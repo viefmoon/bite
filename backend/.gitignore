@@ -1,4 +1,6 @@
-# compiled output
+# Backend specific .gitignore
+
+# Compiled output
 /dist
 /node_modules
 
@@ -10,17 +12,19 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
-# Repomix
-.repomix/
-repomix-output.txt
+.pnpm-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
 # Tests
 /coverage
 /.nyc_output
+*.lcov
 
 # IDEs and editors
 /.idea
@@ -30,6 +34,7 @@ repomix-output.txt
 *.launch
 .settings/
 *.sublime-workspace
+*.sublime-project
 
 # IDE - VSCode
 .vscode/*
@@ -38,8 +43,64 @@ repomix-output.txt
 !.vscode/launch.json
 !.vscode/extensions.json
 
-.data
-/files
+# Environment files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+.data
 /ormconfig.json
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploaded files
+/files
+/uploads
+/public/uploads
+
+# TypeORM
+ormconfig.json
+ormconfig.js
+
+# Build files
+*.pid
+*.seed
+*.pid.lock
+
+# Dependencies
+.pnp
+.pnp.js
+
+# Cache
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Documentation
+/docs/_build
+/documentation
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cer
+
+# Misc
 .codegpt
+.repomix/
+repomix-output.txt
+
+# Docker volumes (if any)
+postgres-data/
+redis-data/

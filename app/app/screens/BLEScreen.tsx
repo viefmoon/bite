@@ -137,7 +137,7 @@ export const BLEScreen: FC<BLEScreenProps> = ({ navigation }) => {
   )
 }
 
-const $container = (theme: Theme): ViewStyle => ({
+const $container = (_theme: Theme): ViewStyle => ({
   paddingHorizontal: 16,
   paddingVertical: 24,
 })
