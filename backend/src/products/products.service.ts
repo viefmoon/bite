@@ -56,7 +56,8 @@ export class ProductsService {
         try {
           // Usar repositorio en lugar de servicio
           const group = await this.modifierGroupRepository.findById(groupId);
-          if (!group) { // Manejar caso donde findById devuelve null
+          if (!group) {
+            // Manejar caso donde findById devuelve null
             throw new NotFoundException(
               `ModifierGroup with ID ${groupId} not found during creation`,
             );
@@ -89,9 +90,9 @@ export class ProductsService {
         // Mantener el manejo de NotFoundException por si findOne lanza otro error
         if (error instanceof NotFoundException) {
           // Re-lanzar la excepción original para mantener el mensaje específico
-           throw new NotFoundException(
-             `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
-           );
+          throw new NotFoundException(
+            `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
+          );
         }
         // Lanzar otros errores inesperados
         throw error;
@@ -115,7 +116,8 @@ export class ProductsService {
         variantToCreate.name = variantDto.name;
         variantToCreate.price = variantDto.price;
         variantToCreate.isActive = variantDto.isActive ?? true;
-        const variant = await this.productVariantRepository.create(variantToCreate);
+        const variant =
+          await this.productVariantRepository.create(variantToCreate);
         variants.push(variant);
       }
       createdProduct.variants = variants;
@@ -125,7 +127,9 @@ export class ProductsService {
     // Si el repositorio 'create' no devuelve las variantes, podríamos necesitar recargar el producto
     // return createdProduct;
     // Opcionalmente, recargar para asegurar que todas las relaciones estén presentes:
-     return this.productRepository.findOne(createdProduct.id) as Promise<Product>; // Asegurar que findOne no devuelva null
+    return this.productRepository.findOne(
+      createdProduct.id,
+    ) as Promise<Product>; // Asegurar que findOne no devuelva null
   }
 
   async findAll(
@@ -191,7 +195,8 @@ export class ProductsService {
           try {
             // Usar repositorio en lugar de servicio
             const group = await this.modifierGroupRepository.findById(groupId);
-            if (!group) { // Manejar caso donde findById devuelve null
+            if (!group) {
+              // Manejar caso donde findById devuelve null
               throw new NotFoundException(
                 `ModifierGroup with ID ${groupId} not found during update`,
               );
@@ -200,7 +205,7 @@ export class ProductsService {
           } catch (error) {
             // Mantener el manejo de NotFoundException por si findById lanza otro error
             if (error instanceof NotFoundException) {
-               throw error; // Re-lanzar
+              throw error; // Re-lanzar
             }
             throw error; // Lanzar otros errores
           }
@@ -228,9 +233,9 @@ export class ProductsService {
         } catch (error) {
           // Mantener el manejo de NotFoundException por si findOne lanza otro error
           if (error instanceof NotFoundException) {
-             throw new NotFoundException(
-               `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
-             );
+            throw new NotFoundException(
+              `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
+            );
           }
           throw error; // Lanzar otros errores
         }
@@ -265,7 +270,10 @@ export class ProductsService {
             variantToUpdate.price = variantDto.price ?? 0; // Asignar valor por defecto si es undefined
             variantToUpdate.isActive = variantDto.isActive ?? true; // Asignar valor por defecto si es undefined
             // No necesitamos productId aquí para la actualización parcial
-            await this.productVariantRepository.update(variantDto.id, variantToUpdate);
+            await this.productVariantRepository.update(
+              variantDto.id,
+              variantToUpdate,
+            );
             processedVariantIds.push(variantDto.id);
           } else {
             // Advertir si se intenta actualizar una variante que no pertenece al producto
@@ -281,7 +289,8 @@ export class ProductsService {
           variantToCreate.name = variantDto.name || '';
           variantToCreate.price = variantDto.price || 0;
           variantToCreate.isActive = variantDto.isActive ?? true;
-          const newVariant = await this.productVariantRepository.create(variantToCreate);
+          const newVariant =
+            await this.productVariantRepository.create(variantToCreate);
           processedVariantIds.push(newVariant.id);
         }
       }

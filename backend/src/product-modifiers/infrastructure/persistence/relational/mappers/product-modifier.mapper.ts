@@ -5,7 +5,10 @@ import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 
 @Injectable()
-export class ProductModifierMapper extends BaseMapper<ProductModifierEntity, ProductModifier> {
+export class ProductModifierMapper extends BaseMapper<
+  ProductModifierEntity,
+  ProductModifier
+> {
   override toDomain(entity: ProductModifierEntity): ProductModifier | null {
     if (!entity) return null;
     const domain = new ProductModifier();
@@ -24,7 +27,7 @@ export class ProductModifierMapper extends BaseMapper<ProductModifierEntity, Pro
   }
 
   override toEntity(domain: ProductModifier): ProductModifierEntity | null {
-     if (!domain) return null;
+    if (!domain) return null;
     const entity = new ProductModifierEntity();
     if (domain.id) entity.id = domain.id;
     entity.groupId = domain.groupId;
@@ -36,7 +39,7 @@ export class ProductModifierMapper extends BaseMapper<ProductModifierEntity, Pro
     entity.isActive = domain.isActive;
 
     if (domain.groupId) {
-       entity.group = { id: domain.groupId } as ModifierGroupEntity;
+      entity.group = { id: domain.groupId } as ModifierGroupEntity;
     }
     return entity;
   }

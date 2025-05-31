@@ -12,11 +12,7 @@ const infrastructurePersistenceModule =
   RelationalThermalPrinterPersistenceModule;
 
 @Module({
-  imports: [
-    infrastructurePersistenceModule,
-    AuthModule,
-    OrdersModule,
-  ],
+  imports: [infrastructurePersistenceModule, AuthModule, OrdersModule],
   controllers: [ThermalPrintersController, PrintingController],
   providers: [ThermalPrintersService, PrintingService, DiscoveryService],
   exports: [ThermalPrintersService, infrastructurePersistenceModule],

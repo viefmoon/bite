@@ -9,19 +9,24 @@ import { UpdateCustomerDto } from '../../dto/update-customer.dto';
 
 // Extender IBaseRepository con los tipos específicos
 export abstract class CustomerRepository
-  implements IBaseRepository< // Cambiado 'extends' por 'implements'
-    Customer,
-    FindAllCustomersDto,
-    CreateCustomerDto,
-    UpdateCustomerDto
-  >
+  implements
+    IBaseRepository<
+      // Cambiado 'extends' por 'implements'
+      Customer,
+      FindAllCustomersDto,
+      CreateCustomerDto,
+      UpdateCustomerDto
+    >
 {
   // Declarar los métodos abstractos de IBaseRepository explícitamente
   // aunque la implementación venga de BaseRelationalRepository
   abstract create(data: CreateCustomerDto): Promise<Customer>;
   abstract findById(id: Customer['id']): Promise<NullableType<Customer>>;
   abstract findAll(filter?: FindAllCustomersDto): Promise<Customer[]>;
-  abstract update(id: Customer['id'], payload: UpdateCustomerDto): Promise<NullableType<Customer>>;
+  abstract update(
+    id: Customer['id'],
+    payload: UpdateCustomerDto,
+  ): Promise<NullableType<Customer>>;
   abstract remove(id: Customer['id']): Promise<void>;
 
   // Mantener métodos específicos que no están en IBaseRepository

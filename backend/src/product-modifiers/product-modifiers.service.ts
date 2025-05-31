@@ -79,7 +79,7 @@ export class ProductModifiersService {
     );
 
     if (!updatedProductModifier) {
-       throw new NotFoundException(`Product modifier with ID ${id} not found`);
+      throw new NotFoundException(`Product modifier with ID ${id} not found`);
     }
 
     return updatedProductModifier;

@@ -7,7 +7,10 @@ import { OrderItemMapper } from './order-item.mapper';
 import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
-export class OrderItemModifierMapper extends BaseMapper<OrderItemModifierEntity, OrderItemModifier> {
+export class OrderItemModifierMapper extends BaseMapper<
+  OrderItemModifierEntity,
+  OrderItemModifier
+> {
   constructor(
     @Inject(forwardRef(() => OrderItemMapper))
     private readonly orderItemMapper: OrderItemMapper,

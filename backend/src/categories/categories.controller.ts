@@ -22,17 +22,17 @@ const BaseCategoriesController = CrudControllerFactory<
   // removeRoles: [RoleEnum.admin],
 });
 
-@Controller() 
+@Controller()
 export class CategoriesController extends BaseCategoriesController {
   protected readonly service: CategoriesService;
 
-  @Get('full-menu') 
+  @Get('full-menu')
   @ApiOperation({
     summary:
       'Obtener el menú completo (categorías, subcategorías, productos, modificadores)',
   })
-  @HttpCode(HttpStatus.OK) 
-  getFullMenu(): Promise<Category[]> { 
+  @HttpCode(HttpStatus.OK)
+  getFullMenu(): Promise<Category[]> {
     return this.service.getFullMenu();
   }
 

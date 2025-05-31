@@ -14,7 +14,7 @@ export interface IBaseRepository<
   TDomain extends { id: unknown },
   TFilterDto = Partial<TDomain>,
   TCreateDto = DeepPartial<TDomain>,
-  TUpdateDto = DeepPartial<TDomain>
+  TUpdateDto = DeepPartial<TDomain>,
 > {
   /**
    * Crea una nueva entidad en el repositorio.
@@ -44,7 +44,10 @@ export interface IBaseRepository<
    * @param payload - Los datos a actualizar (DTO de actualización).
    * @returns La entidad de dominio actualizada o null si no se encontró la entidad original.
    */
-  update(id: TDomain['id'], payload: TUpdateDto): Promise<NullableType<TDomain>>;
+  update(
+    id: TDomain['id'],
+    payload: TUpdateDto,
+  ): Promise<NullableType<TDomain>>;
 
   /**
    * Elimina una entidad (lógica o físicamente) por su ID.

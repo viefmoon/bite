@@ -29,5 +29,4 @@ export abstract class TicketImpressionRepository {
   abstract findByOrderId(
     orderId: TicketImpression['orderId'],
   ): Promise<TicketImpression[]>;
-
 }

@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ModifierGroupEntity } from '../entities/modifier-group.entity';
@@ -26,13 +30,17 @@ export class ModifierGroupsRelationalRepository
   ): Promise<ModifierGroup> {
     const entity = this.modifierGroupMapper.toEntity(data as ModifierGroup);
     if (!entity) {
-      throw new InternalServerErrorException('Error creating modifier group entity');
+      throw new InternalServerErrorException(
+        'Error creating modifier group entity',
+      );
     }
 
     const savedEntity = await this.modifierGroupRepository.save(entity);
     const domainResult = this.modifierGroupMapper.toDomain(savedEntity);
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved modifier group entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping saved modifier group entity to domain',
+      );
     }
     return domainResult;
   }
@@ -115,9 +123,13 @@ export class ModifierGroupsRelationalRepository
     id: ModifierGroup['id'],
     payload: DeepPartial<ModifierGroup>,
   ): Promise<ModifierGroup | null> {
-    const entityToUpdate = this.modifierGroupMapper.toEntity(payload as ModifierGroup);
-     if (!entityToUpdate) {
-      throw new InternalServerErrorException('Error creating modifier group entity for update');
+    const entityToUpdate = this.modifierGroupMapper.toEntity(
+      payload as ModifierGroup,
+    );
+    if (!entityToUpdate) {
+      throw new InternalServerErrorException(
+        'Error creating modifier group entity for update',
+      );
     }
 
     await this.modifierGroupRepository.update(id, entityToUpdate);
@@ -128,20 +140,22 @@ export class ModifierGroupsRelationalRepository
     });
 
     if (!updatedEntity) {
-       throw new NotFoundException(`ModifierGroup con ID ${id} no encontrado`);
+      throw new NotFoundException(`ModifierGroup con ID ${id} no encontrado`);
     }
 
     const domainResult = this.modifierGroupMapper.toDomain(updatedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated modifier group entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping updated modifier group entity to domain',
+      );
     }
 
     return domainResult;
   }
 
   async remove(id: ModifierGroup['id']): Promise<void> {
-     const result = await this.modifierGroupRepository.softDelete(id);
-     if (result.affected === 0) {
+    const result = await this.modifierGroupRepository.softDelete(id);
+    if (result.affected === 0) {
       throw new NotFoundException(`ModifierGroup con ID ${id} no encontrado`);
     }
   }

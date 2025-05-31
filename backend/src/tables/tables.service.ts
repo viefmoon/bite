@@ -8,12 +8,12 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 import { TABLE_REPOSITORY } from '../common/tokens';
 import { Inject } from '@nestjs/common';
 
-
 @Injectable()
 export class TablesService {
   constructor(
     @Inject(TABLE_REPOSITORY)
-    private readonly tableRepository: TableRepository) {}
+    private readonly tableRepository: TableRepository,
+  ) {}
 
   async create(createTableDto: CreateTableDto): Promise<Table> {
     const table = new Table();

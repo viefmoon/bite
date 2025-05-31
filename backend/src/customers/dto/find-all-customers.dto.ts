@@ -37,5 +37,4 @@ export class FindAllCustomersDto extends PaginationParams {
   @IsOptional()
   @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
   phoneNumber?: string;
-
 }

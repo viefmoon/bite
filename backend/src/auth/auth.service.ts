@@ -204,7 +204,10 @@ export class AuthService {
       });
     }
 
-    await this.usersService.update(user.id, { email: newEmail, isActive: true });
+    await this.usersService.update(user.id, {
+      email: newEmail,
+      isActive: true,
+    });
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -310,9 +313,7 @@ export class AuthService {
     if (userDto.password !== undefined)
       userToUpdate.password = userDto.password;
     if (userDto.birthDate !== undefined)
-      userToUpdate.birthDate = userDto.birthDate
-        ? userDto.birthDate
-        : null;
+      userToUpdate.birthDate = userDto.birthDate ? userDto.birthDate : null;
     if (userDto.gender !== undefined) userToUpdate.gender = userDto.gender;
     if (userDto.phoneNumber !== undefined)
       userToUpdate.phoneNumber = userDto.phoneNumber;

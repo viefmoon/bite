@@ -26,8 +26,11 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 100 })
   lastName: string;
 
-  @Index('uq_customer_phone', { unique: true, where: '"phoneNumber" IS NOT NULL' })
-  @Column({ type: 'varchar', length: 20, nullable: true }) 
+  @Index('uq_customer_phone', {
+    unique: true,
+    where: '"phoneNumber" IS NOT NULL',
+  })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   phoneNumber: string | null;
 
   @Index('uq_customer_email', { unique: true, where: 'email IS NOT NULL' })

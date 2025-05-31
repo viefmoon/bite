@@ -7,13 +7,13 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  OneToMany, 
+  OneToMany,
   RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity'; 
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Entity({
   name: 'subcategory',

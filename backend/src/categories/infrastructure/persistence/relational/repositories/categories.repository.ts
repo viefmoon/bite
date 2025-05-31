@@ -16,9 +16,9 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
   constructor(
     @InjectRepository(CategoryEntity)
     ormRepo: Repository<CategoryEntity>,
-    mapper: CategoryMapper, 
+    mapper: CategoryMapper,
   ) {
-    super(ormRepo, mapper); 
+    super(ormRepo, mapper);
   }
 
   // Sobrescribe buildWhere para manejar filtros específicos de categorías

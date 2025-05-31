@@ -6,10 +6,16 @@ import { CategoryMapper } from '../../../../../categories/infrastructure/persist
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
 import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
-export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory> {
+export class SubcategoryMapper extends BaseMapper<
+  SubcategoryEntity,
+  Subcategory
+> {
   constructor(
     @Inject(forwardRef(() => CategoryMapper))
     private readonly categoryMapper: CategoryMapper,
@@ -29,9 +35,13 @@ export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory
     domain.isActive = entity.isActive;
     domain.categoryId = entity.categoryId;
     domain.photoId = entity.photoId;
-    domain.category = entity.category ? this.categoryMapper.toDomain(entity.category) : null;
+    domain.category = entity.category
+      ? this.categoryMapper.toDomain(entity.category)
+      : null;
     domain.photo = entity.photo ? this.fileMapper.toDomain(entity.photo) : null;
-    domain.products = mapArray(entity.products, (p) => this.productMapper.toDomain(p));
+    domain.products = mapArray(entity.products, (p) =>
+      this.productMapper.toDomain(p),
+    );
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -46,7 +56,9 @@ export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory
     entity.description = domain.description;
     entity.isActive = domain.isActive;
     entity.category = { id: domain.categoryId } as CategoryEntity;
-    entity.photo = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    entity.photo = domain.photoId
+      ? ({ id: domain.photoId } as FileEntity)
+      : null;
     return entity;
   }
 }

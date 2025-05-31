@@ -44,7 +44,6 @@ async function bootstrap() {
   // Asumiendo que no necesita argumentos por ahora, basado en el código original.
   app.useGlobalFilters(new AllExceptionsFilter());
 
-
   const options = new DocumentBuilder()
     .setTitle('API')
     .setDescription('API docs')

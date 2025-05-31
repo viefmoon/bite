@@ -11,7 +11,7 @@ import { Inject } from '@nestjs/common';
 export class SessionService {
   constructor(
     @Inject(SESSION_REPOSITORY)
-    private readonly sessionRepository: SessionRepository
+    private readonly sessionRepository: SessionRepository,
   ) {}
 
   findById(id: Session['id']): Promise<NullableType<Session>> {

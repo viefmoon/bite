@@ -8,15 +8,13 @@ import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
 import { BaseCrudService } from '../common/application/base-crud.service';
 
 @Injectable()
-export class CategoriesService extends BaseCrudService< 
+export class CategoriesService extends BaseCrudService<
   Category,
   CreateCategoryDto,
   UpdateCategoryDto,
   FindAllCategoriesDto
 > {
-  constructor(
-    @Inject(CATEGORY_REPOSITORY) repo: CategoryRepository,
-  ) {
+  constructor(@Inject(CATEGORY_REPOSITORY) repo: CategoryRepository) {
     super(repo);
   }
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
@@ -20,12 +24,16 @@ export class PreparationScreensRelationalRepository
   async create(data: PreparationScreen): Promise<PreparationScreen> {
     const entity = this.preparationScreenMapper.toEntity(data);
     if (!entity) {
-      throw new InternalServerErrorException('Error creating preparation screen entity');
+      throw new InternalServerErrorException(
+        'Error creating preparation screen entity',
+      );
     }
     const savedEntity = await this.preparationScreenRepository.save(entity);
     const domainResult = this.preparationScreenMapper.toDomain(savedEntity);
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved preparation screen entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping saved preparation screen entity to domain',
+      );
     }
     return domainResult;
   }
@@ -36,7 +44,9 @@ export class PreparationScreensRelationalRepository
       relations: ['products'],
     });
 
-    const domainResult = entity ? this.preparationScreenMapper.toDomain(entity) : null;
+    const domainResult = entity
+      ? this.preparationScreenMapper.toDomain(entity)
+      : null;
     if (!domainResult) {
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
@@ -98,7 +108,9 @@ export class PreparationScreensRelationalRepository
 
     const domainResult = this.preparationScreenMapper.toDomain(updatedEntity);
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated preparation screen entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping updated preparation screen entity to domain',
+      );
     }
 
     return domainResult;

@@ -14,7 +14,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { CustomerEntity } from './customer.entity';
 
 @Entity({
-  name: 'address', 
+  name: 'address',
 })
 export class AddressEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common'; // Removed Inject
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common'; // Removed Inject
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubcategoryEntity } from '../entities/subcategory.entity';
@@ -14,18 +18,22 @@ export class SubcategoriesRelationalRepository
   constructor(
     @InjectRepository(SubcategoryEntity)
     private readonly subcategoryRepository: Repository<SubcategoryEntity>,
-    private readonly subcategoryMapper: SubcategoryMapper, 
+    private readonly subcategoryMapper: SubcategoryMapper,
   ) {}
 
   async create(data: Subcategory): Promise<Subcategory> {
     const entity = this.subcategoryMapper.toEntity(data);
     if (!entity) {
-      throw new InternalServerErrorException('Error creating subcategory entity');
+      throw new InternalServerErrorException(
+        'Error creating subcategory entity',
+      );
     }
     const savedEntity = await this.subcategoryRepository.save(entity);
     const domainResult = this.subcategoryMapper.toDomain(savedEntity);
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved subcategory entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping saved subcategory entity to domain',
+      );
     }
     return domainResult;
   }
@@ -36,7 +44,9 @@ export class SubcategoriesRelationalRepository
       relations: ['photo', 'category'],
     });
 
-    const domainResult = entity ? this.subcategoryMapper.toDomain(entity) : null;
+    const domainResult = entity
+      ? this.subcategoryMapper.toDomain(entity)
+      : null;
     if (!domainResult) {
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
@@ -102,7 +112,9 @@ export class SubcategoriesRelationalRepository
 
     const domainResult = this.subcategoryMapper.toDomain(updatedEntity);
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated subcategory entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping updated subcategory entity to domain',
+      );
     }
 
     return domainResult;

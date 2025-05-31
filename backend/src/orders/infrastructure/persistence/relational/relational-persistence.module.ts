@@ -35,7 +35,6 @@ import { RelationalProductPersistenceModule } from '../../../../products/infrast
 import { RelationalProductVariantPersistenceModule } from '../../../../product-variants/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalProductModifierPersistenceModule } from '../../../../product-modifiers/infrastructure/persistence/relational/relational-persistence.module';
 
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([

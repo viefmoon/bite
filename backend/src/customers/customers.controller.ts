@@ -47,14 +47,14 @@ const BaseCustomersController = CrudControllerFactory<
   // Roles por defecto de la factory (Admin para CUD) son adecuados aquí
 });
 
-
 @ApiTags('Customers') // Mantener ApiTags aquí o mover a la factory si se prefiere
 @Controller() // El path ya está definido en la factory
-export class CustomersController extends BaseCustomersController { // Extender el controlador base
+export class CustomersController extends BaseCustomersController {
+  // Extender el controlador base
   // Inyectar ambos servicios
   constructor(
-      protected service: CustomersService, // El servicio principal (requerido por la factory)
-      private addressesService: AddressesService // El servicio de direcciones
+    protected service: CustomersService, // El servicio principal (requerido por la factory)
+    private addressesService: AddressesService, // El servicio de direcciones
   ) {
     super(service); // Llamar al constructor base con el servicio principal
   }
@@ -63,7 +63,6 @@ export class CustomersController extends BaseCustomersController { // Extender e
 
   // Se elimina el endpoint GET /customers con paginación infinita.
   // El endpoint GET / heredado de BaseCustomersController (sin paginación) tomará efecto si se necesita.
-
 
   // --- Endpoints específicos para Direcciones eliminados ---
   // La gestión de direcciones se moverá a un AddressesController plano (/addresses).

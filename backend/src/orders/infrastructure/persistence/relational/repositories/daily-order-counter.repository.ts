@@ -46,7 +46,9 @@ export class DailyOrderCounterRelationalRepository
 
     const domainResult = this.dailyOrderCounterMapper.toDomain(completeEntity);
     if (!domainResult) {
-      throw new Error('Failed to map complete daily order counter entity to domain');
+      throw new Error(
+        'Failed to map complete daily order counter entity to domain',
+      );
     }
     return domainResult;
   }
@@ -124,7 +126,9 @@ export class DailyOrderCounterRelationalRepository
 
     const existingDomain = this.dailyOrderCounterMapper.toDomain(entity);
     if (!existingDomain) {
-      throw new Error('Failed to map existing daily order counter entity to domain');
+      throw new Error(
+        'Failed to map existing daily order counter entity to domain',
+      );
     }
 
     const updatedDomain = {
@@ -132,9 +136,12 @@ export class DailyOrderCounterRelationalRepository
       ...payload,
     };
 
-    const persistenceModel = this.dailyOrderCounterMapper.toEntity(updatedDomain);
+    const persistenceModel =
+      this.dailyOrderCounterMapper.toEntity(updatedDomain);
     if (!persistenceModel) {
-      throw new Error('Failed to map updated daily order counter domain to entity');
+      throw new Error(
+        'Failed to map updated daily order counter domain to entity',
+      );
     }
 
     const updatedEntity = await this.dailyOrderCounterRepository.save(
@@ -152,9 +159,12 @@ export class DailyOrderCounterRelationalRepository
       );
     }
 
-    const finalDomainResult = this.dailyOrderCounterMapper.toDomain(completeEntity);
+    const finalDomainResult =
+      this.dailyOrderCounterMapper.toDomain(completeEntity);
     if (!finalDomainResult) {
-      throw new Error('Failed to map final updated daily order counter entity to domain');
+      throw new Error(
+        'Failed to map final updated daily order counter entity to domain',
+      );
     }
     return finalDomainResult;
   }

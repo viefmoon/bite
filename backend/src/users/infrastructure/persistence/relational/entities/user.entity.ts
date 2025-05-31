@@ -64,13 +64,11 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: 'jsonb', nullable: true })
   emergencyContact: Record<string, any> | null;
 
-
   @ManyToOne(() => RoleEntity, {
     eager: true,
     nullable: false,
   })
   role: RoleEntity;
-
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { ProductEntity } from '../entities/product.entity';
@@ -25,8 +29,10 @@ export class ProductRelationalRepository implements ProductRepository {
     }
     const savedEntity = await this.productRepository.save(entity);
     const domainResult = this.productMapper.toDomain(savedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved product entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping saved product entity to domain',
+      );
     }
     return domainResult;
   }
@@ -61,7 +67,13 @@ export class ProductRelationalRepository implements ProductRepository {
       where,
       skip: (options.page - 1) * options.limit,
       take: options.limit,
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
+      relations: [
+        'photo',
+        'subcategory',
+        'variants',
+        'modifierGroups',
+        'preparationScreen',
+      ],
     });
 
     const products = entities
@@ -74,7 +86,13 @@ export class ProductRelationalRepository implements ProductRepository {
   async findOne(id: string): Promise<Product> {
     const entity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
+      relations: [
+        'photo',
+        'subcategory',
+        'variants',
+        'modifierGroups',
+        'preparationScreen',
+      ],
     });
 
     if (!entity) {
@@ -82,8 +100,10 @@ export class ProductRelationalRepository implements ProductRepository {
     }
 
     const domainResult = this.productMapper.toDomain(entity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping found product entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping found product entity to domain',
+      );
     }
     return domainResult;
   }
@@ -105,8 +125,10 @@ export class ProductRelationalRepository implements ProductRepository {
     productUpdatePayload: Partial<Product>,
   ): Promise<Product | null> {
     const entity = this.productMapper.toEntity(productUpdatePayload as Product);
-     if (!entity) {
-      throw new InternalServerErrorException('Error creating product entity for update');
+    if (!entity) {
+      throw new InternalServerErrorException(
+        'Error creating product entity for update',
+      );
     }
 
     const updateResult = await this.productRepository.update(id, entity);
@@ -117,30 +139,48 @@ export class ProductRelationalRepository implements ProductRepository {
 
     const updatedEntity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
+      relations: [
+        'photo',
+        'subcategory',
+        'variants',
+        'modifierGroups',
+        'preparationScreen',
+      ],
     });
 
     if (!updatedEntity) {
-      throw new NotFoundException(`Producto con ID ${id} no encontrado después de actualizar`);
+      throw new NotFoundException(
+        `Producto con ID ${id} no encontrado después de actualizar`,
+      );
     }
 
     const domainResult = this.productMapper.toDomain(updatedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated product entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping updated product entity to domain',
+      );
     }
     return domainResult;
   }
 
   async save(product: Product): Promise<Product> {
     const entity = this.productMapper.toEntity(product);
-     if (!entity) {
-      throw new InternalServerErrorException('Error creating product entity for save');
+    if (!entity) {
+      throw new InternalServerErrorException(
+        'Error creating product entity for save',
+      );
     }
     const savedEntity = await this.productRepository.save(entity);
 
     const reloadedEntity = await this.productRepository.findOne({
       where: { id: savedEntity.id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
+      relations: [
+        'photo',
+        'subcategory',
+        'variants',
+        'modifierGroups',
+        'preparationScreen',
+      ],
     });
     if (!reloadedEntity) {
       throw new NotFoundException(
@@ -148,8 +188,10 @@ export class ProductRelationalRepository implements ProductRepository {
       );
     }
     const domainResult = this.productMapper.toDomain(reloadedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping reloaded product entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping reloaded product entity to domain',
+      );
     }
     return domainResult;
   }

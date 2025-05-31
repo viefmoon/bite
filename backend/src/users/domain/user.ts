@@ -36,8 +36,7 @@ export class User {
 
   emergencyContact: Record<string, any> | null;
 
-
-  role: Role
+  role: Role;
 
   isActive: boolean;
 

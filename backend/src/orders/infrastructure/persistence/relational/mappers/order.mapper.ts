@@ -9,7 +9,10 @@ import { PaymentMapper } from '../../../../../payments/infrastructure/persistenc
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
 import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
 export class OrderMapper extends BaseMapper<OrderEntity, Order> {
@@ -43,8 +46,12 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
     domain.user = this.userMapper.toDomain(entity.user!)!;
-    domain.table = entity.table ? this.tableMapper.toDomain(entity.table) : null;
-    domain.dailyOrderCounter = this.dailyOrderCounterMapper.toDomain(entity.dailyOrderCounter!)!;
+    domain.table = entity.table
+      ? this.tableMapper.toDomain(entity.table)
+      : null;
+    domain.dailyOrderCounter = this.dailyOrderCounterMapper.toDomain(
+      entity.dailyOrderCounter!,
+    )!;
 
     domain.orderItems = mapArray(entity.orderItems, (item) =>
       this.orderItemMapper.toDomain(item),
@@ -65,7 +72,9 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       id: domain.dailyOrderCounterId,
     } as DailyOrderCounterEntity;
     entity.user = { id: domain.userId } as UserEntity;
-    entity.table = domain.tableId ? ({ id: domain.tableId } as TableEntity) : null;
+    entity.table = domain.tableId
+      ? ({ id: domain.tableId } as TableEntity)
+      : null;
     entity.orderStatus = domain.orderStatus;
     entity.orderType = domain.orderType;
     entity.total = domain.total;

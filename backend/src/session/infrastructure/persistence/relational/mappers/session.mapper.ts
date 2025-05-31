@@ -5,9 +5,7 @@ import { Session } from '../../../../domain/session';
 import { SessionEntity } from '../entities/session.entity';
 
 export class SessionMapper extends BaseMapper<SessionEntity, Session> {
-  constructor(
-    private readonly userMapper: UserMapper,
-  ) {
+  constructor(private readonly userMapper: UserMapper) {
     super();
   }
 

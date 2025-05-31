@@ -8,7 +8,10 @@ import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructu
 import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
@@ -71,7 +74,9 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
     entity.subcategory = { id: domain.subcategoryId } as SubcategoryEntity;
-    entity.photo = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    entity.photo = domain.photoId
+      ? ({ id: domain.photoId } as FileEntity)
+      : null;
     entity.estimatedPrepTime = domain.estimatedPrepTime;
     entity.preparationScreen = domain.preparationScreen?.id
       ? ({ id: domain.preparationScreen.id } as PreparationScreenEntity)
@@ -79,7 +84,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
 
     if (domain.modifierGroups !== undefined) {
       entity.modifierGroups = domain.modifierGroups.map(
-        (group) => ({ id: group.id } as ModifierGroupEntity),
+        (group) => ({ id: group.id }) as ModifierGroupEntity,
       );
     }
 

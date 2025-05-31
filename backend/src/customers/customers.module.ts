@@ -15,6 +15,10 @@ const infrastructurePersistenceModule = RelationalCustomerPersistenceModule;
   // Añadir AddressesService a los providers
   providers: [CustomersService, AddressesService],
   // Exportar AddressesService si se va a usar fuera de este módulo
-  exports: [CustomersService, AddressesService, infrastructurePersistenceModule],
+  exports: [
+    CustomersService,
+    AddressesService,
+    infrastructurePersistenceModule,
+  ],
 })
 export class CustomersModule {}

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Customer } from '../../../../domain/customer';
 import { CustomerEntity } from '../entities/customer.entity';
 import { AddressMapper } from './address.mapper';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 // Address import removed as it was unused
 
 @Injectable()

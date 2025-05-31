@@ -53,5 +53,4 @@ export class TicketImpressionsController {
   ): Promise<TicketImpression[]> {
     return this.ordersService.findImpressionsByOrderId(orderId);
   }
-
 }

@@ -61,7 +61,8 @@ export class ModifierGroupsService {
     id: string,
     updateModifierGroupDto: UpdateModifierGroupDto,
   ): Promise<ModifierGroup> {
-     const existingModifierGroup = await this.modifierGroupRepository.findById(id);
+    const existingModifierGroup =
+      await this.modifierGroupRepository.findById(id);
 
     if (!existingModifierGroup) {
       throw new NotFoundException(`ModifierGroup con ID ${id} no encontrado`);
@@ -69,22 +70,33 @@ export class ModifierGroupsService {
 
     const modifierGroup = new ModifierGroup();
     modifierGroup.id = id;
-    modifierGroup.name = updateModifierGroupDto.name ?? existingModifierGroup.name;
-    modifierGroup.description = updateModifierGroupDto.description ?? existingModifierGroup.description;
-    modifierGroup.minSelections = updateModifierGroupDto.minSelections ?? existingModifierGroup.minSelections;
-    modifierGroup.maxSelections = updateModifierGroupDto.maxSelections ?? existingModifierGroup.maxSelections;
-    modifierGroup.isRequired = updateModifierGroupDto.isRequired ?? existingModifierGroup.isRequired;
-    modifierGroup.allowMultipleSelections = updateModifierGroupDto.allowMultipleSelections ?? existingModifierGroup.allowMultipleSelections;
-    modifierGroup.isActive = updateModifierGroupDto.isActive ?? existingModifierGroup.isActive;
-
+    modifierGroup.name =
+      updateModifierGroupDto.name ?? existingModifierGroup.name;
+    modifierGroup.description =
+      updateModifierGroupDto.description ?? existingModifierGroup.description;
+    modifierGroup.minSelections =
+      updateModifierGroupDto.minSelections ??
+      existingModifierGroup.minSelections;
+    modifierGroup.maxSelections =
+      updateModifierGroupDto.maxSelections ??
+      existingModifierGroup.maxSelections;
+    modifierGroup.isRequired =
+      updateModifierGroupDto.isRequired ?? existingModifierGroup.isRequired;
+    modifierGroup.allowMultipleSelections =
+      updateModifierGroupDto.allowMultipleSelections ??
+      existingModifierGroup.allowMultipleSelections;
+    modifierGroup.isActive =
+      updateModifierGroupDto.isActive ?? existingModifierGroup.isActive;
 
     const updatedModifierGroup = await this.modifierGroupRepository.update(
       id,
       modifierGroup,
     );
 
-     if (!updatedModifierGroup) {
-      throw new NotFoundException('Grupo de modificadores no encontrado después de intentar actualizar');
+    if (!updatedModifierGroup) {
+      throw new NotFoundException(
+        'Grupo de modificadores no encontrado después de intentar actualizar',
+      );
     }
 
     return updatedModifierGroup;

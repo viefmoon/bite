@@ -13,16 +13,17 @@ import { FindAllAddressesDto } from '../../../../dto/find-all-addresses.dto'; //
 
 // Eliminar el tipo placeholder
 
-@Injectable()
+@Injectable() // Implementar la interfaz AddressRepository
 export class AddressRelationalRepository
-  extends BaseRelationalRepository< // Extender BaseRelationalRepository
+  extends BaseRelationalRepository<
+    // Extender BaseRelationalRepository
     AddressEntity,
     Address,
     FindAllAddressesDto, // Usar el DTO de filtro real
     CreateAddressDto,
     UpdateAddressDto
   >
-  implements AddressRepository // Implementar la interfaz AddressRepository
+  implements AddressRepository
 {
   constructor(
     @InjectRepository(AddressEntity)
@@ -47,7 +48,8 @@ export class AddressRelationalRepository
     if (filter?.zipCode) {
       where.zipCode = filter.zipCode;
     }
-    if (filter?.city) { // Añadir filtro por ciudad
+    if (filter?.city) {
+      // Añadir filtro por ciudad
       where.city = ILike(`%${filter.city}%`);
     }
     // Añadir más filtros si es necesario (street, state, etc.)

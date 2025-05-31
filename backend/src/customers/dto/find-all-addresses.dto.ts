@@ -4,7 +4,8 @@ import { Transform } from 'class-transformer';
 
 export class FindAllAddressesDto {
   @ApiPropertyOptional({
-    description: 'Filtrar por ID del cliente (generalmente inyectado desde el parámetro de ruta)',
+    description:
+      'Filtrar por ID del cliente (generalmente inyectado desde el parámetro de ruta)',
     example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
   })
   @IsOptional()
@@ -34,7 +35,8 @@ export class FindAllAddressesDto {
 
   // Añadir otros filtros según sea necesario (ej. city, state)
   @ApiPropertyOptional({
-    description: 'Filtrar por ciudad (búsqueda parcial, insensible a mayúsculas)',
+    description:
+      'Filtrar por ciudad (búsqueda parcial, insensible a mayúsculas)',
     example: 'Ejemplo',
   })
   @IsOptional()

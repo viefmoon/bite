@@ -9,7 +9,8 @@ import { FILE_REPOSITORY } from '../common/tokens';
 export class FilesService {
   constructor(
     @Inject(FILE_REPOSITORY)
-    private readonly fileRepository: FileRepository) {}
+    private readonly fileRepository: FileRepository,
+  ) {}
 
   findById(id: FileType['id']): Promise<NullableType<FileType>> {
     return this.fileRepository.findById(id);

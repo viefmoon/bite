@@ -47,7 +47,9 @@ export class OrderItemModifierRelationalRepository
   async save(orderItemModifier: OrderItemModifier): Promise<OrderItemModifier> {
     const entity = this.orderItemModifierMapper.toEntity(orderItemModifier);
     if (!entity) {
-      throw new InternalServerErrorException('Error mapping OrderItemModifier domain to entity for save');
+      throw new InternalServerErrorException(
+        'Error mapping OrderItemModifier domain to entity for save',
+      );
     }
     const savedEntity = await this.orderItemModifierRepository.save(entity);
 
@@ -57,12 +59,16 @@ export class OrderItemModifierRelationalRepository
     });
 
     if (!reloadedEntity) {
-      throw new InternalServerErrorException(`Failed to reload OrderItemModifier with ID ${savedEntity.id} after saving.`);
+      throw new InternalServerErrorException(
+        `Failed to reload OrderItemModifier with ID ${savedEntity.id} after saving.`,
+      );
     }
 
     const domainResult = this.orderItemModifierMapper.toDomain(reloadedEntity);
     if (!domainResult) {
-        throw new InternalServerErrorException('Error mapping reloaded OrderItemModifier entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping reloaded OrderItemModifier entity to domain',
+      );
     }
     return domainResult;
   }
@@ -72,22 +78,28 @@ export class OrderItemModifierRelationalRepository
   ): Promise<OrderItemModifier> {
     const entity = this.orderItemModifierMapper.toEntity(orderItemModifier);
     if (!entity || !entity.id) {
-        throw new InternalServerErrorException('Error mapping OrderItemModifier domain to entity for update or ID missing');
+      throw new InternalServerErrorException(
+        'Error mapping OrderItemModifier domain to entity for update or ID missing',
+      );
     }
     const updatedEntity = await this.orderItemModifierRepository.save(entity);
 
     const reloadedEntity = await this.orderItemModifierRepository.findOne({
-        where: { id: updatedEntity.id },
-        relations: ['orderItem', 'modifier'],
+      where: { id: updatedEntity.id },
+      relations: ['orderItem', 'modifier'],
     });
 
     if (!reloadedEntity) {
-        throw new InternalServerErrorException(`Failed to reload OrderItemModifier with ID ${updatedEntity.id} after updating.`);
+      throw new InternalServerErrorException(
+        `Failed to reload OrderItemModifier with ID ${updatedEntity.id} after updating.`,
+      );
     }
 
     const domainResult = this.orderItemModifierMapper.toDomain(reloadedEntity);
     if (!domainResult) {
-        throw new InternalServerErrorException('Error mapping reloaded OrderItemModifier entity to domain after update');
+      throw new InternalServerErrorException(
+        'Error mapping reloaded OrderItemModifier entity to domain after update',
+      );
     }
     return domainResult;
   }

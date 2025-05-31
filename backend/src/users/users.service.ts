@@ -24,7 +24,6 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-
     let password: string | undefined = undefined;
 
     if (createUserDto.password) {
@@ -238,7 +237,9 @@ export class UsersService {
       country: updateUserDto.country,
       zipCode: updateUserDto.zipCode,
       emergencyContact: updateUserDto.emergencyContact,
-      ...(updateUserDto.isActive !== undefined && { isActive: updateUserDto.isActive }),
+      ...(updateUserDto.isActive !== undefined && {
+        isActive: updateUserDto.isActive,
+      }),
     };
 
     const filteredPayload: Partial<User> = {};

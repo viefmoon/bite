@@ -9,7 +9,11 @@ import {
 } from 'class-validator';
 
 export class CreateAddressDto {
-  @ApiProperty({ example: 'uuid-cliente', description: 'ID del cliente al que pertenece la dirección (requerido si no se usa la ruta anidada)' })
+  @ApiProperty({
+    example: 'uuid-cliente',
+    description:
+      'ID del cliente al que pertenece la dirección (requerido si no se usa la ruta anidada)',
+  })
   @IsUUID()
   @IsOptional() // Hacerlo opcional aquí, pero la lógica del servicio lo requerirá si no viene de la ruta
   customerId?: string;

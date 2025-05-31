@@ -27,9 +27,7 @@ export class PaymentsService {
   }
 
   async findAll(findAllPaymentsDto: FindAllPaymentsDto): Promise<Payment[]> {
-
     const payments = await this.paymentRepository.findAll();
-
 
     let filteredPayments = payments;
     if (findAllPaymentsDto.orderId) {
@@ -38,13 +36,11 @@ export class PaymentsService {
       );
     }
 
-
     if (findAllPaymentsDto.paymentMethod) {
       filteredPayments = filteredPayments.filter(
         (payment) => payment.paymentMethod === findAllPaymentsDto.paymentMethod,
       );
     }
-
 
     if (findAllPaymentsDto.paymentStatus) {
       filteredPayments = filteredPayments.filter(
@@ -73,26 +69,22 @@ export class PaymentsService {
   ): Promise<Payment> {
     const existingPayment = await this.findOne(id);
 
-
     const updatedPayment = new Payment();
     updatedPayment.id = id;
     updatedPayment.orderId = existingPayment.orderId;
     updatedPayment.paymentMethod =
       updatePaymentDto.paymentMethod ?? existingPayment.paymentMethod;
-    updatedPayment.amount =
-      updatePaymentDto.amount ?? existingPayment.amount;
+    updatedPayment.amount = updatePaymentDto.amount ?? existingPayment.amount;
     updatedPayment.paymentStatus =
       updatePaymentDto.paymentStatus ?? existingPayment.paymentStatus;
 
     updatedPayment.createdAt = existingPayment.createdAt;
     updatedPayment.order = existingPayment.order;
 
-
     return this.paymentRepository.update(id, updatedPayment);
   }
 
   async remove(id: string): Promise<void> {
-
     await this.findOne(id);
     await this.paymentRepository.delete(id);
   }

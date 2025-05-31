@@ -8,7 +8,10 @@ import { UserMapper } from '../../../../../users/infrastructure/persistence/rela
 import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
-export class TicketImpressionMapper extends BaseMapper<TicketImpressionEntity, TicketImpression> {
+export class TicketImpressionMapper extends BaseMapper<
+  TicketImpressionEntity,
+  TicketImpression
+> {
   constructor(
     private readonly orderMapper: OrderMapper,
     private readonly userMapper: UserMapper,

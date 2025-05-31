@@ -7,8 +7,10 @@ import { PAYMENT_REPOSITORY } from '../../../../common/tokens';
 import { RelationalOrderPersistenceModule } from '../../../../orders/infrastructure/persistence/relational/relational-persistence.module'; // Importar el módulo de Orders
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PaymentEntity]), 
-  forwardRef(() => RelationalOrderPersistenceModule)],
+  imports: [
+    TypeOrmModule.forFeature([PaymentEntity]),
+    forwardRef(() => RelationalOrderPersistenceModule),
+  ],
   providers: [
     {
       provide: PAYMENT_REPOSITORY,

@@ -1,6 +1,6 @@
 import { IBaseRepository } from '../domain/repositories/base.repository';
 import { NullableType } from '../../utils/types/nullable.type';
-import { NotFoundException } from '@nestjs/common'; 
+import { NotFoundException } from '@nestjs/common';
 
 export abstract class BaseCrudService<
   D extends { id: unknown },
@@ -9,7 +9,12 @@ export abstract class BaseCrudService<
   FilterDto = Partial<D>,
 > {
   protected constructor(
-    protected readonly repo: IBaseRepository<D, FilterDto, CreateDto, UpdateDto>,
+    protected readonly repo: IBaseRepository<
+      D,
+      FilterDto,
+      CreateDto,
+      UpdateDto
+    >,
   ) {}
 
   async create(dto: CreateDto): Promise<D> {
@@ -24,7 +29,9 @@ export abstract class BaseCrudService<
     const entity = await this.repo.findById(id);
     if (!entity) {
       // Lanzar NotFoundException si la entidad no se encuentra
-      throw new NotFoundException(`${this.constructor.name.replace('Service', '')} with ID ${id} not found`);
+      throw new NotFoundException(
+        `${this.constructor.name.replace('Service', '')} with ID ${id} not found`,
+      );
     }
     return entity;
   }

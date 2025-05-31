@@ -12,21 +12,21 @@ export enum PreparationStatus {
 }
 
 export class OrderItem {
-    id: string;
-    orderId: string;
-    productId: string;
-    productVariantId: string | null;
-    quantity: number;
-    basePrice: number;
-    finalPrice: number;
-    preparationStatus: PreparationStatus;
-    statusChangedAt: Date;
-    preparationNotes: string | null;
-    order?: Order;
-    product?: Product;
-    productVariant?: ProductVariant | null;
-    modifiers?: OrderItemModifier[];
-    createdAt?: Date;
-    updatedAt?: Date;
-    deletedAt?: Date | null;
+  id: string;
+  orderId: string;
+  productId: string;
+  productVariantId: string | null;
+  quantity: number;
+  basePrice: number;
+  finalPrice: number;
+  preparationStatus: PreparationStatus;
+  statusChangedAt: Date;
+  preparationNotes: string | null;
+  order?: Order;
+  product?: Product;
+  productVariant?: ProductVariant | null;
+  modifiers?: OrderItemModifier[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
 }

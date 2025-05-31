@@ -2,11 +2,17 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Injectable()
-export class PreparationScreenMapper extends BaseMapper<PreparationScreenEntity, PreparationScreen> {
+export class PreparationScreenMapper extends BaseMapper<
+  PreparationScreenEntity,
+  PreparationScreen
+> {
   constructor(
     @Inject(forwardRef(() => ProductMapper))
     private readonly productMapper: ProductMapper,
@@ -21,7 +27,9 @@ export class PreparationScreenMapper extends BaseMapper<PreparationScreenEntity,
     domain.name = entity.name;
     domain.description = entity.description;
     domain.isActive = entity.isActive;
-    domain.products = mapArray(entity.products, (p) => this.productMapper.toDomain(p));
+    domain.products = mapArray(entity.products, (p) =>
+      this.productMapper.toDomain(p),
+    );
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -37,7 +45,10 @@ export class PreparationScreenMapper extends BaseMapper<PreparationScreenEntity,
     entity.isActive = domain.isActive;
 
     if (domain.products) {
-      entity.products = mapArray(domain.products, (p) => this.productMapper.toEntity(p) as ProductEntity);
+      entity.products = mapArray(
+        domain.products,
+        (p) => this.productMapper.toEntity(p) as ProductEntity,
+      );
     }
 
     return entity;

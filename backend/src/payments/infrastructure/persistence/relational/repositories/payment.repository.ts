@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentEntity } from '../entities/payment.entity';
@@ -44,16 +48,20 @@ export class RelationalPaymentRepository implements PaymentRepository {
     }
     const savedEntity = await this.paymentRepository.save(paymentEntity);
     const domainResult = this.paymentMapper.toDomain(savedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved payment entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping saved payment entity to domain',
+      );
     }
     return domainResult;
   }
 
   async update(id: string, payment: Payment): Promise<Payment> {
     const paymentEntity = this.paymentMapper.toEntity(payment);
-     if (!paymentEntity) {
-      throw new InternalServerErrorException('Error creating payment entity for update');
+    if (!paymentEntity) {
+      throw new InternalServerErrorException(
+        'Error creating payment entity for update',
+      );
     }
     await this.paymentRepository.update(id, paymentEntity);
 
@@ -61,19 +69,23 @@ export class RelationalPaymentRepository implements PaymentRepository {
       where: { id },
     });
     if (!updatedEntity) {
-      throw new NotFoundException(`Payment with ID ${id} not found after update`);
+      throw new NotFoundException(
+        `Payment with ID ${id} not found after update`,
+      );
     }
-     const domainResult = this.paymentMapper.toDomain(updatedEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated payment entity to domain');
+    const domainResult = this.paymentMapper.toDomain(updatedEntity);
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping updated payment entity to domain',
+      );
     }
     return domainResult;
   }
 
   async delete(id: string): Promise<void> {
-     const result = await this.paymentRepository.softDelete(id);
-     if (result.affected === 0) {
-       throw new NotFoundException(`Payment with ID ${id} not found`);
-     }
+    const result = await this.paymentRepository.softDelete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Payment with ID ${id} not found`);
+    }
   }
 }

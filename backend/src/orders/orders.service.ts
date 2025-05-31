@@ -23,19 +23,19 @@ import {
   ORDER_ITEM_REPOSITORY,
   ORDER_ITEM_MODIFIER_REPOSITORY,
   TICKET_IMPRESSION_REPOSITORY,
-} from '../common/tokens'; 
+} from '../common/tokens';
 @Injectable()
 export class OrdersService {
   constructor(
-    @Inject(ORDER_REPOSITORY) 
+    @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: OrderRepository,
-    @Inject(ORDER_ITEM_MODIFIER_REPOSITORY) 
+    @Inject(ORDER_ITEM_MODIFIER_REPOSITORY)
     private readonly orderItemModifierRepository: OrderItemModifierRepository,
     @Inject(ORDER_ITEM_REPOSITORY)
     private readonly orderItemRepository: OrderItemRepository,
-    @Inject(TICKET_IMPRESSION_REPOSITORY) 
+    @Inject(TICKET_IMPRESSION_REPOSITORY)
     private readonly ticketImpressionRepository: TicketImpressionRepository,
-) {}
+  ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const order = await this.orderRepository.create({

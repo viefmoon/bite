@@ -19,7 +19,9 @@ export class ProductVariantRelationalRepository
   async create(productVariant: ProductVariant): Promise<ProductVariant> {
     const entity = this.productVariantMapper.toEntity(productVariant);
     if (!entity) {
-      throw new Error('Error mapping ProductVariant domain to entity for create');
+      throw new Error(
+        'Error mapping ProductVariant domain to entity for create',
+      );
     }
     // Usar create + save puede ser más explícito sobre la creación de una nueva entidad
     const newEntity = this.productVariantRepository.create(entity);
@@ -27,7 +29,9 @@ export class ProductVariantRelationalRepository
     const domainResult = this.productVariantMapper.toDomain(savedEntity);
     if (!domainResult) {
       // Si toDomain devuelve null aquí, es un error interno inesperado
-      throw new Error('Error mapping saved ProductVariant entity back to domain');
+      throw new Error(
+        'Error mapping saved ProductVariant entity back to domain',
+      );
     }
     return domainResult;
   }
@@ -90,17 +94,22 @@ export class ProductVariantRelationalRepository
     // Mapear solo los campos actualizables a un objeto parcial
     const partialEntity = this.productVariantMapper.toEntity(productVariant);
     if (!partialEntity) {
-        throw new Error('Error mapping ProductVariant domain to partial entity for update');
+      throw new Error(
+        'Error mapping ProductVariant domain to partial entity for update',
+      );
     }
     // Eliminar el ID del objeto parcial si está presente, ya que se pasa como primer argumento
     const { id: _, ...updatePayload } = partialEntity;
 
-    const updateResult = await this.productVariantRepository.update(id, updatePayload);
+    const updateResult = await this.productVariantRepository.update(
+      id,
+      updatePayload,
+    );
 
     if (updateResult.affected === 0) {
-        throw new NotFoundException(
-            `Variante de producto con ID ${id} no encontrada para actualizar`,
-        );
+      throw new NotFoundException(
+        `Variante de producto con ID ${id} no encontrada para actualizar`,
+      );
     }
 
     const updatedEntity = await this.productVariantRepository.findOne({
@@ -115,7 +124,7 @@ export class ProductVariantRelationalRepository
     }
 
     const domainResult = this.productVariantMapper.toDomain(updatedEntity);
-     if (!domainResult) {
+    if (!domainResult) {
       // Si toDomain devuelve null aquí, es un error interno inesperado
       throw new NotFoundException(
         `Error mapping updated ProductVariant entity with ID ${id} to domain`,
@@ -133,8 +142,14 @@ export class ProductVariantRelationalRepository
     const savedEntity = await this.productVariantRepository.save(entity);
 
     // Verificar que savedEntity no sea un array y tenga id (aunque save con una entidad debe devolver una entidad)
-    if (!savedEntity || typeof savedEntity !== 'object' || !('id' in savedEntity)) {
-        throw new Error('Error saving ProductVariant: unexpected result from repository save');
+    if (
+      !savedEntity ||
+      typeof savedEntity !== 'object' ||
+      !('id' in savedEntity)
+    ) {
+      throw new Error(
+        'Error saving ProductVariant: unexpected result from repository save',
+      );
     }
 
     const reloadedEntity = await this.productVariantRepository.findOne({

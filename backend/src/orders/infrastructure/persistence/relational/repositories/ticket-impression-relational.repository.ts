@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'; // Añadir excepciones
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'; // Añadir excepciones
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -25,11 +29,14 @@ export class TicketImpressionRelationalRepository
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'order' | 'user'
     >,
   ): Promise<TicketImpression> {
-    const persistenceModel = this.ticketImpressionMapper.toEntity( // Usar instancia del mapper
+    const persistenceModel = this.ticketImpressionMapper.toEntity(
+      // Usar instancia del mapper
       data as TicketImpression,
     );
     if (!persistenceModel) {
-      throw new InternalServerErrorException('Error creating ticket impression entity');
+      throw new InternalServerErrorException(
+        'Error creating ticket impression entity',
+      );
     }
     const newEntity = await this.repository.save(
       this.repository.create(persistenceModel),
@@ -41,11 +48,15 @@ export class TicketImpressionRelationalRepository
     });
     if (!completeEntity) {
       // Usar NotFoundException o InternalServerErrorException según el caso
-      throw new InternalServerErrorException('Failed to load created ticket impression after saving');
+      throw new InternalServerErrorException(
+        'Failed to load created ticket impression after saving',
+      );
     }
     const domainResult = this.ticketImpressionMapper.toDomain(completeEntity); // Usar instancia del mapper
     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved ticket impression entity to domain');
+      throw new InternalServerErrorException(
+        'Error mapping saved ticket impression entity to domain',
+      );
     }
     return domainResult;
   }
@@ -97,7 +108,9 @@ export class TicketImpressionRelationalRepository
       relations: ['order', 'user'],
     });
 
-    const domainResult = entity ? this.ticketImpressionMapper.toDomain(entity) : null; // Usar instancia del mapper
+    const domainResult = entity
+      ? this.ticketImpressionMapper.toDomain(entity)
+      : null; // Usar instancia del mapper
     // Opcional: Lanzar NotFoundException si no se encuentra, similar a categorías
     // if (!domainResult) {
     //   throw new NotFoundException(`TicketImpression with ID ${id} not found`);

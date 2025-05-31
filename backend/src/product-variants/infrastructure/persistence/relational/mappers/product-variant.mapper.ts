@@ -6,10 +6,13 @@ import { ProductEntity } from '../../../../../products/infrastructure/persistenc
 import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
-export class ProductVariantMapper extends BaseMapper<ProductVariantEntity, ProductVariant> {
+export class ProductVariantMapper extends BaseMapper<
+  ProductVariantEntity,
+  ProductVariant
+> {
   constructor(
     @Inject(forwardRef(() => ProductMapper))
-    private readonly productMapper: ProductMapper
+    private readonly productMapper: ProductMapper,
   ) {
     super();
   }

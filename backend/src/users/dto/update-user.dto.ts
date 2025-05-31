@@ -24,7 +24,7 @@ export class UpdateUserDto {
 
   @ApiPropertyOptional({ example: 'johndoe', type: String })
   @IsOptional()
-  @IsEmail() 
+  @IsEmail()
   username?: string;
 
   @ApiPropertyOptional()
@@ -92,12 +92,10 @@ export class UpdateUserDto {
   @IsObject()
   emergencyContact?: Record<string, any> | null;
 
-
   @ApiPropertyOptional({ type: () => RoleDto })
   @IsOptional()
   @Type(() => RoleDto)
   role?: RoleDto | null;
-
 
   @ApiPropertyOptional({ example: true, type: Boolean })
   @IsOptional()

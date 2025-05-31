@@ -2,13 +2,20 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DailyOrderCounter } from '../../../../domain/daily-order-counter';
 import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
 import { OrderMapper } from './order.mapper';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
-export class DailyOrderCounterMapper extends BaseMapper<DailyOrderCounterEntity, DailyOrderCounter> {
+export class DailyOrderCounterMapper extends BaseMapper<
+  DailyOrderCounterEntity,
+  DailyOrderCounter
+> {
   constructor(
-    @Inject(forwardRef(() => OrderMapper)) 
-    private readonly orderMapper: OrderMapper) {
+    @Inject(forwardRef(() => OrderMapper))
+    private readonly orderMapper: OrderMapper,
+  ) {
     super();
   }
 
@@ -21,7 +28,9 @@ export class DailyOrderCounterMapper extends BaseMapper<DailyOrderCounterEntity,
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    domain.orders = mapArray(entity.orders, (order) => this.orderMapper.toDomain(order));
+    domain.orders = mapArray(entity.orders, (order) =>
+      this.orderMapper.toDomain(order),
+    );
     return domain;
   }
 

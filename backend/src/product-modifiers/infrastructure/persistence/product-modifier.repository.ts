@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductModifier } from '../../domain/product-modifier';
@@ -16,10 +20,12 @@ export interface IProductModifierRepository {
     filterOptions: FindAllProductModifiersDto;
     paginationOptions: IPaginationOptions;
   }): Promise<Paginated<ProductModifier>>;
-  update(id: string, data: Partial<ProductModifier>): Promise<ProductModifier | null>;
+  update(
+    id: string,
+    data: Partial<ProductModifier>,
+  ): Promise<ProductModifier | null>;
   remove(id: string): Promise<void>;
 }
-
 
 @Injectable()
 export class ProductModifierRepository implements IProductModifierRepository {
@@ -31,14 +37,18 @@ export class ProductModifierRepository implements IProductModifierRepository {
 
   async create(data: ProductModifier): Promise<ProductModifier> {
     const persistenceModel = this.productModifierMapper.toEntity(data);
-     if (!persistenceModel) {
-      throw new InternalServerErrorException('Error creating product modifier entity');
+    if (!persistenceModel) {
+      throw new InternalServerErrorException(
+        'Error creating product modifier entity',
+      );
     }
     const newEntity =
       await this.productModifierEntityRepository.save(persistenceModel);
     const domainResult = this.productModifierMapper.toDomain(newEntity);
-     if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved product modifier entity to domain');
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping saved product modifier entity to domain',
+      );
     }
     return domainResult;
   }
@@ -47,10 +57,14 @@ export class ProductModifierRepository implements IProductModifierRepository {
     const entity = await this.productModifierEntityRepository.findOne({
       where: { id },
     });
-    const domainResult = entity ? this.productModifierMapper.toDomain(entity) : null;
-     if (!domainResult && entity) {
-        throw new InternalServerErrorException('Error mapping found product modifier entity to domain');
-     }
+    const domainResult = entity
+      ? this.productModifierMapper.toDomain(entity)
+      : null;
+    if (!domainResult && entity) {
+      throw new InternalServerErrorException(
+        'Error mapping found product modifier entity to domain',
+      );
+    }
     return domainResult;
   }
 
@@ -117,17 +131,22 @@ export class ProductModifierRepository implements IProductModifierRepository {
       .map((entity) => this.productModifierMapper.toDomain(entity))
       .filter((item): item is ProductModifier => item !== null);
 
-     return new Paginated(domainResults, count, page, limit);
+    return new Paginated(domainResults, count, page, limit);
   }
 
   async update(
     id: string,
     data: Partial<ProductModifier>,
   ): Promise<ProductModifier | null> {
-     const entityToUpdate = this.productModifierMapper.toEntity({ ...data, id } as ProductModifier);
-     if (!entityToUpdate) {
-       throw new InternalServerErrorException('Error creating product modifier entity for update');
-     }
+    const entityToUpdate = this.productModifierMapper.toEntity({
+      ...data,
+      id,
+    } as ProductModifier);
+    if (!entityToUpdate) {
+      throw new InternalServerErrorException(
+        'Error creating product modifier entity for update',
+      );
+    }
 
     await this.productModifierEntityRepository.update(id, entityToUpdate);
 
@@ -135,22 +154,26 @@ export class ProductModifierRepository implements IProductModifierRepository {
       where: { id },
     });
 
-     if (!updatedEntity) {
-       throw new NotFoundException(`Product modifier with ID ${id} not found after update`);
-     }
+    if (!updatedEntity) {
+      throw new NotFoundException(
+        `Product modifier with ID ${id} not found after update`,
+      );
+    }
 
     const domainResult = this.productModifierMapper.toDomain(updatedEntity);
-     if (!domainResult) {
-       throw new InternalServerErrorException('Error mapping updated product modifier entity to domain');
-     }
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping updated product modifier entity to domain',
+      );
+    }
 
     return domainResult;
   }
 
   async remove(id: string): Promise<void> {
-     const result = await this.productModifierEntityRepository.softDelete(id);
-     if (result.affected === 0) {
-       throw new NotFoundException(`Product modifier with ID ${id} not found`);
-     }
+    const result = await this.productModifierEntityRepository.softDelete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Product modifier with ID ${id} not found`);
+    }
   }
 }

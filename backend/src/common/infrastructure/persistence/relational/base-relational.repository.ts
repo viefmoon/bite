@@ -1,4 +1,9 @@
-import { Repository, DeepPartial, FindOptionsWhere, ObjectLiteral } from 'typeorm';
+import {
+  Repository,
+  DeepPartial,
+  FindOptionsWhere,
+  ObjectLiteral,
+} from 'typeorm';
 import { IBaseRepository } from '../../../domain/repositories/base.repository';
 import { NullableType } from '../../../../utils/types/nullable.type';
 
@@ -61,7 +66,6 @@ export abstract class BaseRelationalRepository<
     });
     return updated ? this.mapper.toDomain(updated as E) : null;
   }
-
 
   async remove(id: D['id']): Promise<void> {
     await this.ormRepo.softDelete(id as any);

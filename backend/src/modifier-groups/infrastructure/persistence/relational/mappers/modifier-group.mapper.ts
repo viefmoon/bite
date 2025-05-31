@@ -2,12 +2,18 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ModifierGroup } from '../../../../domain/modifier-group';
 import { ModifierGroupEntity } from '../entities/modifier-group.entity';
 import { ProductModifierMapper } from '../../../../../product-modifiers/infrastructure/persistence/relational/mappers/product-modifier.mapper';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Injectable()
-export class ModifierGroupMapper extends BaseMapper<ModifierGroupEntity, ModifierGroup> {
+export class ModifierGroupMapper extends BaseMapper<
+  ModifierGroupEntity,
+  ModifierGroup
+> {
   constructor(
     private readonly productModifierMapper: ProductModifierMapper,
     @Inject(forwardRef(() => ProductMapper))
@@ -30,8 +36,12 @@ export class ModifierGroupMapper extends BaseMapper<ModifierGroupEntity, Modifie
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    domain.productModifiers = mapArray(entity.productModifiers, (modifier) => this.productModifierMapper.toDomain(modifier));
-    domain.products = mapArray(entity.products, (product) => this.productMapper.toEntity(product));
+    domain.productModifiers = mapArray(entity.productModifiers, (modifier) =>
+      this.productModifierMapper.toDomain(modifier),
+    );
+    domain.products = mapArray(entity.products, (product) =>
+      this.productMapper.toEntity(product),
+    );
     return domain;
   }
 
@@ -46,7 +56,9 @@ export class ModifierGroupMapper extends BaseMapper<ModifierGroupEntity, Modifie
     entity.isRequired = domain.isRequired;
     entity.allowMultipleSelections = domain.allowMultipleSelections;
     entity.isActive = domain.isActive;
-    entity.products = mapArray(domain.products, (product) => this.productMapper.toEntity(product)) as ProductEntity[];
+    entity.products = mapArray(domain.products, (product) =>
+      this.productMapper.toEntity(product),
+    ) as ProductEntity[];
     return entity;
   }
 }

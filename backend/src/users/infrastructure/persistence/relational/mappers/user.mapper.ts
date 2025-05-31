@@ -38,7 +38,9 @@ export class UserMapper extends BaseMapper<UserEntity, User> {
   override toEntity(domain: User): UserEntity | null {
     if (!domain) return null;
     if (!domain.role) {
-      throw new Error('User domain entity must have a role to be mapped to persistence.');
+      throw new Error(
+        'User domain entity must have a role to be mapped to persistence.',
+      );
     }
 
     const role = new RoleEntity();

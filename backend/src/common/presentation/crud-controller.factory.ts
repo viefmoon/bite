@@ -1,6 +1,16 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query, Type, // Importar Type
-  HttpCode, HttpStatus, UseGuards // Importar decoradores necesarios
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Type, // Importar Type
+  HttpCode,
+  HttpStatus,
+  UseGuards, // Importar decoradores necesarios
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'; // Importar decoradores de Swagger
 import { BaseCrudService } from '../application/base-crud.service';
@@ -35,8 +45,9 @@ export function CrudControllerFactory<
   FilterDto,
   S extends BaseCrudService<D, CreateDto, UpdateDto, FilterDto>,
 >(
-  options: CrudControllerOptions // Usar el objeto de opciones
-): Type<ICrudController<D, CreateDto, UpdateDto, FilterDto>> { // Devolver Type<ICrudController>
+  options: CrudControllerOptions, // Usar el objeto de opciones
+): Type<ICrudController<D, CreateDto, UpdateDto, FilterDto>> {
+  // Devolver Type<ICrudController>
 
   const {
     path,
@@ -48,15 +59,17 @@ export function CrudControllerFactory<
 
   @ApiTags(swaggerTag ?? path)
   @Controller({ path, version: '1' })
-  class CrudController implements ICrudController<D, CreateDto, UpdateDto, FilterDto> {
+  class CrudController
+    implements ICrudController<D, CreateDto, UpdateDto, FilterDto>
+  {
     // Inyectar el servicio genérico. Debe ser proveído en el módulo que use este controller.
     constructor(protected readonly service: S) {}
 
     @Post()
     @ApiOperation({ summary: `Create a new ${swaggerTag ?? path}` })
-    @ApiBearerAuth() 
-    @UseGuards(AuthGuard('jwt'), RolesGuard) 
-    @Roles(...createRoles) 
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(...createRoles)
     @HttpCode(HttpStatus.CREATED)
     create(@Body() dto: CreateDto): Promise<D> {
       return this.service.create(dto);
@@ -74,18 +87,23 @@ export function CrudControllerFactory<
     @ApiOperation({ summary: `Find one ${swaggerTag ?? path} by ID` })
     // findOne suele ser público
     @HttpCode(HttpStatus.OK)
-    findOne(@Param('id') id: D['id']): Promise<D> { // Usar D['id'] para el tipo del parámetro
+    findOne(@Param('id') id: D['id']): Promise<D> {
+      // Usar D['id'] para el tipo del parámetro
       // El servicio ya maneja NotFoundException
       return this.service.findOne(id);
     }
 
     @Patch(':id')
     @ApiOperation({ summary: `Update a ${swaggerTag ?? path}` })
-    @ApiBearerAuth() 
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(...updateRoles) 
+    @Roles(...updateRoles)
     @HttpCode(HttpStatus.OK)
-    update(@Param('id') id: D['id'], @Body() dto: UpdateDto): Promise<D | null> { // Usar D['id']
+    update(
+      @Param('id') id: D['id'],
+      @Body() dto: UpdateDto,
+    ): Promise<D | null> {
+      // Usar D['id']
       return this.service.update(id, dto);
     }
 
@@ -95,7 +113,8 @@ export function CrudControllerFactory<
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(...removeRoles) // Aplicar roles para eliminar
     @HttpCode(HttpStatus.NO_CONTENT) // Usar NO_CONTENT para delete
-    async remove(@Param('id') id: D['id']): Promise<void> { // Usar D['id'], método async
+    async remove(@Param('id') id: D['id']): Promise<void> {
+      // Usar D['id'], método async
       await this.service.remove(id);
     }
   }

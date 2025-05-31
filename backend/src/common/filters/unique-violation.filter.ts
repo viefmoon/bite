@@ -1,4 +1,11 @@
-import { ArgumentsHost, Catch, ConflictException, ExceptionFilter, Logger, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ConflictException,
+  ExceptionFilter,
+  Logger,
+  HttpStatus,
+} from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { ERROR_CODES } from '../constants/error-codes.constants'; // Asegúrate que la ruta sea correcta
 
@@ -22,14 +29,21 @@ export class UniqueViolationFilter implements ExceptionFilter {
 
     if (exception.code === PG_UNIQUE_VIOLATION_CODE) {
       // Mapeo de nombres de restricciones a códigos de error y mensajes
-      const map: Record<string, { code: string; message: (d?: string) => string }> = {
-        uq_customer_email: { // Nombre del índice/restricción para email
+      const map: Record<
+        string,
+        { code: string; message: (d?: string) => string }
+      > = {
+        uq_customer_email: {
+          // Nombre del índice/restricción para email
           code: ERROR_CODES.AUTH_DUPLICATE_EMAIL, // Usar código existente si aplica
-          message: (d) => `El correo electrónico ya está registrado${d ? `: ${d}` : ''}.`,
+          message: (d) =>
+            `El correo electrónico ya está registrado${d ? `: ${d}` : ''}.`,
         },
-        uq_customer_phone: { // Nombre del índice/restricción para teléfono
+        uq_customer_phone: {
+          // Nombre del índice/restricción para teléfono
           code: 'CUSTOMER_DUPLICATE_PHONE', // Código específico
-          message: (d) => `El número de teléfono ya está registrado${d ? `: ${d}` : ''}.`,
+          message: (d) =>
+            `El número de teléfono ya está registrado${d ? `: ${d}` : ''}.`,
         },
         // Añadir aquí mapeos para otras restricciones UNIQUE si es necesario
       };
@@ -49,12 +63,15 @@ export class UniqueViolationFilter implements ExceptionFilter {
         return; // Detener la ejecución aquí
       } else {
         // Si la restricción violada no está mapeada, lanzar un error genérico de conflicto
-        this.logger.warn(`Unhandled UNIQUE constraint violation: ${constraint}`, exception.detail);
+        this.logger.warn(
+          `Unhandled UNIQUE constraint violation: ${constraint}`,
+          exception.detail,
+        );
         const genericConflictResponse = {
-            statusCode: HttpStatus.CONFLICT,
-            code: ERROR_CODES.CONFLICT_ERROR, // Código genérico de conflicto
-            message: 'Conflicto de datos: un valor único ya existe.',
-            detail: `Constraint: ${constraint}`, // Incluir el nombre de la constraint para debugging
+          statusCode: HttpStatus.CONFLICT,
+          code: ERROR_CODES.CONFLICT_ERROR, // Código genérico de conflicto
+          message: 'Conflicto de datos: un valor único ya existe.',
+          detail: `Constraint: ${constraint}`, // Incluir el nombre de la constraint para debugging
         };
         response.status(HttpStatus.CONFLICT).json(genericConflictResponse);
         return; // Detener la ejecución aquí

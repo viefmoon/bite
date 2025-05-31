@@ -4,7 +4,10 @@ import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import {
+  BaseMapper,
+  mapArray,
+} from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
 export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
@@ -25,7 +28,9 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     domain.isActive = entity.isActive;
     domain.photoId = entity.photoId;
     domain.photo = entity.photo ? this.fileMapper.toDomain(entity.photo) : null;
-    domain.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub));
+    domain.subcategories = mapArray(entity.subcategories, (sub) =>
+      this.subcategoryMapper.toDomain(sub),
+    );
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -39,7 +44,9 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
-    entity.photo = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    entity.photo = domain.photoId
+      ? ({ id: domain.photoId } as FileEntity)
+      : null;
     return entity;
   }
 }

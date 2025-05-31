@@ -17,16 +17,17 @@ import { BaseRelationalRepository } from '../../../../../common/infrastructure/p
 import { CreateCustomerDto } from '../../../../dto/create-customer.dto'; // Importar DTOs
 import { UpdateCustomerDto } from '../../../../dto/update-customer.dto';
 
-@Injectable()
+@Injectable() // Implementar la interfaz CustomerRepository
 export class CustomerRelationalRepository
-  extends BaseRelationalRepository< // Extender BaseRelationalRepository
+  extends BaseRelationalRepository<
+    // Extender BaseRelationalRepository
     CustomerEntity,
     Customer,
     FindAllCustomersDto,
     CreateCustomerDto, // Añadir DTOs de Create y Update
     UpdateCustomerDto
   >
-  implements CustomerRepository // Implementar la interfaz CustomerRepository
+  implements CustomerRepository
 {
   constructor(
     @InjectRepository(CustomerEntity)
@@ -59,13 +60,13 @@ export class CustomerRelationalRepository
     return Object.keys(where).length > 0 ? where : undefined;
   }
 
-
   // Se elimina findManyWithPagination
 
   // Mantener métodos específicos de CustomerRepository
   async findByEmail(email: Customer['email']): Promise<NullableType<Customer>> {
     if (!email) return null;
-    const entity = await this.ormRepo.findOne({ // Usar this.ormRepo
+    const entity = await this.ormRepo.findOne({
+      // Usar this.ormRepo
       where: { email },
       relations: ['addresses'],
     });
@@ -76,7 +77,8 @@ export class CustomerRelationalRepository
     phone: Customer['phoneNumber'],
   ): Promise<NullableType<Customer>> {
     if (!phone) return null;
-    const entity = await this.ormRepo.findOne({ // Usar this.ormRepo
+    const entity = await this.ormRepo.findOne({
+      // Usar this.ormRepo
       where: { phoneNumber: phone },
       relations: ['addresses'],
     });

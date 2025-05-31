@@ -9,9 +9,7 @@ import { UserMapper } from './infrastructure/persistence/relational/mappers/user
 const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
 @Module({
-  imports: [
-    infrastructurePersistenceModule,
-  ],
+  imports: [infrastructurePersistenceModule],
   controllers: [UsersController],
   providers: [UsersService, UserMapper],
   exports: [UsersService, infrastructurePersistenceModule],
