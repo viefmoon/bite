@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a restaurant management system with two main components:
 - **Backend**: NestJS API for restaurant operations (orders, products, thermal printing, etc.)
-- **App**: React Native mobile app built with Expo and Ignite boilerplate
+- **App**: React Native mobile app built with Expo
 
 ## Backend Commands
 
@@ -153,23 +153,27 @@ npm run compile         # TypeScript check
 ### App Architecture
 
 **Navigation:**
-- React Navigation with native stack
+- React Navigation with drawer and stack navigators
 - Authentication flow separate from main app flow
+- Module-based navigation structure
 
 **State Management:**
-- Supabase for backend communication
-- React hooks for local state
+- Zustand stores for global state (auth, theme, snackbar)
+- React Query for API state and caching
 - AsyncStorage for persistence
 
 **Key Screens:**
-- BLE device configuration and monitoring
-- Dashboard for device metrics
-- Authentication (login/register)
+- Order creation with product customization
+- Open orders management
+- Product catalog with categories and variants
+- Table and area configuration
+- Thermal printer setup and testing
 
-**BLE Integration:**
-- Custom BLE hooks for device communication
-- Configuration forms for various sensor types (pH, conductivity, temperature)
-- Real-time data monitoring
+**API Integration:**
+- Custom API client with interceptors
+- Automatic token refresh
+- Error mapping and handling
+- Image caching system
 
 ## Important Configuration
 
@@ -181,14 +185,18 @@ Create `.env` from `env-example-relational`:
 - `MAIL_*` - Email service configuration
 
 ### App Configuration
-- `app/config/` - Environment-specific configs
-- Supabase configuration in `services/supabase.ts`
-- BLE permissions configured for both iOS and Android
+- `app/.env` - API_URL and other environment variables
+- Module-specific services in each module's `services/` directory
+- Global configuration in `app/constants/`
+- Theme configuration in `app/styles/`
 
 ## Development Notes
 
 1. Backend uses PostgreSQL with TypeORM
 2. Order changes are automatically tracked via subscribers
 3. Thermal printer discovery uses network scanning
-4. App requires BLE permissions for sensor communication
+4. App supports both light and dark themes
 5. Both projects use TypeScript with strict configurations
+6. Backend includes Hygen generators for scaffolding
+7. App uses React Hook Form for form validation
+8. File uploads support multiple storage backends
