@@ -1,17 +1,20 @@
-/** @type {import('@babel/core').TransformOptions} */
 module.exports = function (api) {
-  api.cache(true)
+  api.cache(true);
   return {
     presets: ["babel-preset-expo"],
     plugins: [
-      "react-native-reanimated/plugin",
       [
         "module:react-native-dotenv",
         {
           moduleName: "@env",
           path: ".env",
+          blacklist: null,
+          whitelist: null,
+          safe: false,
+          allowUndefined: true,
         },
       ],
+      'react-native-reanimated/plugin', // Necesario para react-navigation drawer
     ],
-  }
-}
+  };
+};

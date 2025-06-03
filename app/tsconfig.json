@@ -1,34 +1,13 @@
 {
-  "compilerOptions": {
-    "allowJs": false,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "module": "es2015",
-    "moduleResolution": "node",
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "sourceMap": true,
-    "target": "esnext",
-    "lib": ["esnext", "dom"],
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./app/*"],
-      "assets/*": ["./assets/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./types"]
-  },
   "extends": "expo/tsconfig.base",
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true, // Report errors on unused local variables
+    "noUnusedParameters": true, // Report errors on unused parameters
+    "moduleResolution": "bundler", // Añadido para resolver tipos de navegación
+    "baseUrl": ".", // O "./" - Directorio base para los paths
+    "paths": {
+      "@/*": ["src/*"] // Define el alias @/ para apuntar a src/
     }
-  },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "test/**/*"]
+  }
 }
