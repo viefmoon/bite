@@ -24,7 +24,9 @@ const BaseCategoriesController = CrudControllerFactory<
 
 @Controller()
 export class CategoriesController extends BaseCategoriesController {
-  protected readonly service: CategoriesService;
+  constructor(protected readonly service: CategoriesService) {
+    super(service);
+  }
 
   @Get('full-menu')
   @ApiOperation({

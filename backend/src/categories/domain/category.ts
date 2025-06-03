@@ -1,5 +1,5 @@
 import { FileType } from '../../files/domain/file';
-import { Subcategory } from '../../subcategories/domain/Subcategory';
+import { Subcategory } from '../../subcategories/domain/subcategory';
 
 export class Category {
   id: string;

@@ -25,10 +25,7 @@ const BaseAddressesController = CrudControllerFactory<
 @ApiTags('Addresses') // Etiqueta Swagger
 @Controller() // El path 'addresses' ya está definido en la factory
 export class AddressesController extends BaseAddressesController {
-  // El constructor con la inyección del servicio es manejado por la factory.
-  // No se necesita constructor ni sobrescribir métodos para un CRUD estándar.
-  // Los endpoints POST /, GET /, GET /:id, PATCH /:id, DELETE /:id
-  // funcionarán directamente sobre /addresses.
-  // El filtro por customerId se hará a través del query param en FindAllAddressesDto (?customerId=xxx)
-  // La creación requerirá que customerId venga en el body de CreateAddressDto.
+  constructor(protected readonly service: AddressesService) {
+    super(service);
+  }
 }

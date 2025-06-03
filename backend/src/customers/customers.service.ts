@@ -1,4 +1,3 @@
-import { Transactional } from 'typeorm-transactional-cls-hooked'; // Importar Transactional
 import {
   Injectable,
   Inject,
@@ -43,7 +42,6 @@ export class CustomersService extends BaseCrudService<
   }
 
   // Sobrescribir 'create' para añadir lógica de validación y creación de direcciones
-  @Transactional() // Añadir decorador para transacción
   override async create(
     createCustomerDto: CreateCustomerDto,
   ): Promise<Customer> {
@@ -87,8 +85,8 @@ export class CustomersService extends BaseCrudService<
     id: string,
     updateCustomerDto: UpdateCustomerDto,
   ): Promise<Customer> {
-    // findOne es heredado, lo usamos para obtener y validar la existencia del cliente
-    const customer = await this.findOne(id);
+    // findOne es heredado, lo usamos para validar la existencia del cliente
+    await this.findOne(id);
 
     // Se eliminan las validaciones preventivas de email y teléfono para la actualización.
     // La base de datos y el UniqueViolationFilter se encargarán de la unicidad.

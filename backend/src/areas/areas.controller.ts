@@ -23,4 +23,8 @@ const BaseAreasController = CrudControllerFactory<
 });
 
 @Controller()
-export class AreasController extends BaseAreasController {}
+export class AreasController extends BaseAreasController {
+  constructor(protected readonly service: AreasService) {
+    super(service);
+  }
+}

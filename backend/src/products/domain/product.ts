@@ -1,4 +1,4 @@
-import { Subcategory } from '../../subcategories/domain/Subcategory';
+import { Subcategory } from '../../subcategories/domain/subcategory';
 import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
