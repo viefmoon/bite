@@ -54,13 +54,38 @@ npm run android         # Run on Android emulator
 npm run web             # Run in web browser
 ```
 
-### Building
+### Building (Local con EAS)
+
+#### Setup Inicial (solo la primera vez)
 ```bash
-npm run build:ios:sim    # Build for iOS simulator
-npm run build:android:sim # Build for Android emulator
-npm run build:ios:dev    # Build for iOS device
-npm run build:android:dev # Build for Android device
+# 1. Instalar herramientas necesarias
+./install-java-and-fix.sh      # Instala Java y actualiza Expo
+./install-android-sdk.sh        # Instala Android SDK
+source ~/.bashrc                # Cargar variables de entorno
+
+# 2. Login en EAS
+npx eas login
 ```
+
+#### Crear Builds Locales
+```bash
+npm run build:ios:sim      # Build para iOS simulator
+npm run build:android:sim  # Build para Android emulator
+npm run build:ios:dev      # Build para iOS device  
+npm run build:android:dev  # Build para Android device (APK)
+npm run build:android:prod # Build de producción
+```
+
+#### Instalar y Ejecutar
+```bash
+# Instalar APK en dispositivo Android
+adb install build-*.apk
+
+# Ejecutar servidor de desarrollo
+npm start
+```
+
+**Nota**: Los archivos de build se generan en la raíz del proyecto como `build-*.apk`
 
 ### Testing & Quality
 ```bash
