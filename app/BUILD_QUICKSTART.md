@@ -34,12 +34,28 @@ adb install build-*.apk
 
 ## Ejecutar la App
 
-```bash
-# Iniciar servidor de desarrollo
-npm start
+### Desarrollo desde WSL2 (Recomendado)
 
-# La app instalada se conectará automáticamente al servidor
+```bash
+# Usar script con modo tunnel (más confiable para WSL2)
+./start-wsl.sh
+
+# Selecciona:
+# 1 - Para Expo Go (más simple)
+# 2 - Para Development Build (APK instalado)
 ```
+
+### Alternativa directa
+```bash
+# Modo tunnel (recomendado para WSL2)
+npx expo start --tunnel          # Para Expo Go
+npx expo start --dev-client --tunnel  # Para Development Build
+
+# Modo LAN (puede tener problemas en WSL2)
+npm start
+```
+
+**Nota:** El modo tunnel es más lento pero evita problemas de red entre WSL2 y dispositivos físicos.
 
 ## Scripts Disponibles
 

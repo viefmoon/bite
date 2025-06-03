@@ -48,11 +48,40 @@ npm run add:property:to-relational    # Add property to existing entity
 ```bash
 cd app
 npm install
-npm run start            # Start Expo dev server
+
+# Para desarrollo desde WSL2 (recomendado)
+./start-wsl.sh          # Usa modo tunnel para evitar problemas de red
+
+# Comandos directos
+npm run start           # Start Expo dev server (puede tener problemas en WSL2)
 npm run ios             # Run on iOS simulator
-npm run android         # Run on Android emulator
+npm run android         # Run on Android emulator  
 npm run web             # Run in web browser
 ```
+
+### Desarrollo con Dispositivo Físico desde WSL2
+
+**Configuración inicial (una sola vez):**
+1. Instala el APK en tu dispositivo desde Windows PowerShell:
+   ```powershell
+   adb install build-*.apk
+   ```
+
+2. Si hay problemas de conexión con Metro, abre los puertos en el firewall de Windows (PowerShell como Admin):
+   ```powershell
+   New-NetFirewallRule -DisplayName "Expo Metro" -Direction Inbound -Protocol TCP -LocalPort 8081 -Action Allow
+   New-NetFirewallRule -DisplayName "Expo Dev" -Direction Inbound -Protocol TCP -LocalPort 19000 -Action Allow
+   New-NetFirewallRule -DisplayName "Expo DevTools" -Direction Inbound -Protocol TCP -LocalPort 19001 -Action Allow
+   ```
+
+**Desarrollo diario:**
+```bash
+# Desde WSL2
+cd app
+./start-wsl.sh    # Selecciona opción 1 (Expo Go) o 2 (Development Build)
+```
+
+**Nota:** El script usa `--tunnel` automáticamente para evitar problemas de red entre WSL2 y dispositivos físicos. Esto puede ser ligeramente más lento pero es mucho más confiable.
 
 ### Building (Local con EAS)
 
