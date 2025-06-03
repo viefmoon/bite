@@ -9,8 +9,9 @@ cd /home/leo/bite/app
 ./install-android-sdk.sh
 source ~/.bashrc
 
-# 2. Login en EAS
-npx eas login
+# 2. Instalar EAS CLI y login
+npm install -g eas-cli
+eas login
 ```
 
 ## Crear Build Local
@@ -82,7 +83,29 @@ npm start
 - Android SDK con API 34
 - ~10GB de espacio libre
 
+## Notas Importantes
+
+- Las variables de entorno de Android SDK pueden no persistir entre sesiones
+- Si encuentras errores de SDK, ejecuta `source ~/.bashrc` o crea el archivo `android/local.properties`
+- Los builds locales con EAS pueden fallar si no se aceptan todas las licencias del Android SDK
+
 ## Troubleshooting
+
+### Error: Cannot determine which native SDK version (expo module not installed)
+```bash
+# Este error ocurre cuando el módulo expo no está instalado
+# Solución:
+npm install expo
+npx expo install --fix
+```
+
+### Error: could not determine executable to run (npx eas)
+```bash
+# Este error ocurre cuando EAS CLI no está instalado
+# Solución:
+npm install -g eas-cli
+eas login  # En lugar de npx eas login
+```
 
 ### Java no encontrado
 ```bash
@@ -90,10 +113,25 @@ npm start
 source ~/.bashrc
 ```
 
-### Android SDK no encontrado
+### Android SDK no encontrado (Build local con EAS)
 ```bash
+# 1. Instalar Android SDK
 ./install-android-sdk.sh
 source ~/.bashrc
+
+# 2. Si el error persiste, configurar variables en la sesión actual:
+export ANDROID_HOME=$HOME/android-sdk
+export ANDROID_SDK_ROOT=$HOME/android-sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+# 3. Crear local.properties
+echo "sdk.dir=$HOME/android-sdk" > android/local.properties
+
+# 4. Alternativa: Usar una shell con las variables cargadas
+bash -c "source ~/.bashrc && npm run build:android:sim"
+
+# 5. Si nada funciona, considerar usar build en la nube:
+eas build --platform android --profile development  # Sin --local
 ```
 
 ### Dispositivo no detectado
@@ -102,6 +140,15 @@ source ~/.bashrc
 adb devices
 adb kill-server
 adb start-server
+```
+
+### Error: expo doctor failed
+```bash
+# Este error puede ignorarse si el resto del build funciona
+# Es causado por tener carpetas android/ios en un proyecto Expo
+# Si necesitas solucionarlo, añade a .gitignore:
+/android
+/ios
 ```
 
 ## Build Exitosa
