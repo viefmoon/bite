@@ -8,9 +8,9 @@
 node_modules/
 
 # Prebuild
-android/
+# android/
 
-ios/
+# ios/
 
 # Expo
 .expo/
