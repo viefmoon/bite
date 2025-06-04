@@ -18,7 +18,7 @@ eas login
 
 ```bash
 # Build de desarrollo para dispositivo Android
-npm run build:android:dev
+npm run build:android:sim
 
 # El APK se generará como: build-[timestamp].apk
 ```
