@@ -341,7 +341,7 @@ await  BluetoothEscposPrinter.printText("广州俊烨\n\r",{
   encoding:'GBK',
   codepage:0,
   widthtimes:3,
-  heigthtimes:3,
+  heighttimes:3,
   fonttype:1
 });
 await BluetoothEscposPrinter.setBlob(0);
@@ -349,7 +349,7 @@ await  BluetoothEscposPrinter.printText("销售单\n\r",{
   encoding:'GBK',
   codepage:0,
   widthtimes:0,
-  heigthtimes:0,
+  heighttimes:0,
   fonttype:1
 });
 await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
