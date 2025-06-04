@@ -20,6 +20,33 @@ const axiosInstance = axios.create({
   timeout: 30000,
 });
 
+// Log para debug de red
+axiosInstance.interceptors.request.use(
+  (config) => {
+    console.log("🔵 Request:", config.method?.toUpperCase(), config.url);
+    console.log("🔵 Base URL:", config.baseURL);
+    console.log("🔵 Full URL:", `${config.baseURL}${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error("🔴 Request Error:", error);
+    return Promise.reject(error);
+  }
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => {
+    console.log("🟢 Response:", response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error("🔴 Response Error:", error.message);
+    console.error("🔴 Error Code:", error.code);
+    console.error("🔴 Error Config:", error.config?.url);
+    return Promise.reject(error);
+  }
+);
+
 // --- Lógica de Refresco de Token (igual que antes) ---
 let isRefreshing = false;
 let failedQueue: Array<{

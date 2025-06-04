@@ -23,8 +23,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
   public validate(
     payload: JwtRefreshPayloadType,
   ): OrNeverType<JwtRefreshPayloadType> {
-    if (!payload.sessionId) {
-      throw new UnauthorizedException();
+    if (!payload.sessionId || payload.sessionId === null || payload.sessionId === undefined) {
+      throw new UnauthorizedException('Session ID is required');
     }
 
     return payload;

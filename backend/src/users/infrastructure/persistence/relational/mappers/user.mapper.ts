@@ -15,10 +15,12 @@ export class UserMapper extends BaseMapper<UserEntity, User> {
     domain.password = entity.password;
     domain.firstName = entity.firstName;
     domain.lastName = entity.lastName;
-    domain.role = {
-      id: entity.role.id,
-      name: entity.role.name ?? null,
-    };
+    if (entity.role) {
+      domain.role = {
+        id: entity.role.id,
+        name: entity.role.name ?? null,
+      };
+    }
     domain.isActive = entity.isActive;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;

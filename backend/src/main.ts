@@ -54,6 +54,27 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(configService.getOrThrow('app.port', { infer: true }));
+  const port = configService.getOrThrow('app.port', { infer: true });
+  await app.listen(port, '0.0.0.0');
+
+  // Obtener y mostrar las IPs disponibles
+  const os = await import('os');
+  const networkInterfaces = os.networkInterfaces();
+  const addresses: string[] = [];
+  
+  for (const interfaces of Object.values(networkInterfaces)) {
+    for (const iface of interfaces || []) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address);
+      }
+    }
+  }
+
+  console.log('\n🚀 Server is running!');
+  console.log('📍 Local:    http://localhost:' + port);
+  addresses.forEach(address => {
+    console.log(`📍 Network:  http://${address}:${port}`);
+  });
+  console.log('📚 Swagger:  http://localhost:' + port + '/docs\n');
 }
 void bootstrap();

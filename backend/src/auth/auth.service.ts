@@ -420,6 +420,13 @@ export class AuthService {
   async refreshToken(
     data: Pick<JwtRefreshPayloadType, 'sessionId' | 'hash'>,
   ): Promise<Omit<LoginResponseDto, 'user'>> {
+    if (!data.sessionId) {
+      throw new UnauthorizedException({
+        code: ERROR_CODES.AUTH_SESSION_EXPIRED_OR_INVALID,
+        message: 'Session ID es requerido.',
+      });
+    }
+    
     const session = await this.sessionService.findById(data.sessionId);
 
     if (!session) {
@@ -475,6 +482,10 @@ export class AuthService {
   }
 
   async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>) {
+    if (!data.sessionId) {
+      // Si no hay sessionId, no hay nada que hacer
+      return;
+    }
     return this.sessionService.deleteById(data.sessionId);
   }
 

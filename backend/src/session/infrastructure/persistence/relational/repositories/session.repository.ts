@@ -17,9 +17,18 @@ export class SessionRelationalRepository implements SessionRepository {
   ) {}
 
   async findById(id: Session['id']): Promise<NullableType<Session>> {
+    if (!id || id === null || id === undefined) {
+      return null;
+    }
+    
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      return null;
+    }
+    
     const entity = await this.sessionRepository.findOne({
       where: {
-        id: Number(id),
+        id: numericId,
       },
     });
 
@@ -31,7 +40,18 @@ export class SessionRelationalRepository implements SessionRepository {
     const createdEntity = await this.sessionRepository.save(
       this.sessionRepository.create(persistenceModel),
     );
-    return this.sessionMapper.toDomain(createdEntity);
+    
+    // Cargar la entidad con sus relaciones
+    const entityWithRelations = await this.sessionRepository.findOne({
+      where: { id: createdEntity.id },
+      relations: ['user', 'user.role'],
+    });
+    
+    if (!entityWithRelations) {
+      throw new Error('Failed to create session');
+    }
+    
+    return this.sessionMapper.toDomain(entityWithRelations);
   }
 
   async update(
@@ -40,8 +60,17 @@ export class SessionRelationalRepository implements SessionRepository {
       Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
     >,
   ): Promise<Session | null> {
+    if (!id || id === null || id === undefined) {
+      throw new Error('Session ID is required');
+    }
+    
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid session ID');
+    }
+    
     const entity = await this.sessionRepository.findOne({
-      where: { id: Number(id) },
+      where: { id: numericId },
     });
 
     if (!entity) {
@@ -61,8 +90,17 @@ export class SessionRelationalRepository implements SessionRepository {
   }
 
   async deleteById(id: Session['id']): Promise<void> {
+    if (!id || id === null || id === undefined) {
+      return;
+    }
+    
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      return;
+    }
+    
     await this.sessionRepository.softDelete({
-      id: Number(id),
+      id: numericId,
     });
   }
 
@@ -78,11 +116,22 @@ export class SessionRelationalRepository implements SessionRepository {
     userId: User['id'];
     excludeSessionId: Session['id'];
   }): Promise<void> {
+    if (!conditions.excludeSessionId || conditions.excludeSessionId === null || conditions.excludeSessionId === undefined) {
+      // Si no hay session a excluir, simplemente eliminamos todas las sesiones del usuario
+      return this.deleteByUserId({ userId: conditions.userId });
+    }
+    
+    const numericExcludeId = Number(conditions.excludeSessionId);
+    if (isNaN(numericExcludeId)) {
+      // Si el ID es inválido, eliminamos todas las sesiones del usuario
+      return this.deleteByUserId({ userId: conditions.userId });
+    }
+    
     await this.sessionRepository.softDelete({
       user: {
         id: conditions.userId, // ID es string (UUID)
       },
-      id: Not(Number(conditions.excludeSessionId)),
+      id: Not(numericExcludeId),
     });
   }
 }
