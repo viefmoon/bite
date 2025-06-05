@@ -342,6 +342,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* 3. Notas */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
+                key="notes-input-dine-in"
                 label="Notas de la Orden (Opcional)"
                 value={orderNotes}
                 onChangeText={setOrderNotes}
@@ -367,6 +368,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* 1. Nombre Cliente */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
+                key="customer-name-input"
                 label="Nombre del Cliente *"
                 value={customerName}
                 onChangeText={(text) => {
@@ -386,6 +388,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* 2. Teléfono */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
+                key="phone-input-takeaway"
                 label="Teléfono (Opcional)"
                 value={phoneNumber}
                 onChangeText={(text) => {
@@ -406,6 +409,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* 3. Notas */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
+                key="notes-input-takeaway"
                 label="Notas de la Orden (Opcional)"
                 value={orderNotes}
                 onChangeText={setOrderNotes}
@@ -431,6 +435,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* 1. Dirección */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
+                key="address-input-delivery"
                 label="Dirección de Entrega *"
                 value={deliveryAddress}
                 onChangeText={(text) => {

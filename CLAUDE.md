@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Instrucciones Importantes
+
+**IMPORTANTE**: Siempre responder en español en todas las interacciones.
+
 ## Project Overview
 
 This is a restaurant management system with two main components:
