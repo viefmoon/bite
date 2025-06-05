@@ -96,3 +96,15 @@ yarn-error.*
 # @end expo-cli
 
 *.apk
+
+# Build files
+build-*.apk
+build-*.aab
+build-*.ipa
+
+# Google Play Service Account
+google-play-service-account.json
+
+# Temporary files
+tmp/
+temp/

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "pizza",
-    "slug": "pizza",
+    "name": "Bite",
+    "slug": "bite-restaurant",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,23 +13,27 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.viefmoon.bite"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.viefmoon.pizza",
-      "jsEngine": "hermes"
+      "package": "com.viefmoon.bite",
+      "versionCode": 1,
+      "jsEngine": "hermes",
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "0eb3c4d0-a8be-4327-9313-be8b3b1038b3"
+        "projectId": "ee42376f-81b2-4fdc-b7c2-0572f4f097a8"
       }
-    }
+    },
+    "owner": "viefmoon"
   }
 }
