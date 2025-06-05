@@ -113,10 +113,30 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
     }
   }, [instanceId, onError]);
 
-  useSpeechRecognitionEvent("start", handleRecognitionStart);
-  useSpeechRecognitionEvent("end", handleRecognitionEnd);
-  useSpeechRecognitionEvent("result", handleRecognitionResult);
-  useSpeechRecognitionEvent("error", handleRecognitionError);
+  // Only register event listeners when this instance is active
+  useSpeechRecognitionEvent("start", (event) => {
+    if (activeRecognizerId === instanceId) {
+      handleRecognitionStart();
+    }
+  });
+  
+  useSpeechRecognitionEvent("end", (event) => {
+    if (activeRecognizerId === instanceId) {
+      handleRecognitionEnd();
+    }
+  });
+  
+  useSpeechRecognitionEvent("result", (event: ExpoSpeechRecognitionResultEvent) => {
+    if (activeRecognizerId === instanceId) {
+      handleRecognitionResult(event);
+    }
+  });
+  
+  useSpeechRecognitionEvent("error", (event: ExpoSpeechRecognitionErrorEvent) => {
+    if (activeRecognizerId === instanceId) {
+      handleRecognitionError(event);
+    }
+  });
 
   const toggleRecognition = async () => {
     if (activeRecognizerId === instanceId) {

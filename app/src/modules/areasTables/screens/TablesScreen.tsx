@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -16,6 +16,7 @@ import { Table, CreateTableDto, UpdateTableDto } from '../schema/table.schema';
 import { TablesListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { useListState } from '../../../app/hooks/useListState';
 
 const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const theme = useAppTheme();
@@ -50,7 +51,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<Table, CreateTableDto, UpdateTableDto>({
+  } = useCrudScreenLogic<Table>({
     entityName: 'Mesa',
     queryKey: ['tables', areaId],
     deleteMutationFn: deleteTable,
@@ -136,12 +137,16 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
       return processed;
   }, [tablesData, filterStatus, searchQuery]);
 
-  const ListEmptyComponent = (
-    <View style={styles.centered}>
-      <Text variant="bodyLarge">No hay mesas creadas para "{areaName}".</Text>
-      <Text variant="bodyMedium">Presiona el botón (+) para añadir una.</Text>
-    </View>
-  );
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingTables,
+    isError: isErrorTables,
+    data: filteredAndSearchedTables,
+    emptyConfig: {
+      title: 'No hay mesas',
+      message: `No hay mesas registradas en ${areaName}. Presiona el botón + para crear la primera.`,
+      icon: 'table-furniture',
+    },
+  });
 
   if (isLoadingTables && !isRefetching) {
     return (

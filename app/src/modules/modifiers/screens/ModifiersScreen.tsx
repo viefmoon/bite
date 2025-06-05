@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 
 import { modifierService } from '../services/modifierService';
-import { Modifier } from '../types/modifier.types';
+import { Modifier } from '../schema/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
@@ -17,6 +17,7 @@ import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import ModifierFormModal from '@/modules/modifiers/components/ModifierFormModal';
 import GenericList, { RenderItemConfig, FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal, { DisplayFieldConfig } from '@/app/components/crud/GenericDetailModal';
+import { useListState } from '@/app/hooks/useListState';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -95,7 +96,7 @@ const ModifiersScreen = () => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<Modifier, any, any>({
+  } = useCrudScreenLogic<Modifier>({
     entityName: 'Modificador',
     queryKey: QUERY_KEY,
     deleteMutationFn: modifierService.remove,
@@ -115,16 +116,22 @@ const ModifiersScreen = () => {
 
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  const ListEmptyComponent = useMemo(() => (
-    <View style={styles.centered}>
-       <Text style={styles.emptyText}>
-         {searchQuery
-           ? `No se encontraron modificadores para "${searchQuery}"`
-           : `No hay modificadores ${statusFilter !== 'all' ? statusFilter + 's' : ''} en este grupo.`}
-       </Text>
-      <Text style={styles.emptySubText}>Puedes añadir uno nuevo con el botón (+).</Text>
-    </View>
-  ), [styles, searchQuery, statusFilter]);
+  const { ListEmptyComponent } = useListState({
+    isLoading,
+    isError,
+    data: modifiers,
+    emptyConfig: {
+      title: searchQuery 
+        ? 'No se encontraron modificadores' 
+        : 'No hay modificadores',
+      message: searchQuery
+        ? `No se encontraron modificadores para "${searchQuery}"`
+        : statusFilter !== 'all' 
+          ? `No hay modificadores ${statusFilter === 'active' ? 'activos' : 'inactivos'} en este grupo.`
+          : `No hay modificadores en "${groupName}". Presiona el botón + para crear el primero.`,
+      icon: 'format-list-bulleted',
+    },
+  });
 
   if (!groupId) {
       return (

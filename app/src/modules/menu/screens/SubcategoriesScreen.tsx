@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { Portal, Text, IconButton } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Portal, IconButton } from 'react-native-paper';
 import { useFocusEffect, useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import GenericDetailModal from '../../../app/components/crud/GenericDetailModal'
 import GenericFormModal, { FormFieldConfig, ImagePickerConfig } from '../../../app/components/crud/GenericFormModal';
 import { FilterOption } from '../../../app/components/crud/GenericList';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { useListState } from '../../../app/hooks/useListState';
 
 import { ImageUploadService, FileObject } from '../../../app/lib/imageUploadService';
 import {
@@ -82,7 +83,7 @@ const SubcategoriesScreen: React.FC = () => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<SubCategory, SubCategoryFormInputs, UpdateSubCategoryFormInputs>({
+  } = useCrudScreenLogic<SubCategory>({
     entityName: 'Subcategoría',
     queryKey: ['subcategories', queryParams],
     deleteMutationFn: removeSubcategory,
@@ -174,17 +175,16 @@ const SubcategoriesScreen: React.FC = () => {
     />
   );
 
-  const renderEmptyList = () => (
-    <View style={styles.emptyContainer}>
-      {isLoadingList ? (
-        <ActivityIndicator animating={true} size="large" />
-      ) : listError ? (
-        <Text style={styles.errorText}>Error al cargar: {listError.message}</Text>
-      ) : (
-        <Text>No hay subcategorías para mostrar.</Text>
-      )}
-    </View>
-  );
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingList,
+    isError: !!listError,
+    data: subcategoriesData?.data,
+    emptyConfig: {
+      title: 'No hay subcategorías',
+      message: `No hay subcategorías registradas para ${categoryName}. Presiona el botón + para crear la primera.`,
+      icon: 'folder-outline',
+    },
+  });
 
   const handleFilterChange = (value: string | number) => { 
       if (value === 'all' || value === 'active' || value === 'inactive') {
@@ -208,7 +208,7 @@ const SubcategoriesScreen: React.FC = () => {
         onItemPress={handleOpenDetailModal}
         onRefresh={handleRefresh}
         isRefreshing={isFetchingList && !isLoadingList}
-        ListEmptyComponent={renderEmptyList}
+        ListEmptyComponent={ListEmptyComponent}
         isLoading={isLoadingList}
         contentContainerStyle={styles.listContentContainer}
         listStyle={styles.listStyle}
@@ -278,24 +278,12 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 50,
-      padding: theme.spacing.l,
-    },
-    errorText: {
-      color: theme.colors.error,
-      textAlign: 'center',
-      margin: 20,
-    },
     listStyle: {
-        flex: 1,
+      flex: 1,
     },
     listContentContainer: {
-        paddingBottom: 80,
-   },
- });
+      paddingBottom: 80,
+    },
+  });
 
 export default SubcategoriesScreen;

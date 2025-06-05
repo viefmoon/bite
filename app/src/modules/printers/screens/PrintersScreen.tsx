@@ -28,6 +28,7 @@ import {
   UpdateThermalPrinterDto,
   PrinterConnectionType,
 } from "../types/printer.types";
+import { useListState } from "../../../app/hooks/useListState";
 import {
   usePrintersQuery,
   useCreatePrinterMutation,
@@ -86,11 +87,7 @@ const PrintersScreen: React.FC = () => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<
-    ThermalPrinter,
-    CreateThermalPrinterDto,
-    UpdateThermalPrinterDto
-  >({
+  } = useCrudScreenLogic<ThermalPrinter>({
     entityName: "Impresora",
     queryKey: ["thermalPrinters", queryParams], // Usar queryKey consistente
     deleteMutationFn: deletePrinter,
@@ -151,22 +148,18 @@ const PrintersScreen: React.FC = () => {
     { value: "inactive", label: "Inactivas" },
   ];
 
-  const ListEmptyComponent = useMemo(
-    () => (
-      <View style={styles.emptyListContent}>
-        {isLoadingList ? (
-          <ActivityIndicator animating={true} size="large" />
-        ) : listError ? (
-          <Text style={styles.errorText}>Error al cargar impresoras.</Text>
-        ) : (
-          <Text style={styles.emptyListText}>
-            No hay impresoras configuradas.
-          </Text>
-        )}
-      </View>
-    ),
-    [isLoadingList, listError, styles]
-  );
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingList,
+    isError: !!listError,
+    data: printersResponse?.data,
+    emptyConfig: {
+      title: 'No hay impresoras',
+      message: statusFilter !== 'all' 
+        ? `No hay impresoras ${statusFilter === 'active' ? 'activas' : 'inactivas'} configuradas.`
+        : 'No hay impresoras configuradas. Presiona el botón + para agregar una nueva o descubrir impresoras en la red.',
+      icon: 'printer-outline',
+    },
+  });
 
   // Wrapper para el cambio de filtro
   const handleFilterChange = useCallback((value: string | number) => {

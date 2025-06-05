@@ -5,22 +5,37 @@ import {
   Product,
   ProductFormInputs,
   FindAllProductsQuery,
-  ProductsListResponse,
   AssignModifierGroupsInput,
 } from "../schema/products.schema"; // Corregida ruta de importación
+import { PaginatedResponse } from "@/app/types/api.types";
 
 
 async function findAll(
   params: FindAllProductsQuery
-): Promise<ProductsListResponse> {
-  const response = await apiClient.get<ProductsListResponse>(
+): Promise<PaginatedResponse<Product>> {
+  const response = await apiClient.get<{
+    items: Product[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(
     API_PATHS.PRODUCTS,
     params
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
-  return response.data;
+  
+  // Transforma la respuesta del backend a PaginatedResponse
+  return {
+    data: response.data.items,
+    total: response.data.total,
+    page: response.data.page,
+    limit: response.data.limit,
+    totalPages: Math.ceil(response.data.total / response.data.limit),
+  };
 }
 
 async function findOne(id: string): Promise<Product> {

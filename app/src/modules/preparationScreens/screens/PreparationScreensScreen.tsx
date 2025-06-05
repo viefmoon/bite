@@ -24,6 +24,7 @@ import {
 import { useAppTheme, AppTheme } from "../../../app/styles/theme";
 import { BaseListQuery } from "../../../app/types/query.types";
 import { getApiErrorMessage } from "@/app/lib/errorMapping";
+import { useListState } from "@/app/hooks/useListState";
 
 type ProductPlaceholder = { id: string; name: string };
 
@@ -100,7 +101,7 @@ const PreparationScreensScreen = () => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<PreparationScreen, any, any>({
+  } = useCrudScreenLogic<PreparationScreen>({
     entityName: 'Pantalla de Preparación',
     queryKey: ['preparationScreens', filters, pagination],
     deleteMutationFn: deleteScreenWrapper,
@@ -173,40 +174,26 @@ const PreparationScreensScreen = () => {
     },
   ];
 
-  const ListEmptyComponent = useMemo(() => {
-    if (isLoadingList && !screensData) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator animating size="large" />
-        </View>
-      );
-    }
-    if (errorList) {
-      return (
-        <View style={styles.emptyListContainer}>
-          <Text style={styles.errorText}>Error al cargar las pantallas: {getApiErrorMessage(errorList)}</Text>
-          <Button onPress={handleRefresh}>Reintentar</Button>
-        </View>
-      );
-    }
-    if (!isLoadingList && screensData && screensData.length === 0) {
-      const message = searchTerm
-        ? "No se encontraron pantallas."
-        : "No hay pantallas creadas.";
-      return (
-        <View style={styles.emptyListContainer}>
-          <Text>{message}</Text>
-        </View>
-      );
-    }
-    return null;
-  }, [isLoadingList, errorList, screensData, searchTerm, styles, theme, handleRefresh]);
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingList,
+    isError: !!errorList,
+    data: screensData?.data,
+    emptyConfig: {
+      title: searchTerm 
+        ? 'No se encontraron pantallas' 
+        : 'No hay pantallas de preparación',
+      message: searchTerm
+        ? `No se encontraron pantallas para "${searchTerm}"`
+        : 'No hay pantallas de preparación creadas. Presiona el botón + para crear la primera.',
+      icon: 'monitor-dashboard',
+    },
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
       <GenericList<PreparationScreen>
         showImagePlaceholder={false}
-        items={screensData ?? []}
+        items={screensData?.data ?? []}
         renderConfig={listRenderConfig}
         onItemPress={handleOpenDetailModal}
         onRefresh={handleRefresh}

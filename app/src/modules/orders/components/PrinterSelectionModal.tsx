@@ -14,6 +14,7 @@ import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { usePrintersQuery } from '../../printers/hooks/usePrintersQueries';
 import type { ThermalPrinter } from '../../printers/types/printer.types';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
+import { useListState } from '../../../app/hooks/useListState';
 
 interface PrinterSelectionModalProps {
   visible: boolean;
@@ -56,22 +57,16 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
     />
   );
 
-  const ListEmptyComponent = useMemo(() => (
-      <View style={styles.centeredView}>
-        {isLoading ? (
-          <ActivityIndicator animating={true} size="large" />
-        ) : isError ? (
-          <>
-            <Text style={styles.errorText}>Error: {getApiErrorMessage(error)}</Text>
-            <Button onPress={() => refetch()}>Reintentar</Button>
-          </>
-        ) : (
-          !isLoading && !isError && printers.length === 0 && (
-             <Text style={styles.statusText}>No hay impresoras activas configuradas.</Text>
-          )
-        )}
-      </View>
-  ), [isLoading, isError, error, refetch, styles, theme, printers.length]); // Añadir printers.length
+  const { ListEmptyComponent } = useListState({
+    isLoading,
+    isError,
+    data: printers,
+    emptyConfig: {
+      title: 'No hay impresoras activas',
+      message: 'No hay impresoras activas configuradas.',
+      icon: 'printer-off',
+    },
+  });
 
 
   return (

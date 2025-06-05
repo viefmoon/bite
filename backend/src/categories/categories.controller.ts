@@ -18,6 +18,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
 import { Category } from './domain/category';
 import { AuthGuard } from '@nestjs/passport';
+import { Paginated } from '../common/types/paginated.type';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -40,8 +41,8 @@ export class CategoriesController {
   @Get()
   @ApiOperation({ summary: 'Find all categories' })
   @HttpCode(HttpStatus.OK)
-  findAll(@Query() q: FindAllCategoriesDto): Promise<Category[]> {
-    return this.service.findAll(q);
+  findAll(@Query() q: FindAllCategoriesDto): Promise<Paginated<Category>> {
+    return this.service.findAllPaginated(q);
   }
 
   @Get('full-menu')

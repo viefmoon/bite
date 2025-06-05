@@ -1,60 +1,63 @@
 import apiClient from '../../../app/services/apiClient';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
-import { BackendErrorResponse } from '../../../app/types/api.types';
+import { BackendErrorResponse, PaginatedResponse } from '../../../app/types/api.types';
 import { BaseListQuery } from '../../../app/types/query.types';
 import {
   PreparationScreen,
   CreatePreparationScreenDto,
   UpdatePreparationScreenDto,
   FindAllPreparationScreensDto,
-} from '../types/preparationScreen.types';
+} from '../schema/preparationScreen.schema';
 
 /**
  * Fetches a list of preparation screens based on filter and pagination options.
  * @param filterOptions - Options to filter the results (e.g., by name, isActive).
  * @param paginationOptions - Options for pagination (page number, limit).
- * @returns A promise that resolves to an array of PreparationScreen objects.
+ * @returns A promise that resolves to a paginated response of PreparationScreen objects.
  * @throws {ApiError} If the API request fails.
  */
 export const getPreparationScreens = async (
   filterOptions: FindAllPreparationScreensDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 15 } // Default limit 15
-): Promise<PreparationScreen[]> => {
-  // Especificamos que la API puede devolver la tupla [data[], count]
-  const response = await apiClient.get<[PreparationScreen[], number]>(API_PATHS.PREPARATION_SCREENS, {
+): Promise<PaginatedResponse<PreparationScreen>> => {
+  const response = await apiClient.get<PaginatedResponse<PreparationScreen>>(API_PATHS.PREPARATION_SCREENS, {
     ...filterOptions,
     page: paginationOptions.page,
     limit: paginationOptions.limit,
   });
 
-  // Primero, verificar si la petición fue exitosa
-  if (!response.ok) {
+  if (!response.ok || !response.data) {
      console.error('[preparationScreenService.getPreparationScreens] API request failed:', response);
      throw ApiError.fromApiResponse(
-       response.data as BackendErrorResponse | undefined, // Puede que no haya data si !ok
+       response.data as BackendErrorResponse | undefined,
        response.status
      );
   }
 
-  // Si la petición fue exitosa (response.ok === true), verificar la estructura de response.data
-  // Esperamos [dataArray, countNumber]
+  // Verificar que la respuesta tenga la estructura esperada del backend paginado
   if (
-    Array.isArray(response.data) &&
-    response.data.length === 2 && // Debe tener exactamente dos elementos
-    Array.isArray(response.data[0]) && // El primer elemento debe ser un array (los datos)
-    typeof response.data[1] === 'number' // El segundo elemento debe ser un número (el count)
+    typeof response.data === 'object' &&
+    'items' in response.data &&
+    Array.isArray(response.data.items) &&
+    'total' in response.data &&
+    'page' in response.data &&
+    'limit' in response.data
   ) {
-    // La estructura es la esperada [data[], count], devolvemos el array de datos.
-    return response.data[0];
+    // Convertir de la estructura del backend a PaginatedResponse
+    return {
+      data: response.data.items,
+      total: response.data.total,
+      page: response.data.page,
+      limit: response.data.limit,
+      totalPages: Math.ceil(response.data.total / response.data.limit),
+    };
   } else {
-    // Si la estructura no es la esperada, loguear una advertencia y devolver un array vacío.
-    // Esto podría pasar si la API cambia o si hay un error inesperado.
-    console.warn(
-      '[preparationScreenService.getPreparationScreens] Unexpected API response data structure:',
+    console.error(
+      '[preparationScreenService.getPreparationScreens] Invalid API response structure:',
       response.data
     );
-    return []; // Devolver array vacío como fallback seguro
+    throw new Error('Invalid response format from API');
   }
 };
 

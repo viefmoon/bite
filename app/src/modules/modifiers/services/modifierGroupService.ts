@@ -8,6 +8,7 @@ import {
   modifierGroupApiSchema,
 } from "../schema/modifierGroup.schema";
 import { z } from "zod";
+import { PaginatedResponse } from "@/app/types/api.types";
 
 const modifierGroupsListSchema = z.array(modifierGroupApiSchema);
 
@@ -30,9 +31,9 @@ interface FindAllParams {
 
 export const modifierGroupService = {
   /**
-   * Obtiene todos los grupos de modificadores (con posible paginación/filtros).
+   * Obtiene todos los grupos de modificadores con paginación.
    */
-  async findAll(params: FindAllParams = {}): Promise<ModifierGroup[]> {
+  async findAll(params: FindAllParams = {}): Promise<PaginatedResponse<ModifierGroup>> {
     const queryParams = {
       page: params.page ?? 1,
       limit: params.limit ?? 10,
@@ -53,16 +54,17 @@ export const modifierGroupService = {
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
-    // Intentar parsear como respuesta paginada primero
+    // Parsear como respuesta paginada
     const paginatedResult = paginatedModifierGroupsSchema.safeParse(response.data);
     if (paginatedResult.success) {
-      return paginatedResult.data.items;
-    }
-
-    // Si no es paginada, intentar como array directo
-    const arrayResult = modifierGroupsListSchema.safeParse(response.data);
-    if (arrayResult.success) {
-      return arrayResult.data;
+      // Transformar la respuesta del backend a PaginatedResponse
+      return {
+        data: paginatedResult.data.items,
+        total: paginatedResult.data.total,
+        page: paginatedResult.data.page,
+        limit: paginatedResult.data.limit,
+        totalPages: Math.ceil(paginatedResult.data.total / paginatedResult.data.limit),
+      };
     }
 
     console.error(

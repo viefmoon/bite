@@ -36,7 +36,14 @@ export const findAllSubcategories = async (
     {} as Record<string, any>
   );
 
-  const response = await apiClient.get<[SubCategory[], number]>(
+  const response = await apiClient.get<{
+    items: SubCategory[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(
     API_PATHS.SUBCATEGORIES,
     queryParams
   );
@@ -45,14 +52,13 @@ export const findAllSubcategories = async (
     throw ApiError.fromApiResponse(response.data, response.status);
   }
 
-  // Transforma la respuesta de tupla a PaginatedResponse
-  const [data, total] = response.data;
+  // Transforma la respuesta del backend a PaginatedResponse
   return {
-    data,
-    total,
-    page: params.page || 1,
-    limit: params.limit || 10,
-    totalPages: Math.ceil(total / (params.limit || 10)),
+    data: response.data.items,
+    total: response.data.total,
+    page: response.data.page,
+    limit: response.data.limit,
+    totalPages: Math.ceil(response.data.total / response.data.limit),
   };
 };
 

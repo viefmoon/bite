@@ -35,6 +35,7 @@ import { DiscoveredPrinterDto } from './dto/discovered-printer.dto';
 import { ThermalPrinter } from './domain/thermal-printer';
 import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
+import { Paginated } from '../common/types/paginated.type';
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiTags('Thermal Printers')
@@ -73,11 +74,11 @@ export class ThermalPrintersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Lista de impresoras obtenida.',
-    type: InfinityPaginationResponseDto,
+    type: Paginated,
   })
   async findAll(
     @Query() query: FindAllThermalPrintersDto,
-  ): Promise<InfinityPaginationResponseDto<ThermalPrinter>> {
+  ): Promise<Paginated<ThermalPrinter>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
@@ -87,12 +88,12 @@ export class ThermalPrintersController {
       page,
       limit,
     };
-    const [data] = await this.thermalPrintersService.findAll(
+    const [data, total] = await this.thermalPrintersService.findAll(
       query,
       paginationOptions,
     );
 
-    return infinityPagination(data, paginationOptions);
+    return new Paginated(data, total, page, limit);
   }
 
   @Get('/discover')
@@ -202,6 +203,32 @@ export class ThermalPrintersController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ status: string }> {
     return this.thermalPrintersService.pingPrinter(id);
+  }
+
+  @Post('test-print')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Imprimir ticket de prueba en una impresora descubierta',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ticket de prueba impreso exitosamente.',
+    schema: { example: { success: true, message: 'Ticket de prueba impreso correctamente' } },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Datos de impresora inválidos.',
+  })
+  @ApiResponse({
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    description: 'No se pudo conectar a la impresora.',
+  })
+  async testPrint(
+    @Body() printerInfo: { ip: string; port: number; connectionType: string },
+  ): Promise<{ success: boolean; message?: string }> {
+    return this.thermalPrintersService.testPrint(printerInfo);
   }
 
   @Patch(':id')

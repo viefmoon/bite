@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ActivityIndicator, Text, IconButton } from 'react-native-paper';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { Area, CreateAreaDto, UpdateAreaDto } from '../schema/area.schema';
 import { AreasListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { useListState } from '../../../app/hooks/useListState';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
@@ -52,7 +53,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<Area, CreateAreaDto, UpdateAreaDto>({
+  } = useCrudScreenLogic<Area>({
     entityName: 'Área',
     queryKey: ['areas', { name: searchQuery || undefined, isActive: filterStatus === 'all' ? undefined : filterStatus === 'true' }],
     deleteMutationFn: deleteArea,
@@ -125,12 +126,16 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     />
   );
 
-  const ListEmptyComponent = (
-    <View style={styles.centered}>
-      <Text variant="bodyLarge">No hay áreas creadas todavía.</Text>
-      <Text variant="bodyMedium">Presiona el botón (+) para añadir una.</Text>
-    </View>
-  );
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingAreas,
+    isError: isErrorAreas,
+    data: areasData,
+    emptyConfig: {
+      title: 'No hay áreas',
+      message: 'No hay áreas registradas. Presiona el botón + para crear la primera.',
+      icon: 'map-marker-outline',
+    },
+  });
 
   if (isLoadingAreas && !isRefetching) {
     return (

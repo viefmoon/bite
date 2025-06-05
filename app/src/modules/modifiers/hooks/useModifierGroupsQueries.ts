@@ -15,6 +15,7 @@ import {
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore, type SnackbarState } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { PaginatedResponse } from '@/app/types/api.types';
 
 const modifierGroupKeys = {
   all: ['modifierGroups'] as const,
@@ -34,12 +35,12 @@ interface FindAllModifierGroupsQuery {
 export const useModifierGroupsQuery = (
   filters: FindAllModifierGroupsQuery = {},
   options?: Omit<
-    UseQueryOptions<ModifierGroup[], ApiError>, // Usar ApiError
+    UseQueryOptions<PaginatedResponse<ModifierGroup>, ApiError>,
     "queryKey" | "queryFn"
   >
-): UseQueryResult<ModifierGroup[], ApiError> => { // Especificar tipo de retorno
+): UseQueryResult<PaginatedResponse<ModifierGroup>, ApiError> => {
   const queryKey = modifierGroupKeys.list(filters);
-  return useQuery<ModifierGroup[], ApiError>({
+  return useQuery<PaginatedResponse<ModifierGroup>, ApiError>({
     queryKey: queryKey,
     queryFn: () => modifierGroupService.findAll(filters),
     ...options,

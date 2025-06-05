@@ -13,7 +13,14 @@ export const getCategories = async (params?: {
   page?: number;
   limit?: number;
 }): Promise<PaginatedResponse<Category>> => {
-  const response = await apiClient.get<Category[]>(
+  const response = await apiClient.get<{
+    items: Category[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(
     API_PATHS.CATEGORIES,
     params
   );
@@ -22,25 +29,14 @@ export const getCategories = async (params?: {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
   }
 
-  // Si la respuesta es un array directo de categorías
-  if (Array.isArray(response.data)) {
-    const categoriesData = response.data;
-    const page = params?.page ?? 1;
-    const limit = params?.limit ?? 10;
-    
-    const paginatedResponse: PaginatedResponse<Category> = {
-      data: categoriesData,
-      total: categoriesData.length,
-      page: page,
-      limit: limit,
-      totalPages: categoriesData.length > 0 ? 1 : 0,
-    };
-    
-    return paginatedResponse;
-  }
-  
-  // Si no es un array, lanzar error
-  throw new Error('Invalid response format for categories');
+  // Transforma la respuesta del backend a PaginatedResponse
+  return {
+    data: response.data.items,
+    total: response.data.total,
+    page: response.data.page,
+    limit: response.data.limit,
+    totalPages: Math.ceil(response.data.total / response.data.limit),
+  };
 };
 
 export const getCategory = async (id: string): Promise<Category> => {

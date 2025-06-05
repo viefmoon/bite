@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 
 import { modifierGroupService } from '../services/modifierGroupService';
-import { ModifierGroup } from '../schema/modifierGroup.schema'; // Corregir ruta de importación
+import { ModifierGroup } from '../schema/modifierGroup.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { debounce } from 'lodash';
@@ -15,6 +15,8 @@ import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
 import GenericList, { RenderItemConfig, FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal, { DisplayFieldConfig } from '@/app/components/crud/GenericDetailModal';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
+import { PaginatedResponse } from '@/app/types/api.types';
+import { useListState } from '@/app/hooks/useListState';
 
 type NavigationProps = {
   navigate: (screen: string, params?: any) => void;
@@ -55,10 +57,12 @@ const drawerStatus = useDrawerStatus();
     return params;
   }, [statusFilter, debouncedSearchQuery]);
 
-  const { data: modifierGroups = [], isLoading, isError, error, refetch, isRefetching } = useQuery<ModifierGroup[], Error>({
+  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useQuery<PaginatedResponse<ModifierGroup>, Error>({
     queryKey: [QUERY_KEY[0], queryParams],
     queryFn: () => modifierGroupService.findAll(queryParams),
   });
+
+  const modifierGroups = paginatedData?.data || [];
 
   const {
     isFormModalVisible,
@@ -71,7 +75,7 @@ const drawerStatus = useDrawerStatus();
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
-  } = useCrudScreenLogic<ModifierGroup, any, any>({
+  } = useCrudScreenLogic<ModifierGroup>({
     entityName: 'Grupo de Modificadores',
     queryKey: [QUERY_KEY[0], queryParams],
     deleteMutationFn: modifierGroupService.remove,
@@ -134,28 +138,23 @@ const drawerStatus = useDrawerStatus();
     { value: 'inactive', label: 'Inactivos' },
   ];
 
-  const ListEmptyComponent = useMemo(() => (
-    <View style={styles.centered}>
-       <Text style={styles.emptyText}>
-         {searchQuery
-           ? `No se encontraron grupos para "${searchQuery}"`
-           : `No hay grupos de modificadores ${statusFilter !== 'all' ? statusFilter + 's' : ''}.`}
-       </Text>
-    </View>
-  ), [styles, searchQuery, statusFilter]);
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoading && !isRefetching,
+    isError,
+    data: modifierGroups,
+    emptyConfig: {
+      title: searchQuery 
+        ? 'No se encontraron grupos' 
+        : 'No hay grupos de modificadores',
+      message: searchQuery
+        ? `No se encontraron grupos para "${searchQuery}"`
+        : statusFilter !== 'all' 
+          ? `No hay grupos de modificadores ${statusFilter === 'active' ? 'activos' : 'inactivos'}.`
+          : 'No hay grupos de modificadores registrados. Presiona el botón + para crear el primero.',
+      icon: 'folder-multiple-outline',
+    },
+  });
 
-  if (isLoading && !isRefetching && !modifierGroups.length) {
-    return <ActivityIndicator animating={true} style={styles.centered} />;
-  }
-
-  if (isError && !modifierGroups.length) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Error: {getApiErrorMessage(error)}</Text>
-        <Button onPress={handleRefresh}>Reintentar</Button>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>

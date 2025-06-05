@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { PaginationParams } from '../../utils/types/pagination-params';
 
-export class FindAllCategoriesDto {
+export class FindAllCategoriesDto extends PaginationParams {
   @ApiPropertyOptional({ example: 'Bebidas' })
   @IsOptional()
   @IsString()

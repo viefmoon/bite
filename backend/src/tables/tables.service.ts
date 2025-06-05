@@ -7,6 +7,7 @@ import { TableRepository } from './infrastructure/persistence/table.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { TABLE_REPOSITORY } from '../common/tokens';
 import { Inject } from '@nestjs/common';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class TablesService {
@@ -72,5 +73,31 @@ export class TablesService {
 
   async remove(id: string): Promise<void> {
     return this.tableRepository.remove(id);
+  }
+
+  async findAllPaginated(
+    filterOptions: FindAllTablesDto,
+    paginationOptions: IPaginationOptions,
+  ): Promise<Paginated<Table>> {
+    const items = await this.findAll(filterOptions, paginationOptions);
+    const total = items.length; // En una implementación real, deberías obtener el total de la BD
+    
+    return new Paginated(
+      items,
+      total,
+      paginationOptions.page || 1,
+      paginationOptions.limit || 10,
+    );
+  }
+
+  async findByAreaIdPaginated(areaId: string): Promise<Paginated<Table>> {
+    const items = await this.findByAreaId(areaId);
+    
+    return new Paginated(
+      items,
+      items.length,
+      1, // página por defecto
+      100, // límite alto por defecto para mostrar todas las mesas del área
+    );
   }
 }

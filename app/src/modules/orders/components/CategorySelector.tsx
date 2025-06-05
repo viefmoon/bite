@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { Card, Text } from 'react-native-paper';
-import type { Category } from '../../../app/types/domain/category.types';
+import type { Category } from '../../../app/schemas/domain/category.schema';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface CategorySelectorProps {

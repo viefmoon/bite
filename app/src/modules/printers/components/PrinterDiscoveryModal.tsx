@@ -16,7 +16,7 @@ import {
   Card,
   Appbar, // Importar Appbar
 } from 'react-native-paper';
-import { useDiscoverPrinters } from '../hooks/usePrintersQueries';
+import { useDiscoverPrinters, useTestPrintDiscoveredPrinter } from '../hooks/usePrintersQueries';
 import { DiscoveredPrinter } from '../types/printer.types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
@@ -38,6 +38,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const discoverMutation = useDiscoverPrinters();
+  const testPrintMutation = useTestPrintDiscoveredPrinter();
 
   useEffect(() => {
     if (visible) {
@@ -60,12 +61,36 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
     discoverMutation.mutate(undefined); // Volver a escanear con duración por defecto
   };
 
+  const handleTestPrint = (printer: DiscoveredPrinter) => {
+    testPrintMutation.mutate(printer);
+  };
+
   const renderPrinterItem = ({ item }: ListRenderItemInfo<DiscoveredPrinter>) => ( // Añadir tipo
     <List.Item
       title={item.name || item.ip} // Mostrar nombre o IP si no hay nombre
       description={`IP: ${item.ip}:${item.port}${item.mac ? ` | MAC: ${item.mac}` : ''}${item.model ? ` (${item.model})` : ''}`}
       left={(props) => <List.Icon {...props} icon="printer" />}
-      onPress={() => onPrinterSelect(item)} // Llamar al callback al seleccionar
+      right={(props) => (
+        <View style={styles.itemActions}>
+          <IconButton
+            {...props}
+            icon="printer-check"
+            size={24}
+            onPress={() => handleTestPrint(item)}
+            disabled={testPrintMutation.isPending}
+            loading={testPrintMutation.isPending && testPrintMutation.variables?.ip === item.ip}
+            tooltip="Imprimir prueba"
+          />
+          <IconButton
+            {...props}
+            icon="plus"
+            size={24}
+            onPress={() => onPrinterSelect(item)}
+            disabled={testPrintMutation.isPending}
+            tooltip="Agregar impresora"
+          />
+        </View>
+      )}
       style={styles.listItem}
       titleStyle={styles.itemTitle}
       descriptionStyle={styles.itemDescription}
@@ -78,17 +103,17 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
         visible={visible}
         onDismiss={onDismiss}
         contentContainerStyle={styles.modalContent}
-        dismissable={!discoverMutation.isPending} // No permitir cerrar mientras busca
+        dismissable={!discoverMutation.isPending && !testPrintMutation.isPending} // No permitir cerrar mientras busca o imprime
       >
         <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction onPress={onDismiss} disabled={discoverMutation.isPending} />
+          <Appbar.BackAction onPress={onDismiss} disabled={discoverMutation.isPending || testPrintMutation.isPending} />
           <Appbar.Content title="Descubrir Impresoras" titleStyle={styles.appBarTitle} />
           {/* Botón de Refrescar/Re-escanear */}
           <Appbar.Action
             icon="refresh"
             size={32} // <-- Aumentar tamaño del icono
             onPress={handleRescan}
-            disabled={discoverMutation.isPending}
+            disabled={discoverMutation.isPending || testPrintMutation.isPending}
             color={theme.colors.primary} // Color distintivo
           />
         </Appbar.Header>
@@ -214,6 +239,10 @@ const createStyles = (theme: AppTheme) =>
     itemDescription: {
         fontSize: 12,
         color: theme.colors.onSurfaceVariant,
+    },
+    itemActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     divider: {
       height: 0, // Ocultar divider si no se desea

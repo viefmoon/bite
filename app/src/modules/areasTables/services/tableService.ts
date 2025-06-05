@@ -16,7 +16,14 @@ export const getTables = async (
   filterOptions: FindAllTablesDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 }
 ): Promise<Table[]> => {
-  const response = await apiClient.get<Table[]>(API_PATHS.TABLES, {
+  const response = await apiClient.get<{
+    items: Table[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(API_PATHS.TABLES, {
     ...filterOptions,
     page: paginationOptions.page,
     limit: paginationOptions.limit,
@@ -29,11 +36,18 @@ export const getTables = async (
       response.status
     );
   }
-  return response.data;
+  return response.data.items;
 };
 
 export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
-    const response = await apiClient.get<Table[]>(`${API_PATHS.TABLES}/area/${areaId}`);
+    const response = await apiClient.get<{
+        items: Table[];
+        total: number;
+        page: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    }>(`${API_PATHS.TABLES}/area/${areaId}`);
 
     if (!response.ok || !response.data) {
         console.error(`[tableService.getTablesByAreaId] Failed to fetch tables for area ${areaId}:`, response);
@@ -42,7 +56,7 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
             response.status
         );
     }
-    return response.data;
+    return response.data.items;
 };
 
 export const getTableById = async (id: string): Promise<Table> => {

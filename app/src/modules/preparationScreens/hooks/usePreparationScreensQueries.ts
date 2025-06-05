@@ -10,8 +10,9 @@ import {
   CreatePreparationScreenDto,
   UpdatePreparationScreenDto,
   FindAllPreparationScreensDto,
-} from '../types/preparationScreen.types';
+} from '../schema/preparationScreen.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
+import { PaginatedResponse } from '../../../app/types/api.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
@@ -35,8 +36,7 @@ export const useGetPreparationScreens = (
   pagination: BaseListQuery = { page: 1, limit: 15 } // Default limit 15
 ) => {
   const queryKey = preparationScreensQueryKeys.list({ ...filters, ...pagination });
-  // El servicio getPreparationScreens ya maneja la estructura [data, count] y devuelve data[]
-  return useQuery<PreparationScreen[], Error>({
+  return useQuery<PaginatedResponse<PreparationScreen>, Error>({
     queryKey,
     queryFn: () => preparationScreenService.getPreparationScreens(filters, pagination),
     // Considerar placeholderData o initialData si es necesario para UX

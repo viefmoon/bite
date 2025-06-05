@@ -22,6 +22,7 @@ import ProductFormModal from "../components/ProductFormModal";
 import { useSnackbarStore } from "@/app/store/snackbarStore";
 import { FileObject } from "@/app/components/common/CustomImagePicker";
 import { useCrudScreenLogic } from "@/app/hooks/useCrudScreenLogic";
+import { useListState } from "@/app/hooks/useListState";
 
 type ProductsScreenRouteProp = RouteProp<MenuStackParamList, "Products">;
 
@@ -91,7 +92,7 @@ function ProductsScreen(): JSX.Element {
     handleOpenCreateModal,
     handleOpenEditModal,
     handleCloseModals,
-  } = useCrudScreenLogic<Product, ProductFormInputs, ProductFormInputs>({
+  } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
     queryKey: ["products", queryFilters],
     deleteMutationFn: deleteProduct,
@@ -99,7 +100,7 @@ function ProductsScreen(): JSX.Element {
 
 
   const products = useMemo(() => {
-    return (productsResponse?.[0] ?? []).map((p: Product) => ({ // Añadido tipo explícito
+    return (productsResponse?.data ?? []).map((p: Product) => ({ // Añadido tipo explícito
       ...p,
       _displayDescription: p.hasVariants
         ? `${p.variants?.length || 0} variante(s)`
@@ -201,35 +202,20 @@ function ProductsScreen(): JSX.Element {
     { value: "inactive", label: "Inactivos" },
   ];
 
-  const ListEmptyComponent = useMemo(
-    () => (
-      <View style={styles.centered}>
-        {isLoading ? (
-          <ActivityIndicator
-            animating={true}
-            color={theme.colors.primary}
-            size="large"
-          />
-        ) : error ? (
-          <Text style={styles.errorText}>{getApiErrorMessage(error)}</Text>
-        ) : (
-          <Text>
-            {debouncedSearchQuery
-              ? `No se encontraron productos para "${debouncedSearchQuery}"`
-              : `No hay productos en "${subCategoryName}".`}
-          </Text>
-        )}
-      </View>
-    ),
-    [
-      isLoading,
-      error,
-      subCategoryName,
-      styles,
-      theme.colors.primary,
-      debouncedSearchQuery,
-    ]
-  );
+  const { ListEmptyComponent } = useListState({
+    isLoading,
+    isError: !!error,
+    data: products,
+    emptyConfig: {
+      title: debouncedSearchQuery 
+        ? `No se encontraron productos` 
+        : 'No hay productos',
+      message: debouncedSearchQuery
+        ? `No se encontraron productos para "${debouncedSearchQuery}"`
+        : `No hay productos en "${subCategoryName}". Presiona el botón + para crear el primero.`,
+      icon: 'package-variant',
+    },
+  });
 
   React.useLayoutEffect(() => {
     navigation.setOptions({

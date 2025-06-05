@@ -16,7 +16,14 @@ export const getAreas = async (
   filterOptions: FindAllAreasDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 }
 ): Promise<Area[]> => {
-  const response = await apiClient.get<Area[]>(API_PATHS.AREAS, {
+  const response = await apiClient.get<{
+    items: Area[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(API_PATHS.AREAS, {
     ...filterOptions,
     page: paginationOptions.page,
     limit: paginationOptions.limit,
@@ -29,7 +36,7 @@ export const getAreas = async (
       response.status
     );
   }
-  return response.data;
+  return response.data.items;
 };
 
 export const getAreaById = async (id: string): Promise<Area> => {

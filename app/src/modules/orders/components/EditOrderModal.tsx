@@ -267,7 +267,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
              </View>
              {/* Notas */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
-               <SpeechRecognitionInput label="Notas de la Orden (Opcional)" value={orderNotes} onChangeText={setOrderNotes} multiline speechLang="es-MX" />
+               <SpeechRecognitionInput key="notes-input-dine-in" label="Notas de la Orden (Opcional)" value={orderNotes} onChangeText={setOrderNotes} multiline speechLang="es-MX" />
              </View>
              {/* Programar Hora */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
@@ -280,17 +280,17 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
            <>
              {/* Nombre Cliente */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
-               <SpeechRecognitionInput label="Nombre del Cliente *" value={customerName} onChangeText={(text) => { setCustomerName(text); if (customerNameError) setCustomerNameError(null); }} error={!!customerNameError} speechLang="es-MX" />
+               <SpeechRecognitionInput key="customer-name-input" label="Nombre del Cliente *" value={customerName} onChangeText={(text) => { setCustomerName(text); if (customerNameError) setCustomerNameError(null); }} error={!!customerNameError} speechLang="es-MX" />
                {customerNameError && ( <HelperText type="error" visible={true} style={styles.helperTextFix}>{customerNameError}</HelperText> )}
              </View>
              {/* Teléfono */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
-               <SpeechRecognitionInput label="Teléfono (Opcional)" value={phoneNumber} onChangeText={(text) => { setPhoneNumber(text); if (phoneError) setPhoneError(null); }} keyboardType="phone-pad" error={!!phoneError} speechLang="es-MX" />
+               <SpeechRecognitionInput key="phone-input-takeaway" label="Teléfono (Opcional)" value={phoneNumber} onChangeText={(text) => { setPhoneNumber(text); if (phoneError) setPhoneError(null); }} keyboardType="phone-pad" error={!!phoneError} speechLang="es-MX" />
                {phoneError && ( <HelperText type="error" visible={true} style={styles.helperTextFix}>{phoneError}</HelperText> )}
              </View>
              {/* Notas */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
-               <SpeechRecognitionInput label="Notas de la Orden (Opcional)" value={orderNotes} onChangeText={setOrderNotes} multiline speechLang="es-MX" />
+               <SpeechRecognitionInput key="notes-input-takeaway" label="Notas de la Orden (Opcional)" value={orderNotes} onChangeText={setOrderNotes} multiline speechLang="es-MX" />
              </View>
              {/* Programar Hora */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
@@ -303,7 +303,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
            <>
              {/* Dirección */}
              <View style={[styles.sectionCompact, styles.fieldContainer]}>
-               <SpeechRecognitionInput label="Dirección de Entrega *" value={deliveryAddress} onChangeText={(text) => { setDeliveryAddress(text); if (addressError) setAddressError(null); }} error={!!addressError} speechLang="es-MX" multiline />
+               <SpeechRecognitionInput key="address-input-delivery" label="Dirección de Entrega *" value={deliveryAddress} onChangeText={(text) => { setDeliveryAddress(text); if (addressError) setAddressError(null); }} error={!!addressError} speechLang="es-MX" multiline />
                {addressError && ( <HelperText type="error" visible={true} style={styles.helperTextFix}>{addressError}</HelperText> )}
              </View>
              {/* Teléfono */}

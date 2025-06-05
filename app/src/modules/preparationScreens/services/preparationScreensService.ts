@@ -8,6 +8,7 @@ import {
   FindAllPreparationScreensFilter,
 } from "../types/preparationScreens.types";
 import { BaseListQuery } from "../../../app/types/query.types";
+import { PaginatedResponse } from "../../../app/types/api.types";
 import { z } from "zod";
 import { preparationScreenSchema } from "../schema/preparationScreens.schema";
 
@@ -18,7 +19,7 @@ import { preparationScreenSchema } from "../schema/preparationScreens.schema";
 const getAllPreparationScreens = async (
   filters?: FindAllPreparationScreensFilter,
   pagination?: BaseListQuery
-): Promise<PreparationScreen[]> => {
+): Promise<PaginatedResponse<PreparationScreen>> => {
   const params = {
     ...filters,
     ...(pagination && { page: pagination.page, limit: pagination.limit }),
@@ -49,19 +50,10 @@ const getAllPreparationScreens = async (
     hasPrevPage: z.boolean(),
   });
 
-  // Schema para array directo
-  const arraySchema = z.array(preparationScreenSchema);
-
-  // Intentar parsear como respuesta paginada primero
+  // Parsear como respuesta paginada
   const paginatedResult = paginatedSchema.safeParse(response.data);
   if (paginatedResult.success) {
-    return paginatedResult.data.items;
-  }
-
-  // Si no es paginada, intentar como array directo
-  const arrayResult = arraySchema.safeParse(response.data);
-  if (arrayResult.success) {
-    return arrayResult.data;
+    return paginatedResult.data;
   }
 
   console.error(

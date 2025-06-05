@@ -50,8 +50,12 @@ const findAllPrinters = async (
   );
 
   type FindAllPrintersApiResponse = {
-    data: ThermalPrinter[];
+    items: ThermalPrinter[];
+    total: number;
+    page: number;
+    limit: number;
     hasNextPage: boolean;
+    hasPrevPage: boolean;
   };
 
   const response = await apiClient.get<FindAllPrintersApiResponse>(
@@ -63,8 +67,7 @@ const findAllPrinters = async (
     !response.ok ||
     !response.data ||
     typeof response.data !== 'object' ||
-    !Array.isArray(response.data.data) ||
-    typeof response.data.hasNextPage !== 'boolean'
+    !Array.isArray(response.data.items)
   ) {
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
@@ -72,33 +75,12 @@ const findAllPrinters = async (
     );
   }
 
-  const { data, hasNextPage } = response.data;
-  const page = pagination.page ?? 1;
-  const limit = pagination.limit ?? 10;
-
-  let total: number;
-  let totalPages: number;
-
-  if (limit <= 0) {
-      total = data.length;
-      totalPages = total > 0 ? 1 : 0;
-  } else {
-      if (hasNextPage) {
-          total = page * limit + 1;
-          totalPages = page + 1;
-      } else {
-          total = (page - 1) * limit + data.length;
-          totalPages = page;
-      }
-  }
-
-
   return {
-    data,
-    total,
-    page,
-    limit,
-    totalPages,
+    data: response.data.items,
+    total: response.data.total,
+    page: response.data.page,
+    limit: response.data.limit,
+    totalPages: Math.ceil(response.data.total / response.data.limit),
   };
 };
 
@@ -176,6 +158,25 @@ const pingPrinter = async (id: string): Promise<{ status: string }> => {
   return response.data;
 };
 
+const testPrintDiscoveredPrinter = async (printer: DiscoveredPrinter): Promise<{ success: boolean; message?: string }> => {
+  const response = await apiClient.post<{ success: boolean; message?: string }>(
+    `${API_PATHS.THERMAL_PRINTERS}/test-print`,
+    {
+      ip: printer.ip,
+      port: printer.port,
+      connectionType: 'NETWORK'
+    }
+  );
+
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status
+    );
+  }
+  return response.data;
+};
+
 export const printerService = {
   discoverPrinters,
   findAllPrinters,
@@ -184,5 +185,5 @@ export const printerService = {
   updatePrinter,
   deletePrinter,
   pingPrinter,
-
+  testPrintDiscoveredPrinter,
 };

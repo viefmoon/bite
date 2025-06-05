@@ -1,14 +1,11 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Alert, StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useDrawerStatus } from "@react-navigation/drawer"; // Importar hook
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ActivityIndicator,
-  Button,
   Portal,
-  Text,
   IconButton,
 } from "react-native-paper";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +13,7 @@ import { useAppTheme } from "../../../app/styles/theme";
 import { useSnackbarStore } from "../../../app/store/snackbarStore";
 import { getApiErrorMessage } from "../../../app/lib/errorMapping";
 import { getImageUrl } from "../../../app/lib/imageUtils";
+import { useListState } from "../../../app/hooks/useListState";
 import GenericList from "../../../app/components/crud/GenericList";
 import { FilterOption } from "../../../app/components/crud/GenericList";
 import GenericDetailModal from "../../../app/components/crud/GenericDetailModal";
@@ -66,7 +64,6 @@ const CategoriesScreen: React.FC = () => {
     data: categoriesResponse,
     isLoading: isLoadingCategories,
     isError: isErrorCategories,
-    error: errorCategories,
     refetch: refetchCategories,
     isFetching: isFetchingCategories,
   } = useQuery({
@@ -76,6 +73,19 @@ const CategoriesScreen: React.FC = () => {
         isActive:
           activeFilter === "all" ? undefined : activeFilter === "active",
       }),
+  });
+
+  const { ListEmptyComponent } = useListState({
+    isLoading: isLoadingCategories,
+    isError: isErrorCategories,
+    data: categoriesResponse?.data,
+    emptyConfig: {
+      title: 'No hay categorías',
+      message: activeFilter !== "all"
+        ? `No hay categorías ${activeFilter === "active" ? "activas" : "inactivas"} registradas.`
+        : "No hay categorías registradas. Presiona el botón + para crear la primera.",
+      icon: 'folder-outline',
+    },
   });
 
   const commonMutationOptions = {
@@ -206,21 +216,6 @@ const CategoriesScreen: React.FC = () => {
     () =>
       StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
-        loadingContainer: {
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        emptyListContainer: {
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: theme.spacing.l,
-        },
-        emptyListText: {
-          marginBottom: theme.spacing.m,
-          color: theme.colors.onSurfaceVariant,
-        },
       }),
     [theme]
   );
@@ -303,37 +298,6 @@ const CategoriesScreen: React.FC = () => {
     imagePickerSize: 150,
   };
 
-  if (isLoadingCategories && !categoriesResponse) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          animating={true}
-          size="large"
-          color={theme.colors.primary}
-        />
-      </View>
-    );
-  }
-
-  if (isErrorCategories && !categoriesResponse) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={{ color: theme.colors.error }}>
-          Error al cargar categorías:
-        </Text>
-        <Text style={{ color: theme.colors.error }}>
-          {getApiErrorMessage(errorCategories)}
-        </Text>
-        <Button
-          onPress={() => refetchCategories()}
-          mode="contained"
-          style={{ marginTop: theme.spacing.m }}
-        >
-          Reintentar
-        </Button>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
@@ -361,17 +325,7 @@ const CategoriesScreen: React.FC = () => {
         onItemPress={openDetailModal}
         onRefresh={refetchCategories}
         isRefreshing={isFetchingCategories && !isLoadingCategories}
-        ListEmptyComponent={
-          <View style={styles.emptyListContainer}>
-            <Text style={styles.emptyListText}>
-              No hay categorías{" "}
-              {activeFilter !== "all" ? activeFilter + "s" : ""} para mostrar.
-            </Text>
-            <Button mode="contained" onPress={openAddModal}>
-              Añadir Categoría
-            </Button>
-          </View>
-        }
+        ListEmptyComponent={ListEmptyComponent}
         showFab={true}
         onFabPress={openAddModal}
         isModalOpen={modalVisible || detailModalVisible}

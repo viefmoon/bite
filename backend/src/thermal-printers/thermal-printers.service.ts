@@ -275,4 +275,95 @@ export class ThermalPrintersService {
       socket.connect(port, host);
     });
   }
+
+  async testPrint(printerInfo: {
+    ip: string;
+    port: number;
+    connectionType: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    this.logger.log(
+      `Intentando imprimir ticket de prueba en ${printerInfo.ip}:${printerInfo.port}`,
+    );
+
+    const net = require('net');
+    const timeout = 5000;
+
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+      let connected = false;
+
+      socket.setTimeout(timeout);
+
+      socket.on('connect', async () => {
+        connected = true;
+        this.logger.log(`Conectado a ${printerInfo.ip}:${printerInfo.port}`);
+        
+        try {
+          // Comandos ESC/POS para el ticket de prueba
+          const commands = [
+            '\x1B\x40', // Inicializar impresora
+            '\x1B\x61\x01', // Centrar texto
+            '\x1B\x21\x30', // Texto doble altura y ancho
+            'TICKET DE PRUEBA\n',
+            '\x1B\x21\x00', // Texto normal
+            '\x1B\x61\x00', // Alinear izquierda
+            '\n',
+            `Fecha: ${new Date().toLocaleString()}\n`,
+            `IP: ${printerInfo.ip}\n`,
+            `Puerto: ${printerInfo.port}\n`,
+            '\n',
+            '\x1B\x61\x01', // Centrar texto
+            'Impresora configurada correctamente\n',
+            '\n',
+            '\x1B\x61\x00', // Alinear izquierda
+            '================================\n',
+            '\n\n\n',
+            '\x1D\x56\x00', // Cortar papel
+          ];
+
+          const buffer = Buffer.from(commands.join(''), 'binary');
+          
+          socket.write(buffer, () => {
+            this.logger.log('Ticket de prueba enviado exitosamente');
+            socket.end();
+            resolve({
+              success: true,
+              message: 'Ticket de prueba impreso correctamente',
+            });
+          });
+        } catch (error) {
+          this.logger.error('Error al enviar ticket de prueba:', error);
+          socket.end();
+          resolve({
+            success: false,
+            message: 'Error al enviar datos a la impresora',
+          });
+        }
+      });
+
+      socket.on('error', (err) => {
+        this.logger.error(`Error de conexión: ${err.message}`);
+        resolve({
+          success: false,
+          message: `No se pudo conectar a la impresora: ${err.message}`,
+        });
+      });
+
+      socket.on('timeout', () => {
+        this.logger.warn('Timeout al conectar con la impresora');
+        socket.destroy();
+        if (!connected) {
+          resolve({
+            success: false,
+            message: 'Tiempo de espera agotado al conectar con la impresora',
+          });
+        }
+      });
+
+      this.logger.log(
+        `Intentando conexión TCP a ${printerInfo.ip}:${printerInfo.port}...`,
+      );
+      socket.connect(printerInfo.port, printerInfo.ip);
+    });
+  }
 }

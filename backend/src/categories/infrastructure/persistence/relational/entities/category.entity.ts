@@ -24,7 +24,7 @@ export class CategoryEntity extends EntityRelationalHelper {
   @Column()
   name: string;
 
-  @Column({ type: 'varchar', default: '' })
+  @Column({ type: 'varchar', nullable: true })
   description?: string;
 
   @Column({ default: true })

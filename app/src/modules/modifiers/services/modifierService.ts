@@ -8,6 +8,7 @@ import {
   modifierApiSchema,
 } from "../schema/modifier.schema";
 import { z } from "zod";
+import { PaginatedResponse } from "@/app/types/api.types";
 
 const modifiersListSchema = z.array(modifierApiSchema);
 
@@ -29,9 +30,9 @@ interface FindAllModifiersParams {
 
 export const modifierService = {
   /**
-   * Obtiene todos los modificadores (con posible paginación/filtros).
+   * Obtiene todos los modificadores con paginación.
    */
-  async findAll(params?: FindAllModifiersParams): Promise<Modifier[]> {
+  async findAll(params?: FindAllModifiersParams): Promise<PaginatedResponse<Modifier>> {
     const queryParams = {
       page: params?.page ?? 1,
       limit: params?.limit ?? 10,
@@ -51,16 +52,17 @@ export const modifierService = {
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
-    // Intentar parsear como respuesta paginada primero
+    // Parsear como respuesta paginada
     const paginatedResult = paginatedModifiersSchema.safeParse(response.data);
     if (paginatedResult.success) {
-      return paginatedResult.data.items;
-    }
-
-    // Si no es paginada, intentar como array directo
-    const arrayResult = modifiersListSchema.safeParse(response.data);
-    if (arrayResult.success) {
-      return arrayResult.data;
+      // Transformar la respuesta del backend a PaginatedResponse
+      return {
+        data: paginatedResult.data.items,
+        total: paginatedResult.data.total,
+        page: paginatedResult.data.page,
+        limit: paginatedResult.data.limit,
+        totalPages: Math.ceil(paginatedResult.data.total / paginatedResult.data.limit),
+      };
     }
 
     console.error(

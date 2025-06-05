@@ -21,6 +21,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
+import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('Areas')
 @Controller({ path: 'areas', version: '1' })
@@ -40,8 +41,8 @@ export class AreasController {
   @Get()
   @ApiOperation({ summary: 'Find all areas' })
   @HttpCode(HttpStatus.OK)
-  findAll(@Query() q: FindAllAreasDto): Promise<Area[]> {
-    return this.service.findAll(q);
+  findAll(@Query() q: FindAllAreasDto): Promise<Paginated<Area>> {
+    return this.service.findAllPaginated(q);
   }
 
   @Get(':id')

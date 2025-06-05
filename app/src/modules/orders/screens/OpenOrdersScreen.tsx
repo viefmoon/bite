@@ -18,6 +18,7 @@ import EditOrderModal, { UpdateOrderPayload } from '../components/EditOrderModal
 // Importar el hook de mutación (lo crearemos después)
 // import { useUpdateOrderMutation } from '../hooks/useOrdersQueries';
 import { useSnackbarStore } from '../../../app/store/snackbarStore'; // Para mostrar mensajes
+import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
 
 type OpenOrdersScreenProps = NativeStackScreenProps<OrdersStackParamList, 'OpenOrders'>;
 
@@ -88,20 +89,16 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     // Se podría añadir un statusConfig si se mapea el estado a 'activo'/'inactivo'
   };
 
-  const ListEmptyComponent = useMemo(() => (
-    <View style={styles.centered}>
-      {isLoading ? (
-        <ActivityIndicator animating={true} size="large" />
-      ) : isError ? (
-        <>
-          <Text style={styles.errorText}>Error al cargar órdenes: {getApiErrorMessage(error)}</Text>
-          <Button onPress={handleRefresh}>Reintentar</Button>
-        </>
-      ) : !ordersData || ordersData.length === 0 ? ( // Comprobar ordersData directamente
-        <Text style={styles.emptyText}>No hay órdenes abiertas en este momento.</Text>
-      ) : null}
-    </View>
-  ), [isLoading, isError, error, handleRefresh, styles, theme]);
+  const { ListEmptyComponent } = useListState({
+    isLoading,
+    isError,
+    data: ordersData,
+    emptyConfig: {
+      title: 'No hay órdenes abiertas',
+      message: 'No hay órdenes abiertas en este momento.',
+      icon: 'clipboard-text-outline',
+    },
+  });
 
   // Efecto para configurar el botón de refrescar en el header
   useEffect(() => {

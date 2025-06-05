@@ -28,6 +28,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
 import { RolesGuard } from '../roles/roles.guard';
+import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('Tables')
 @Controller({
@@ -58,7 +59,7 @@ export class TablesController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of tables',
-    type: [Table],
+    type: Paginated,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
@@ -66,8 +67,8 @@ export class TablesController {
     @Query() filterOptions: FindAllTablesDto,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-  ): Promise<Table[]> {
-    return this.tablesService.findAll(filterOptions, {
+  ): Promise<Paginated<Table>> {
+    return this.tablesService.findAllPaginated(filterOptions, {
       page,
       limit,
     } as IPaginationOptions);
@@ -84,12 +85,12 @@ export class TablesController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of tables by area id',
-    type: [Table],
+    type: Paginated,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  findByAreaId(@Param('areaId') areaId: string): Promise<Table[]> {
-    return this.tablesService.findByAreaId(areaId);
+  findByAreaId(@Param('areaId') areaId: string): Promise<Paginated<Table>> {
+    return this.tablesService.findByAreaIdPaginated(areaId);
   }
 
   @Get(':id')

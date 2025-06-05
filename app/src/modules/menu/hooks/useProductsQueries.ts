@@ -4,9 +4,9 @@ import {
   Product,
   ProductFormInputs,
   FindAllProductsQuery,
-  ProductsListResponse,
   AssignModifierGroupsInput,
 } from '../schema/products.schema';
+import { PaginatedResponse } from '@/app/types/api.types';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar store de Snackbar
 import { getApiErrorMessage } from '@/app/lib/errorMapping'; // Importar mapeo de errores
@@ -21,8 +21,8 @@ const productKeys = {
 export function useProductsQuery(
   filters: FindAllProductsQuery,
   options?: { enabled?: boolean }
-): UseQueryResult<ProductsListResponse, ApiError> {
-  return useQuery<ProductsListResponse, ApiError>({
+): UseQueryResult<PaginatedResponse<Product>, ApiError> {
+  return useQuery<PaginatedResponse<Product>, ApiError>({
     queryKey: productKeys.lists(filters),
     queryFn: () => productsService.findAll(filters),
     enabled: options?.enabled ?? true,
@@ -50,7 +50,7 @@ export function useCreateProductMutation(): UseMutationResult<Product, ApiError,
   });
 }
 
-export function useUpdateProductMutation(): UseMutationResult<Product, ApiError, { id: string; data: Partial<ProductFormInputs> }, { previousProducts?: ProductsListResponse; previousDetail?: Product }> {
+export function useUpdateProductMutation(): UseMutationResult<Product, ApiError, { id: string; data: Partial<ProductFormInputs> }, { previousProducts?: PaginatedResponse<Product>; previousDetail?: Product }> {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
