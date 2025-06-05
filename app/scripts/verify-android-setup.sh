@@ -87,7 +87,7 @@ echo
 
 echo "=== Summary ==="
 echo "Run the following commands to complete setup:"
-echo "1. ./install-java.sh          # Install Java JDK 17"
-echo "2. source ~/.bashrc           # Reload environment variables"
-echo "3. ./fix-expo-packages.sh     # Fix Expo package versions"
-echo "4. npm install -g eas-cli     # Install EAS CLI if needed"
+echo "1. ./scripts/install-java.sh          # Install Java JDK 17"
+echo "2. source ~/.bashrc                  # Reload environment variables"
+echo "3. ./scripts/fix-expo-packages.sh     # Fix Expo package versions"
+echo "4. npm install -g eas-cli            # Install EAS CLI if needed"
