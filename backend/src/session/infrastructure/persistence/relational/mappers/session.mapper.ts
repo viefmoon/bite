@@ -14,16 +14,16 @@ export class SessionMapper extends BaseMapper<SessionEntity, Session> {
   override toDomain(raw: SessionEntity): Session {
     const domain = new Session();
     domain.id = raw.id;
-    
+
     if (!raw.user) {
       throw new Error('Session must have a user');
     }
-    
+
     const user = this.userMapper.toDomain(raw.user);
     if (!user) {
       throw new Error('Failed to map user');
     }
-    
+
     domain.user = user;
     domain.hash = raw.hash;
     domain.createdAt = raw.createdAt;

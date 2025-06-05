@@ -8,6 +8,8 @@ import {
   FindAllPreparationScreensFilter,
 } from "../types/preparationScreens.types";
 import { BaseListQuery } from "../../../app/types/query.types";
+import { z } from "zod";
+import { preparationScreenSchema } from "../schema/preparationScreens.schema";
 
 
 /**
@@ -26,7 +28,7 @@ const getAllPreparationScreens = async (
     params.isActive = String(params.isActive) as any; // Adjust if backend expects string
   }
 
-  const response = await apiClient.get<PreparationScreen[]>(API_PATHS.PREPARATION_SCREENS, params);
+  const response = await apiClient.get<unknown>(API_PATHS.PREPARATION_SCREENS, params);
 
   if (!response.ok || !response.data) {
     console.error(
@@ -36,14 +38,37 @@ const getAllPreparationScreens = async (
     );
     throw ApiError.fromApiResponse(response.data, response.status);
   }
-  // Optionally validate response data with Zod here if needed
-  // import { z } from 'zod';
-  // const validation = z.array(preparationScreenSchema).safeParse(response.data);
-  // if (!validation.success) {
-  //   console.error('[getAllPreparationScreens] Zod Validation Error:', validation.error);
-  //   throw new Error('Invalid data received from server.');
-  // }
-  return response.data; // return validation.data; if using Zod
+
+  // Schema para respuesta paginada
+  const paginatedSchema = z.object({
+    items: z.array(preparationScreenSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    hasNextPage: z.boolean(),
+    hasPrevPage: z.boolean(),
+  });
+
+  // Schema para array directo
+  const arraySchema = z.array(preparationScreenSchema);
+
+  // Intentar parsear como respuesta paginada primero
+  const paginatedResult = paginatedSchema.safeParse(response.data);
+  if (paginatedResult.success) {
+    return paginatedResult.data.items;
+  }
+
+  // Si no es paginada, intentar como array directo
+  const arrayResult = arraySchema.safeParse(response.data);
+  if (arrayResult.success) {
+    return arrayResult.data;
+  }
+
+  console.error(
+    '[getAllPreparationScreens] Invalid data received:',
+    response.data
+  );
+  throw new Error('Invalid data format received from server.');
 };
 
 /**

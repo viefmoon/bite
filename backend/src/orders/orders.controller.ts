@@ -93,8 +93,7 @@ export class OrdersController {
       page,
       limit: limit > 50 ? 50 : limit,
     };
-    const [data, total] = await this.ordersService.findAll(
-      // Corregido para obtener total
+    const [data] = await this.ordersService.findAll(
       filterOptions,
       paginationOptions,
     );
@@ -405,8 +404,7 @@ export class OrdersController {
       page,
       limit: limit > 50 ? 50 : limit,
     };
-    const [data, total] = await this.orderChangeLogService.findByOrderId(
-      // Corregido para obtener total
+    const [data] = await this.orderChangeLogService.findByOrderId(
       id,
       paginationOptions,
     );
@@ -433,12 +431,10 @@ export class OrdersController {
       page,
       limit: limit > 50 ? 50 : limit,
     };
-    const [data, total] =
-      await this.orderItemChangeLogService.findByOrderItemId(
-        // Corregido para obtener total
-        id,
-        paginationOptions,
-      );
+    const [data] = await this.orderItemChangeLogService.findByOrderItemId(
+      id,
+      paginationOptions,
+    );
     return infinityPagination(data, paginationOptions); // Pasar total si es necesario
   }
 }

@@ -38,8 +38,29 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
    docker compose up -d postgres adminer maildev
    ```
 
-   //borrar todo
-   docker-compose down --volumes --rmi all
+  //borrar todo
+  # 1. Detener y eliminar TODO (contenedores, volúmenes e imágenes)
+  docker-compose down --volumes --rmi all
+
+  # 2. Eliminar el volumen de la base de datos manualmente (por si 
+  acaso)
+  docker volume rm backend_postgres || true
+
+  # 3. Limpiar cualquier contenedor o volumen huérfano
+  docker system prune -a --volumes -f
+
+  # 4. Iniciar solo PostgreSQL con una base de datos completamente 
+  nueva
+  docker-compose up -d postgres adminer maildev
+
+  # 5. Esperar que PostgreSQL esté listo
+  sleep 5
+
+  # 6. Ahora generar la migración
+  npm run migration:generate -- src/database/migrations/InitialSchema
+
+
+  sudo lsof -ti:3000 | xargs kill -9
 
 1. Install dependency
 

@@ -99,7 +99,8 @@ export class ProductVariantRelationalRepository
       );
     }
     // Eliminar el ID del objeto parcial si está presente, ya que se pasa como primer argumento
-    const { id: _, ...updatePayload } = partialEntity;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _entityId, ...updatePayload } = partialEntity;
 
     const updateResult = await this.productVariantRepository.update(
       id,

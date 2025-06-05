@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { BaseCrudService } from '../common/application/base-crud.service';
 import { Address } from './domain/address';
 import { CreateAddressDto } from './dto/create-address.dto';

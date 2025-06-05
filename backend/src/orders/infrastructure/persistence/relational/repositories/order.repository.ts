@@ -282,7 +282,13 @@ export class OrdersRelationalRepository implements OrderRepository {
       throw new Error('Failed to map existing order entity to domain');
     }
 
-    const { dailyNumber, dailyOrderCounterId, ...updateData } = payload;
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      dailyNumber,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      dailyOrderCounterId,
+      ...updateData
+    } = payload;
 
     const updatedDomain = {
       ...existingDomain,

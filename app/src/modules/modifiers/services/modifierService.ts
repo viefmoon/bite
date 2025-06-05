@@ -11,6 +11,16 @@ import { z } from "zod";
 
 const modifiersListSchema = z.array(modifierApiSchema);
 
+// Schema para respuesta paginada
+const paginatedModifiersSchema = z.object({
+  items: z.array(modifierApiSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  hasNextPage: z.boolean(),
+  hasPrevPage: z.boolean(),
+});
+
 interface FindAllModifiersParams {
   page?: number;
   limit?: number;
@@ -41,15 +51,23 @@ export const modifierService = {
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
-    const validationResult = modifiersListSchema.safeParse(response.data);
-    if (!validationResult.success) {
-      console.error(
-        "Invalid data received for modifiers:",
-        validationResult.error.flatten()
-      );
-      throw new Error("Received invalid data format for modifiers.");
+    // Intentar parsear como respuesta paginada primero
+    const paginatedResult = paginatedModifiersSchema.safeParse(response.data);
+    if (paginatedResult.success) {
+      return paginatedResult.data.items;
     }
-    return validationResult.data;
+
+    // Si no es paginada, intentar como array directo
+    const arrayResult = modifiersListSchema.safeParse(response.data);
+    if (arrayResult.success) {
+      return arrayResult.data;
+    }
+
+    console.error(
+      "Invalid data received for modifiers:",
+      response.data
+    );
+    throw new Error("Received invalid data format for modifiers.");
   },
 
   /**

@@ -1,31 +1,47 @@
-import { Get, HttpCode, HttpStatus, Controller } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  Get,
+  HttpCode,
+  HttpStatus,
+  Controller,
+  Post,
+  Body,
+  Query,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
 import { Category } from './domain/category';
-import { CrudControllerFactory } from '../common/presentation/crud-controller.factory'; // Importar la factory
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../roles/roles.guard';
+import { Roles } from '../roles/roles.decorator';
+import { RoleEnum } from '../roles/roles.enum';
 
-const BaseCategoriesController = CrudControllerFactory<
-  Category,
-  CreateCategoryDto,
-  UpdateCategoryDto,
-  FindAllCategoriesDto,
-  CategoriesService
->({
-  path: 'categories',
-  swaggerTag: 'Categorías',
-  // Puedes especificar roles aquí si difieren de los defaults de la factory
-  // createRoles: [RoleEnum.admin],
-  // updateRoles: [RoleEnum.admin],
-  // removeRoles: [RoleEnum.admin],
-});
+@ApiTags('Categorías')
+@Controller({ path: 'categories', version: '1' })
+export class CategoriesController {
+  constructor(private readonly service: CategoriesService) {}
 
-@Controller()
-export class CategoriesController extends BaseCategoriesController {
-  constructor(protected readonly service: CategoriesService) {
-    super(service);
+  @Post()
+  @ApiOperation({ summary: 'Create a new category' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() dto: CreateCategoryDto): Promise<Category> {
+    return this.service.create(dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Find all categories' })
+  @HttpCode(HttpStatus.OK)
+  findAll(@Query() q: FindAllCategoriesDto): Promise<Category[]> {
+    return this.service.findAll(q);
   }
 
   @Get('full-menu')
@@ -38,6 +54,33 @@ export class CategoriesController extends BaseCategoriesController {
     return this.service.getFullMenu();
   }
 
-  // Los endpoints CRUD (POST /, GET /, GET /:id, PATCH /:id, DELETE /:id)
-  // son heredados de BaseCategoriesController y ya están decorados.
+  @Get(':id')
+  @ApiOperation({ summary: 'Find one category by ID' })
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param('id') id: string): Promise<Category> {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a category' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): Promise<Category | null> {
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove a category' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.service.remove(id);
+  }
 }

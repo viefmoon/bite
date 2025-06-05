@@ -77,9 +77,10 @@ npm start    # Inicia el servidor de desarrollo
 #### Setup Inicial (solo la primera vez)
 ```bash
 # 1. Instalar herramientas necesarias
-./install-java-and-fix.sh      # Instala Java y actualiza Expo
-./install-android-sdk.sh        # Instala Android SDK
-source ~/.bashrc                # Cargar variables de entorno
+cd app
+./scripts/install-java.sh        # Instala Java
+./scripts/install-android-sdk.sh # Instala Android SDK (si existe)
+source ~/.bashrc                 # Cargar variables de entorno
 
 # 2. Login en EAS
 npx eas login

@@ -10,18 +10,15 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
-  // ParseUUIDPipe, DefaultValuePipe, ParseIntPipe ya no se usan directamente
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
-// CreateAddressDto y UpdateAddressDto ya no se usan directamente
 import { FindAllCustomersDto } from './dto/find-all-customers.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
@@ -29,41 +26,59 @@ import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { Customer } from './domain/customer';
-// Address ya no se usa directamente
-// Imports de InfinityPagination ya no se usan
-import { CrudControllerFactory } from '../common/presentation/crud-controller.factory'; // Importar Factory
-import { AddressesService } from './addresses.service'; // Importar AddressesService
 
-// Crear el controlador base usando la factory
-const BaseCustomersController = CrudControllerFactory<
-  Customer,
-  CreateCustomerDto,
-  UpdateCustomerDto,
-  FindAllCustomersDto, // Usar FindAllCustomersDto como DTO de filtro base
-  CustomersService
->({
-  path: 'customers', // Ruta base (la factory añade /:id etc.)
-  swaggerTag: 'Customers', // Etiqueta para Swagger
-  // Roles por defecto de la factory (Admin para CUD) son adecuados aquí
-});
+@ApiTags('Customers')
+@Controller({ path: 'customers', version: '1' })
+export class CustomersController {
+  constructor(private readonly customersService: CustomersService) {}
 
-@ApiTags('Customers') // Mantener ApiTags aquí o mover a la factory si se prefiere
-@Controller() // El path ya está definido en la factory
-export class CustomersController extends BaseCustomersController {
-  // Extender el controlador base
-  // Inyectar ambos servicios
-  constructor(
-    protected service: CustomersService, // El servicio principal (requerido por la factory)
-    private addressesService: AddressesService, // El servicio de direcciones
-  ) {
-    super(service); // Llamar al constructor base con el servicio principal
+  @Post()
+  @ApiOperation({ summary: 'Create a new customer' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createCustomerDto: CreateCustomerDto): Promise<Customer> {
+    return this.customersService.create(createCustomerDto);
   }
 
-  // Los métodos create, findOne, update, remove son heredados de BaseCustomersController
+  @Get()
+  @ApiOperation({ summary: 'Find all customers' })
+  @HttpCode(HttpStatus.OK)
+  findAll(@Query() query: FindAllCustomersDto): Promise<Customer[]> {
+    return this.customersService.findAll(query);
+  }
 
-  // Se elimina el endpoint GET /customers con paginación infinita.
-  // El endpoint GET / heredado de BaseCustomersController (sin paginación) tomará efecto si se necesita.
+  @Get(':id')
+  @ApiOperation({ summary: 'Find one customer by ID' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param('id') id: string): Promise<Customer> {
+    return this.customersService.findOne(id);
+  }
 
-  // --- Endpoints específicos para Direcciones eliminados ---
-  // La gestión de direcciones se moverá a un AddressesController plano (/addresses).
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  update(
+    @Param('id') id: string,
+    @Body() updateCustomerDto: UpdateCustomerDto,
+  ): Promise<Customer> {
+    return this.customersService.update(id, updateCustomerDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.customersService.remove(id);
+  }
 }

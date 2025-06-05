@@ -4,9 +4,9 @@
 
 ```bash
 # 1. Ejecutar scripts de instalación
-cd /home/leo/bite/app
-./install-java-and-fix.sh
-./install-android-sdk.sh
+cd app
+./scripts/install-java.sh
+./scripts/install-android-sdk.sh
 source ~/.bashrc
 
 # 2. Instalar EAS CLI y login
@@ -53,10 +53,10 @@ npx expo start --dev-client --tunnel  # Para Development Build
 
 | Script | Descripción |
 |--------|-------------|
-| `install-java-and-fix.sh` | Instala Java 17 y actualiza paquetes Expo |
-| `install-android-sdk.sh` | Instala Android SDK y configura el entorno |
-| `setup-android-env.sh` | Script alternativo si ya tienes Java |
-| `set-java-env.sh` | Configura temporalmente las variables de Java |
+| `scripts/install-java.sh` | Instala Java 17 |
+| `scripts/install-android-sdk.sh` | Instala Android SDK y configura el entorno |
+| `scripts/verify-android-setup.sh` | Verifica la configuración del entorno |
+| `scripts/fix-expo-packages.sh` | Actualiza y corrige versiones de paquetes Expo |
 
 ## Comandos de Build
 
@@ -100,14 +100,14 @@ eas login  # En lugar de npx eas login
 
 ### Java no encontrado
 ```bash
-./install-java-and-fix.sh
+./scripts/install-java.sh
 source ~/.bashrc
 ```
 
 ### Android SDK no encontrado (Build local con EAS)
 ```bash
 # 1. Instalar Android SDK
-./install-android-sdk.sh
+./scripts/install-android-sdk.sh
 source ~/.bashrc
 
 # 2. Si el error persiste, configurar variables en la sesión actual:
@@ -147,5 +147,5 @@ adb start-server
 Cuando la build sea exitosa verás:
 ```
 Build successful
-You can find the build artifacts in /home/leo/bite/app/build-1748967974325.apk
+You can find the build artifacts in app/build-1748967974325.apk
 ```

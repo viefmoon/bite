@@ -61,7 +61,7 @@ async function bootstrap() {
   const os = await import('os');
   const networkInterfaces = os.networkInterfaces();
   const addresses: string[] = [];
-  
+
   for (const interfaces of Object.values(networkInterfaces)) {
     for (const iface of interfaces || []) {
       if (iface.family === 'IPv4' && !iface.internal) {
@@ -72,7 +72,7 @@ async function bootstrap() {
 
   console.log('\n🚀 Server is running!');
   console.log('📍 Local:    http://localhost:' + port);
-  addresses.forEach(address => {
+  addresses.forEach((address) => {
     console.log(`📍 Network:  http://${address}:${port}`);
   });
   console.log('📚 Swagger:  http://localhost:' + port + '/docs\n');

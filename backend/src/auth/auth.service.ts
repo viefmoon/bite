@@ -426,7 +426,7 @@ export class AuthService {
         message: 'Session ID es requerido.',
       });
     }
-    
+
     const session = await this.sessionService.findById(data.sessionId);
 
     if (!session) {

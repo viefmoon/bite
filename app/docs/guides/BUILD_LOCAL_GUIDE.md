@@ -6,20 +6,20 @@ Esta app incluye scripts automatizados para configurar todo el entorno necesario
 
 ### 1. **Configuración Completa de Java y Expo**
 ```bash
-cd /home/leo/bite/app
-./install-java-and-fix.sh
+cd app
+./scripts/install-java.sh
 source ~/.bashrc
 ```
 
 ### 2. **Instalación de Android SDK**
 ```bash
-./install-android-sdk.sh
+./scripts/install-android-sdk.sh
 source ~/.bashrc
 ```
 
 ### 3. **Verificar el Entorno (Opcional)**
 ```bash
-./setup-android-env.sh  # Script alternativo si ya tienes Java
+./scripts/verify-android-setup.sh  # Verifica la configuración
 ```
 
 ## Requisitos Previos (Instalación Manual)
@@ -34,7 +34,7 @@ source ~/.bashrc
    ```
 
 2. **Android SDK**
-   - Opción 1: Usar el script automatizado `install-android-sdk.sh`
+   - Opción 1: Usar el script automatizado `./scripts/install-android-sdk.sh`
    - Opción 2: Instalar manualmente:
    ```bash
    # Crear directorio para Android SDK
@@ -97,7 +97,7 @@ source ~/.bashrc
 
 #### APK de Desarrollo (para pruebas):
 ```bash
-cd /home/leo/bite/app
+cd app
 npm run build:android:sim
 ```
 

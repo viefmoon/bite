@@ -133,6 +133,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               secureTextEntry={secureTextEntry}
               error={!!errors.password}
               style={styles.input}
+              autoCapitalize="none"
               right={
                 <TextInput.Icon
                   icon={secureTextEntry ? "eye" : "eye-off"}
