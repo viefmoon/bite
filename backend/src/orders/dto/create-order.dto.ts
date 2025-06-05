@@ -14,7 +14,7 @@ import {
 } from 'class-validator';
 import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';
-import { CreateOrderItemDto } from './create-order-item.dto';
+import { OrderItemInputDto } from './order-item-input.dto';
 
 export class CreateOrderDto {
   @ApiProperty({
@@ -91,14 +91,14 @@ export class CreateOrderDto {
   notes?: string;
 
   @ApiProperty({
-    type: [CreateOrderItemDto],
+    type: [OrderItemInputDto],
     description: 'Items de la orden',
     required: true,
   })
   @IsNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => CreateOrderItemDto)
-  items: CreateOrderItemDto[];
+  @Type(() => OrderItemInputDto)
+  items: OrderItemInputDto[];
 
   @ApiProperty({
     type: String,

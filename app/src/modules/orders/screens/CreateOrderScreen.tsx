@@ -146,17 +146,20 @@ const CreateOrderScreen = () => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (isCartEmpty || e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'RESET') {
+      // Don't do anything if cart is empty or modal is already showing
+      if (isCartEmpty || showExitConfirmationModal) {
         return;
       }
-
+      
+      // Prevent default for any navigation away when cart has items
+      // This includes back navigation and drawer navigation
       e.preventDefault();
       setPendingNavigationAction(() => () => navigation.dispatch(e.data.action));
       setShowExitConfirmationModal(true);
     });
 
     return unsubscribe;
-  }, [navigation, isCartEmpty]);
+  }, [navigation, isCartEmpty, showExitConfirmationModal]);
 
 
   const handleViewCart = useCallback(() => {
@@ -354,12 +357,21 @@ const CreateOrderScreen = () => {
 
   
   const handleConfirmExit = () => {
-    clearCart();
-    if (pendingNavigationAction) {
-      pendingNavigationAction();
-    }
     setShowExitConfirmationModal(false);
+    
+    // Store the navigation action before clearing the cart
+    const navigationAction = pendingNavigationAction || (() => navigation.goBack());
+    
+    // Clear the pending action
     setPendingNavigationAction(null);
+    
+    // Execute navigation first
+    navigationAction();
+    
+    // Clear cart after navigation to avoid the beforeRemove check
+    setTimeout(() => {
+      clearCart();
+    }, 100);
   };
 
   const handleCancelExit = () => {

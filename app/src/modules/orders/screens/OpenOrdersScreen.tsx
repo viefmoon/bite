@@ -1,13 +1,12 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, ActivityIndicator, Button, Appbar, IconButton, Portal } from 'react-native-paper';
+import { Text, ActivityIndicator, Button, Appbar, IconButton, Portal, Card, Chip, List, Surface } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
-import GenericList, { RenderItemConfig } from '../../../app/components/crud/GenericList'; // Importar GenericList
-import { Order, OrderStatusEnum, type OrderStatus } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
+import { Order, OrderStatusEnum, type OrderStatus, OrderType, OrderTypeEnum } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
 import { getApiErrorMessage } from '../../../app/lib/errorMapping'; // Importar mapeo de errores
 import { format } from 'date-fns'; // Para formatear fechas
 import { es } from 'date-fns/locale'; // Locale español
@@ -35,6 +34,16 @@ const formatOrderStatus = (status: OrderStatus): string => {
   }
 };
 
+// Helper para formatear el tipo de orden
+const formatOrderType = (type: OrderType): string => {
+  switch (type) {
+    case OrderTypeEnum.DINE_IN: return '🍽️ Para Comer Aquí';
+    case OrderTypeEnum.TAKE_AWAY: return '🥡 Para Llevar';
+    case OrderTypeEnum.DELIVERY: return '🚚 Domicilio';
+    default: return type;
+  }
+};
+
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -59,17 +68,15 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
 
-  const orders = useMemo(() => {
-    // Mapear datos para GenericList, añadiendo campos virtuales si es necesario
-    // Ahora ordersData es directamente el array Order[] | undefined
-    return (ordersData ?? []).map((order: Order) => ({ // Añadir tipo explícito a order
-      ...order,
-      // Crear un campo de descripción combinando tipo y estado
-      _displayDescription: `${order.orderType} - ${formatOrderStatus(order.status)} - ${format(new Date(order.createdAt), 'p', { locale: es })}`,
-      // Usar orderNumber como título principal
-      _displayTitle: `#${order.dailyNumber}`, // Usar dailyNumber
-    }));
-  }, [ordersData]); // Depender de ordersData
+  const getStatusColor = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatusEnum.PENDING: return '#FFA000'; // Orange
+      case OrderStatusEnum.IN_PROGRESS: return theme.colors.primary;
+      case OrderStatusEnum.READY: return '#4CAF50'; // Green
+      case OrderStatusEnum.DELIVERED: return theme.colors.tertiary;
+      default: return theme.colors.onSurfaceVariant;
+    }
+  };
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -81,13 +88,85 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     setIsEditModalVisible(true);
   };
 
-  // Configuración para GenericList
-  const listRenderConfig: RenderItemConfig<Order & { _displayDescription: string, _displayTitle: string }> = {
-    titleField: '_displayTitle', // Usar el número de orden como título
-    descriptionField: '_displayDescription', // Usar la descripción combinada
-    // No hay imagen, precio o estado directo aplicable como en otros CRUDs
-    // Se podría añadir un statusConfig si se mapea el estado a 'activo'/'inactivo'
-  };
+  const renderOrderItem = useCallback(({ item: order }: { item: Order }) => {
+    const itemsCount = order.orderItems?.length || 0;
+    const itemsText = itemsCount === 1 ? '1 producto' : `${itemsCount} productos`;
+    
+    // Get customer info based on order type
+    let customerInfo = '';
+    if (order.orderType === OrderTypeEnum.DELIVERY) {
+      customerInfo = order.deliveryAddress || '';
+    } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
+      customerInfo = order.customerName || '';
+    } else if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
+      customerInfo = `Mesa ${order.table.name || order.table.number || 'N/A'}`;
+    }
+
+    return (
+      <Card 
+        style={styles.orderCard} 
+        mode="elevated"
+        onPress={() => handleOrderItemPress(order)}
+      >
+        <Card.Content>
+          {/* Header Row */}
+          <View style={styles.orderHeader}>
+            <Text style={styles.orderNumber}>Orden #{order.dailyNumber}</Text>
+            <Chip 
+              mode="flat" 
+              style={[styles.statusChip, { backgroundColor: getStatusColor(order.orderStatus) }]}
+              textStyle={styles.statusChipText}
+            >
+              {formatOrderStatus(order.orderStatus)}
+            </Chip>
+          </View>
+
+          {/* Order Type Row */}
+          <View style={styles.orderTypeRow}>
+            <Text style={styles.orderType}>{formatOrderType(order.orderType)}</Text>
+            <Text style={styles.orderTime}>
+              {format(new Date(order.createdAt), 'p', { locale: es })}
+            </Text>
+          </View>
+
+          {/* Customer Info */}
+          {customerInfo ? (
+            <Text style={styles.customerInfo} numberOfLines={1}>
+              📍 {customerInfo}
+            </Text>
+          ) : null}
+
+          {/* Items Summary */}
+          <View style={styles.itemsSummary}>
+            <Text style={styles.itemsCount}>{itemsText}</Text>
+            <Text style={styles.totalAmount}>Total: ${order.total}</Text>
+          </View>
+
+          {/* Notes if any */}
+          {order.notes ? (
+            <Text style={styles.notes} numberOfLines={2}>
+              📝 {order.notes}
+            </Text>
+          ) : null}
+        </Card.Content>
+
+        {/* Action Buttons */}
+        <Card.Actions style={styles.cardActions}>
+          <IconButton
+            icon="pencil-outline"
+            size={20}
+            onPress={() => handleOrderItemPress(order)}
+          />
+          <IconButton
+            icon="printer-outline"
+            size={20}
+            onPress={() => handleOpenPrinterModal(order.id)}
+            disabled={printKitchenTicketMutation.isPending && printKitchenTicketMutation.variables?.orderId === order.id}
+          />
+        </Card.Actions>
+      </Card>
+    );
+  }, [handleOrderItemPress, handleOpenPrinterModal, printKitchenTicketMutation.isPending, printKitchenTicketMutation.variables?.orderId, theme, styles]);
 
   const { ListEmptyComponent } = useListState({
     isLoading,
@@ -132,37 +211,24 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     }
   }, [orderToPrintId]); // Dependencia: orderToPrintId
 
-  // Función para renderizar el botón de imprimir ticket
-  const renderItemActions = useCallback((item: Order) => (
-    <IconButton
-      icon="printer-outline" // Icono de impresora
-      size={24}
-      onPress={() => handleOpenPrinterModal(item.id)} // Abrir modal al presionar
-      // Deshabilitar el botón si esta orden específica se está imprimiendo
-      disabled={printKitchenTicketMutation.isPending && printKitchenTicketMutation.variables?.orderId === item.id}
-    />
-  ), [handleOpenPrinterModal, printKitchenTicketMutation.isPending]); // Añadir dependencia
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <GenericList<Order & { _displayDescription: string, _displayTitle: string }>
-        items={orders}
-        renderConfig={listRenderConfig}
-        onItemPress={handleOrderItemPress}
-        onRefresh={handleRefresh}
-        isRefreshing={isFetching && !isLoading}
-        ListEmptyComponent={ListEmptyComponent}
-        isLoading={isLoading && !isFetching && !ordersData} // Mostrar loading solo si no hay datos aún
-        // Opciones de filtro y búsqueda no aplicadas por ahora
-        // filterOptions={[]}
-        // filterValue={''}
-        // onFilterChange={() => {}}
-        // enableSearch={false}
-        showFab={false} // No necesitamos FAB aquí
-        showImagePlaceholder={false} // No hay imágenes
-        contentContainerStyle={styles.listContentContainer}
-        renderItemActions={renderItemActions} // Pasar la función para renderizar acciones
-      />
+      {isLoading && !ordersData ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Cargando órdenes...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={ordersData || []}
+          keyExtractor={(item) => item.id}
+          renderItem={renderOrderItem}
+          refreshing={isFetching}
+          onRefresh={handleRefresh}
+          contentContainerStyle={styles.listContentContainer}
+          ListEmptyComponent={ListEmptyComponent}
+        />
+      )}
       {/* Modal de Selección de Impresora */}
       <Portal>
         <PrinterSelectionModal
@@ -202,39 +268,87 @@ const createStyles = (theme: AppTheme) => // Usar AppTheme directamente
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    content: { // No usado directamente por GenericList, pero mantenido por si acaso
-      flex: 1,
-      padding: theme.spacing.m,
-    },
-    title: { // No usado directamente por GenericList
-      marginBottom: theme.spacing.m,
-      textAlign: 'center',
-      color: theme.colors.primary,
-    },
-    centered: {
+    loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
-      marginTop: 50, // Añadir margen superior para centrar mejor
     },
-    emptyText: {
-      textAlign: 'center',
+    loadingText: {
+      marginTop: theme.spacing.m,
       color: theme.colors.onSurfaceVariant,
     },
-    errorText: {
-      textAlign: 'center',
-      color: theme.colors.error,
-      marginBottom: theme.spacing.m,
-    },
     listContentContainer: {
-      paddingBottom: theme.spacing.m, // Añadir padding inferior
+      padding: theme.spacing.m,
+      paddingBottom: theme.spacing.l * 2,
     },
-    // Estilos específicos para los items de la lista de órdenes si GenericList no es suficiente
-    // orderItem: { ... },
-    // orderNumber: { ... },
-    // orderStatus: { ... },
-    // orderTime: { ... },
+    orderCard: {
+      marginBottom: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
+    },
+    orderHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    orderNumber: {
+      ...theme.fonts.titleMedium,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+    },
+    statusChip: {
+      height: 24,
+    },
+    statusChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'white',
+    },
+    orderTypeRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.s,
+    },
+    orderType: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
+    },
+    orderTime: {
+      ...theme.fonts.bodySmall,
+      color: theme.colors.onSurfaceVariant,
+    },
+    customerInfo: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: theme.spacing.s,
+    },
+    itemsSummary: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: theme.spacing.xs,
+    },
+    itemsCount: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurfaceVariant,
+    },
+    totalAmount: {
+      ...theme.fonts.titleSmall,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+    },
+    notes: {
+      ...theme.fonts.bodySmall,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: theme.spacing.s,
+      fontStyle: 'italic',
+    },
+    cardActions: {
+      justifyContent: 'flex-end',
+      paddingTop: 0,
+    },
   });
 
 export default OpenOrdersScreen;

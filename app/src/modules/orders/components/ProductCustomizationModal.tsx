@@ -381,6 +381,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
               name="preparationNotes"
               render={({ field: { onChange, onBlur, value } }) => (
                 <SpeechRecognitionInput
+                  key="preparation-notes-input"
                   // Usar el label del propio componente
                   label="Notas de Preparación (Opcional)"
                   value={value}

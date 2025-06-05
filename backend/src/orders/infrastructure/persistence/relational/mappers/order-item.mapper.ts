@@ -1,6 +1,9 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { OrderItem } from '../../../../domain/order-item';
 import { OrderItemEntity } from '../entities/order-item.entity';
+import { OrderEntity } from '../entities/order.entity';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
+import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { OrderMapper } from './order.mapper';
 import { OrderItemModifierMapper } from './order-item-modifier.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
@@ -53,9 +56,18 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     if (!domain) return null;
     const entity = new OrderItemEntity();
     if (domain.id) entity.id = domain.id;
-    entity.orderId = domain.orderId;
-    entity.productId = domain.productId;
-    entity.productVariantId = domain.productVariantId;
+    
+    // Set the foreign key relations using objects with IDs
+    if (domain.orderId) {
+      entity.order = { id: domain.orderId } as OrderEntity;
+    }
+    if (domain.productId) {
+      entity.product = { id: domain.productId } as ProductEntity;
+    }
+    if (domain.productVariantId) {
+      entity.productVariant = { id: domain.productVariantId } as ProductVariantEntity;
+    }
+    
     entity.quantity = domain.quantity;
     entity.basePrice = domain.basePrice;
     entity.finalPrice = domain.finalPrice;

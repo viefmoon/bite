@@ -15,7 +15,8 @@ import {
   Appbar,
 } from "react-native-paper";
 import { useAppTheme, AppTheme } from "@/app/styles/theme";
-import { Order, OrderTypeEnum, type OrderType, OrderItem } from "../types/orders.types";
+import { Order, OrderTypeEnum, type OrderType } from "../types/orders.types";
+import { CartItem, CartItemModifier } from "../context/CartContext";
 import { useGetAreas } from "@/modules/areasTables/services/areaService";
 import AnimatedLabelSelector from "@/app/components/common/AnimatedLabelSelector";
 import SpeechRecognitionInput from "@/app/components/common/SpeechRecognitionInput";
@@ -38,7 +39,8 @@ export interface UpdateOrderPayload {
   phoneNumber?: string;
   deliveryAddress?: string;
   notes?: string | null;
-  status?: Order['status'];
+  status?: Order['orderStatus'];
+  total?: number;
 }
 interface OrderItemDtoForBackend {
   id?: string;
@@ -66,6 +68,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  
 
   // --- Fetching Order Details ---
   const {
@@ -94,7 +97,8 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [orderNotes, setOrderNotes] = useState<string>('');
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
-  const [currentItems, setCurrentItems] = useState<OrderItem[]>([]);
+  const [currentItems, setCurrentItems] = useState<CartItem[]>([]);
+  
 
   // --- Carga de datos relacionados (Áreas, Mesas) ---
   const {
@@ -110,19 +114,9 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 
   // --- Efecto para inicializar el estado del formulario cuando los datos de la orden cargan ---
   useEffect(() => {
-    if (orderData) { // Usar orderData de la query
-      setOrderType(orderData.orderType);
-      setSelectedTableId(orderData.tableId ?? null);
-      // TODO: Implementar lógica para obtener areaId de la mesa
-      // setSelectedAreaId(areaIdFromTable ?? null);
-      setScheduledTime(orderData.scheduledAt ? new Date(orderData.scheduledAt) : null);
-      // TODO: Añadir campos de cliente/delivery al schema Order si es necesario
-      setCustomerName(orderData.customerName ?? '');
-      setPhoneNumber(orderData.phoneNumber ?? '');
-      setDeliveryAddress(orderData.deliveryAddress ?? '');
-      setOrderNotes(orderData.notes ?? '');
-      setCurrentItems(orderData.items || []);
-    } else if (!isLoadingOrder && !orderId) { // Resetear si no hay orderId (o si se cierra el modal)
+    if (!orderId || !visible) {
+      // Reset when modal is closed or no order selected
+      if (!visible) {
         setOrderType(OrderTypeEnum.DINE_IN);
         setSelectedAreaId(null);
         setSelectedTableId(null);
@@ -132,8 +126,48 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
         setDeliveryAddress('');
         setOrderNotes('');
         setCurrentItems([]);
+      }
+      return;
     }
-  }, [orderData, isLoadingOrder, orderId]); // Depender de orderData
+    
+    if (orderData && !isLoadingOrder) { // Only process when data is loaded
+      
+      // Set form fields
+      setOrderType(orderData.orderType);
+      setSelectedTableId(orderData.tableId ?? null);
+      setScheduledTime(orderData.scheduledAt ? new Date(orderData.scheduledAt) : null);
+      setCustomerName(orderData.customerName ?? '');
+      setPhoneNumber(orderData.phoneNumber ?? '');
+      setDeliveryAddress(orderData.deliveryAddress ?? '');
+      setOrderNotes(orderData.notes ?? '');
+      
+      // Map orderItems to the expected format
+      if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
+        const mappedItems: CartItem[] = orderData.orderItems.map((item: any) => {
+          const mappedItem: CartItem = {
+            id: item.id,
+            productId: item.productId,
+            productName: item.product?.name || 'Producto desconocido',
+            quantity: Number(item.quantity) || 1,
+            unitPrice: parseFloat(item.basePrice || '0'),
+            totalPrice: parseFloat(item.finalPrice || '0'), // finalPrice ya incluye la cantidad
+            modifiers: (item.modifiers || []).map((mod: any) => ({
+              id: mod.id,
+              name: mod.productModifier?.name || mod.name || 'Modificador',
+              price: parseFloat(mod.price || '0'),
+            })),
+            variantId: item.productVariantId || undefined,
+            variantName: item.productVariant?.name || undefined,
+            preparationNotes: item.preparationNotes || undefined,
+          };
+          return mappedItem;
+        });
+        setCurrentItems(mappedItems);
+      } else {
+        setCurrentItems([]);
+      }
+    }
+  }, [orderData, isLoadingOrder, orderId, visible]); // Add visible to dependencies
 
   // --- Lógica para manejar cambios en tipo de orden (sin cambios) ---
    useEffect(() => {
@@ -142,17 +176,8 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
      setCustomerNameError(null);
      setPhoneError(null);
      setAddressError(null);
-     if (orderType !== OrderTypeEnum.DINE_IN) {
-     } else {
-        setCustomerName('');
-        setPhoneNumber('');
-        setDeliveryAddress('');
-     }
-     if (orderType !== OrderTypeEnum.TAKE_AWAY) {
-     }
-     if (orderType !== OrderTypeEnum.DELIVERY) {
-        setDeliveryAddress('');
-     }
+     // Note: This effect should NOT clear form fields when editing an existing order
+     // Only clear fields when orderType changes due to user interaction
    }, [orderType]);
 
   // --- Lógica para calcular totales (sin cambios) ---
@@ -169,9 +194,31 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 
   // --- Lógica para añadir/editar/eliminar items (sin cambios) ---
   const handleAddItem = () => { console.log("TODO: Añadir item"); };
-  const handleEditItem = (itemId: string) => { console.log("TODO: Editar item", itemId); };
   const handleRemoveItem = (itemId: string) => setCurrentItems(prev => prev.filter(item => item.id !== itemId));
-  const handleUpdateItemQuantity = (itemId: string, newQuantity: number) => { /* ... */ if (newQuantity <= 0) { handleRemoveItem(itemId); return; } setCurrentItems(prev => prev.map(item => { if (item.id === itemId) { const modifiersPrice = item.modifiers.reduce((sum, mod) => sum + mod.price, 0); const newTotalPrice = (item.unitPrice + modifiersPrice) * newQuantity; return { ...item, quantity: newQuantity, totalPrice: newTotalPrice }; } return item; })); };
+  const handleUpdateItemQuantity = (itemId: string, newQuantity: number) => {
+    console.log('[EditOrderModal] Updating quantity for item:', itemId, 'to:', newQuantity);
+    if (newQuantity <= 0) {
+      handleRemoveItem(itemId);
+      return;
+    }
+    
+    setCurrentItems(prev => {
+      const updated = prev.map(item => {
+        if (item.id === itemId) {
+          const modifiersPrice = item.modifiers.reduce((sum, mod) => sum + mod.price, 0);
+          const newTotalPrice = (item.unitPrice + modifiersPrice) * newQuantity;
+          return {
+            ...item,
+            quantity: newQuantity,
+            totalPrice: newTotalPrice
+          };
+        }
+        return item;
+      });
+      console.log('[EditOrderModal] Updated items:', updated);
+      return updated;
+    });
+  };
 
   // --- Lógica para guardar cambios ---
   const handleSaveChanges = async () => {
@@ -185,9 +232,22 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
     if (orderType === OrderTypeEnum.DINE_IN) { if (!selectedAreaId) { setAreaError("Debe seleccionar un área"); isValid = false; } if (!selectedTableId) { setTableError("Debe seleccionar una mesa"); isValid = false; } } else if (orderType === OrderTypeEnum.TAKE_AWAY) { if (!customerName || customerName.trim() === '') { setCustomerNameError("El nombre del cliente es obligatorio"); isValid = false; } } else if (orderType === OrderTypeEnum.DELIVERY) { if (!deliveryAddress || deliveryAddress.trim() === '') { setAddressError("La dirección es obligatoria para Domicilio"); isValid = false; } if (!phoneNumber || phoneNumber.trim() === '') { setPhoneError("El teléfono es obligatorio para Domicilio"); isValid = false; } }
     if (!isValid) return;
 
-    // Mapear items (sin cambios)
-    const itemsForBackend: OrderItemDtoForBackend[] = currentItems.map(item => ({ id: item.id, productId: item.productId, productVariantId: item.variantId || null, quantity: item.quantity, basePrice: Number(item.unitPrice), finalPrice: Number(item.totalPrice / item.quantity), preparationNotes: item.notes || null, }));
+    // Mapear items
+    console.log('[EditOrderModal] Current items before mapping:', currentItems);
+    const itemsForBackend: OrderItemDtoForBackend[] = currentItems.map(item => ({
+      id: item.id,
+      productId: item.productId,
+      productVariantId: item.variantId || null,
+      quantity: item.quantity,
+      basePrice: Number(item.unitPrice),
+      finalPrice: Number(item.unitPrice), // finalPrice should be unit price, not total/quantity
+      preparationNotes: item.preparationNotes || null, // Use preparationNotes, not notes
+    }));
+    console.log('[EditOrderModal] Items for backend:', itemsForBackend);
 
+    // Calculate new total based on current items
+    const newTotal = currentItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    
     // Construir payload (comparar con orderData de la query)
     const updatePayload: UpdateOrderPayload = {
       orderType: orderType !== orderData?.orderType ? orderType : undefined,
@@ -198,10 +258,13 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
       phoneNumber: (orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY) ? phoneNumber : undefined,
       deliveryAddress: orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined,
       notes: orderNotes !== orderData?.notes ? orderNotes : undefined,
+      total: newTotal, // Add total to update
     };
 
     // Filtrar payload (sin cambios)
     const filteredPayload = Object.entries(updatePayload).reduce((acc, [key, value]) => { if (value !== undefined) { acc[key as keyof UpdateOrderPayload] = value; } return acc; }, {} as Partial<UpdateOrderPayload>);
+    
+    console.log('[EditOrderModal] Final payload being sent:', filteredPayload);
 
     try {
         await onSaveChanges(orderId, filteredPayload); // Usar orderId
@@ -373,7 +436,10 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
         <View style={styles.container}>
           <Appbar.Header style={styles.appBar} elevated>
             <Appbar.BackAction onPress={onClose} />
-            <Appbar.Content title={`Editar Orden #${orderData.dailyNumber}`} titleStyle={styles.appBarTitle} />
+            <Appbar.Content 
+              title={`Editar Orden #${orderData.dailyNumber} - ${format(new Date(orderData.createdAt), 'dd/MM/yyyy', { locale: es })}`} 
+              titleStyle={styles.appBarTitle} 
+            />
           </Appbar.Header>
 
           <ScrollView style={styles.scrollView}>
@@ -394,13 +460,49 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 
             {/* Lista de Items */}
             <List.Section title="Productos">
-              {currentItems.map((item) => (
+              {currentItems.length === 0 && !isLoadingOrder && (
+                <Text style={{ padding: theme.spacing.m, textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
+                  No hay productos en esta orden
+                </Text>
+              )}
+              {currentItems.map((item, index) => (
                 <List.Item
-                  key={item.id}
+                  key={item.id || `item-${index}`}
                   title={`${item.quantity}x ${item.productName}${item.variantName ? ` (${item.variantName})` : ''}`}
-                  description={item.modifiers.map(m => m.modifierName).join(', ') || item.notes || ''}
+                  description={
+                    item.modifiers.length > 0
+                      ? item.modifiers.map(m => m.name).join(', ')
+                      : item.preparationNotes || undefined
+                  }
                   descriptionNumberOfLines={2}
-                  right={() => ( <View style={styles.itemActionsContainer}> <View style={styles.quantityActions}> <IconButton icon="minus-circle-outline" size={24} onPress={() => handleUpdateItemQuantity(item.id, item.quantity - 1)} style={styles.quantityButton} disabled={item.quantity <= 1}/> <Text style={styles.quantityText}>{item.quantity}</Text> <IconButton icon="plus-circle-outline" size={24} onPress={() => handleUpdateItemQuantity(item.id, item.quantity + 1)} style={styles.quantityButton}/> </View> <Text style={styles.itemPrice}>${item.totalPrice.toFixed(2)}</Text> <IconButton icon="delete-outline" size={24} onPress={() => handleRemoveItem(item.id)} style={styles.deleteButton} iconColor={theme.colors.error}/> </View> )}
+                  right={() => (
+                    <View style={styles.itemActionsContainer}>
+                      <View style={styles.quantityActions}>
+                        <IconButton
+                          icon="minus-circle-outline"
+                          size={24}
+                          onPress={() => handleUpdateItemQuantity(item.id, item.quantity - 1)}
+                          style={styles.quantityButton}
+                          disabled={item.quantity <= 1}
+                        />
+                        <Text style={styles.quantityText}>{item.quantity}</Text>
+                        <IconButton
+                          icon="plus-circle-outline"
+                          size={24}
+                          onPress={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
+                          style={styles.quantityButton}
+                        />
+                      </View>
+                      <Text style={styles.itemPrice}>${item.totalPrice.toFixed(2)}</Text>
+                      <IconButton
+                        icon="delete-outline"
+                        size={24}
+                        onPress={() => handleRemoveItem(item.id)}
+                        style={styles.deleteButton}
+                        iconColor={theme.colors.error}
+                      />
+                    </View>
+                  )}
                   style={styles.listItem}
                 />
               ))}

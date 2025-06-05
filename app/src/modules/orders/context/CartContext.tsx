@@ -32,6 +32,7 @@ export interface CartItem {
   variantId?: string;
   variantName?: string;
   preparationNotes?: string;
+  notes?: string; // Add notes field for backward compatibility
 }
 
 interface CartContextType {

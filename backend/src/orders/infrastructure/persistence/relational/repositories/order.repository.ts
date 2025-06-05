@@ -242,8 +242,12 @@ export class OrdersRelationalRepository implements OrderRepository {
 
     const queryBuilder = this.ordersRepository
       .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('order.table', 'table')
+      .leftJoinAndSelect('order.dailyOrderCounter', 'dailyOrderCounter')
       .leftJoinAndSelect('order.orderItems', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'product')
+      .leftJoinAndSelect('orderItems.productVariant', 'productVariant')
       .leftJoinAndSelect('orderItems.modifiers', 'modifiers')
       .leftJoinAndSelect('order.payments', 'payments')
       .where('order.createdAt >= :start', { start: startUtc })

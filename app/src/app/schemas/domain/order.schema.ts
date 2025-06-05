@@ -48,18 +48,25 @@ export const orderSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.string().optional(), // Hacer opcional si no siempre está presente
   dailyNumber: z.number().int().positive(),
-  items: z.array(orderItemSchema),
-  totalAmount: z.number(),
-  status: orderStatusSchema,
+  orderItems: z.array(z.any()).optional(), // Changed from 'items' to 'orderItems' to match API
+  total: z.union([z.string(), z.number()]).optional(), // The API returns 'total' not 'totalAmount'
+  orderStatus: orderStatusSchema, // Changed from 'status' to 'orderStatus' to match API
   orderType: orderTypeSchema,
   createdAt: z.union([z.string().datetime(), z.date()]), // Permitir string o Date
   updatedAt: z.union([z.string().datetime(), z.date()]), // Permitir string o Date
-  customerId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(), // Changed from 'customerId' to 'userId' to match API
   tableId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   customerName: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
   deliveryAddress: z.string().nullable().optional(),
+  // Add fields that API returns but were missing
+  user: z.any().optional(),
+  table: z.any().optional(),
+  dailyOrderCounter: z.any().optional(),
+  payments: z.array(z.any()).optional(),
+  deletedAt: z.string().nullable().optional(),
+  dailyOrderCounterId: z.string().uuid().nullable().optional(),
 });
 export type Order = z.infer<typeof orderSchema>;
