@@ -29,6 +29,11 @@ npm run migration:generate -- src/database/migrations/MigrationName
 npm run migration:run
 npm run migration:revert
 npm run seed:run:relational  # Run database seeds
+
+# Reset de la base de datos
+npm run db:reset           # Elimina TODA la base de datos y la recrea vacía
+npm run db:clear-migrations # Solo elimina la tabla de migraciones
+npm run db:fresh           # Reset completo + migraciones + seeds
 ```
 
 ### Testing & Quality
