@@ -1,5 +1,5 @@
 import apiClient from "../../../app/services/apiClient";
-import { ApiError } from "../../../app/lib/errors";
+import { handleApiResponse, handleApiResponseVoid } from "../../../app/lib/apiHelpers";
 import { API_PATHS } from "../../../app/constants/apiPaths";
 import {
   AuthEmailLoginDto,
@@ -23,10 +23,7 @@ class AuthService {
       payload
     );
 
-    if (!response.ok || !response.data) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
-    return response.data;
+    return handleApiResponse(response);
   }
 
   async register(data: RegisterFormInputs): Promise<void> {
@@ -35,9 +32,7 @@ class AuthService {
       data
     );
 
-    if (!response.ok) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
+    handleApiResponseVoid(response);
   }
 
 }

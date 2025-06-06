@@ -56,13 +56,30 @@ export class ApiError extends Error {
     const axiosError = error as AxiosError;
     const responseData = axiosError.response?.data as BackendErrorResponse | any;
     const status = axiosError.response?.status ?? 500;
-    const code = responseData?.code ?? ERROR_CODES.UNKNOWN_API_ERROR;
-    // Use original Axios message if backend message is unavailable
-    const message = responseData?.message ?? axiosError.message ?? 'Error desconocido de la API.';
+    
+    // Extract error code - check multiple possible locations
+    let code = responseData?.code || 
+               responseData?.error?.code || 
+               responseData?.errors?.[0]?.code ||
+               ERROR_CODES.UNKNOWN_API_ERROR;
+    
+    // Extract error message - check multiple possible locations
+    let message = responseData?.message || 
+                  responseData?.error?.message || 
+                  responseData?.errors?.[0]?.message ||
+                  axiosError.message || 
+                  'Error desconocido de la API.';
+    
     // Include full response data as details if no specific 'details' property exists
     const details = responseData?.details ?? responseData;
 
-    console.warn("Creating ApiError from AxiosError:", { status, code, message }); // Log warning for easier debugging
+    console.warn("Creating ApiError from AxiosError:", { 
+      status, 
+      code, 
+      message,
+      responseData 
+    });
+    
     // Uses the main constructor signature: code, message, status, details
     return new ApiError(code, message, status, details);
   }

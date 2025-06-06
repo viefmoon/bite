@@ -1,5 +1,5 @@
 import apiClient from "@/app/services/apiClient";
-import { ApiError } from "@/app/lib/errors";
+import { handleApiResponse } from "@/app/lib/apiHelpers";
 import { API_PATHS } from "@/app/constants/apiPaths";
 import type { Order } from "../../../app/schemas/domain/order.schema";
 import type { FindAllOrdersDto } from "../types/orders.types"; // FindAllOrdersDto se queda aquí
@@ -15,17 +15,8 @@ import type { UpdateOrderPayload } from "../components/EditOrderModal"; // Impor
  */
 const createOrder = async (orderData: OrderDetailsForBackend): Promise<Order> => {
   // Asegúrate de que la ruta sea correcta para crear órdenes
-  const response = await apiClient.post<Order>(API_PATHS.ORDERS, orderData); // Usar API_PATHS.ORDERS si existe, o la ruta directa '/api/v1/orders'
-
-  if (!response.ok || !response.data) {
-    console.error("[orderService.createOrder] Failed to create order:", response);
-    throw ApiError.fromApiResponse(
-      response.data, // Puede ser BackendErrorResponse o any
-      response.status
-    );
-  }
-  // Asumiendo que la API devuelve la orden creada como tipo Order
-  return response.data;
+  const response = await apiClient.post<Order>(API_PATHS.ORDERS, orderData);
+  return handleApiResponse(response);
 };
 
 export const orderService = {

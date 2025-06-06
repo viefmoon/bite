@@ -173,6 +173,8 @@ const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
           placeholderTextColor={finalInactiveLabelColor}
           multiline={multiline}
           editable={!disabled}
+          autoCorrect={false}
+          keyboardAppearance={theme.dark ? 'dark' : 'light'}
           {...rest}
         />
       </View>
