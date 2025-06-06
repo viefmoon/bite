@@ -56,7 +56,7 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     if (!domain) return null;
     const entity = new OrderItemEntity();
     if (domain.id) entity.id = domain.id;
-    
+
     // Set the foreign key relations using objects with IDs
     if (domain.orderId) {
       entity.order = { id: domain.orderId } as OrderEntity;
@@ -65,9 +65,11 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
       entity.product = { id: domain.productId } as ProductEntity;
     }
     if (domain.productVariantId) {
-      entity.productVariant = { id: domain.productVariantId } as ProductVariantEntity;
+      entity.productVariant = {
+        id: domain.productVariantId,
+      } as ProductVariantEntity;
     }
-    
+
     entity.quantity = domain.quantity;
     entity.basePrice = domain.basePrice;
     entity.finalPrice = domain.finalPrice;

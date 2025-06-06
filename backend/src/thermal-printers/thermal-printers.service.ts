@@ -13,8 +13,8 @@ import {
   PrinterConnectionType,
 } from './domain/thermal-printer';
 import { FindAllThermalPrintersDto } from './dto/find-all-thermal-printers.dto';
+import * as net from 'net';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import net from 'net';
 import { QueryFailedError } from 'typeorm';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
 import { Inject } from '@nestjs/common';
@@ -285,7 +285,6 @@ export class ThermalPrintersService {
       `Intentando imprimir ticket de prueba en ${printerInfo.ip}:${printerInfo.port}`,
     );
 
-    const net = require('net');
     const timeout = 5000;
 
     return new Promise((resolve) => {
@@ -294,10 +293,10 @@ export class ThermalPrintersService {
 
       socket.setTimeout(timeout);
 
-      socket.on('connect', async () => {
+      socket.on('connect', () => {
         connected = true;
         this.logger.log(`Conectado a ${printerInfo.ip}:${printerInfo.port}`);
-        
+
         try {
           // Comandos ESC/POS para el ticket de prueba
           const commands = [
@@ -322,7 +321,7 @@ export class ThermalPrintersService {
           ];
 
           const buffer = Buffer.from(commands.join(''), 'binary');
-          
+
           socket.write(buffer, () => {
             this.logger.log('Ticket de prueba enviado exitosamente');
             socket.end();

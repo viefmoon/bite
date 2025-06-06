@@ -81,7 +81,7 @@ export class TablesService {
   ): Promise<Paginated<Table>> {
     const items = await this.findAll(filterOptions, paginationOptions);
     const total = items.length; // En una implementación real, deberías obtener el total de la BD
-    
+
     return new Paginated(
       items,
       total,
@@ -92,7 +92,7 @@ export class TablesService {
 
   async findByAreaIdPaginated(areaId: string): Promise<Paginated<Table>> {
     const items = await this.findByAreaId(areaId);
-    
+
     return new Paginated(
       items,
       items.length,

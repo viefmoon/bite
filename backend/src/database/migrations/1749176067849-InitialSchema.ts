@@ -1,9 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakeCategoryDescriptionNullable1749149863129
-  implements MigrationInterface
-{
-  name = 'MakeCategoryDescriptionNullable1749149863129';
+export class InitialSchema1749176067849 implements MigrationInterface {
+  name = 'InitialSchema1749176067849';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

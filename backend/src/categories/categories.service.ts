@@ -21,13 +21,15 @@ export class CategoriesService extends BaseCrudService<
 
   // Los métodos CRUD (create, findAll, findOne, update, remove) son heredados de BaseCrudService
 
-  async findAllPaginated(filter?: FindAllCategoriesDto): Promise<Paginated<Category>> {
+  async findAllPaginated(
+    filter?: FindAllCategoriesDto,
+  ): Promise<Paginated<Category>> {
     const page = filter?.page || 1;
     const limit = filter?.limit || 10;
-    
+
     // Usar el método findAll heredado para obtener todos los registros
     const allItems = await this.findAll(filter);
-    
+
     // Crear respuesta paginada
     return new Paginated(allItems, allItems.length, page, limit);
   }

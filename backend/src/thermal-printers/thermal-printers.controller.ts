@@ -33,10 +33,8 @@ import { FindAllThermalPrintersDto } from './dto/find-all-thermal-printers.dto';
 import { DiscoveryService } from './discovery.service';
 import { DiscoveredPrinterDto } from './dto/discovered-printer.dto';
 import { ThermalPrinter } from './domain/thermal-printer';
-import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { Paginated } from '../common/types/paginated.type';
-import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiTags('Thermal Printers')
 @Controller({
@@ -215,7 +213,12 @@ export class ThermalPrintersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Ticket de prueba impreso exitosamente.',
-    schema: { example: { success: true, message: 'Ticket de prueba impreso correctamente' } },
+    schema: {
+      example: {
+        success: true,
+        message: 'Ticket de prueba impreso correctamente',
+      },
+    },
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
