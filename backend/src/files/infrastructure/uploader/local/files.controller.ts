@@ -51,7 +51,30 @@ export class FilesLocalController {
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
   ): Promise<FileResponseDto> {
-    return this.filesService.create(file);
+    console.log('[FilesController] Upload request received');
+    console.log('[FilesController] File details:', {
+      originalname: file?.originalname,
+      mimetype: file?.mimetype,
+      size: file?.size,
+      encoding: file?.encoding,
+    });
+
+    if (!file) {
+      console.error('[FilesController] No file received in request');
+      throw new Error('No file uploaded');
+    }
+
+    try {
+      const result = await this.filesService.create(file);
+      console.log(
+        '[FilesController] File uploaded successfully:',
+        result.file.id,
+      );
+      return result;
+    } catch (error) {
+      console.error('[FilesController] Error uploading file:', error);
+      throw error;
+    }
   }
 
   @Get(':path')

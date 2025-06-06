@@ -57,6 +57,26 @@ export class ApiError extends Error {
     const responseData = axiosError.response?.data as BackendErrorResponse | any;
     const status = axiosError.response?.status ?? 500;
     
+    // Manejar errores de red específicamente
+    if (axiosError.code === 'ERR_NETWORK' || !axiosError.response) {
+      return new ApiError(
+        ERROR_CODES.NETWORK_ERROR,
+        "Error de conexión. Verifica tu conexión a internet e intenta nuevamente.",
+        0,
+        { originalError: axiosError.message }
+      );
+    }
+    
+    // Manejar timeout
+    if (axiosError.code === 'ECONNABORTED' || axiosError.message.includes('timeout')) {
+      return new ApiError(
+        ERROR_CODES.NETWORK_ERROR,
+        "La solicitud tardó demasiado tiempo. Intenta nuevamente con una conexión más estable.",
+        0,
+        { originalError: axiosError.message }
+      );
+    }
+    
     // Extract error code - check multiple possible locations
     let code = responseData?.code || 
                responseData?.error?.code || 
@@ -73,12 +93,6 @@ export class ApiError extends Error {
     // Include full response data as details if no specific 'details' property exists
     const details = responseData?.details ?? responseData;
 
-    console.warn("Creating ApiError from AxiosError:", { 
-      status, 
-      code, 
-      message,
-      responseData 
-    });
     
     // Uses the main constructor signature: code, message, status, details
     return new ApiError(code, message, status, details);
@@ -88,7 +102,6 @@ export class ApiError extends Error {
    * Creates a specific ApiError for refresh token failures.
    */
   static fromRefreshError(error: any): ApiError {
-    console.error("Creating ApiError from RefreshError:", error);
     // Note: Logout logic should primarily reside in the refreshToken function itself
 
     // Uses the main constructor signature: code, message, status, details

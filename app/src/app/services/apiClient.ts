@@ -5,7 +5,6 @@ import EncryptedStorage from "react-native-encrypted-storage";
 import { useAuthStore } from "../store/authStore";
 import { ApiError } from "../lib/errors";
 
-console.log("API_URL loaded:", API_URL);
 const REFRESH_TOKEN_KEY = "refresh_token";
 const AUTH_REFRESH_PATH = "/api/v1/auth/refresh";
 
@@ -20,32 +19,8 @@ const axiosInstance = axios.create({
   timeout: 30000,
 });
 
-// Log para debug de red
-axiosInstance.interceptors.request.use(
-  (config) => {
-    console.log("🔵 Request:", config.method?.toUpperCase(), config.url);
-    console.log("🔵 Base URL:", config.baseURL);
-    console.log("🔵 Full URL:", `${config.baseURL}${config.url}`);
-    return config;
-  },
-  (error) => {
-    console.error("🔴 Request Error:", error);
-    return Promise.reject(error);
-  }
-);
 
-axiosInstance.interceptors.response.use(
-  (response) => {
-    console.log("🟢 Response:", response.status, response.config.url);
-    return response;
-  },
-  (error) => {
-    console.error("🔴 Response Error:", error.message);
-    console.error("🔴 Error Code:", error.code);
-    console.error("🔴 Error Config:", error.config?.url);
-    return Promise.reject(error);
-  }
-);
+
 
 // --- Lógica de Refresco de Token (igual que antes) ---
 let isRefreshing = false;
@@ -69,10 +44,8 @@ async function refreshToken(): Promise<string> {
   try {
     const currentRefreshToken = await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
     if (!currentRefreshToken) {
-      console.warn("REFRESH: No refresh token found.");
       throw new Error("No refresh token available.");
     }
-    console.log("REFRESH: Attempting token refresh...");
     const response = await axios.post<{ token: string; refreshToken?: string }>(
       `${API_URL}${AUTH_REFRESH_PATH}`,
       {},
@@ -80,18 +53,14 @@ async function refreshToken(): Promise<string> {
     );
     const newAccessToken = response.data.token;
     const newRefreshToken = response.data.refreshToken;
-    console.log("REFRESH: Token refreshed successfully.");
     await useAuthStore.getState().setAccessToken(newAccessToken);
     if (newRefreshToken && newRefreshToken !== currentRefreshToken) {
-      console.log("REFRESH: Updating refresh token in storage.");
       await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
       useAuthStore.setState({ refreshToken: newRefreshToken });
     }
     return newAccessToken;
   } catch (error: any) {
-    console.error("REFRESH: Refresh token request failed.", error.response?.data || error.message);
     if (error.response?.status === 401) {
-      console.error("REFRESH: Refresh token is invalid or expired. Logging out.");
       await useAuthStore.getState().logout();
     }
     // Lanzamos un error específico que el interceptor pueda reconocer si es necesario,
@@ -122,7 +91,8 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status !== 401 || originalRequest.url === AUTH_REFRESH_PATH || originalRequest._retry) {
       // Si no es 401, es refresh, o ya se reintentó -> Rechazar con ApiError
-      return Promise.reject(ApiError.fromAxiosError(error));
+      const apiError = ApiError.fromAxiosError(error);
+      return Promise.reject(apiError);
     }
 
     // --- Manejo del 401 ---
@@ -168,6 +138,15 @@ const apiClient = createApisauceInstance({
   },
   timeout: 30000,
   axiosInstance: axiosInstance, // ¡Aquí está la clave!
+});
+
+// Agregar un response transform para manejar errores
+apiClient.addResponseTransform((response) => {
+  // Si la respuesta no es ok y tenemos un error original del interceptor
+  if (!response.ok && response.originalError instanceof ApiError) {
+    // Preservar el ApiError original
+    (response as any).apiError = response.originalError;
+  }
 });
 
 // Exportamos la instancia de APISAUCE que usa nuestro Axios configurado

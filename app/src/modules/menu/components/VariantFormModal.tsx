@@ -13,8 +13,21 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ProductVariant } from "../schema/products.schema";
-import { productVariantSchema } from "../../../app/schemas/domain/product-variant.schema";
+import { z } from "zod";
 import { useAppTheme } from "@/app/styles/theme";
+
+// Schema local para el formulario de variantes
+const variantFormSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1, "El nombre es requerido"),
+  price: z.coerce.number({
+    invalid_type_error: "El precio debe ser un número",
+    required_error: "El precio es requerido",
+  }).positive("El precio debe ser mayor a 0"),
+  isActive: z.boolean(),
+});
+
+type VariantFormData = z.infer<typeof variantFormSchema>;
 
 interface VariantFormModalProps {
   visible: boolean;
@@ -38,8 +51,8 @@ function VariantFormModal({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ProductVariant>({
-    resolver: zodResolver(productVariantSchema),
+  } = useForm<VariantFormData>({
+    resolver: zodResolver(variantFormSchema),
     defaultValues: {
       name: initialData?.name ?? "",
       price: initialData?.price ?? 0,
@@ -60,11 +73,11 @@ function VariantFormModal({
     }
   }, [visible, initialData, reset]);
 
-  const handleFormSubmit = (data: ProductVariant) => {
-    const finalData = {
+  const handleFormSubmit = (data: VariantFormData) => {
+    const finalData: ProductVariant = {
       ...data,
       ...(initialData?.id && { id: initialData.id }),
-    };
+    } as ProductVariant;
     onSubmit(finalData);
   };
 

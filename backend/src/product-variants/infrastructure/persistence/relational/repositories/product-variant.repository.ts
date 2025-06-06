@@ -45,7 +45,7 @@ export class ProductVariantRelationalRepository
     const where: any = {};
 
     if (options.productId) {
-      where.productId = options.productId;
+      where.product = { id: options.productId };
     }
 
     if (options.isActive !== undefined) {
@@ -174,7 +174,7 @@ export class ProductVariantRelationalRepository
 
   async findAllByProductId(productId: string): Promise<ProductVariant[]> {
     const entities = await this.productVariantRepository.find({
-      where: { productId },
+      where: { product: { id: productId } },
       relations: ['product'],
     });
     return entities

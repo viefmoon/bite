@@ -47,11 +47,26 @@ async function findOne(id: string): Promise<Product> {
 }
 
 async function create(data: ProductFormInputs): Promise<Product> {
+  
   const response = await apiClient.post<Product>(API_PATHS.PRODUCTS, data);
-  if (!response.ok || !response.data) {
+  
+  
+  if (!response.ok) {
+    // Verificar si tenemos un ApiError preservado
+    if ((response as any).apiError instanceof ApiError) {
+      throw (response as any).apiError;
+    }
+    
+    // Verificar si el error original del interceptor es un ApiError
+    if (response.originalError instanceof ApiError) {
+      throw response.originalError;
+    }
+    
+    // Si no hay originalError, crear uno desde la respuesta
     throw ApiError.fromApiResponse(response.data, response.status);
   }
-  return response.data;
+  
+  return response.data!;
 }
 
 async function update(
@@ -62,10 +77,23 @@ async function update(
     `${API_PATHS.PRODUCTS}/${id}`,
     data
   );
-  if (!response.ok || !response.data) {
+  
+  if (!response.ok) {
+    // Verificar si tenemos un ApiError preservado
+    if ((response as any).apiError instanceof ApiError) {
+      throw (response as any).apiError;
+    }
+    
+    // Verificar si el error original del interceptor es un ApiError
+    if (response.originalError instanceof ApiError) {
+      throw response.originalError;
+    }
+    
+    // Si no hay originalError, crear uno desde la respuesta
     throw ApiError.fromApiResponse(response.data, response.status);
   }
-  return response.data;
+  
+  return response.data!;
 }
 
 async function remove(id: string): Promise<void> {

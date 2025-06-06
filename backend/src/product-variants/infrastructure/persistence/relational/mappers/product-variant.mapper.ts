@@ -21,14 +21,21 @@ export class ProductVariantMapper extends BaseMapper<
     if (!entity) return null;
     const domain = new ProductVariant();
     domain.id = entity.id;
-    domain.productId = entity.product!.id;
+    // Si product existe, usar su id, sino usar productId del RelationId
+    domain.productId = entity.product?.id || entity.productId;
     domain.name = entity.name;
     domain.price = entity.price;
     domain.isActive = entity.isActive;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    domain.product = this.productMapper.toDomain(entity.product!)!;
+    // Solo mapear product si existe
+    if (entity.product) {
+      const mappedProduct = this.productMapper.toDomain(entity.product);
+      if (mappedProduct) {
+        domain.product = mappedProduct;
+      }
+    }
     return domain;
   }
 

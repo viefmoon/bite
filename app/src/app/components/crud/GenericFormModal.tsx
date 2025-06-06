@@ -344,8 +344,10 @@ const GenericFormModal = <
         try {
           const uploadResult =
             await imagePickerConfig.onImageUpload(localSelectedFile);
+          console.log('[GenericFormModal] Upload result:', uploadResult);
           if (uploadResult?.id) {
             finalPhotoId = uploadResult.id;
+            console.log('[GenericFormModal] New photo ID:', finalPhotoId);
           } else {
             throw new Error("La subida de la imagen no devolvió un ID.");
           }
@@ -370,6 +372,7 @@ const GenericFormModal = <
       }
     }
 
+    console.log('[GenericFormModal] Calling onSubmit with finalPhotoId:', finalPhotoId);
     await onSubmit(formData, finalPhotoId);
   };
 

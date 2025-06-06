@@ -14,6 +14,11 @@ export class FileType {
 
   @Transform(
     ({ value }) => {
+      // Si no hay valor, retornar null
+      if (!value) {
+        return null;
+      }
+
       if ((fileConfig() as FileConfig).driver === FileDriver.LOCAL) {
         return (appConfig() as AppConfig).backendDomain + value;
       } else if (

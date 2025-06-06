@@ -44,9 +44,11 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
-    entity.photo = domain.photoId
-      ? ({ id: domain.photoId } as FileEntity)
-      : null;
+    // Solo asignar photoId si está presente en el DTO
+    if (domain.photoId !== undefined) {
+      entity.photoId = domain.photoId;
+    }
+    // No asignar photo directamente, dejar que TypeORM maneje la relación
     return entity;
   }
 }

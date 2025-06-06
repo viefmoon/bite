@@ -2,6 +2,8 @@ import {
   HttpStatus,
   Module,
   UnprocessableEntityException,
+  MiddlewareConsumer,
+  NestModule,
 } from '@nestjs/common';
 import { FilesLocalController } from './files.controller';
 import { MulterModule } from '@nestjs/platform-express';
@@ -12,6 +14,7 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
 import { FilesLocalService } from './files.service';
 import { RelationalFilePersistenceModule } from '../../persistence/relational/relational-persistence.module';
 import { AllConfigType } from '../../../../config/config.type';
+import { UploadTimeoutMiddleware } from '../upload.middleware';
 
 const infrastructurePersistenceModule = RelationalFilePersistenceModule;
 
@@ -24,7 +27,7 @@ const infrastructurePersistenceModule = RelationalFilePersistenceModule;
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
           fileFilter: (request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
               return callback(
                 new UnprocessableEntityException({
                   status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -58,7 +61,16 @@ const infrastructurePersistenceModule = RelationalFilePersistenceModule;
     }),
   ],
   controllers: [FilesLocalController],
-  providers: [ConfigModule, ConfigService, FilesLocalService],
+  providers: [
+    ConfigModule,
+    ConfigService,
+    FilesLocalService,
+    UploadTimeoutMiddleware,
+  ],
   exports: [FilesLocalService],
 })
-export class FilesLocalModule {}
+export class FilesLocalModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(UploadTimeoutMiddleware).forRoutes('files/upload');
+  }
+}

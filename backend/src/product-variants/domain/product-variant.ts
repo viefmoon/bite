@@ -11,7 +11,7 @@ export class ProductVariant {
 
   isActive: boolean;
 
-  product: Product;
+  product?: Product;
 
   createdAt: Date;
 

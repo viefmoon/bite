@@ -146,7 +146,7 @@ const CategoriesScreen: React.FC = () => {
   }, []);
 
   const openDetailModal = useCallback(
-    (category: Category & { photoUrl?: string | null }) => {
+    (category: Category) => {
       setSelectedCategory(category);
       setDetailModalVisible(true);
     },
@@ -167,22 +167,27 @@ const CategoriesScreen: React.FC = () => {
 
   const handleFormSubmit = async (
     formData: CategoryFormData,
-    photoIdResult: string | null | undefined
+    photoId: string | null | undefined
   ) => {
-    const categoryDto = {
-      name: formData.name,
-      description: formData.description || null,
-      isActive: formData.isActive,
-      ...(photoIdResult !== undefined && { photoId: photoIdResult }),
+
+    const { imageUri, ...dataToSubmit } = formData;
+    const finalData = {
+      ...dataToSubmit,
     };
+
+    // Solo incluir photoId si tiene un valor definido (string o null)
+    if (photoId !== undefined) {
+      finalData.photoId = photoId;
+    }
+
 
     if (editingCategory) {
       updateCategoryMutation.mutate({
         id: editingCategory.id,
-        data: categoryDto as UpdateCategoryDto,
+        data: finalData as UpdateCategoryDto,
       });
     } else {
-      createCategoryMutation.mutate(categoryDto as CreateCategoryDto);
+      createCategoryMutation.mutate(finalData as CreateCategoryDto);
     }
   };
 
@@ -202,10 +207,7 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-    const baseCategories = (categoriesResponse?.data ?? []).map((cat) => ({
-      ...cat,
-      photoUrl: getImageUrl(cat.photo?.path),
-    }));
+    const baseCategories = categoriesResponse?.data ?? [];
     const sortedCategories = baseCategories.sort((a, b) =>
       a.name.localeCompare(b.name)
     );
@@ -239,10 +241,7 @@ const CategoriesScreen: React.FC = () => {
 
   const selectedCategoryMapped = useMemo(() => {
     if (!selectedCategory) return null;
-    return {
-      ...selectedCategory,
-      photoUrl: getImageUrl(selectedCategory.photo?.path),
-    };
+    return selectedCategory;
   }, [selectedCategory]);
 
   const filterOptions: FilterOption<string | number>[] = [
@@ -255,7 +254,7 @@ const CategoriesScreen: React.FC = () => {
     titleField: "name" as keyof Category,
     descriptionField: "description" as keyof Category,
     descriptionMaxLength: 60,
-    imageField: "photoUrl" as keyof (Category & { photoUrl?: string | null }),
+    imageField: "photo" as keyof Category,
     statusConfig: {
       field: "isActive" as keyof Category,
       activeValue: true,
@@ -357,7 +356,7 @@ const CategoriesScreen: React.FC = () => {
           onDismiss={closeModals}
           item={selectedCategoryMapped}
           titleField="name"
-          imageField="photoUrl"
+          imageField="photo"
           descriptionField="description"
           statusConfig={listRenderConfig.statusConfig}
           onEdit={openEditModal as (item: any) => void}

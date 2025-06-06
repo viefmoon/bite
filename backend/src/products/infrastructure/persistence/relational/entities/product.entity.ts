@@ -10,7 +10,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
@@ -39,10 +38,10 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @RelationId((product: ProductEntity) => product.subcategory)
+  @Column({ name: 'subcategory_id' })
   subcategoryId: string;
 
-  @RelationId((product: ProductEntity) => product.photo)
+  @Column({ name: 'photo_id', nullable: true })
   photoId: string | null;
 
   @Column()
@@ -78,7 +77,7 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @RelationId((product: ProductEntity) => product.preparationScreen)
+  @Column({ name: 'preparation_screen_id', nullable: true })
   preparationScreenId: string | null;
 
   @ManyToOne(

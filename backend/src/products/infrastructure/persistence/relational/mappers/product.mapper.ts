@@ -73,14 +73,29 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     entity.price = domain.price;
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
+    entity.subcategoryId = domain.subcategoryId;
     entity.subcategory = { id: domain.subcategoryId } as SubcategoryEntity;
+    entity.photoId = domain.photoId || null;
     entity.photo = domain.photoId
       ? ({ id: domain.photoId } as FileEntity)
       : null;
     entity.estimatedPrepTime = domain.estimatedPrepTime;
-    entity.preparationScreen = domain.preparationScreen?.id
-      ? ({ id: domain.preparationScreen.id } as PreparationScreenEntity)
-      : null;
+
+    // Establecer tanto la relación como el ID de preparationScreen
+    if (domain.preparationScreenId !== undefined) {
+      entity.preparationScreenId = domain.preparationScreenId;
+      entity.preparationScreen = domain.preparationScreenId
+        ? ({ id: domain.preparationScreenId } as PreparationScreenEntity)
+        : null;
+    } else if (domain.preparationScreen?.id) {
+      entity.preparationScreenId = domain.preparationScreen.id;
+      entity.preparationScreen = {
+        id: domain.preparationScreen.id,
+      } as PreparationScreenEntity;
+    } else {
+      entity.preparationScreenId = null;
+      entity.preparationScreen = null;
+    }
 
     if (domain.modifierGroups !== undefined) {
       entity.modifierGroups = domain.modifierGroups.map(

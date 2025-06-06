@@ -57,10 +57,27 @@ export abstract class BaseRelationalRepository<
     });
     if (!entity) return null;
 
-    // Asegúrate de que el payload no sobrescriba el ID existente
-    const updatePayload = { ...payload, id: undefined };
+    // Convertir el payload a entidad usando el mapper
+    const domainWithId = { ...payload, id } as unknown as D;
+    const mappedEntity = this.mapper.toEntity(domainWithId);
 
-    await this.ormRepo.save({ ...(entity as any), ...(updatePayload as any) });
+    if (!mappedEntity) return null;
+
+    // Filtrar campos undefined para evitar sobrescribir valores existentes
+    const updateData = Object.entries(mappedEntity as any).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined && key !== 'id') {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as any,
+    );
+
+    // Actualizar usando el método update de TypeORM en lugar de save
+    await this.ormRepo.update(id as any, updateData);
+
+    // Recuperar la entidad actualizada con todas sus relaciones
     const updated = await this.ormRepo.findOne({
       where: { id } as unknown as FindOptionsWhere<E>,
     });

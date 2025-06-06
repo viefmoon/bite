@@ -8,7 +8,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
@@ -21,7 +20,7 @@ export class CategoryEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ type: 'varchar', nullable: true })
@@ -30,7 +29,7 @@ export class CategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @RelationId((category: CategoryEntity) => category.photo)
+  @Column({ name: 'photo_id', nullable: true })
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })

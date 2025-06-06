@@ -18,6 +18,7 @@ const errorCodeMessages: { [key in ApiErrorCode | string]?: string } = {
   // Errores de recursos
   [ERROR_CODES.RESOURCE_NOT_FOUND]: "El recurso solicitado no se encontró.",
   [ERROR_CODES.CONFLICT_ERROR]: "Hubo un conflicto al procesar tu solicitud.",
+  [ERROR_CODES.PRODUCT_NAME_EXISTS]: "Ya existe un producto con ese nombre. Por favor, elige otro nombre.",
   
   // Errores de red y servidor
   [ERROR_CODES.NETWORK_ERROR]: "Error de red. Verifica tu conexión e inténtalo de nuevo.",
@@ -82,14 +83,21 @@ const errorCodeMessages: { [key in ApiErrorCode | string]?: string } = {
   'CATEGORY_NOT_FOUND': "La categoría no fue encontrada.",
   'SUBCATEGORY_NOT_FOUND': "La subcategoría no fue encontrada.",
   'CATEGORY_HAS_PRODUCTS': "No se puede eliminar la categoría porque tiene productos asociados.",
+  
+  // Errores de archivos
+  [ERROR_CODES.UPLOAD_FAILED]: "Error al subir el archivo. Por favor, intenta nuevamente.",
+  [ERROR_CODES.FILE_TOO_LARGE]: "El archivo es demasiado grande. El tamaño máximo permitido es 10MB.",
+  'cantUploadFileType': "El tipo de archivo no está permitido. Solo se permiten imágenes (JPG, JPEG, PNG, GIF).",
 };
 
 export function getApiErrorMessage(error: unknown): string {
   const defaultMessage = "Ocurrió un error inesperado.";
+  
 
   if (error instanceof ApiError) {
     // Primero intentamos con el código específico
     let message = errorCodeMessages[error.code];
+    
 
     // Si no hay mensaje para el código, intentamos con el código de estado
     if (!message) {
@@ -101,15 +109,6 @@ export function getApiErrorMessage(error: unknown): string {
        message = error.originalMessage;
     }
 
-    // Log para debugging solo en desarrollo
-    if (__DEV__) {
-      console.log("Error mapping:", {
-        code: error.code,
-        status: error.status,
-        originalMessage: error.originalMessage,
-        mappedMessage: message || defaultMessage
-      });
-    }
 
     return message || defaultMessage;
 

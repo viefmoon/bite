@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
-import { Snackbar, Text } from "react-native-paper";
+import Toast from 'react-native-root-toast';
 import {
   useSnackbarStore,
   SnackbarType,
@@ -11,88 +11,84 @@ const GlobalSnackbar: React.FC = () => {
   const { visible, message, type, duration, hideSnackbar } = useSnackbarStore();
   const theme = useAppTheme();
 
-  const getSnackbarStyle = (snackbarType: SnackbarType) => {
+  useEffect(() => {
+    if (visible && message) {
+      const backgroundColor = getBackgroundColor(type);
+      const textColor = getTextColor(type);
+      
+      const toast = Toast.show(message, {
+        duration: duration || 4000,
+        position: Toast.positions.BOTTOM,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: backgroundColor,
+        textColor: textColor,
+        shadowColor: theme.colors.shadow,
+        opacity: 0.95,
+        containerStyle: {
+          marginHorizontal: 16,
+          marginBottom: 40,
+          paddingHorizontal: 20,
+          paddingVertical: 14,
+          borderRadius: theme.roundness,
+          minHeight: 56,
+          justifyContent: 'center',
+          zIndex: 99999,
+          elevation: 9999,
+        },
+        textStyle: {
+          fontSize: 16,
+          fontWeight: '500',
+          lineHeight: 24,
+          textAlign: 'center',
+        },
+        onHidden: hideSnackbar,
+      });
+
+      // Limpiar el toast cuando se oculte el componente
+      return () => {
+        Toast.hide(toast);
+      };
+    }
+  }, [visible, message, type, duration, hideSnackbar]);
+
+  const getBackgroundColor = (snackbarType: SnackbarType) => {
     switch (snackbarType) {
       case "success":
-        return { backgroundColor: theme.colors.successContainer };
+        return theme.colors.successContainer;
       case "error":
-        return { backgroundColor: theme.colors.errorContainer };
+        return theme.colors.errorContainer;
       case "warning":
-        return { backgroundColor: theme.colors.warningContainer };
+        return theme.colors.warningContainer || theme.colors.tertiaryContainer;
       case "info":
-        return { backgroundColor: theme.colors.infoContainer };
+        return theme.colors.infoContainer || theme.colors.surfaceVariant;
       default:
-        return {};
+        return theme.colors.inverseSurface;
     }
   };
 
-  const getSnackbarTextStyle = (snackbarType: SnackbarType) => {
+  const getTextColor = (snackbarType: SnackbarType) => {
     const defaultTextColor = theme.dark
       ? theme.colors.surface
       : theme.colors.onSurface;
 
-    const baseStyle = {
-      fontSize: 16,
-      fontWeight: "500" as const,
-      lineHeight: 24,
-    };
-
     switch (snackbarType) {
       case "success":
-        return {
-          ...baseStyle,
-          color: theme.colors.onSuccessContainer || defaultTextColor,
-        };
+        return theme.colors.onSuccessContainer || defaultTextColor;
       case "error":
-        return {
-          ...baseStyle,
-          color: theme.colors.onErrorContainer,
-        };
+        return theme.colors.onErrorContainer;
       case "warning":
-        return {
-          ...baseStyle,
-          color: theme.colors.onWarningContainer || defaultTextColor,
-        };
+        return theme.colors.onWarningContainer || theme.colors.onTertiaryContainer;
       case "info":
-        return {
-          ...baseStyle,
-          color: theme.colors.onInfoContainer || defaultTextColor,
-        };
+        return theme.colors.onInfoContainer || theme.colors.onSurfaceVariant;
       default:
-        return {
-          ...baseStyle,
-          color: theme.colors.inverseOnSurface,
-        };
+        return theme.colors.inverseOnSurface;
     }
   };
 
-  return (
-    <Snackbar
-      visible={visible}
-      onDismiss={hideSnackbar}
-      duration={duration}
-      style={[styles.snackbarBase, getSnackbarStyle(type)]}
-      theme={{ roundness: theme.roundness }}
-    >
-      <Text style={[styles.messageText, getSnackbarTextStyle(type)]}>
-        {message}
-      </Text>
-    </Snackbar>
-  );
+  return null;
 };
-
-const styles = StyleSheet.create({
-  snackbarBase: {
-    marginBottom: 16,
-    marginHorizontal: 16,
-    minHeight: 56,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  messageText: {
-    flex: 1,
-    textAlign: "center",
-  },
-});
 
 export default GlobalSnackbar;

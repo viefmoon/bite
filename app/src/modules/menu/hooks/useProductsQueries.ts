@@ -43,10 +43,14 @@ export function useProductQuery(
 export function useCreateProductMutation(): UseMutationResult<Product, ApiError, ProductFormInputs> {
   const queryClient = useQueryClient();
   return useMutation<Product, ApiError, ProductFormInputs>({
-    mutationFn: (newProduct) => productsService.create(newProduct),
+    mutationFn: (newProduct) => {
+      return productsService.create(newProduct);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
+    onError: (error) => {
+    }
   });
 }
 
@@ -81,7 +85,6 @@ export function useUpdateProductMutation(): UseMutationResult<Product, ApiError,
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error updating product ${variables.id}:`, error);
 
       if (context?.previousDetail) {
         queryClient.setQueryData(productKeys.details(variables.id), context.previousDetail);
@@ -122,7 +125,6 @@ export function useDeleteProductMutation(): UseMutationResult<void, ApiError, st
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error deleting product ${deletedId}:`, error);
 
       if (context?.previousDetail) {
         queryClient.setQueryData(productKeys.details(deletedId), context.previousDetail);

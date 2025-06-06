@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryRepository } from './infrastructure/persistence/category.repository';
 import { CATEGORY_REPOSITORY } from '../common/tokens';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -20,6 +20,27 @@ export class CategoriesService extends BaseCrudService<
   }
 
   // Los métodos CRUD (create, findAll, findOne, update, remove) son heredados de BaseCrudService
+
+  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+    console.log('[CategoriesService] Create called with:', createCategoryDto);
+    return this.repo.create(createCategoryDto);
+  }
+
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
+    console.log('[CategoriesService] Update called with:', {
+      id,
+      updateCategoryDto,
+    });
+
+    const result = await this.repo.update(id, updateCategoryDto);
+    if (!result) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+    return result;
+  }
 
   async findAllPaginated(
     filter?: FindAllCategoriesDto,

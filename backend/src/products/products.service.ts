@@ -1,4 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ERROR_CODES } from '../common/constants/error-codes.constants';
+import { CustomConflictException } from '../common/exceptions/custom-conflict.exception';
 import { ProductRepository } from './infrastructure/persistence/product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -31,6 +33,20 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
+    // Verificar si ya existe un producto con el mismo nombre
+    const existingProducts = await this.productRepository.findAll({
+      page: 1,
+      limit: 1,
+      search: createProductDto.name,
+    });
+    
+    if (existingProducts.items.length > 0 && existingProducts.items[0].name === createProductDto.name) {
+      throw new CustomConflictException(
+        `Ya existe un producto con el nombre "${createProductDto.name}"`,
+        ERROR_CODES.PRODUCT_NAME_EXISTS,
+      );
+    }
+
     const product = new Product();
     product.name = createProductDto.name;
     product.price = createProductDto.price ?? null;
@@ -163,6 +179,24 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
+    // Si se está actualizando el nombre, verificar que no exista otro producto con ese nombre
+    if (updateProductDto.name && updateProductDto.name !== product.name) {
+      const existingProducts = await this.productRepository.findAll({
+        page: 1,
+        limit: 1,
+        search: updateProductDto.name,
+      });
+      
+      if (existingProducts.items.length > 0 && 
+          existingProducts.items[0].name === updateProductDto.name &&
+          existingProducts.items[0].id !== id) {
+        throw new CustomConflictException(
+          `Ya existe un producto con el nombre "${updateProductDto.name}"`,
+          ERROR_CODES.PRODUCT_NAME_EXISTS,
+        );
+      }
+    }
+
     // Actualizar propiedades directas del producto
     product.name = updateProductDto.name ?? product.name;
     product.price =
@@ -263,18 +297,26 @@ export class ProductsService {
         if (variantDto.id) {
           // Actualizar variante existente
           if (currentVariantIds.includes(variantDto.id)) {
-            // Usar repositorio en lugar de servicio
-            const variantToUpdate = new ProductVariant();
-            // No asignar ID aquí, se pasa como primer argumento a update
-            variantToUpdate.name = variantDto.name ?? ''; // Asignar valor por defecto si es undefined
-            variantToUpdate.price = variantDto.price ?? 0; // Asignar valor por defecto si es undefined
-            variantToUpdate.isActive = variantDto.isActive ?? true; // Asignar valor por defecto si es undefined
-            // No necesitamos productId aquí para la actualización parcial
-            await this.productVariantRepository.update(
-              variantDto.id,
-              variantToUpdate,
+            // Buscar la variante actual para mantener sus propiedades
+            const currentVariant = currentVariants.find(
+              (v) => v.id === variantDto.id,
             );
-            processedVariantIds.push(variantDto.id);
+            if (currentVariant) {
+              // Crear objeto completo con los datos actualizados
+              const variantToUpdate = new ProductVariant();
+              variantToUpdate.id = variantDto.id;
+              variantToUpdate.productId = id;
+              variantToUpdate.name = variantDto.name ?? currentVariant.name;
+              variantToUpdate.price = variantDto.price ?? currentVariant.price;
+              variantToUpdate.isActive =
+                variantDto.isActive ?? currentVariant.isActive;
+
+              await this.productVariantRepository.update(
+                variantDto.id,
+                variantToUpdate,
+              );
+              processedVariantIds.push(variantDto.id);
+            }
           } else {
             // Advertir si se intenta actualizar una variante que no pertenece al producto
             console.warn(

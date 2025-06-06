@@ -9,6 +9,17 @@ import type { Product } from "../../../app/schemas/domain/product.schema";
 
 // --- Schemas Zod ---
 
+// Schema para variantes en el formulario (sin requerir ID)
+const productVariantFormSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1, "El nombre es requerido"),
+  price: z.coerce.number({
+    invalid_type_error: "El precio debe ser un número",
+    required_error: "El precio es requerido",
+  }).positive("El precio debe ser mayor a 0"),
+  isActive: z.boolean(),
+});
+
 // Schema base local para el formulario (necesario para superRefine y campos extra como imageUri)
 // y también como base para productResponseSchema
 const productBaseSchema = z.object({
@@ -35,7 +46,7 @@ const productBaseSchema = z.object({
     .nullable(),
   estimatedPrepTime: z.number().min(1, "El tiempo debe ser al menos 1 minuto").optional(),
   preparationScreenId: z.string().uuid().optional().nullable(),
-  variants: z.array(productVariantSchema).optional(), // Usa el schema importado
+  variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
   variantsToDelete: z.array(z.string().uuid()).optional(), // Para manejar eliminación en edición
   modifierGroupIds: z.array(z.string().uuid()).optional(), // IDs para asignar/actualizar
 });

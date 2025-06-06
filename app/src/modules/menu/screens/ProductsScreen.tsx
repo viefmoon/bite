@@ -17,6 +17,7 @@ import { Product, ProductFormInputs } from "../schema/products.schema";
 import { MenuStackParamList } from "@/modules/menu/navigation/types";
 import { useAppTheme, AppTheme } from "@/app/styles/theme";
 import { getApiErrorMessage } from "@/app/lib/errorMapping";
+import { ApiError } from "@/app/lib/errors";
 import GenericList, { FilterOption } from "@/app/components/crud/GenericList";
 import ProductFormModal from "../components/ProductFormModal";
 import { useSnackbarStore } from "@/app/store/snackbarStore";
@@ -58,7 +59,6 @@ function ProductsScreen(): JSX.Element {
     if (value === "all" || value === "active" || value === "inactive") {
         setStatusFilter(value);
     } else {
-        console.warn("Valor de filtro inesperado:", value);
         setStatusFilter("all");
     }
   };
@@ -127,48 +127,38 @@ function ProductsScreen(): JSX.Element {
       };
 
       try {
-        const handleMutationSuccess = (createdOrUpdatedProduct: Product) => {
-          const message = isEditing
-            ? "Producto actualizado con éxito"
-            : "Producto creado con éxito";
-
-          showSnackbar({ message, type: "success" });
-
-          handleCloseModals();
-          queryClient.invalidateQueries({
-            queryKey: ["products", queryFilters],
-          });
-          if (createdOrUpdatedProduct?.id) {
-            queryClient.invalidateQueries({
-              queryKey: ["product", createdOrUpdatedProduct.id],
-            });
-          }
-        };
-
-        const handleMutationError = (err: unknown) => {
-          showSnackbar({
-            message: `Error al ${isEditing ? "actualizar" : "crear"} producto: ${getApiErrorMessage(err)}`,
-            type: "error",
-          });
-        };
-
+        let productResult: Product;
+        
         if (isEditing && editingItem) {
-          await updateMutation.mutateAsync(
-            { id: editingItem.id, data: mutationData },
-            {
-              onSuccess: handleMutationSuccess,
-              onError: handleMutationError,
-            }
+          productResult = await updateMutation.mutateAsync(
+            { id: editingItem.id, data: mutationData }
           );
         } else {
-          await createMutation.mutateAsync(mutationData, {
-            onSuccess: handleMutationSuccess,
-            onError: handleMutationError,
+          productResult = await createMutation.mutateAsync(mutationData);
+        }
+        
+        // Éxito
+        const message = isEditing
+          ? "Producto actualizado con éxito"
+          : "Producto creado con éxito";
+
+        showSnackbar({ message, type: "success" });
+        handleCloseModals();
+        
+        queryClient.invalidateQueries({
+          queryKey: ["products", queryFilters],
+        });
+        if (productResult?.id) {
+          queryClient.invalidateQueries({
+            queryKey: ["product", productResult.id],
           });
         }
       } catch (err) {
-        console.error("Unexpected error during form submission:", err);
-        showSnackbar({ message: "Ocurrió un error inesperado", type: "error" });
+        const errorMessage = getApiErrorMessage(err);
+        showSnackbar({
+          message: `Error al ${isEditing ? "actualizar" : "crear"} producto: ${errorMessage}`,
+          type: "error",
+        });
       }
     },
     [

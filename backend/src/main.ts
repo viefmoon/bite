@@ -14,9 +14,29 @@ import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { UniqueViolationFilter } from './common/filters/unique-violation.filter'; // Importar el nuevo filtro
+import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
+    },
+    bodyParser: false, // Deshabilitamos el body parser por defecto para manejar uploads grandes
+  });
+
+  // Configurar body parser con límites más grandes
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // Configurar timeout global del servidor
+  const server = app.getHttpServer();
+  server.setTimeout(300000); // 5 minutos de timeout
+  server.keepAliveTimeout = 120000; // 2 minutos de keep-alive
+  server.headersTimeout = 121000; // Ligeramente mayor que keepAliveTimeout
+
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 

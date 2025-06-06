@@ -65,6 +65,8 @@ export const updateCategory = async (
   id: string,
   data: UpdateCategoryDto
 ): Promise<Category> => {
+  console.log('[categoryService] updateCategory called with:', { id, data });
+  
   const response = await apiClient.patch<Category>(
     `${API_PATHS.CATEGORIES}/${id}`,
     data
@@ -73,6 +75,8 @@ export const updateCategory = async (
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
   }
+  
+  console.log('[categoryService] updateCategory response:', response.data);
   return response.data;
 };
 
