@@ -24,6 +24,7 @@ export class SubcategoriesService {
     subcategory.categoryId = createSubcategoryDto.categoryId;
 
     if (createSubcategoryDto.photoId) {
+      subcategory.photoId = createSubcategoryDto.photoId;
       subcategory.photo = {
         id: createSubcategoryDto.photoId,
         path: '',
@@ -65,6 +66,7 @@ export class SubcategoriesService {
       updateSubcategoryDto.categoryId ?? existingSubcategory.categoryId;
 
     if (updateSubcategoryDto.photoId !== undefined) {
+      subcategory.photoId = updateSubcategoryDto.photoId;
       subcategory.photo = updateSubcategoryDto.photoId
         ? {
             id: updateSubcategoryDto.photoId,
@@ -72,6 +74,7 @@ export class SubcategoriesService {
           }
         : null;
     } else if (existingSubcategory.photo) {
+      subcategory.photoId = existingSubcategory.photoId;
       subcategory.photo = {
         id: existingSubcategory.photo.id,
         path: '',

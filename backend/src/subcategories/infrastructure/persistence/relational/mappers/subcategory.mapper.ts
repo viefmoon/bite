@@ -56,6 +56,7 @@ export class SubcategoryMapper extends BaseMapper<
     entity.description = domain.description;
     entity.isActive = domain.isActive;
     entity.category = { id: domain.categoryId } as CategoryEntity;
+    entity.photoId = domain.photoId || null;
     entity.photo = domain.photoId
       ? ({ id: domain.photoId } as FileEntity)
       : null;
