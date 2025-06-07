@@ -39,8 +39,11 @@ export class ProductsService {
       limit: 1,
       search: createProductDto.name,
     });
-    
-    if (existingProducts.items.length > 0 && existingProducts.items[0].name === createProductDto.name) {
+
+    if (
+      existingProducts.items.length > 0 &&
+      existingProducts.items[0].name === createProductDto.name
+    ) {
       throw new CustomConflictException(
         `Ya existe un producto con el nombre "${createProductDto.name}"`,
         ERROR_CODES.PRODUCT_NAME_EXISTS,
@@ -186,10 +189,12 @@ export class ProductsService {
         limit: 1,
         search: updateProductDto.name,
       });
-      
-      if (existingProducts.items.length > 0 && 
-          existingProducts.items[0].name === updateProductDto.name &&
-          existingProducts.items[0].id !== id) {
+
+      if (
+        existingProducts.items.length > 0 &&
+        existingProducts.items[0].name === updateProductDto.name &&
+        existingProducts.items[0].id !== id
+      ) {
         throw new CustomConflictException(
           `Ya existe un producto con el nombre "${updateProductDto.name}"`,
           ERROR_CODES.PRODUCT_NAME_EXISTS,
