@@ -15,6 +15,7 @@ import { PreparationScreensService } from './preparation-screens.service';
 import { CreatePreparationScreenDto } from './dto/create-preparation-screen.dto';
 import { UpdatePreparationScreenDto } from './dto/update-preparation-screen.dto';
 import { FindAllPreparationScreensDto } from './dto/find-all-preparation-screens.dto';
+import { AssociateProductsDto } from './dto/associate-products.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -89,5 +90,42 @@ export class PreparationScreensController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.preparationScreensService.remove(id);
+  }
+
+  @Get(':id/products')
+  @ApiOperation({
+    summary: 'Obtener productos asociados a una pantalla de preparación',
+  })
+  @HttpCode(HttpStatus.OK)
+  async getProducts(@Param('id') id: string) {
+    return this.preparationScreensService.getProducts(id);
+  }
+
+  @Get(':id/menu-with-associations')
+  @ApiOperation({
+    summary:
+      'Obtener menú completo con información de asociaciones para una pantalla específica',
+  })
+  @HttpCode(HttpStatus.OK)
+  async getMenuWithAssociations(@Param('id') id: string) {
+    return this.preparationScreensService.getMenuWithAssociations(id);
+  }
+
+  @Post(':id/products')
+  @ApiOperation({
+    summary: 'Asociar productos a una pantalla de preparación',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async associateProducts(
+    @Param('id') id: string,
+    @Body() associateProductsDto: AssociateProductsDto,
+  ) {
+    return this.preparationScreensService.associateProducts(
+      id,
+      associateProductsDto.productIds,
+    );
   }
 }
