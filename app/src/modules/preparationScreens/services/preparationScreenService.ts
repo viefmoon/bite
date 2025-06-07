@@ -139,3 +139,64 @@ export const deletePreparationScreen = async (id: string): Promise<void> => {
     );
   }
 };
+
+/**
+ * Gets products associated with a preparation screen.
+ * @param id - The UUID of the preparation screen.
+ * @returns A promise that resolves to an array of products.
+ * @throws {ApiError} If the API request fails.
+ */
+export const getPreparationScreenProducts = async (id: string): Promise<any[]> => {
+  const response = await apiClient.get<any[]>(`${API_PATHS.PREPARATION_SCREENS}/${id}/products`);
+
+  if (!response.ok || !response.data) {
+    console.error(`[preparationScreenService.getPreparationScreenProducts] Failed to fetch products for screen ${id}:`, response);
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status
+    );
+  }
+  return response.data;
+};
+
+/**
+ * Gets the complete menu with association information for a preparation screen.
+ * @param id - The UUID of the preparation screen.
+ * @returns A promise that resolves to the menu data with associations.
+ * @throws {ApiError} If the API request fails.
+ */
+export const getMenuWithAssociations = async (id: string): Promise<any> => {
+  const response = await apiClient.get<any>(`${API_PATHS.PREPARATION_SCREENS}/${id}/menu-with-associations`);
+
+  if (!response.ok || !response.data) {
+    console.error(`[preparationScreenService.getMenuWithAssociations] Failed to fetch menu for screen ${id}:`, response);
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status
+    );
+  }
+  return response.data;
+};
+
+/**
+ * Associates products with a preparation screen.
+ * @param id - The UUID of the preparation screen.
+ * @param productIds - Array of product IDs to associate.
+ * @returns A promise that resolves to the updated preparation screen.
+ * @throws {ApiError} If the API request fails.
+ */
+export const associateProducts = async (id: string, productIds: string[]): Promise<PreparationScreen> => {
+  const response = await apiClient.post<PreparationScreen>(
+    `${API_PATHS.PREPARATION_SCREENS}/${id}/products`,
+    { productIds }
+  );
+
+  if (!response.ok || !response.data) {
+    console.error(`[preparationScreenService.associateProducts] Failed to associate products with screen ${id}:`, response);
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status
+    );
+  }
+  return response.data;
+};

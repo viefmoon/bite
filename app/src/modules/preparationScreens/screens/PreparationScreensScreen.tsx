@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, StyleSheet, Alert } from "react-native";
-import { ActivityIndicator, Text, Button } from "react-native-paper";
+import { View, StyleSheet } from "react-native";
+import { Text, Button, IconButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDrawerStatus } from "@react-navigation/drawer";
 
@@ -12,21 +12,22 @@ import GenericDetailModal, {
 } from "../../../app/components/crud/GenericDetailModal";
 import { useCrudScreenLogic } from "../../../app/hooks/useCrudScreenLogic";
 import PreparationScreenFormModal from "../components/PreparationScreenFormModal";
+import { ProductSelectionModal } from "../components/ProductSelectionModal";
 import {
   useGetPreparationScreens,
   useGetPreparationScreenById,
   useDeletePreparationScreen,
+  useGetMenuWithAssociations,
+  useAssociateProducts,
 } from "../hooks/usePreparationScreensQueries";
 import {
   PreparationScreen,
-  FindAllPreparationScreensFilter,
-} from "../types/preparationScreens.types";
+  FindAllPreparationScreensDto as FindAllPreparationScreensFilter,
+} from "../schema/preparationScreen.schema";
 import { useAppTheme, AppTheme } from "../../../app/styles/theme";
 import { BaseListQuery } from "../../../app/types/query.types";
-import { getApiErrorMessage } from "@/app/lib/errorMapping";
 import { useListState } from "@/app/hooks/useListState";
 
-type ProductPlaceholder = { id: string; name: string };
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -70,6 +71,8 @@ const PreparationScreensScreen = () => {
     limit: 15,
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [isProductModalVisible, setIsProductModalVisible] = useState(false);
+  const [productModalScreenId, setProductModalScreenId] = useState<string | null>(null);
 
   const {
     data: screensData,
@@ -80,6 +83,7 @@ const PreparationScreensScreen = () => {
   } = useGetPreparationScreens(filters, pagination);
 
   const { mutate: deleteScreenMutate } = useDeletePreparationScreen();
+  const associateProductsMutation = useAssociateProducts();
 
   const deleteScreenWrapper = useCallback(async (id: string): Promise<void> => {
       return new Promise((resolve, reject) => {
@@ -89,6 +93,38 @@ const PreparationScreensScreen = () => {
           });
       });
   }, [deleteScreenMutate]);
+
+  // Hooks para el modal de productos
+  const {
+    data: menuData,
+    isLoading: isLoadingMenu,
+  } = useGetMenuWithAssociations(productModalScreenId, {
+    enabled: !!productModalScreenId && isProductModalVisible,
+  });
+
+  const handleOpenProductModal = useCallback((screen: PreparationScreen) => {
+    setProductModalScreenId(screen.id);
+    setIsProductModalVisible(true);
+  }, []);
+
+  const handleCloseProductModal = useCallback(() => {
+    setIsProductModalVisible(false);
+    setProductModalScreenId(null);
+  }, []);
+
+  const handleSaveProducts = useCallback((productIds: string[]) => {
+    if (productModalScreenId) {
+      associateProductsMutation.mutate(
+        { id: productModalScreenId, productIds },
+        {
+          onSuccess: () => {
+            handleCloseProductModal();
+            refetchList();
+          },
+        }
+      );
+    }
+  }, [productModalScreenId, associateProductsMutation, handleCloseProductModal, refetchList]);
 
   const {
     isFormModalVisible,
@@ -111,7 +147,6 @@ const PreparationScreensScreen = () => {
 
   const {
     data: selectedScreenData,
-    isLoading: isLoadingDetail,
   } = useGetPreparationScreenById(selectedScreenId, {
     enabled: !!selectedScreenId && isDetailModalVisible,
   });
@@ -123,18 +158,19 @@ const PreparationScreensScreen = () => {
   const handleSearchChange = useCallback((query: string) => {
     setSearchTerm(query);
     const timerId = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, name: query || undefined }));
+      setFilters((prev: FindAllPreparationScreensFilter) => ({ ...prev, name: query || undefined }));
       setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
     return () => clearTimeout(timerId);
   }, []);
 
-  const handleFilterChange = useCallback((value: string) => {
+  const handleFilterChange = useCallback((value: string | number) => {
+    const strValue = String(value);
     let newIsActive: boolean | undefined;
-    if (value === "true") newIsActive = true;
-    else if (value === "false") newIsActive = false;
+    if (strValue === "true") newIsActive = true;
+    else if (strValue === "false") newIsActive = false;
     else newIsActive = undefined;
-    setFilters((prev) => ({ ...prev, isActive: newIsActive }));
+    setFilters((prev: FindAllPreparationScreensFilter) => ({ ...prev, isActive: newIsActive }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
@@ -159,16 +195,22 @@ const PreparationScreensScreen = () => {
     {
       field: "products",
       label: "Productos Asociados",
-      render: (products) => {
-        if (Array.isArray(products) && products.length > 0) {
-          return (
-            <Text style={styles.fieldValue}>
-              {products.map((p: ProductPlaceholder) => p.name).join(", ")}
-            </Text>
-          );
-        }
+      render: (products, item) => {
+        const productCount = Array.isArray(products) ? products.length : 0;
         return (
-          <Text style={styles.fieldValue}>Ninguno</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={[styles.fieldValue, { flex: 1 }]}>
+              {productCount > 0 ? `${productCount} productos` : 'Ninguno'}
+            </Text>
+            <Button
+              mode="outlined"
+              compact
+              onPress={() => item && handleOpenProductModal(item)}
+              icon="link"
+            >
+              Gestionar
+            </Button>
+          </View>
         );
       },
     },
@@ -214,8 +256,15 @@ const PreparationScreensScreen = () => {
         onFilterChange={handleFilterChange}
         showFab={true}
         onFabPress={handleOpenCreateModal}
-        isModalOpen={isDetailModalVisible || isFormModalVisible}
+        isModalOpen={isDetailModalVisible || isFormModalVisible || isProductModalVisible}
         isDrawerOpen={isDrawerOpen}
+        renderItemActions={(item) => (
+          <IconButton
+            icon="link"
+            size={20}
+            onPress={() => handleOpenProductModal(item)}
+          />
+        )}
       />
 
       <GenericDetailModal<PreparationScreen>
@@ -244,6 +293,15 @@ const PreparationScreensScreen = () => {
         onDismiss={handleCloseModals}
         editingItem={editingItem}
         onSubmitSuccess={() => {}}
+      />
+
+      <ProductSelectionModal
+        visible={isProductModalVisible}
+        onDismiss={handleCloseProductModal}
+        onSave={handleSaveProducts}
+        screenId={productModalScreenId || ''}
+        menuData={menuData}
+        loading={isLoadingMenu}
       />
     </SafeAreaView>
   );

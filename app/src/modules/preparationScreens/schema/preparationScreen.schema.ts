@@ -6,7 +6,10 @@ export const PreparationScreenSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
-  // productIds: z.array(z.string().uuid()).optional(), // Descomentar si la API devuelve los IDs de productos asociados
+  products: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+  })).optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
