@@ -13,6 +13,7 @@ export interface AuthState {
   user: User | null;
   setTokens: (accessToken: string, refreshToken: string, user: User | null) => Promise<void>;
   setAccessToken: (accessToken: string) => Promise<void>;
+  setRefreshToken: (refreshToken: string) => Promise<void>;
   setUser: (user: User | null) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -44,6 +45,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ accessToken, isAuthenticated: true });
     } catch (error) {
       console.error("Error guardando access token:", error);
+    }
+  },
+
+  setRefreshToken: async (refreshToken: string) => {
+    try {
+      await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      set({ refreshToken });
+    } catch (error) {
+      console.error("Error guardando refresh token:", error);
     }
   },
 

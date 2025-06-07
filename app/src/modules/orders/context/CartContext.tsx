@@ -51,6 +51,7 @@ interface CartContextType {
   isCartEmpty: boolean;
   subtotal: number;
   total: number;
+  totalItemsCount: number;
   isCartVisible: boolean;
   showCart: () => void;
   hideCart: () => void;
@@ -111,6 +112,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     return subtotal;
   }, [subtotal]);
 
+  const totalItemsCount = useMemo(() => {
+    return items.reduce((sum, item: CartItem) => sum + item.quantity, 0);
+  }, [items]);
+
   const isCartEmpty = items.length === 0;
 
   const addItem = (
@@ -128,20 +133,68 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const modifiersPrice = modifiers.reduce((sum, mod) => sum + mod.price, 0);
 
-    const newItem: CartItem = {
-      id: generateId(),
-      productId: product.id,
-      productName: product.name,
-      quantity,
-      unitPrice: unitPrice as number,
-      totalPrice: ((unitPrice as number) + modifiersPrice) * quantity,
-      modifiers,
-      variantId,
-      variantName: variantToAdd?.name,
-      preparationNotes,
-    };
+    setItems((currentItems) => {
+      // Buscar si existe un item idéntico
+      const existingItemIndex = currentItems.findIndex((item) => {
+        // Verificar que sea el mismo producto
+        if (item.productId !== product.id) return false;
+        
+        // Verificar que sea la misma variante (o ambas undefined)
+        if (item.variantId !== variantId) return false;
+        
+        // Verificar que tengan las mismas notas de preparación
+        if (item.preparationNotes !== preparationNotes) return false;
+        
+        // Verificar que tengan los mismos modificadores
+        if (item.modifiers.length !== modifiers.length) return false;
+        
+        // Comparar cada modificador (asumiendo que el orden no importa)
+        const sortedExistingModifiers = [...item.modifiers].sort((a, b) => a.id.localeCompare(b.id));
+        const sortedNewModifiers = [...modifiers].sort((a, b) => a.id.localeCompare(b.id));
+        
+        for (let i = 0; i < sortedExistingModifiers.length; i++) {
+          if (sortedExistingModifiers[i].id !== sortedNewModifiers[i].id ||
+              sortedExistingModifiers[i].name !== sortedNewModifiers[i].name ||
+              sortedExistingModifiers[i].price !== sortedNewModifiers[i].price) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
 
-    setItems((currentItems) => [...currentItems, newItem]);
+      if (existingItemIndex !== -1) {
+        // Si existe un item idéntico, actualizar la cantidad
+        const updatedItems = [...currentItems];
+        const existingItem = updatedItems[existingItemIndex];
+        const newQuantity = existingItem.quantity + quantity;
+        const newTotalPrice = (existingItem.unitPrice + modifiersPrice) * newQuantity;
+        
+        updatedItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: newQuantity,
+          totalPrice: newTotalPrice,
+        };
+        
+        return updatedItems;
+      } else {
+        // Si no existe, crear un nuevo item
+        const newItem: CartItem = {
+          id: generateId(),
+          productId: product.id,
+          productName: product.name,
+          quantity,
+          unitPrice: unitPrice as number,
+          totalPrice: ((unitPrice as number) + modifiersPrice) * quantity,
+          modifiers,
+          variantId,
+          variantName: variantToAdd?.name,
+          preparationNotes,
+        };
+        
+        return [...currentItems, newItem];
+      }
+    });
   };
 
   const removeItem = (itemId: string) => {
@@ -209,6 +262,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     isCartEmpty,
     subtotal,
     total,
+    totalItemsCount,
     isCartVisible,
     showCart,
     hideCart,

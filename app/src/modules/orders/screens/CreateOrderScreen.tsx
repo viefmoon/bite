@@ -64,6 +64,7 @@ const CreateOrderScreen = () => {
     showCart,
     hideCart,
     clearCart,
+    totalItemsCount,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
@@ -503,7 +504,7 @@ const CreateOrderScreen = () => {
           {showCartButton ? (
             <CartButton
               ref={cartButtonRef}
-              itemCount={items.length}
+              itemCount={totalItemsCount}
               onPress={handleViewCart}
             />
           ) : (

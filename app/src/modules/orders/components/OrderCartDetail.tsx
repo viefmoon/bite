@@ -67,7 +67,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
   // Obtener estado del carrito Y del formulario desde el contexto
   const {
-    items, removeItem, updateItemQuantity, subtotal, total, isCartVisible, clearCart,
+    items, removeItem, updateItemQuantity, subtotal, total, totalItemsCount, isCartVisible, clearCart,
     orderType, setOrderType,
     selectedAreaId, setSelectedAreaId,
     selectedTableId, setSelectedTableId,
@@ -515,7 +515,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           <OrderHeader
             title="Resumen de Orden"
             onBackPress={onClose}
-            itemCount={items.length}
+            itemCount={totalItemsCount}
             onCartPress={() => {}}
             isCartVisible={isCartVisible}
           />
@@ -608,7 +608,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         <View style={styles.quantityActions}>
                           <IconButton
                             icon="minus-circle-outline"
-                            size={24} // Reducir tamaño
+                            size={20} // Reducir tamaño de icono
                             onPress={() =>
                               updateItemQuantity(item.id, item.quantity - 1)
                             }
@@ -618,7 +618,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                           <Text style={styles.quantityText}>{item.quantity}</Text>
                           <IconButton
                             icon="plus-circle-outline"
-                            size={24} // Reducir tamaño
+                            size={20} // Reducir tamaño de icono
                             onPress={() =>
                               updateItemQuantity(item.id, item.quantity + 1)
                             }
@@ -630,7 +630,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         </Text>
                         <IconButton
                           icon="delete-outline"
-                          size={24} // Reducir tamaño
+                          size={20} // Reducir tamaño de icono
                           onPress={() => removeItem(item.id)}
                           style={styles.deleteButton}
                           iconColor={theme.colors.error}
@@ -735,28 +735,30 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
 
     itemTextContainer: { // Contenedor para título y descripción
-      flex: 1,                        // que el texto ocupe todo lo que pueda
-      // paddingHorizontal: theme.spacing.m, // Eliminar padding interno, usar el del ScrollView/List.Item
-      justifyContent: 'center', // Centrar texto verticalmente
+      flex: 2,                        // Darle más espacio al texto
+      marginRight: theme.spacing.xs,  // Pequeño margen para separar de las acciones
+      justifyContent: 'center',       // Centrar texto verticalmente
       // backgroundColor: 'lightyellow', // Debug
     },
     itemTitleText: { // Estilo para el texto del título
-      fontSize: 14, // Ajustar tamaño si es necesario
+      fontSize: 13,                   // Reducir ligeramente el tamaño
       fontWeight: '500',
       color: theme.colors.onSurface,
+      flexWrap: 'wrap',              // Permitir que el texto se ajuste
+      lineHeight: 18,                // Ajustar altura de línea
     },
     itemDescription: {
-      fontSize: 12,
+      fontSize: 11,                  // Reducir tamaño de descripción
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
+      flexWrap: 'wrap',             // Permitir que el texto se ajuste
+      lineHeight: 15,               // Ajustar altura de línea
     },
     itemActionsContainer: { // Contenedor para acciones (cantidad, precio, borrar)
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "flex-end",    // empuja hijos al extremo derecho
-      flex: 1,                        // ocupa el espacio sobrante
-      // marginLeft: 'auto', // Quitar
-      // paddingRight: theme.spacing.m, // Eliminar padding interno
+      justifyContent: "flex-end",
+      flexShrink: 0,                // No permitir que se encoja
       // backgroundColor: 'lightblue', // Debug
     },
     quantityActions: {
@@ -773,32 +775,32 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     //   // marginRight: theme.spacing.xs,
     // },
     quantityButton: { // <<< ESTILO CORRECTO
-        marginHorizontal: 0, // Sin margen horizontal extra en los botones
+        marginHorizontal: -4, // Reducir espacio horizontal entre botones
+        padding: 0,          // Eliminar padding interno
         // backgroundColor: 'lightgreen', // Debug
     }, // <<< COMA RESTAURADA
     quantityText: {
-        fontSize: 14, // Reducir tamaño
+        fontSize: 13,        // Reducir tamaño
         fontWeight: 'bold',
-        minWidth: 20, // Reducir ancho mínimo
+        minWidth: 18,        // Reducir ancho mínimo
         textAlign: 'center',
-        marginHorizontal: 2, // Reducir margen horizontal mínimo para el número
+        marginHorizontal: 1, // Mínimo margen horizontal
         // backgroundColor: 'pink', // Debug
     }, // <<< COMA RESTAURADA
     itemPrice: {
       alignSelf: "center",
-      // marginHorizontal: 4, // Reemplazar con marginRight específico
-      marginRight: theme.spacing.s, // Añadir espacio a la derecha del precio
+      marginRight: theme.spacing.xs, // Reducir espacio
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 13,          // Reducir tamaño
       fontWeight: 'bold',
-      minWidth: 55, // Reducir ancho mínimo
+      minWidth: 50,          // Reducir ancho mínimo
       textAlign: "right",
       // backgroundColor: 'lightcoral', // Debug
     }, // <<< COMA RESTAURADA
     deleteButton: {
-      margin: 0, // Asegurar sin margen vertical
-      marginLeft: theme.spacing.s,    // opcional: un gap extra sobre el precio
-      // marginRight : 0, // No es necesario si el contenedor ya está a la derecha
+      margin: 0,
+      marginLeft: theme.spacing.xs, // Reducir espacio
+      padding: 0,                   // Eliminar padding
       // backgroundColor: 'gold', // Debug
     }, // <<< COMA RESTAURADA
     // End List Item Styles

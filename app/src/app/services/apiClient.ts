@@ -42,30 +42,47 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 async function refreshToken(): Promise<string> {
   try {
+    console.log("[ApiClient] Iniciando renovación de token...");
     const currentRefreshToken = await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
     if (!currentRefreshToken) {
+      console.error("[ApiClient] No hay refresh token disponible");
       throw new Error("No refresh token available.");
     }
+    
+    console.log("[ApiClient] Enviando solicitud de refresh...");
     const response = await axios.post<{ token: string; refreshToken?: string }>(
       `${API_URL}${AUTH_REFRESH_PATH}`,
       {},
       { headers: { Authorization: `Bearer ${currentRefreshToken}` } }
     );
+    
     const newAccessToken = response.data.token;
     const newRefreshToken = response.data.refreshToken;
-    await useAuthStore.getState().setAccessToken(newAccessToken);
+    
+    console.log("[ApiClient] Token renovado exitosamente");
+    
+    // Actualizar tokens en el store
+    const authStore = useAuthStore.getState();
+    
+    // Si viene un nuevo refresh token, actualizarlo primero
     if (newRefreshToken && newRefreshToken !== currentRefreshToken) {
-      await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
-      useAuthStore.setState({ refreshToken: newRefreshToken });
+      console.log("[ApiClient] Actualizando refresh token...");
+      await authStore.setRefreshToken(newRefreshToken);
     }
+    
+    // Luego actualizar el access token
+    await authStore.setAccessToken(newAccessToken);
+    
+    console.log("[ApiClient] Tokens actualizados en el store");
+    
     return newAccessToken;
   } catch (error: any) {
+    console.error("[ApiClient] Error renovando token:", error.response?.status, error.message);
     if (error.response?.status === 401) {
+      console.log("[ApiClient] Refresh token inválido, cerrando sesión...");
       await useAuthStore.getState().logout();
     }
-    // Lanzamos un error específico que el interceptor pueda reconocer si es necesario,
-    // o simplemente el error original para que fromAxiosError lo maneje.
-    throw error; // Lanzamos el error original para que el interceptor lo capture
+    throw error;
   }
 }
 
@@ -89,38 +106,51 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => { // Maneja errores
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Log para debug
+    if (error.response?.status === 401) {
+      console.log("[ApiClient] Error 401 detectado en:", originalRequest.url);
+    }
+
+    // No intentar renovar si:
+    // 1. No es un error 401
+    // 2. Es la propia petición de refresh
+    // 3. Ya se intentó renovar antes
     if (error.response?.status !== 401 || originalRequest.url === AUTH_REFRESH_PATH || originalRequest._retry) {
-      // Si no es 401, es refresh, o ya se reintentó -> Rechazar con ApiError
       const apiError = ApiError.fromAxiosError(error);
       return Promise.reject(apiError);
     }
 
     // --- Manejo del 401 ---
     if (isRefreshing) {
+      console.log("[ApiClient] Ya hay una renovación en curso, encolando petición...");
       // Encolar petición
       return new Promise((resolve, reject) => {
         failedQueue.push({
           resolve: (token) => {
+            console.log("[ApiClient] Reintentando petición encolada con nuevo token");
             originalRequest.headers["Authorization"] = `Bearer ${token}`;
             originalRequest._retry = true;
-            resolve(axiosInstance(originalRequest)); // Reintentar con Axios
+            resolve(axiosInstance(originalRequest));
           },
-          reject: (err) => reject(ApiError.fromAxiosError(err as AxiosError)), // Rechazar cola con ApiError
+          reject: (err) => reject(ApiError.fromAxiosError(err as AxiosError)),
         });
       });
     }
 
+    console.log("[ApiClient] Iniciando proceso de renovación de token...");
     isRefreshing = true;
     originalRequest._retry = true;
 
     try {
       const newAccessToken = await refreshToken();
+      console.log("[ApiClient] Token renovado, procesando cola de peticiones...");
       processQueue(null, newAccessToken);
       originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-      return axiosInstance(originalRequest); // Devolver promesa del reintento con Axios
+      console.log("[ApiClient] Reintentando petición original con nuevo token");
+      return axiosInstance(originalRequest);
     } catch (refreshError: any) {
+      console.error("[ApiClient] Fallo al renovar token, rechazando todas las peticiones en cola");
       processQueue(refreshError, null);
-      // Rechazar con ApiError estandarizado para fallo de refresco
       return Promise.reject(ApiError.fromRefreshError(refreshError));
     } finally {
       isRefreshing = false;
