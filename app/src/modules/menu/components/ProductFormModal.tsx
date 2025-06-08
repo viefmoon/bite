@@ -13,6 +13,7 @@ import {
   IconButton,
   Card,
   Checkbox,
+  TouchableRipple,
 } from "react-native-paper";
 import {
   useForm,
@@ -154,8 +155,10 @@ function ProductFormModal({
   const hasVariants = watch("hasVariants");
   const currentImageUri = watch("imageUri");
 
-  const { data: allModifierGroups, isLoading: isLoadingGroups } =
-    useModifierGroupsQuery({}); // Ajustar filtros si es necesario
+  const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
+    useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
+  
+  const allModifierGroups = modifierGroupsResponse?.data || [];
 
   useEffect(() => {
     if (visible) {
@@ -445,29 +448,52 @@ function ProductFormModal({
                   {variantFields.map((field, index) => (
                     <Card
                       key={field.id || `new-${index}`}
-                      style={styles.variantCard}
+                      style={[
+                        styles.variantCard,
+                        field.isActive === false && styles.variantCardInactive
+                      ]}
                     >
-                      <Card.Title
-                        title={field.name || "Nueva Variante"}
-                        subtitle={`$${!isNaN(Number(field.price)) ? Number(field.price).toFixed(2) : "0.00"}${field.isActive === false ? " (Inactiva)" : ""}`}
-                        right={() => (
-                          <View style={styles.variantActions}>
-                            <IconButton
-                              icon="pencil"
-                              size={20}
-                              onPress={() => showVariantModal(index)}
-                              disabled={isSubmitting}
-                            />
-                            <IconButton
-                              icon="delete"
-                              size={20}
-                              onPress={() => handleRemoveVariant(index)}
-                              iconColor={theme.colors.error}
-                              disabled={isSubmitting}
-                            />
+                      <View style={styles.variantContent}>
+                        <View style={styles.variantInfo}>
+                          <View style={styles.variantHeader}>
+                            <Text 
+                              style={[
+                                styles.variantName,
+                                field.isActive === false && styles.variantNameInactive
+                              ]}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {field.name || "Nueva Variante"}
+                            </Text>
+                            {field.isActive === false && (
+                              <View style={styles.inactiveBadge}>
+                                <Text style={styles.inactiveBadgeText}>Inactiva</Text>
+                              </View>
+                            )}
                           </View>
-                        )}
-                      />
+                          <Text style={styles.variantPrice}>
+                            ${!isNaN(Number(field.price)) ? Number(field.price).toFixed(2) : "0.00"}
+                          </Text>
+                        </View>
+                        <View style={styles.variantActions}>
+                          <IconButton
+                            icon="pencil"
+                            size={24}
+                            onPress={() => showVariantModal(index)}
+                            disabled={isSubmitting}
+                            style={styles.variantActionButton}
+                          />
+                          <IconButton
+                            icon="delete"
+                            size={24}
+                            onPress={() => handleRemoveVariant(index)}
+                            iconColor={theme.colors.error}
+                            disabled={isSubmitting}
+                            style={styles.variantActionButton}
+                          />
+                        </View>
+                      </View>
                     </Card>
                   ))}
                   {/* Mostrar error si hasVariants es true pero no hay variantes */}
@@ -545,9 +571,7 @@ function ProductFormModal({
                     animating={true}
                     style={{ marginVertical: theme.spacing.m }}
                   />
-                ) : !allModifierGroups ||
-                  !Array.isArray(allModifierGroups) ||
-                  allModifierGroups.length === 0 ? (
+                ) : allModifierGroups.length === 0 ? (
                   <Text style={styles.noItemsText}>
                     No hay grupos de modificadores disponibles.
                   </Text>
@@ -557,18 +581,17 @@ function ProductFormModal({
                     name="modifierGroupIds"
                     render={({ field: { onChange, value } }) => {
                       const currentIds = Array.isArray(value) ? value : []; // Asegurar que sea array
-                      const availableGroups = allModifierGroups; // El hook devuelve ModifierGroup[]
+                      const availableGroups = allModifierGroups; // Ya es un array de ModifierGroup
 
                       return (
                         <>
                           {availableGroups.map((group: ModifierGroup) => {
-                            // Renderizar Checkbox.Item
                             const isSelected = currentIds.includes(group.id);
+                            const modifierNames = ""; // Los modificadores se manejan en otra pantalla
+                            
                             return (
-                              <Checkbox.Item
+                              <TouchableRipple
                                 key={group.id}
-                                label={group.name}
-                                status={isSelected ? "checked" : "unchecked"}
                                 onPress={() => {
                                   const newIds = isSelected
                                     ? currentIds.filter((id) => id !== group.id)
@@ -576,9 +599,23 @@ function ProductFormModal({
                                   onChange(newIds);
                                 }}
                                 disabled={isSubmitting}
-                                style={styles.checkboxItem}
-                                labelStyle={styles.checkboxLabel}
-                              />
+                                style={styles.modifierGroupTouchable}
+                              >
+                                <View style={styles.modifierGroupContent}>
+                                  <Checkbox
+                                    status={isSelected ? "checked" : "unchecked"}
+                                    disabled={isSubmitting}
+                                  />
+                                  <View style={styles.modifierGroupTextContainer}>
+                                    <Text style={styles.modifierGroupName}>{group.name}</Text>
+                                    {modifierNames && (
+                                      <Text style={styles.modifiersList}>
+                                        {modifierNames}
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
+                              </TouchableRipple>
                             );
                           })}
                         </>
@@ -698,9 +735,60 @@ const createStyles = (theme: AppTheme) =>
     variantCard: {
       marginBottom: theme.spacing.s,
       backgroundColor: theme.colors.elevation.level1,
+      paddingVertical: theme.spacing.xs,
+      paddingLeft: theme.spacing.m,
+      paddingRight: theme.spacing.xs,
+    },
+    variantCardInactive: {
+      opacity: 0.7,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    variantContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    variantInfo: {
+      flex: 1,
+      marginRight: theme.spacing.s,
+    },
+    variantHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 2,
+    },
+    variantName: {
+      fontSize: 15,
+      fontWeight: "500",
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    variantNameInactive: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    variantPrice: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
+    inactiveBadge: {
+      backgroundColor: theme.colors.errorContainer,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginLeft: theme.spacing.xs,
+    },
+    inactiveBadgeText: {
+      fontSize: 10,
+      color: theme.colors.onErrorContainer,
+      fontWeight: "600",
     },
     variantActions: {
       flexDirection: "row",
+      alignItems: "center",
+    },
+    variantActionButton: {
+      margin: 0,
     },
     noVariantsText: {
       textAlign: "center",
@@ -719,18 +807,34 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: theme.spacing.s,
       marginLeft: theme.spacing.xs,
     },
-    checkboxItem: {
-      paddingVertical: 0,
-      paddingLeft: 0,
-    },
-    checkboxLabel: {
-      fontSize: 15,
-    },
     noItemsText: {
       textAlign: "center",
       color: theme.colors.onSurfaceVariant,
       marginVertical: theme.spacing.s,
       fontStyle: "italic",
+    },
+    modifierGroupTouchable: {
+      paddingVertical: theme.spacing.s,
+      paddingHorizontal: theme.spacing.m,
+      marginHorizontal: -theme.spacing.m,
+    },
+    modifierGroupContent: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    modifierGroupTextContainer: {
+      flex: 1,
+      marginLeft: theme.spacing.m,
+    },
+    modifierGroupName: {
+      fontSize: 15,
+      color: theme.colors.onSurface,
+    },
+    modifiersList: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: "italic",
+      marginTop: 2,
     },
     modalActions: {
       flexDirection: "row",

@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useGetFullMenu } from "../hooks/useMenuQueries";
 // Importar el hook de mutación para crear órdenes
 import { useCreateOrderMutation } from "@/modules/orders/hooks/useOrdersQueries"; // Usar ruta absoluta
-import { useCart, CartProvider } from "../context/CartContext";
+import { useCart, CartProvider, CartItem } from "../context/CartContext";
 import { CartItemModifier } from "../context/CartContext";
 import {
   OrderType,
@@ -60,6 +60,7 @@ const CreateOrderScreen = () => {
     
     
     addItem: originalAddItem,
+    updateItem,
     isCartVisible,
     showCart,
     hideCart,
@@ -83,8 +84,10 @@ const CreateOrderScreen = () => {
     string | null
   >(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [showExitConfirmationModal, setShowExitConfirmationModal] = useState(false);
   const [pendingNavigationAction, setPendingNavigationAction] = useState<(() => void) | null>(null);
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
 
   const { data: menu, isLoading } = useGetFullMenu(); 
@@ -124,7 +127,49 @@ const CreateOrderScreen = () => {
 
   const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);
-  }, []);
+    setEditingItem(null);
+    // Si estábamos editando y hay items en el carrito, volver a mostrar el carrito
+    if (editingItem && !isCartEmpty) {
+      showCart();
+    }
+  }, [editingItem, isCartEmpty, showCart]);
+
+  const handleEditItem = useCallback((item: CartItem) => {
+    // Encontrar el producto completo desde el menú
+    if (!menu || !Array.isArray(menu)) {
+      showSnackbar({ 
+        message: "El menú aún se está cargando. Por favor, intenta nuevamente.", 
+        type: "info" 
+      });
+      return;
+    }
+    
+    // Buscar el producto en la estructura anidada
+    let product: Product | undefined;
+    
+    for (const category of menu) {
+      if (category.subcategories && Array.isArray(category.subcategories)) {
+        for (const subcategory of category.subcategories) {
+          if (subcategory.products && Array.isArray(subcategory.products)) {
+            product = subcategory.products.find(p => p.id === item.productId);
+            if (product) break;
+          }
+        }
+      }
+      if (product) break;
+    }
+    
+    if (product) {
+      setEditingItem(item);
+      setSelectedProduct(product);
+      hideCart(); // Cerrar el carrito para mostrar el modal de personalización
+    } else {
+      showSnackbar({ 
+        message: "No se pudo encontrar el producto. Por favor, recarga la pantalla.", 
+        type: "error" 
+      });
+    }
+  }, [menu, showSnackbar, hideCart]);
 
   const handleGoBackInternal = () => {
      if (navigationLevel === "products") {
@@ -173,31 +218,29 @@ const CreateOrderScreen = () => {
 
   // Actualizar handleConfirmOrder para usar la mutación
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
+    if (isProcessingOrder) return; // Prevenir múltiples envíos
+    
     console.log("Intentando confirmar orden con detalles:", details);
+    setIsProcessingOrder(true);
+    
     try {
       // Llamar a la mutación para enviar la orden al backend
-      await createOrderMutation.mutateAsync(details, {
-        onSuccess: (createdOrder: Order) => { // Añadir tipo explícito Order
-          // Usar 'orderNumber' en lugar de 'dailyNumber'
-          showSnackbar({ message: `Orden #${createdOrder.orderNumber} creada con éxito`, type: "success" });
-          hideCart();
-          clearCart(); // Limpiar carrito después de éxito
-          // Opcional: Navegar a otra pantalla, por ejemplo, la lista de órdenes
-          // navigation.navigate('Orders'); // Asegúrate de que 'Orders' exista en tu stack
-          navigation.goBack(); // O simplemente volver atrás
-        },
-        onError: (error: Error) => { // Añadir tipo explícito Error
-          // El manejo de errores con snackbar ya debería estar en el hook useCreateOrderMutation
-          // Si no, puedes añadirlo aquí:
-           const message = getApiErrorMessage(error);
-           showSnackbar({ message: `Error al crear orden: ${message}`, type: "error" });
-          console.error("Error al crear la orden:", error);
-        },
-      });
+      const createdOrder = await createOrderMutation.mutateAsync(details);
+      
+      // Usar 'orderNumber' en lugar de 'dailyNumber'
+      showSnackbar({ message: `Orden #${createdOrder.orderNumber} creada con éxito`, type: "success" });
+      hideCart();
+      clearCart(); // Limpiar carrito después de éxito
+      // Opcional: Navegar a otra pantalla, por ejemplo, la lista de órdenes
+      // navigation.navigate('Orders'); // Asegúrate de que 'Orders' exista en tu stack
+      navigation.goBack(); // O simplemente volver atrás
     } catch (error) {
-      // Captura errores si mutateAsync lanza (aunque onError del hook es preferible)
-      console.error("Error inesperado al llamar a mutateAsync:", error);
-      showSnackbar({ message: "Error inesperado al enviar la orden.", type: "error" });
+      // El manejo de errores con snackbar ya debería estar en el hook useCreateOrderMutation
+      const message = getApiErrorMessage(error as Error);
+      showSnackbar({ message: `Error al crear orden: ${message}`, type: "error" });
+      console.error("Error al crear la orden:", error);
+    } finally {
+      setIsProcessingOrder(false);
     }
   };
 
@@ -398,6 +441,7 @@ const CreateOrderScreen = () => {
              visible={isCartVisible}
              onClose={handleCloseCart}
              onConfirmOrder={handleConfirmOrder}
+             onEditItem={handleEditItem}
            />
         </SafeAreaView>
       );
@@ -556,7 +600,9 @@ const CreateOrderScreen = () => {
             <ProductCustomizationModal
               visible={true}
               product={selectedProduct}
+              editingItem={editingItem}
               onAddToCart={handleAddItem}
+              onUpdateItem={updateItem}
               onDismiss={handleCloseProductModal}
             />
           )}

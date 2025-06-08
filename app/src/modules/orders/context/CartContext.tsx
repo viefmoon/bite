@@ -47,6 +47,15 @@ interface CartContextType {
   ) => void;
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
+  updateItem: (
+    itemId: string,
+    quantity: number,
+    modifiers: CartItemModifier[],
+    preparationNotes?: string,
+    variantId?: string,
+    variantName?: string,
+    unitPrice?: number
+  ) => void;
   clearCart: () => void;
   isCartEmpty: boolean;
   subtotal: number;
@@ -129,9 +138,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       ? product.variants?.find((v) => v.id === variantId)
       : undefined;
 
-    const unitPrice = variantToAdd ? variantToAdd.price : product.price || 0;
+    const unitPrice = variantToAdd 
+      ? Number(variantToAdd.price) 
+      : Number(product.price) || 0;
 
-    const modifiersPrice = modifiers.reduce((sum, mod) => sum + mod.price, 0);
+    const modifiersPrice = modifiers.reduce((sum, mod) => sum + Number(mod.price || 0), 0);
 
     setItems((currentItems) => {
       // Buscar si existe un item idéntico
@@ -213,13 +224,47 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       currentItems.map((item) => {
         if (item.id === itemId) {
           const modifiersPrice = item.modifiers.reduce(
-            (sum, mod) => sum + mod.price,
+            (sum, mod) => sum + Number(mod.price || 0),
             0
           );
           const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
           return {
             ...item,
             quantity,
+            totalPrice: newTotalPrice,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const updateItem = (
+    itemId: string,
+    quantity: number,
+    modifiers: CartItemModifier[],
+    preparationNotes?: string,
+    variantId?: string,
+    variantName?: string,
+    unitPrice?: number
+  ) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => {
+        if (item.id === itemId) {
+          const modifiersPrice = modifiers.reduce(
+            (sum, mod) => sum + Number(mod.price || 0),
+            0
+          );
+          const finalUnitPrice = unitPrice !== undefined ? unitPrice : item.unitPrice;
+          const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
+          return {
+            ...item,
+            quantity,
+            modifiers,
+            preparationNotes: preparationNotes !== undefined ? preparationNotes : item.preparationNotes,
+            variantId: variantId !== undefined ? variantId : item.variantId,
+            variantName: variantName !== undefined ? variantName : item.variantName,
+            unitPrice: finalUnitPrice,
             totalPrice: newTotalPrice,
           };
         }
@@ -258,6 +303,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     addItem,
     removeItem,
     updateItemQuantity,
+    updateItem,
     clearCart,
     isCartEmpty,
     subtotal,

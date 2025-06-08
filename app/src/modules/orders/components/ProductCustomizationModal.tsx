@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import {
   Modal,
@@ -9,7 +9,6 @@ import {
   Checkbox,
   Divider,
   Appbar, // Importar Appbar
-  Title,
   TouchableRipple,
   IconButton,
   Card,
@@ -21,26 +20,37 @@ import { useForm, Controller, FieldValues } from "react-hook-form";
 import { useAppTheme } from "@/app/styles/theme";
 import SpeechRecognitionInput from "@/app/components/common/SpeechRecognitionInput"; // Importar SpeechRecognitionInput
 import {
-  Product,
+  FullMenuProduct as Product,
   ProductVariant,
   Modifier,
   ModifierGroup,
 } from "../types/orders.types";
-import { CartItemModifier } from "../context/CartContext";
+import { CartItemModifier, CartItem } from "../context/CartContext";
 import { getImageUrl } from "@/app/lib/imageUtils";
 import { AppTheme } from "@/app/styles/theme";
 import { useSnackbarStore } from "@/app/store/snackbarStore";
+import ConfirmationModal from "@/app/components/common/ConfirmationModal";
 
 interface ProductCustomizationModalProps {
   visible: boolean;
   onDismiss: () => void;
   product: Product;
+  editingItem?: CartItem | null;
   onAddToCart: (
     product: Product,
     quantity: number,
     variantId?: string,
     modifiers?: CartItemModifier[],
     preparationNotes?: string
+  ) => void;
+  onUpdateItem?: (
+    itemId: string,
+    quantity: number,
+    modifiers: CartItemModifier[],
+    preparationNotes?: string,
+    variantId?: string,
+    variantName?: string,
+    unitPrice?: number
   ) => void;
 }
 
@@ -52,7 +62,9 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   visible,
   onDismiss,
   product,
+  editingItem,
   onAddToCart,
+  onUpdateItem,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -81,23 +93,84 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     return Object.values(selectedModifiersByGroup).flat();
   }, [selectedModifiersByGroup]);
   const [quantity, setQuantity] = useState(1);
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Función para verificar si hay cambios
+  const checkForChanges = useCallback(() => {
+    if (!editingItem) return false;
+
+    // Comparar cantidad
+    if (quantity !== editingItem.quantity) return true;
+
+    // Comparar variante
+    if (selectedVariantId !== editingItem.variantId) return true;
+
+    // Comparar notas
+    if (watchedPreparationNotes !== (editingItem.preparationNotes || "")) return true;
+
+    // Comparar modificadores
+    const currentModifierIds = selectedModifiers.map(m => m.id).sort();
+    const originalModifierIds = editingItem.modifiers.map(m => m.id).sort();
+    
+    if (currentModifierIds.length !== originalModifierIds.length) return true;
+    
+    for (let i = 0; i < currentModifierIds.length; i++) {
+      if (currentModifierIds[i] !== originalModifierIds[i]) return true;
+    }
+
+    return false;
+  }, [editingItem, quantity, selectedVariantId, watchedPreparationNotes, selectedModifiers]);
 
   useEffect(() => {
     if (!product) return;
 
-    if (
-      product.variants &&
-      Array.isArray(product.variants) &&
-      product.variants.length > 0
-    ) {
-      setSelectedVariantId(product.variants[0].id);
+    if (editingItem) {
+      // Si estamos editando, usar los valores del item
+      setSelectedVariantId(editingItem.variantId);
+      setQuantity(editingItem.quantity);
+      reset({ preparationNotes: editingItem.preparationNotes || "" });
+      
+      // Reconstruir los modificadores por grupo
+      const modifiersByGroup: Record<string, CartItemModifier[]> = {};
+      if (editingItem.modifiers && product.modifierGroups) {
+        editingItem.modifiers.forEach(mod => {
+          // Encontrar a qué grupo pertenece este modificador
+          const group = product.modifierGroups?.find(g => 
+            g.productModifiers?.some(pm => pm.id === mod.id)
+          );
+          if (group) {
+            if (!modifiersByGroup[group.id]) {
+              modifiersByGroup[group.id] = [];
+            }
+            modifiersByGroup[group.id].push(mod);
+          }
+        });
+      }
+      setSelectedModifiersByGroup(modifiersByGroup);
     } else {
-      setSelectedVariantId(undefined);
+      // Si es un nuevo item, valores por defecto
+      if (
+        product.variants &&
+        Array.isArray(product.variants) &&
+        product.variants.length > 0
+      ) {
+        setSelectedVariantId(product.variants[0].id);
+      } else {
+        setSelectedVariantId(undefined);
+      }
+      setSelectedModifiersByGroup({});
+      setQuantity(1);
+      reset({ preparationNotes: "" });
     }
-    setSelectedModifiersByGroup({});
-    setQuantity(1);
-    reset({ preparationNotes: "" });
-  }, [product, reset]);
+  }, [product, editingItem, reset]);
+
+  // Detectar cambios
+  useEffect(() => {
+    if (editingItem) {
+      setHasChanges(checkForChanges());
+    }
+  }, [editingItem, checkForChanges]);
 
   const handleVariantSelect = (variantId: string) => {
     setSelectedVariantId(variantId);
@@ -125,14 +198,14 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       if (!group.allowMultipleSelections) {
         updatedModifiersByGroup[group.id] = [newModifier];
       } else {
-        if (currentGroupModifiers.length < group.maxSelection) {
+        if (currentGroupModifiers.length < (group.maxSelections || 0)) {
           updatedModifiersByGroup[group.id] = [
             ...currentGroupModifiers,
             newModifier,
           ];
         } else {
           showSnackbar(
-            `Solo puedes seleccionar hasta ${group.maxSelection} opciones en ${group.name}`,
+            `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
             "warning"
           );
           return;
@@ -144,19 +217,53 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   };
 
   const handleAddToCart = () => {
-    onAddToCart(
-      product,
-      quantity,
-      selectedVariantId,
-      selectedModifiers,
-      watchedPreparationNotes
-    );
+    if (editingItem && onUpdateItem) {
+      // Si estamos editando, actualizar el item existente
+      const variant = product.variants?.find(v => v.id === selectedVariantId);
+      const unitPrice = variant ? Number(variant.price) : Number(product.price) || 0;
+      
+      onUpdateItem(
+        editingItem.id,
+        quantity,
+        selectedModifiers,
+        watchedPreparationNotes,
+        selectedVariantId,
+        variant?.name,
+        unitPrice
+      );
+    } else {
+      // Si es un nuevo item, agregarlo al carrito
+      onAddToCart(
+        product,
+        quantity,
+        selectedVariantId,
+        selectedModifiers,
+        watchedPreparationNotes
+      );
+    }
     onDismiss();
   };
 
   const increaseQuantity = () => setQuantity((prev) => prev + 1);
   const decreaseQuantity = () =>
     setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  const handleDismiss = () => {
+    if (editingItem && hasChanges) {
+      setShowExitConfirmation(true);
+    } else {
+      onDismiss();
+    }
+  };
+
+  const handleConfirmExit = () => {
+    setShowExitConfirmation(false);
+    onDismiss();
+  };
+
+  const handleCancelExit = () => {
+    setShowExitConfirmation(false);
+  };
 
   if (!product) {
     return null;
@@ -187,12 +294,12 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     <Portal>
       <Modal
         visible={visible}
-        onDismiss={onDismiss}
+        onDismiss={handleDismiss}
         contentContainerStyle={styles.modalContent}
       >
         {/* Encabezado Refactorizado con Appbar */}
         <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction onPress={onDismiss} color={theme.colors.onSurface} />
+          <Appbar.BackAction onPress={handleDismiss} color={theme.colors.onSurface} />
           <Appbar.Content
             title={product?.name || "Producto"}
             titleStyle={styles.appBarTitle}
@@ -261,13 +368,13 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                     <View style={styles.groupTitleContainer}>
                       <Text style={styles.groupTitle}>{group.name}</Text>
                       {group.minSelection !== undefined &&
-                        group.maxSelection !== undefined && (
+                        group.maxSelections !== undefined && (
                           <Text style={styles.selectionRules}>
-                            {group.minSelection === 0 && group.maxSelection === 1
+                            {(group.minSelections || 0) === 0 && group.maxSelections === 1
                               ? "Hasta 1 opción"
-                              : group.minSelection === group.maxSelection
-                                ? `Elegir ${group.maxSelection}`
-                                : `${group.minSelection}-${group.maxSelection} opciones`}
+                              : (group.minSelections || 0) === group.maxSelections
+                                ? `Elegir ${group.maxSelections}`
+                                : `${group.minSelections || 0}-${group.maxSelections} opciones`}
                           </Text>
                         )}
                     </View>
@@ -472,14 +579,25 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             mode="contained"
             onPress={handleAddToCart}
             style={styles.confirmButton} // Usar estilo de OrderCartDetail
-            icon="cart-plus"
+            icon={editingItem ? "cart-check" : "cart-plus"}
             // Podrías agregar lógica de disabled si es necesario
             // disabled={!isValidSelection()}
           >
-            Agregar al Carrito {/* Texto simplificado */}
+            {editingItem ? "Actualizar Item" : "Agregar al Carrito"}
           </Button>
         </View>
       </Modal>
+      
+      <ConfirmationModal
+        visible={showExitConfirmation}
+        onDismiss={handleCancelExit}
+        onConfirm={handleConfirmExit}
+        title="¿Descartar cambios?"
+        message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+        confirmText="Descartar"
+        cancelText="Cancelar"
+        confirmButtonColor={theme.colors.error}
+      />
     </Portal>
   );
 };

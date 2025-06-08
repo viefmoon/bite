@@ -72,6 +72,7 @@ export class ProductRelationalRepository implements ProductRepository {
         'subcategory',
         'variants',
         'modifierGroups',
+        'modifierGroups.productModifiers',
         'preparationScreen',
       ],
     });
@@ -91,6 +92,7 @@ export class ProductRelationalRepository implements ProductRepository {
         'subcategory',
         'variants',
         'modifierGroups',
+        'modifierGroups.productModifiers',
         'preparationScreen',
       ],
     });
@@ -144,6 +146,7 @@ export class ProductRelationalRepository implements ProductRepository {
         'subcategory',
         'variants',
         'modifierGroups',
+        'modifierGroups.productModifiers',
         'preparationScreen',
       ],
     });
@@ -179,6 +182,7 @@ export class ProductRelationalRepository implements ProductRepository {
         'subcategory',
         'variants',
         'modifierGroups',
+        'modifierGroups.productModifiers',
         'preparationScreen',
       ],
     });
@@ -201,6 +205,19 @@ export class ProductRelationalRepository implements ProductRepository {
 
     if (result.affected === 0) {
       throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+    }
+  }
+
+  async updatePreparationScreen(
+    productId: string,
+    preparationScreenId: string | null,
+  ): Promise<void> {
+    const result = await this.productRepository.update(productId, {
+      preparationScreenId: preparationScreenId,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
     }
   }
 }

@@ -16,4 +16,8 @@ export interface ProductRepository {
   update(id: string, product: Partial<Product>): Promise<Product | null>;
   save(product: Product): Promise<Product>;
   softDelete(id: string): Promise<void>;
+  updatePreparationScreen(
+    productId: string,
+    preparationScreenId: string | null,
+  ): Promise<void>;
 }

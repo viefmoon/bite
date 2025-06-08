@@ -1,21 +1,18 @@
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, ActivityIndicator, Button, Appbar, IconButton, Portal, Card, Chip, List, Surface } from 'react-native-paper';
+import { Text, ActivityIndicator, Appbar, IconButton, Portal, Card, Chip } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import { Order, OrderStatusEnum, type OrderStatus, OrderType, OrderTypeEnum } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
-import { getApiErrorMessage } from '../../../app/lib/errorMapping'; // Importar mapeo de errores
 import { format } from 'date-fns'; // Para formatear fechas
 import { es } from 'date-fns/locale'; // Locale español
 import PrinterSelectionModal from '../components/PrinterSelectionModal'; // Importar el modal
 import type { ThermalPrinter } from '../../printers/types/printer.types';
-// Importar el nuevo modal y el tipo de payload
-import EditOrderModal, { UpdateOrderPayload } from '../components/EditOrderModal';
-// Importar el hook de mutación (lo crearemos después)
-// import { useUpdateOrderMutation } from '../hooks/useOrdersQueries';
+// Importar OrderCartDetail y el tipo de payload
+import OrderCartDetail, { OrderDetailsForBackend } from '../components/OrderCartDetail';
 import { useSnackbarStore } from '../../../app/store/snackbarStore'; // Para mostrar mensajes
 import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
 
@@ -50,7 +47,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [isPrinterModalVisible, setIsPrinterModalVisible] = useState(false);
   const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
   const printKitchenTicketMutation = usePrintKitchenTicketMutation();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar (Corregido)
 
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -63,7 +59,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
     isLoading,
     isError,
-    error,
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
@@ -82,6 +77,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch();
   }, [refetch]);
 
+  // Función para abrir el modal de selección de impresora
+  const handleOpenPrinterModal = useCallback((orderId: string) => {
+    setOrderToPrintId(orderId);
+    setIsPrinterModalVisible(true);
+  }, []);
+  
   const handleOrderItemPress = (order: Order) => {
     // Guardar solo el ID y abrir el modal
     setEditingOrderId(order.id);
@@ -193,12 +194,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     });
   }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
 
-  // Función para abrir el modal de selección de impresora
-  const handleOpenPrinterModal = useCallback((orderId: string) => {
-    setOrderToPrintId(orderId);
-    setIsPrinterModalVisible(true);
-  }, []);
-
   // Función que se ejecuta al seleccionar una impresora en el modal
   const handlePrinterSelect = useCallback((printer: ThermalPrinter) => {
     setIsPrinterModalVisible(false);
@@ -209,56 +204,102 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     } else {
       console.warn("Se seleccionó una impresora pero no había ID de orden guardado.");
     }
-  }, [orderToPrintId]); // Dependencia: orderToPrintId
+  }, [orderToPrintId, printKitchenTicketMutation]); // Dependencias
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {isLoading && !ordersData ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Cargando órdenes...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={ordersData || []}
-          keyExtractor={(item) => item.id}
-          renderItem={renderOrderItem}
-          refreshing={isFetching}
-          onRefresh={handleRefresh}
-          contentContainerStyle={styles.listContentContainer}
-          ListEmptyComponent={ListEmptyComponent}
-        />
-      )}
-      {/* Modal de Selección de Impresora */}
-      <Portal>
-        <PrinterSelectionModal
-          visible={isPrinterModalVisible}
-          onDismiss={() => setIsPrinterModalVisible(false)}
-          onPrinterSelect={handlePrinterSelect}
-        />
-        {/* Modal de Edición de Orden */}
-        <EditOrderModal
-          visible={isEditModalVisible}
-          orderId={editingOrderId} // Pasar ID en lugar del objeto
-          onClose={() => {
-            setIsEditModalVisible(false);
-            setEditingOrderId(null); // Limpiar ID
-          }}
-          onSaveChanges={async (orderId, payload) => { // orderId ya viene como argumento
-            // Llamar a la mutación de actualización
-            try {
-              await updateOrderMutation.mutateAsync({ orderId, payload });
-              // El hook useUpdateOrderMutation ya muestra el snackbar de éxito
-              setIsEditModalVisible(false);
-              setEditingOrderId(null); // Limpiar ID
-            } catch (error) {
-              // El hook useUpdateOrderMutation ya muestra el snackbar de error
-              console.error("Error al actualizar la orden desde el modal:", error);
-            }
-          }}
-        />
-      </Portal>
-    </SafeAreaView>
+        {isLoading && !ordersData ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Cargando órdenes...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={ordersData || []}
+            keyExtractor={(item) => item.id}
+            renderItem={renderOrderItem}
+            refreshing={isFetching}
+            onRefresh={handleRefresh}
+            contentContainerStyle={styles.listContentContainer}
+            ListEmptyComponent={ListEmptyComponent}
+          />
+        )}
+        {/* Modal de Selección de Impresora */}
+        <Portal>
+          <PrinterSelectionModal
+            visible={isPrinterModalVisible}
+            onDismiss={() => setIsPrinterModalVisible(false)}
+            onPrinterSelect={handlePrinterSelect}
+          />
+          {/* Modal de Edición de Orden usando OrderCartDetail */}
+          {editingOrderId && (
+            <OrderCartDetail
+              visible={isEditModalVisible}
+              isEditMode={true}
+              orderId={editingOrderId}
+              orderNumber={ordersData?.find(o => o.id === editingOrderId)?.dailyNumber}
+              orderDate={ordersData?.find(o => o.id === editingOrderId)?.createdAt ? new Date(ordersData.find(o => o.id === editingOrderId)!.createdAt) : undefined}
+              onClose={() => {
+                setIsEditModalVisible(false);
+                setEditingOrderId(null);
+              }}
+              onConfirmOrder={async (details: OrderDetailsForBackend) => {
+                // Formatear el número de teléfono si existe
+                let formattedPhone: string | null = null;
+                if (details.phoneNumber && details.phoneNumber.trim() !== '') {
+                  // Si ya tiene formato internacional, usarlo tal cual
+                  if (details.phoneNumber.startsWith('+')) {
+                    formattedPhone = details.phoneNumber;
+                  } else {
+                    // Eliminar espacios, guiones y caracteres no numéricos
+                    let cleanPhone = details.phoneNumber.replace(/\D/g, '');
+                    
+                    // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
+                    if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
+                      cleanPhone = cleanPhone.substring(1);
+                    }
+                    // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
+                    else if (cleanPhone.length === 12 && cleanPhone.startsWith('521')) {
+                      cleanPhone = cleanPhone.substring(2);
+                    }
+                    
+                    // Si después del formateo tiene 10 dígitos, agregar +52
+                    if (cleanPhone.length === 10) {
+                      formattedPhone = `+52${cleanPhone}`;
+                    }
+                  }
+                }
+                
+                // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
+                // NOTA: El backend actual no actualiza los items, solo los campos de la orden
+                const payload = {
+                  orderType: details.orderType,
+                  // items: details.items, // Comentado porque el backend no procesa items en update
+                  tableId: details.tableId || null,
+                  scheduledAt: details.scheduledAt || null,
+                  customerName: details.customerName || null,
+                  phoneNumber: formattedPhone,
+                  deliveryAddress: details.deliveryAddress || null,
+                  notes: details.notes || null,
+                  total: details.total,
+                  subtotal: details.subtotal,
+                };
+                
+                try {
+                  await updateOrderMutation.mutateAsync({ orderId: editingOrderId, payload });
+                  setIsEditModalVisible(false);
+                  setEditingOrderId(null);
+                } catch (error) {
+                  console.error("Error al actualizar la orden:", error);
+                }
+              }}
+              onAddProducts={() => {
+                // La funcionalidad de añadir productos ahora se maneja internamente en OrderCartDetail
+              }}
+            />
+          )}
+        </Portal>
+      </SafeAreaView>
   );
 };
 

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 // Importar desde el servicio de categorías correcto
 import { getFullMenu } from '@/modules/menu/services/categoryService';
-// Importar el tipo Category que SÍ representa el menú completo (definido en orders)
-import type { Category } from '@/modules/orders/types/orders.types';
+// Importar el tipo de menú completo con relaciones anidadas
+import type { FullMenuCategory } from '@/modules/orders/types/orders.types';
 import { ApiError } from '@/app/lib/errors';
 
 // Define una clave única para esta query
@@ -13,7 +13,7 @@ const queryKey = ['fullMenu'];
  * Gestiona el fetching, caching, estado de carga y errores.
  */
 export function useGetFullMenu() {
-  return useQuery<Category[], ApiError>({ // Especifica los tipos para data y error
+  return useQuery<FullMenuCategory[], ApiError>({ // Especifica los tipos para data y error
     queryKey: queryKey,
     queryFn: getFullMenu, // La función que realiza el fetch
     // Opciones adicionales de React Query (opcional):

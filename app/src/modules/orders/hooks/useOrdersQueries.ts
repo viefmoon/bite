@@ -9,7 +9,7 @@ import type { PaginatedResponse } from '../../../app/types/api.types'; // Correg
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import type { UpdateOrderPayload } from '../components/EditOrderModal'; // Importar payload
+import type { UpdateOrderPayload } from '../types/update-order.types'; // Importar payload
 
 // --- Query Keys (si se necesitan queries futuras para órdenes) ---
 const orderKeys = {

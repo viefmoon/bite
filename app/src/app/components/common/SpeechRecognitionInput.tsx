@@ -44,6 +44,7 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
   const isMounted = useRef(true);
   const instanceId = useRef(Math.random().toString(36).substring(2)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const inputRef = useRef<any>(null);
 
   useEffect(() => {
     isMounted.current = true;
@@ -190,6 +191,7 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
   return (
     <View style={styles.wrapper}>
       <AnimatedLabelInput
+        ref={inputRef}
         label={label}
         value={value}
         onChangeText={onChangeText}

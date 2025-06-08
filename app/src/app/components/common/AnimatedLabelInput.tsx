@@ -25,7 +25,7 @@ interface AnimatedLabelInputProps extends TextInputProps {
   disabled?: boolean; 
 }
 
-const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
+const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(({
   label,
   value,
   onChangeText,
@@ -44,7 +44,7 @@ const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
   multiline,
   disabled = false, // Añadir disabled a las props destructuradas
   ...rest
-}) => {
+}, ref) => {
   const theme = useAppTheme();
   const [isFocused, setIsFocused] = useState(false);
   const animation = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -74,6 +74,10 @@ const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
     setIsFocused(false);
     onBlur?.(e);
   };
+  
+  // Usar ref externa o crear una nueva
+  const inputRef = useRef<TextInput>(null);
+  const finalRef = ref || inputRef;
 
   const labelScale = animation.interpolate({
     inputRange: [0, 1],
@@ -163,12 +167,15 @@ const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
       </Animated.Text>
       <View style={styles.inputContainer}>
         <TextInput
+          ref={finalRef}
           value={value}
           onChangeText={onChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}
           style={[styles.input, inputStyle, style]}
           placeholder=""
+          editable={!disabled}
+          pointerEvents={disabled ? 'none' : 'auto'}
           underlineColorAndroid="transparent"
           placeholderTextColor={finalInactiveLabelColor}
           multiline={multiline}
@@ -180,6 +187,8 @@ const AnimatedLabelInput: React.FC<AnimatedLabelInputProps> = ({
       </View>
     </View>
   );
-};
+});
+
+AnimatedLabelInput.displayName = 'AnimatedLabelInput';
 
 export default AnimatedLabelInput;

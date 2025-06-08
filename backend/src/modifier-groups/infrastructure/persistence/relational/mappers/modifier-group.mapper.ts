@@ -39,9 +39,8 @@ export class ModifierGroupMapper extends BaseMapper<
     domain.productModifiers = mapArray(entity.productModifiers, (modifier) =>
       this.productModifierMapper.toDomain(modifier),
     );
-    domain.products = mapArray(entity.products, (product) =>
-      this.productMapper.toEntity(product),
-    );
+    // No mapear products para evitar referencias circulares
+    domain.products = [];
     return domain;
   }
 
@@ -56,9 +55,8 @@ export class ModifierGroupMapper extends BaseMapper<
     entity.isRequired = domain.isRequired;
     entity.allowMultipleSelections = domain.allowMultipleSelections;
     entity.isActive = domain.isActive;
-    entity.products = mapArray(domain.products, (product) =>
-      this.productMapper.toEntity(product),
-    ) as ProductEntity[];
+    // No mapear products al crear/actualizar para evitar problemas
+    // La relación se maneja desde el lado del producto
     return entity;
   }
 }

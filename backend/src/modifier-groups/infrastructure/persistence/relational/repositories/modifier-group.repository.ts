@@ -86,6 +86,14 @@ export class ModifierGroupsRelationalRepository
       });
     }
 
+    // Incluir relaciones con productModifiers
+    queryBuilder.leftJoinAndSelect(
+      'modifierGroup.productModifiers',
+      'productModifiers',
+    );
+    queryBuilder.orderBy('modifierGroup.name', 'ASC');
+    queryBuilder.addOrderBy('productModifiers.sortOrder', 'ASC');
+
     queryBuilder.skip(skip).take(limit);
 
     const [entities, count] = await queryBuilder.getManyAndCount();
@@ -102,7 +110,7 @@ export class ModifierGroupsRelationalRepository
   ): Promise<NullableType<ModifierGroup>> {
     const entity = await this.modifierGroupRepository.findOne({
       where: { id },
-      relations: ['productModifiers', 'products'],
+      relations: ['productModifiers'],
     });
 
     return entity ? this.modifierGroupMapper.toDomain(entity) : null;
@@ -113,7 +121,7 @@ export class ModifierGroupsRelationalRepository
   ): Promise<NullableType<ModifierGroup>> {
     const entity = await this.modifierGroupRepository.findOne({
       where: { name },
-      relations: ['productModifiers', 'products'],
+      relations: ['productModifiers'],
     });
 
     return entity ? this.modifierGroupMapper.toDomain(entity) : null;
@@ -136,7 +144,7 @@ export class ModifierGroupsRelationalRepository
 
     const updatedEntity = await this.modifierGroupRepository.findOne({
       where: { id },
-      relations: ['productModifiers', 'products'],
+      relations: ['productModifiers'],
     });
 
     if (!updatedEntity) {

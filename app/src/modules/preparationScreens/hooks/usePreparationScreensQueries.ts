@@ -2,7 +2,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  QueryKey,
 } from '@tanstack/react-query';
 import * as preparationScreenService from '../services/preparationScreenService';
 import {
@@ -24,6 +23,8 @@ const preparationScreensQueryKeys = {
     [...preparationScreensQueryKeys.lists(), filters] as const,
   details: () => [...preparationScreensQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...preparationScreensQueryKeys.details(), id] as const,
+  products: (id: string) => [...preparationScreensQueryKeys.detail(id), 'products'] as const,
+  menuWithAssociations: (id: string) => [...preparationScreensQueryKeys.detail(id), 'menuWithAssociations'] as const,
 };
 
 // --- Hooks ---
@@ -64,7 +65,7 @@ export const useCreatePreparationScreen = () => {
 
   return useMutation<PreparationScreen, Error, CreatePreparationScreenDto>({
     mutationFn: preparationScreenService.createPreparationScreen,
-    onSuccess: (newScreen) => {
+    onSuccess: () => {
       // Invalidate list queries to refetch
       queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.lists() });
       showSnackbar({ message: 'Pantalla de preparación creada con éxito', type: 'success' });
@@ -181,7 +182,7 @@ export const useDeletePreparationScreen = () => {
       }
     },
 
-    onSettled: (data, error, deletedId) => {
+    onSettled: (_, error, deletedId) => {
       // Invalidar listas para asegurar consistencia final
       queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.lists() });
 
@@ -192,5 +193,55 @@ export const useDeletePreparationScreen = () => {
       }
     },
      // onSuccess eliminado
+  });
+};
+
+/**
+ * Hook to fetch products associated with a preparation screen.
+ */
+export const useGetPreparationScreenProducts = (id: string | null, options?: { enabled?: boolean }) => {
+  const queryKey = preparationScreensQueryKeys.products(id!);
+  return useQuery<any[], Error>({
+    queryKey,
+    queryFn: () => preparationScreenService.getPreparationScreenProducts(id!),
+    enabled: !!id && (options?.enabled ?? true),
+  });
+};
+
+/**
+ * Hook to fetch menu with associations for a preparation screen.
+ */
+export const useGetMenuWithAssociations = (id: string | null, options?: { enabled?: boolean }) => {
+  const queryKey = preparationScreensQueryKeys.menuWithAssociations(id!);
+  return useQuery<any, Error>({
+    queryKey,
+    queryFn: () => preparationScreenService.getMenuWithAssociations(id!),
+    enabled: !!id && (options?.enabled ?? true),
+  });
+};
+
+/**
+ * Hook for associating products with a preparation screen.
+ */
+export const useAssociateProducts = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation<PreparationScreen, Error, { id: string; productIds: string[] }>({
+    mutationFn: ({ id, productIds }) => preparationScreenService.associateProducts(id, productIds),
+    onSuccess: (_, variables) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.products(variables.id) });
+      queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.menuWithAssociations(variables.id) });
+      queryClient.invalidateQueries({ queryKey: preparationScreensQueryKeys.lists() });
+      
+      showSnackbar({ message: 'Productos asociados con éxito', type: 'success' });
+    },
+    onError: (error) => {
+      const errorMessage = getApiErrorMessage(error);
+      showSnackbar({ message: errorMessage, type: 'error' });
+      console.error('Error associating products:', error);
+    },
   });
 };

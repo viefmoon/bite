@@ -1,11 +1,12 @@
 import apiClient from "@/app/services/apiClient";
 import { handleApiResponse } from "@/app/lib/apiHelpers";
 import { API_PATHS } from "@/app/constants/apiPaths";
+import { ApiError } from "@/app/lib/errors"; // Importar ApiError
 import type { Order } from "../../../app/schemas/domain/order.schema";
 import type { FindAllOrdersDto } from "../types/orders.types"; // FindAllOrdersDto se queda aquí
 import type { PaginatedResponse } from "../../../app/types/api.types"; // Importar PaginatedResponse
 import type { OrderDetailsForBackend } from "../components/OrderCartDetail"; // Importar la interfaz del payload de creación
-import type { UpdateOrderPayload } from "../components/EditOrderModal"; // Importar la interfaz del payload de actualización
+import type { UpdateOrderPayload } from "../types/update-order.types"; // Importar la interfaz del payload de actualización
 
 /**
  * Crea una nueva orden en el backend.

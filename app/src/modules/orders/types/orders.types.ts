@@ -34,6 +34,24 @@ export const OrderTypeEnum = orderTypeSchema.enum;
 
 // --- Tipos específicos del módulo de Órdenes que no son entidades de dominio ---
 
+// Tipos extendidos para el menú completo con relaciones anidadas
+export interface FullMenuModifierGroup extends ModifierGroup {
+  productModifiers?: Modifier[];
+}
+
+export interface FullMenuProduct extends Product {
+  variants?: ProductVariant[];
+  modifierGroups?: FullMenuModifierGroup[];
+}
+
+export interface FullMenuSubCategory extends SubCategory {
+  products?: FullMenuProduct[];
+}
+
+export interface FullMenuCategory extends Category {
+  subcategories?: FullMenuSubCategory[];
+}
+
 // DTO para filtrar órdenes (basado en el backend DTO)
 // Este tipo es específico para la API de este módulo, por lo que permanece aquí.
 export interface FindAllOrdersDto {
