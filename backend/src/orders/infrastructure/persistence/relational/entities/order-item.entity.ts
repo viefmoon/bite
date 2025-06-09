@@ -24,13 +24,13 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @RelationId((orderItem: OrderItemEntity) => orderItem.order)
+  @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
-  @RelationId((orderItem: OrderItemEntity) => orderItem.product)
+  @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @RelationId((orderItem: OrderItemEntity) => orderItem.productVariant)
+  @Column({ name: 'product_variant_id', type: 'uuid', nullable: true })
   productVariantId: string | null;
 
   @Column({ type: 'int', nullable: false })

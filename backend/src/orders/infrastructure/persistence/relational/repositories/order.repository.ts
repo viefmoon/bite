@@ -58,9 +58,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
     });
@@ -127,9 +129,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
       order: {
@@ -150,11 +154,13 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
     });
@@ -168,9 +174,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
       order: {
@@ -193,9 +201,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
       order: {
@@ -216,9 +226,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
       order: {
@@ -244,6 +256,7 @@ export class OrdersRelationalRepository implements OrderRepository {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('order.table', 'table')
+      .leftJoinAndSelect('table.area', 'area')
       .leftJoinAndSelect('order.dailyOrderCounter', 'dailyOrderCounter')
       .leftJoinAndSelect('order.orderItems', 'orderItems')
       .leftJoinAndSelect('orderItems.product', 'product')
@@ -270,9 +283,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
     });
@@ -313,9 +328,11 @@ export class OrdersRelationalRepository implements OrderRepository {
       relations: [
         'user',
         'table',
+        'table.area',
         'dailyOrderCounter',
         'orderItems',
         'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
         'payments',
       ],
     });

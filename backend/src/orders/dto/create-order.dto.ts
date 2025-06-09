@@ -116,9 +116,16 @@ export class CreateOrderDto {
     message: 'El número de teléfono es obligatorio para entregas a domicilio',
   }) // Requerido si es DELIVERY
   @IsString({ message: 'El número de teléfono debe ser una cadena de texto' })
-  @MinLength(10, { message: 'El número de teléfono debe tener al menos 10 dígitos' })
-  @MaxLength(15, { message: 'El número de teléfono no puede tener más de 15 dígitos' })
-  @Matches(/^\+?[0-9]+$/, { message: 'El número de teléfono solo debe contener dígitos y puede empezar con +' })
+  @MinLength(10, {
+    message: 'El número de teléfono debe tener al menos 10 dígitos',
+  })
+  @MaxLength(15, {
+    message: 'El número de teléfono no puede tener más de 15 dígitos',
+  })
+  @Matches(/^\+?[0-9]+$/, {
+    message:
+      'El número de teléfono solo debe contener dígitos y puede empezar con +',
+  })
   phoneNumber?: string | null;
 
   @ApiProperty({

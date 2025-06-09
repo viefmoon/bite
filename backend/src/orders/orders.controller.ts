@@ -308,7 +308,8 @@ export class OrdersController {
     // Corregir llamada al servicio para pasar un objeto
     return this.ordersService.createOrderItemModifier({
       orderItemId: orderItemId,
-      productModifierId: createDto.productModifierId,
+      modifierId: createDto.modifierId,
+      modifierOptionId: createDto.modifierOptionId,
       quantity: createDto.quantity,
       price: createDto.price,
     });

@@ -3,12 +3,21 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateOrderItemModifierDto {
   @ApiPropertyOptional({
-    description: 'ID del ProductModifier asociado',
+    description: 'ID del ProductModifier seleccionado (la opción específica)',
     example: '123e4567-e89b-12d3-a456-426614174001',
   })
   @IsOptional()
   @IsUUID()
-  productModifierId?: string;
+  modifierId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Campo opcional para información adicional',
+    example: null,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUUID()
+  modifierOptionId?: string | null;
 
   @ApiPropertyOptional({
     description: 'Cantidad del modificador',

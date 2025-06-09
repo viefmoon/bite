@@ -15,7 +15,16 @@ export class TableMapper extends BaseMapper<TableEntity, Table> {
     if (!entity) return null;
 
     if (entity.id && !entity.area) {
-      throw new Error(`La tabla ${entity.id} no tiene un área asociada`);
+      console.error('Error en TableMapper:', {
+        tableId: entity.id,
+        tableName: entity.name,
+        areaId: entity.areaId,
+        hasArea: !!entity.area,
+      });
+      throw new Error(
+        `La tabla ${entity.id} (${entity.name}) no tiene un área asociada. ` +
+          `Asegúrese de cargar la relación 'table.area' en la consulta.`,
+      );
     }
 
     const domain = new Table();

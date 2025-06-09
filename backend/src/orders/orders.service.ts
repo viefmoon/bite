@@ -54,7 +54,7 @@ export class OrdersService {
 
     if (createOrderDto.items && createOrderDto.items.length > 0) {
       for (const itemDto of createOrderDto.items) {
-        // Crear el item primero
+        // Crear un item individual
         const createOrderItemDto: CreateOrderItemDto = {
           orderId: order.id,
           productId: itemDto.productId,
@@ -73,9 +73,9 @@ export class OrdersService {
         if (itemDto.modifiers && itemDto.modifiers.length > 0) {
           for (const modifierDto of itemDto.modifiers) {
             await this.createOrderItemModifier({
-              // Llamada actualizada
               orderItemId: savedOrderItem.id,
-              productModifierId: modifierDto.productModifierId,
+              modifierId: modifierDto.modifierId,
+              modifierOptionId: modifierDto.modifierOptionId,
               quantity: modifierDto.quantity,
               price: modifierDto.price,
             });
@@ -127,7 +127,9 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    await this.findOne(id); // Asegurarse de que la orden existe
+    const existingOrder = await this.findOne(id); // Asegurarse de que la orden existe
+
+    // Actualizar datos básicos de la orden
     const updatePayload: Partial<Order> = {
       userId: updateOrderDto.userId,
       tableId: updateOrderDto.tableId,
@@ -142,12 +144,60 @@ export class OrdersService {
       deliveryAddress: updateOrderDto.deliveryAddress,
     };
 
+    // Actualizar la orden
     const updatedOrder = await this.orderRepository.update(id, updatePayload);
     if (!updatedOrder) {
-      // Podría ser un error interno si findOne no lanzó error antes
       throw new Error(`Failed to update order with ID ${id}`);
     }
-    return updatedOrder;
+
+    // Si se proporcionan items, actualizar los items de la orden
+    if (updateOrderDto.items && Array.isArray(updateOrderDto.items)) {
+      // Eliminar todos los items existentes
+      const existingItems = await this.orderItemRepository.findByOrderId(id);
+      for (const item of existingItems) {
+        // Eliminar modificadores del item
+        const modifiers =
+          await this.orderItemModifierRepository.findByOrderItemId(item.id);
+        for (const modifier of modifiers) {
+          await this.orderItemModifierRepository.delete(modifier.id);
+        }
+        // Eliminar el item
+        await this.orderItemRepository.delete(item.id);
+      }
+
+      // Crear los nuevos items
+      for (const itemDto of updateOrderDto.items) {
+        const createOrderItemDto: CreateOrderItemDto = {
+          orderId: id,
+          productId: itemDto.productId,
+          productVariantId: itemDto.productVariantId,
+          quantity: itemDto.quantity,
+          basePrice: itemDto.basePrice,
+          finalPrice: itemDto.finalPrice,
+          preparationNotes: itemDto.preparationNotes,
+          modifiers: itemDto.modifiers,
+        };
+
+        const savedOrderItem =
+          await this.createOrderItemInternal(createOrderItemDto);
+
+        // Crear modificadores asociados
+        if (itemDto.modifiers && itemDto.modifiers.length > 0) {
+          for (const modifierDto of itemDto.modifiers) {
+            await this.createOrderItemModifier({
+              orderItemId: savedOrderItem.id,
+              modifierId: modifierDto.modifierId,
+              modifierOptionId: modifierDto.modifierOptionId,
+              quantity: modifierDto.quantity,
+              price: modifierDto.price,
+            });
+          }
+        }
+      }
+    }
+
+    // Recargar la orden completa con todos los datos actualizados
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
@@ -265,21 +315,22 @@ export class OrdersService {
   // Firma refactorizada para aceptar un objeto
   async createOrderItemModifier(data: {
     orderItemId: string;
-    productModifierId: string; // Cambiado de modifierId
-    quantity?: number; // Opcional
-    price?: number | null; // Opcional y permite null
+    modifierId: string; // ID del ProductModifier (la opción específica)
+    modifierOptionId?: string | null; // Campo opcional
+    quantity?: number;
+    price?: number | null;
   }): Promise<OrderItemModifier> {
     await this.findOrderItemById(data.orderItemId); // Verificar que el orderItem existe
 
-    // Aquí iría la lógica para obtener el precio del catálogo si data.price es null/undefined
-    // const productModifier = await this.productModifierRepository.findById(data.productModifierId);
+    // TODO: Aquí se podría obtener el precio del catálogo si data.price es null/undefined
+    // const productModifier = await this.productModifierRepository.findById(data.modifierId);
     // const finalPrice = data.price ?? productModifier?.price ?? 0;
 
     const orderItemModifier = new OrderItemModifier();
     orderItemModifier.id = uuidv4();
     orderItemModifier.orderItemId = data.orderItemId;
-    orderItemModifier.modifierId = data.productModifierId; // Asignar a modifierId
-    orderItemModifier.modifierOptionId = null; // Mantener como null
+    orderItemModifier.modifierId = data.modifierId;
+    orderItemModifier.modifierOptionId = data.modifierOptionId || null;
     orderItemModifier.quantity = data.quantity ?? 1;
     orderItemModifier.price = data.price ?? 0;
 
@@ -314,9 +365,10 @@ export class OrdersService {
     const updatedData = {
       ...existingModifier,
       modifierId:
-        updateOrderItemModifierDto.productModifierId ??
-        existingModifier.modifierId, // Usar productModifierId
-      // modifierOptionId se mantiene igual
+        updateOrderItemModifierDto.modifierId ?? existingModifier.modifierId,
+      modifierOptionId:
+        updateOrderItemModifierDto.modifierOptionId ??
+        existingModifier.modifierOptionId,
       quantity:
         updateOrderItemModifierDto.quantity ?? existingModifier.quantity,
       price:

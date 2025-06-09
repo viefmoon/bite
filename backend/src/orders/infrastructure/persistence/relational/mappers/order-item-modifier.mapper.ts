@@ -31,6 +31,10 @@ export class OrderItemModifierMapper extends BaseMapper<
     domain.quantity = entity.quantity;
     domain.price = entity.price;
     domain.orderItem = orderItemDomain;
+    // Incluir la información del modificador si está disponible
+    if (entity.modifier) {
+      domain.modifier = entity.modifier;
+    }
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;

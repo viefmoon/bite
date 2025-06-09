@@ -16,7 +16,8 @@ const generateId = () => {
 };
 
 export interface CartItemModifier {
-  id: string;
+  id: string; // ID de la opción específica (ProductModifier)
+  groupId: string;
   name: string;
   price: number;
 }

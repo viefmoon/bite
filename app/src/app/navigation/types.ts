@@ -26,6 +26,7 @@ export type OrdersStackParamList = {
     phoneNumber?: string; // Teléfono
     deliveryAddress?: string; // Dirección
     notes?: string; // Notas
+    scheduledAt?: string; // Hora programada en ISO string
   } | undefined; // Pantalla para crear una nueva orden
   OpenOrders: {
     addedItems?: any[]; // Items agregados desde CreateOrder

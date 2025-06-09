@@ -8,6 +8,7 @@ export class OrderItemModifier {
   quantity: number;
   price: number;
   orderItem?: OrderItem;
+  modifier?: any; // Información del modificador (ProductModifierEntity)
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
