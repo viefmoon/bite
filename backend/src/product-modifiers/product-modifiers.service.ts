@@ -65,8 +65,11 @@ export class ProductModifiersService {
     return productModifier;
   }
 
-  async findByGroupId(groupId: string): Promise<ProductModifier[]> {
-    return this.productModifierRepository.findByGroupId(groupId);
+  async findByGroupId(
+    groupId: string,
+    filters?: { isActive?: boolean; search?: string },
+  ): Promise<ProductModifier[]> {
+    return this.productModifierRepository.findByGroupId(groupId, filters);
   }
 
   async update(

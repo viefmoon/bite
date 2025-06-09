@@ -8,9 +8,11 @@ import {
   IsUUID,
   ValidateNested,
   ValidateIf,
-  IsPhoneNumber,
   IsString,
   IsNotEmpty,
+  MinLength,
+  MaxLength,
+  Matches,
 } from 'class-validator';
 import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';
@@ -113,7 +115,7 @@ export class UpdateOrderDto {
 
   @ApiProperty({
     type: String,
-    example: '+15551234567',
+    example: '+523331234567',
     description:
       'Número de teléfono para la entrega (obligatorio si orderType es DELIVERY)',
     required: false,
@@ -124,7 +126,10 @@ export class UpdateOrderDto {
   @IsNotEmpty({
     message: 'El número de teléfono es obligatorio para entregas a domicilio',
   })
-  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
+  @IsString({ message: 'El número de teléfono debe ser una cadena de texto' })
+  @MinLength(10, { message: 'El número de teléfono debe tener al menos 10 dígitos' })
+  @MaxLength(15, { message: 'El número de teléfono no puede tener más de 15 dígitos' })
+  @Matches(/^\+?[0-9]+$/, { message: 'El número de teléfono solo debe contener dígitos y puede empezar con +' })
   phoneNumber?: string | null;
 
   @ApiProperty({

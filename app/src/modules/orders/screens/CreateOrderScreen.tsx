@@ -15,7 +15,7 @@ import {
   Appbar,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useGetFullMenu } from "../hooks/useMenuQueries";
 // Importar el hook de mutación para crear órdenes
 import { useCreateOrderMutation } from "@/modules/orders/hooks/useOrdersQueries"; // Usar ruta absoluta
@@ -41,6 +41,7 @@ import { getApiErrorMessage } from "@/app/lib/errorMapping"; // Importar mapeo d
 import { useAppTheme } from "@/app/styles/theme";
 // Importar el tipo completo para el payload de confirmación
 import type { OrderDetailsForBackend } from "../components/OrderCartDetail";
+import type { OrdersStackScreenProps } from "@/app/navigation/types";
 
 
 interface CartButtonHandle {
@@ -51,14 +52,23 @@ const CreateOrderScreen = () => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
   const navigation = useNavigation();
+  const route = useRoute<OrdersStackScreenProps<'CreateOrder'>['route']>();
+  
+  // Verificar si estamos en modo de agregar productos a una orden existente
+  const isAddingToOrder = route.params?.isAddingToOrder || false;
+  const existingOrderId = route.params?.orderId;
+  const existingOrderNumber = route.params?.orderNumber;
+  const existingOrderDate = route.params?.orderDate;
+  const existingItems = route.params?.existingItems || [];
+  const existingOrderType = route.params?.orderType;
+  const existingTableId = route.params?.tableId;
+  const existingCustomerName = route.params?.customerName;
+  const existingPhoneNumber = route.params?.phoneNumber;
+  const existingDeliveryAddress = route.params?.deliveryAddress;
+  const existingNotes = route.params?.notes;
   const {
     items,
-    
-    
-    
     isCartEmpty,
-    
-    
     addItem: originalAddItem,
     updateItem,
     isCartVisible,
@@ -66,6 +76,13 @@ const CreateOrderScreen = () => {
     hideCart,
     clearCart,
     totalItemsCount,
+    setOrderType,
+    setSelectedTableId,
+    setCustomerName,
+    setPhoneNumber,
+    setDeliveryAddress,
+    setOrderNotes,
+    setItems,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
@@ -91,6 +108,27 @@ const CreateOrderScreen = () => {
 
 
   const { data: menu, isLoading } = useGetFullMenu(); 
+
+  // Cargar los datos existentes cuando estamos en modo edición
+  useEffect(() => {
+    if (isAddingToOrder && existingItems.length > 0) {
+      // Cargar los items existentes en el carrito
+      setItems(existingItems);
+      
+      // Cargar los datos de la orden
+      if (existingOrderType) setOrderType(existingOrderType);
+      if (existingTableId) setSelectedTableId(existingTableId);
+      if (existingCustomerName) setCustomerName(existingCustomerName);
+      if (existingPhoneNumber) setPhoneNumber(existingPhoneNumber);
+      if (existingDeliveryAddress) setDeliveryAddress(existingDeliveryAddress);
+      if (existingNotes) setOrderNotes(existingNotes);
+      
+      showSnackbar({ 
+        message: `Editando orden #${existingOrderNumber}`, 
+        type: "info" 
+      });
+    }
+  }, [isAddingToOrder]); // Solo ejecutar una vez al montar
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -220,6 +258,17 @@ const CreateOrderScreen = () => {
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
     if (isProcessingOrder) return; // Prevenir múltiples envíos
     
+    // Si estamos en modo de agregar productos, simplemente volver con los items
+    if (isAddingToOrder) {
+      // Navegar de vuelta a la pantalla de órdenes abiertas
+      navigation.navigate('OpenOrders', {
+        addedItems: items,
+        orderId: existingOrderId,
+      } as any);
+      clearCart();
+      return;
+    }
+    
     console.log("Intentando confirmar orden con detalles:", details);
     setIsProcessingOrder(true);
     
@@ -227,8 +276,8 @@ const CreateOrderScreen = () => {
       // Llamar a la mutación para enviar la orden al backend
       const createdOrder = await createOrderMutation.mutateAsync(details);
       
-      // Usar 'orderNumber' en lugar de 'dailyNumber'
-      showSnackbar({ message: `Orden #${createdOrder.orderNumber} creada con éxito`, type: "success" });
+      // Usar 'dailyNumber' que es lo que devuelve el backend
+      showSnackbar({ message: `Orden #${createdOrder.dailyNumber} creada con éxito`, type: "success" });
       hideCart();
       clearCart(); // Limpiar carrito después de éxito
       // Opcional: Navegar a otra pantalla, por ejemplo, la lista de órdenes
@@ -294,6 +343,10 @@ const CreateOrderScreen = () => {
     if (selectedProduct) {
       return selectedProduct.name;
     }
+    // Si estamos en modo edición, mostrar título especial
+    if (isAddingToOrder && navigationLevel === "categories") {
+      return `Agregar a Orden #${existingOrderNumber}`;
+    }
     switch (navigationLevel) {
       case "categories":
         return "Categorías";
@@ -308,7 +361,7 @@ const CreateOrderScreen = () => {
       default:
         return "Categorías";
     }
-  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct]);
+  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct, isAddingToOrder, existingOrderNumber]);
 
 
   const styles = useMemo(
@@ -431,7 +484,7 @@ const CreateOrderScreen = () => {
            <Appbar.Header style={styles.appBar}>
              <Appbar.BackAction onPress={handleCloseCart} />
              <Appbar.Content
-               title="Carrito de Compras"
+               title={isAddingToOrder ? `Editando Orden #${existingOrderNumber}` : "Carrito de Compras"}
                titleStyle={styles.appBarTitle}
                style={styles.appBarContent}
              />
@@ -442,6 +495,10 @@ const CreateOrderScreen = () => {
              onClose={handleCloseCart}
              onConfirmOrder={handleConfirmOrder}
              onEditItem={handleEditItem}
+             isEditMode={false}
+             // Si estamos agregando a una orden, pasar info para el header
+             orderNumber={isAddingToOrder ? existingOrderNumber : undefined}
+             orderDate={isAddingToOrder && existingOrderDate ? new Date(existingOrderDate) : undefined}
            />
         </SafeAreaView>
       );

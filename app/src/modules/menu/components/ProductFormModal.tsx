@@ -40,6 +40,7 @@ import CustomImagePicker, {
 import { ImageUploadService } from "@/app/lib/imageUploadService";
 import { getImageUrl } from "@/app/lib/imageUtils";
 import { useModifierGroupsQuery } from "../../modifiers/hooks/useModifierGroupsQueries";
+import { modifierService } from "../../modifiers/services/modifierService";
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -78,6 +79,7 @@ function ProductFormModal({
   );
   const [isInternalImageUploading, setIsInternalImageUploading] =
     useState(false);
+  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>({});
 
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
@@ -159,6 +161,29 @@ function ProductFormModal({
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
   
   const allModifierGroups = modifierGroupsResponse?.data || [];
+
+  // Cargar los modificadores de cada grupo
+  useEffect(() => {
+    const loadModifiers = async () => {
+      const modifiersMap: Record<string, any[]> = {};
+      
+      for (const group of allModifierGroups) {
+        try {
+          const modifiers = await modifierService.findByGroupId(group.id);
+          modifiersMap[group.id] = modifiers.filter(mod => mod.isActive);
+        } catch (error) {
+          console.error(`Error loading modifiers for group ${group.id}:`, error);
+          modifiersMap[group.id] = [];
+        }
+      }
+      
+      setGroupModifiers(modifiersMap);
+    };
+
+    if (allModifierGroups.length > 0) {
+      loadModifiers();
+    }
+  }, [allModifierGroups]);
 
   useEffect(() => {
     if (visible) {
@@ -587,7 +612,7 @@ function ProductFormModal({
                         <>
                           {availableGroups.map((group: ModifierGroup) => {
                             const isSelected = currentIds.includes(group.id);
-                            const modifierNames = ""; // Los modificadores se manejan en otra pantalla
+                            const modifiers = groupModifiers[group.id] || [];
                             
                             return (
                               <TouchableRipple
@@ -608,9 +633,20 @@ function ProductFormModal({
                                   />
                                   <View style={styles.modifierGroupTextContainer}>
                                     <Text style={styles.modifierGroupName}>{group.name}</Text>
-                                    {modifierNames && (
-                                      <Text style={styles.modifiersList}>
-                                        {modifierNames}
+                                    {modifiers.length > 0 && (
+                                      <View style={styles.modifiersListContainer}>
+                                        {modifiers.map((modifier, index) => (
+                                          <Text key={modifier.id} style={styles.modifierItem}>
+                                            {modifier.isDefault && "✓ "}
+                                            {modifier.name}
+                                            {index < modifiers.length - 1 && ", "}
+                                          </Text>
+                                        ))}
+                                      </View>
+                                    )}
+                                    {modifiers.length === 0 && (
+                                      <Text style={styles.noModifiersText}>
+                                        Sin modificadores activos
                                       </Text>
                                     )}
                                   </View>
@@ -835,6 +871,23 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.onSurfaceVariant,
       fontStyle: "italic",
       marginTop: 2,
+    },
+    modifiersListContainer: {
+      marginTop: 4,
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    modifierItem: {
+      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 18,
+    },
+    noModifiersText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: "italic",
+      marginTop: 4,
+      opacity: 0.7,
     },
     modalActions: {
       flexDirection: "row",

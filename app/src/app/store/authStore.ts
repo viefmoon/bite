@@ -99,8 +99,24 @@ export const initializeAuthStore = async () => {
     }
 
     if (accessToken && refreshToken) {
+      // Primero establecemos el token en el estado para que el apiClient pueda usarlo
       useAuthStore.setState({ accessToken, refreshToken, user, isAuthenticated: true });
-      console.log("AuthStore inicializado con tokens.");
+      
+      // Verificamos si el token es válido con el backend actual
+      console.log("Verificando validez del token almacenado...");
+      const { authService } = await import("../../modules/auth/services/authService");
+      const isTokenValid = await authService.verifyToken();
+      
+      if (isTokenValid) {
+        console.log("Token válido, manteniendo sesión activa.");
+      } else {
+        console.log("Token inválido o backend diferente, limpiando sesión...");
+        // Si el token no es válido, limpiamos todo
+        await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
+        await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
+        await EncryptedStorage.removeItem(USER_INFO_KEY);
+        useAuthStore.setState({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+      }
     } else {
        useAuthStore.setState({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
        console.log("AuthStore inicializado sin tokens.");

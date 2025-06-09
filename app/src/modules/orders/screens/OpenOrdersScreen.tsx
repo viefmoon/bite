@@ -5,6 +5,7 @@ import { Text, ActivityIndicator, Appbar, IconButton, Portal, Card, Chip } from 
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
+import { useRoute } from '@react-navigation/native';
 import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import { Order, OrderStatusEnum, type OrderStatus, OrderType, OrderTypeEnum } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
 import { format } from 'date-fns'; // Para formatear fechas
@@ -44,6 +45,7 @@ const formatOrderType = (type: OrderType): string => {
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const route = useRoute<OpenOrdersScreenProps['route']>();
   const [isPrinterModalVisible, setIsPrinterModalVisible] = useState(false);
   const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
   const printKitchenTicketMutation = usePrintKitchenTicketMutation();
@@ -51,6 +53,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
+  const [pendingAdditionalItems, setPendingAdditionalItems] = useState<any[]>([]);
 
   // TODO: Instanciar la mutación de actualización cuando esté creada
   const updateOrderMutation = useUpdateOrderMutation(); // Instanciar la mutación
@@ -62,6 +65,30 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
+  
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  
+  // Procesar items agregados cuando volvemos de CreateOrderScreen
+  useEffect(() => {
+    if (route.params?.addedItems && route.params?.orderId) {
+      const { addedItems, orderId } = route.params;
+      
+      // Guardar los items adicionales
+      setPendingAdditionalItems(addedItems);
+      
+      // Abrir automáticamente el modal de edición con los nuevos items
+      setEditingOrderId(orderId);
+      setIsEditModalVisible(true);
+      
+      showSnackbar({ 
+        message: `${addedItems.length} producto${addedItems.length > 1 ? 's' : ''} agregado${addedItems.length > 1 ? 's' : ''} al carrito de edición`, 
+        type: 'success' 
+      });
+      
+      // Limpiar los parámetros para evitar procesarlos de nuevo
+      navigation.setParams({ addedItems: undefined, orderId: undefined } as any);
+    }
+  }, [route.params, navigation, showSnackbar]);
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -239,9 +266,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               orderId={editingOrderId}
               orderNumber={ordersData?.find(o => o.id === editingOrderId)?.dailyNumber}
               orderDate={ordersData?.find(o => o.id === editingOrderId)?.createdAt ? new Date(ordersData.find(o => o.id === editingOrderId)!.createdAt) : undefined}
+              additionalItems={pendingAdditionalItems}
+              navigation={navigation}
               onClose={() => {
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
+                setPendingAdditionalItems([]); // Limpiar items adicionales
               }}
               onConfirmOrder={async (details: OrderDetailsForBackend) => {
                 // Formatear el número de teléfono si existe
@@ -271,10 +301,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 }
                 
                 // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
-                // NOTA: El backend actual no actualiza los items, solo los campos de la orden
                 const payload = {
                   orderType: details.orderType,
-                  // items: details.items, // Comentado porque el backend no procesa items en update
+                  items: details.items, // Enviar items para actualizar
                   tableId: details.tableId || null,
                   scheduledAt: details.scheduledAt || null,
                   customerName: details.customerName || null,

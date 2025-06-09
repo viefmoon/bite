@@ -10,6 +10,7 @@ import {
   HttpStatus,
   HttpCode,
   ParseUUIDPipe,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductModifiersService } from './product-modifiers.service';
@@ -18,6 +19,7 @@ import { UpdateProductModifierDto } from './dto/update-product-modifier.dto';
 import { FindAllProductModifiersDto } from './dto/find-all-product-modifiers.dto';
 import { ProductModifier } from './domain/product-modifier';
 import { Paginated } from '../common/types/paginated.type';
+import { Transform } from 'class-transformer';
 
 @ApiTags('Product Modifiers')
 @Controller({ path: 'product-modifiers', version: '1' })
@@ -82,8 +84,14 @@ export class ProductModifiersController {
   })
   findByGroupId(
     @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Query('isActive', new ParseBoolPipe({ optional: true }))
+    isActive?: boolean,
+    @Query('search') search?: string,
   ): Promise<ProductModifier[]> {
-    return this.productModifiersService.findByGroupId(groupId);
+    return this.productModifiersService.findByGroupId(groupId, {
+      isActive,
+      search,
+    });
   }
 
   @Patch(':id')

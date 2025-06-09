@@ -15,7 +15,10 @@ import { Paginated } from '../../../common/types/paginated.type';
 export interface IProductModifierRepository {
   create(data: ProductModifier): Promise<ProductModifier>;
   findById(id: string): Promise<ProductModifier | null>;
-  findByGroupId(groupId: string): Promise<ProductModifier[]>;
+  findByGroupId(
+    groupId: string,
+    filters?: { isActive?: boolean; search?: string },
+  ): Promise<ProductModifier[]>;
   findManyWithPagination(options: {
     filterOptions: FindAllProductModifiersDto;
     paginationOptions: IPaginationOptions;
@@ -68,11 +71,33 @@ export class ProductModifierRepository implements IProductModifierRepository {
     return domainResult;
   }
 
-  async findByGroupId(groupId: string): Promise<ProductModifier[]> {
-    const entities = await this.productModifierEntityRepository.find({
-      where: { groupId },
-      order: { sortOrder: 'ASC' },
-    });
+  async findByGroupId(
+    groupId: string,
+    filters?: { isActive?: boolean; search?: string },
+  ): Promise<ProductModifier[]> {
+    const queryBuilder =
+      this.productModifierEntityRepository.createQueryBuilder(
+        'product_modifier',
+      );
+
+    queryBuilder.where('product_modifier.group_id = :groupId', { groupId });
+
+    if (filters?.isActive !== undefined) {
+      queryBuilder.andWhere('product_modifier.is_active = :isActive', {
+        isActive: filters.isActive,
+      });
+    }
+
+    if (filters?.search) {
+      queryBuilder.andWhere(
+        '(product_modifier.name ILIKE :search OR product_modifier.description ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
+
+    queryBuilder.orderBy('product_modifier.sort_order', 'ASC');
+
+    const entities = await queryBuilder.getMany();
     const domainResults = entities
       .map((entity) => this.productModifierMapper.toDomain(entity))
       .filter((item): item is ProductModifier => item !== null);

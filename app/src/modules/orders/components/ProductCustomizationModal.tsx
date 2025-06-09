@@ -95,6 +95,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Función para verificar si hay cambios
   const checkForChanges = useCallback(() => {
@@ -159,7 +160,35 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       } else {
         setSelectedVariantId(undefined);
       }
-      setSelectedModifiersByGroup({});
+      
+      // Aplicar modificadores por defecto
+      const defaultModifiersByGroup: Record<string, CartItemModifier[]> = {};
+      
+      if (product.modifierGroups) {
+        product.modifierGroups.forEach(group => {
+          const defaultModifiers: CartItemModifier[] = [];
+          
+          if (group.productModifiers) {
+            group.productModifiers.forEach(modifier => {
+              if (modifier.isDefault && modifier.isActive) {
+                defaultModifiers.push({
+                  id: modifier.id,
+                  name: modifier.name,
+                  price: Number(modifier.price) || 0,
+                });
+              }
+            });
+          }
+          
+          if (defaultModifiers.length > 0) {
+            // Respetar el límite máximo de selecciones
+            const maxSelections = group.maxSelections || defaultModifiers.length;
+            defaultModifiersByGroup[group.id] = defaultModifiers.slice(0, maxSelections);
+          }
+        });
+      }
+      
+      setSelectedModifiersByGroup(defaultModifiersByGroup);
       setQuantity(1);
       reset({ preparationNotes: "" });
     }
@@ -171,6 +200,29 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       setHasChanges(checkForChanges());
     }
   }, [editingItem, checkForChanges]);
+
+  // Validar en tiempo real
+  useEffect(() => {
+    const errors: Record<string, string> = {};
+    
+    if (product.modifierGroups) {
+      product.modifierGroups.forEach(group => {
+        const selectedInGroup = selectedModifiersByGroup[group.id] || [];
+        const selectedCount = selectedInGroup.length;
+        const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
+        
+        if (selectedCount < minRequired) {
+          if (group.isRequired && minRequired === 1) {
+            errors[group.id] = 'Requerido';
+          } else {
+            errors[group.id] = `Mínimo ${minRequired}`;
+          }
+        }
+      });
+    }
+    
+    setValidationErrors(errors);
+  }, [product, selectedModifiersByGroup]);
 
   const handleVariantSelect = (variantId: string) => {
     setSelectedVariantId(variantId);
@@ -185,6 +237,18 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     const updatedModifiersByGroup = { ...selectedModifiersByGroup };
 
     if (isSelected) {
+      // Verificar si al deseleccionar quedaríamos por debajo del mínimo
+      const newCount = currentGroupModifiers.length - 1;
+      const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
+      
+      if (newCount < minRequired) {
+        showSnackbar({
+          message: `No puedes deseleccionar. "${group.name}" requiere al menos ${minRequired} ${minRequired === 1 ? 'opción seleccionada' : 'opciones seleccionadas'}.`,
+          type: "warning"
+        });
+        return;
+      }
+      
       updatedModifiersByGroup[group.id] = currentGroupModifiers.filter(
         (mod) => mod.id !== modifier.id
       );
@@ -204,10 +268,10 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             newModifier,
           ];
         } else {
-          showSnackbar(
-            `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
-            "warning"
-          );
+          showSnackbar({
+            message: `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
+            type: "warning"
+          });
           return;
         }
       }
@@ -217,6 +281,45 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   };
 
   const handleAddToCart = () => {
+    // Validar grupos requeridos y límites de selección
+    if (product.modifierGroups) {
+      for (const group of product.modifierGroups) {
+        const selectedInGroup = selectedModifiersByGroup[group.id] || [];
+        const selectedCount = selectedInGroup.length;
+        
+        // Validar grupos requeridos y mínimo de selecciones
+        if (group.isRequired || group.minSelections > 0) {
+          const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
+          
+          if (selectedCount < minRequired) {
+            let message = '';
+            if (group.isRequired && minRequired === 1) {
+              message = `"${group.name}" es requerido. Debes seleccionar al menos una opción.`;
+            } else if (minRequired > 1) {
+              message = `Debes seleccionar al menos ${minRequired} ${minRequired === 1 ? 'opción' : 'opciones'} en "${group.name}"`;
+            } else {
+              message = `Debes seleccionar al menos una opción en "${group.name}"`;
+            }
+            
+            showSnackbar({
+              message,
+              type: "error"
+            });
+            return;
+          }
+        }
+        
+        // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
+        if (selectedCount > group.maxSelections) {
+          showSnackbar({
+            message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
+            type: "error"
+          });
+          return;
+        }
+      }
+    }
+
     if (editingItem && onUpdateItem) {
       // Si estamos editando, actualizar el item existente
       const variant = product.variants?.find(v => v.id === selectedVariantId);
@@ -367,24 +470,43 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                   <View style={styles.sectionHeader}>
                     <View style={styles.groupTitleContainer}>
                       <Text style={styles.groupTitle}>{group.name}</Text>
-                      {group.minSelection !== undefined &&
-                        group.maxSelections !== undefined && (
-                          <Text style={styles.selectionRules}>
-                            {(group.minSelections || 0) === 0 && group.maxSelections === 1
-                              ? "Hasta 1 opción"
-                              : (group.minSelections || 0) === group.maxSelections
-                                ? `Elegir ${group.maxSelections}`
-                                : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+                      <View style={styles.selectionInfo}>
+                        {group.minSelections !== undefined &&
+                          group.maxSelections !== undefined && (
+                            <Text style={styles.selectionRules}>
+                              {(group.minSelections || 0) === 0 && group.maxSelections === 1
+                                ? "Hasta 1 opción"
+                                : (group.minSelections || 0) === group.maxSelections
+                                  ? `Elegir ${group.maxSelections}`
+                                  : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+                            </Text>
+                          )}
+                        {group.allowMultipleSelections && (
+                          <Text style={styles.selectedCount}>
+                            ({(selectedModifiersByGroup[group.id] || []).length} seleccionadas)
                           </Text>
                         )}
+                      </View>
                     </View>
-                    <Chip 
-                      mode="flat" 
-                      compact 
-                      style={group.isRequired ? styles.requiredChip : styles.optionalChip}
-                    >
-                      {group.isRequired ? "Requerido" : "Opcional"}
-                    </Chip>
+                    <View style={styles.chipContainer}>
+                      {validationErrors[group.id] && (
+                        <Chip 
+                          mode="flat" 
+                          compact 
+                          style={styles.errorChip}
+                          icon="alert-circle"
+                        >
+                          {validationErrors[group.id]}
+                        </Chip>
+                      )}
+                      <Chip 
+                        mode="flat" 
+                        compact 
+                        style={group.isRequired ? styles.requiredChip : styles.optionalChip}
+                      >
+                        {group.isRequired ? "Requerido" : "Opcional"}
+                      </Chip>
+                    </View>
                   </View>
 
                   {group.allowMultipleSelections ? (
@@ -668,6 +790,15 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: theme.spacing.xs,
       fontStyle: "italic",
     },
+    selectionInfo: {
+      marginTop: 2,
+    },
+    selectedCount: {
+      fontSize: 12,
+      color: theme.colors.primary,
+      fontWeight: "500",
+      marginTop: 2,
+    },
     // title: { // Estilo obsoleto, reemplazado por appBarTitle
     //   flex: 1,
     //   fontSize: 22,
@@ -724,6 +855,14 @@ const createStyles = (theme: AppTheme) =>
     optionalChip: {
       backgroundColor: theme.colors.secondaryContainer,
       marginLeft: theme.spacing.s,
+    },
+    chipContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    errorChip: {
+      backgroundColor: theme.colors.errorContainer,
+      marginRight: theme.spacing.xs,
     },
     // Estilos para variantes
     variantSurface: {

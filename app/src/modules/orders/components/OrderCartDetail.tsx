@@ -34,6 +34,12 @@ import { useGetFullMenu } from "../hooks/useMenuQueries"; // Para obtener produc
 import type { FullMenuCategory } from "../types/orders.types"; // Tipo con subcategorías
 
 // Definir la estructura esperada para los items en el DTO de backend
+interface OrderItemModifierDto {
+  productModifierId: string;
+  quantity?: number;
+  price?: number | null;
+}
+
 interface OrderItemDtoForBackend {
   productId: string;
   productVariantId?: string | null;
@@ -41,6 +47,7 @@ interface OrderItemDtoForBackend {
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
+  modifiers?: OrderItemModifierDto[];
 }
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
@@ -68,6 +75,8 @@ interface OrderCartDetailProps {
   orderNumber?: number;
   orderDate?: Date;
   onAddProducts?: () => void;
+  additionalItems?: CartItem[]; // Items agregados desde CreateOrderScreen
+  navigation?: any; // Prop de navegación opcional
 }
 
 const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
@@ -79,6 +88,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   orderId,
   orderNumber,
   orderDate,
+  additionalItems,
+  navigation,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -105,6 +116,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editPhoneNumber, setEditPhoneNumber] = useState<string>('');
   const [editDeliveryAddress, setEditDeliveryAddress] = useState<string>('');
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
+  const [additionalItemsProcessed, setAdditionalItemsProcessed] = useState(false);
   
   // Obtener estado del carrito Y del formulario desde el contexto SOLO si NO estamos en modo edición
   const cartContext = !isEditMode ? useCart() : null;
@@ -210,7 +222,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [showProductSelection, setShowProductSelection] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [editingItemFromList, setEditingItemFromList] = useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -261,8 +272,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       const mappedItems: CartItem[] = orderData.orderItems.map((item: any) => {
         // Calcular el precio de los modificadores
         const modifiers = (item.modifiers || []).map((mod: any) => ({
-          id: mod.id,
-          name: mod.productModifier?.name || mod.name || 'Modificador',
+          id: mod.modifierId || mod.productModifierId || mod.id, // Usar modifierId que es el ID del ProductModifier
+          name: mod.modifier?.name || mod.productModifier?.name || mod.name || 'Modificador',
           price: parseFloat(mod.price || '0'),
         }));
         
@@ -289,6 +300,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setEditItems(mappedItems);
     }
   }, [isEditMode, orderData, visible]);
+  
+  // Agregar items adicionales cuando se proporcionen
+  useEffect(() => {
+    if (isEditMode && additionalItems && additionalItems.length > 0 && !additionalItemsProcessed) {
+      // Generar nuevos IDs únicos para evitar duplicados
+      const itemsWithNewIds = additionalItems.map((item, index) => ({
+        ...item,
+        id: `new-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`
+      }));
+      
+      setEditItems(prev => [...prev, ...itemsWithNewIds]);
+      setAdditionalItemsProcessed(true);
+    }
+  }, [isEditMode, additionalItems, additionalItemsProcessed]);
 
   // Limpiar errores locales al cambiar tipo de orden (más simple)
   useEffect(() => {
@@ -313,10 +338,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setEditOrderNotes('');
       setEditItems([]);
       setShowExitConfirmation(false);
-      setShowProductSelection(false);
       setEditingItemFromList(null);
       setEditingProduct(null);
       setIsModalReady(false);
+      setAdditionalItemsProcessed(false);
     }
   }, [visible, isEditMode]);
   
@@ -388,32 +413,37 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       basePrice: Number(item.unitPrice), // Asegurar que sea número
       finalPrice: Number(item.totalPrice / item.quantity), // Asegurar que sea número
       preparationNotes: item.preparationNotes || null,
-      // Mapear modifiers si es necesario y la estructura del backend es diferente
+      // Mapear modificadores al formato del backend
+      modifiers: item.modifiers && item.modifiers.length > 0 
+        ? item.modifiers.map(mod => ({
+            productModifierId: mod.id,
+            quantity: 1, // Por defecto 1
+            price: mod.price || null
+          }))
+        : undefined
     }));
 
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
     if (phoneNumber && phoneNumber.trim() !== '') {
-      // Eliminar espacios, guiones y caracteres no numéricos
-      let cleanPhone = phoneNumber.replace(/\D/g, '');
+      // Mantener el formato original del teléfono, solo validar longitud
+      formattedPhone = phoneNumber.trim();
       
-      // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
-      if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
-        cleanPhone = cleanPhone.substring(1);
-      }
-      // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
-      else if (cleanPhone.length === 12 && cleanPhone.startsWith('521')) {
-        cleanPhone = cleanPhone.substring(2);
+      // Si no empieza con +, agregar +52 por defecto (México)
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = `+52${formattedPhone}`;
       }
       
-      // Validar que tenga exactamente 10 dígitos
-      if (cleanPhone.length !== 10) {
-        setPhoneError("El teléfono debe tener 10 dígitos");
+      // Validar longitud mínima y máxima (contando solo dígitos)
+      const digitsOnly = formattedPhone.replace(/\D/g, '');
+      if (digitsOnly.length < 10) {
+        setPhoneError("El teléfono debe tener al menos 10 dígitos");
         return;
       }
-      
-      // El backend espera números con formato internacional, agregar +52 para México
-      formattedPhone = `+52${cleanPhone}`;
+      if (digitsOnly.length > 15) {
+        setPhoneError("El teléfono no puede tener más de 15 dígitos");
+        return;
+      }
     }
 
     const orderDetails: OrderDetailsForBackend = {
@@ -643,47 +673,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setEditingProduct(null);
   }, [isEditMode]);
 
-  // Función para añadir un producto desde el modal de selección
-  const handleAddProductFromModal = (
-    product: Product,
-    quantity: number,
-    variantId?: string,
-    modifiers?: CartItemModifier[],
-    preparationNotes?: string
-  ) => {
-    if (!isEditMode) return;
-    
-    // Encontrar la variante si existe
-    const variant = variantId && product.variants
-      ? product.variants.find(v => v.id === variantId)
-      : undefined;
-    
-    // Calcular precio unitario
-    const unitPrice = variant ? Number(variant.price) : Number(product.price) || 0;
-    
-    // Calcular precio de modificadores
-    const modifiersPrice = modifiers?.reduce((sum, mod) => sum + Number(mod.price || 0), 0) || 0;
-    
-    // Crear nuevo item
-    const newItem: CartItem = {
-      id: `new-${Date.now()}-${Math.random()}`, // ID temporal para nuevos items
-      productId: product.id,
-      productName: product.name,
-      quantity,
-      unitPrice,
-      totalPrice: (unitPrice + modifiersPrice) * quantity,
-      modifiers: modifiers || [],
-      variantId,
-      variantName: variant?.name,
-      preparationNotes,
-    };
-    
-    // Añadir al array de items editados
-    setEditItems(prev => [...prev, newItem]);
-    
-    // Cerrar el modal
-    setShowProductSelection(false);
-  };
 
   // Helper function to render fields in order
   const renderFields = () => {
@@ -833,19 +822,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
             {/* 2. Teléfono */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key={`phone-input-takeaway-${orderType}`}
-                label="Teléfono (Opcional)"
-                value={phoneNumber}
-                onChangeText={(text) => {
-                  setPhoneNumber(text);
-                  if (phoneError) setPhoneError(null);
-                }}
-                keyboardType="phone-pad"
-                error={!!phoneError} // Aunque opcional, puede tener errores de formato si se ingresa
-                speechLang="es-MX"
-                autoCorrect={false}
-              />
+              <View style={styles.phoneInputWrapper}>
+                <SpeechRecognitionInput
+                  key={`phone-input-takeaway-${orderType}`}
+                  label="Teléfono (Opcional)"
+                  value={phoneNumber}
+                  onChangeText={(text) => {
+                    setPhoneNumber(text);
+                    if (phoneError) setPhoneError(null);
+                  }}
+                  keyboardType="phone-pad"
+                  error={!!phoneError} // Aunque opcional, puede tener errores de formato si se ingresa
+                  speechLang="es-MX"
+                  autoCorrect={false}
+                />
+                {phoneNumber.length > 0 && !phoneError && (
+                  <Text style={styles.digitCounterAbsolute}>
+                    {phoneNumber.replace(/\D/g, '').length} dígitos
+                  </Text>
+                )}
+              </View>
               {phoneError && (
                 <HelperText type="error" visible={true} style={styles.helperTextFix}>
                   {phoneError}
@@ -908,6 +904,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 error={!!addressError}
                 speechLang="es-MX"
                 multiline
+                isInModal={true}
               />
               {addressError && (
                 <HelperText type="error" visible={true} style={styles.helperTextFix}>
@@ -933,11 +930,19 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 speechLang="es-MX"
                 autoCorrect={false}
               />
-              {phoneError && (
-                <HelperText type="error" visible={true} style={styles.helperTextFix}>
-                  {phoneError}
-                </HelperText>
-              )}
+              <View style={styles.phoneHelperContainer}>
+                {phoneError ? (
+                  <HelperText type="error" visible={true} style={[styles.helperTextFix, styles.phoneError]}>
+                    {phoneError}
+                  </HelperText>
+                ) : (
+                  phoneNumber.length > 0 && (
+                    <Text style={styles.digitCounter}>
+                      {phoneNumber.replace(/\D/g, '').length} dígitos
+                    </Text>
+                  )
+                )}
+              </View>
             </View>
 
             {/* 4. Notas */}
@@ -1019,24 +1024,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         dismissable={false}
         dismissableBackButton={false}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <OrderHeader
-            title={isEditMode && orderNumber && orderDate 
-              ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
-              : "Resumen de Orden"
-            }
-            onBackPress={() => {
-              if (isEditMode && hasUnsavedChanges()) {
-                setShowExitConfirmation(true);
-              } else {
-                onClose?.();
-              }
-            }}
-            itemCount={totalItemsCount}
-            onCartPress={() => {}}
-            isCartVisible={isCartVisible}
-          />
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View>
+              <OrderHeader
+                title={
+                  isEditMode && orderNumber && orderDate 
+                    ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
+                    : orderNumber 
+                      ? `Editando Orden #${orderNumber}`
+                      : "Resumen de Orden"
+                }
+                onBackPress={() => {
+                  if (isEditMode && hasUnsavedChanges()) {
+                    setShowExitConfirmation(true);
+                  } else {
+                    onClose?.();
+                  }
+                }}
+                itemCount={totalItemsCount}
+                onCartPress={() => {}}
+                isCartVisible={isCartVisible}
+              />
+            </View>
+          </TouchableWithoutFeedback>
 
           <ScrollView 
             style={styles.scrollView}
@@ -1180,7 +1191,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* Botón para añadir productos en modo edición */}
             {isEditMode && (
               <Button 
-                onPress={() => setShowProductSelection(true)} 
+                onPress={() => {
+                  // Navegar a CreateOrderScreen con parámetros especiales
+                  if (navigation) {
+                    onClose?.(); // Cerrar el modal actual
+                    navigation.navigate('CreateOrder', {
+                      isAddingToOrder: true,
+                      orderId: orderId || undefined,
+                      orderNumber: orderNumber,
+                      orderDate: orderDate?.toISOString(),
+                      existingItems: items, // Pasar los items actuales
+                      orderType: orderType,
+                      tableId: selectedTableId || undefined,
+                      customerName: customerName || undefined,
+                      phoneNumber: phoneNumber || undefined,
+                      deliveryAddress: deliveryAddress || undefined,
+                      notes: orderNotes || undefined,
+                    });
+                  }
+                }} 
                 mode="outlined" 
                 style={{ marginTop: theme.spacing.m, marginBottom: theme.spacing.m }}
                 icon="plus-circle-outline"
@@ -1226,7 +1255,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               }
             </Button>
           </View>
-        </View>
 
         {/* Modals */}
         <DateTimePickerModal
@@ -1248,14 +1276,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           onConfirm={() => setTimeAlertVisible(false)}
         />
         
-        {/* Modal de selección de productos */}
-        {isEditMode && (
-          <ProductSelectionModal
-            visible={showProductSelection}
-            onDismiss={() => setShowProductSelection(false)}
-            onAddProduct={handleAddProductFromModal}
-          />
-        )}
         
         {/* Modal de confirmación para descartar cambios */}
         <ConfirmationModal
@@ -1286,7 +1306,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           />
         )}
         </View>
-        </TouchableWithoutFeedback>
       </Modal>
     </Portal>
   );
@@ -1332,18 +1351,18 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       // backgroundColor: 'lightyellow', // Debug
     },
     itemTitleText: { // Estilo para el texto del título
-      fontSize: 13,                   // Reducir ligeramente el tamaño
+      fontSize: 15,                   // Aumentar tamaño del título
       fontWeight: '500',
       color: theme.colors.onSurface,
       flexWrap: 'wrap',              // Permitir que el texto se ajuste
-      lineHeight: 18,                // Ajustar altura de línea
+      lineHeight: 20,                // Ajustar altura de línea
     },
     itemDescription: {
-      fontSize: 11,                  // Reducir tamaño de descripción
+      fontSize: 13,                  // Aumentar tamaño de descripción
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
       flexWrap: 'wrap',             // Permitir que el texto se ajuste
-      lineHeight: 15,               // Ajustar altura de línea
+      lineHeight: 18,               // Ajustar altura de línea
     },
     itemActionsContainer: { // Contenedor para acciones (cantidad, precio, borrar)
       flexDirection: "row",
@@ -1371,20 +1390,20 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
         // backgroundColor: 'lightgreen', // Debug
     }, // <<< COMA RESTAURADA
     quantityText: {
-        fontSize: 13,        // Reducir tamaño
+        fontSize: 14,        // Aumentar tamaño
         fontWeight: 'bold',
-        minWidth: 18,        // Reducir ancho mínimo
+        minWidth: 20,        // Ajustar ancho mínimo
         textAlign: 'center',
-        marginHorizontal: 1, // Mínimo margen horizontal
+        marginHorizontal: 2, // Ajustar margen horizontal
         // backgroundColor: 'pink', // Debug
     }, // <<< COMA RESTAURADA
     itemPrice: {
       alignSelf: "center",
       marginRight: theme.spacing.xs, // Reducir espacio
       color: theme.colors.onSurfaceVariant,
-      fontSize: 13,          // Reducir tamaño
+      fontSize: 15,          // Aumentar tamaño
       fontWeight: 'bold',
-      minWidth: 50,          // Reducir ancho mínimo
+      minWidth: 55,          // Ajustar ancho mínimo
       textAlign: "right",
       // backgroundColor: 'lightcoral', // Debug
     }, // <<< COMA RESTAURADA
@@ -1394,7 +1413,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginRight: theme.spacing.xs,
     },
     unitPriceText: {
-      fontSize: 11,
+      fontSize: 12,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
@@ -1523,6 +1542,42 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     errorText: {
       color: theme.colors.error,
       marginBottom: theme.spacing.m,
+    },
+    phoneHelperContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginTop: 2,
+      paddingHorizontal: 12,
+      minHeight: 20,
+    },
+    phoneError: {
+      flex: 1,
+      marginBottom: 0,
+      marginTop: 0,
+    },
+    digitCounter: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      opacity: 0.6,
+      marginLeft: theme.spacing.xs,
+      marginTop: 2,
+    },
+    phoneInputWrapper: {
+      position: 'relative',
+    },
+    digitCounterAbsolute: {
+      position: 'absolute',
+      right: 50, // Mover más a la izquierda para evitar el botón de micrófono
+      top: 10, // Ajustar para estar en la parte superior del input
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      opacity: 0.7,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 12,
+      zIndex: 1,
     }, // <<< COMA RESTAURADA (Último estilo antes del cierre)
   });
 export default OrderCartDetail;

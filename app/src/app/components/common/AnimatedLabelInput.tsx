@@ -8,6 +8,7 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -160,32 +161,39 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
     maxWidth: '90%' as `${number}%`,
   };
 
+  const handleContainerPress = () => {
+    if (!disabled && finalRef && typeof finalRef !== 'function' && finalRef.current) {
+      finalRef.current.focus();
+    }
+  };
+
   return (
-    <View style={[styles.container, { borderColor: currentBorderColor }, containerStyle]}>
-      <Animated.Text style={[styles.label, labelStyle, animatedLabelStyle]}>
-        {label}
-      </Animated.Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          ref={finalRef}
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          style={[styles.input, inputStyle, style]}
-          placeholder=""
-          editable={!disabled}
-          pointerEvents={disabled ? 'none' : 'auto'}
-          underlineColorAndroid="transparent"
-          placeholderTextColor={finalInactiveLabelColor}
-          multiline={multiline}
-          editable={!disabled}
-          autoCorrect={false}
-          keyboardAppearance={theme.dark ? 'dark' : 'light'}
-          {...rest}
-        />
+    <TouchableWithoutFeedback onPress={handleContainerPress} disabled={disabled}>
+      <View style={[styles.container, { borderColor: currentBorderColor }, containerStyle]}>
+        <Animated.Text style={[styles.label, labelStyle, animatedLabelStyle]} pointerEvents="none">
+          {label}
+        </Animated.Text>
+        <View style={styles.inputContainer} pointerEvents="box-none">
+          <TextInput
+            ref={finalRef}
+            value={value}
+            onChangeText={onChangeText}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            style={[styles.input, inputStyle, style]}
+            placeholder=""
+            editable={!disabled}
+            pointerEvents={disabled ? 'none' : 'auto'}
+            underlineColorAndroid="transparent"
+            placeholderTextColor={finalInactiveLabelColor}
+            multiline={multiline}
+            autoCorrect={false}
+            keyboardAppearance={theme.dark ? 'dark' : 'light'}
+            {...rest}
+          />
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 });
 

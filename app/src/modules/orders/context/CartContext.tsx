@@ -38,6 +38,7 @@ export interface CartItem {
 interface CartContextType {
   // --- Items del carrito ---
   items: CartItem[];
+  setItems: (items: CartItem[]) => void; // Añadir esta función
   addItem: (
     product: Product,
     quantity?: number,
@@ -300,6 +301,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const value: CartContextType = {
     // --- Carrito ---
     items,
+    setItems, // Añadir esta función
     addItem,
     removeItem,
     updateItemQuantity,

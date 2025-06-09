@@ -43,6 +43,7 @@ export interface RenderItemConfig<TItem> {
   priceField?: keyof TItem;
   sortOrderField?: keyof TItem;
   imageField?: keyof TItem;
+  isDefaultField?: keyof TItem;
   statusConfig?: StatusConfig<TItem>;
 }
 
@@ -359,13 +360,32 @@ const GenericList = <TItem extends { id: string }>({
               </Text>
             )}
             description={() => {
-              const sortOrderText = sortOrderString
-                ? `${sortOrderString} | `
-                : "";
-              const descriptionText = description ? description : "";
-              const priceText = priceString ? ` - ${priceString}` : "";
-
-              const combinedText = `${sortOrderText}${descriptionText}${priceText}`;
+              // Construir las partes del texto
+              const parts = [];
+              
+              // Verificar si es por defecto
+              if (
+                renderConfig.isDefaultField &&
+                item.hasOwnProperty(renderConfig.isDefaultField) &&
+                item[renderConfig.isDefaultField] === true
+              ) {
+                parts.push("✓ Por defecto");
+              }
+              
+              if (sortOrderString) {
+                parts.push(sortOrderString);
+              }
+              
+              if (description) {
+                parts.push(description);
+              }
+              
+              if (priceString) {
+                parts.push(priceString);
+              }
+              
+              // Unir las partes con el separador apropiado
+              const combinedText = parts.join(' - ');
 
               if (combinedText.trim()) {
                 return (

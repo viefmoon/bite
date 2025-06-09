@@ -12,7 +12,7 @@ const CartButton = React.forwardRef(
     const theme = useTheme();
     const cartBadgeScale = useRef(new Animated.Value(1)).current;
     const cartBounceAnimation = useRef(new Animated.Value(1)).current;
-    const [isPressed, setIsPressed] = useState(false);
+    const isPressedRef = useRef(false);
 
     const styles = StyleSheet.create({
       cartButton: {
@@ -60,16 +60,16 @@ const CartButton = React.forwardRef(
     }));
 
     const handlePress = useCallback(() => {
-      if (isPressed) return; // Prevenir múltiples clics
+      if (isPressedRef.current) return; // Prevenir múltiples clics
       
-      setIsPressed(true);
+      isPressedRef.current = true;
       onPress();
       
-      // Re-habilitar después de 500ms
+      // Re-habilitar después de 150ms
       setTimeout(() => {
-        setIsPressed(false);
-      }, 500);
-    }, [isPressed, onPress]);
+        isPressedRef.current = false;
+      }, 150);
+    }, [onPress]);
 
     return (
       <View>
@@ -80,7 +80,6 @@ const CartButton = React.forwardRef(
             size={30}
             onPress={handlePress}
             style={styles.cartButton}
-            disabled={isPressed}
           />
         </Animated.View>
         {itemCount > 0 && (

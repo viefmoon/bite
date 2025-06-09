@@ -78,8 +78,8 @@ async function refreshToken(): Promise<string> {
     return newAccessToken;
   } catch (error: any) {
     console.error("[ApiClient] Error renovando token:", error.response?.status, error.message);
-    if (error.response?.status === 401) {
-      console.log("[ApiClient] Refresh token inválido, cerrando sesión...");
+    if (error.response?.status === 401 || error.response?.status === 404) {
+      console.log("[ApiClient] Token inválido o backend diferente, cerrando sesión...");
       await useAuthStore.getState().logout();
     }
     throw error;
@@ -114,8 +114,12 @@ axiosInstance.interceptors.response.use(
     // No intentar renovar si:
     // 1. No es un error 401
     // 2. Es la propia petición de refresh
-    // 3. Ya se intentó renovar antes
-    if (error.response?.status !== 401 || originalRequest.url === AUTH_REFRESH_PATH || originalRequest._retry) {
+    // 3. Es la petición de verificación de token (/auth/me)
+    // 4. Ya se intentó renovar antes
+    if (error.response?.status !== 401 || 
+        originalRequest.url === AUTH_REFRESH_PATH || 
+        originalRequest.url?.includes('/auth/me') ||
+        originalRequest._retry) {
       const apiError = ApiError.fromAxiosError(error);
       return Promise.reject(apiError);
     }
@@ -151,6 +155,9 @@ axiosInstance.interceptors.response.use(
     } catch (refreshError: any) {
       console.error("[ApiClient] Fallo al renovar token, rechazando todas las peticiones en cola");
       processQueue(refreshError, null);
+      
+      // Si el error es 401 o 404, ya se habrá cerrado la sesión en refreshToken()
+      // Solo necesitamos rechazar la promesa
       return Promise.reject(ApiError.fromRefreshError(refreshError));
     } finally {
       isRefreshing = false;

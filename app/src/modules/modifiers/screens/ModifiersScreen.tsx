@@ -159,6 +159,7 @@ const ModifiersScreen = () => {
     titleField: 'name',
     priceField: 'price',
     sortOrderField: 'sortOrder',
+    isDefaultField: 'isDefault',
     statusConfig: {
         field: 'isActive',
         activeValue: true,

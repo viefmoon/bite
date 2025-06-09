@@ -14,10 +14,23 @@ export type AuthStackParamList = {
 
 export type OrdersStackParamList = {
   Orders: undefined; // Pantalla principal del módulo de órdenes
-  CreateOrder: undefined; // Pantalla para crear una nueva orden
-  OpenOrders: undefined; // Pantalla para ver órdenes abiertas
-
-
+  CreateOrder: {
+    isAddingToOrder?: boolean; // Indica si estamos agregando productos a una orden existente
+    orderId?: string; // ID de la orden a la que estamos agregando productos
+    orderNumber?: number; // Número de la orden
+    orderDate?: string; // Fecha de la orden en ISO string
+    existingItems?: any[]; // Items existentes de la orden
+    orderType?: string; // Tipo de orden
+    tableId?: string; // ID de la mesa
+    customerName?: string; // Nombre del cliente
+    phoneNumber?: string; // Teléfono
+    deliveryAddress?: string; // Dirección
+    notes?: string; // Notas
+  } | undefined; // Pantalla para crear una nueva orden
+  OpenOrders: {
+    addedItems?: any[]; // Items agregados desde CreateOrder
+    orderId?: string; // ID de la orden a la que se agregaron items
+  } | undefined; // Pantalla para ver órdenes abiertas
 };
 
 export type OrdersStackScreenProps<T extends keyof OrdersStackParamList> =

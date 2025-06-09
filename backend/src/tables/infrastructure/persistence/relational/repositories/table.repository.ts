@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository, ILike } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { Table } from '../../../../domain/table';
@@ -54,7 +54,7 @@ export class TablesRelationalRepository implements TableRepository {
     const where: FindOptionsWhere<TableEntity> = {};
 
     if (filterOptions?.name) {
-      where.name = filterOptions.name;
+      where.name = ILike(`%${filterOptions.name}%`);
     }
 
     if (filterOptions?.areaId) {
