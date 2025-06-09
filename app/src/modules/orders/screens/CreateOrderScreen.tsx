@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useGetFullMenu } from "../hooks/useMenuQueries";
 // Importar el hook de mutación para crear órdenes
-import { useCreateOrderMutation } from "@/modules/orders/hooks/useOrdersQueries"; // Usar ruta absoluta
+import { useCreateOrderMutation, useUpdateOrderMutation } from "@/modules/orders/hooks/useOrdersQueries"; // Usar ruta absoluta
 import { useCart, CartProvider, CartItem } from "../context/CartContext";
 import { CartItemModifier } from "../context/CartContext";
 import {
@@ -42,6 +42,7 @@ import { useAppTheme } from "@/app/styles/theme";
 // Importar el tipo completo para el payload de confirmación
 import type { OrderDetailsForBackend } from "../components/OrderCartDetail";
 import type { OrdersStackScreenProps } from "@/app/navigation/types";
+import type { UpdateOrderPayload } from '../types/update-order.types';
 
 
 interface CartButtonHandle {
@@ -66,6 +67,7 @@ const CreateOrderScreen = () => {
   const existingPhoneNumber = route.params?.phoneNumber;
   const existingDeliveryAddress = route.params?.deliveryAddress;
   const existingNotes = route.params?.notes;
+  const existingScheduledAt = route.params?.scheduledAt;
   const {
     items,
     isCartEmpty,
@@ -83,11 +85,14 @@ const CreateOrderScreen = () => {
     setDeliveryAddress,
     setOrderNotes,
     setItems,
+    setScheduledTime,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
   // Instanciar la mutación para crear la orden
   const createOrderMutation = useCreateOrderMutation();
+  // Instanciar la mutación para actualizar la orden
+  const updateOrderMutation = useUpdateOrderMutation();
 
   const cartButtonRef = useRef<CartButtonHandle>(null);
 
@@ -111,9 +116,18 @@ const CreateOrderScreen = () => {
 
   // Cargar los datos existentes cuando estamos en modo edición
   useEffect(() => {
-    if (isAddingToOrder && existingItems.length > 0) {
+    if (isAddingToOrder) {
+      console.log('Modo agregar productos activado', {
+        existingItems: existingItems?.length || 0,
+        existingOrderNumber,
+        existingOrderType
+      });
+      
       // Cargar los items existentes en el carrito
-      setItems(existingItems);
+      if (existingItems && existingItems.length > 0) {
+        console.log('Cargando items existentes:', existingItems);
+        setItems(existingItems);
+      }
       
       // Cargar los datos de la orden
       if (existingOrderType) setOrderType(existingOrderType);
@@ -122,13 +136,14 @@ const CreateOrderScreen = () => {
       if (existingPhoneNumber) setPhoneNumber(existingPhoneNumber);
       if (existingDeliveryAddress) setDeliveryAddress(existingDeliveryAddress);
       if (existingNotes) setOrderNotes(existingNotes);
+      if (existingScheduledAt) setScheduledTime(new Date(existingScheduledAt));
       
       showSnackbar({ 
         message: `Editando orden #${existingOrderNumber}`, 
         type: "info" 
       });
     }
-  }, [isAddingToOrder]); // Solo ejecutar una vez al montar
+  }, [isAddingToOrder, existingItems?.length]); // Incluir existingItems.length como dependencia
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -258,14 +273,64 @@ const CreateOrderScreen = () => {
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
     if (isProcessingOrder) return; // Prevenir múltiples envíos
     
-    // Si estamos en modo de agregar productos, simplemente volver con los items
-    if (isAddingToOrder) {
-      // Navegar de vuelta a la pantalla de órdenes abiertas
-      navigation.navigate('OpenOrders', {
-        addedItems: items,
-        orderId: existingOrderId,
-      } as any);
-      clearCart();
+    // Si estamos en modo de agregar productos, actualizar la orden directamente
+    if (isAddingToOrder && existingOrderId) {
+      console.log("Actualizando orden con detalles:", details);
+      setIsProcessingOrder(true);
+      
+      try {
+        // Formatear el número de teléfono si existe
+        let formattedPhone: string | null = null;
+        if (details.phoneNumber && details.phoneNumber.trim() !== '') {
+          // Si ya tiene formato internacional, usarlo tal cual
+          if (details.phoneNumber.startsWith('+')) {
+            formattedPhone = details.phoneNumber;
+          } else {
+            // Eliminar espacios, guiones y caracteres no numéricos
+            let cleanPhone = details.phoneNumber.replace(/\D/g, '');
+            
+            // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
+            if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
+              cleanPhone = cleanPhone.substring(1);
+            }
+            // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
+            else if (cleanPhone.length === 12 && cleanPhone.startsWith('521')) {
+              cleanPhone = cleanPhone.substring(2);
+            }
+            
+            // Si después del formateo tiene 10 dígitos, agregar +52
+            if (cleanPhone.length === 10) {
+              formattedPhone = `+52${cleanPhone}`;
+            }
+          }
+        }
+        
+        // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
+        const payload = {
+          orderType: details.orderType,
+          items: details.items, // Enviar items para actualizar
+          tableId: details.tableId || null,
+          scheduledAt: details.scheduledAt || null,
+          customerName: details.customerName || null,
+          phoneNumber: formattedPhone,
+          deliveryAddress: details.deliveryAddress || null,
+          notes: details.notes || null,
+          total: details.total,
+          subtotal: details.subtotal,
+        };
+        
+        await updateOrderMutation.mutateAsync({ orderId: existingOrderId, payload });
+        showSnackbar({ message: `Orden #${existingOrderNumber} actualizada con éxito`, type: "success" });
+        hideCart();
+        clearCart();
+        navigation.goBack();
+      } catch (error) {
+        const message = getApiErrorMessage(error as Error);
+        showSnackbar({ message: `Error al actualizar orden: ${message}`, type: "error" });
+        console.error("Error al actualizar la orden:", error);
+      } finally {
+        setIsProcessingOrder(false);
+      }
       return;
     }
     

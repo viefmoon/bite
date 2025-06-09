@@ -13,7 +13,7 @@ export interface OrderItemDtoForBackend {
   id?: string;
   productId: string;
   productVariantId?: string | null;
-  quantity: number;
+  quantity: number; // NOTA: Siempre será 1, el backend ya no maneja cantidades
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;

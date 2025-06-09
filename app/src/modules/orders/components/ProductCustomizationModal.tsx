@@ -255,6 +255,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     } else {
       const newModifier: CartItemModifier = {
         id: modifier.id,
+        groupId: group.id,
         name: modifier.name,
         price: Number(modifier.price) || 0,
       };

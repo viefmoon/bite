@@ -34,6 +34,7 @@ export interface CartItem {
   variantName?: string;
   preparationNotes?: string;
   notes?: string; // Add notes field for backward compatibility
+  preparationStatus?: 'PENDING' | 'IN_PROGRESS' | 'READY' | 'DELIVERED' | 'CANCELLED'; // Estado de preparación
 }
 
 interface CartContextType {

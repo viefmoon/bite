@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
+import { StyleSheet, View, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, ActivityIndicator, Appbar, IconButton, Portal, Card, Chip } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useRoute } from '@react-navigation/native';
-import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
+import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation, useCancelOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import { Order, OrderStatusEnum, type OrderStatus, OrderType, OrderTypeEnum } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
 import { format } from 'date-fns'; // Para formatear fechas
 import { es } from 'date-fns/locale'; // Locale español
@@ -53,10 +53,14 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
-  const [pendingAdditionalItems, setPendingAdditionalItems] = useState<any[]>([]);
+  const [currentOrderItems, setCurrentOrderItems] = useState<any[]>([]); // Para almacenar los items actuales
+  
+  // Estado para filtro de tipo de orden
+  const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>('ALL');
 
-  // TODO: Instanciar la mutación de actualización cuando esté creada
-  const updateOrderMutation = useUpdateOrderMutation(); // Instanciar la mutación
+  // Instanciar las mutaciones
+  const updateOrderMutation = useUpdateOrderMutation();
+  const cancelOrderMutation = useCancelOrderMutation();
 
   const {
     data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
@@ -68,27 +72,15 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   
-  // Procesar items agregados cuando volvemos de CreateOrderScreen
-  useEffect(() => {
-    if (route.params?.addedItems && route.params?.orderId) {
-      const { addedItems, orderId } = route.params;
-      
-      // Guardar los items adicionales
-      setPendingAdditionalItems(addedItems);
-      
-      // Abrir automáticamente el modal de edición con los nuevos items
-      setEditingOrderId(orderId);
-      setIsEditModalVisible(true);
-      
-      showSnackbar({ 
-        message: `${addedItems.length} producto${addedItems.length > 1 ? 's' : ''} agregado${addedItems.length > 1 ? 's' : ''} al carrito de edición`, 
-        type: 'success' 
-      });
-      
-      // Limpiar los parámetros para evitar procesarlos de nuevo
-      navigation.setParams({ addedItems: undefined, orderId: undefined } as any);
-    }
-  }, [route.params, navigation, showSnackbar]);
+  // Filtrar órdenes por tipo
+  const filteredOrders = React.useMemo(() => {
+    if (!ordersData) return [];
+    if (selectedOrderType === 'ALL') return ordersData;
+    return ordersData.filter(order => order.orderType === selectedOrderType);
+  }, [ordersData, selectedOrderType]);
+  
+  // Ya no necesitamos procesar items agregados porque la actualización se hace directamente en CreateOrderScreen
+  // Este efecto se puede eliminar o simplificar
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -117,9 +109,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   };
 
   const renderOrderItem = useCallback(({ item: order }: { item: Order }) => {
-    const itemsCount = order.orderItems?.length || 0;
-    const itemsText = itemsCount === 1 ? '1 producto' : `${itemsCount} productos`;
-    
     // Get customer info based on order type
     let customerInfo = '';
     if (order.orderType === OrderTypeEnum.DELIVERY) {
@@ -149,7 +138,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             </Chip>
           </View>
 
-          {/* Order Type Row */}
+          {/* Order Type and Time Row */}
           <View style={styles.orderTypeRow}>
             <Text style={styles.orderType}>{formatOrderType(order.orderType)}</Text>
             <Text style={styles.orderTime}>
@@ -164,9 +153,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             </Text>
           ) : null}
 
-          {/* Items Summary */}
-          <View style={styles.itemsSummary}>
-            <Text style={styles.itemsCount}>{itemsText}</Text>
+          {/* Total Amount */}
+          <View style={styles.totalRow}>
             <Text style={styles.totalAmount}>Total: ${order.total}</Text>
           </View>
 
@@ -181,11 +169,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         {/* Action Buttons */}
         <Card.Actions style={styles.cardActions}>
           <IconButton
-            icon="pencil-outline"
-            size={20}
-            onPress={() => handleOrderItemPress(order)}
-          />
-          <IconButton
             icon="printer-outline"
             size={20}
             onPress={() => handleOpenPrinterModal(order.id)}
@@ -199,10 +182,14 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const { ListEmptyComponent } = useListState({
     isLoading,
     isError,
-    data: ordersData,
+    data: filteredOrders,
     emptyConfig: {
-      title: 'No hay órdenes abiertas',
-      message: 'No hay órdenes abiertas en este momento.',
+      title: selectedOrderType === 'ALL' 
+        ? 'No hay órdenes abiertas'
+        : `No hay órdenes de tipo ${formatOrderType(selectedOrderType as OrderType).replace(/[🍽️🥡🚚]/g, '').trim()}`,
+      message: selectedOrderType === 'ALL' 
+        ? 'No hay órdenes abiertas en este momento.'
+        : `No hay órdenes de este tipo en este momento.`,
       icon: 'clipboard-text-outline',
     },
   });
@@ -233,6 +220,19 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     }
   }, [orderToPrintId, printKitchenTicketMutation]); // Dependencias
 
+  // Función para manejar la cancelación de una orden
+  const handleCancelOrder = useCallback(async (orderId: string) => {
+    try {
+      await cancelOrderMutation.mutateAsync(orderId);
+      // Cerrar el modal después de cancelar exitosamente
+      setIsEditModalVisible(false);
+      setEditingOrderId(null);
+    } catch (error) {
+      console.error("Error al cancelar la orden:", error);
+      // El error se muestra a través del hook useCancelOrderMutation
+    }
+  }, [cancelOrderMutation]);
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
         {isLoading && !ordersData ? (
@@ -241,15 +241,94 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             <Text style={styles.loadingText}>Cargando órdenes...</Text>
           </View>
         ) : (
-          <FlatList
-            data={ordersData || []}
-            keyExtractor={(item) => item.id}
-            renderItem={renderOrderItem}
-            refreshing={isFetching}
-            onRefresh={handleRefresh}
-            contentContainerStyle={styles.listContentContainer}
-            ListEmptyComponent={ListEmptyComponent}
-          />
+          <>
+            {/* Filtros de tipo de orden - Fuera del View para mantener posición fija */}
+            <View style={styles.filterWrapper}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.filterContainer}
+                contentContainerStyle={styles.filterContentContainer}
+              >
+                <Chip
+                  mode="outlined"
+                  selected={selectedOrderType === 'ALL'}
+                  onPress={() => setSelectedOrderType('ALL')}
+                  style={[
+                    styles.filterChip,
+                    selectedOrderType === 'ALL' && styles.filterChipSelected
+                  ]}
+                  textStyle={[
+                    styles.filterChipText,
+                    selectedOrderType === 'ALL' && styles.filterChipTextSelected
+                  ]}
+                >
+                  Todas
+                </Chip>
+                <Chip
+                  mode="outlined"
+                  selected={selectedOrderType === OrderTypeEnum.DINE_IN}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
+                  style={[
+                    styles.filterChip,
+                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterChipSelected
+                  ]}
+                  textStyle={[
+                    styles.filterChipText,
+                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterChipTextSelected
+                  ]}
+                  icon="silverware-fork-knife"
+                >
+                  Para Comer Aquí
+                </Chip>
+                <Chip
+                  mode="outlined"
+                  selected={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
+                  style={[
+                    styles.filterChip,
+                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterChipSelected
+                  ]}
+                  textStyle={[
+                    styles.filterChipText,
+                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterChipTextSelected
+                  ]}
+                  icon="package-variant"
+                >
+                  Para Llevar
+                </Chip>
+                <Chip
+                  mode="outlined"
+                  selected={selectedOrderType === OrderTypeEnum.DELIVERY}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
+                  style={[
+                    styles.filterChip,
+                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterChipSelected
+                  ]}
+                  textStyle={[
+                    styles.filterChipText,
+                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterChipTextSelected
+                  ]}
+                  icon="truck-delivery"
+                >
+                  Domicilio
+                </Chip>
+              </ScrollView>
+            </View>
+            
+            {/* Lista de órdenes */}
+            <View style={styles.listContainer}>
+              <FlatList
+                data={filteredOrders}
+                keyExtractor={(item) => item.id}
+                renderItem={renderOrderItem}
+                refreshing={isFetching}
+                onRefresh={handleRefresh}
+                contentContainerStyle={styles.listContentContainer}
+                ListEmptyComponent={ListEmptyComponent}
+              />
+            </View>
+          </>
         )}
         {/* Modal de Selección de Impresora */}
         <Portal>
@@ -266,12 +345,10 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               orderId={editingOrderId}
               orderNumber={ordersData?.find(o => o.id === editingOrderId)?.dailyNumber}
               orderDate={ordersData?.find(o => o.id === editingOrderId)?.createdAt ? new Date(ordersData.find(o => o.id === editingOrderId)!.createdAt) : undefined}
-              additionalItems={pendingAdditionalItems}
               navigation={navigation}
               onClose={() => {
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
-                setPendingAdditionalItems([]); // Limpiar items adicionales
               }}
               onConfirmOrder={async (details: OrderDetailsForBackend) => {
                 // Formatear el número de teléfono si existe
@@ -316,14 +393,52 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 
                 try {
                   await updateOrderMutation.mutateAsync({ orderId: editingOrderId, payload });
+                  // Limpiar estados después de actualización exitosa
                   setIsEditModalVisible(false);
                   setEditingOrderId(null);
                 } catch (error) {
                   console.error("Error al actualizar la orden:", error);
+                  // No cerrar el modal en caso de error para que el usuario pueda reintentar
                 }
               }}
-              onAddProducts={() => {
-                // La funcionalidad de añadir productos ahora se maneja internamente en OrderCartDetail
+              onAddProducts={(currentItems) => {
+                console.log('onAddProducts llamado con items:', currentItems?.length || 0);
+                // Guardar los items actuales
+                setCurrentOrderItems(currentItems || []);
+                
+                // Cerrar el modal de edición antes de navegar
+                setIsEditModalVisible(false);
+                
+                // Obtener la orden actual
+                const currentOrder = ordersData?.find(o => o.id === editingOrderId);
+                
+                if (currentOrder) {
+                  console.log('Navegando a CreateOrder con:', {
+                    itemsCount: currentItems?.length || 0,
+                    orderNumber: currentOrder.dailyNumber
+                  });
+                  
+                  // Navegar a CreateOrderScreen con los datos de la orden
+                  navigation.navigate('CreateOrder', {
+                    isAddingToOrder: true,
+                    orderId: editingOrderId || undefined,
+                    orderNumber: currentOrder.dailyNumber,
+                    orderDate: currentOrder.createdAt,
+                    existingItems: currentItems || [], // Pasar los items actuales del modal
+                    orderType: currentOrder.orderType,
+                    tableId: currentOrder.tableId || undefined,
+                    customerName: currentOrder.customerName || undefined,
+                    phoneNumber: currentOrder.phoneNumber || undefined,
+                    deliveryAddress: currentOrder.deliveryAddress || undefined,
+                    notes: currentOrder.notes || undefined,
+                    scheduledAt: currentOrder.scheduledAt || undefined,
+                  } as any);
+                }
+              }}
+              onCancelOrder={() => {
+                if (editingOrderId) {
+                  handleCancelOrder(editingOrderId);
+                }
               }}
             />
           )}
@@ -347,9 +462,55 @@ const createStyles = (theme: AppTheme) => // Usar AppTheme directamente
       marginTop: theme.spacing.m,
       color: theme.colors.onSurfaceVariant,
     },
+    filterWrapper: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    filterContainer: {
+      backgroundColor: theme.colors.surface,
+      elevation: 2,
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 1 },
+      height: 56,
+    },
+    filterContentContainer: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+      gap: theme.spacing.s,
+      alignItems: 'center',
+    },
+    filterChip: {
+      marginRight: theme.spacing.xs,
+      height: 32,
+      backgroundColor: theme.colors.surface,
+    },
+    filterChipSelected: {
+      backgroundColor: theme.colors.primaryContainer,
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
+      elevation: 3,
+    },
+    filterChipText: {
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    filterChipTextSelected: {
+      color: theme.colors.onPrimaryContainer,
+      fontWeight: '600',
+    },
+    listContainer: {
+      flex: 1,
+      paddingTop: 56, // Mismo height que filterContainer
+    },
     listContentContainer: {
       padding: theme.spacing.m,
       paddingBottom: theme.spacing.l * 2,
+      flexGrow: 1,
     },
     orderCard: {
       marginBottom: theme.spacing.m,
@@ -394,15 +555,11 @@ const createStyles = (theme: AppTheme) => // Usar AppTheme directamente
       color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.s,
     },
-    itemsSummary: {
+    totalRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       marginTop: theme.spacing.xs,
-    },
-    itemsCount: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onSurfaceVariant,
     },
     totalAmount: {
       ...theme.fonts.titleSmall,

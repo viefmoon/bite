@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, TouchableWithoutFeedback, Keyboard, Platform } from "react-native";
+import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, TouchableWithoutFeedback, Keyboard, Platform, Animated } from "react-native";
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Text,
   Divider,
@@ -11,6 +12,7 @@ import {
   IconButton,
   Modal,
   Portal,
+  Appbar,
 } from "react-native-paper";
 import { useAppTheme } from "@/app/styles/theme";
 import { OrderTypeEnum, type OrderType } from "../types/orders.types"; // Importar OrderTypeEnum y el tipo OrderType
@@ -29,13 +31,15 @@ import { useGetTablesByArea } from "@/modules/areasTables/services/tableService"
 import type { Table } from "@/modules/areasTables/types/areasTables.types";
 import { useCart, CartItem, CartItemModifier } from "../context/CartContext"; // Importar CartItem y CartItemModifier
 import { useAuthStore } from "@/app/store/authStore"; // Importar authStore
+import { useSnackbarStore } from "@/app/store/snackbarStore"; // Importar snackbar store
 import { useGetOrderByIdQuery } from "../hooks/useOrdersQueries"; // Para cargar datos en modo edición
 import { useGetFullMenu } from "../hooks/useMenuQueries"; // Para obtener productos completos
 import type { FullMenuCategory } from "../types/orders.types"; // Tipo con subcategorías
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
-  productModifierId: string;
+  modifierId: string; // ID del ProductModifier (la opción específica)
+  modifierOptionId?: string | null; // Campo opcional
   quantity?: number;
   price?: number | null;
 }
@@ -43,7 +47,7 @@ interface OrderItemModifierDto {
 interface OrderItemDtoForBackend {
   productId: string;
   productVariantId?: string | null;
-  quantity: number;
+  quantity: number; // NOTA: Siempre será 1, el backend ya no maneja cantidades
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
@@ -74,10 +78,47 @@ interface OrderCartDetailProps {
   orderId?: string | null;
   orderNumber?: number;
   orderDate?: Date;
-  onAddProducts?: () => void;
+  onAddProducts?: (currentItems: CartItem[]) => void;
   additionalItems?: CartItem[]; // Items agregados desde CreateOrderScreen
   navigation?: any; // Prop de navegación opcional
+  onCancelOrder?: () => void; // Función para cancelar la orden
 }
+
+// Helper para obtener el color del estado de preparación
+const getPreparationStatusColor = (status: string | undefined, theme: any) => {
+  switch (status) {
+    case 'PENDING':
+      return theme.colors.error; // Rojo para pendiente
+    case 'IN_PROGRESS':
+      return '#FFA000'; // Naranja para en progreso
+    case 'READY':
+      return '#4CAF50'; // Verde para listo
+    case 'DELIVERED':
+      return theme.colors.tertiary; // Color terciario para entregado
+    case 'CANCELLED':
+      return theme.colors.onSurfaceDisabled; // Gris para cancelado
+    default:
+      return theme.colors.onSurfaceVariant;
+  }
+};
+
+// Helper para obtener el texto del estado de preparación
+const getPreparationStatusText = (status: string | undefined): string => {
+  switch (status) {
+    case 'PENDING':
+      return 'Pendiente';
+    case 'IN_PROGRESS':
+      return 'En Preparación';
+    case 'READY':
+      return 'Listo';
+    case 'DELIVERED':
+      return 'Entregado';
+    case 'CANCELLED':
+      return 'Cancelado';
+    default:
+      return '';
+  }
+};
 
 const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   visible,
@@ -88,8 +129,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   orderId,
   orderNumber,
   orderDate,
+  onAddProducts,
   additionalItems,
   navigation,
+  onCancelOrder,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -164,7 +207,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   
   const removeItem = (itemId: string) => {
     if (isEditMode) {
-      setEditItems(prev => prev.filter(item => item.id !== itemId));
+      const item = editItems.find(i => i.id === itemId);
+      if (!item) return;
+      
+      // Verificar el estado del item
+      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
+        // No permitir eliminar items listos o entregados
+        showSnackbar({ 
+          message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
+          type: "error" 
+        });
+        return;
+      }
+      
+      if (item.preparationStatus === 'IN_PROGRESS') {
+        // Pedir confirmación para items en preparación
+        setModifyingItemName(item.productName);
+        setPendingModifyAction(() => () => {
+          setEditItems(prev => prev.filter(i => i.id !== itemId));
+        });
+        setShowModifyInProgressConfirmation(true);
+      } else {
+        // Permitir eliminar items pendientes o cancelados sin confirmación
+        setEditItems(prev => prev.filter(i => i.id !== itemId));
+      }
     } else {
       removeCartItem(itemId);
     }
@@ -176,21 +242,47 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         removeItem(itemId);
         return;
       }
-      setEditItems(prev => prev.map(item => {
-        if (item.id === itemId) {
-          const modifiersPrice = item.modifiers.reduce(
-            (sum, mod) => sum + Number(mod.price || 0),
-            0
-          );
-          const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
-          return {
-            ...item,
-            quantity,
-            totalPrice: newTotalPrice,
-          };
-        }
-        return item;
-      }));
+      
+      const item = editItems.find(i => i.id === itemId);
+      if (!item) return;
+      
+      // Verificar el estado del item
+      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
+        // No permitir modificar items listos o entregados
+        showSnackbar({ 
+          message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
+          type: "error" 
+        });
+        return;
+      }
+      
+      const updateQuantity = () => {
+        setEditItems(prev => prev.map(item => {
+          if (item.id === itemId) {
+            const modifiersPrice = item.modifiers.reduce(
+              (sum, mod) => sum + Number(mod.price || 0),
+              0
+            );
+            const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
+            return {
+              ...item,
+              quantity,
+              totalPrice: newTotalPrice,
+            };
+          }
+          return item;
+        }));
+      };
+      
+      if (item.preparationStatus === 'IN_PROGRESS') {
+        // Pedir confirmación para items en preparación
+        setModifyingItemName(item.productName);
+        setPendingModifyAction(() => updateQuantity);
+        setShowModifyInProgressConfirmation(true);
+      } else {
+        // Permitir modificar items pendientes o cancelados sin confirmación
+        updateQuantity();
+      }
     } else {
       updateCartItemQuantity(itemId, quantity);
     }
@@ -210,6 +302,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   }, [items]);
   
   const { user } = useAuthStore(); // Obtener usuario autenticado
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
   // Estados locales solo para UI (errores, visibilidad de menús/modales)
   const [areaMenuVisible, setAreaMenuVisible] = useState(false);
@@ -226,6 +319,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editingItemFromList, setEditingItemFromList] = useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalReady, setIsModalReady] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [showModifyInProgressConfirmation, setShowModifyInProgressConfirmation] = useState(false);
+  const [pendingModifyAction, setPendingModifyAction] = useState<(() => void) | null>(null);
+  const [modifyingItemName, setModifyingItemName] = useState<string>('');
 
 
   // --- Queries para Áreas y Mesas (sin cambios) ---
@@ -267,35 +365,59 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setEditSelectedAreaId(orderData.table.areaId);
     }
     
-    // Mapear los items de la orden
+    // Mapear y agrupar los items de la orden
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-      const mappedItems: CartItem[] = orderData.orderItems.map((item: any) => {
+      // Mapa para agrupar items idénticos
+      const groupedItemsMap = new Map<string, CartItem>();
+      
+      orderData.orderItems.forEach((item: any) => {
         // Calcular el precio de los modificadores
         const modifiers = (item.modifiers || []).map((mod: any) => ({
-          id: mod.modifierId || mod.productModifierId || mod.id, // Usar modifierId que es el ID del ProductModifier
-          name: mod.modifier?.name || mod.productModifier?.name || mod.name || 'Modificador',
+          id: mod.modifierId, // El modifierId en la BD es el ID del ProductModifier
+          groupId: mod.modifier?.groupId || '', // Obtener el groupId desde la relación
+          name: mod.modifier?.name || 'Modificador',
           price: parseFloat(mod.price || '0'),
         }));
         
         const modifiersPrice = modifiers.reduce((sum: number, mod: any) => sum + (mod.price || 0), 0);
         const unitPrice = parseFloat(item.basePrice || '0');
-        const quantity = Number(item.quantity) || 1;
         
-        // El totalPrice es (precio base + modificadores) * cantidad
-        const totalPrice = (unitPrice + modifiersPrice) * quantity;
+        // Crear una clave única para agrupar items idénticos (incluyendo estado de preparación)
+        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${
+          JSON.stringify(modifiers.map(m => m.id).sort())
+        }-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
         
-        return {
-          id: item.id,
-          productId: item.productId,
-          productName: item.product?.name || 'Producto desconocido',
-          quantity,
-          unitPrice,
-          totalPrice,
-          modifiers,
-          variantId: item.productVariantId || undefined,
-          variantName: item.productVariant?.name || undefined,
-          preparationNotes: item.preparationNotes || undefined,
-        };
+        const existingItem = groupedItemsMap.get(groupKey);
+        
+        if (existingItem) {
+          // Si ya existe un item idéntico con el mismo estado, incrementar la cantidad
+          existingItem.quantity += 1;
+          existingItem.totalPrice = (unitPrice + modifiersPrice) * existingItem.quantity;
+        } else {
+          // Si es un nuevo item, agregarlo al mapa
+          const cartItem: CartItem = {
+            id: item.id, // Usar el ID del primer item del grupo
+            productId: item.productId,
+            productName: item.product?.name || 'Producto desconocido',
+            quantity: 1, // Empezar con 1, el backend ya no envía quantity
+            unitPrice,
+            totalPrice: unitPrice + modifiersPrice,
+            modifiers,
+            variantId: item.productVariantId || undefined,
+            variantName: item.productVariant?.name || undefined,
+            preparationNotes: item.preparationNotes || undefined,
+            preparationStatus: item.preparationStatus || 'PENDING', // Incluir estado de preparación
+          };
+          groupedItemsMap.set(groupKey, cartItem);
+        }
+      });
+      
+      // Convertir el mapa a array
+      const mappedItems = Array.from(groupedItemsMap.values());
+      console.log('Cargando items de la orden en OrderCartDetail:', {
+        orderItemsCount: orderData.orderItems?.length || 0,
+        mappedItemsCount: mappedItems.length,
+        mappedItems
       });
       setEditItems(mappedItems);
     }
@@ -406,22 +528,32 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     
     // Mapear items del carrito al formato esperado por el DTO del backend
-    const itemsForBackend: OrderItemDtoForBackend[] = items.map((item: CartItem) => ({
-      productId: item.productId,
-      productVariantId: item.variantId || null,
-      quantity: item.quantity,
-      basePrice: Number(item.unitPrice), // Asegurar que sea número
-      finalPrice: Number(item.totalPrice / item.quantity), // Asegurar que sea número
-      preparationNotes: item.preparationNotes || null,
-      // Mapear modificadores al formato del backend
-      modifiers: item.modifiers && item.modifiers.length > 0 
-        ? item.modifiers.map(mod => ({
-            productModifierId: mod.id,
-            quantity: 1, // Por defecto 1
-            price: mod.price || null
-          }))
-        : undefined
-    }));
+    // IMPORTANTE: Expandir items según su cantidad ya que el backend no maneja quantity
+    const itemsForBackend: OrderItemDtoForBackend[] = [];
+    
+    items.forEach((item: CartItem) => {
+      // Crear un item individual por cada unidad de la cantidad
+      for (let i = 0; i < item.quantity; i++) {
+        itemsForBackend.push({
+          productId: item.productId,
+          productVariantId: item.variantId || null,
+          // quantity se elimina del backend, pero mantenemos el campo para compatibilidad temporal
+          quantity: 1, // Siempre 1 porque cada item es individual
+          basePrice: Number(item.unitPrice), // Precio unitario
+          finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
+          preparationNotes: item.preparationNotes || null,
+          // Mapear modificadores al formato del backend
+          modifiers: item.modifiers && item.modifiers.length > 0 
+            ? item.modifiers.map(mod => ({
+                modifierId: mod.id, // ID del ProductModifier (la opción específica)
+                modifierOptionId: null, // Campo opcional, no se usa actualmente
+                quantity: 1, // Por defecto 1
+                price: mod.price || null
+              }))
+            : undefined
+        });
+      }
+    });
 
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
@@ -469,8 +601,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     
     try {
       await onConfirmOrder(orderDetails);
-      // Si llegamos aquí, la orden fue exitosa, resetear el estado
+      // Si llegamos aquí, la orden fue exitosa
       setIsConfirming(false);
+      // Cerrar el modal después de una actualización exitosa
+      if (isEditMode) {
+        onClose?.();
+      }
     } catch (error) {
       // Solo re-habilitar si hubo un error
       setIsConfirming(false);
@@ -548,26 +684,48 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Comparar items
     const originalItems = orderData.orderItems || [];
     
-    // Si la cantidad de items cambió
-    if (editItems.length !== originalItems.length) return true;
-    
-    // Comparar cada item (esto es más complejo porque los items pueden haber sido modificados)
-    // Por simplicidad, si algún item tiene un ID temporal (new-*), hay cambios
+    // Si algún item tiene un ID temporal (new-*), hay cambios
     if (editItems.some(item => item.id.startsWith('new-'))) return true;
     
-    // Comparar items existentes por cantidad
-    for (const editItem of editItems) {
-      if (!editItem.id.startsWith('new-')) {
-        const originalItem = originalItems.find((item: any) => item.id === editItem.id);
-        if (!originalItem) return true; // Item fue eliminado
-        if (editItem.quantity !== Number(originalItem.quantity)) return true;
-      }
-    }
+    // Calcular la cantidad total de items originales
+    const originalTotalQuantity = originalItems.length; // Backend envía items individuales
+    const editTotalQuantity = editItems.reduce((sum, item) => sum + item.quantity, 0);
     
-    // Verificar si algún item original fue eliminado
-    for (const originalItem of originalItems) {
-      const stillExists = editItems.find(item => item.id === originalItem.id);
-      if (!stillExists) return true;
+    // Si la cantidad total de items cambió, hay cambios
+    if (originalTotalQuantity !== editTotalQuantity) return true;
+    
+    // Crear un mapa de items agrupados desde los items originales para comparación
+    const originalGroupedMap = new Map<string, number>();
+    
+    originalItems.forEach((item: any) => {
+      // Crear una clave única para agrupar items idénticos
+      const modifierIds = (item.modifiers || []).map((m: any) => m.modifierId).sort().join(',');
+      const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
+      
+      const currentQuantity = originalGroupedMap.get(groupKey) || 0;
+      originalGroupedMap.set(groupKey, currentQuantity + 1);
+    });
+    
+    // Crear un mapa similar para los items editados
+    const editGroupedMap = new Map<string, number>();
+    
+    editItems.forEach((item) => {
+      if (!item.id.startsWith('new-')) {
+        const modifierIds = item.modifiers.map(m => m.id).sort().join(',');
+        const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
+        
+        editGroupedMap.set(groupKey, item.quantity);
+      }
+    });
+    
+    // Comparar los mapas
+    if (originalGroupedMap.size !== editGroupedMap.size) return true;
+    
+    for (const [key, originalQuantity] of originalGroupedMap) {
+      const editQuantity = editGroupedMap.get(key);
+      if (editQuantity === undefined || editQuantity !== originalQuantity) {
+        return true;
+      }
     }
     
     return false;
@@ -582,56 +740,78 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         onEditItem(item);
       }
     } else {
-      // En modo edición, buscar el producto real del menú
-      if (!menu || !Array.isArray(menu)) {
-        console.warn("El menú no está disponible");
+      // Verificar el estado del item antes de permitir edición
+      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
+        // No permitir editar items listos o entregados
+        showSnackbar({ 
+          message: `No se puede editar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
+          type: "error" 
+        });
         return;
       }
       
-      // Buscar el producto en la estructura anidada del menú
-      let product: Product | undefined;
-      
-      for (const category of menu as FullMenuCategory[]) {
-        if (category.subcategories && Array.isArray(category.subcategories)) {
-          for (const subcategory of category.subcategories) {
-            if (subcategory.products && Array.isArray(subcategory.products)) {
-              product = subcategory.products.find((p: Product) => p.id === item.productId);
-              if (product) break;
+      const proceedWithEdit = () => {
+        // En modo edición, buscar el producto real del menú
+        if (!menu || !Array.isArray(menu)) {
+          console.warn("El menú no está disponible");
+          return;
+        }
+        
+        // Buscar el producto en la estructura anidada del menú
+        let product: Product | undefined;
+        
+        for (const category of menu as FullMenuCategory[]) {
+          if (category.subcategories && Array.isArray(category.subcategories)) {
+            for (const subcategory of category.subcategories) {
+              if (subcategory.products && Array.isArray(subcategory.products)) {
+                product = subcategory.products.find((p: Product) => p.id === item.productId);
+                if (product) break;
+              }
             }
           }
+          if (product) break;
         }
-        if (product) break;
-      }
-      
-      if (product) {
-        setEditingItemFromList(item);
-        setEditingProduct(product);
-      } else {
-        // Si no encontramos el producto en el menú, crear uno temporal
-        console.warn("Producto no encontrado en el menú, usando datos temporales");
-        setEditingItemFromList(item);
         
-        const tempProduct: Product = {
-          id: item.productId,
-          name: item.productName,
-          price: item.unitPrice,
-          hasVariants: !!item.variantId,
-          variants: item.variantId ? [{
-            id: item.variantId,
-            name: item.variantName || '',
+        if (product) {
+          setEditingItemFromList(item);
+          setEditingProduct(product);
+        } else {
+          // Si no encontramos el producto en el menú, crear uno temporal
+          console.warn("Producto no encontrado en el menú, usando datos temporales");
+          setEditingItemFromList(item);
+          
+          const tempProduct: Product = {
+            id: item.productId,
+            name: item.productName,
             price: item.unitPrice,
-          }] : [],
-          modifierGroups: [], // Sin grupos de modificadores
-          photo: null,
-          subcategoryId: '',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
-        setEditingProduct(tempProduct);
+            hasVariants: !!item.variantId,
+            variants: item.variantId ? [{
+              id: item.variantId,
+              name: item.variantName || '',
+              price: item.unitPrice,
+            }] : [],
+            modifierGroups: [], // Sin grupos de modificadores
+            photo: null,
+            subcategoryId: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          
+          setEditingProduct(tempProduct);
+        }
+      };
+      
+      if (item.preparationStatus === 'IN_PROGRESS') {
+        // Pedir confirmación para items en preparación
+        setModifyingItemName(item.productName);
+        setPendingModifyAction(() => proceedWithEdit);
+        setShowModifyInProgressConfirmation(true);
+      } else {
+        // Permitir editar items pendientes o cancelados sin confirmación
+        proceedWithEdit();
       }
     }
-  }, [isEditMode, onEditItem, menu]);
+  }, [isEditMode, onEditItem, menu, showSnackbar]);
   
   // Función para actualizar un item editado
   const handleUpdateEditedItem = useCallback((
@@ -1024,28 +1204,64 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         dismissable={false}
         dismissableBackButton={false}
       >
-        <View style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View>
-              <OrderHeader
-                title={
-                  isEditMode && orderNumber && orderDate 
-                    ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
-                    : orderNumber 
-                      ? `Editando Orden #${orderNumber}`
-                      : "Resumen de Orden"
-                }
-                onBackPress={() => {
-                  if (isEditMode && hasUnsavedChanges()) {
-                    setShowExitConfirmation(true);
-                  } else {
-                    onClose?.();
-                  }
-                }}
-                itemCount={totalItemsCount}
-                onCartPress={() => {}}
-                isCartVisible={isCartVisible}
-              />
+              {isEditMode ? (
+                <View style={styles.customHeader}>
+                  <IconButton
+                    icon="arrow-left"
+                    size={24}
+                    onPress={() => {
+                      if (hasUnsavedChanges()) {
+                        setShowExitConfirmation(true);
+                      } else {
+                        onClose?.();
+                      }
+                    }}
+                    iconColor={theme.colors.onSurface}
+                  />
+                  
+                  <Text style={styles.headerTitle}>
+                    {orderNumber && orderDate 
+                      ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
+                      : orderNumber 
+                        ? `Editando Orden #${orderNumber}`
+                        : "Editar Orden"
+                    }
+                  </Text>
+                  
+                  <Menu
+                    visible={showOptionsMenu}
+                    onDismiss={() => setShowOptionsMenu(false)}
+                    anchor={
+                      <IconButton
+                        icon="dots-vertical"
+                        size={24}
+                        onPress={() => setShowOptionsMenu(true)}
+                        iconColor={theme.colors.onSurface}
+                      />
+                    }
+                  >
+                    <Menu.Item
+                      onPress={() => {
+                        setShowOptionsMenu(false);
+                        setShowCancelConfirmation(true);
+                      }}
+                      title="Cancelar Orden"
+                      leadingIcon="cancel"
+                    />
+                  </Menu>
+                </View>
+              ) : (
+                <OrderHeader
+                  title={orderNumber ? `Orden #${orderNumber}` : "Resumen de Orden"}
+                  onBackPress={() => onClose?.()}
+                  itemCount={totalItemsCount}
+                  onCartPress={() => {}}
+                  isCartVisible={isCartVisible}
+                />
+              )}
             </View>
           </TouchableWithoutFeedback>
 
@@ -1096,43 +1312,141 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* Cart Items */}
             <List.Section>
               {items.map((item) => {
+                // Crear función de renderizado de acción de eliminar
+                const renderRightActions = (progress, dragX) => {
+                  const translateX = dragX.interpolate({
+                    inputRange: [-100, 0],
+                    outputRange: [0, 100],
+                    extrapolate: 'clamp',
+                  });
+
+                  const scale = dragX.interpolate({
+                    inputRange: [-100, -50, 0],
+                    outputRange: [1, 0.8, 0.5],
+                    extrapolate: 'clamp',
+                  });
+
+                  const opacity = dragX.interpolate({
+                    inputRange: [-100, -20, 0],
+                    outputRange: [1, 0.5, 0],
+                    extrapolate: 'clamp',
+                  });
+
+                  return (
+                    <Animated.View 
+                      style={[
+                        styles.deleteActionContainer,
+                        {
+                          opacity,
+                          transform: [{ translateX }],
+                        }
+                      ]}
+                    >
+                      <Animated.View 
+                        style={[
+                          styles.deleteAction,
+                          { 
+                            backgroundColor: theme.colors.error,
+                            transform: [{ scale }]
+                          }
+                        ]}
+                      >
+                        <View style={styles.deleteIconContainer}>
+                          <IconButton
+                            icon="delete-sweep"
+                            size={28}
+                            iconColor="white"
+                            style={styles.deleteIcon}
+                          />
+                        </View>
+                        <Text style={styles.deleteActionText}>ELIMINAR</Text>
+                      </Animated.View>
+                    </Animated.View>
+                  );
+                };
+                
                 return (
-                  <TouchableOpacity
+                  <Swipeable
                     key={item.id}
-                    onPress={() => handleEditCartItem(item)}
-                    disabled={!onEditItem && !isEditMode}
+                    renderRightActions={renderRightActions}
+                    overshootRight={false}
+                    friction={2}
+                    rightThreshold={90}
+                    leftThreshold={100}
+                    onSwipeableOpen={(direction) => {
+                      if (direction === 'right') {
+                        // Pequeño delay para que se vea la animación completa
+                        setTimeout(() => {
+                          removeItem(item.id);
+                        }, 150);
+                      }
+                    }}
                   >
-                    <List.Item
+                    <TouchableOpacity
+                      onPress={() => handleEditCartItem(item)}
+                      disabled={!onEditItem && !isEditMode}
+                      activeOpacity={0.7}
+                    >
+                      <List.Item
                       // Mover title y description a un View contenedor para controlar el ancho
                       title={() => (
                       <View style={styles.itemTextContainer}>
-                        {/* Eliminar numberOfLines para permitir expansión */}
-                        <Text style={styles.itemTitleText}>
-                          {`${item.quantity}x ${String(item.productName ?? "")}${item.variantName ? ` (${String(item.variantName ?? "")})` : ""}`}
-                        </Text>
+                        <View style={styles.itemHeaderRow}>
+                          <Text style={styles.itemTitleText}>
+                            {`${item.quantity}x ${String(item.productName ?? "")}${item.variantName ? ` (${String(item.variantName ?? "")})` : ""}`}
+                          </Text>
+                          {/* Mostrar estado de preparación solo en modo edición */}
+                          {isEditMode && item.preparationStatus && (
+                            <View style={[
+                              styles.statusBadge, 
+                              { backgroundColor: getPreparationStatusColor(item.preparationStatus, theme) + '20' }
+                            ]}>
+                              <View style={[
+                                styles.statusDot,
+                                { backgroundColor: getPreparationStatusColor(item.preparationStatus, theme) }
+                              ]} />
+                              <Text style={[
+                                styles.statusText,
+                                { color: getPreparationStatusColor(item.preparationStatus, theme) }
+                              ]}>
+                                {getPreparationStatusText(item.preparationStatus)}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                         {(() => { // Render description condicionalmente
-                          const modifierString =
-                            item.modifiers && item.modifiers.length > 0
-                              ? item.modifiers.map((mod) => mod.name).join(", ")
-                              : "";
-                          const notesString = item.preparationNotes
-                            ? `Notas: ${item.preparationNotes}`
-                            : "";
+                          const hasModifiers = item.modifiers && item.modifiers.length > 0;
+                          const hasNotes = item.preparationNotes && item.preparationNotes.trim() !== "";
 
-                          if (modifierString && notesString) {
+                          if (hasModifiers && hasNotes) {
                             return (
-                              // Comentario eliminado o corregido si es necesario
-                              <Text style={styles.itemDescription}>
-                                {/* Usar template literal para interpretar \n */}
-                                {`${modifierString}\n${notesString}`}
+                              <View>
+                                {item.modifiers.map((mod, index) => (
+                                  <Text key={mod.id || index} style={styles.itemDescription}>
+                                    • {mod.name} {mod.price && mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
+                                  </Text>
+                                ))}
+                                <Text style={[styles.itemDescription, styles.notesText]}>
+                                  Notas: {item.preparationNotes}
+                                </Text>
+                              </View>
+                            );
+                          } else if (hasModifiers) {
+                            return (
+                              <View>
+                                {item.modifiers.map((mod, index) => (
+                                  <Text key={mod.id || index} style={styles.itemDescription}>
+                                    • {mod.name} {mod.price && mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
+                                  </Text>
+                                ))}
+                              </View>
+                            );
+                          } else if (hasNotes) {
+                            return (
+                              <Text style={[styles.itemDescription, styles.notesText]}>
+                                Notas: {item.preparationNotes}
                               </Text>
                             );
-                          } else if (modifierString) {
-                            // Comentario eliminado o corregido si es necesario
-                            return <Text style={styles.itemDescription}>{modifierString}</Text>;
-                          } else if (notesString) {
-                            // Comentario eliminado o corregido si es necesario
-                            return <Text style={styles.itemDescription}>{notesString}</Text>;
                           } else {
                             return null;
                           }
@@ -1172,18 +1486,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             </Text>
                           )}
                         </View>
-                        <IconButton
-                          icon="delete-outline"
-                          size={20} // Reducir tamaño de icono
-                          onPress={() => removeItem(item.id)}
-                          style={styles.deleteButton}
-                          iconColor={theme.colors.error}
-                        />
                       </View>
                     )}
                     style={styles.listItem}
                   />
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </Swipeable>
                 );
               })}
             </List.Section>
@@ -1192,22 +1500,48 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {isEditMode && (
               <Button 
                 onPress={() => {
-                  // Navegar a CreateOrderScreen con parámetros especiales
-                  if (navigation) {
-                    onClose?.(); // Cerrar el modal actual
-                    navigation.navigate('CreateOrder', {
-                      isAddingToOrder: true,
-                      orderId: orderId || undefined,
-                      orderNumber: orderNumber,
-                      orderDate: orderDate?.toISOString(),
-                      existingItems: items, // Pasar los items actuales
-                      orderType: orderType,
-                      tableId: selectedTableId || undefined,
-                      customerName: customerName || undefined,
-                      phoneNumber: phoneNumber || undefined,
-                      deliveryAddress: deliveryAddress || undefined,
-                      notes: orderNotes || undefined,
-                    });
+                  console.log('Botón Añadir Productos presionado', { 
+                    hasNavigation: !!navigation, 
+                    hasOnAddProducts: !!onAddProducts,
+                    orderId,
+                    itemsCount: items.length,
+                    isEditMode,
+                    items: items
+                  });
+                  
+                  // Si hay un callback onAddProducts, usarlo
+                  if (onAddProducts) {
+                    onAddProducts(items);
+                  } 
+                  // Si no, intentar navegar directamente
+                  else if (navigation) {
+                    // Cerrar el modal primero para evitar problemas de navegación
+                    onClose?.();
+                    
+                    // Pequeño delay para asegurar que el modal se cierre antes de navegar
+                    setTimeout(() => {
+                      console.log('Navegando a CreateOrder con params:', {
+                        isAddingToOrder: true,
+                        orderId: orderId || undefined,
+                        orderNumber: orderNumber,
+                      });
+                      navigation.navigate('CreateOrder', {
+                        isAddingToOrder: true,
+                        orderId: orderId || undefined,
+                        orderNumber: orderNumber,
+                        orderDate: orderDate?.toISOString(),
+                        existingItems: items, // Pasar los items actuales
+                        orderType: orderType,
+                        tableId: selectedTableId || undefined,
+                        customerName: customerName || undefined,
+                        phoneNumber: phoneNumber || undefined,
+                        deliveryAddress: deliveryAddress || undefined,
+                        notes: orderNotes || undefined,
+                        scheduledAt: scheduledTime?.toISOString() || undefined,
+                      });
+                    }, 100);
+                  } else {
+                    console.error('Ni navigation ni onAddProducts están disponibles en OrderCartDetail');
                   }
                 }} 
                 mode="outlined" 
@@ -1291,6 +1625,44 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           onCancel={() => setShowExitConfirmation(false)}
         />
         
+        {/* Modal de confirmación para cancelar la orden */}
+        <ConfirmationModal
+          visible={showCancelConfirmation}
+          title="¿Cancelar orden?"
+          message={`¿Estás seguro de que quieres cancelar la orden #${orderNumber}? Esta acción no se puede deshacer.`}
+          confirmText="Cancelar Orden"
+          cancelText="No, mantener"
+          onConfirm={() => {
+            setShowCancelConfirmation(false);
+            if (onCancelOrder) {
+              onCancelOrder();
+            }
+          }}
+          onCancel={() => setShowCancelConfirmation(false)}
+        />
+        
+        {/* Modal de confirmación para modificar items en preparación */}
+        <ConfirmationModal
+          visible={showModifyInProgressConfirmation}
+          title="¿Modificar producto en preparación?"
+          message={`El producto "${modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
+          confirmText="Sí, modificar"
+          cancelText="No, cancelar"
+          onConfirm={() => {
+            setShowModifyInProgressConfirmation(false);
+            if (pendingModifyAction) {
+              pendingModifyAction();
+              setPendingModifyAction(null);
+            }
+            setModifyingItemName('');
+          }}
+          onCancel={() => {
+            setShowModifyInProgressConfirmation(false);
+            setPendingModifyAction(null);
+            setModifyingItemName('');
+          }}
+        />
+        
         {/* Modal de personalización de producto para edición */}
         {isEditMode && editingProduct && editingItemFromList && (
           <ProductCustomizationModal
@@ -1305,7 +1677,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onUpdateItem={handleUpdateEditedItem}
           />
         )}
-        </View>
+        </GestureHandlerRootView>
       </Modal>
     </Portal>
   );
@@ -1342,10 +1714,12 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       justifyContent: 'space-between',// 2) Separar título y acciones
       paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.s, // controla el “gap” desde el borde
+      backgroundColor: theme.colors.surface,
+      minHeight: 80, // Altura mínima para mejor experiencia de swipe
     },
 
     itemTextContainer: { // Contenedor para título y descripción
-      flex: 2,                        // Darle más espacio al texto
+      flex: 3,                        // Darle aún más espacio al texto ahora que no hay botón de eliminar
       marginRight: theme.spacing.xs,  // Pequeño margen para separar de las acciones
       justifyContent: 'center',       // Centrar texto verticalmente
       // backgroundColor: 'lightyellow', // Debug
@@ -1417,11 +1791,49 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
-    deleteButton: {
+    deleteActionContainer: {
+      width: 120,
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      paddingRight: theme.spacing.m,
+    },
+    deleteAction: {
+      backgroundColor: theme.colors.error,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 90,
+      height: '90%',
+      borderRadius: theme.roundness * 2,
+      flexDirection: 'column',
+      shadowColor: theme.colors.error,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    deleteIconContainer: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    deleteIcon: {
       margin: 0,
-      marginLeft: theme.spacing.xs, // Reducir espacio
-      padding: 0,                   // Eliminar padding
-      // backgroundColor: 'gold', // Debug
+      padding: 0,
+    },
+    deleteActionText: {
+      color: 'white',
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
     }, // <<< COMA RESTAURADA
     // End List Item Styles
     totalsContainer: {
@@ -1578,6 +1990,54 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       paddingVertical: 3,
       borderRadius: 12,
       zIndex: 1,
-    }, // <<< COMA RESTAURADA (Último estilo antes del cierre)
+    },
+    notesText: {
+      fontStyle: 'italic',
+      marginTop: 4,
+      paddingTop: 4,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+    },
+    customHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+      paddingVertical: 8,
+      backgroundColor: theme.colors.elevation.level2,
+    },
+    headerTitle: {
+      ...theme.fonts.titleMedium,
+      color: theme.colors.onSurface,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      flex: 1,
+    },
+    itemHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.s,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 4,
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    statusText: {
+      fontSize: 11,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
   });
 export default OrderCartDetail;

@@ -141,5 +141,32 @@ export const orderService = {
     }
     return response.data;
   },
+  
+  /**
+   * Cancela una orden existente.
+   * @param orderId - El ID de la orden a cancelar.
+   * @returns Una promesa que resuelve a la orden cancelada.
+   * @throws {ApiError} Si la petición falla.
+   */
+  cancelOrder: async (orderId: string): Promise<Order> => {
+    // Actualizar el estado de la orden a CANCELLED
+    const payload: UpdateOrderPayload = {
+      orderStatus: 'CANCELLED'
+    };
+    
+    const response = await apiClient.patch<Order>(
+      `${API_PATHS.ORDERS}/${orderId}`,
+      payload
+    );
+
+    if (!response.ok || !response.data) {
+      console.error(`[orderService.cancelOrder] Failed to cancel order ${orderId}:`, response);
+      throw ApiError.fromApiResponse(
+        response.data,
+        response.status
+      );
+    }
+    return response.data;
+  },
   // Añadir aquí otras funciones del servicio de órdenes si son necesarias (findOne, update, etc.)
 };

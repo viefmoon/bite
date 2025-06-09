@@ -76,6 +76,33 @@ export const useUpdateOrderMutation = () => {
   });
 };
 
+/**
+ * Hook para cancelar una orden.
+ */
+export const useCancelOrderMutation = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation<Order, ApiError, string>({
+    mutationFn: (orderId) => orderService.cancelOrder(orderId),
+    onSuccess: (cancelledOrder) => {
+      // Invalidar queries relevantes
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+      
+      showSnackbar({ 
+        message: `Orden #${cancelledOrder.dailyNumber} cancelada`, 
+        type: 'info' 
+      });
+    },
+    onError: (error) => {
+      const message = getApiErrorMessage(error);
+      showSnackbar({ message: `Error al cancelar orden: ${message}`, type: 'error' });
+      console.error('Error en useCancelOrderMutation:', error);
+    },
+  });
+};
+
 // Añadir aquí otros hooks para órdenes si son necesarios (useGetOrders, etc.)
 
 /**
