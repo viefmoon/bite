@@ -37,14 +37,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
   OrderChangeLogService,
   EnrichedOrderHistoryDto,
 } from './order-change-log.service';
-import {
-  OrderItemChangeLogService,
-  EnrichedOrderItemHistoryDto,
-} from './order-item-change-log.service';
 import {
   InfinityPaginationResponseDto,
   InfinityPaginationResponse,
@@ -57,7 +54,6 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly orderChangeLogService: OrderChangeLogService,
-    private readonly orderItemChangeLogService: OrderItemChangeLogService,
   ) {}
 
   @Post()
@@ -158,6 +154,23 @@ export class OrdersController {
   @Roles(RoleEnum.admin)
   remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.ordersService.remove(id);
+  }
+
+  @Post(':id/recover')
+  @ApiOperation({ summary: 'Recover a completed or cancelled order' })
+  @ApiResponse({
+    status: 200,
+    description: 'The order has been successfully recovered to DELIVERED status.',
+    type: Order,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  recoverOrder(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<Order> {
+    return this.ordersService.recoverOrder(id, userId);
   }
 
   @Get('user/:userId')
@@ -395,7 +408,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
+  @Roles(RoleEnum.admin, RoleEnum.user)
   async getOrderHistory(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -406,33 +419,6 @@ export class OrdersController {
       limit: limit > 50 ? 50 : limit,
     };
     const [data] = await this.orderChangeLogService.findByOrderId(
-      id,
-      paginationOptions,
-    );
-    return infinityPagination(data, paginationOptions); // Pasar total si es necesario
-  }
-
-  @Get('items/:id/history')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get history for a specific order item' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Return the history log for the specified order item.',
-    type: InfinityPaginationResponse(EnrichedOrderItemHistoryDto),
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  async getOrderItemHistory(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<InfinityPaginationResponseDto<EnrichedOrderItemHistoryDto>> {
-    const paginationOptions: IPaginationOptions = {
-      page,
-      limit: limit > 50 ? 50 : limit,
-    };
-    const [data] = await this.orderItemChangeLogService.findByOrderItemId(
       id,
       paginationOptions,
     );
