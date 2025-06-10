@@ -12,7 +12,22 @@ import { AppNavigator } from "./src/app/navigation/AppNavigator";
 import GlobalSnackbar from "./src/app/components/common/GlobalSnackbar";
 import { useInitializeAuth } from "./src/app/hooks/useInitializeAuth";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0, // Los datos se consideran obsoletos inmediatamente
+      gcTime: 0, // No mantener caché (antes cacheTime en v4)
+      refetchOnMount: 'always', // Siempre refrescar al montar
+      refetchOnWindowFocus: true, // Refrescar al enfocar la ventana
+      refetchOnReconnect: true, // Refrescar al reconectar
+      retry: 1, // Reintentar solo una vez en caso de error
+      refetchInterval: false, // No refrescar automáticamente por intervalo
+    },
+    mutations: {
+      retry: 1, // Reintentar mutaciones solo una vez
+    },
+  },
+});
 
 export default function App() {
   const isInitializingAuth = useInitializeAuth();

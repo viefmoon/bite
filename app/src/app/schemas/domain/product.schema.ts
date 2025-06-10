@@ -10,7 +10,7 @@ import { modifierGroupSchema } from './modifier-group.schema'; // Usar el schema
 export const productSchema = z.object({
   id: z.string().uuid(), // ID es requerido en el dominio
   name: z.string().min(1, "El nombre es requerido"),
-  description: z.string().nullable().optional(), // Incluido desde la interfaz original
+  description: z.string().nullable().optional(), // Campo descripción agregado
   price: z
     .number()
     .positive("El precio debe ser positivo")

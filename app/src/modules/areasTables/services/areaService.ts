@@ -105,7 +105,6 @@ export function useGetAreas() {
   return useQuery<Area[], ApiError>({
     queryKey: areaQueryKeys.all,
     queryFn: () => getAreas(), // Llama a getAreas sin argumentos para obtener todos por defecto
-    // Opciones adicionales si son necesarias (ej. staleTime)
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    // Sin staleTime, se usará la configuración global (0)
   });
 }

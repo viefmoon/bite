@@ -6,6 +6,8 @@ import type { MenuStackParamList } from "../../modules/menu/navigation/types";
 import type { PreparationScreensStackParamList } from "../../modules/preparationScreens/navigation/types";
 import type { AreasTablesStackParamList } from "../../modules/areasTables/navigation/types";
 import type { PrintersStackParamList } from '../../modules/printers/navigation/types'; // Importar tipos de impresoras
+import type { ReceiptsStackParamList } from '../../modules/receipts/navigation/types'; // Importar tipos de recibos
+import type { AvailabilityStackParamList } from '../../modules/availability/navigation/types';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -56,6 +58,8 @@ export type AppDrawerParamList = {
   AreasTablesStack: NavigatorScreenParams<AreasTablesStackParamList>; // Añadir el nuevo stack al Drawer
   OrdersStack: NavigatorScreenParams<OrdersStackParamList>; // Añadir el stack de órdenes al Drawer
   PrintersStack: NavigatorScreenParams<PrintersStackParamList>; // Añadir el stack de impresoras DENTRO del bloque
+  ReceiptsStack: NavigatorScreenParams<ReceiptsStackParamList>; // Añadir el stack de recibos
+  AvailabilityStack: NavigatorScreenParams<AvailabilityStackParamList>; // Stack de disponibilidad
 };
 
 
@@ -71,6 +75,8 @@ declare global {
         PreparationScreensStackParamList,
         AreasTablesStackParamList,
         OrdersStackParamList,
-        PrintersStackParamList {} 
+        PrintersStackParamList,
+        ReceiptsStackParamList,
+        AvailabilityStackParamList {} 
   }
 }

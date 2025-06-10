@@ -7,6 +7,8 @@ import PreparationScreensStackNavigator from "../../modules/preparationScreens/n
 import AreasTablesStackNavigator from "../../modules/areasTables/navigation/AreasTablesStackNavigator";
 import OrdersStackNavigator from "./OrdersStackNavigator";
 import PrintersStackNavigator from "../../modules/printers/navigation/PrintersStackNavigator";
+import { ReceiptsStackNavigator } from "../../modules/receipts/navigation/ReceiptsStackNavigator";
+import { AvailabilityStackNavigator } from "../../modules/availability/navigation/AvailabilityStackNavigator";
 
 import { CustomDrawerContent } from "./components/CustomDrawerContent";
 import { useAppTheme } from "../styles/theme";
@@ -106,6 +108,12 @@ export function AppDrawerNavigator() {
               case "PrintersStack":
                 title = "Impresoras";
                 break;
+              case "ReceiptsStack":
+                title = "Recibos";
+                break;
+              case "AvailabilityStack":
+                title = "Disponibilidad";
+                break;
 
               default:
                 title = children?.toString() || "";
@@ -134,12 +142,32 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
+          name="ReceiptsStack"
+          component={ReceiptsStackNavigator}
+          options={{
+            title: "Recibos",
+            drawerIcon: ({ color, size }) => (
+              <Icon source="receipt" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="MenuStack"
           component={MenuStackNavigator}
           options={{
             title: "Menú",
             drawerIcon: ({ color, size }) => (
               <Icon source="menu" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="AvailabilityStack"
+          component={AvailabilityStackNavigator}
+          options={{
+            title: "Disponibilidad",
+            drawerIcon: ({ color, size }) => (
+              <Icon source="eye-off-outline" color={color} size={size} />
             ),
           }}
         />

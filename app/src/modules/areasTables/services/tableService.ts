@@ -129,6 +129,6 @@ export function useGetTablesByArea(areaId: string | null | undefined) {
       return getTablesByAreaId(areaId);
     },
     enabled: !!areaId,
-    staleTime: 2 * 60 * 1000,
+    // Sin staleTime, se usará la configuración global (0)
   });
 }
