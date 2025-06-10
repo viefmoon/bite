@@ -28,6 +28,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { ThermalPrintersModule } from './thermal-printers/thermal-printers.module';
 import { CustomersModule } from './customers/customers.module';
 import { PreparationScreensModule } from './preparation-screens/preparation-screens.module';
+import { CommonModule } from './common/common.module';
+import { AvailabilityModule } from './availability/availability.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -44,6 +46,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       envFilePath: ['.env'],
     }),
     infrastructureDatabaseModule,
+    CommonModule, // Debe estar primero porque es Global
     UsersModule,
     FilesModule,
     AuthModule,
@@ -64,6 +67,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     ThermalPrintersModule,
     CustomersModule,
     PreparationScreensModule,
+    AvailabilityModule,
   ],
 })
 export class AppModule {}

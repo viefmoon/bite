@@ -41,9 +41,6 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ default: true })
-  isAvailable: boolean;
-
   @Column({ name: 'subcategory_id' })
   subcategoryId: string;
 

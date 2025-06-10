@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { Between, FindOptionsWhere, Repository } from 'typeorm';
+import { Between, FindOptionsWhere, Repository, In } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { Order } from '../../../../domain/order';
@@ -101,7 +101,13 @@ export class OrdersRelationalRepository implements OrderRepository {
       where.dailyOrderCounterId = filterOptions.dailyOrderCounterId;
     }
 
-    if (filterOptions?.orderStatus) {
+    // Soportar tanto un solo estado como múltiples estados
+    if (
+      filterOptions?.orderStatuses &&
+      filterOptions.orderStatuses.length > 0
+    ) {
+      where.orderStatus = In(filterOptions.orderStatuses);
+    } else if (filterOptions?.orderStatus) {
       where.orderStatus = filterOptions.orderStatus;
     }
 
@@ -319,9 +325,10 @@ export class OrdersRelationalRepository implements OrderRepository {
       throw new Error('Failed to map updated order domain to entity');
     }
 
-    const updatedEntity = await this.ordersRepository.save(
-      this.ordersRepository.create(persistenceModel),
-    );
+    // Usar merge en lugar de create para preservar la instancia original
+    // y permitir que el subscriber detecte correctamente la actualización
+    const mergedEntity = this.ordersRepository.merge(entity, persistenceModel);
+    const updatedEntity = await this.ordersRepository.save(mergedEntity);
 
     const completeEntity = await this.ordersRepository.findOne({
       where: { id: updatedEntity.id },

@@ -3,9 +3,7 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { TicketImpressionsController } from './ticket-impressions.controller';
 import { OrderSubscriber } from './infrastructure/persistence/relational/subscribers/order.subscriber';
-import { OrderItemSubscriber } from './infrastructure/persistence/relational/subscribers/order-item.subscriber';
 import { OrderChangeLogService } from './order-change-log.service';
-import { OrderItemChangeLogService } from './order-item-change-log.service';
 import { UsersModule } from '../users/users.module';
 import { TablesModule } from '../tables/tables.module';
 import { PaymentsModule } from '../payments/payments.module';
@@ -13,10 +11,12 @@ import { ProductsModule } from '../products/products.module';
 import { ProductVariantsModule } from '../product-variants/product-variants.module';
 import { ProductModifiersModule } from '../product-modifiers/product-modifiers.module';
 import { RelationalOrderPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
     RelationalOrderPersistenceModule,
+    CommonModule, // Para acceder a UserContextService
     UsersModule,
     TablesModule,
     PaymentsModule,
@@ -25,17 +25,10 @@ import { RelationalOrderPersistenceModule } from './infrastructure/persistence/r
     forwardRef(() => ProductModifiersModule),
   ],
   controllers: [OrdersController, TicketImpressionsController],
-  providers: [
-    OrdersService,
-    OrderSubscriber,
-    OrderItemSubscriber,
-    OrderChangeLogService,
-    OrderItemChangeLogService,
-  ],
+  providers: [OrdersService, OrderSubscriber, OrderChangeLogService],
   exports: [
     OrdersService,
     OrderChangeLogService,
-    OrderItemChangeLogService,
     RelationalOrderPersistenceModule,
   ],
 })
