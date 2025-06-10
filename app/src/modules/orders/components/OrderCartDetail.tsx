@@ -35,6 +35,7 @@ import { useSnackbarStore } from "@/app/store/snackbarStore"; // Importar snackb
 import { useGetOrderByIdQuery } from "../hooks/useOrdersQueries"; // Para cargar datos en modo edición
 import { useGetFullMenu } from "../hooks/useMenuQueries"; // Para obtener productos completos
 import type { FullMenuCategory } from "../types/orders.types"; // Tipo con subcategorías
+import OrderHistoryModal from "./OrderHistoryModal"; // Modal de historial
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
@@ -324,6 +325,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [showModifyInProgressConfirmation, setShowModifyInProgressConfirmation] = useState(false);
   const [pendingModifyAction, setPendingModifyAction] = useState<(() => void) | null>(null);
   const [modifyingItemName, setModifyingItemName] = useState<string>('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
 
   // --- Queries para Áreas y Mesas (sin cambios) ---
@@ -1246,6 +1248,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
+                        setShowHistoryModal(true);
+                      }}
+                      title="Ver Historial"
+                      leadingIcon="history"
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setShowOptionsMenu(false);
                         setShowCancelConfirmation(true);
                       }}
                       title="Cancelar Orden"
@@ -1675,6 +1685,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             }}
             onAddToCart={() => {}} // No usado en modo edición
             onUpdateItem={handleUpdateEditedItem}
+          />
+        )}
+        
+        {/* Modal de historial de cambios */}
+        {isEditMode && (
+          <OrderHistoryModal
+            visible={showHistoryModal}
+            onDismiss={() => setShowHistoryModal(false)}
+            orderId={orderId}
+            orderNumber={orderNumber}
           />
         )}
         </GestureHandlerRootView>

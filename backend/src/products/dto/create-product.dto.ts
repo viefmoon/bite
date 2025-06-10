@@ -56,6 +56,18 @@ export class CreateProductDto {
   name: string;
 
   @ApiProperty({
+    type: String,
+    example:
+      'Deliciosa hamburguesa con carne 100% res, lechuga, tomate y nuestra salsa especial',
+    description: 'Descripción del producto',
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
     type: Number,
     example: 10.99,
     description: 'Precio del producto (puede ser nulo si tiene variantes)',

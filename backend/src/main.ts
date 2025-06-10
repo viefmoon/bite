@@ -14,6 +14,8 @@ import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { UniqueViolationFilter } from './common/filters/unique-violation.filter'; // Importar el nuevo filtro
+import { UserContextInterceptor } from './common/interceptors/user-context.interceptor';
+import { UserContextService } from './common/services/user-context.service';
 import * as express from 'express';
 
 async function bootstrap() {
@@ -51,7 +53,12 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
   app.useGlobalPipes(new ValidationPipe(validationOptions));
+
+  // Obtener el servicio de contexto de usuario
+  const userContextService = app.get(UserContextService);
+
   app.useGlobalInterceptors(
+    new UserContextInterceptor(userContextService),
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );

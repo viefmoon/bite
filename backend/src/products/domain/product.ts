@@ -8,11 +8,15 @@ export class Product {
 
   name: string;
 
+  description: string | null;
+
   price: number | null;
 
   hasVariants: boolean;
 
   isActive: boolean;
+
+  isAvailable: boolean;
 
   subcategoryId: string;
 

@@ -84,6 +84,7 @@ function ProductFormModal({
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
       name: "",
+      description: null,
       price: null,
       hasVariants: false,
       isActive: true,
@@ -134,6 +135,7 @@ function ProductFormModal({
 
         reset({
           name: initialData.name,
+          description: initialData.description || null,
           price: parsedPrice,
           hasVariants: initialData.hasVariants,
           isActive: initialData.isActive,
@@ -366,6 +368,29 @@ function ProductFormModal({
               {errors.name && (
                 <HelperText type="error" visible={!!errors.name}>
                   {errors.name.message}
+                </HelperText>
+              )}
+
+              <Controller
+                control={control}
+                name="description"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    label="Descripción"
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.description}
+                    style={styles.input}
+                    disabled={isSubmitting}
+                    multiline
+                    numberOfLines={3}
+                  />
+                )}
+              />
+              {errors.description && (
+                <HelperText type="error" visible={!!errors.description}>
+                  {errors.description.message}
                 </HelperText>
               )}
 

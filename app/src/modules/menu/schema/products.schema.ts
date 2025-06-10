@@ -25,6 +25,7 @@ const productVariantFormSchema = z.object({
 const productBaseSchema = z.object({
   id: z.string().uuid().optional(), // ID opcional para creación/formulario
   name: z.string().min(1, "El nombre es requerido"),
+  description: z.string().nullable().optional(), // Campo descripción agregado
   price: z
     .number()
     .positive("El precio debe ser positivo")
