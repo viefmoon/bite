@@ -52,6 +52,7 @@ export class ProductsService {
 
     const product = new Product();
     product.name = createProductDto.name;
+    product.description = createProductDto.description ?? null;
     product.price = createProductDto.price ?? null;
     product.hasVariants = createProductDto.hasVariants ?? false;
     product.isActive = createProductDto.isActive ?? true;
@@ -204,6 +205,10 @@ export class ProductsService {
 
     // Actualizar propiedades directas del producto
     product.name = updateProductDto.name ?? product.name;
+    product.description =
+      updateProductDto.description === null
+        ? null
+        : (updateProductDto.description ?? product.description);
     product.price =
       updateProductDto.price === null
         ? null
@@ -358,5 +363,13 @@ export class ProductsService {
 
   async remove(id: string): Promise<void> {
     await this.productRepository.softDelete(id);
+  }
+
+  async findAllBySubcategoryId(subcategoryId: string): Promise<Product[]> {
+    const result = await this.productRepository.findAll({
+      subcategoryId,
+      limit: 1000, // Un límite alto para obtener todos
+    });
+    return result.data;
   }
 }

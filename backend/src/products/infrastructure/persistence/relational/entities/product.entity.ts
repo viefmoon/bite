@@ -29,6 +29,9 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column()
   name: string;
 
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
+
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   price: number | null;
 
@@ -37,6 +40,9 @@ export class ProductEntity extends EntityRelationalHelper {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ default: true })
+  isAvailable: boolean;
 
   @Column({ name: 'subcategory_id' })
   subcategoryId: string;

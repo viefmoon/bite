@@ -37,6 +37,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     const domain = new Product();
     domain.id = entity.id;
     domain.name = entity.name;
+    domain.description = entity.description;
     domain.price = entity.price;
     domain.hasVariants = entity.hasVariants;
     domain.isActive = entity.isActive;
@@ -70,6 +71,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     const entity = new ProductEntity();
     if (domain.id) entity.id = domain.id;
     entity.name = domain.name;
+    entity.description = domain.description;
     entity.price = domain.price;
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;

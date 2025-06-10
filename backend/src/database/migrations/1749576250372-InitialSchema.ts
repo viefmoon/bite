@@ -1,9 +1,21 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialSchema1749263451137 implements MigrationInterface {
-  name = 'InitialSchema1749263451137';
+export class InitialSchema1749576250372 implements MigrationInterface {
+  name = 'InitialSchema1749576250372';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "thermal_printer" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "connectionType" "public"."thermal_printer_connectiontype_enum" NOT NULL, "ipAddress" character varying, "port" integer, "path" character varying, "isActive" boolean NOT NULL DEFAULT true, "macAddress" character varying(17), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_cd20a8ea69e128597672d5c7813" UNIQUE ("ipAddress"), CONSTRAINT "PK_fa2e4d506b3ae2a00b5c62d894c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_cd20a8ea69e128597672d5c781" ON "thermal_printer" ("ipAddress") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_7f20d400228dc58a946e3b4ecb" ON "thermal_printer" ("macAddress") `,
+    );
     await queryRunner.query(
       `CREATE TABLE "role" ("id" integer NOT NULL, "name" character varying NOT NULL, CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`,
     );
@@ -71,7 +83,7 @@ export class InitialSchema1749263451137 implements MigrationInterface {
       `CREATE TYPE "public"."order_item_preparationstatus_enum" AS ENUM('PENDING', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "order_item" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "quantity" integer NOT NULL, "basePrice" numeric(10,2) NOT NULL, "finalPrice" numeric(10,2) NOT NULL, "preparationStatus" "public"."order_item_preparationstatus_enum" NOT NULL DEFAULT 'PENDING', "statusChangedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "preparationNotes" character varying, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "order_id" uuid NOT NULL, "product_id" uuid NOT NULL, "product_variant_id" uuid, CONSTRAINT "PK_d01158fe15b1ead5c26fd7f4e90" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "order_item" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "order_id" uuid NOT NULL, "product_id" uuid NOT NULL, "product_variant_id" uuid, "quantity" integer NOT NULL, "basePrice" numeric(10,2) NOT NULL, "finalPrice" numeric(10,2) NOT NULL, "preparationStatus" "public"."order_item_preparationstatus_enum" NOT NULL DEFAULT 'PENDING', "statusChangedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "preparationNotes" character varying, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_d01158fe15b1ead5c26fd7f4e90" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "product_variant" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "price" numeric(10,2) NOT NULL, "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "product_id" uuid NOT NULL, CONSTRAINT "PK_1ab69c9935c61f7c70791ae0a9f" PRIMARY KEY ("id"))`,
@@ -86,18 +98,6 @@ export class InitialSchema1749263451137 implements MigrationInterface {
       `CREATE TABLE "subcategory" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "category_id" uuid NOT NULL, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_5ad0b82340b411f9463c8e9554d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "thermal_printer" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "connectionType" "public"."thermal_printer_connectiontype_enum" NOT NULL, "ipAddress" character varying, "port" integer, "path" character varying, "isActive" boolean NOT NULL DEFAULT true, "macAddress" character varying(17), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_cd20a8ea69e128597672d5c7813" UNIQUE ("ipAddress"), CONSTRAINT "PK_fa2e4d506b3ae2a00b5c62d894c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_cd20a8ea69e128597672d5c781" ON "thermal_printer" ("ipAddress") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_7f20d400228dc58a946e3b4ecb" ON "thermal_printer" ("macAddress") `,
-    );
-    await queryRunner.query(
       `CREATE TABLE "session" ("id" SERIAL NOT NULL, "hash" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "userId" uuid, CONSTRAINT "PK_f55da76ac1c3ac420f444d2ff11" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -110,13 +110,10 @@ export class InitialSchema1749263451137 implements MigrationInterface {
       `CREATE INDEX "IDX_a2937c330238ea84f26c912104" ON "order_history" ("order_id", "changed_at") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "order_item_history" ("id" SERIAL NOT NULL, "order_item_id" uuid NOT NULL, "order_id" uuid NOT NULL, "operation" character varying(10) NOT NULL, "changed_by" uuid NOT NULL, "changed_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "diff" jsonb, "snapshot" jsonb NOT NULL, CONSTRAINT "PK_a8f0e093d17d8b23a2e66f6b514" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "address" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "street" character varying(200) NOT NULL, "number" character varying(50) NOT NULL, "interiorNumber" character varying(50), "neighborhood" character varying(150), "city" character varying(100), "state" character varying(100), "zipCode" character varying(10), "country" character varying(100), "references" text, "isDefault" boolean NOT NULL DEFAULT false, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "customer_id" uuid NOT NULL, CONSTRAINT "PK_d92de1f82754668b5f5f5dd4fd5" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_db2b69c88d576d94d850a29662" ON "order_item_history" ("order_id", "changed_at") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_76d4e87926d94c8805a3621219" ON "order_item_history" ("order_item_id", "changed_at") `,
+      `CREATE INDEX "IDX_49bc1e3cd91c06dc434318abd9" ON "address" ("zipCode") `,
     );
     await queryRunner.query(
       `CREATE TABLE "customer" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "firstName" character varying(100) NOT NULL, "lastName" character varying(100) NOT NULL, "phoneNumber" character varying(20), "email" character varying(255), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_a7a13f4cacb744524e44dfdad32" PRIMARY KEY ("id"))`,
@@ -132,12 +129,6 @@ export class InitialSchema1749263451137 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE UNIQUE INDEX "uq_customer_email" ON "customer" ("email") WHERE email IS NOT NULL`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "address" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "street" character varying(200) NOT NULL, "number" character varying(50) NOT NULL, "interiorNumber" character varying(50), "neighborhood" character varying(150), "city" character varying(100), "state" character varying(100), "zipCode" character varying(10), "country" character varying(100), "references" text, "isDefault" boolean NOT NULL DEFAULT false, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "customer_id" uuid NOT NULL, CONSTRAINT "PK_d92de1f82754668b5f5f5dd4fd5" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_49bc1e3cd91c06dc434318abd9" ON "address" ("zipCode") `,
     );
     await queryRunner.query(
       `CREATE TABLE "product_modifier_group" ("product_id" uuid NOT NULL, "modifier_group_id" uuid NOT NULL, CONSTRAINT "PK_37bc0163dbdbccfc385cf524d57" PRIMARY KEY ("product_id", "modifier_group_id"))`,
@@ -308,10 +299,6 @@ export class InitialSchema1749263451137 implements MigrationInterface {
       `DROP INDEX "public"."IDX_e35ee74f60bf7607fcfa5b5a44"`,
     );
     await queryRunner.query(`DROP TABLE "product_modifier_group"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_49bc1e3cd91c06dc434318abd9"`,
-    );
-    await queryRunner.query(`DROP TABLE "address"`);
     await queryRunner.query(`DROP INDEX "public"."uq_customer_email"`);
     await queryRunner.query(`DROP INDEX "public"."uq_customer_phone"`);
     await queryRunner.query(
@@ -322,12 +309,9 @@ export class InitialSchema1749263451137 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "customer"`);
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_76d4e87926d94c8805a3621219"`,
+      `DROP INDEX "public"."IDX_49bc1e3cd91c06dc434318abd9"`,
     );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_db2b69c88d576d94d850a29662"`,
-    );
-    await queryRunner.query(`DROP TABLE "order_item_history"`);
+    await queryRunner.query(`DROP TABLE "address"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_a2937c330238ea84f26c912104"`,
     );
@@ -336,16 +320,6 @@ export class InitialSchema1749263451137 implements MigrationInterface {
       `DROP INDEX "public"."IDX_3d2f174ef04fb312fdebd0ddc5"`,
     );
     await queryRunner.query(`DROP TABLE "session"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_7f20d400228dc58a946e3b4ecb"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_cd20a8ea69e128597672d5c781"`,
-    );
-    await queryRunner.query(`DROP TABLE "thermal_printer"`);
-    await queryRunner.query(
-      `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
-    );
     await queryRunner.query(`DROP TABLE "subcategory"`);
     await queryRunner.query(`DROP TABLE "product"`);
     await queryRunner.query(`DROP TABLE "preparation_screens"`);
@@ -381,5 +355,15 @@ export class InitialSchema1749263451137 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "user"`);
     await queryRunner.query(`DROP TYPE "public"."user_gender_enum"`);
     await queryRunner.query(`DROP TABLE "role"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_7f20d400228dc58a946e3b4ecb"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_cd20a8ea69e128597672d5c781"`,
+    );
+    await queryRunner.query(`DROP TABLE "thermal_printer"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
+    );
   }
 }

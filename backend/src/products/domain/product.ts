@@ -16,8 +16,6 @@ export class Product {
 
   isActive: boolean;
 
-  isAvailable: boolean;
-
   subcategoryId: string;
 
   preparationScreenId: string | null;
