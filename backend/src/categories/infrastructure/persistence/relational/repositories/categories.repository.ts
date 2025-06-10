@@ -68,40 +68,14 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
   async findFullMenu(): Promise<Category[]> {
     const queryBuilder = this.ormRepo
       .createQueryBuilder('category')
-      .leftJoinAndSelect(
-        'category.subcategories',
-        'subcategory',
-        'subcategory.isActive = :isActive',
-        { isActive: true },
-      )
-      .leftJoinAndSelect(
-        'subcategory.products',
-        'product',
-        'product.isActive = :isActive',
-        { isActive: true },
-      )
-      .leftJoinAndSelect(
-        'product.variants',
-        'productVariant',
-        'productVariant.isActive = :isActive',
-        { isActive: true },
-      )
-      .leftJoinAndSelect(
-        'product.modifierGroups',
-        'modifierGroup',
-        'modifierGroup.isActive = :isActive',
-        { isActive: true },
-      )
-      .leftJoinAndSelect(
-        'modifierGroup.productModifiers',
-        'modifier',
-        'modifier.isActive = :isActive',
-        { isActive: true },
-      )
+      .leftJoinAndSelect('category.subcategories', 'subcategory')
+      .leftJoinAndSelect('subcategory.products', 'product')
+      .leftJoinAndSelect('product.variants', 'productVariant')
+      .leftJoinAndSelect('product.modifierGroups', 'modifierGroup')
+      .leftJoinAndSelect('modifierGroup.productModifiers', 'modifier')
       .leftJoinAndSelect('category.photo', 'categoryPhoto')
       .leftJoinAndSelect('subcategory.photo', 'subcategoryPhoto')
       .leftJoinAndSelect('product.photo', 'productPhoto')
-      .where('category.isActive = :isActive', { isActive: true })
       .orderBy({
         'category.name': 'ASC',
         'subcategory.name': 'ASC',

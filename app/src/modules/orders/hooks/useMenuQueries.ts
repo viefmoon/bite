@@ -13,13 +13,9 @@ const queryKey = ['fullMenu'];
  * Gestiona el fetching, caching, estado de carga y errores.
  */
 export function useGetFullMenu() {
-  return useQuery<FullMenuCategory[], ApiError>({ // Especifica los tipos para data y error
+  return useQuery<FullMenuCategory[], ApiError>({
     queryKey: queryKey,
-    queryFn: getFullMenu, // La función que realiza el fetch
-    // Opciones adicionales de React Query (opcional):
-    // staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar los datos "stale"
-    // cacheTime: 10 * 60 * 1000, // 10 minutos antes de limpiar datos no usados de la caché
-    // refetchOnWindowFocus: false, // Evitar refetch al volver a la app
-    // retry: 1, // Reintentar 1 vez en caso de error
+    queryFn: getFullMenu,
+    // Sin configuración adicional, se usará la configuración global
   });
 }

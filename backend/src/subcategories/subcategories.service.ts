@@ -87,4 +87,21 @@ export class SubcategoriesService {
   async remove(id: string): Promise<void> {
     return this.subcategoryRepository.softDelete(id);
   }
+
+  async findAllByCategoryId(categoryId: string): Promise<Subcategory[]> {
+    const result = await this.subcategoryRepository.findAll({
+      page: 1,
+      limit: 1000, // Un límite alto para obtener todas
+      categoryId,
+    });
+    return result.items;
+  }
+
+  async findAllByCategoryIdWithProducts(
+    categoryId: string,
+  ): Promise<Subcategory[]> {
+    // Por ahora retornamos las subcategorías sin productos
+    // El componente de frontend obtendrá los productos por separado
+    return this.findAllByCategoryId(categoryId);
+  }
 }

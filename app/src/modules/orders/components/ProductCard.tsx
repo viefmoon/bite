@@ -20,6 +20,7 @@ const ProductCard = ({ product, onPress }: ProductCardProps) => {
       marginVertical: 8,
       marginHorizontal: 12,
       overflow: "hidden",
+      opacity: product.isActive ? 1 : 0.6,
     },
     productImage: {
       width: "100%",
@@ -56,6 +57,26 @@ const ProductCard = ({ product, onPress }: ProductCardProps) => {
       fontStyle: "italic",
       marginTop: 4,
     },
+    inactiveOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 10,
+    },
+    inactiveText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "bold",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 4,
+    },
   });
 
   const productImageUrl = product.photo
@@ -69,8 +90,14 @@ const ProductCard = ({ product, onPress }: ProductCardProps) => {
     <Card
       key={product.id}
       style={styles.productCard}
-      onPress={() => onPress(product)}
+      onPress={() => product.isActive && onPress(product)}
+      disabled={!product.isActive}
     >
+      {!product.isActive && (
+        <View style={styles.inactiveOverlay}>
+          <Text style={styles.inactiveText}>NO DISPONIBLE</Text>
+        </View>
+      )}
       {productImageUrl ? (
         <Image
           source={{ uri: productImageUrl }}

@@ -13,6 +13,7 @@ import {
   Card,
   Title,
   Appbar,
+  IconButton,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -33,6 +34,7 @@ import { getImageUrl } from "@/app/lib/imageUtils";
 
 import OrderCartDetail from "../components/OrderCartDetail";
 import ProductCustomizationModal from "../components/ProductCustomizationModal";
+import SimpleProductDescriptionModal from "../components/SimpleProductDescriptionModal";
 import CartButton from "../components/CartButton";
 import ConfirmationModal from "@/app/components/common/ConfirmationModal";
 import { useSnackbarStore } from "@/app/store/snackbarStore"; // Importar snackbar
@@ -110,6 +112,8 @@ const CreateOrderScreen = () => {
   const [showExitConfirmationModal, setShowExitConfirmationModal] = useState(false);
   const [pendingNavigationAction, setPendingNavigationAction] = useState<(() => void) | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const [selectedProductForDescription, setSelectedProductForDescription] = useState<Product | null>(null);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
 
 
   const { data: menu, isLoading } = useGetFullMenu(); 
@@ -457,6 +461,9 @@ const CreateOrderScreen = () => {
           borderRadius: 8,
           elevation: 2,
         },
+        cardItemInactive: {
+          opacity: 0.5,
+        },
         itemImage: {
           width: "100%",
           height: 120,
@@ -467,6 +474,9 @@ const CreateOrderScreen = () => {
           backgroundColor: "#eeeeee",
           justifyContent: "center",
           alignItems: "center",
+        },
+        imageInactive: {
+          opacity: 0.6,
         },
         placeholderText: {
           fontSize: 24,
@@ -480,6 +490,16 @@ const CreateOrderScreen = () => {
           fontSize: 16,
           fontWeight: "bold",
           marginBottom: 4,
+        },
+        cardHeader: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        },
+        infoButton: {
+          margin: -8,
+          marginTop: -12,
+          marginRight: -12,
         },
         priceText: {
           color: "#2e7d32",
@@ -513,6 +533,20 @@ const CreateOrderScreen = () => {
         spacer: {
           width: 48,
         },
+        inactiveBadge: {
+          position: "absolute",
+          top: 8,
+          right: 8,
+          backgroundColor: colors.errorContainer,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 4,
+        },
+        inactiveBadgeText: {
+          fontSize: 12,
+          color: colors.onErrorContainer,
+          fontWeight: "600",
+        },
       }),
     [colors, fonts]
   );
@@ -539,6 +573,16 @@ const CreateOrderScreen = () => {
   const handleCancelExit = () => {
     setShowExitConfirmationModal(false);
     setPendingNavigationAction(null);
+  };
+
+  const handleShowProductDescription = (product: Product) => {
+    setSelectedProductForDescription(product);
+    setIsDescriptionModalVisible(true);
+  };
+
+  const handleCloseDescriptionModal = () => {
+    setIsDescriptionModalVisible(false);
+    setSelectedProductForDescription(null);
   };
   
 
@@ -578,8 +622,12 @@ const CreateOrderScreen = () => {
       item: Category | SubCategory | Product;
     }) => {
       const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
+      const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
 
       const handlePress = () => {
+        // No hacer nada si el elemento está inactivo
+        if (!isActive) return;
+        
         if (navigationLevel === "categories") {
           handleCategorySelect(item.id);
         } else if (navigationLevel === "subcategories") {
@@ -612,24 +660,45 @@ const CreateOrderScreen = () => {
       };
 
       return (
-        <Card style={styles.cardItem} onPress={handlePress}>
+        <Card 
+          style={[styles.cardItem, !isActive && styles.cardItemInactive]} 
+          onPress={handlePress}
+          disabled={!isActive}
+        >
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={styles.itemImage}
+              style={[styles.itemImage, !isActive && styles.imageInactive]}
               contentFit="cover"
               placeholder={blurhash}
               transition={300}
             />
           ) : (
-            <View style={styles.imagePlaceholder}>
+            <View style={[styles.imagePlaceholder, !isActive && styles.imageInactive]}>
               <Text style={styles.placeholderText}>
                 {item.name.charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
+          {!isActive && (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>INACTIVO</Text>
+            </View>
+          )}
           <View style={styles.cardContent}>
-            <Title style={styles.cardTitle}>{item.name}</Title>
+            {navigationLevel === "products" && "price" in item && (item as Product).description ? (
+              <View style={styles.cardHeader}>
+                <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
+                <IconButton
+                  icon="information-outline"
+                  size={20}
+                  onPress={() => handleShowProductDescription(item as Product)}
+                  style={styles.infoButton}
+                />
+              </View>
+            ) : (
+              <Title style={styles.cardTitle}>{item.name}</Title>
+            )}
             {renderPrice()}
           </View>
         </Card>
@@ -728,6 +797,12 @@ const CreateOrderScreen = () => {
               onDismiss={handleCloseProductModal}
             />
           )}
+          
+          <SimpleProductDescriptionModal
+            visible={isDescriptionModalVisible}
+            product={selectedProductForDescription}
+            onDismiss={handleCloseDescriptionModal}
+          />
         </Portal>
       </SafeAreaView>
     );

@@ -367,9 +367,10 @@ export class ProductsService {
 
   async findAllBySubcategoryId(subcategoryId: string): Promise<Product[]> {
     const result = await this.productRepository.findAll({
-      subcategoryId,
+      page: 1,
       limit: 1000, // Un límite alto para obtener todos
+      subcategoryId,
     });
-    return result.data;
+    return result.items;
   }
 }

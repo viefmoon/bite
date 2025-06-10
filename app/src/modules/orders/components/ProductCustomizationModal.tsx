@@ -435,22 +435,27 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                         key={variant.id} 
                         style={[
                           styles.variantSurface,
-                          selectedVariantId === variant.id && styles.variantSurfaceSelected
+                          selectedVariantId === variant.id && styles.variantSurfaceSelected,
+                          !variant.isActive && styles.inactiveVariantSurface
                         ]}
-                        elevation={selectedVariantId === variant.id ? 2 : 0}
+                        elevation={selectedVariantId === variant.id && variant.isActive ? 2 : 0}
                       >
                         <TouchableRipple
-                          onPress={() => handleVariantSelect(variant.id)}
+                          onPress={() => variant.isActive && handleVariantSelect(variant.id)}
+                          disabled={!variant.isActive}
                           style={styles.variantTouchable}
                         >
                           <View style={styles.variantRow}>
                             <RadioButton
                               value={variant.id}
                               status={selectedVariantId === variant.id ? 'checked' : 'unchecked'}
-                              onPress={() => handleVariantSelect(variant.id)}
+                              onPress={() => variant.isActive && handleVariantSelect(variant.id)}
+                              disabled={!variant.isActive}
                             />
-                            <Text style={styles.variantName}>{variant.name}</Text>
-                            <Text style={styles.variantPrice}>
+                            <Text style={[styles.variantName, !variant.isActive && styles.inactiveText]}>
+                              {variant.name}{!variant.isActive && " (No disponible)"}
+                            </Text>
+                            <Text style={[styles.variantPrice, !variant.isActive && styles.inactiveText]}>
                               ${Number(variant.price).toFixed(2)}
                             </Text>
                           </View>
@@ -525,14 +530,16 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                               key={modifier.id}
                               style={[
                                 styles.modifierSurface,
-                                isSelected && styles.modifierSurfaceSelected
+                                isSelected && styles.modifierSurfaceSelected,
+                                !modifier.isActive && styles.inactiveModifierSurface
                               ]}
-                              elevation={isSelected ? 1 : 0}
+                              elevation={isSelected && modifier.isActive ? 1 : 0}
                             >
                               <TouchableRipple
                                 onPress={() =>
-                                  handleModifierToggle(modifier, group)
+                                  modifier.isActive && handleModifierToggle(modifier, group)
                                 }
+                                disabled={!modifier.isActive}
                                 style={styles.modifierTouchable}
                               >
                                 <View style={styles.modifierRow}>
@@ -541,14 +548,15 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                                       isSelected ? "checked" : "unchecked"
                                     }
                                     onPress={() =>
-                                      handleModifierToggle(modifier, group)
+                                      modifier.isActive && handleModifierToggle(modifier, group)
                                     }
+                                    disabled={!modifier.isActive}
                                   />
-                                  <Text style={styles.modifierName}>
-                                    {modifier.name}
+                                  <Text style={[styles.modifierName, !modifier.isActive && styles.inactiveText]}>
+                                    {modifier.name}{!modifier.isActive && " (No disponible)"}
                                   </Text>
                                   {Number(modifier.price) > 0 && (
-                                    <Text style={styles.modifierPrice}>
+                                    <Text style={[styles.modifierPrice, !modifier.isActive && styles.inactiveText]}>
                                       +${Number(modifier.price).toFixed(2)}
                                     </Text>
                                   )}
@@ -582,24 +590,27 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                                 key={modifier.id}
                                 style={[
                                   styles.modifierSurface,
-                                  isSelected && styles.modifierSurfaceSelected
+                                  isSelected && styles.modifierSurfaceSelected,
+                                  !modifier.isActive && styles.inactiveModifierSurface
                                 ]}
-                                elevation={isSelected ? 1 : 0}
+                                elevation={isSelected && modifier.isActive ? 1 : 0}
                               >
                                 <TouchableRipple
-                                  onPress={() => handleModifierToggle(modifier, group)}
+                                  onPress={() => modifier.isActive && handleModifierToggle(modifier, group)}
+                                  disabled={!modifier.isActive}
                                   style={styles.modifierTouchable}
                                 >
                                   <View style={styles.modifierRow}>
                                     <RadioButton
                                       value={modifier.id}
                                       status={isSelected ? 'checked' : 'unchecked'}
+                                      disabled={!modifier.isActive}
                                     />
-                                    <Text style={styles.modifierName}>
-                                      {modifier.name}
+                                    <Text style={[styles.modifierName, !modifier.isActive && styles.inactiveText]}>
+                                      {modifier.name}{!modifier.isActive && " (No disponible)"}
                                     </Text>
                                     {Number(modifier.price) > 0 && (
-                                      <Text style={styles.modifierPrice}>
+                                      <Text style={[styles.modifierPrice, !modifier.isActive && styles.inactiveText]}>
                                         +${Number(modifier.price).toFixed(2)}
                                       </Text>
                                     )}
@@ -996,6 +1007,18 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.onSurfaceVariant, // Color secundario consistente
       marginLeft: "auto",
       marginRight: 8,
+    },
+    inactiveVariantSurface: {
+      opacity: 0.6,
+      backgroundColor: theme.colors.surfaceDisabled,
+    },
+    inactiveModifierSurface: {
+      opacity: 0.6,
+      backgroundColor: theme.colors.surfaceDisabled,
+    },
+    inactiveText: {
+      color: theme.colors.onSurfaceDisabled,
+      textDecorationLine: "line-through",
     },
     modifierPrice: { // Estilo para precio de modificador (Checkbox y Radio)
       fontSize: 14,

@@ -23,6 +23,7 @@ export interface IProductModifierRepository {
     filterOptions: FindAllProductModifiersDto;
     paginationOptions: IPaginationOptions;
   }): Promise<Paginated<ProductModifier>>;
+  findAll(filters: { modifierGroupId?: string }): Promise<Paginated<ProductModifier>>;
   update(
     id: string,
     data: Partial<ProductModifier>,
@@ -200,5 +201,23 @@ export class ProductModifierRepository implements IProductModifierRepository {
     if (result.affected === 0) {
       throw new NotFoundException(`Product modifier with ID ${id} not found`);
     }
+  }
+
+  async findAll(filters: { modifierGroupId?: string }): Promise<Paginated<ProductModifier>> {
+    const queryBuilder = this.productModifierEntityRepository.createQueryBuilder('product_modifier');
+
+    if (filters.modifierGroupId) {
+      queryBuilder.where('product_modifier.group_id = :groupId', { groupId: filters.modifierGroupId });
+    }
+
+    queryBuilder.orderBy('product_modifier.sort_order', 'ASC');
+
+    const [entities, count] = await queryBuilder.getManyAndCount();
+
+    const domainResults = entities
+      .map((entity) => this.productModifierMapper.toDomain(entity))
+      .filter((item): item is ProductModifier => item !== null);
+
+    return new Paginated(domainResults, count, 1, count);
   }
 }

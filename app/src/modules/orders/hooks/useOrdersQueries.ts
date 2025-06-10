@@ -157,7 +157,7 @@ export const useGetOpenOrdersQuery = (
     queryKey: queryKey,
     queryFn: () => orderService.getOpenOrdersToday(), // Llamar a la nueva función del servicio
     enabled: options?.enabled ?? true,
-    staleTime: 1 * 60 * 1000, // Refrescar cada minuto (ajustar según necesidad)
+    // Sin staleTime, se usará la configuración global (0)
   });
 
   // La lógica de useQueries y combinación se elimina
@@ -184,7 +184,7 @@ export const useGetOrderByIdQuery = (
       return orderService.getOrderById(orderId);
     },
     enabled: !!orderId && (options?.enabled ?? true), // Habilitar solo si hay orderId y está habilitado externamente
-    // Opcional: añadir staleTime, cacheTime si es necesario
+    // Sin staleTime, se usará la configuración global (0)
   });
 };
 

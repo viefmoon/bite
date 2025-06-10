@@ -9,6 +9,7 @@ import OrdersStackNavigator from "./OrdersStackNavigator";
 import PrintersStackNavigator from "../../modules/printers/navigation/PrintersStackNavigator";
 import { ReceiptsStackNavigator } from "../../modules/receipts/navigation/ReceiptsStackNavigator";
 import { AvailabilityStackNavigator } from "../../modules/availability/navigation/AvailabilityStackNavigator";
+import { OrderFinalizationStackNavigator } from "../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator";
 
 import { CustomDrawerContent } from "./components/CustomDrawerContent";
 import { useAppTheme } from "../styles/theme";
@@ -114,6 +115,9 @@ export function AppDrawerNavigator() {
               case "AvailabilityStack":
                 title = "Disponibilidad";
                 break;
+              case "OrderFinalizationStack":
+                title = "Finalización";
+                break;
 
               default:
                 title = children?.toString() || "";
@@ -148,6 +152,16 @@ export function AppDrawerNavigator() {
             title: "Recibos",
             drawerIcon: ({ color, size }) => (
               <Icon source="receipt" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="OrderFinalizationStack"
+          component={OrderFinalizationStackNavigator}
+          options={{
+            title: "Finalización",
+            drawerIcon: ({ color, size }) => (
+              <Icon source="clipboard-check-outline" color={color} size={size} />
             ),
           }}
         />

@@ -130,31 +130,100 @@ export class OrdersService {
     const existingOrder = await this.findOne(id); // Asegurarse de que la orden existe
 
     // Actualizar datos básicos de la orden
-    const updatePayload: Partial<Order> = {
-      userId: updateOrderDto.userId,
-      tableId: updateOrderDto.tableId,
-      scheduledAt: updateOrderDto.scheduledAt,
-      orderStatus: updateOrderDto.orderStatus,
-      orderType: updateOrderDto.orderType,
-      subtotal: updateOrderDto.subtotal,
-      total: updateOrderDto.total,
-      notes: updateOrderDto.notes,
-      phoneNumber: updateOrderDto.phoneNumber,
-      customerName: updateOrderDto.customerName,
-      deliveryAddress: updateOrderDto.deliveryAddress,
-    };
+    const updatePayload: Partial<Order> = {};
 
-    // Actualizar la orden
-    const updatedOrder = await this.orderRepository.update(id, updatePayload);
-    if (!updatedOrder) {
-      throw new Error(`Failed to update order with ID ${id}`);
+    // Solo incluir campos que realmente se están actualizando
+    if (updateOrderDto.userId !== undefined)
+      updatePayload.userId = updateOrderDto.userId;
+    if (updateOrderDto.tableId !== undefined)
+      updatePayload.tableId = updateOrderDto.tableId;
+    if (updateOrderDto.scheduledAt !== undefined)
+      updatePayload.scheduledAt = updateOrderDto.scheduledAt;
+    if (updateOrderDto.orderStatus !== undefined)
+      updatePayload.orderStatus = updateOrderDto.orderStatus;
+    if (updateOrderDto.orderType !== undefined)
+      updatePayload.orderType = updateOrderDto.orderType;
+    if (updateOrderDto.subtotal !== undefined)
+      updatePayload.subtotal = updateOrderDto.subtotal;
+    if (updateOrderDto.total !== undefined)
+      updatePayload.total = updateOrderDto.total;
+    if (updateOrderDto.notes !== undefined)
+      updatePayload.notes = updateOrderDto.notes;
+    if (updateOrderDto.phoneNumber !== undefined)
+      updatePayload.phoneNumber = updateOrderDto.phoneNumber;
+    if (updateOrderDto.customerName !== undefined)
+      updatePayload.customerName = updateOrderDto.customerName;
+    if (updateOrderDto.deliveryAddress !== undefined)
+      updatePayload.deliveryAddress = updateOrderDto.deliveryAddress;
+
+    // Solo actualizar si hay cambios en los campos básicos
+    if (Object.keys(updatePayload).length > 0) {
+      const updatedOrder = await this.orderRepository.update(id, updatePayload);
+      if (!updatedOrder) {
+        throw new Error(`Failed to update order with ID ${id}`);
+      }
     }
 
-    // Si se proporcionan items, actualizar los items de la orden
-    if (updateOrderDto.items && Array.isArray(updateOrderDto.items)) {
-      // Eliminar todos los items existentes
+    // Solo procesar items si se proporcionaron explícitamente
+    if (
+      updateOrderDto.items !== undefined &&
+      Array.isArray(updateOrderDto.items)
+    ) {
+      // Obtener items existentes con sus detalles completos
       const existingItems = await this.orderItemRepository.findByOrderId(id);
-      for (const item of existingItems) {
+
+      // Crear mapas para comparación eficiente
+      const existingItemsMap = new Map(
+        existingItems.map((item) => [
+          `${item.productId}-${item.productVariantId || 'null'}`,
+          item,
+        ]),
+      );
+
+      const newItemsMap = new Map(
+        updateOrderDto.items.map((item) => [
+          `${item.productId}-${item.productVariantId || 'null'}`,
+          item,
+        ]),
+      );
+
+      // Identificar items a eliminar
+      const itemsToDelete = existingItems.filter(
+        (item) =>
+          !newItemsMap.has(
+            `${item.productId}-${item.productVariantId || 'null'}`,
+          ),
+      );
+
+      // Identificar items a crear
+      const itemsToCreate = updateOrderDto.items.filter(
+        (item) =>
+          !existingItemsMap.has(
+            `${item.productId}-${item.productVariantId || 'null'}`,
+          ),
+      );
+
+      // Identificar items a actualizar
+      const itemsToUpdate = updateOrderDto.items.filter((newItem) => {
+        const key = `${newItem.productId}-${newItem.productVariantId || 'null'}`;
+        const existingItem = existingItemsMap.get(key);
+        if (!existingItem) return false;
+
+        // Verificar si hay cambios reales
+        return (
+          existingItem.quantity !== newItem.quantity ||
+          existingItem.basePrice !== newItem.basePrice ||
+          existingItem.finalPrice !== newItem.finalPrice ||
+          existingItem.preparationNotes !== newItem.preparationNotes ||
+          this.modifiersChanged(
+            existingItem.modifiers || [],
+            newItem.modifiers || [],
+          )
+        );
+      });
+
+      // Eliminar items que ya no están
+      for (const item of itemsToDelete) {
         // Eliminar modificadores del item
         const modifiers =
           await this.orderItemModifierRepository.findByOrderItemId(item.id);
@@ -165,8 +234,8 @@ export class OrdersService {
         await this.orderItemRepository.delete(item.id);
       }
 
-      // Crear los nuevos items
-      for (const itemDto of updateOrderDto.items) {
+      // Crear nuevos items
+      for (const itemDto of itemsToCreate) {
         const createOrderItemDto: CreateOrderItemDto = {
           orderId: id,
           productId: itemDto.productId,
@@ -191,6 +260,50 @@ export class OrdersService {
               quantity: modifierDto.quantity,
               price: modifierDto.price,
             });
+          }
+        }
+      }
+
+      // Actualizar items existentes que han cambiado
+      for (const updatedItemDto of itemsToUpdate) {
+        const key = `${updatedItemDto.productId}-${updatedItemDto.productVariantId || 'null'}`;
+        const existingItem = existingItemsMap.get(key)!;
+
+        // Actualizar el item
+        await this.updateOrderItem(existingItem.id, {
+          quantity: updatedItemDto.quantity,
+          basePrice: updatedItemDto.basePrice,
+          finalPrice: updatedItemDto.finalPrice,
+          preparationNotes: updatedItemDto.preparationNotes,
+        });
+
+        // Actualizar modificadores si han cambiado
+        if (
+          this.modifiersChanged(
+            existingItem.modifiers || [],
+            updatedItemDto.modifiers || [],
+          )
+        ) {
+          // Eliminar modificadores existentes
+          const existingModifiers =
+            await this.orderItemModifierRepository.findByOrderItemId(
+              existingItem.id,
+            );
+          for (const modifier of existingModifiers) {
+            await this.orderItemModifierRepository.delete(modifier.id);
+          }
+
+          // Crear nuevos modificadores
+          if (updatedItemDto.modifiers && updatedItemDto.modifiers.length > 0) {
+            for (const modifierDto of updatedItemDto.modifiers) {
+              await this.createOrderItemModifier({
+                orderItemId: existingItem.id,
+                modifierId: modifierDto.modifierId,
+                modifierOptionId: modifierDto.modifierOptionId,
+                quantity: modifierDto.quantity,
+                price: modifierDto.price,
+              });
+            }
           }
         }
       }
@@ -400,6 +513,28 @@ export class OrdersService {
     await this.orderItemModifierRepository.delete(orderItemModifier.id);
   }
 
+  // Helper para comparar modificadores
+  private modifiersChanged(
+    existingModifiers: any[],
+    newModifiers: any[],
+  ): boolean {
+    if (existingModifiers.length !== newModifiers.length) return true;
+
+    const existingSet = new Set(
+      existingModifiers.map(
+        (m) =>
+          `${m.modifierId}-${m.modifierOptionId || 'null'}-${m.quantity}-${m.price}`,
+      ),
+    );
+
+    for (const newMod of newModifiers) {
+      const key = `${newMod.modifierId}-${newMod.modifierOptionId || 'null'}-${newMod.quantity}-${newMod.price}`;
+      if (!existingSet.has(key)) return true;
+    }
+
+    return false;
+  }
+
   // --- Ticket Impression Methods ---
 
   async registerTicketImpression(
@@ -421,5 +556,35 @@ export class OrdersService {
   async findImpressionsByOrderId(orderId: string): Promise<TicketImpression[]> {
     await this.findOne(orderId); // Verificar orden
     return this.ticketImpressionRepository.findByOrderId(orderId);
+  }
+
+  async recoverOrder(
+    id: string,
+    userId: string,
+  ): Promise<Order> {
+    const order = await this.findOne(id);
+
+    // Verificar que la orden esté en un estado recuperable
+    if (
+      order.orderStatus !== OrderStatus.COMPLETED &&
+      order.orderStatus !== OrderStatus.CANCELLED
+    ) {
+      throw new NotFoundException(
+        `La orden no está en un estado recuperable. Estado actual: ${order.orderStatus}`,
+      );
+    }
+
+    // Actualizar el estado de la orden a DELIVERED y agregar nota
+    const currentNotes = order.notes || '';
+    const recoveryNote = `[Recuperada por usuario ${userId} el ${new Date().toLocaleString()}]`;
+    
+    const updateData: UpdateOrderDto = {
+      orderStatus: OrderStatus.DELIVERED,
+      notes: currentNotes
+        ? `${currentNotes}\n${recoveryNote}`
+        : recoveryNote,
+    };
+
+    return this.update(id, updateData);
   }
 }

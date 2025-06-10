@@ -197,10 +197,70 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                           routes: [{ name: "Orders" }],
                         },
                       },
+                      { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
                       { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
                       { name: "PreparationScreensStack" },
                       { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
+                    ],
+                  })
+                );
+              }
+            )}
+            {renderDrawerItem(
+              "ReceiptsStack",
+              "Recibos",
+              "receipt",
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 1,
+                    routes: [
+                      { name: "OrdersStack" },
+                      {
+                        name: "ReceiptsStack",
+                        state: {
+                          routes: [{ name: "ReceiptsList" }],
+                        },
+                      },
+                      { name: "OrderFinalizationStack" },
+                      { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
+                      { name: "ModifiersStack" },
+                      { name: "PreparationScreensStack" },
+                      { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
+                    ],
+                  })
+                );
+              }
+            )}
+            {renderDrawerItem(
+              "OrderFinalizationStack",
+              "Finalización",
+              "clipboard-check-outline",
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 2,
+                    routes: [
+                      { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
+                      {
+                        name: "OrderFinalizationStack",
+                        state: {
+                          routes: [{ name: "OrderFinalizationScreen" }],
+                        },
+                      },
+                      { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
+                      { name: "ModifiersStack" },
+                      { name: "PreparationScreensStack" },
+                      { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
                     ],
                   })
                 );
@@ -216,22 +276,55 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
               props.navigation.dispatch(
                 CommonActions.reset({
-                  index: 1,
+                  index: 3,
                   routes: [
                     { name: "OrdersStack" },
+                    { name: "ReceiptsStack" },
+                    { name: "OrderFinalizationStack" },
                     {
                       name: "MenuStack",
                       state: {
                         routes: [{ name: "CategoriesScreen" }],
                       },
                     },
+                    { name: "AvailabilityStack" },
                     { name: "ModifiersStack" },
                     { name: "PreparationScreensStack" },
                     { name: "AreasTablesStack" },
+                    { name: "PrintersStack" },
                   ],
                 })
               );
             })}
+
+            {renderDrawerItem(
+              "AvailabilityStack",
+              "Disponibilidad",
+              "eye-off-outline",
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 4,
+                    routes: [
+                      { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
+                      { name: "MenuStack" },
+                      {
+                        name: "AvailabilityStack",
+                        state: {
+                          routes: [{ name: "AvailabilityScreen" }],
+                        },
+                      },
+                      { name: "ModifiersStack" },
+                      { name: "PreparationScreensStack" },
+                      { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
+                    ],
+                  })
+                );
+              }
+            )}
 
             {renderDrawerItem(
               "ModifiersStack",
@@ -241,10 +334,12 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 2,
+                    index: 8,
                     routes: [
                       { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
                       { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
                       {
                         name: "ModifiersStack",
                         state: {
@@ -253,6 +348,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       },
                       { name: "PreparationScreensStack" },
                       { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
                     ],
                   })
                 );
@@ -266,10 +362,12 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 3,
+                    index: 8,
                     routes: [
                       { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
                       { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
                       {
                         name: "PreparationScreensStack",
@@ -278,6 +376,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                         },
                       },
                       { name: "AreasTablesStack" },
+                      { name: "PrintersStack" },
                     ],
                   })
                 );
@@ -291,10 +390,12 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 4,
+                    index: 8,
                     routes: [
                       { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
                       { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
                       { name: "PreparationScreensStack" },
                       {
@@ -317,10 +418,12 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 5,
+                    index: 8,
                     routes: [
                       { name: "OrdersStack" },
+                      { name: "ReceiptsStack" },
                       { name: "MenuStack" },
+                      { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
                       { name: "PreparationScreensStack" },
                       { name: "AreasTablesStack" },

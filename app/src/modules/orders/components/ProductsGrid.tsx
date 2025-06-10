@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
@@ -8,7 +8,6 @@ import {
 import type { Product } from "../../../app/schemas/domain/product.schema"; // Ruta corregida
 import { FlashList, ListRenderItemInfo } from "@shopify/flash-list"; // Importar FlashList y tipo
 import ProductCard from "./ProductCard";
-import ProductDescriptionModal from "./ProductDescriptionModal";
 import { useAppTheme } from "@/app/styles/theme";
 
 interface ProductsGridProps {
@@ -25,13 +24,6 @@ const ProductsGrid = ({
   onProductPress,
 }: ProductsGridProps) => {
   const theme = useAppTheme();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedProduct(null);
-  };
 
   const styles = StyleSheet.create({
     container: {
@@ -88,25 +80,18 @@ const ProductsGrid = ({
   }
 
   return (
-    <>
-      <FlashList
-        data={products}
-        keyExtractor={(item: Product) => item.id} // Añadir tipo Product
-        renderItem={({ item }: ListRenderItemInfo<Product>) => ( // Añadir tipo Product
-          <ProductCard 
-            product={item} 
-            onPress={() => onProductPress(item)}
-          /> // Asegurar que onProductPress reciba el item
-        )}
-        estimatedItemSize={250} // Añadir tamaño estimado
-        contentContainerStyle={{ paddingBottom: 80 }}
-      />
-      <ProductDescriptionModal
-        visible={modalVisible}
-        product={selectedProduct}
-        onDismiss={handleCloseModal}
-      />
-    </>
+    <FlashList
+      data={products}
+      keyExtractor={(item: Product) => item.id} // Añadir tipo Product
+      renderItem={({ item }: ListRenderItemInfo<Product>) => ( // Añadir tipo Product
+        <ProductCard 
+          product={item} 
+          onPress={() => onProductPress(item)}
+        /> // Asegurar que onProductPress reciba el item
+      )}
+      estimatedItemSize={250} // Añadir tamaño estimado
+      contentContainerStyle={{ paddingBottom: 80 }}
+    />
   );
 };
 
