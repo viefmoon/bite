@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsArray,
+} from 'class-validator';
 import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';
 
@@ -40,6 +46,18 @@ export class FindAllOrdersDto {
   @IsOptional()
   @IsEnum(OrderStatus)
   orderStatus?: OrderStatus;
+
+  @ApiProperty({
+    description: 'Filter orders by multiple statuses',
+    enum: OrderStatus,
+    isArray: true,
+    example: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(OrderStatus, { each: true })
+  orderStatuses?: OrderStatus[];
 
   @ApiProperty({
     description: 'Filter orders by type',
