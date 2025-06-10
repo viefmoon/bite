@@ -24,6 +24,7 @@ import {
   ORDER_ITEM_MODIFIER_REPOSITORY,
   TICKET_IMPRESSION_REPOSITORY,
 } from '../common/tokens';
+import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -586,5 +587,49 @@ export class OrdersService {
     };
 
     return this.update(id, updateData);
+  }
+
+  async findOrdersForFinalization(): Promise<Order[]> {
+    return this.orderRepository.findOrdersForFinalization();
+  }
+
+  async finalizeMultipleOrders(
+    finalizeOrdersDto: FinalizeOrdersDto,
+    userId: string,
+  ): Promise<void> {
+    const { orderIds, paymentMethod, notes } = finalizeOrdersDto;
+
+    for (const orderId of orderIds) {
+      const order = await this.findOne(orderId);
+
+      // Verificar que la orden esté en un estado finalizable
+      if (
+        order.orderStatus !== OrderStatus.READY &&
+        order.orderStatus !== OrderStatus.DELIVERED
+      ) {
+        continue; // Saltar órdenes que no están en estado finalizable
+      }
+
+      // Preparar nota de finalización
+      const finalizationNote = `[Finalizada por usuario ${userId} el ${new Date().toLocaleString()}] Método de pago: ${paymentMethod}`;
+      const currentNotes = order.notes || '';
+      let finalNotes = finalizationNote;
+
+      if (notes && notes.trim()) {
+        finalNotes += ` - ${notes.trim()}`;
+      }
+
+      if (currentNotes) {
+        finalNotes = `${currentNotes}\n${finalNotes}`;
+      }
+
+      // Actualizar el estado de la orden a COMPLETED
+      const updateData: UpdateOrderDto = {
+        orderStatus: OrderStatus.COMPLETED,
+        notes: finalNotes,
+      };
+
+      await this.update(orderId, updateData);
+    }
   }
 }

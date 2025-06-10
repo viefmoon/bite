@@ -27,6 +27,8 @@ import { OrderItem } from './domain/order-item';
 import { OrderItemModifier } from './domain/order-item-modifier';
 import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto';
 import { CreateOrderItemModifierDto } from './dto/create-order-item-modifier.dto';
+import { RecoverOrderDto } from './dto/recover-order.dto';
+import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -109,6 +111,38 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   findOpenOrders(): Promise<Order[]> {
     return this.ordersService.findOpenOrders();
+  }
+
+  @Get('for-finalization')
+  @ApiOperation({ summary: 'Obtener órdenes listas para finalizar' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de órdenes listas para finalizar (READY y DELIVERED).',
+    type: [Order],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  @HttpCode(HttpStatus.OK)
+  findOrdersForFinalization(): Promise<Order[]> {
+    return this.ordersService.findOrdersForFinalization();
+  }
+
+  @Patch('finalize-multiple')
+  @ApiOperation({ summary: 'Finalizar múltiples órdenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Las órdenes han sido finalizadas exitosamente.',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  @HttpCode(HttpStatus.OK)
+  finalizeMultipleOrders(
+    @Body() finalizeOrdersDto: FinalizeOrdersDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    return this.ordersService.finalizeMultipleOrders(finalizeOrdersDto, userId);
   }
 
   @Get(':id')

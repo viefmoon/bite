@@ -34,6 +34,7 @@ export abstract class OrderRepository {
     dailyOrderCounterId: Order['dailyOrderCounterId'],
   ): Promise<Order[]>;
   abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
+  abstract findOrdersForFinalization(): Promise<Order[]>;
 
   abstract update(
     id: Order['id'],

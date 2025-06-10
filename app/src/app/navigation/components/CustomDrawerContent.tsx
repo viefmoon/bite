@@ -334,10 +334,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 8,
+                    index: 5,
                     routes: [
                       { name: "OrdersStack" },
                       { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
                       { name: "MenuStack" },
                       { name: "AvailabilityStack" },
                       {
@@ -362,10 +363,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 8,
+                    index: 6,
                     routes: [
                       { name: "OrdersStack" },
                       { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
                       { name: "MenuStack" },
                       { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
@@ -390,10 +392,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 8,
+                    index: 7,
                     routes: [
                       { name: "OrdersStack" },
                       { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
                       { name: "MenuStack" },
                       { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },
@@ -404,6 +407,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                           routes: [{ name: "AreasList" }],
                         },
                       },
+                      { name: "PrintersStack" },
                     ],
                   })
                 );
@@ -422,6 +426,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     routes: [
                       { name: "OrdersStack" },
                       { name: "ReceiptsStack" },
+                      { name: "OrderFinalizationStack" },
                       { name: "MenuStack" },
                       { name: "AvailabilityStack" },
                       { name: "ModifiersStack" },

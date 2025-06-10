@@ -360,4 +360,29 @@ export class OrdersRelationalRepository implements OrderRepository {
   async remove(id: Order['id']): Promise<void> {
     await this.ordersRepository.softDelete(id);
   }
+
+  async findOrdersForFinalization(): Promise<Order[]> {
+    const entities = await this.ordersRepository.find({
+      where: {
+        orderStatus: In([OrderStatus.READY, OrderStatus.DELIVERED]),
+      },
+      relations: [
+        'user',
+        'table',
+        'table.area',
+        'dailyOrderCounter',
+        'orderItems',
+        'orderItems.modifiers',
+        'orderItems.modifiers.modifier',
+        'payments',
+      ],
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    return entities
+      .map((entity) => this.orderMapper.toDomain(entity))
+      .filter(Boolean) as Order[];
+  }
 }
