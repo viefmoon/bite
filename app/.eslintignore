@@ -1,0 +1,15 @@
+node_modules/
+android/
+ios/
+.expo/
+dist/
+build/
+coverage/
+*.config.js
+*.config.ts
+babel.config.js
+metro.config.js
+.eslintrc.js
+fix-*.js
+fix-*.sh
+scripts/

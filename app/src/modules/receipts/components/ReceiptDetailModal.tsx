@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import {
   Text,
   Divider,
@@ -87,17 +82,18 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
     const price = parseFloat(item.finalPrice || item.basePrice || '0');
     const quantity = item.quantity || 1;
     const baseTotal = price * quantity;
-    const modifiersTotal = item.modifiers?.reduce((sum: number, mod: any) => {
-      return sum + (parseFloat(mod.price || '0')) * (mod.quantity || 1);
-    }, 0) || 0;
+    const modifiersTotal =
+      item.modifiers?.reduce((sum: number, mod: any) => {
+        return sum + parseFloat(mod.price || '0') * (mod.quantity || 1);
+      }, 0) || 0;
     return baseTotal + modifiersTotal;
   };
 
   const handleRecoverOrder = async () => {
     if (!order) return;
-    
+
     await recoverOrderMutation.mutateAsync(order.id);
-    
+
     setShowRecoverModal(false);
     onClose();
   };
@@ -133,8 +129,10 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
           ]}
         >
           <Appbar.Header>
-            <Appbar.Content title={`Recibo #${order.dailyNumber || order.orderNumber}`} />
-            <Appbar.Action 
+            <Appbar.Content
+              title={`Recibo #${order.dailyNumber || order.orderNumber}`}
+            />
+            <Appbar.Action
               icon="history"
               onPress={() => setShowHistory(true)}
             />
@@ -150,15 +148,21 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                     Fecha:
                   </Text>
                   <Text variant="bodyLarge">
-                    {format(new Date(order.createdAt), "d 'de' MMMM, yyyy 'a las' HH:mm", {
-                      locale: es,
-                    })}
+                    {format(
+                      new Date(order.createdAt),
+                      "d 'de' MMMM, yyyy 'a las' HH:mm",
+                      {
+                        locale: es,
+                      },
+                    )}
                   </Text>
                 </View>
                 <Chip
                   mode="flat"
                   style={{
-                    backgroundColor: getStatusColor(order.orderStatus || order.status),
+                    backgroundColor: getStatusColor(
+                      order.orderStatus || order.status,
+                    ),
                   }}
                   textStyle={{ color: theme.colors.onPrimary }}
                 >
@@ -246,47 +250,62 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
               </Text>
               <Divider style={styles.divider} />
 
-              {(order.orderItems || order.items)?.map((item: any, index: number) => (
-                <View key={item.id || index}>
-                  <List.Item
-                    title={`${item.product?.name || item.productName || 'Producto'} ${
-                      item.productVariant?.name ? `(${item.productVariant.name})` : ''
-                    }`}
-                    description={() => (
-                      <View>
-                        {item.modifiers && item.modifiers.length > 0 && (
-                          <View style={styles.modifiersList}>
-                            {item.modifiers.map((mod: any, modIndex: number) => (
-                              <Text
-                                key={modIndex}
-                                variant="bodySmall"
-                                style={styles.modifierText}
-                              >
-                                • {mod.modifierGroup?.name}: {mod.modifier?.name}
-                                {mod.price && mod.price > 0 && ` (+$${mod.price})`}
-                              </Text>
-                            ))}
-                          </View>
-                        )}
-                        {item.preparationNotes && (
-                          <Text variant="bodySmall" style={styles.notesText}>
-                            Nota: {item.preparationNotes}
+              {(order.orderItems || order.items)?.map(
+                (item: any, index: number) => (
+                  <View key={item.id || index}>
+                    <List.Item
+                      title={`${item.product?.name || item.productName || 'Producto'} ${
+                        item.productVariant?.name
+                          ? `(${item.productVariant.name})`
+                          : ''
+                      }`}
+                      description={() => (
+                        <View>
+                          {item.modifiers && item.modifiers.length > 0 && (
+                            <View style={styles.modifiersList}>
+                              {item.modifiers.map(
+                                (mod: any, modIndex: number) => (
+                                  <Text
+                                    key={modIndex}
+                                    variant="bodySmall"
+                                    style={styles.modifierText}
+                                  >
+                                    • {mod.modifierGroup?.name}:{' '}
+                                    {mod.modifier?.name}
+                                    {mod.price &&
+                                      mod.price > 0 &&
+                                      ` (+$${mod.price})`}
+                                  </Text>
+                                ),
+                              )}
+                            </View>
+                          )}
+                          {item.preparationNotes && (
+                            <Text variant="bodySmall" style={styles.notesText}>
+                              Nota: {item.preparationNotes}
+                            </Text>
+                          )}
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.quantityText}
+                          >
+                            Cantidad: {item.quantity}
                           </Text>
-                        )}
-                        <Text variant="bodyMedium" style={styles.quantityText}>
-                          Cantidad: {item.quantity}
+                        </View>
+                      )}
+                      right={() => (
+                        <Text variant="titleMedium" style={styles.priceText}>
+                          ${calculateItemTotal(item).toFixed(2)}
                         </Text>
-                      </View>
+                      )}
+                    />
+                    {index <
+                      (order.orderItems || order.items || []).length - 1 && (
+                      <Divider />
                     )}
-                    right={() => (
-                      <Text variant="titleMedium" style={styles.priceText}>
-                        ${calculateItemTotal(item).toFixed(2)}
-                      </Text>
-                    )}
-                  />
-                  {index < (order.orderItems || order.items || []).length - 1 && <Divider />}
-                </View>
-              ))}
+                  </View>
+                ),
+              )}
             </Surface>
 
             {/* Totales */}
@@ -295,7 +314,9 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                 <>
                   <View style={styles.totalRow}>
                     <Text variant="titleMedium">Subtotal:</Text>
-                    <Text variant="titleMedium">${(parseFloat(order.subtotal || '0')).toFixed(2)}</Text>
+                    <Text variant="titleMedium">
+                      ${parseFloat(order.subtotal || '0').toFixed(2)}
+                    </Text>
                   </View>
                   <Divider style={styles.divider} />
                 </>
@@ -305,7 +326,7 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                   Total:
                 </Text>
                 <Text variant="titleLarge" style={styles.totalText}>
-                  ${(parseFloat(order.total || '0')).toFixed(2)}
+                  ${parseFloat(order.total || '0').toFixed(2)}
                 </Text>
               </View>
             </Surface>
@@ -320,12 +341,17 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                 {order.payments.map((payment: any, index: number) => (
                   <View key={payment.id || index} style={styles.paymentRow}>
                     <Text variant="bodyMedium">
-                      {payment.paymentMethod === 'cash' ? 'Efectivo' : 
-                       payment.paymentMethod === 'card' ? 'Tarjeta' :
-                       payment.paymentMethod === 'transfer' ? 'Transferencia' :
-                       payment.paymentMethod}
+                      {payment.paymentMethod === 'cash'
+                        ? 'Efectivo'
+                        : payment.paymentMethod === 'card'
+                          ? 'Tarjeta'
+                          : payment.paymentMethod === 'transfer'
+                            ? 'Transferencia'
+                            : payment.paymentMethod}
                     </Text>
-                    <Text variant="bodyMedium">${payment.amount.toFixed(2)}</Text>
+                    <Text variant="bodyMedium">
+                      ${payment.amount.toFixed(2)}
+                    </Text>
                   </View>
                 ))}
               </Surface>

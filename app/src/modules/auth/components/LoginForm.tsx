@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   TextInput,
   Button,
   HelperText,
   Checkbox,
   TouchableRipple,
-} from "react-native-paper";
-import { useAppTheme } from "../../../app/styles/theme";
-import { loginSchema, LoginFormInputs } from "../schema/auth.schema";
+} from 'react-native-paper';
+import { useAppTheme } from '../../../app/styles/theme';
+import { loginSchema, LoginFormInputs } from '../schema/auth.schema';
 
 interface LoginFormProps {
   onSubmit: (data: LoginFormInputs, rememberMe: boolean) => void;
@@ -23,8 +23,8 @@ interface LoginFormProps {
 const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   isLoading,
-  initialEmailOrUsername = "",
-  initialPassword = "",
+  initialEmailOrUsername = '',
+  initialPassword = '',
   initialRememberMe = false,
 }) => {
   const theme = useAppTheme();
@@ -47,8 +47,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   React.useEffect(() => {
     if (initialEmailOrUsername || initialPassword) {
       reset({
-        emailOrUsername: initialEmailOrUsername || "",
-        password: initialPassword || "",
+        emailOrUsername: initialEmailOrUsername || '',
+        password: initialPassword || '',
       });
     }
   }, [initialEmailOrUsername, initialPassword, reset]);
@@ -61,7 +61,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     () =>
       StyleSheet.create({
         container: {
-          width: "100%",
+          width: '100%',
         },
         input: {
           marginBottom: 8,
@@ -73,8 +73,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
           marginBottom: 8,
         },
         checkboxContainer: {
-          flexDirection: "row",
-          alignItems: "center",
+          flexDirection: 'row',
+          alignItems: 'center',
           marginTop: 8,
           marginBottom: 8,
         },
@@ -84,7 +84,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           marginLeft: 8,
         },
       }),
-    [theme]
+    [theme],
   );
 
   return (
@@ -136,7 +136,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               autoCapitalize="none"
               right={
                 <TextInput.Icon
-                  icon={secureTextEntry ? "eye" : "eye-off"}
+                  icon={secureTextEntry ? 'eye' : 'eye-off'}
                   onPress={toggleSecureEntry}
                   forceTextInputFocus={false}
                   color={errors.password ? theme.colors.error : undefined}
@@ -164,7 +164,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       >
         <>
           <Checkbox
-            status={rememberMe ? "checked" : "unchecked"}
+            status={rememberMe ? 'checked' : 'unchecked'}
             onPress={() => setRememberMe(!rememberMe)}
             disabled={isLoading}
           />
@@ -181,7 +181,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
         style={styles.button}
       >
-        <Text>{isLoading ? "Ingresando..." : "Ingresar"}</Text>
+        <Text>{isLoading ? 'Ingresando...' : 'Ingresar'}</Text>
       </Button>
     </View>
   );

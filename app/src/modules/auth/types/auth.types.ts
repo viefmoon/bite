@@ -1,9 +1,9 @@
-import type { AuthResponse, LoginFormInputs } from "../schema/auth.schema";
+import type { AuthResponse, LoginFormInputs } from '../schema/auth.schema';
 
 // Pure TypeScript interfaces/types remain here
 export interface AuthState {
   token: string | null;
-  user: AuthResponse["user"] | null;
+  user: AuthResponse['user'] | null;
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginFormInputs) => Promise<void>;

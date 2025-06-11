@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEnum,
   IsNotEmpty,
   IsBoolean,
   IsNumber,
@@ -12,17 +11,8 @@ import {
   Max,
   ValidateIf,
 } from 'class-validator';
-import { AdjustmentType } from '../domain/enums/adjustment-type.enum';
 
 export class CreateAdjustmentDto {
-  @ApiProperty({
-    enum: AdjustmentType,
-    description: 'Type of adjustment',
-  })
-  @IsEnum(AdjustmentType)
-  @IsNotEmpty()
-  type: AdjustmentType;
-
   @ApiProperty({
     description: 'Order ID (required for order-level adjustments)',
     required: false,

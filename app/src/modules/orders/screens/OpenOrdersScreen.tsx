@@ -1,54 +1,93 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, ActivityIndicator, Appbar, IconButton, Portal, Card, Chip } from 'react-native-paper';
+import {
+  Text,
+  ActivityIndicator,
+  Appbar,
+  IconButton,
+  Portal,
+  Card,
+  Chip,
+} from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useRoute } from '@react-navigation/native';
-import { useGetOpenOrdersQuery, usePrintKitchenTicketMutation, useUpdateOrderMutation, useCancelOrderMutation } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
-import { Order, OrderStatusEnum, type OrderStatus, OrderType, OrderTypeEnum } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
+import {
+  useGetOpenOrdersQuery,
+  usePrintKitchenTicketMutation,
+  useUpdateOrderMutation,
+  useCancelOrderMutation,
+} from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
+import {
+  Order,
+  OrderStatusEnum,
+  type OrderStatus,
+  OrderType,
+  OrderTypeEnum,
+} from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
 import { format } from 'date-fns'; // Para formatear fechas
 import { es } from 'date-fns/locale'; // Locale español
 import PrinterSelectionModal from '../components/PrinterSelectionModal'; // Importar el modal
 import type { ThermalPrinter } from '../../printers/types/printer.types';
 // Importar OrderCartDetail y el tipo de payload
-import OrderCartDetail, { OrderDetailsForBackend } from '../components/OrderCartDetail';
+import OrderCartDetail, {
+  OrderDetailsForBackend,
+} from '../components/OrderCartDetail';
 import { useSnackbarStore } from '../../../app/store/snackbarStore'; // Para mostrar mensajes
 import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
 
-type OpenOrdersScreenProps = NativeStackScreenProps<OrdersStackParamList, 'OpenOrders'>;
+type OpenOrdersScreenProps = NativeStackScreenProps<
+  OrdersStackParamList,
+  'OpenOrders'
+>;
 
 // Helper para formatear el estado de la orden
 const formatOrderStatus = (status: OrderStatus): string => {
   switch (status) {
-    case OrderStatusEnum.PENDING: return 'Pendiente';
-    case OrderStatusEnum.IN_PROGRESS: return 'En Progreso';
-    case OrderStatusEnum.READY: return 'Lista';
-    case OrderStatusEnum.DELIVERED: return 'Entregada';
-    case OrderStatusEnum.COMPLETED: return 'Completada';
-    case OrderStatusEnum.CANCELLED: return 'Cancelada';
-    default: return status;
+    case OrderStatusEnum.PENDING:
+      return 'Pendiente';
+    case OrderStatusEnum.IN_PROGRESS:
+      return 'En Progreso';
+    case OrderStatusEnum.READY:
+      return 'Lista';
+    case OrderStatusEnum.DELIVERED:
+      return 'Entregada';
+    case OrderStatusEnum.COMPLETED:
+      return 'Completada';
+    case OrderStatusEnum.CANCELLED:
+      return 'Cancelada';
+    default:
+      return status;
   }
 };
 
 // Helper para formatear el tipo de orden
 const formatOrderType = (type: OrderType): string => {
   switch (type) {
-    case OrderTypeEnum.DINE_IN: return '🍽️ Para Comer Aquí';
-    case OrderTypeEnum.TAKE_AWAY: return '🥡 Para Llevar';
-    case OrderTypeEnum.DELIVERY: return '🚚 Domicilio';
-    default: return type;
+    case OrderTypeEnum.DINE_IN:
+      return '🍽️ Para Comer Aquí';
+    case OrderTypeEnum.TAKE_AWAY:
+      return '🥡 Para Llevar';
+    case OrderTypeEnum.DELIVERY:
+      return '🚚 Domicilio';
+    default:
+      return type;
   }
 };
 
 // Helper para formatear el tipo de orden corto (para el título)
 const formatOrderTypeShort = (type: OrderType): string => {
   switch (type) {
-    case OrderTypeEnum.DINE_IN: return '🍽️ Local';
-    case OrderTypeEnum.TAKE_AWAY: return '🥡 Llevar';
-    case OrderTypeEnum.DELIVERY: return '🚚 Envío';
-    default: return type;
+    case OrderTypeEnum.DINE_IN:
+      return '🍽️ Local';
+    case OrderTypeEnum.TAKE_AWAY:
+      return '🥡 Llevar';
+    case OrderTypeEnum.DELIVERY:
+      return '🚚 Envío';
+    default:
+      return type;
   }
 };
 
@@ -64,9 +103,11 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
   const [currentOrderItems, setCurrentOrderItems] = useState<any[]>([]); // Para almacenar los items actuales
-  
+
   // Estado para filtro de tipo de orden
-  const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>('ALL');
+  const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>(
+    'ALL',
+  );
 
   // Instanciar las mutaciones
   const updateOrderMutation = useUpdateOrderMutation();
@@ -79,26 +120,31 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
-  
+
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   // Filtrar órdenes por tipo
   const filteredOrders = React.useMemo(() => {
     if (!ordersData) return [];
     if (selectedOrderType === 'ALL') return ordersData;
-    return ordersData.filter(order => order.orderType === selectedOrderType);
+    return ordersData.filter((order) => order.orderType === selectedOrderType);
   }, [ordersData, selectedOrderType]);
-  
+
   // Ya no necesitamos procesar items agregados porque la actualización se hace directamente en CreateOrderScreen
   // Este efecto se puede eliminar o simplificar
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case OrderStatusEnum.PENDING: return '#FFA000'; // Orange
-      case OrderStatusEnum.IN_PROGRESS: return theme.colors.primary;
-      case OrderStatusEnum.READY: return '#4CAF50'; // Green
-      case OrderStatusEnum.DELIVERED: return theme.colors.tertiary;
-      default: return theme.colors.onSurfaceVariant;
+      case OrderStatusEnum.PENDING:
+        return '#FFA000'; // Orange
+      case OrderStatusEnum.IN_PROGRESS:
+        return theme.colors.primary;
+      case OrderStatusEnum.READY:
+        return '#4CAF50'; // Green
+      case OrderStatusEnum.DELIVERED:
+        return theme.colors.tertiary;
+      default:
+        return theme.colors.onSurfaceVariant;
     }
   };
 
@@ -111,96 +157,118 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     setOrderToPrintId(orderId);
     setIsPrinterModalVisible(true);
   }, []);
-  
+
   const handleOrderItemPress = (order: Order) => {
     // Guardar solo el ID y abrir el modal
     setEditingOrderId(order.id);
     setIsEditModalVisible(true);
   };
 
-  const renderOrderItem = useCallback(({ item: order }: { item: Order }) => {
-    // Construir el título según el tipo de orden
-    let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
-    
-    if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
-      orderTitle += ` • ${order.table.area?.name || 'Sin área'} • Mesa ${order.table.name || order.table.number || 'N/A'}`;
-    } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
-      if (order.customerName) {
-        orderTitle += ` • ${order.customerName}`;
-      }
-      if (order.phoneNumber) {
-        orderTitle += ` • ${order.phoneNumber}`;
-      }
-    } else if (order.orderType === OrderTypeEnum.DELIVERY) {
-      if (order.deliveryAddress) {
-        orderTitle += ` • ${order.deliveryAddress}`;
-      }
-      if (order.phoneNumber) {
-        orderTitle += ` • ${order.phoneNumber}`;
-      }
-    }
+  const renderOrderItem = useCallback(
+    ({ item: order }: { item: Order }) => {
+      // Construir el título según el tipo de orden
+      let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
-    return (
-      <Card 
-        style={styles.orderCard} 
-        mode="elevated"
-        onPress={() => handleOrderItemPress(order)}
-      >
-        <Card.Content style={styles.cardContent}>
-          {/* Main Container */}
-          <View style={styles.mainContainer}>
-            {/* Left Side - Title and Time */}
-            <View style={styles.leftContainer}>
-              <Text style={styles.orderNumber} numberOfLines={2}>
-                {orderTitle}
-                <Text style={styles.orderPrice}> • ${order.total}</Text>
-              </Text>
-              <Text style={styles.orderTime}>
-                {format(new Date(order.createdAt), 'p', { locale: es })}
-              </Text>
+      if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
+        orderTitle += ` • ${order.table.area?.name || 'Sin área'} • Mesa ${order.table.name || order.table.number || 'N/A'}`;
+      } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
+        if (order.customerName) {
+          orderTitle += ` • ${order.customerName}`;
+        }
+        if (order.phoneNumber) {
+          orderTitle += ` • ${order.phoneNumber}`;
+        }
+      } else if (order.orderType === OrderTypeEnum.DELIVERY) {
+        if (order.deliveryAddress) {
+          orderTitle += ` • ${order.deliveryAddress}`;
+        }
+        if (order.phoneNumber) {
+          orderTitle += ` • ${order.phoneNumber}`;
+        }
+      }
+
+      return (
+        <Card
+          style={styles.orderCard}
+          mode="elevated"
+          onPress={() => handleOrderItemPress(order)}
+        >
+          <Card.Content style={styles.cardContent}>
+            {/* Main Container */}
+            <View style={styles.mainContainer}>
+              {/* Left Side - Title and Time */}
+              <View style={styles.leftContainer}>
+                <Text style={styles.orderNumber} numberOfLines={2}>
+                  {orderTitle}
+                  <Text style={styles.orderPrice}> • ${order.total}</Text>
+                </Text>
+                <Text style={styles.orderTime}>
+                  {format(new Date(order.createdAt), 'p', { locale: es })}
+                </Text>
+              </View>
+
+              {/* Right Side - Status and Print */}
+              <View style={styles.rightContainer}>
+                <Chip
+                  mode="flat"
+                  style={[
+                    styles.statusChip,
+                    { backgroundColor: getStatusColor(order.orderStatus) },
+                  ]}
+                  textStyle={styles.statusChipText}
+                >
+                  {formatOrderStatus(order.orderStatus)}
+                </Chip>
+                <IconButton
+                  icon="printer"
+                  size={28}
+                  style={styles.printButton}
+                  onPress={() => handleOpenPrinterModal(order.id)}
+                  disabled={
+                    printKitchenTicketMutation.isPending &&
+                    printKitchenTicketMutation.variables?.orderId === order.id
+                  }
+                />
+              </View>
             </View>
 
-            {/* Right Side - Status and Print */}
-            <View style={styles.rightContainer}>
-              <Chip 
-                mode="flat" 
-                style={[styles.statusChip, { backgroundColor: getStatusColor(order.orderStatus) }]}
-                textStyle={styles.statusChipText}
-              >
-                {formatOrderStatus(order.orderStatus)}
-              </Chip>
-              <IconButton
-                icon="printer"
-                size={28}
-                style={styles.printButton}
-                onPress={() => handleOpenPrinterModal(order.id)}
-                disabled={printKitchenTicketMutation.isPending && printKitchenTicketMutation.variables?.orderId === order.id}
-              />
-            </View>
-          </View>
-
-          {/* Notes if any */}
-          {order.notes ? (
-            <Text style={styles.notes} numberOfLines={2}>
-              📝 {order.notes}
-            </Text>
-          ) : null}
-        </Card.Content>
-      </Card>
-    );
-  }, [handleOrderItemPress, handleOpenPrinterModal, printKitchenTicketMutation.isPending, printKitchenTicketMutation.variables?.orderId, theme, styles]);
+            {/* Notes if any */}
+            {order.notes ? (
+              <Text style={styles.notes} numberOfLines={2}>
+                📝 {order.notes}
+              </Text>
+            ) : null}
+          </Card.Content>
+        </Card>
+      );
+    },
+    [
+      handleOrderItemPress,
+      handleOpenPrinterModal,
+      printKitchenTicketMutation.isPending,
+      printKitchenTicketMutation.variables?.orderId,
+      theme,
+      styles,
+    ],
+  );
 
   const { ListEmptyComponent } = useListState({
     isLoading,
     isError,
     data: filteredOrders,
     emptyConfig: {
-      title: selectedOrderType === 'ALL' 
-        ? 'No hay órdenes abiertas'
-        : `No hay órdenes de tipo ${formatOrderType(selectedOrderType as OrderType).replace(/[🍽️🥡🚚]/g, '').trim()}`,
-      message: selectedOrderType === 'ALL' 
-        ? 'No hay órdenes abiertas en este momento.'
-        : `No hay órdenes de este tipo en este momento.`,
+      title:
+        selectedOrderType === 'ALL'
+          ? 'No hay órdenes abiertas'
+          : `No hay órdenes de tipo ${formatOrderType(
+              selectedOrderType as OrderType,
+            )
+              .replace(/[🍽️🥡🚚]/g, '')
+              .trim()}`,
+      message:
+        selectedOrderType === 'ALL'
+          ? 'No hay órdenes abiertas en este momento.'
+          : `No hay órdenes de este tipo en este momento.`,
       icon: 'clipboard-text-outline',
     },
   });
@@ -222,245 +290,283 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
 
   // Función que se ejecuta al seleccionar una impresora en el modal
-  const handlePrinterSelect = useCallback((printer: ThermalPrinter) => {
-    setIsPrinterModalVisible(false);
-    if (orderToPrintId) {
-      // Llamar a la mutación para imprimir
-      printKitchenTicketMutation.mutate({ orderId: orderToPrintId, printerId: printer.id });
-      setOrderToPrintId(null); // Limpiar el ID de la orden
-    } else {
-      console.warn("Se seleccionó una impresora pero no había ID de orden guardado.");
-    }
-  }, [orderToPrintId, printKitchenTicketMutation]); // Dependencias
+  const handlePrinterSelect = useCallback(
+    (printer: ThermalPrinter) => {
+      setIsPrinterModalVisible(false);
+      if (orderToPrintId) {
+        // Llamar a la mutación para imprimir
+        printKitchenTicketMutation.mutate({
+          orderId: orderToPrintId,
+          printerId: printer.id,
+        });
+        setOrderToPrintId(null); // Limpiar el ID de la orden
+      } else {
+        console.warn(
+          'Se seleccionó una impresora pero no había ID de orden guardado.',
+        );
+      }
+    },
+    [orderToPrintId, printKitchenTicketMutation],
+  ); // Dependencias
 
   // Función para manejar la cancelación de una orden
-  const handleCancelOrder = useCallback(async (orderId: string) => {
-    try {
-      await cancelOrderMutation.mutateAsync(orderId);
-      // Cerrar el modal después de cancelar exitosamente
-      setIsEditModalVisible(false);
-      setEditingOrderId(null);
-    } catch (error) {
-      console.error("Error al cancelar la orden:", error);
-      // El error se muestra a través del hook useCancelOrderMutation
-    }
-  }, [cancelOrderMutation]);
+  const handleCancelOrder = useCallback(
+    async (orderId: string) => {
+      try {
+        await cancelOrderMutation.mutateAsync(orderId);
+        // Cerrar el modal después de cancelar exitosamente
+        setIsEditModalVisible(false);
+        setEditingOrderId(null);
+      } catch (error) {
+        console.error('Error al cancelar la orden:', error);
+        // El error se muestra a través del hook useCancelOrderMutation
+      }
+    },
+    [cancelOrderMutation],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-        {isLoading && !ordersData ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Cargando órdenes...</Text>
-          </View>
-        ) : (
-          <>
-            {/* Filtros de tipo de orden - Fuera del View para mantener posición fija */}
-            <View style={styles.filterWrapper}>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.filterContainer}
-                contentContainerStyle={styles.filterContentContainer}
+      {isLoading && !ordersData ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Cargando órdenes...</Text>
+        </View>
+      ) : (
+        <>
+          {/* Filtros de tipo de orden - Fuera del View para mantener posición fija */}
+          <View style={styles.filterWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.filterContainer}
+              contentContainerStyle={styles.filterContentContainer}
+            >
+              <Chip
+                mode="outlined"
+                selected={selectedOrderType === 'ALL'}
+                onPress={() => setSelectedOrderType('ALL')}
+                style={[
+                  styles.filterChip,
+                  selectedOrderType === 'ALL' && styles.filterChipSelected,
+                ]}
+                textStyle={[
+                  styles.filterChipText,
+                  selectedOrderType === 'ALL' && styles.filterChipTextSelected,
+                ]}
               >
-                <Chip
-                  mode="outlined"
-                  selected={selectedOrderType === 'ALL'}
-                  onPress={() => setSelectedOrderType('ALL')}
-                  style={[
-                    styles.filterChip,
-                    selectedOrderType === 'ALL' && styles.filterChipSelected
-                  ]}
-                  textStyle={[
-                    styles.filterChipText,
-                    selectedOrderType === 'ALL' && styles.filterChipTextSelected
-                  ]}
-                >
-                  Todas
-                </Chip>
-                <Chip
-                  mode="outlined"
-                  selected={selectedOrderType === OrderTypeEnum.DINE_IN}
-                  onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
-                  style={[
-                    styles.filterChip,
-                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterChipSelected
-                  ]}
-                  textStyle={[
-                    styles.filterChipText,
-                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterChipTextSelected
-                  ]}
-                  icon="silverware-fork-knife"
-                >
-                  Para Comer Aquí
-                </Chip>
-                <Chip
-                  mode="outlined"
-                  selected={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
-                  onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
-                  style={[
-                    styles.filterChip,
-                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterChipSelected
-                  ]}
-                  textStyle={[
-                    styles.filterChipText,
-                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterChipTextSelected
-                  ]}
-                  icon="package-variant"
-                >
-                  Para Llevar
-                </Chip>
-                <Chip
-                  mode="outlined"
-                  selected={selectedOrderType === OrderTypeEnum.DELIVERY}
-                  onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
-                  style={[
-                    styles.filterChip,
-                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterChipSelected
-                  ]}
-                  textStyle={[
-                    styles.filterChipText,
-                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterChipTextSelected
-                  ]}
-                  icon="truck-delivery"
-                >
-                  Domicilio
-                </Chip>
-              </ScrollView>
-            </View>
-            
-            {/* Lista de órdenes */}
-            <View style={styles.listContainer}>
-              <FlatList
-                data={filteredOrders}
-                keyExtractor={(item) => item.id}
-                renderItem={renderOrderItem}
-                refreshing={isFetching}
-                onRefresh={handleRefresh}
-                contentContainerStyle={styles.listContentContainer}
-                ListEmptyComponent={ListEmptyComponent}
-              />
-            </View>
-          </>
-        )}
-        {/* Modal de Selección de Impresora */}
-        <Portal>
-          <PrinterSelectionModal
-            visible={isPrinterModalVisible}
-            onDismiss={() => setIsPrinterModalVisible(false)}
-            onPrinterSelect={handlePrinterSelect}
-          />
-          {/* Modal de Edición de Orden usando OrderCartDetail */}
-          {editingOrderId && (
-            <OrderCartDetail
-              visible={isEditModalVisible}
-              isEditMode={true}
-              orderId={editingOrderId}
-              orderNumber={ordersData?.find(o => o.id === editingOrderId)?.dailyNumber}
-              orderDate={ordersData?.find(o => o.id === editingOrderId)?.createdAt ? new Date(ordersData.find(o => o.id === editingOrderId)!.createdAt) : undefined}
-              navigation={navigation}
-              onClose={() => {
-                setIsEditModalVisible(false);
-                setEditingOrderId(null);
-              }}
-              onConfirmOrder={async (details: OrderDetailsForBackend) => {
-                // Formatear el número de teléfono si existe
-                let formattedPhone: string | null = null;
-                if (details.phoneNumber && details.phoneNumber.trim() !== '') {
-                  // Si ya tiene formato internacional, usarlo tal cual
-                  if (details.phoneNumber.startsWith('+')) {
-                    formattedPhone = details.phoneNumber;
-                  } else {
-                    // Eliminar espacios, guiones y caracteres no numéricos
-                    let cleanPhone = details.phoneNumber.replace(/\D/g, '');
-                    
-                    // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
-                    if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
-                      cleanPhone = cleanPhone.substring(1);
-                    }
-                    // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
-                    else if (cleanPhone.length === 12 && cleanPhone.startsWith('521')) {
-                      cleanPhone = cleanPhone.substring(2);
-                    }
-                    
-                    // Si después del formateo tiene 10 dígitos, agregar +52
-                    if (cleanPhone.length === 10) {
-                      formattedPhone = `+52${cleanPhone}`;
-                    }
+                Todas
+              </Chip>
+              <Chip
+                mode="outlined"
+                selected={selectedOrderType === OrderTypeEnum.DINE_IN}
+                onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
+                style={[
+                  styles.filterChip,
+                  selectedOrderType === OrderTypeEnum.DINE_IN &&
+                    styles.filterChipSelected,
+                ]}
+                textStyle={[
+                  styles.filterChipText,
+                  selectedOrderType === OrderTypeEnum.DINE_IN &&
+                    styles.filterChipTextSelected,
+                ]}
+                icon="silverware-fork-knife"
+              >
+                Para Comer Aquí
+              </Chip>
+              <Chip
+                mode="outlined"
+                selected={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
+                onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
+                style={[
+                  styles.filterChip,
+                  selectedOrderType === OrderTypeEnum.TAKE_AWAY &&
+                    styles.filterChipSelected,
+                ]}
+                textStyle={[
+                  styles.filterChipText,
+                  selectedOrderType === OrderTypeEnum.TAKE_AWAY &&
+                    styles.filterChipTextSelected,
+                ]}
+                icon="package-variant"
+              >
+                Para Llevar
+              </Chip>
+              <Chip
+                mode="outlined"
+                selected={selectedOrderType === OrderTypeEnum.DELIVERY}
+                onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
+                style={[
+                  styles.filterChip,
+                  selectedOrderType === OrderTypeEnum.DELIVERY &&
+                    styles.filterChipSelected,
+                ]}
+                textStyle={[
+                  styles.filterChipText,
+                  selectedOrderType === OrderTypeEnum.DELIVERY &&
+                    styles.filterChipTextSelected,
+                ]}
+                icon="truck-delivery"
+              >
+                Domicilio
+              </Chip>
+            </ScrollView>
+          </View>
+
+          {/* Lista de órdenes */}
+          <View style={styles.listContainer}>
+            <FlatList
+              data={filteredOrders}
+              keyExtractor={(item) => item.id}
+              renderItem={renderOrderItem}
+              refreshing={isFetching}
+              onRefresh={handleRefresh}
+              contentContainerStyle={styles.listContentContainer}
+              ListEmptyComponent={ListEmptyComponent}
+            />
+          </View>
+        </>
+      )}
+      {/* Modal de Selección de Impresora */}
+      <Portal>
+        <PrinterSelectionModal
+          visible={isPrinterModalVisible}
+          onDismiss={() => setIsPrinterModalVisible(false)}
+          onPrinterSelect={handlePrinterSelect}
+        />
+        {/* Modal de Edición de Orden usando OrderCartDetail */}
+        {editingOrderId && (
+          <OrderCartDetail
+            visible={isEditModalVisible}
+            isEditMode={true}
+            orderId={editingOrderId}
+            orderNumber={
+              ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber
+            }
+            orderDate={
+              ordersData?.find((o) => o.id === editingOrderId)?.createdAt
+                ? new Date(
+                    ordersData.find((o) => o.id === editingOrderId)!.createdAt,
+                  )
+                : undefined
+            }
+            navigation={navigation}
+            onClose={() => {
+              setIsEditModalVisible(false);
+              setEditingOrderId(null);
+            }}
+            onConfirmOrder={async (details: OrderDetailsForBackend) => {
+              // Formatear el número de teléfono si existe
+              let formattedPhone: string | null = null;
+              if (details.phoneNumber && details.phoneNumber.trim() !== '') {
+                // Si ya tiene formato internacional, usarlo tal cual
+                if (details.phoneNumber.startsWith('+')) {
+                  formattedPhone = details.phoneNumber;
+                } else {
+                  // Eliminar espacios, guiones y caracteres no numéricos
+                  let cleanPhone = details.phoneNumber.replace(/\D/g, '');
+
+                  // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
+                  if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
+                    cleanPhone = cleanPhone.substring(1);
+                  }
+                  // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
+                  else if (
+                    cleanPhone.length === 12 &&
+                    cleanPhone.startsWith('521')
+                  ) {
+                    cleanPhone = cleanPhone.substring(2);
+                  }
+
+                  // Si después del formateo tiene 10 dígitos, agregar +52
+                  if (cleanPhone.length === 10) {
+                    formattedPhone = `+52${cleanPhone}`;
                   }
                 }
-                
-                // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
-                const payload = {
-                  orderType: details.orderType,
-                  items: details.items, // Enviar items para actualizar
-                  tableId: details.tableId || null,
-                  scheduledAt: details.scheduledAt || null,
-                  customerName: details.customerName || null,
-                  phoneNumber: formattedPhone,
-                  deliveryAddress: details.deliveryAddress || null,
-                  notes: details.notes || null,
-                  total: details.total,
-                  subtotal: details.subtotal,
-                };
-                
-                try {
-                  await updateOrderMutation.mutateAsync({ orderId: editingOrderId, payload });
-                  // Limpiar estados después de actualización exitosa
-                  setIsEditModalVisible(false);
-                  setEditingOrderId(null);
-                } catch (error) {
-                  console.error("Error al actualizar la orden:", error);
-                  // No cerrar el modal en caso de error para que el usuario pueda reintentar
-                }
-              }}
-              onAddProducts={(currentItems) => {
-                console.log('onAddProducts llamado con items:', currentItems?.length || 0);
-                // Guardar los items actuales
-                setCurrentOrderItems(currentItems || []);
-                
-                // Cerrar el modal de edición antes de navegar
+              }
+
+              // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
+              const payload = {
+                orderType: details.orderType,
+                items: details.items, // Enviar items para actualizar
+                tableId: details.tableId || null,
+                scheduledAt: details.scheduledAt || null,
+                customerName: details.customerName || null,
+                phoneNumber: formattedPhone,
+                deliveryAddress: details.deliveryAddress || null,
+                notes: details.notes || null,
+                total: details.total,
+                subtotal: details.subtotal,
+              };
+
+              try {
+                await updateOrderMutation.mutateAsync({
+                  orderId: editingOrderId,
+                  payload,
+                });
+                // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
-                
-                // Obtener la orden actual
-                const currentOrder = ordersData?.find(o => o.id === editingOrderId);
-                
-                if (currentOrder) {
-                  console.log('Navegando a CreateOrder con:', {
-                    itemsCount: currentItems?.length || 0,
-                    orderNumber: currentOrder.dailyNumber
-                  });
-                  
-                  // Navegar a CreateOrderScreen con los datos de la orden
-                  navigation.navigate('CreateOrder', {
-                    isAddingToOrder: true,
-                    orderId: editingOrderId || undefined,
-                    orderNumber: currentOrder.dailyNumber,
-                    orderDate: currentOrder.createdAt,
-                    existingItems: currentItems || [], // Pasar los items actuales del modal
-                    orderType: currentOrder.orderType,
-                    tableId: currentOrder.tableId || undefined,
-                    customerName: currentOrder.customerName || undefined,
-                    phoneNumber: currentOrder.phoneNumber || undefined,
-                    deliveryAddress: currentOrder.deliveryAddress || undefined,
-                    notes: currentOrder.notes || undefined,
-                    scheduledAt: currentOrder.scheduledAt || undefined,
-                  } as any);
-                }
-              }}
-              onCancelOrder={() => {
-                if (editingOrderId) {
-                  handleCancelOrder(editingOrderId);
-                }
-              }}
-            />
-          )}
-        </Portal>
-      </SafeAreaView>
+                setEditingOrderId(null);
+              } catch (error) {
+                console.error('Error al actualizar la orden:', error);
+                // No cerrar el modal en caso de error para que el usuario pueda reintentar
+              }
+            }}
+            onAddProducts={(currentItems) => {
+              console.log(
+                'onAddProducts llamado con items:',
+                currentItems?.length || 0,
+              );
+              // Guardar los items actuales
+              setCurrentOrderItems(currentItems || []);
+
+              // Cerrar el modal de edición antes de navegar
+              setIsEditModalVisible(false);
+
+              // Obtener la orden actual
+              const currentOrder = ordersData?.find(
+                (o) => o.id === editingOrderId,
+              );
+
+              if (currentOrder) {
+                console.log('Navegando a CreateOrder con:', {
+                  itemsCount: currentItems?.length || 0,
+                  orderNumber: currentOrder.dailyNumber,
+                });
+
+                // Navegar a CreateOrderScreen con los datos de la orden
+                navigation.navigate('CreateOrder', {
+                  isAddingToOrder: true,
+                  orderId: editingOrderId || undefined,
+                  orderNumber: currentOrder.dailyNumber,
+                  orderDate: currentOrder.createdAt,
+                  existingItems: currentItems || [], // Pasar los items actuales del modal
+                  orderType: currentOrder.orderType,
+                  tableId: currentOrder.tableId || undefined,
+                  customerName: currentOrder.customerName || undefined,
+                  phoneNumber: currentOrder.phoneNumber || undefined,
+                  deliveryAddress: currentOrder.deliveryAddress || undefined,
+                  notes: currentOrder.notes || undefined,
+                  scheduledAt: currentOrder.scheduledAt || undefined,
+                } as any);
+              }
+            }}
+            onCancelOrder={() => {
+              if (editingOrderId) {
+                handleCancelOrder(editingOrderId);
+              }
+            }}
+          />
+        )}
+      </Portal>
+    </SafeAreaView>
   );
 };
 
-const createStyles = (theme: AppTheme) => // Usar AppTheme directamente
+const createStyles = (
+  theme: AppTheme, // Usar AppTheme directamente
+) =>
   StyleSheet.create({
     container: {
       flex: 1,

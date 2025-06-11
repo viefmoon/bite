@@ -4,8 +4,8 @@ import React, {
   useState,
   useMemo,
   useCallback,
-} from "react"; 
-import { Product, OrderTypeEnum, type OrderType } from "../types/orders.types"; // Importar OrderType y Enum
+} from 'react';
+import { Product, OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderType y Enum
 
 const generateId = () => {
   return (
@@ -34,7 +34,12 @@ export interface CartItem {
   variantName?: string;
   preparationNotes?: string;
   notes?: string; // Add notes field for backward compatibility
-  preparationStatus?: 'PENDING' | 'IN_PROGRESS' | 'READY' | 'DELIVERED' | 'CANCELLED'; // Estado de preparación
+  preparationStatus?:
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'READY'
+    | 'DELIVERED'
+    | 'CANCELLED'; // Estado de preparación
 }
 
 interface CartContextType {
@@ -46,7 +51,7 @@ interface CartContextType {
     quantity?: number,
     variantId?: string,
     modifiers?: CartItemModifier[],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => void;
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
@@ -57,7 +62,7 @@ interface CartContextType {
     preparationNotes?: string,
     variantId?: string,
     variantName?: string,
-    unitPrice?: number
+    unitPrice?: number,
   ) => void;
   clearCart: () => void;
   isCartEmpty: boolean;
@@ -92,7 +97,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error("useCart debe ser usado dentro de un CartProvider");
+    throw new Error('useCart debe ser usado dentro de un CartProvider');
   }
   return context;
 };
@@ -114,7 +119,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [orderNotes, setOrderNotes] = useState<string>('');
 
-
   const subtotal = useMemo(() => {
     return items.reduce((sum, item: CartItem) => sum + item.totalPrice, 0);
   }, [items]);
@@ -135,45 +139,54 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     quantity: number = 1,
     variantId?: string,
     modifiers: CartItemModifier[] = [],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => {
     const variantToAdd = variantId
       ? product.variants?.find((v) => v.id === variantId)
       : undefined;
 
-    const unitPrice = variantToAdd 
-      ? Number(variantToAdd.price) 
+    const unitPrice = variantToAdd
+      ? Number(variantToAdd.price)
       : Number(product.price) || 0;
 
-    const modifiersPrice = modifiers.reduce((sum, mod) => sum + Number(mod.price || 0), 0);
+    const modifiersPrice = modifiers.reduce(
+      (sum, mod) => sum + Number(mod.price || 0),
+      0,
+    );
 
     setItems((currentItems) => {
       // Buscar si existe un item idéntico
       const existingItemIndex = currentItems.findIndex((item) => {
         // Verificar que sea el mismo producto
         if (item.productId !== product.id) return false;
-        
+
         // Verificar que sea la misma variante (o ambas undefined)
         if (item.variantId !== variantId) return false;
-        
+
         // Verificar que tengan las mismas notas de preparación
         if (item.preparationNotes !== preparationNotes) return false;
-        
+
         // Verificar que tengan los mismos modificadores
         if (item.modifiers.length !== modifiers.length) return false;
-        
+
         // Comparar cada modificador (asumiendo que el orden no importa)
-        const sortedExistingModifiers = [...item.modifiers].sort((a, b) => a.id.localeCompare(b.id));
-        const sortedNewModifiers = [...modifiers].sort((a, b) => a.id.localeCompare(b.id));
-        
+        const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
+          a.id.localeCompare(b.id),
+        );
+        const sortedNewModifiers = [...modifiers].sort((a, b) =>
+          a.id.localeCompare(b.id),
+        );
+
         for (let i = 0; i < sortedExistingModifiers.length; i++) {
-          if (sortedExistingModifiers[i].id !== sortedNewModifiers[i].id ||
-              sortedExistingModifiers[i].name !== sortedNewModifiers[i].name ||
-              sortedExistingModifiers[i].price !== sortedNewModifiers[i].price) {
+          if (
+            sortedExistingModifiers[i].id !== sortedNewModifiers[i].id ||
+            sortedExistingModifiers[i].name !== sortedNewModifiers[i].name ||
+            sortedExistingModifiers[i].price !== sortedNewModifiers[i].price
+          ) {
             return false;
           }
         }
-        
+
         return true;
       });
 
@@ -182,14 +195,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const updatedItems = [...currentItems];
         const existingItem = updatedItems[existingItemIndex];
         const newQuantity = existingItem.quantity + quantity;
-        const newTotalPrice = (existingItem.unitPrice + modifiersPrice) * newQuantity;
-        
+        const newTotalPrice =
+          (existingItem.unitPrice + modifiersPrice) * newQuantity;
+
         updatedItems[existingItemIndex] = {
           ...existingItem,
           quantity: newQuantity,
           totalPrice: newTotalPrice,
         };
-        
+
         return updatedItems;
       } else {
         // Si no existe, crear un nuevo item
@@ -205,7 +219,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           variantName: variantToAdd?.name,
           preparationNotes,
         };
-        
+
         return [...currentItems, newItem];
       }
     });
@@ -213,7 +227,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const removeItem = (itemId: string) => {
     setItems((currentItems) =>
-      currentItems.filter((item) => item.id !== itemId)
+      currentItems.filter((item) => item.id !== itemId),
     );
   };
 
@@ -228,7 +242,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         if (item.id === itemId) {
           const modifiersPrice = item.modifiers.reduce(
             (sum, mod) => sum + Number(mod.price || 0),
-            0
+            0,
           );
           const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
           return {
@@ -238,7 +252,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           };
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -249,30 +263,35 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     preparationNotes?: string,
     variantId?: string,
     variantName?: string,
-    unitPrice?: number
+    unitPrice?: number,
   ) => {
     setItems((currentItems) =>
       currentItems.map((item) => {
         if (item.id === itemId) {
           const modifiersPrice = modifiers.reduce(
             (sum, mod) => sum + Number(mod.price || 0),
-            0
+            0,
           );
-          const finalUnitPrice = unitPrice !== undefined ? unitPrice : item.unitPrice;
+          const finalUnitPrice =
+            unitPrice !== undefined ? unitPrice : item.unitPrice;
           const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
           return {
             ...item,
             quantity,
             modifiers,
-            preparationNotes: preparationNotes !== undefined ? preparationNotes : item.preparationNotes,
+            preparationNotes:
+              preparationNotes !== undefined
+                ? preparationNotes
+                : item.preparationNotes,
             variantId: variantId !== undefined ? variantId : item.variantId,
-            variantName: variantName !== undefined ? variantName : item.variantName,
+            variantName:
+              variantName !== undefined ? variantName : item.variantName,
             unitPrice: finalUnitPrice,
             totalPrice: newTotalPrice,
           };
         }
         return item;
-      })
+      }),
     );
   };
 

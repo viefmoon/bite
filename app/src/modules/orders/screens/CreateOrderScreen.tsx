@@ -4,8 +4,8 @@ import React, {
   useRef,
   useCallback,
   useEffect,
-} from "react";
-import { StyleSheet, View, FlatList } from "react-native";
+} from 'react';
+import { StyleSheet, View, FlatList } from 'react-native';
 import {
   Text,
   Portal,
@@ -14,38 +14,40 @@ import {
   Title,
   Appbar,
   IconButton,
-} from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useGetFullMenu } from "../hooks/useMenuQueries";
+} from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useGetFullMenu } from '../hooks/useMenuQueries';
 // Importar el hook de mutación para crear órdenes
-import { useCreateOrderMutation, useUpdateOrderMutation } from "@/modules/orders/hooks/useOrdersQueries"; // Usar ruta absoluta
-import { useCart, CartProvider, CartItem } from "../context/CartContext";
-import { CartItemModifier } from "../context/CartContext";
+import {
+  useCreateOrderMutation,
+  useUpdateOrderMutation,
+} from '@/modules/orders/hooks/useOrdersQueries'; // Usar ruta absoluta
+import { useCart, CartProvider, CartItem } from '../context/CartContext';
+import { CartItemModifier } from '../context/CartContext';
 import {
   OrderType,
   Product,
   Category,
   SubCategory,
   Order, // Importar el tipo Order
-} from "../types/orders.types";
-import { Image } from "expo-image";
-import { getImageUrl } from "@/app/lib/imageUtils";
+} from '../types/orders.types';
+import { Image } from 'expo-image';
+import { getImageUrl } from '@/app/lib/imageUtils';
 
-import OrderCartDetail from "../components/OrderCartDetail";
-import ProductCustomizationModal from "../components/ProductCustomizationModal";
-import SimpleProductDescriptionModal from "../components/SimpleProductDescriptionModal";
-import CartButton from "../components/CartButton";
-import ConfirmationModal from "@/app/components/common/ConfirmationModal";
-import { useSnackbarStore } from "@/app/store/snackbarStore"; // Importar snackbar
-import { getApiErrorMessage } from "@/app/lib/errorMapping"; // Importar mapeo de errores
+import OrderCartDetail from '../components/OrderCartDetail';
+import ProductCustomizationModal from '../components/ProductCustomizationModal';
+import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
+import CartButton from '../components/CartButton';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
+import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar
+import { getApiErrorMessage } from '@/app/lib/errorMapping'; // Importar mapeo de errores
 
-import { useAppTheme } from "@/app/styles/theme";
+import { useAppTheme } from '@/app/styles/theme';
 // Importar el tipo completo para el payload de confirmación
-import type { OrderDetailsForBackend } from "../components/OrderCartDetail";
-import type { OrdersStackScreenProps } from "@/app/navigation/types";
+import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
+import type { OrdersStackScreenProps } from '@/app/navigation/types';
 import type { UpdateOrderPayload } from '../types/update-order.types';
-
 
 interface CartButtonHandle {
   animate: () => void;
@@ -56,7 +58,7 @@ const CreateOrderScreen = () => {
   const { colors, fonts } = theme;
   const navigation = useNavigation();
   const route = useRoute<OrdersStackScreenProps<'CreateOrder'>['route']>();
-  
+
   // Verificar si estamos en modo de agregar productos a una orden existente
   const isAddingToOrder = route.params?.isAddingToOrder || false;
   const existingOrderId = route.params?.orderId;
@@ -99,24 +101,28 @@ const CreateOrderScreen = () => {
   const cartButtonRef = useRef<CartButtonHandle>(null);
 
   const [navigationLevel, setNavigationLevel] = useState<
-    "categories" | "subcategories" | "products"
-  >("categories");
+    'categories' | 'subcategories' | 'products'
+  >('categories');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
     string | null
   >(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
-  const [showExitConfirmationModal, setShowExitConfirmationModal] = useState(false);
-  const [pendingNavigationAction, setPendingNavigationAction] = useState<(() => void) | null>(null);
+  const [showExitConfirmationModal, setShowExitConfirmationModal] =
+    useState(false);
+  const [pendingNavigationAction, setPendingNavigationAction] = useState<
+    (() => void) | null
+  >(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
-  const [selectedProductForDescription, setSelectedProductForDescription] = useState<Product | null>(null);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [selectedProductForDescription, setSelectedProductForDescription] =
+    useState<Product | null>(null);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
 
-
-  const { data: menu, isLoading } = useGetFullMenu(); 
+  const { data: menu, isLoading } = useGetFullMenu();
 
   // Cargar los datos existentes cuando estamos en modo edición
   useEffect(() => {
@@ -124,15 +130,15 @@ const CreateOrderScreen = () => {
       console.log('Modo agregar productos activado', {
         existingItems: existingItems?.length || 0,
         existingOrderNumber,
-        existingOrderType
+        existingOrderType,
       });
-      
+
       // Cargar los items existentes en el carrito
       if (existingItems && existingItems.length > 0) {
         console.log('Cargando items existentes:', existingItems);
         setItems(existingItems);
       }
-      
+
       // Cargar los datos de la orden
       if (existingOrderType) setOrderType(existingOrderType);
       if (existingTableId) setSelectedTableId(existingTableId);
@@ -141,10 +147,10 @@ const CreateOrderScreen = () => {
       if (existingDeliveryAddress) setDeliveryAddress(existingDeliveryAddress);
       if (existingNotes) setOrderNotes(existingNotes);
       if (existingScheduledAt) setScheduledTime(new Date(existingScheduledAt));
-      
-      showSnackbar({ 
-        message: `Editando orden #${existingOrderNumber}`, 
-        type: "info" 
+
+      showSnackbar({
+        message: `Editando orden #${existingOrderNumber}`,
+        type: 'info',
       });
     }
   }, [isAddingToOrder, existingItems?.length]); // Incluir existingItems.length como dependencia
@@ -152,12 +158,12 @@ const CreateOrderScreen = () => {
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(null);
-    setNavigationLevel("subcategories");
+    setNavigationLevel('subcategories');
   };
 
   const handleSubCategorySelect = (subcategoryId: string) => {
     setSelectedSubcategoryId(subcategoryId);
-    setNavigationLevel("products");
+    setNavigationLevel('products');
   };
 
   const productNeedsCustomization = (product: Product): boolean => {
@@ -191,49 +197,56 @@ const CreateOrderScreen = () => {
     }
   }, [editingItem, isCartEmpty, showCart]);
 
-  const handleEditItem = useCallback((item: CartItem) => {
-    // Encontrar el producto completo desde el menú
-    if (!menu || !Array.isArray(menu)) {
-      showSnackbar({ 
-        message: "El menú aún se está cargando. Por favor, intenta nuevamente.", 
-        type: "info" 
-      });
-      return;
-    }
-    
-    // Buscar el producto en la estructura anidada
-    let product: Product | undefined;
-    
-    for (const category of menu) {
-      if (category.subcategories && Array.isArray(category.subcategories)) {
-        for (const subcategory of category.subcategories) {
-          if (subcategory.products && Array.isArray(subcategory.products)) {
-            product = subcategory.products.find(p => p.id === item.productId);
-            if (product) break;
+  const handleEditItem = useCallback(
+    (item: CartItem) => {
+      // Encontrar el producto completo desde el menú
+      if (!menu || !Array.isArray(menu)) {
+        showSnackbar({
+          message:
+            'El menú aún se está cargando. Por favor, intenta nuevamente.',
+          type: 'info',
+        });
+        return;
+      }
+
+      // Buscar el producto en la estructura anidada
+      let product: Product | undefined;
+
+      for (const category of menu) {
+        if (category.subcategories && Array.isArray(category.subcategories)) {
+          for (const subcategory of category.subcategories) {
+            if (subcategory.products && Array.isArray(subcategory.products)) {
+              product = subcategory.products.find(
+                (p) => p.id === item.productId,
+              );
+              if (product) break;
+            }
           }
         }
+        if (product) break;
       }
-      if (product) break;
-    }
-    
-    if (product) {
-      setEditingItem(item);
-      setSelectedProduct(product);
-      hideCart(); // Cerrar el carrito para mostrar el modal de personalización
-    } else {
-      showSnackbar({ 
-        message: "No se pudo encontrar el producto. Por favor, recarga la pantalla.", 
-        type: "error" 
-      });
-    }
-  }, [menu, showSnackbar, hideCart]);
+
+      if (product) {
+        setEditingItem(item);
+        setSelectedProduct(product);
+        hideCart(); // Cerrar el carrito para mostrar el modal de personalización
+      } else {
+        showSnackbar({
+          message:
+            'No se pudo encontrar el producto. Por favor, recarga la pantalla.',
+          type: 'error',
+        });
+      }
+    },
+    [menu, showSnackbar, hideCart],
+  );
 
   const handleGoBackInternal = () => {
-     if (navigationLevel === "products") {
-      setNavigationLevel("subcategories");
+    if (navigationLevel === 'products') {
+      setNavigationLevel('subcategories');
       setSelectedSubcategoryId(null);
-    } else if (navigationLevel === "subcategories") {
-      setNavigationLevel("categories");
+    } else if (navigationLevel === 'subcategories') {
+      setNavigationLevel('categories');
       setSelectedCategoryId(null);
     }
   };
@@ -253,17 +266,18 @@ const CreateOrderScreen = () => {
       if (isCartEmpty || showExitConfirmationModal) {
         return;
       }
-      
+
       // Prevent default for any navigation away when cart has items
       // This includes back navigation and drawer navigation
       e.preventDefault();
-      setPendingNavigationAction(() => () => navigation.dispatch(e.data.action));
+      setPendingNavigationAction(
+        () => () => navigation.dispatch(e.data.action),
+      );
       setShowExitConfirmationModal(true);
     });
 
     return unsubscribe;
   }, [navigation, isCartEmpty, showExitConfirmationModal]);
-
 
   const handleViewCart = useCallback(() => {
     showCart();
@@ -276,12 +290,12 @@ const CreateOrderScreen = () => {
   // Actualizar handleConfirmOrder para usar la mutación
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
     if (isProcessingOrder) return; // Prevenir múltiples envíos
-    
+
     // Si estamos en modo de agregar productos, actualizar la orden directamente
     if (isAddingToOrder && existingOrderId) {
-      console.log("Actualizando orden con detalles:", details);
+      console.log('Actualizando orden con detalles:', details);
       setIsProcessingOrder(true);
-      
+
       try {
         // Formatear el número de teléfono si existe
         let formattedPhone: string | null = null;
@@ -292,7 +306,7 @@ const CreateOrderScreen = () => {
           } else {
             // Eliminar espacios, guiones y caracteres no numéricos
             let cleanPhone = details.phoneNumber.replace(/\D/g, '');
-            
+
             // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
             if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
               cleanPhone = cleanPhone.substring(1);
@@ -301,14 +315,14 @@ const CreateOrderScreen = () => {
             else if (cleanPhone.length === 12 && cleanPhone.startsWith('521')) {
               cleanPhone = cleanPhone.substring(2);
             }
-            
+
             // Si después del formateo tiene 10 dígitos, agregar +52
             if (cleanPhone.length === 10) {
               formattedPhone = `+52${cleanPhone}`;
             }
           }
         }
-        
+
         // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
         const payload = {
           orderType: details.orderType,
@@ -322,31 +336,43 @@ const CreateOrderScreen = () => {
           total: details.total,
           subtotal: details.subtotal,
         };
-        
-        await updateOrderMutation.mutateAsync({ orderId: existingOrderId, payload });
-        showSnackbar({ message: `Orden #${existingOrderNumber} actualizada con éxito`, type: "success" });
+
+        await updateOrderMutation.mutateAsync({
+          orderId: existingOrderId,
+          payload,
+        });
+        showSnackbar({
+          message: `Orden #${existingOrderNumber} actualizada con éxito`,
+          type: 'success',
+        });
         hideCart();
         clearCart();
         navigation.goBack();
       } catch (error) {
         const message = getApiErrorMessage(error as Error);
-        showSnackbar({ message: `Error al actualizar orden: ${message}`, type: "error" });
-        console.error("Error al actualizar la orden:", error);
+        showSnackbar({
+          message: `Error al actualizar orden: ${message}`,
+          type: 'error',
+        });
+        console.error('Error al actualizar la orden:', error);
       } finally {
         setIsProcessingOrder(false);
       }
       return;
     }
-    
-    console.log("Intentando confirmar orden con detalles:", details);
+
+    console.log('Intentando confirmar orden con detalles:', details);
     setIsProcessingOrder(true);
-    
+
     try {
       // Llamar a la mutación para enviar la orden al backend
       const createdOrder = await createOrderMutation.mutateAsync(details);
-      
+
       // Usar 'dailyNumber' que es lo que devuelve el backend
-      showSnackbar({ message: `Orden #${createdOrder.dailyNumber} creada con éxito`, type: "success" });
+      showSnackbar({
+        message: `Orden #${createdOrder.dailyNumber} creada con éxito`,
+        type: 'success',
+      });
       hideCart();
       clearCart(); // Limpiar carrito después de éxito
       // Opcional: Navegar a otra pantalla, por ejemplo, la lista de órdenes
@@ -355,8 +381,11 @@ const CreateOrderScreen = () => {
     } catch (error) {
       // El manejo de errores con snackbar ya debería estar en el hook useCreateOrderMutation
       const message = getApiErrorMessage(error as Error);
-      showSnackbar({ message: `Error al crear orden: ${message}`, type: "error" });
-      console.error("Error al crear la orden:", error);
+      showSnackbar({
+        message: `Error al crear orden: ${message}`,
+        type: 'error',
+      });
+      console.error('Error al crear la orden:', error);
     } finally {
       setIsProcessingOrder(false);
     }
@@ -367,14 +396,14 @@ const CreateOrderScreen = () => {
     quantity: number,
     selectedVariantId?: string,
     selectedModifiers?: CartItemModifier[],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => {
     originalAddItem(
       product,
       quantity,
       selectedVariantId,
       selectedModifiers,
-      preparationNotes
+      preparationNotes,
     );
     cartButtonRef.current?.animate();
   };
@@ -403,8 +432,9 @@ const CreateOrderScreen = () => {
 
   const selectedSubCategory =
     selectedCategory && Array.isArray(selectedCategory.subcategories) // Corregido a lowercase
-      ? selectedCategory.subcategories.find( // Corregido a lowercase
-          (sub: SubCategory) => sub.id === selectedSubcategoryId
+      ? selectedCategory.subcategories.find(
+          // Corregido a lowercase
+          (sub: SubCategory) => sub.id === selectedSubcategoryId,
         )
       : null;
 
@@ -413,25 +443,31 @@ const CreateOrderScreen = () => {
       return selectedProduct.name;
     }
     // Si estamos en modo edición, mostrar título especial
-    if (isAddingToOrder && navigationLevel === "categories") {
+    if (isAddingToOrder && navigationLevel === 'categories') {
       return `Agregar a Orden #${existingOrderNumber}`;
     }
     switch (navigationLevel) {
-      case "categories":
-        return "Categorías";
-      case "subcategories":
+      case 'categories':
+        return 'Categorías';
+      case 'subcategories':
         return selectedCategory?.name
           ? `Categoría: ${selectedCategory.name}`
-          : "Subcategorías";
-      case "products":
+          : 'Subcategorías';
+      case 'products':
         return selectedSubCategory?.name
           ? `Subcategoría: ${selectedSubCategory.name}`
-          : "Productos";
+          : 'Productos';
       default:
-        return "Categorías";
+        return 'Categorías';
     }
-  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct, isAddingToOrder, existingOrderNumber]);
-
+  }, [
+    navigationLevel,
+    selectedCategory,
+    selectedSubCategory,
+    selectedProduct,
+    isAddingToOrder,
+    existingOrderNumber,
+  ]);
 
   const styles = useMemo(
     () =>
@@ -451,13 +487,13 @@ const CreateOrderScreen = () => {
           paddingBottom: 60,
         },
         row: {
-          justifyContent: "flex-start",
+          justifyContent: 'flex-start',
         },
         cardItem: {
-          width: "48%",
-          marginHorizontal: "1%",
+          width: '48%',
+          marginHorizontal: '1%',
           marginVertical: 4,
-          overflow: "hidden",
+          overflow: 'hidden',
           borderRadius: 8,
           elevation: 2,
         },
@@ -465,36 +501,36 @@ const CreateOrderScreen = () => {
           opacity: 0.5,
         },
         itemImage: {
-          width: "100%",
+          width: '100%',
           height: 120,
         },
         imagePlaceholder: {
-          width: "100%",
+          width: '100%',
           height: 120,
-          backgroundColor: "#eeeeee",
-          justifyContent: "center",
-          alignItems: "center",
+          backgroundColor: '#eeeeee',
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         imageInactive: {
           opacity: 0.6,
         },
         placeholderText: {
           fontSize: 24,
-          fontWeight: "bold",
-          color: "#999",
+          fontWeight: 'bold',
+          color: '#999',
         },
         cardContent: {
           padding: 12,
         },
         cardTitle: {
           fontSize: 16,
-          fontWeight: "bold",
+          fontWeight: 'bold',
           marginBottom: 4,
         },
         cardHeader: {
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
         },
         infoButton: {
           margin: -8,
@@ -502,20 +538,20 @@ const CreateOrderScreen = () => {
           marginRight: -12,
         },
         priceText: {
-          color: "#2e7d32",
-          fontWeight: "bold",
+          color: '#2e7d32',
+          fontWeight: 'bold',
           marginTop: 4,
         },
         noItemsText: {
-          textAlign: "center",
+          textAlign: 'center',
           marginTop: 40,
           fontSize: 16,
-          color: "#666",
+          color: '#666',
         },
         loadingContainer: {
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         appBar: {
           backgroundColor: colors.elevation.level2,
@@ -524,17 +560,15 @@ const CreateOrderScreen = () => {
         appBarTitle: {
           ...fonts.titleMedium,
           color: colors.onSurface,
-          fontWeight: "bold",
-          textAlign: "center",
+          fontWeight: 'bold',
+          textAlign: 'center',
         },
-        appBarContent: {
-          
-        },
+        appBarContent: {},
         spacer: {
           width: 48,
         },
         inactiveBadge: {
-          position: "absolute",
+          position: 'absolute',
           top: 8,
           right: 8,
           backgroundColor: colors.errorContainer,
@@ -545,25 +579,25 @@ const CreateOrderScreen = () => {
         inactiveBadgeText: {
           fontSize: 12,
           color: colors.onErrorContainer,
-          fontWeight: "600",
+          fontWeight: '600',
         },
       }),
-    [colors, fonts]
+    [colors, fonts],
   );
 
-  
   const handleConfirmExit = () => {
     setShowExitConfirmationModal(false);
-    
+
     // Store the navigation action before clearing the cart
-    const navigationAction = pendingNavigationAction || (() => navigation.goBack());
-    
+    const navigationAction =
+      pendingNavigationAction || (() => navigation.goBack());
+
     // Clear the pending action
     setPendingNavigationAction(null);
-    
+
     // Execute navigation first
     navigationAction();
-    
+
     // Clear cart after navigation to avoid the beforeRemove check
     setTimeout(() => {
       clearCart();
@@ -584,37 +618,47 @@ const CreateOrderScreen = () => {
     setIsDescriptionModalVisible(false);
     setSelectedProductForDescription(null);
   };
-  
 
   const renderContent = () => {
     if (isCartVisible) {
       return (
-        <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
-           <Appbar.Header style={styles.appBar}>
-             <Appbar.BackAction onPress={handleCloseCart} />
-             <Appbar.Content
-               title={isAddingToOrder ? `Editando Orden #${existingOrderNumber}` : "Carrito de Compras"}
-               titleStyle={styles.appBarTitle}
-               style={styles.appBarContent}
-             />
-             <View style={styles.spacer} />
-           </Appbar.Header>
-           <OrderCartDetail
-             visible={isCartVisible}
-             onClose={handleCloseCart}
-             onConfirmOrder={handleConfirmOrder}
-             onEditItem={handleEditItem}
-             isEditMode={false}
-             // Si estamos agregando a una orden, pasar info para el header
-             orderNumber={isAddingToOrder ? existingOrderNumber : undefined}
-             orderDate={isAddingToOrder && existingOrderDate ? new Date(existingOrderDate) : undefined}
-           />
+        <SafeAreaView
+          style={styles.safeArea}
+          edges={['left', 'right', 'bottom']}
+        >
+          <Appbar.Header style={styles.appBar}>
+            <Appbar.BackAction onPress={handleCloseCart} />
+            <Appbar.Content
+              title={
+                isAddingToOrder
+                  ? `Editando Orden #${existingOrderNumber}`
+                  : 'Carrito de Compras'
+              }
+              titleStyle={styles.appBarTitle}
+              style={styles.appBarContent}
+            />
+            <View style={styles.spacer} />
+          </Appbar.Header>
+          <OrderCartDetail
+            visible={isCartVisible}
+            onClose={handleCloseCart}
+            onConfirmOrder={handleConfirmOrder}
+            onEditItem={handleEditItem}
+            isEditMode={false}
+            // Si estamos agregando a una orden, pasar info para el header
+            orderNumber={isAddingToOrder ? existingOrderNumber : undefined}
+            orderDate={
+              isAddingToOrder && existingOrderDate
+                ? new Date(existingOrderDate)
+                : undefined
+            }
+          />
         </SafeAreaView>
       );
     }
 
     const blurhash =
-      "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+      '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
     const renderItem = ({
       item,
@@ -627,21 +671,21 @@ const CreateOrderScreen = () => {
       const handlePress = () => {
         // No hacer nada si el elemento está inactivo
         if (!isActive) return;
-        
-        if (navigationLevel === "categories") {
+
+        if (navigationLevel === 'categories') {
           handleCategorySelect(item.id);
-        } else if (navigationLevel === "subcategories") {
+        } else if (navigationLevel === 'subcategories') {
           handleSubCategorySelect(item.id);
-        } else if ("price" in item) {
+        } else if ('price' in item) {
           handleProductSelect(item as Product);
         }
       };
 
       const renderPrice = () => {
         if (
-          navigationLevel === "products" &&
-          "price" in item &&
-          "hasVariants" in item
+          navigationLevel === 'products' &&
+          'price' in item &&
+          'hasVariants' in item
         ) {
           const productItem = item as Product;
           if (
@@ -660,8 +704,8 @@ const CreateOrderScreen = () => {
       };
 
       return (
-        <Card 
-          style={[styles.cardItem, !isActive && styles.cardItemInactive]} 
+        <Card
+          style={[styles.cardItem, !isActive && styles.cardItemInactive]}
           onPress={handlePress}
           disabled={!isActive}
         >
@@ -674,7 +718,12 @@ const CreateOrderScreen = () => {
               transition={300}
             />
           ) : (
-            <View style={[styles.imagePlaceholder, !isActive && styles.imageInactive]}>
+            <View
+              style={[
+                styles.imagePlaceholder,
+                !isActive && styles.imageInactive,
+              ]}
+            >
               <Text style={styles.placeholderText}>
                 {item.name.charAt(0).toUpperCase()}
               </Text>
@@ -686,9 +735,13 @@ const CreateOrderScreen = () => {
             </View>
           )}
           <View style={styles.cardContent}>
-            {navigationLevel === "products" && "price" in item && (item as Product).description ? (
+            {navigationLevel === 'products' &&
+            'price' in item &&
+            (item as Product).description ? (
               <View style={styles.cardHeader}>
-                <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
+                <Title style={[styles.cardTitle, { flex: 1 }]}>
+                  {item.name}
+                </Title>
                 <IconButton
                   icon="information-outline"
                   size={20}
@@ -707,11 +760,11 @@ const CreateOrderScreen = () => {
 
     const getItemsToDisplay = () => {
       switch (navigationLevel) {
-        case "categories":
+        case 'categories':
           return getCategories();
-        case "subcategories":
+        case 'subcategories':
           return getSubcategories();
-        case "products":
+        case 'products':
           return getProducts();
         default:
           return [];
@@ -724,11 +777,11 @@ const CreateOrderScreen = () => {
     const backAction = selectedProduct
       ? handleCloseProductModal
       : navigationLevel === 'categories'
-      ? () => handleAttemptExit(() => navigation.goBack())
-      : handleGoBackInternal;
+        ? () => handleAttemptExit(() => navigation.goBack())
+        : handleGoBackInternal;
 
     return (
-      <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <Appbar.Header style={styles.appBar} elevated>
           <Appbar.BackAction onPress={backAction} />
           <Appbar.Content
@@ -767,11 +820,11 @@ const CreateOrderScreen = () => {
             />
           ) : (
             <Text style={styles.noItemsText}>
-              {navigationLevel === "products"
-                ? "No hay productos disponibles"
-                : navigationLevel === "subcategories"
-                  ? "No hay subcategorías disponibles"
-                  : "No hay categorías disponibles"}
+              {navigationLevel === 'products'
+                ? 'No hay productos disponibles'
+                : navigationLevel === 'subcategories'
+                  ? 'No hay subcategorías disponibles'
+                  : 'No hay categorías disponibles'}
             </Text>
           )}
         </View>
@@ -797,7 +850,7 @@ const CreateOrderScreen = () => {
               onDismiss={handleCloseProductModal}
             />
           )}
-          
+
           <SimpleProductDescriptionModal
             visible={isDescriptionModalVisible}
             product={selectedProductForDescription}

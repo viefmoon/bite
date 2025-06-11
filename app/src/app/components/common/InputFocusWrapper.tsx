@@ -1,5 +1,11 @@
 import React, { useRef, useCallback } from 'react';
-import { TouchableOpacity, View, Platform, findNodeHandle, AccessibilityInfo } from 'react-native';
+import {
+  TouchableOpacity,
+  View,
+  Platform,
+  findNodeHandle,
+  AccessibilityInfo,
+} from 'react-native';
 
 interface InputFocusWrapperProps {
   children: React.ReactElement;
@@ -11,13 +17,17 @@ interface InputFocusWrapperProps {
  * Wrapper para solucionar problemas de focus en inputs dentro de modales
  * Especialmente útil cuando se requiere doble click para enfocar
  */
-const InputFocusWrapper: React.FC<InputFocusWrapperProps> = ({ children, onFocus, disabled = false }) => {
+const InputFocusWrapper: React.FC<InputFocusWrapperProps> = ({
+  children,
+  onFocus,
+  disabled = false,
+}) => {
   const childRef = useRef<any>(null);
   const isFocused = useRef(false);
 
   const handlePress = useCallback(() => {
     if (disabled) return;
-    
+
     const focusInput = () => {
       if (childRef.current) {
         // Primero intentar el método focus directo
@@ -32,13 +42,13 @@ const InputFocusWrapper: React.FC<InputFocusWrapperProps> = ({ children, onFocus
         else if (childRef.current.getNode?.()?.focus) {
           childRef.current.getNode().focus();
         }
-        
+
         // Notificar a accessibility que este elemento está enfocado
         const nodeHandle = findNodeHandle(childRef.current);
         if (nodeHandle) {
           AccessibilityInfo.setAccessibilityFocus(nodeHandle);
         }
-        
+
         isFocused.current = true;
         onFocus?.();
       }
@@ -77,9 +87,7 @@ const InputFocusWrapper: React.FC<InputFocusWrapperProps> = ({ children, onFocus
       style={{ width: '100%' }}
       disabled={disabled}
     >
-      <View pointerEvents={disabled ? 'none' : 'box-only'}>
-        {childWithRef}
-      </View>
+      <View pointerEvents={disabled ? 'none' : 'box-only'}>{childWithRef}</View>
     </TouchableOpacity>
   );
 };

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Esquema Zod para validar un objeto Modifier completo.
@@ -6,8 +6,8 @@ import { z } from "zod";
  */
 export const modifierSchema = z.object({
   id: z.string().uuid(),
-  groupId: z.string().uuid("El ID del grupo no es válido"),
-  name: z.string().min(1, "El nombre es requerido").max(100),
+  groupId: z.string().uuid('El ID del grupo no es válido'),
+  name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
   price: z.coerce.number().nullable().optional(), // Coerce string from API to number
   sortOrder: z.number().int().default(0),

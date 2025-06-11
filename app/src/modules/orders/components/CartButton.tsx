@@ -1,6 +1,6 @@
-import React, { useRef, useState, useCallback } from "react";
-import { StyleSheet, View, Animated } from "react-native";
-import { IconButton, Badge, useTheme } from "react-native-paper";
+import React, { useRef, useState, useCallback } from 'react';
+import { StyleSheet, View, Animated } from 'react-native';
+import { IconButton, Badge, useTheme } from 'react-native-paper';
 
 interface CartButtonProps {
   itemCount: number;
@@ -20,7 +20,7 @@ const CartButton = React.forwardRef(
         backgroundColor: theme.colors.surfaceVariant,
       },
       cartBadge: {
-        position: "absolute",
+        position: 'absolute',
         top: 0,
         right: 0,
         backgroundColor: theme.colors.error,
@@ -61,10 +61,10 @@ const CartButton = React.forwardRef(
 
     const handlePress = useCallback(() => {
       if (isPressedRef.current) return; // Prevenir múltiples clics
-      
+
       isPressedRef.current = true;
       onPress();
-      
+
       // Re-habilitar después de 150ms
       setTimeout(() => {
         isPressedRef.current = false;
@@ -86,7 +86,7 @@ const CartButton = React.forwardRef(
           <Animated.View
             style={{
               transform: [{ scale: cartBadgeScale }],
-              position: "absolute",
+              position: 'absolute',
               top: 0,
               right: 0,
             }}
@@ -98,7 +98,7 @@ const CartButton = React.forwardRef(
         )}
       </View>
     );
-  }
+  },
 );
 
 export default CartButton;

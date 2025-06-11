@@ -35,7 +35,9 @@ export const AvailabilityToggle: React.FC<AvailabilityToggleProps> = ({
           styles.label,
           {
             ...theme.fonts.bodyLarge,
-            color: disabled ? theme.colors.onSurfaceDisabled : theme.colors.onSurface,
+            color: disabled
+              ? theme.colors.onSurfaceDisabled
+              : theme.colors.onSurface,
             fontWeight: level <= 1 ? '500' : '400',
           },
         ]}

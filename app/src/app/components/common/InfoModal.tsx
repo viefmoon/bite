@@ -1,7 +1,7 @@
-import React from "react";
-import { Portal, Dialog, Paragraph, Button } from "react-native-paper";
-import { useAppTheme } from "@/app/styles/theme";
-import { StyleSheet } from "react-native";
+import React from 'react';
+import { Portal, Dialog, Paragraph, Button } from 'react-native-paper';
+import { useAppTheme } from '@/app/styles/theme';
+import { StyleSheet } from 'react-native';
 
 interface InfoModalProps {
   visible: boolean;
@@ -16,7 +16,7 @@ const InfoModal: React.FC<InfoModalProps> = ({
   title,
   message,
   onDismiss,
-  buttonText = "Entendido",
+  buttonText = 'Entendido',
 }) => {
   const theme = useAppTheme();
 
@@ -35,16 +35,14 @@ const InfoModal: React.FC<InfoModalProps> = ({
           lineHeight: 20,
         },
         actions: {
-          justifyContent: "flex-end",
+          justifyContent: 'flex-end',
           paddingHorizontal: theme.spacing.m,
           paddingBottom: theme.spacing.m,
           paddingTop: theme.spacing.s,
         },
-        button: {
-
-        },
+        button: {},
       }),
-    [theme]
+    [theme],
   );
 
   return (
@@ -55,11 +53,7 @@ const InfoModal: React.FC<InfoModalProps> = ({
           <Paragraph style={styles.paragraph}>{message}</Paragraph>
         </Dialog.Content>
         <Dialog.Actions style={styles.actions}>
-          <Button
-            onPress={onDismiss}
-            mode="contained"
-            style={styles.button}
-          >
+          <Button onPress={onDismiss} mode="contained" style={styles.button}>
             {buttonText}
           </Button>
         </Dialog.Actions>

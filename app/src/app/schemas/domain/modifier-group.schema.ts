@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 // Importar Modifier si se incluye en el schema de dominio
 // import { modifierSchema } from './modifier.schema';
 
@@ -8,7 +8,7 @@ import { z } from "zod";
  */
 export const modifierGroupSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   minSelections: z.number().int().min(0).optional(),
   maxSelections: z.number().int().min(1).optional(),

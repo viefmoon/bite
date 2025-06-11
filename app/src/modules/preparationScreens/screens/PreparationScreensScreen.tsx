@@ -1,33 +1,32 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, Button, IconButton } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDrawerStatus } from "@react-navigation/drawer";
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Text, Button, IconButton } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDrawerStatus } from '@react-navigation/drawer';
 
 import GenericList, {
   FilterOption,
-} from "../../../app/components/crud/GenericList";
+} from '../../../app/components/crud/GenericList';
 import GenericDetailModal, {
   DisplayFieldConfig,
-} from "../../../app/components/crud/GenericDetailModal";
-import { useCrudScreenLogic } from "../../../app/hooks/useCrudScreenLogic";
-import PreparationScreenFormModal from "../components/PreparationScreenFormModal";
-import { ProductSelectionModal } from "../components/ProductSelectionModal";
+} from '../../../app/components/crud/GenericDetailModal';
+import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import PreparationScreenFormModal from '../components/PreparationScreenFormModal';
+import { ProductSelectionModal } from '../components/ProductSelectionModal';
 import {
   useGetPreparationScreens,
   useGetPreparationScreenById,
   useDeletePreparationScreen,
   useGetMenuWithAssociations,
   useAssociateProducts,
-} from "../hooks/usePreparationScreensQueries";
+} from '../hooks/usePreparationScreensQueries';
 import {
   PreparationScreen,
   FindAllPreparationScreensDto as FindAllPreparationScreensFilter,
-} from "../schema/preparationScreen.schema";
-import { useAppTheme, AppTheme } from "../../../app/styles/theme";
-import { BaseListQuery } from "../../../app/types/query.types";
-import { useListState } from "@/app/hooks/useListState";
-
+} from '../schema/preparationScreen.schema';
+import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { BaseListQuery } from '../../../app/types/query.types';
+import { useListState } from '@/app/hooks/useListState';
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -37,25 +36,25 @@ const getStyles = (theme: AppTheme) =>
     },
     emptyListContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: theme.spacing.l,
       marginTop: 50,
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     errorText: {
-        color: theme.colors.error,
-        marginBottom: 10,
-        textAlign: 'center',
+      color: theme.colors.error,
+      marginBottom: 10,
+      textAlign: 'center',
     },
     fieldValue: {
-       flexShrink: 1,
-       textAlign: "right",
-       color: theme.colors.onSurface,
+      flexShrink: 1,
+      textAlign: 'right',
+      color: theme.colors.onSurface,
     },
   });
 
@@ -63,16 +62,18 @@ const PreparationScreensScreen = () => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const drawerStatus = useDrawerStatus();
-  const isDrawerOpen = drawerStatus === "open";
+  const isDrawerOpen = drawerStatus === 'open';
 
   const [filters, setFilters] = useState<FindAllPreparationScreensFilter>({});
   const [pagination, setPagination] = useState<BaseListQuery>({
     page: 1,
     limit: 15,
   });
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [isProductModalVisible, setIsProductModalVisible] = useState(false);
-  const [productModalScreenId, setProductModalScreenId] = useState<string | null>(null);
+  const [productModalScreenId, setProductModalScreenId] = useState<
+    string | null
+  >(null);
 
   const {
     data: screensData,
@@ -85,22 +86,23 @@ const PreparationScreensScreen = () => {
   const { mutate: deleteScreenMutate } = useDeletePreparationScreen();
   const associateProductsMutation = useAssociateProducts();
 
-  const deleteScreenWrapper = useCallback(async (id: string): Promise<void> => {
+  const deleteScreenWrapper = useCallback(
+    async (id: string): Promise<void> => {
       return new Promise((resolve, reject) => {
-          deleteScreenMutate(id, {
-              onSuccess: () => resolve(),
-              onError: (error) => reject(error),
-          });
+        deleteScreenMutate(id, {
+          onSuccess: () => resolve(),
+          onError: (error) => reject(error),
+        });
       });
-  }, [deleteScreenMutate]);
+    },
+    [deleteScreenMutate],
+  );
 
   // Hooks para el modal de productos
-  const {
-    data: menuData,
-    isLoading: isLoadingMenu,
-  } = useGetMenuWithAssociations(productModalScreenId, {
-    enabled: !!productModalScreenId && isProductModalVisible,
-  });
+  const { data: menuData, isLoading: isLoadingMenu } =
+    useGetMenuWithAssociations(productModalScreenId, {
+      enabled: !!productModalScreenId && isProductModalVisible,
+    });
 
   const handleOpenProductModal = useCallback((screen: PreparationScreen) => {
     setProductModalScreenId(screen.id);
@@ -112,19 +114,27 @@ const PreparationScreensScreen = () => {
     setProductModalScreenId(null);
   }, []);
 
-  const handleSaveProducts = useCallback((productIds: string[]) => {
-    if (productModalScreenId) {
-      associateProductsMutation.mutate(
-        { id: productModalScreenId, productIds },
-        {
-          onSuccess: () => {
-            handleCloseProductModal();
-            refetchList();
+  const handleSaveProducts = useCallback(
+    (productIds: string[]) => {
+      if (productModalScreenId) {
+        associateProductsMutation.mutate(
+          { id: productModalScreenId, productIds },
+          {
+            onSuccess: () => {
+              handleCloseProductModal();
+              refetchList();
+            },
           },
-        }
-      );
-    }
-  }, [productModalScreenId, associateProductsMutation, handleCloseProductModal, refetchList]);
+        );
+      }
+    },
+    [
+      productModalScreenId,
+      associateProductsMutation,
+      handleCloseProductModal,
+      refetchList,
+    ],
+  );
 
   const {
     isFormModalVisible,
@@ -145,11 +155,12 @@ const PreparationScreensScreen = () => {
 
   const selectedScreenId = selectedItem?.id ?? null;
 
-  const {
-    data: selectedScreenData,
-  } = useGetPreparationScreenById(selectedScreenId, {
-    enabled: !!selectedScreenId && isDetailModalVisible,
-  });
+  const { data: selectedScreenData } = useGetPreparationScreenById(
+    selectedScreenId,
+    {
+      enabled: !!selectedScreenId && isDetailModalVisible,
+    },
+  );
 
   const handleRefresh = useCallback(() => {
     refetchList();
@@ -158,7 +169,10 @@ const PreparationScreensScreen = () => {
   const handleSearchChange = useCallback((query: string) => {
     setSearchTerm(query);
     const timerId = setTimeout(() => {
-      setFilters((prev: FindAllPreparationScreensFilter) => ({ ...prev, name: query || undefined }));
+      setFilters((prev: FindAllPreparationScreensFilter) => ({
+        ...prev,
+        name: query || undefined,
+      }));
       setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
     return () => clearTimeout(timerId);
@@ -167,38 +181,47 @@ const PreparationScreensScreen = () => {
   const handleFilterChange = useCallback((value: string | number) => {
     const strValue = String(value);
     let newIsActive: boolean | undefined;
-    if (strValue === "true") newIsActive = true;
-    else if (strValue === "false") newIsActive = false;
+    if (strValue === 'true') newIsActive = true;
+    else if (strValue === 'false') newIsActive = false;
     else newIsActive = undefined;
-    setFilters((prev: FindAllPreparationScreensFilter) => ({ ...prev, isActive: newIsActive }));
+    setFilters((prev: FindAllPreparationScreensFilter) => ({
+      ...prev,
+      isActive: newIsActive,
+    }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
   const listRenderConfig = {
-    titleField: "name" as keyof PreparationScreen,
-    descriptionField: "description" as keyof PreparationScreen,
+    titleField: 'name' as keyof PreparationScreen,
+    descriptionField: 'description' as keyof PreparationScreen,
     statusConfig: {
-      field: "isActive" as keyof PreparationScreen,
+      field: 'isActive' as keyof PreparationScreen,
       activeValue: true,
-      activeLabel: "Activa",
-      inactiveLabel: "Inactiva",
+      activeLabel: 'Activa',
+      inactiveLabel: 'Inactiva',
     },
   };
 
   const filterOptions: FilterOption<string>[] = [
-    { value: "", label: "Todas" },
-    { value: "true", label: "Activas" },
-    { value: "false", label: "Inactivas" },
+    { value: '', label: 'Todas' },
+    { value: 'true', label: 'Activas' },
+    { value: 'false', label: 'Inactivas' },
   ];
 
   const detailFields: DisplayFieldConfig<PreparationScreen>[] = [
     {
-      field: "products",
-      label: "Productos Asociados",
+      field: 'products',
+      label: 'Productos Asociados',
       render: (products, item) => {
         const productCount = Array.isArray(products) ? products.length : 0;
         return (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             <Text style={[styles.fieldValue, { flex: 1 }]}>
               {productCount > 0 ? `${productCount} productos` : 'Ninguno'}
             </Text>
@@ -221,8 +244,8 @@ const PreparationScreensScreen = () => {
     isError: !!errorList,
     data: screensData?.data,
     emptyConfig: {
-      title: searchTerm 
-        ? 'No se encontraron pantallas' 
+      title: searchTerm
+        ? 'No se encontraron pantallas'
         : 'No hay pantallas de preparación',
       message: searchTerm
         ? `No se encontraron pantallas para "${searchTerm}"`
@@ -232,7 +255,7 @@ const PreparationScreensScreen = () => {
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <GenericList<PreparationScreen>
         showImagePlaceholder={false}
         items={screensData?.data ?? []}
@@ -248,15 +271,17 @@ const PreparationScreensScreen = () => {
         filterOptions={filterOptions}
         filterValue={
           filters.isActive === true
-            ? "true"
+            ? 'true'
             : filters.isActive === false
-              ? "false"
-              : ""
+              ? 'false'
+              : ''
         }
         onFilterChange={handleFilterChange}
         showFab={true}
         onFabPress={handleOpenCreateModal}
-        isModalOpen={isDetailModalVisible || isFormModalVisible || isProductModalVisible}
+        isModalOpen={
+          isDetailModalVisible || isFormModalVisible || isProductModalVisible
+        }
         isDrawerOpen={isDrawerOpen}
         renderItemActions={(item) => (
           <IconButton
@@ -276,10 +301,10 @@ const PreparationScreensScreen = () => {
         statusConfig={listRenderConfig.statusConfig}
         fieldsToDisplay={detailFields}
         onEdit={() => {
-            const itemToEdit = selectedScreenData ?? selectedItem;
-            if (itemToEdit) {
-                handleOpenEditModal(itemToEdit);
-            }
+          const itemToEdit = selectedScreenData ?? selectedItem;
+          if (itemToEdit) {
+            handleOpenEditModal(itemToEdit);
+          }
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Única fuente de verdad para la entidad Area
 export const areaSchema = z.object({

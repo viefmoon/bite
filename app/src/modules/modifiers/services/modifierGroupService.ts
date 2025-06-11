@@ -1,14 +1,14 @@
-import apiClient from "@/app/services/apiClient";
-import { ApiError } from "@/app/lib/errors";
-import { API_PATHS } from "@/app/constants/apiPaths";
+import apiClient from '@/app/services/apiClient';
+import { ApiError } from '@/app/lib/errors';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   ModifierGroup,
   CreateModifierGroupInput,
   UpdateModifierGroupInput,
   modifierGroupApiSchema,
-} from "../schema/modifierGroup.schema";
-import { z } from "zod";
-import { PaginatedResponse } from "@/app/types/api.types";
+} from '../schema/modifierGroup.schema';
+import { z } from 'zod';
+import { PaginatedResponse } from '@/app/types/api.types';
 
 const modifierGroupsListSchema = z.array(modifierGroupApiSchema);
 
@@ -33,7 +33,9 @@ export const modifierGroupService = {
   /**
    * Obtiene todos los grupos de modificadores con paginación.
    */
-  async findAll(params: FindAllParams = {}): Promise<PaginatedResponse<ModifierGroup>> {
+  async findAll(
+    params: FindAllParams = {},
+  ): Promise<PaginatedResponse<ModifierGroup>> {
     const queryParams = {
       page: params.page ?? 1,
       limit: params.limit ?? 10,
@@ -42,20 +44,22 @@ export const modifierGroupService = {
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIER_GROUPS,
-      queryParams
+      queryParams,
     );
 
     if (!response.ok || !response.data) {
       console.error(
-        "Error fetching modifier groups:",
+        'Error fetching modifier groups:',
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     // Parsear como respuesta paginada
-    const paginatedResult = paginatedModifierGroupsSchema.safeParse(response.data);
+    const paginatedResult = paginatedModifierGroupsSchema.safeParse(
+      response.data,
+    );
     if (paginatedResult.success) {
       // Transformar la respuesta del backend a PaginatedResponse
       return {
@@ -63,15 +67,14 @@ export const modifierGroupService = {
         total: paginatedResult.data.total,
         page: paginatedResult.data.page,
         limit: paginatedResult.data.limit,
-        totalPages: Math.ceil(paginatedResult.data.total / paginatedResult.data.limit),
+        totalPages: Math.ceil(
+          paginatedResult.data.total / paginatedResult.data.limit,
+        ),
       };
     }
 
-    console.error(
-      "Invalid data received for modifier groups:",
-      response.data
-    );
-    throw new Error("Received invalid data format for modifier groups.");
+    console.error('Invalid data received for modifier groups:', response.data);
+    throw new Error('Received invalid data format for modifier groups.');
   },
 
   /**
@@ -79,14 +82,14 @@ export const modifierGroupService = {
    */
   async findOne(id: string): Promise<ModifierGroup> {
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIER_GROUPS}/${id}`
+      `${API_PATHS.MODIFIER_GROUPS}/${id}`,
     );
 
     if (!response.ok || !response.data) {
       console.error(
         `Error fetching modifier group ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -95,7 +98,7 @@ export const modifierGroupService = {
     if (!validationResult.success) {
       console.error(
         `Invalid data received for modifier group ${id}:`,
-        validationResult.error.flatten()
+        validationResult.error.flatten(),
       );
       throw new Error(`Received invalid data format for modifier group ${id}.`);
     }
@@ -108,14 +111,14 @@ export const modifierGroupService = {
   async create(data: CreateModifierGroupInput): Promise<ModifierGroup> {
     const response = await apiClient.post<unknown>(
       API_PATHS.MODIFIER_GROUPS,
-      data
+      data,
     );
 
     if (!response.ok || !response.data) {
       console.error(
-        "Error creating modifier group:",
+        'Error creating modifier group:',
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -123,11 +126,11 @@ export const modifierGroupService = {
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       console.error(
-        "Invalid data received after creating modifier group:",
-        validationResult.error.flatten()
+        'Invalid data received after creating modifier group:',
+        validationResult.error.flatten(),
       );
       throw new Error(
-        "Received invalid data format after creating modifier group."
+        'Received invalid data format after creating modifier group.',
       );
     }
     return validationResult.data;
@@ -138,18 +141,18 @@ export const modifierGroupService = {
    */
   async update(
     id: string,
-    data: UpdateModifierGroupInput
+    data: UpdateModifierGroupInput,
   ): Promise<ModifierGroup> {
     const response = await apiClient.patch<unknown>(
       `${API_PATHS.MODIFIER_GROUPS}/${id}`,
-      data
+      data,
     );
 
     if (!response.ok || !response.data) {
       console.error(
         `Error updating modifier group ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -158,10 +161,10 @@ export const modifierGroupService = {
     if (!validationResult.success) {
       console.error(
         `Invalid data received after updating modifier group ${id}:`,
-        validationResult.error.flatten()
+        validationResult.error.flatten(),
       );
       throw new Error(
-        `Received invalid data format after updating modifier group ${id}.`
+        `Received invalid data format after updating modifier group ${id}.`,
       );
     }
     return validationResult.data;
@@ -172,14 +175,14 @@ export const modifierGroupService = {
    */
   async remove(id: string): Promise<void> {
     const response = await apiClient.delete(
-      `${API_PATHS.MODIFIER_GROUPS}/${id}`
+      `${API_PATHS.MODIFIER_GROUPS}/${id}`,
     );
 
     if (!response.ok) {
       console.error(
         `Error deleting modifier group ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }

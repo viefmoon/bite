@@ -6,22 +6,27 @@ import {
   type UseQueryResult,
   type UseMutationResult,
 } from '@tanstack/react-query';
-import { modifierService } from "../services/modifierService";
+import { modifierService } from '../services/modifierService';
 import {
   Modifier,
   CreateModifierInput,
   UpdateModifierInput,
-} from "../schema/modifier.schema";
+} from '../schema/modifier.schema';
 import { ApiError } from '@/app/lib/errors';
-import { useSnackbarStore, type SnackbarState } from '@/app/store/snackbarStore';
+import {
+  useSnackbarStore,
+  type SnackbarState,
+} from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { PaginatedResponse } from '@/app/types/api.types';
 
 const modifierKeys = {
   all: ['modifiers'] as const,
   lists: () => [...modifierKeys.all, 'list'] as const,
-  list: (filters: FindAllModifiersParams = {}) => [...modifierKeys.lists(), filters] as const,
-  listsByGroup: (groupId: string) => [...modifierKeys.lists(), { groupId }] as const,
+  list: (filters: FindAllModifiersParams = {}) =>
+    [...modifierKeys.lists(), filters] as const,
+  listsByGroup: (groupId: string) =>
+    [...modifierKeys.lists(), { groupId }] as const,
   details: () => [...modifierKeys.all, 'detail'] as const,
   detail: (id: string) => [...modifierKeys.details(), id] as const,
 };
@@ -34,10 +39,12 @@ interface FindAllModifiersParams {
   // Añadir otros filtros si existen en el servicio (e.g., isActive, search)
 }
 
-
 export const useModifiersQuery = (
   filters: FindAllModifiersParams = {},
-  options?: Omit<UseQueryOptions<PaginatedResponse<Modifier>, ApiError>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<PaginatedResponse<Modifier>, ApiError>,
+    'queryKey' | 'queryFn'
+  >,
 ): UseQueryResult<PaginatedResponse<Modifier>, ApiError> => {
   const queryKey = modifierKeys.list(filters);
   return useQuery<PaginatedResponse<Modifier>, ApiError>({
@@ -48,35 +55,34 @@ export const useModifiersQuery = (
 };
 
 export const useModifiersByGroupQuery = (
-    groupId: string | undefined,
-    options?: Omit<UseQueryOptions<Modifier[], ApiError>, 'queryKey' | 'queryFn'>
+  groupId: string | undefined,
+  options?: Omit<UseQueryOptions<Modifier[], ApiError>, 'queryKey' | 'queryFn'>,
 ): UseQueryResult<Modifier[], ApiError> => {
-    const queryKey = modifierKeys.listsByGroup(groupId!);
-    return useQuery<Modifier[], ApiError>({
-        queryKey: queryKey,
-        queryFn: () => modifierService.findByGroupId(groupId!),
-        enabled: !!groupId && (options?.enabled ?? true),
-        ...options,
-    });
+  const queryKey = modifierKeys.listsByGroup(groupId!);
+  return useQuery<Modifier[], ApiError>({
+    queryKey: queryKey,
+    queryFn: () => modifierService.findByGroupId(groupId!),
+    enabled: !!groupId && (options?.enabled ?? true),
+    ...options,
+  });
 };
 
-
 export const useModifierQuery = (
-    id: string | undefined,
-    options?: Omit<UseQueryOptions<Modifier, ApiError>, 'queryKey' | 'queryFn'>
+  id: string | undefined,
+  options?: Omit<UseQueryOptions<Modifier, ApiError>, 'queryKey' | 'queryFn'>,
 ): UseQueryResult<Modifier, ApiError> => {
-    const queryKey = modifierKeys.detail(id!);
-    return useQuery<Modifier, ApiError>({
-        queryKey: queryKey,
-        queryFn: () => modifierService.findOne(id!),
-        enabled: !!id && (options?.enabled ?? true),
-        ...options,
-    });
+  const queryKey = modifierKeys.detail(id!);
+  return useQuery<Modifier, ApiError>({
+    queryKey: queryKey,
+    queryFn: () => modifierService.findOne(id!),
+    enabled: !!id && (options?.enabled ?? true),
+    ...options,
+  });
 };
 
 // Contexto para actualización optimista
 type UpdateModifierContext = {
-    previousDetail?: Modifier;
+  previousDetail?: Modifier;
 };
 
 export const useCreateModifierMutation = (): UseMutationResult<
@@ -85,7 +91,9 @@ export const useCreateModifierMutation = (): UseMutationResult<
   CreateModifierInput
 > => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state: SnackbarState) => state.showSnackbar);
+  const showSnackbar = useSnackbarStore(
+    (state: SnackbarState) => state.showSnackbar,
+  );
 
   return useMutation<Modifier, ApiError, CreateModifierInput>({
     mutationFn: modifierService.create,
@@ -93,8 +101,13 @@ export const useCreateModifierMutation = (): UseMutationResult<
       // Invalidar listas generales y listas por grupo
       queryClient.invalidateQueries({ queryKey: modifierKeys.lists() });
       // Usar groupId que sí existe en el tipo Modifier
-      queryClient.invalidateQueries({ queryKey: modifierKeys.listsByGroup(newModifier.groupId) });
-      showSnackbar({ message: 'Modificador creado con éxito', type: 'success' });
+      queryClient.invalidateQueries({
+        queryKey: modifierKeys.listsByGroup(newModifier.groupId),
+      });
+      showSnackbar({
+        message: 'Modificador creado con éxito',
+        type: 'success',
+      });
     },
     onError: (error) => {
       const message = getApiErrorMessage(error);
@@ -111,9 +124,16 @@ export const useUpdateModifierMutation = (): UseMutationResult<
   UpdateModifierContext
 > => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state: SnackbarState) => state.showSnackbar);
+  const showSnackbar = useSnackbarStore(
+    (state: SnackbarState) => state.showSnackbar,
+  );
 
-  return useMutation<Modifier, ApiError, { id: string; data: UpdateModifierInput }, UpdateModifierContext>({
+  return useMutation<
+    Modifier,
+    ApiError,
+    { id: string; data: UpdateModifierInput },
+    UpdateModifierContext
+  >({
     mutationFn: ({ id, data }) => modifierService.update(id, data),
 
     // --- Inicio Actualización Optimista ---
@@ -125,8 +145,10 @@ export const useUpdateModifierMutation = (): UseMutationResult<
       const previousDetail = queryClient.getQueryData<Modifier>(detailQueryKey);
 
       if (previousDetail) {
-        queryClient.setQueryData<Modifier>(detailQueryKey, (old: Modifier | undefined) => 
-          old ? { ...old, ...data } : undefined
+        queryClient.setQueryData<Modifier>(
+          detailQueryKey,
+          (old: Modifier | undefined) =>
+            old ? { ...old, ...data } : undefined,
         );
       }
       return { previousDetail };
@@ -138,22 +160,32 @@ export const useUpdateModifierMutation = (): UseMutationResult<
       showSnackbar({ message, type: 'error' });
       console.error(`Error updating modifier ${variables.id}:`, error);
       if (context?.previousDetail) {
-        queryClient.setQueryData(modifierKeys.detail(variables.id), context.previousDetail);
+        queryClient.setQueryData(
+          modifierKeys.detail(variables.id),
+          context.previousDetail,
+        );
       }
     },
     onSettled: (data, error, variables) => {
       // Invalidar listas generales y detalle siempre
       queryClient.invalidateQueries({ queryKey: modifierKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: modifierKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: modifierKeys.detail(variables.id),
+      });
 
       // Invalidar la lista específica del grupo SOLO si la mutación fue exitosa (data existe)
       // y por lo tanto tenemos el groupId correcto.
       if (data?.groupId) {
-          queryClient.invalidateQueries({ queryKey: modifierKeys.listsByGroup(data.groupId) });
+        queryClient.invalidateQueries({
+          queryKey: modifierKeys.listsByGroup(data.groupId),
+        });
       }
 
       if (!error && data) {
-        showSnackbar({ message: 'Modificador actualizado con éxito', type: 'success' });
+        showSnackbar({
+          message: 'Modificador actualizado con éxito',
+          type: 'success',
+        });
       }
     },
   });
@@ -166,7 +198,9 @@ export const useDeleteModifierMutation = (): UseMutationResult<
   { previousDetail?: Modifier } // Añadir contexto
 > => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state: SnackbarState) => state.showSnackbar);
+  const showSnackbar = useSnackbarStore(
+    (state: SnackbarState) => state.showSnackbar,
+  );
 
   // Contexto para guardar el detalle eliminado
   type DeleteModifierContext = { previousDetail?: Modifier };
@@ -176,19 +210,19 @@ export const useDeleteModifierMutation = (): UseMutationResult<
 
     // --- Inicio Actualización Optimista ---
     onMutate: async (deletedId) => {
-        const detailQueryKey = modifierKeys.detail(deletedId);
+      const detailQueryKey = modifierKeys.detail(deletedId);
 
-        // 1. Cancelar query de detalle
-        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+      // 1. Cancelar query de detalle
+      await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-        // 2. Guardar estado anterior del detalle
-        const previousDetail = queryClient.getQueryData<Modifier>(detailQueryKey);
+      // 2. Guardar estado anterior del detalle
+      const previousDetail = queryClient.getQueryData<Modifier>(detailQueryKey);
 
-        // 3. Eliminar optimistamente de la caché de detalle
-        queryClient.removeQueries({ queryKey: detailQueryKey });
+      // 3. Eliminar optimistamente de la caché de detalle
+      queryClient.removeQueries({ queryKey: detailQueryKey });
 
-        // 4. Retornar contexto
-        return { previousDetail };
+      // 4. Retornar contexto
+      return { previousDetail };
     },
     // --- Fin Actualización Optimista ---
 
@@ -199,7 +233,10 @@ export const useDeleteModifierMutation = (): UseMutationResult<
 
       // Revertir caché de detalle si hubo error
       if (context?.previousDetail) {
-        queryClient.setQueryData(modifierKeys.detail(deletedId), context.previousDetail);
+        queryClient.setQueryData(
+          modifierKeys.detail(deletedId),
+          context.previousDetail,
+        );
       }
     },
 
@@ -207,15 +244,20 @@ export const useDeleteModifierMutation = (): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: modifierKeys.lists() });
       // Invalidar lista por grupo si se conoce el groupId (desde el contexto)
       if (context?.previousDetail?.groupId) {
-          queryClient.invalidateQueries({ queryKey: modifierKeys.listsByGroup(context.previousDetail.groupId) });
+        queryClient.invalidateQueries({
+          queryKey: modifierKeys.listsByGroup(context.previousDetail.groupId),
+        });
       }
 
       // Asegurar remoción en éxito y mostrar snackbar
       if (!error) {
-          queryClient.removeQueries({ queryKey: modifierKeys.detail(deletedId) });
-          showSnackbar({ message: 'Modificador eliminado con éxito', type: 'success' });
+        queryClient.removeQueries({ queryKey: modifierKeys.detail(deletedId) });
+        showSnackbar({
+          message: 'Modificador eliminado con éxito',
+          type: 'success',
+        });
       }
     },
-     // onSuccess eliminado
+    // onSuccess eliminado
   });
 };

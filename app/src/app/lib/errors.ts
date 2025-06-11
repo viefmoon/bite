@@ -10,9 +10,9 @@ export class ApiError extends Error {
 
   constructor(
     code: ApiErrorCode | string = ERROR_CODES.UNKNOWN_API_ERROR,
-    backendMessage: string = "Ocurrió un error en la API",
+    backendMessage: string = 'Ocurrió un error en la API',
     status: number = 500,
-    details?: any
+    details?: any,
   ) {
     super(backendMessage);
     this.code = code;
@@ -32,7 +32,7 @@ export class ApiError extends Error {
    */
   static fromApiResponse(
     responseData: BackendErrorResponse | any,
-    responseStatus?: number
+    responseStatus?: number,
   ): ApiError {
     const status = responseStatus ?? responseData?.statusCode ?? 500;
     const code = responseData?.code ?? ERROR_CODES.UNKNOWN_API_ERROR;
@@ -54,51 +54,57 @@ export class ApiError extends Error {
 
     // Use type assertion for better property access
     const axiosError = error as AxiosError;
-    const responseData = axiosError.response?.data as BackendErrorResponse | any;
+    const responseData = axiosError.response?.data as
+      | BackendErrorResponse
+      | any;
     const status = axiosError.response?.status ?? 500;
-    
+
     // Manejar errores de red específicamente
     if (axiosError.code === 'ERR_NETWORK' || !axiosError.response) {
       return new ApiError(
         ERROR_CODES.NETWORK_ERROR,
-        "Error de conexión. Verifica tu conexión a internet e intenta nuevamente.",
+        'Error de conexión. Verifica tu conexión a internet e intenta nuevamente.',
         0,
-        { originalError: axiosError.message }
+        { originalError: axiosError.message },
       );
     }
-    
+
     // Manejar timeout
-    if (axiosError.code === 'ECONNABORTED' || axiosError.message.includes('timeout')) {
+    if (
+      axiosError.code === 'ECONNABORTED' ||
+      axiosError.message.includes('timeout')
+    ) {
       return new ApiError(
         ERROR_CODES.NETWORK_ERROR,
-        "La solicitud tardó demasiado tiempo. Intenta nuevamente con una conexión más estable.",
+        'La solicitud tardó demasiado tiempo. Intenta nuevamente con una conexión más estable.',
         0,
-        { originalError: axiosError.message }
+        { originalError: axiosError.message },
       );
     }
-    
+
     // Extract error code - check multiple possible locations
-    let code = responseData?.code || 
-               responseData?.error?.code || 
-               responseData?.errors?.[0]?.code ||
-               ERROR_CODES.UNKNOWN_API_ERROR;
-    
+    const code =
+      responseData?.code ||
+      responseData?.error?.code ||
+      responseData?.errors?.[0]?.code ||
+      ERROR_CODES.UNKNOWN_API_ERROR;
+
     // Extract error message - check multiple possible locations
-    let message = responseData?.message || 
-                  responseData?.error?.message || 
-                  responseData?.errors?.[0]?.message ||
-                  axiosError.message || 
-                  'Error desconocido de la API.';
-    
+    const message =
+      responseData?.message ||
+      responseData?.error?.message ||
+      responseData?.errors?.[0]?.message ||
+      axiosError.message ||
+      'Error desconocido de la API.';
+
     // Include full response data as details if no specific 'details' property exists
     const details = responseData?.details ?? responseData;
 
-    
     // Uses the main constructor signature: code, message, status, details
     return new ApiError(code, message, status, details);
   }
 
-   /**
+  /**
    * Creates a specific ApiError for refresh token failures.
    */
   static fromRefreshError(error: any): ApiError {
@@ -107,9 +113,9 @@ export class ApiError extends Error {
     // Uses the main constructor signature: code, message, status, details
     return new ApiError(
       ERROR_CODES.REFRESH_FAILED, // Specific code for refresh failure - Ensure this exists in ERROR_CODES
-      error?.message || "La sesión ha expirado o no se pudo renovar.", // Message
+      error?.message || 'La sesión ha expirado o no se pudo renovar.', // Message
       401, // Status (force 401)
-      error // Details (original error)
+      error, // Details (original error)
     );
   }
 } // End of ApiError class definition

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Esquema Zod para validar la estructura de una foto de categoría.
@@ -15,7 +15,7 @@ export const categoryPhotoSchema = z.object({
  */
 export const categorySchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
   photo: categoryPhotoSchema.nullable().optional(),

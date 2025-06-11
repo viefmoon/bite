@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { initializeAuthStore } from "../store/authStore";
+import { useEffect, useState } from 'react';
+import { initializeAuthStore } from '../store/authStore';
 
 export function useInitializeAuth() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -9,7 +9,7 @@ export function useInitializeAuth() {
       try {
         await initializeAuthStore();
       } catch (error) {
-        console.error("Error llamando a initializeAuthStore:", error);
+        console.error('Error llamando a initializeAuthStore:', error);
       } finally {
         setIsInitializing(false);
       }

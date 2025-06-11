@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -7,81 +7,105 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Text,
-  IconButton,
-  Surface,
-  TouchableRipple,
-} from "react-native-paper";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, IconButton, Surface, TouchableRipple } from 'react-native-paper';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import { STORAGE_KEYS } from "../../../app/constants/storageKeys";
-import { useNavigation } from "@react-navigation/native";
-import { useAppTheme } from "../../../app/styles/theme";
-import { useSnackbarStore } from "../../../app/store/snackbarStore";
-import { getApiErrorMessage } from "../../../app/lib/errorMapping";
-import { ApiError } from "../../../app/lib/errors";
-import { useThemeStore } from "../../../app/store/themeStore";
-import { useAuthStore } from "../../../app/store/authStore";
-import { LoginFormInputs, LoginResponseDto } from "../schema/auth.schema";
-import { authService } from "../services/authService";
-import LoginForm from "../components/LoginForm";
+import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
+import { useNavigation } from '@react-navigation/native';
+import { useAppTheme } from '../../../app/styles/theme';
+import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { getApiErrorMessage } from '../../../app/lib/errorMapping';
+import { ApiError } from '../../../app/lib/errors';
+import { useThemeStore } from '../../../app/store/themeStore';
+import { useAuthStore } from '../../../app/store/authStore';
+import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
+import { authService } from '../services/authService';
+import LoginForm from '../components/LoginForm';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
   const { showSnackbar } = useSnackbarStore();
-  const { setThemePreference } = useThemeStore(); 
+  const { setThemePreference } = useThemeStore();
   const setTokens = useAuthStore((state) => state.setTokens);
 
-  const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<string | undefined>(undefined);
-  const [initialPassword, setInitialPassword] = useState<string | undefined>(undefined);
+  const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<
+    string | undefined
+  >(undefined);
+  const [initialPassword, setInitialPassword] = useState<string | undefined>(
+    undefined,
+  );
   const [initialRememberMe, setInitialRememberMe] = useState(false);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
 
   type LoginMutationVariables = LoginFormInputs & { rememberMe: boolean };
 
-  const loginMutation = useMutation<LoginResponseDto, Error, LoginMutationVariables>({
-    mutationFn: (variables) => authService.login({
+  const loginMutation = useMutation<
+    LoginResponseDto,
+    Error,
+    LoginMutationVariables
+  >({
+    mutationFn: (variables) =>
+      authService.login({
         emailOrUsername: variables.emailOrUsername,
-        password: variables.password
-    }),
+        password: variables.password,
+      }),
     onSuccess: async (data, variables) => {
       try {
         await setTokens(data.token, data.refreshToken, data.user ?? null);
         const { emailOrUsername, password, rememberMe } = variables;
 
         if (rememberMe) {
-          const credentialsToSave = JSON.stringify({ emailOrUsername, password });
-          await EncryptedStorage.setItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS, credentialsToSave);
-          await EncryptedStorage.setItem(STORAGE_KEYS.REMEMBER_ME_ENABLED, 'true');
-          console.log("Credenciales guardadas.");
+          const credentialsToSave = JSON.stringify({
+            emailOrUsername,
+            password,
+          });
+          await EncryptedStorage.setItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+            credentialsToSave,
+          );
+          await EncryptedStorage.setItem(
+            STORAGE_KEYS.REMEMBER_ME_ENABLED,
+            'true',
+          );
+          console.log('Credenciales guardadas.');
         } else {
-          await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS);
+          await EncryptedStorage.removeItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+          );
           await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
-          console.log("Preferencia 'Recordarme' desactivada, credenciales eliminadas.");
+          console.log(
+            "Preferencia 'Recordarme' desactivada, credenciales eliminadas.",
+          );
         }
 
         showSnackbar({
           message: `¡Bienvenido!`,
-          type: "success",
+          type: 'success',
         });
-        queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-
+        queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
       } catch (error) {
-        console.error("Error al procesar post-login o guardar credenciales:", error);
+        console.error(
+          'Error al procesar post-login o guardar credenciales:',
+          error,
+        );
         try {
-            await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS);
-            await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
+          await EncryptedStorage.removeItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+          );
+          await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
         } catch (cleanupError) {
-            console.error("Error al limpiar credenciales durante el manejo de error:", cleanupError);
+          console.error(
+            'Error al limpiar credenciales durante el manejo de error:',
+            cleanupError,
+          );
         }
         showSnackbar({
-          message: "Error procesando el inicio de sesión.",
-          type: "error",
+          message: 'Error procesando el inicio de sesión.',
+          type: 'error',
         });
       }
     },
@@ -89,12 +113,16 @@ const LoginScreen = () => {
       const userMessage = getApiErrorMessage(error);
       showSnackbar({
         message: userMessage,
-        type: "error",
+        type: 'error',
         duration: 5000,
       });
-      console.error("Login failed:", error);
+      console.error('Login failed:', error);
       if (error instanceof ApiError) {
-         console.error("API Error Details:", { code: error.code, status: error.status, details: error.details });
+        console.error('API Error Details:', {
+          code: error.code,
+          status: error.status,
+          details: error.details,
+        });
       }
     },
   });
@@ -107,9 +135,13 @@ const LoginScreen = () => {
     const loadCredentials = async () => {
       setIsLoadingCredentials(true);
       try {
-        const rememberEnabled = await EncryptedStorage.getItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
+        const rememberEnabled = await EncryptedStorage.getItem(
+          STORAGE_KEYS.REMEMBER_ME_ENABLED,
+        );
         if (rememberEnabled === 'true') {
-          const storedCredentialsJson = await EncryptedStorage.getItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS);
+          const storedCredentialsJson = await EncryptedStorage.getItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+          );
           if (storedCredentialsJson) {
             const storedCredentials = JSON.parse(storedCredentialsJson);
             setInitialEmailOrUsername(storedCredentials.emailOrUsername);
@@ -122,23 +154,28 @@ const LoginScreen = () => {
             await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
           }
         } else {
-           setInitialRememberMe(false);
-           setInitialEmailOrUsername('');
-           setInitialPassword('');
+          setInitialRememberMe(false);
+          setInitialEmailOrUsername('');
+          setInitialPassword('');
         }
       } catch (error) {
-        console.error("Error al cargar credenciales recordadas:", error);
+        console.error('Error al cargar credenciales recordadas:', error);
         setInitialRememberMe(false);
         setInitialEmailOrUsername('');
         setInitialPassword('');
         try {
-            await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS);
-            await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
+          await EncryptedStorage.removeItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+          );
+          await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
         } catch (cleanupError) {
-             console.error("Error al limpiar credenciales durante manejo de error de carga:", cleanupError);
+          console.error(
+            'Error al limpiar credenciales durante manejo de error de carga:',
+            cleanupError,
+          );
         }
       } finally {
-         setIsLoadingCredentials(false);
+        setIsLoadingCredentials(false);
       }
     };
 
@@ -146,7 +183,7 @@ const LoginScreen = () => {
   }, []);
 
   const toggleTheme = () => {
-    setThemePreference(theme.dark ? "light" : "dark");
+    setThemePreference(theme.dark ? 'light' : 'dark');
   };
 
   const styles = React.useMemo(
@@ -162,10 +199,10 @@ const LoginScreen = () => {
         container: {
           flex: 1,
           padding: 24,
-          justifyContent: "space-between",
+          justifyContent: 'space-between',
         },
         logoContainer: {
-          alignItems: "center",
+          alignItems: 'center',
           marginTop: 30,
           marginBottom: 5,
         },
@@ -176,16 +213,16 @@ const LoginScreen = () => {
         },
         title: {
           fontSize: 32,
-          fontWeight: "bold",
+          fontWeight: 'bold',
           color: theme.colors.primary,
           marginBottom: 8,
-          textAlign: "center",
+          textAlign: 'center',
         },
         subtitle: {
           fontSize: 16,
           color: theme.colors.onSurfaceVariant,
           marginBottom: 20,
-          textAlign: "center",
+          textAlign: 'center',
           paddingHorizontal: 20,
         },
         formContainer: {
@@ -197,14 +234,14 @@ const LoginScreen = () => {
         },
         forgotPassword: {
           color: theme.colors.primary,
-          textAlign: "right",
+          textAlign: 'right',
           marginTop: 8,
           marginBottom: 16,
         },
         registerContainer: {
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
           marginTop: 20,
         },
         registerText: {
@@ -213,10 +250,10 @@ const LoginScreen = () => {
         },
         registerLink: {
           color: theme.colors.primary,
-          fontWeight: "bold",
+          fontWeight: 'bold',
         },
         bottomThemeToggleContainer: {
-          alignItems: "center",
+          alignItems: 'center',
           marginTop: 20,
           marginBottom: 16,
         },
@@ -225,17 +262,22 @@ const LoginScreen = () => {
   );
 
   if (isLoadingCredentials) {
-     return (
-       <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-         <ActivityIndicator size="large" color={theme.colors.primary} />
-       </SafeAreaView>
-     );
+    return (
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -246,7 +288,7 @@ const LoginScreen = () => {
             <View>
               <View style={styles.logoContainer}>
                 <Image
-                  source={require("../../../assets/logo.png")}
+                  source={require('../../../assets/logo.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />
@@ -267,7 +309,7 @@ const LoginScreen = () => {
               </Surface>
 
               <TouchableRipple
-                onPress={() => console.log("Olvidé mi contraseña")}
+                onPress={() => console.log('Olvidé mi contraseña')}
               >
                 <Text style={styles.forgotPassword}>
                   ¿Olvidaste tu contraseña?
@@ -279,14 +321,14 @@ const LoginScreen = () => {
               <View style={styles.registerContainer}>
                 <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
                 <TouchableRipple
-                  onPress={() => navigation.navigate("Register")}
+                  onPress={() => navigation.navigate('Register')}
                 >
                   <Text style={styles.registerLink}>Regístrate</Text>
                 </TouchableRipple>
               </View>
               <View style={styles.bottomThemeToggleContainer}>
                 <IconButton
-                  icon={theme.dark ? "weather-night" : "weather-sunny"}
+                  icon={theme.dark ? 'weather-night' : 'weather-sunny'}
                   size={28}
                   onPress={toggleTheme}
                   iconColor={theme.colors.onSurfaceVariant}

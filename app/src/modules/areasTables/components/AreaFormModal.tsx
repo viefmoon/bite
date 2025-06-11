@@ -1,36 +1,36 @@
-import React from "react";
+import React from 'react';
 import GenericFormModal, {
   FormFieldConfig,
-} from "../../../app/components/crud/GenericFormModal";
+} from '../../../app/components/crud/GenericFormModal';
 import {
   Area,
   CreateAreaDto,
   UpdateAreaDto,
   CreateAreaSchema,
   UpdateAreaSchema,
-} from "../schema/area.schema";
-import { z } from "zod";
+} from '../schema/area.schema';
+import { z } from 'zod';
 
 const areaFormFields: FormFieldConfig<CreateAreaDto | UpdateAreaDto>[] = [
   {
-    name: "name",
-    label: "Nombre del Área",
-    type: "text",
-    placeholder: "Ej: Terraza, Salón Principal",
+    name: 'name',
+    label: 'Nombre del Área',
+    type: 'text',
+    placeholder: 'Ej: Terraza, Salón Principal',
     required: true,
   },
   {
-    name: "description",
-    label: "Descripción (Opcional)",
-    type: "textarea",
-    placeholder: "Ej: Área al aire libre con vista",
+    name: 'description',
+    label: 'Descripción (Opcional)',
+    type: 'textarea',
+    placeholder: 'Ej: Área al aire libre con vista',
     numberOfLines: 3,
   },
   {
-    name: "isActive",
-    label: "¿Está activa?",
-    type: "switch",
-    switchLabel: "Activa",
+    name: 'isActive',
+    label: '¿Está activa?',
+    type: 'switch',
+    switchLabel: 'Activa',
     defaultValue: true,
   },
 ];
@@ -40,7 +40,7 @@ interface AreaFormModalProps {
   onDismiss: () => void;
   onSubmit: (
     data: CreateAreaDto | UpdateAreaDto,
-    photoId: string | null | undefined
+    photoId: string | null | undefined,
   ) => Promise<void>;
   editingItem: Area | null;
   isSubmitting: boolean;
@@ -63,7 +63,7 @@ const AreaFormModal: React.FC<AreaFormModalProps> = ({
         isActive: editingItem?.isActive,
       }
     : {
-        name: "",
+        name: '',
         description: undefined,
         isActive: true,
       };
@@ -79,7 +79,7 @@ const AreaFormModal: React.FC<AreaFormModalProps> = ({
       editingItem={editingItem}
       isSubmitting={isSubmitting}
       modalTitle={(isEditing) =>
-        isEditing ? "Editar Área" : "Crear Nueva Área"
+        isEditing ? 'Editar Área' : 'Crear Nueva Área'
       }
     />
   );

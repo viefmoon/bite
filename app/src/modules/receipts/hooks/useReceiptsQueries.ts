@@ -1,15 +1,21 @@
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { receiptService, receiptQueryOptions } from '../services/receiptService';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  receiptService,
+  receiptQueryOptions,
+} from '../services/receiptService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
-export const useReceiptsInfinite = (
-  filters?: {
-    status?: 'COMPLETED' | 'CANCELLED';
-    search?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }
-) => {
+export const useReceiptsInfinite = (filters?: {
+  status?: 'COMPLETED' | 'CANCELLED';
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+}) => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const query = useInfiniteQuery({
@@ -18,9 +24,9 @@ export const useReceiptsInfinite = (
 
   // Manejar errores
   if (query.error) {
-    showSnackbar({ 
+    showSnackbar({
       message: query.error.message || 'Error al cargar los recibos',
-      type: 'error'
+      type: 'error',
     });
   }
 
@@ -36,23 +42,21 @@ export const useReceipt = (id: string) => {
 
   // Manejar errores
   if (query.error) {
-    showSnackbar({ 
+    showSnackbar({
       message: query.error.message || 'Error al cargar el recibo',
-      type: 'error'
+      type: 'error',
     });
   }
 
   return query;
 };
 
-export const useReceiptsCount = (
-  filters?: {
-    status?: 'COMPLETED' | 'CANCELLED';
-    search?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }
-) => {
+export const useReceiptsCount = (filters?: {
+  status?: 'COMPLETED' | 'CANCELLED';
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+}) => {
   return useQuery({
     queryKey: ['receipts', 'count', filters],
     queryFn: async () => {

@@ -27,7 +27,7 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
   visible,
   onDismiss,
   onPrinterSelect,
-  title = "Seleccionar Impresora",
+  title = 'Seleccionar Impresora',
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -39,11 +39,14 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
     error,
     refetch,
   } = usePrintersQuery(
-      { isActive: true, limit: 100, page: 1 },
-      { enabled: visible }
+    { isActive: true, limit: 100, page: 1 },
+    { enabled: visible },
   );
 
-  const printers = useMemo(() => printersResponse?.data ?? [], [printersResponse]);
+  const printers = useMemo(
+    () => printersResponse?.data ?? [],
+    [printersResponse],
+  );
 
   const renderPrinterItem = ({ item }: ListRenderItemInfo<ThermalPrinter>) => (
     <List.Item
@@ -68,7 +71,6 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
     },
   });
 
-
   return (
     <Portal>
       <Modal
@@ -77,7 +79,10 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
         contentContainerStyle={styles.modalContent}
       >
         <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction onPress={onDismiss} color={theme.colors.onSurface} />
+          <Appbar.BackAction
+            onPress={onDismiss}
+            color={theme.colors.onSurface}
+          />
           <Appbar.Content title={title} titleStyle={styles.appBarTitle} />
         </Appbar.Header>
 

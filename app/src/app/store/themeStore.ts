@@ -1,15 +1,15 @@
-import React from "react";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import EncryptedStorage from "react-native-encrypted-storage";
-import { useColorScheme, Appearance } from "react-native";
+import React from 'react';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import { useColorScheme, Appearance } from 'react-native';
 
 import {
   ThemePreference,
   THEME_PREFERENCE_STORAGE_KEY,
   THEME_MODE,
-} from "../types/theme.types";
-import { lightTheme, darkTheme } from "../styles/theme";
+} from '../types/theme.types';
+import { lightTheme, darkTheme } from '../styles/theme';
 
 interface ThemeState {
   themePreference: ThemePreference;
@@ -35,7 +35,10 @@ export const useThemeStore = create<ThemeState>()(
             set({ activeTheme: isSystemDarkMode ? darkTheme : lightTheme });
           }
         } else {
-          set({ activeTheme: preference === THEME_MODE.DARK ? darkTheme : lightTheme });
+          set({
+            activeTheme:
+              preference === THEME_MODE.DARK ? darkTheme : lightTheme,
+          });
         }
       },
 
@@ -56,11 +59,13 @@ export const useThemeStore = create<ThemeState>()(
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
-            console.error("Error rehydrating theme store:", error);
+            console.error('Error rehydrating theme store:', error);
             return;
           }
           if (!state) {
-            console.warn("State not available during theme rehydration callback");
+            console.warn(
+              'State not available during theme rehydration callback',
+            );
             return;
           }
 
@@ -80,19 +85,18 @@ export const useThemeStore = create<ThemeState>()(
           }
         };
       },
-    }
-  )
+    },
+  ),
 );
 
 export function useSystemThemeDetector() {
   const systemColorScheme = useColorScheme();
   const setSystemDarkMode = useThemeStore((state) => state.setSystemDarkMode);
 
-
   React.useEffect(() => {
-    const isDarkMode = systemColorScheme === "dark";
+    const isDarkMode = systemColorScheme === 'dark';
     if (useThemeStore.getState().isSystemDarkMode !== isDarkMode) {
-        setSystemDarkMode(isDarkMode);
+      setSystemDarkMode(isDarkMode);
     }
   }, [systemColorScheme, setSystemDarkMode]);
 }

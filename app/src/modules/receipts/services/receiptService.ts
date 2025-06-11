@@ -1,8 +1,8 @@
-import apiClient from "@/app/services/apiClient";
-import type { Order } from "@/modules/orders/types/orders.types";
+import apiClient from '@/app/services/apiClient';
+import type { Order } from '@/modules/orders/types/orders.types';
 import type { QueryOptions, InfiniteQueryOptions } from '@tanstack/react-query';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { ApiError } from "@/app/lib/errors";
+import { ApiError } from '@/app/lib/errors';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -25,15 +25,10 @@ interface GetReceiptsParams {
 
 export const receiptService = {
   // Obtener órdenes finalizadas o canceladas
-  getReceipts: async (params: GetReceiptsParams): Promise<PaginatedResponse<Order>> => {
-    const { 
-      page = 1, 
-      limit = 20,
-      status,
-      startDate,
-      endDate,
-      search 
-    } = params;
+  getReceipts: async (
+    params: GetReceiptsParams,
+  ): Promise<PaginatedResponse<Order>> => {
+    const { page = 1, limit = 20, status, startDate, endDate, search } = params;
 
     const queryParams: Record<string, any> = {
       page: page.toString(),
@@ -59,7 +54,10 @@ export const receiptService = {
     const response = await apiClient.get<any>(API_PATHS.ORDERS, queryParams);
 
     if (!response.ok || !response.data) {
-      console.error("[receiptService.getReceipts] Failed to fetch receipts:", response);
+      console.error(
+        '[receiptService.getReceipts] Failed to fetch receipts:',
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -78,60 +76,71 @@ export const receiptService = {
       total = data.length; // No tenemos el total real, usar la longitud
       // Si hay más páginas, estimar que hay al menos una página más
       totalPages = response.data.hasNextPage ? page + 1 : page;
-      
+
       // Si estamos en la primera página y no hay siguiente, entonces solo hay una página
       if (page === 1 && !response.data.hasNextPage) {
         totalPages = 1;
       }
     } else {
-      console.error("[receiptService.getReceipts] Unexpected response format:", response.data);
+      console.error(
+        '[receiptService.getReceipts] Unexpected response format:',
+        response.data,
+      );
       throw new Error('Formato de respuesta inesperado del servidor');
     }
 
     // Debug: ver qué órdenes están llegando
-    console.log("[receiptService] Órdenes recibidas del backend:", data.map(o => ({
-      id: o.id,
-      orderStatus: o.orderStatus,
-      status: o.status,
-      dailyNumber: o.dailyNumber
-    })));
+    console.log(
+      '[receiptService] Órdenes recibidas del backend:',
+      data.map((o) => ({
+        id: o.id,
+        orderStatus: o.orderStatus,
+        status: o.status,
+        dailyNumber: o.dailyNumber,
+      })),
+    );
 
     // Filtrar para asegurar que solo se muestren COMPLETED y CANCELLED
-    let filteredData = data.filter(order => 
-      order.orderStatus === 'COMPLETED' || 
-      order.orderStatus === 'CANCELLED' ||
-      order.status === 'completed' ||
-      order.status === 'cancelled'
+    let filteredData = data.filter(
+      (order) =>
+        order.orderStatus === 'COMPLETED' ||
+        order.orderStatus === 'CANCELLED' ||
+        order.status === 'completed' ||
+        order.status === 'cancelled',
     );
-    
+
     // Si hay búsqueda, filtrar adicionalmente del lado del cliente
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredData = filteredData.filter(order => 
-        order.orderNumber?.toString().includes(searchLower) ||
-        order.customerName?.toLowerCase().includes(searchLower) ||
-        order.dailyNumber?.toString().includes(searchLower)
+      filteredData = filteredData.filter(
+        (order) =>
+          order.orderNumber?.toString().includes(searchLower) ||
+          order.customerName?.toLowerCase().includes(searchLower) ||
+          order.dailyNumber?.toString().includes(searchLower),
       );
     }
 
     // Si estamos filtrando del lado del cliente, actualizar el total
     const actualTotal = filteredData.length;
-    
+
     return {
       data: filteredData,
       totalPages,
       totalData: actualTotal, // Usar el total real después del filtrado
       page,
-      limit
+      limit,
     };
   },
 
   // Obtener detalles de un recibo específico
   getReceiptById: async (id: string): Promise<Order> => {
     const response = await apiClient.get<Order>(`${API_PATHS.ORDERS}/${id}`);
-    
+
     if (!response.ok || !response.data) {
-      console.error("[receiptService.getReceiptById] Failed to fetch receipt:", response);
+      console.error(
+        '[receiptService.getReceiptById] Failed to fetch receipt:',
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -142,11 +151,14 @@ export const receiptService = {
   recoverOrder: async (id: string): Promise<Order> => {
     const response = await apiClient.post<Order>(
       `${API_PATHS.ORDERS}/${id}/recover`,
-      {} // Body vacío ya que no necesitamos parámetros
+      {}, // Body vacío ya que no necesitamos parámetros
     );
-    
+
     if (!response.ok || !response.data) {
-      console.error("[receiptService.recoverOrder] Failed to recover order:", response);
+      console.error(
+        '[receiptService.recoverOrder] Failed to recover order:',
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -157,22 +169,22 @@ export const receiptService = {
 // Query options para React Query
 export const receiptQueryOptions = {
   receiptsInfinite: (
-    filters?: Omit<GetReceiptsParams, 'page'>
+    filters?: Omit<GetReceiptsParams, 'page'>,
   ): InfiniteQueryOptions<PaginatedResponse<Order>, Error> => ({
     queryKey: ['receipts', 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) => 
+    queryFn: ({ pageParam = 1 }) =>
       receiptService.getReceipts({
         ...filters,
         page: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.page < lastPage.totalPages
-        ? lastPage.page + 1
-        : undefined,
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
   }),
 
-  receipts: (params: GetReceiptsParams): QueryOptions<PaginatedResponse<Order>, Error> => ({
+  receipts: (
+    params: GetReceiptsParams,
+  ): QueryOptions<PaginatedResponse<Order>, Error> => ({
     queryKey: ['receipts', params],
     queryFn: () => receiptService.getReceipts(params),
   }),

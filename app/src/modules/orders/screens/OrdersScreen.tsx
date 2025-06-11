@@ -10,7 +10,8 @@ import type { OrdersStackParamList } from '@/app/navigation/types'; // Importar 
 function OrdersScreen() {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  const navigation = useNavigation<NativeStackNavigationProp<OrdersStackParamList>>(); // Hook de navegación
+  const navigation =
+    useNavigation<NativeStackNavigationProp<OrdersStackParamList>>(); // Hook de navegación
 
   const handleOpenOrders = () => {
     navigation.navigate('OpenOrders'); // Navegar a la pantalla de órdenes abiertas

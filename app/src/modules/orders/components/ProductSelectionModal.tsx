@@ -1,24 +1,17 @@
-import React, { useState, useMemo, useRef, useCallback } from "react";
-import { StyleSheet, View, FlatList, ActivityIndicator } from "react-native";
-import {
-  Text,
-  Portal,
-  Modal,
-  Card,
-  Title,
-  Appbar,
-} from "react-native-paper";
-import { Image } from "expo-image";
-import { useAppTheme } from "@/app/styles/theme";
-import { useGetFullMenu } from "../hooks/useMenuQueries";
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
+import { Text, Portal, Modal, Card, Title, Appbar } from 'react-native-paper';
+import { Image } from 'expo-image';
+import { useAppTheme } from '@/app/styles/theme';
+import { useGetFullMenu } from '../hooks/useMenuQueries';
 import {
   FullMenuProduct as Product,
   FullMenuCategory as Category,
   FullMenuSubCategory as SubCategory,
-} from "../types/orders.types";
-import { getImageUrl } from "@/app/lib/imageUtils";
-import ProductCustomizationModal from "./ProductCustomizationModal";
-import { CartItemModifier } from "../context/CartContext";
+} from '../types/orders.types';
+import { getImageUrl } from '@/app/lib/imageUtils';
+import ProductCustomizationModal from './ProductCustomizationModal';
+import { CartItemModifier } from '../context/CartContext';
 
 interface ProductSelectionModalProps {
   visible: boolean;
@@ -28,7 +21,7 @@ interface ProductSelectionModalProps {
     quantity: number,
     variantId?: string,
     modifiers?: CartItemModifier[],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => void;
 }
 
@@ -43,12 +36,16 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
-  
+
   const [navigationLevel, setNavigationLevel] = useState<
-    "categories" | "subcategories" | "products"
-  >("categories");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
+    'categories' | 'subcategories' | 'products'
+  >('categories');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
+    string | null
+  >(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const { data: menu, isLoading } = useGetFullMenu();
@@ -56,12 +53,12 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(null);
-    setNavigationLevel("subcategories");
+    setNavigationLevel('subcategories');
   };
 
   const handleSubCategorySelect = (subcategoryId: string) => {
     setSelectedSubcategoryId(subcategoryId);
-    setNavigationLevel("products");
+    setNavigationLevel('products');
   };
 
   const productNeedsCustomization = (product: Product): boolean => {
@@ -96,11 +93,11 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const handleGoBack = () => {
     if (selectedProduct) {
       handleCloseProductModal();
-    } else if (navigationLevel === "products") {
-      setNavigationLevel("subcategories");
+    } else if (navigationLevel === 'products') {
+      setNavigationLevel('subcategories');
       setSelectedSubcategoryId(null);
-    } else if (navigationLevel === "subcategories") {
-      setNavigationLevel("categories");
+    } else if (navigationLevel === 'subcategories') {
+      setNavigationLevel('categories');
       setSelectedCategoryId(null);
     } else {
       onDismiss();
@@ -108,7 +105,7 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   };
 
   const resetNavigation = () => {
-    setNavigationLevel("categories");
+    setNavigationLevel('categories');
     setSelectedCategoryId(null);
     setSelectedSubcategoryId(null);
     setSelectedProduct(null);
@@ -124,9 +121,15 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     quantity: number,
     selectedVariantId?: string,
     selectedModifiers?: CartItemModifier[],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => {
-    onAddProduct(product, quantity, selectedVariantId, selectedModifiers, preparationNotes);
+    onAddProduct(
+      product,
+      quantity,
+      selectedVariantId,
+      selectedModifiers,
+      preparationNotes,
+    );
     setSelectedProduct(null);
     // Opcional: volver a categorías después de añadir
     resetNavigation();
@@ -157,7 +160,7 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const selectedSubCategory =
     selectedCategory && Array.isArray(selectedCategory.subcategories)
       ? selectedCategory.subcategories.find(
-          (sub: SubCategory) => sub.id === selectedSubcategoryId
+          (sub: SubCategory) => sub.id === selectedSubcategoryId,
         )
       : null;
 
@@ -166,18 +169,18 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return selectedProduct.name;
     }
     switch (navigationLevel) {
-      case "categories":
-        return "Seleccionar Categoría";
-      case "subcategories":
+      case 'categories':
+        return 'Seleccionar Categoría';
+      case 'subcategories':
         return selectedCategory?.name
           ? `Categoría: ${selectedCategory.name}`
-          : "Subcategorías";
-      case "products":
+          : 'Subcategorías';
+      case 'products':
         return selectedSubCategory?.name
           ? `Subcategoría: ${selectedSubCategory.name}`
-          : "Productos";
+          : 'Productos';
       default:
-        return "Categorías";
+        return 'Categorías';
     }
   }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct]);
 
@@ -186,11 +189,11 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       StyleSheet.create({
         modalContent: {
           backgroundColor: colors.background,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           margin: 0,
           padding: 0,
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
         },
@@ -206,55 +209,55 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
           paddingBottom: 60,
         },
         row: {
-          justifyContent: "flex-start",
+          justifyContent: 'flex-start',
         },
         cardItem: {
-          width: "48%",
-          marginHorizontal: "1%",
+          width: '48%',
+          marginHorizontal: '1%',
           marginVertical: 4,
-          overflow: "hidden",
+          overflow: 'hidden',
           borderRadius: 8,
           elevation: 2,
         },
         itemImage: {
-          width: "100%",
+          width: '100%',
           height: 120,
         },
         imagePlaceholder: {
-          width: "100%",
+          width: '100%',
           height: 120,
-          backgroundColor: "#eeeeee",
-          justifyContent: "center",
-          alignItems: "center",
+          backgroundColor: '#eeeeee',
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         placeholderText: {
           fontSize: 24,
-          fontWeight: "bold",
-          color: "#999",
+          fontWeight: 'bold',
+          color: '#999',
         },
         cardContent: {
           padding: 12,
         },
         cardTitle: {
           fontSize: 16,
-          fontWeight: "bold",
+          fontWeight: 'bold',
           marginBottom: 4,
         },
         priceText: {
-          color: "#2e7d32",
-          fontWeight: "bold",
+          color: '#2e7d32',
+          fontWeight: 'bold',
           marginTop: 4,
         },
         noItemsText: {
-          textAlign: "center",
+          textAlign: 'center',
           marginTop: 40,
           fontSize: 16,
-          color: "#666",
+          color: '#666',
         },
         loadingContainer: {
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         appBar: {
           backgroundColor: colors.elevation.level2,
@@ -263,42 +266,38 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         appBarTitle: {
           ...fonts.titleMedium,
           color: colors.onSurface,
-          fontWeight: "bold",
-          textAlign: "center",
+          fontWeight: 'bold',
+          textAlign: 'center',
         },
         appBarContent: {},
         spacer: {
           width: 48,
         },
       }),
-    [colors, fonts]
+    [colors, fonts],
   );
 
   const blurhash =
-    "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-  const renderItem = ({
-    item,
-  }: {
-    item: Category | SubCategory | Product;
-  }) => {
+  const renderItem = ({ item }: { item: Category | SubCategory | Product }) => {
     const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
 
     const handlePress = () => {
-      if (navigationLevel === "categories") {
+      if (navigationLevel === 'categories') {
         handleCategorySelect(item.id);
-      } else if (navigationLevel === "subcategories") {
+      } else if (navigationLevel === 'subcategories') {
         handleSubCategorySelect(item.id);
-      } else if ("price" in item) {
+      } else if ('price' in item) {
         handleProductSelect(item as Product);
       }
     };
 
     const renderPrice = () => {
       if (
-        navigationLevel === "products" &&
-        "price" in item &&
-        "hasVariants" in item
+        navigationLevel === 'products' &&
+        'price' in item &&
+        'hasVariants' in item
       ) {
         const productItem = item as Product;
         if (
@@ -343,11 +342,11 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
   const getItemsToDisplay = () => {
     switch (navigationLevel) {
-      case "categories":
+      case 'categories':
         return getCategories();
-      case "subcategories":
+      case 'subcategories':
         return getSubcategories();
-      case "products":
+      case 'products':
         return getProducts();
       default:
         return [];
@@ -394,11 +393,11 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               />
             ) : (
               <Text style={styles.noItemsText}>
-                {navigationLevel === "products"
-                  ? "No hay productos disponibles"
-                  : navigationLevel === "subcategories"
-                    ? "No hay subcategorías disponibles"
-                    : "No hay categorías disponibles"}
+                {navigationLevel === 'products'
+                  ? 'No hay productos disponibles'
+                  : navigationLevel === 'subcategories'
+                    ? 'No hay subcategorías disponibles'
+                    : 'No hay categorías disponibles'}
               </Text>
             )}
           </View>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
   Portal,
@@ -14,22 +14,22 @@ import {
   Card,
   Chip,
   Surface,
-} from "react-native-paper";
-import { Image } from "expo-image";
-import { useForm, Controller, FieldValues } from "react-hook-form";
-import { useAppTheme } from "@/app/styles/theme";
-import SpeechRecognitionInput from "@/app/components/common/SpeechRecognitionInput"; // Importar SpeechRecognitionInput
+} from 'react-native-paper';
+import { Image } from 'expo-image';
+import { useForm, Controller, FieldValues } from 'react-hook-form';
+import { useAppTheme } from '@/app/styles/theme';
+import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput'; // Importar SpeechRecognitionInput
 import {
   FullMenuProduct as Product,
   ProductVariant,
   Modifier,
   ModifierGroup,
-} from "../types/orders.types";
-import { CartItemModifier, CartItem } from "../context/CartContext";
-import { getImageUrl } from "@/app/lib/imageUtils";
-import { AppTheme } from "@/app/styles/theme";
-import { useSnackbarStore } from "@/app/store/snackbarStore";
-import ConfirmationModal from "@/app/components/common/ConfirmationModal";
+} from '../types/orders.types';
+import { CartItemModifier, CartItem } from '../context/CartContext';
+import { getImageUrl } from '@/app/lib/imageUtils';
+import { AppTheme } from '@/app/styles/theme';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 interface ProductCustomizationModalProps {
   visible: boolean;
@@ -41,7 +41,7 @@ interface ProductCustomizationModalProps {
     quantity: number,
     variantId?: string,
     modifiers?: CartItemModifier[],
-    preparationNotes?: string
+    preparationNotes?: string,
   ) => void;
   onUpdateItem?: (
     itemId: string,
@@ -50,7 +50,7 @@ interface ProductCustomizationModalProps {
     preparationNotes?: string,
     variantId?: string,
     variantName?: string,
-    unitPrice?: number
+    unitPrice?: number,
   ) => void;
 }
 
@@ -71,9 +71,9 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const { control, reset, watch } = useForm<NotesFormData>({
-    defaultValues: { preparationNotes: "" },
+    defaultValues: { preparationNotes: '' },
   });
-  const watchedPreparationNotes = watch("preparationNotes");
+  const watchedPreparationNotes = watch('preparationNotes');
 
   const [selectedVariantId, setSelectedVariantId] = useState<
     string | undefined
@@ -83,7 +83,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       Array.isArray(product.variants) &&
       product.variants.length > 0
       ? product.variants[0].id
-      : undefined
+      : undefined,
   );
   const [selectedModifiersByGroup, setSelectedModifiersByGroup] = useState<
     Record<string, CartItemModifier[]>
@@ -95,7 +95,9 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Función para verificar si hay cambios
   const checkForChanges = useCallback(() => {
@@ -108,20 +110,27 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     if (selectedVariantId !== editingItem.variantId) return true;
 
     // Comparar notas
-    if (watchedPreparationNotes !== (editingItem.preparationNotes || "")) return true;
+    if (watchedPreparationNotes !== (editingItem.preparationNotes || ''))
+      return true;
 
     // Comparar modificadores
-    const currentModifierIds = selectedModifiers.map(m => m.id).sort();
-    const originalModifierIds = editingItem.modifiers.map(m => m.id).sort();
-    
+    const currentModifierIds = selectedModifiers.map((m) => m.id).sort();
+    const originalModifierIds = editingItem.modifiers.map((m) => m.id).sort();
+
     if (currentModifierIds.length !== originalModifierIds.length) return true;
-    
+
     for (let i = 0; i < currentModifierIds.length; i++) {
       if (currentModifierIds[i] !== originalModifierIds[i]) return true;
     }
 
     return false;
-  }, [editingItem, quantity, selectedVariantId, watchedPreparationNotes, selectedModifiers]);
+  }, [
+    editingItem,
+    quantity,
+    selectedVariantId,
+    watchedPreparationNotes,
+    selectedModifiers,
+  ]);
 
   useEffect(() => {
     if (!product) return;
@@ -130,15 +139,15 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       // Si estamos editando, usar los valores del item
       setSelectedVariantId(editingItem.variantId);
       setQuantity(editingItem.quantity);
-      reset({ preparationNotes: editingItem.preparationNotes || "" });
-      
+      reset({ preparationNotes: editingItem.preparationNotes || '' });
+
       // Reconstruir los modificadores por grupo
       const modifiersByGroup: Record<string, CartItemModifier[]> = {};
       if (editingItem.modifiers && product.modifierGroups) {
-        editingItem.modifiers.forEach(mod => {
+        editingItem.modifiers.forEach((mod) => {
           // Encontrar a qué grupo pertenece este modificador
-          const group = product.modifierGroups?.find(g => 
-            g.productModifiers?.some(pm => pm.id === mod.id)
+          const group = product.modifierGroups?.find((g) =>
+            g.productModifiers?.some((pm) => pm.id === mod.id),
           );
           if (group) {
             if (!modifiersByGroup[group.id]) {
@@ -160,16 +169,16 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       } else {
         setSelectedVariantId(undefined);
       }
-      
+
       // Aplicar modificadores por defecto
       const defaultModifiersByGroup: Record<string, CartItemModifier[]> = {};
-      
+
       if (product.modifierGroups) {
-        product.modifierGroups.forEach(group => {
+        product.modifierGroups.forEach((group) => {
           const defaultModifiers: CartItemModifier[] = [];
-          
+
           if (group.productModifiers) {
-            group.productModifiers.forEach(modifier => {
+            group.productModifiers.forEach((modifier) => {
               if (modifier.isDefault && modifier.isActive) {
                 defaultModifiers.push({
                   id: modifier.id,
@@ -179,18 +188,22 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
               }
             });
           }
-          
+
           if (defaultModifiers.length > 0) {
             // Respetar el límite máximo de selecciones
-            const maxSelections = group.maxSelections || defaultModifiers.length;
-            defaultModifiersByGroup[group.id] = defaultModifiers.slice(0, maxSelections);
+            const maxSelections =
+              group.maxSelections || defaultModifiers.length;
+            defaultModifiersByGroup[group.id] = defaultModifiers.slice(
+              0,
+              maxSelections,
+            );
           }
         });
       }
-      
+
       setSelectedModifiersByGroup(defaultModifiersByGroup);
       setQuantity(1);
-      reset({ preparationNotes: "" });
+      reset({ preparationNotes: '' });
     }
   }, [product, editingItem, reset]);
 
@@ -204,13 +217,16 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   // Validar en tiempo real
   useEffect(() => {
     const errors: Record<string, string> = {};
-    
+
     if (product.modifierGroups) {
-      product.modifierGroups.forEach(group => {
+      product.modifierGroups.forEach((group) => {
         const selectedInGroup = selectedModifiersByGroup[group.id] || [];
         const selectedCount = selectedInGroup.length;
-        const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
-        
+        const minRequired = Math.max(
+          group.minSelections || 0,
+          group.isRequired ? 1 : 0,
+        );
+
         if (selectedCount < minRequired) {
           if (group.isRequired && minRequired === 1) {
             errors[group.id] = 'Requerido';
@@ -220,7 +236,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         }
       });
     }
-    
+
     setValidationErrors(errors);
   }, [product, selectedModifiersByGroup]);
 
@@ -231,7 +247,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const handleModifierToggle = (modifier: Modifier, group: ModifierGroup) => {
     const currentGroupModifiers = selectedModifiersByGroup[group.id] || [];
     const isSelected = currentGroupModifiers.some(
-      (mod) => mod.id === modifier.id
+      (mod) => mod.id === modifier.id,
     );
 
     const updatedModifiersByGroup = { ...selectedModifiersByGroup };
@@ -239,18 +255,21 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     if (isSelected) {
       // Verificar si al deseleccionar quedaríamos por debajo del mínimo
       const newCount = currentGroupModifiers.length - 1;
-      const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
-      
+      const minRequired = Math.max(
+        group.minSelections || 0,
+        group.isRequired ? 1 : 0,
+      );
+
       if (newCount < minRequired) {
         showSnackbar({
           message: `No puedes deseleccionar. "${group.name}" requiere al menos ${minRequired} ${minRequired === 1 ? 'opción seleccionada' : 'opciones seleccionadas'}.`,
-          type: "warning"
+          type: 'warning',
         });
         return;
       }
-      
+
       updatedModifiersByGroup[group.id] = currentGroupModifiers.filter(
-        (mod) => mod.id !== modifier.id
+        (mod) => mod.id !== modifier.id,
       );
     } else {
       const newModifier: CartItemModifier = {
@@ -271,7 +290,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         } else {
           showSnackbar({
             message: `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
-            type: "warning"
+            type: 'warning',
           });
           return;
         }
@@ -287,11 +306,14 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       for (const group of product.modifierGroups) {
         const selectedInGroup = selectedModifiersByGroup[group.id] || [];
         const selectedCount = selectedInGroup.length;
-        
+
         // Validar grupos requeridos y mínimo de selecciones
         if (group.isRequired || group.minSelections > 0) {
-          const minRequired = Math.max(group.minSelections || 0, group.isRequired ? 1 : 0);
-          
+          const minRequired = Math.max(
+            group.minSelections || 0,
+            group.isRequired ? 1 : 0,
+          );
+
           if (selectedCount < minRequired) {
             let message = '';
             if (group.isRequired && minRequired === 1) {
@@ -301,20 +323,20 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             } else {
               message = `Debes seleccionar al menos una opción en "${group.name}"`;
             }
-            
+
             showSnackbar({
               message,
-              type: "error"
+              type: 'error',
             });
             return;
           }
         }
-        
+
         // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
         if (selectedCount > group.maxSelections) {
           showSnackbar({
             message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
-            type: "error"
+            type: 'error',
           });
           return;
         }
@@ -323,9 +345,11 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
 
     if (editingItem && onUpdateItem) {
       // Si estamos editando, actualizar el item existente
-      const variant = product.variants?.find(v => v.id === selectedVariantId);
-      const unitPrice = variant ? Number(variant.price) : Number(product.price) || 0;
-      
+      const variant = product.variants?.find((v) => v.id === selectedVariantId);
+      const unitPrice = variant
+        ? Number(variant.price)
+        : Number(product.price) || 0;
+
       onUpdateItem(
         editingItem.id,
         quantity,
@@ -333,7 +357,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         watchedPreparationNotes,
         selectedVariantId,
         variant?.name,
-        unitPrice
+        unitPrice,
       );
     } else {
       // Si es un nuevo item, agregarlo al carrito
@@ -342,7 +366,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         quantity,
         selectedVariantId,
         selectedModifiers,
-        watchedPreparationNotes
+        watchedPreparationNotes,
       );
     }
     onDismiss();
@@ -376,7 +400,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const selectedVariant =
     product.variants && Array.isArray(product.variants)
       ? product.variants.find(
-          (variant: ProductVariant) => variant.id === selectedVariantId
+          (variant: ProductVariant) => variant.id === selectedVariantId,
         )
       : undefined;
 
@@ -385,14 +409,14 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     : Number(product.price) || 0;
   const modifiersPrice = selectedModifiers.reduce(
     (sum, mod) => sum + Number(mod.price || 0),
-    0
+    0,
   );
   const totalPrice = (basePrice + modifiersPrice) * quantity;
 
   const imageUrl = product.photo ? getImageUrl(product.photo.path) : null;
 
   const blurhash =
-    "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   return (
     <Portal>
@@ -403,9 +427,12 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       >
         {/* Encabezado Refactorizado con Appbar */}
         <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction onPress={handleDismiss} color={theme.colors.onSurface} />
+          <Appbar.BackAction
+            onPress={handleDismiss}
+            color={theme.colors.onSurface}
+          />
           <Appbar.Content
-            title={product?.name || "Producto"}
+            title={product?.name || 'Producto'}
             titleStyle={styles.appBarTitle}
             style={styles.appBarContent}
           />
@@ -428,34 +455,59 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                   </View>
                   <RadioButton.Group
                     onValueChange={(value) => handleVariantSelect(value)}
-                    value={selectedVariantId || ""}
+                    value={selectedVariantId || ''}
                   >
                     {product.variants.map((variant: ProductVariant) => (
-                      <Surface 
-                        key={variant.id} 
+                      <Surface
+                        key={variant.id}
                         style={[
                           styles.variantSurface,
-                          selectedVariantId === variant.id && styles.variantSurfaceSelected,
-                          !variant.isActive && styles.inactiveVariantSurface
+                          selectedVariantId === variant.id &&
+                            styles.variantSurfaceSelected,
+                          !variant.isActive && styles.inactiveVariantSurface,
                         ]}
-                        elevation={selectedVariantId === variant.id && variant.isActive ? 2 : 0}
+                        elevation={
+                          selectedVariantId === variant.id && variant.isActive
+                            ? 2
+                            : 0
+                        }
                       >
                         <TouchableRipple
-                          onPress={() => variant.isActive && handleVariantSelect(variant.id)}
+                          onPress={() =>
+                            variant.isActive && handleVariantSelect(variant.id)
+                          }
                           disabled={!variant.isActive}
                           style={styles.variantTouchable}
                         >
                           <View style={styles.variantRow}>
                             <RadioButton
                               value={variant.id}
-                              status={selectedVariantId === variant.id ? 'checked' : 'unchecked'}
-                              onPress={() => variant.isActive && handleVariantSelect(variant.id)}
+                              status={
+                                selectedVariantId === variant.id
+                                  ? 'checked'
+                                  : 'unchecked'
+                              }
+                              onPress={() =>
+                                variant.isActive &&
+                                handleVariantSelect(variant.id)
+                              }
                               disabled={!variant.isActive}
                             />
-                            <Text style={[styles.variantName, !variant.isActive && styles.inactiveText]}>
-                              {variant.name}{!variant.isActive && " (No disponible)"}
+                            <Text
+                              style={[
+                                styles.variantName,
+                                !variant.isActive && styles.inactiveText,
+                              ]}
+                            >
+                              {variant.name}
+                              {!variant.isActive && ' (No disponible)'}
                             </Text>
-                            <Text style={[styles.variantPrice, !variant.isActive && styles.inactiveText]}>
+                            <Text
+                              style={[
+                                styles.variantPrice,
+                                !variant.isActive && styles.inactiveText,
+                              ]}
+                            >
                               ${Number(variant.price).toFixed(2)}
                             </Text>
                           </View>
@@ -480,37 +532,44 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                         {group.minSelections !== undefined &&
                           group.maxSelections !== undefined && (
                             <Text style={styles.selectionRules}>
-                              {(group.minSelections || 0) === 0 && group.maxSelections === 1
-                                ? "Hasta 1 opción"
-                                : (group.minSelections || 0) === group.maxSelections
+                              {(group.minSelections || 0) === 0 &&
+                              group.maxSelections === 1
+                                ? 'Hasta 1 opción'
+                                : (group.minSelections || 0) ===
+                                    group.maxSelections
                                   ? `Elegir ${group.maxSelections}`
                                   : `${group.minSelections || 0}-${group.maxSelections} opciones`}
                             </Text>
                           )}
                         {group.allowMultipleSelections && (
                           <Text style={styles.selectedCount}>
-                            ({(selectedModifiersByGroup[group.id] || []).length} seleccionadas)
+                            ({(selectedModifiersByGroup[group.id] || []).length}{' '}
+                            seleccionadas)
                           </Text>
                         )}
                       </View>
                     </View>
                     <View style={styles.chipContainer}>
                       {validationErrors[group.id] && (
-                        <Chip 
-                          mode="flat" 
-                          compact 
+                        <Chip
+                          mode="flat"
+                          compact
                           style={styles.errorChip}
                           icon="alert-circle"
                         >
                           {validationErrors[group.id]}
                         </Chip>
                       )}
-                      <Chip 
-                        mode="flat" 
-                        compact 
-                        style={group.isRequired ? styles.requiredChip : styles.optionalChip}
+                      <Chip
+                        mode="flat"
+                        compact
+                        style={
+                          group.isRequired
+                            ? styles.requiredChip
+                            : styles.optionalChip
+                        }
                       >
-                        {group.isRequired ? "Requerido" : "Opcional"}
+                        {group.isRequired ? 'Requerido' : 'Opcional'}
                       </Chip>
                     </View>
                   </View>
@@ -522,7 +581,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                           const groupModifiers =
                             selectedModifiersByGroup[group.id] || [];
                           const isSelected = groupModifiers.some(
-                            (mod) => mod.id === modifier.id
+                            (mod) => mod.id === modifier.id,
                           );
 
                           return (
@@ -531,13 +590,17 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                               style={[
                                 styles.modifierSurface,
                                 isSelected && styles.modifierSurfaceSelected,
-                                !modifier.isActive && styles.inactiveModifierSurface
+                                !modifier.isActive &&
+                                  styles.inactiveModifierSurface,
                               ]}
-                              elevation={isSelected && modifier.isActive ? 1 : 0}
+                              elevation={
+                                isSelected && modifier.isActive ? 1 : 0
+                              }
                             >
                               <TouchableRipple
                                 onPress={() =>
-                                  modifier.isActive && handleModifierToggle(modifier, group)
+                                  modifier.isActive &&
+                                  handleModifierToggle(modifier, group)
                                 }
                                 disabled={!modifier.isActive}
                                 style={styles.modifierTouchable}
@@ -545,18 +608,31 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                                 <View style={styles.modifierRow}>
                                   <Checkbox
                                     status={
-                                      isSelected ? "checked" : "unchecked"
+                                      isSelected ? 'checked' : 'unchecked'
                                     }
                                     onPress={() =>
-                                      modifier.isActive && handleModifierToggle(modifier, group)
+                                      modifier.isActive &&
+                                      handleModifierToggle(modifier, group)
                                     }
                                     disabled={!modifier.isActive}
                                   />
-                                  <Text style={[styles.modifierName, !modifier.isActive && styles.inactiveText]}>
-                                    {modifier.name}{!modifier.isActive && " (No disponible)"}
+                                  <Text
+                                    style={[
+                                      styles.modifierName,
+                                      !modifier.isActive && styles.inactiveText,
+                                    ]}
+                                  >
+                                    {modifier.name}
+                                    {!modifier.isActive && ' (No disponible)'}
                                   </Text>
                                   {Number(modifier.price) > 0 && (
-                                    <Text style={[styles.modifierPrice, !modifier.isActive && styles.inactiveText]}>
+                                    <Text
+                                      style={[
+                                        styles.modifierPrice,
+                                        !modifier.isActive &&
+                                          styles.inactiveText,
+                                      ]}
+                                    >
                                       +${Number(modifier.price).toFixed(2)}
                                     </Text>
                                   )}
@@ -570,47 +646,68 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                     <RadioButton.Group
                       onValueChange={(value) => {
                         const modifier = group.productModifiers.find(
-                          (m: Modifier) => m.id === value
+                          (m: Modifier) => m.id === value,
                         );
                         if (modifier) {
                           handleModifierToggle(modifier, group);
                         }
                       }}
-                      value={
-                        selectedModifiersByGroup[group.id]?.[0]?.id || ""
-                      }
+                      value={selectedModifiersByGroup[group.id]?.[0]?.id || ''}
                     >
                       <View style={styles.modifiersContainer}>
                         {Array.isArray(group.productModifiers) &&
                           group.productModifiers.map((modifier: Modifier) => {
-                            const isSelected = selectedModifiersByGroup[group.id]?.[0]?.id === modifier.id;
-                            
+                            const isSelected =
+                              selectedModifiersByGroup[group.id]?.[0]?.id ===
+                              modifier.id;
+
                             return (
                               <Surface
                                 key={modifier.id}
                                 style={[
                                   styles.modifierSurface,
                                   isSelected && styles.modifierSurfaceSelected,
-                                  !modifier.isActive && styles.inactiveModifierSurface
+                                  !modifier.isActive &&
+                                    styles.inactiveModifierSurface,
                                 ]}
-                                elevation={isSelected && modifier.isActive ? 1 : 0}
+                                elevation={
+                                  isSelected && modifier.isActive ? 1 : 0
+                                }
                               >
                                 <TouchableRipple
-                                  onPress={() => modifier.isActive && handleModifierToggle(modifier, group)}
+                                  onPress={() =>
+                                    modifier.isActive &&
+                                    handleModifierToggle(modifier, group)
+                                  }
                                   disabled={!modifier.isActive}
                                   style={styles.modifierTouchable}
                                 >
                                   <View style={styles.modifierRow}>
                                     <RadioButton
                                       value={modifier.id}
-                                      status={isSelected ? 'checked' : 'unchecked'}
+                                      status={
+                                        isSelected ? 'checked' : 'unchecked'
+                                      }
                                       disabled={!modifier.isActive}
                                     />
-                                    <Text style={[styles.modifierName, !modifier.isActive && styles.inactiveText]}>
-                                      {modifier.name}{!modifier.isActive && " (No disponible)"}
+                                    <Text
+                                      style={[
+                                        styles.modifierName,
+                                        !modifier.isActive &&
+                                          styles.inactiveText,
+                                      ]}
+                                    >
+                                      {modifier.name}
+                                      {!modifier.isActive && ' (No disponible)'}
                                     </Text>
                                     {Number(modifier.price) > 0 && (
-                                      <Text style={[styles.modifierPrice, !modifier.isActive && styles.inactiveText]}>
+                                      <Text
+                                        style={[
+                                          styles.modifierPrice,
+                                          !modifier.isActive &&
+                                            styles.inactiveText,
+                                        ]}
+                                      >
                                         +${Number(modifier.price).toFixed(2)}
                                       </Text>
                                     )}
@@ -637,9 +734,13 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                   onPress={decreaseQuantity}
                   style={[
                     styles.quantityIconButton,
-                    quantity <= 1 && styles.quantityIconButtonDisabled
+                    quantity <= 1 && styles.quantityIconButtonDisabled,
                   ]}
-                  iconColor={quantity <= 1 ? theme.colors.onSurfaceDisabled : theme.colors.primary}
+                  iconColor={
+                    quantity <= 1
+                      ? theme.colors.onSurfaceDisabled
+                      : theme.colors.primary
+                  }
                   disabled={quantity <= 1}
                 />
                 <Surface style={styles.quantityBadge} elevation={1}>
@@ -685,12 +786,16 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
               <View style={styles.summaryContent}>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Precio base:</Text>
-                  <Text style={styles.summaryValue}>${basePrice.toFixed(2)}</Text>
+                  <Text style={styles.summaryValue}>
+                    ${basePrice.toFixed(2)}
+                  </Text>
                 </View>
                 {selectedModifiers.length > 0 && (
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Adicionales:</Text>
-                    <Text style={styles.summaryValue}>+${modifiersPrice.toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>
+                      +${modifiersPrice.toFixed(2)}
+                    </Text>
                   </View>
                 )}
                 <View style={styles.summaryRow}>
@@ -700,7 +805,9 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                 <Divider style={styles.summaryDivider} />
                 <View style={[styles.summaryRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>Total:</Text>
-                  <Text style={styles.totalValue}>${totalPrice.toFixed(2)}</Text>
+                  <Text style={styles.totalValue}>
+                    ${totalPrice.toFixed(2)}
+                  </Text>
                 </View>
               </View>
             </Card.Content>
@@ -713,15 +820,15 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             mode="contained"
             onPress={handleAddToCart}
             style={styles.confirmButton} // Usar estilo de OrderCartDetail
-            icon={editingItem ? "cart-check" : "cart-plus"}
+            icon={editingItem ? 'cart-check' : 'cart-plus'}
             // Podrías agregar lógica de disabled si es necesario
             // disabled={!isValidSelection()}
           >
-            {editingItem ? "Actualizar Item" : "Agregar al Carrito"}
+            {editingItem ? 'Actualizar Item' : 'Agregar al Carrito'}
           </Button>
         </View>
       </Modal>
-      
+
       <ConfirmationModal
         visible={showExitConfirmation}
         onDismiss={handleCancelExit}
@@ -739,11 +846,11 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     modalContent: {
       backgroundColor: theme.colors.background,
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
       margin: 0,
       padding: 0,
-      position: "absolute",
+      position: 'absolute',
       top: 0,
       left: 0,
     },
@@ -751,20 +858,23 @@ const createStyles = (theme: AppTheme) =>
     appBar: {
       backgroundColor: theme.colors.elevation.level2, // Coincidir con OrderHeader
     },
-    appBarTitle: { // Estilo para el TÍTULO dentro de Appbar.Content
+    appBarTitle: {
+      // Estilo para el TÍTULO dentro de Appbar.Content
       ...theme.fonts.titleMedium, // Fuente consistente con OrderHeader
       color: theme.colors.onSurface,
       fontWeight: 'bold', // Añadir negritas al título
       // textAlign: 'center', // El centrado lo maneja appBarContent
       // flex: 1, // Quitar flex para permitir centrado vertical por appBarContent
     },
-    appBarContent: { // Contenedor del título
+    appBarContent: {
+      // Contenedor del título
       flex: 1, // Ocupar espacio disponible para centrar
       justifyContent: 'center', // Centrar verticalmente el contenido (título)
       alignItems: 'center', // Centrar horizontalmente el contenido (título)
       // marginLeft: -48, // Compensar el botón de back si es necesario (ajustar)
     },
-    appBarSpacer: { // Espaciador para equilibrar el botón de retroceso
+    appBarSpacer: {
+      // Espaciador para equilibrar el botón de retroceso
       width: 48, // Ancho estándar de IconButton
     },
     // --- Fin estilos Appbar ---
@@ -772,14 +882,14 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: theme.spacing.s,
     },
     modifierGroupHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 2,
     },
     groupTitle: {
       fontSize: 16,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       color: theme.colors.onSurface,
     },
     groupDescription: {
@@ -789,18 +899,18 @@ const createStyles = (theme: AppTheme) =>
     requiredText: {
       fontSize: 12,
       color: theme.colors.error,
-      fontWeight: "500",
+      fontWeight: '500',
     },
     optionalText: {
       fontSize: 12,
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: '500',
     },
     selectionRules: {
       fontSize: 10,
       color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.xs,
-      fontStyle: "italic",
+      fontStyle: 'italic',
     },
     selectionInfo: {
       marginTop: 2,
@@ -808,7 +918,7 @@ const createStyles = (theme: AppTheme) =>
     selectedCount: {
       fontSize: 12,
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: '500',
       marginTop: 2,
     },
     // title: { // Estilo obsoleto, reemplazado por appBarTitle
@@ -826,8 +936,8 @@ const createStyles = (theme: AppTheme) =>
     },
     imagePlaceholder: {
       backgroundColor: theme.colors.surfaceVariant,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     placeholderText: {
       fontSize: 50,
@@ -842,7 +952,7 @@ const createStyles = (theme: AppTheme) =>
     },
     sectionTitle: {
       fontSize: 16,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       marginBottom: theme.spacing.xs,
       color: theme.colors.onSurface,
     },
@@ -852,9 +962,9 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
     },
     sectionHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: theme.spacing.m,
     },
     groupTitleContainer: {
@@ -869,8 +979,8 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: theme.spacing.s,
     },
     chipContainer: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     errorChip: {
       backgroundColor: theme.colors.errorContainer,
@@ -892,8 +1002,8 @@ const createStyles = (theme: AppTheme) =>
       padding: 0,
     },
     variantRow: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.xs,
     },
@@ -922,8 +1032,8 @@ const createStyles = (theme: AppTheme) =>
       padding: 0,
     },
     modifierRow: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.xs,
     },
@@ -945,7 +1055,9 @@ const createStyles = (theme: AppTheme) =>
     },
     // Estilos de resumen mejorados
     summaryCard: {
-      backgroundColor: theme.dark ? theme.colors.elevation.level3 : theme.colors.secondaryContainer,
+      backgroundColor: theme.dark
+        ? theme.colors.elevation.level3
+        : theme.colors.secondaryContainer,
       borderWidth: theme.dark ? 1 : 0,
       borderColor: theme.dark ? theme.colors.outlineVariant : undefined,
     },
@@ -958,7 +1070,7 @@ const createStyles = (theme: AppTheme) =>
     },
     summaryValue: {
       fontSize: 14,
-      fontWeight: "500",
+      fontWeight: '500',
       color: theme.colors.onSurface,
     },
     summaryDivider: {
@@ -973,14 +1085,15 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: 4,
     },
     optionRow: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: 8,
       paddingVertical: 8,
     },
-    optionContent: { // Contenedor solo para el título del modificador (Checkbox)
+    optionContent: {
+      // Contenedor solo para el título del modificador (Checkbox)
       flex: 1, // Ocupa el espacio restante
-      justifyContent: "center", // Centra verticalmente el texto si es necesario
+      justifyContent: 'center', // Centra verticalmente el texto si es necesario
       // Quitar justifyContent: 'space-between'
       // alignItems: "center", // Ya está en optionRow
       // paddingRight: 8, // No necesario si el precio está fuera
@@ -998,14 +1111,15 @@ const createStyles = (theme: AppTheme) =>
     },
     modifierTitle: {
       fontSize: 16,
-      fontWeight: "500",
+      fontWeight: '500',
       color: theme.colors.onSurface, // Color estándar para texto
     },
-    variantPrice: { // Estilo específico para precio de variante
+    variantPrice: {
+      // Estilo específico para precio de variante
       fontSize: 14,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       color: theme.colors.onSurfaceVariant, // Color secundario consistente
-      marginLeft: "auto",
+      marginLeft: 'auto',
       marginRight: 8,
     },
     inactiveVariantSurface: {
@@ -1018,28 +1132,31 @@ const createStyles = (theme: AppTheme) =>
     },
     inactiveText: {
       color: theme.colors.onSurfaceDisabled,
-      textDecorationLine: "line-through",
+      textDecorationLine: 'line-through',
     },
-    modifierPrice: { // Estilo para precio de modificador (Checkbox y Radio)
+    modifierPrice: {
+      // Estilo para precio de modificador (Checkbox y Radio)
       fontSize: 14,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       color: theme.colors.onSurfaceVariant, // Color secundario consistente
       marginLeft: 'auto', // Empujar a la derecha
       paddingHorizontal: 8, // Añadir padding similar a variantPrice
     },
     quantityContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center", // Mantener una sola instancia
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center', // Mantener una sola instancia
       // alignItems: "center", // Eliminar duplicado
       marginVertical: theme.spacing.s, // Añadir espacio vertical
     },
-    quantityIconButton: { // Estilo para IconButton de cantidad
+    quantityIconButton: {
+      // Estilo para IconButton de cantidad
       margin: 0, // Quitar margen por defecto
       // backgroundColor: theme.colors.surfaceVariant, // Fondo sutil opcional - Eliminado para mayor consistencia si no se usa en OrderCartDetail
       borderRadius: 18, // Hacerlo circular
     },
-    quantityText: { // Estilo consistente con OrderCartDetail
+    quantityText: {
+      // Estilo consistente con OrderCartDetail
       fontSize: 18, // Tamaño de fuente
       fontWeight: 'bold',
       minWidth: 40, // Ancho mínimo
@@ -1049,24 +1166,27 @@ const createStyles = (theme: AppTheme) =>
     },
     // Estilos de Resumen - Consistentes con OrderCartDetail
     summaryRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       paddingVertical: theme.spacing.xs,
       paddingHorizontal: theme.spacing.xs, // Añadir padding horizontal
     },
-    totalRow: { // Estilo adicional para la fila del total
+    totalRow: {
+      // Estilo adicional para la fila del total
       marginTop: theme.spacing.s,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       paddingTop: theme.spacing.s,
     },
-    totalLabel: { // Estilo consistente con OrderCartDetail
-      fontWeight: "bold",
+    totalLabel: {
+      // Estilo consistente con OrderCartDetail
+      fontWeight: 'bold',
       fontSize: 18,
       color: theme.colors.onSurface,
     },
-    totalValue: { // Estilo consistente con OrderCartDetail para el TOTAL FINAL
-      fontWeight: "bold",
+    totalValue: {
+      // Estilo consistente con OrderCartDetail para el TOTAL FINAL
+      fontWeight: 'bold',
       fontSize: 18,
       color: theme.colors.primary, // Color primario para el total final
     },
@@ -1077,7 +1197,8 @@ const createStyles = (theme: AppTheme) =>
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface, // Fondo consistente
     },
-    confirmButton: { // Reemplaza addButton
+    confirmButton: {
+      // Reemplaza addButton
       paddingVertical: theme.spacing.s, // Padding consistente
       // width: "100%", // Ya es el comportamiento por defecto del botón en un View
     },
@@ -1091,7 +1212,8 @@ const createStyles = (theme: AppTheme) =>
     // Eliminar estilos no usados
     // sectionTitleContainer: { ... },
     // sectionTitleOptional: { ... },
-    divider: { // Estilo de Divider si se usa
+    divider: {
+      // Estilo de Divider si se usa
       marginVertical: theme.spacing.s,
       backgroundColor: theme.colors.outlineVariant,
     },

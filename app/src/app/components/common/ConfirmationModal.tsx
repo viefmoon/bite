@@ -1,7 +1,7 @@
-import React from "react";
-import { Portal, Dialog, Paragraph, Button } from "react-native-paper";
-import { useAppTheme } from "@/app/styles/theme";
-import { StyleSheet } from "react-native";
+import React from 'react';
+import { Portal, Dialog, Paragraph, Button } from 'react-native-paper';
+import { useAppTheme } from '@/app/styles/theme';
+import { StyleSheet } from 'react-native';
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -19,8 +19,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   onConfirm,
   onCancel,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
 }) => {
   const theme = useAppTheme();
 
@@ -38,11 +38,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           color: theme.colors.onSurfaceVariant,
         },
         actions: {
-          justifyContent: "space-between",
+          justifyContent: 'space-between',
           paddingHorizontal: 16,
           paddingBottom: 16,
           paddingTop: 8,
-          flexDirection: "row",
+          flexDirection: 'row',
           gap: 16,
         },
         button: {
@@ -51,11 +51,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         cancelButton: {
           backgroundColor: theme.colors.secondaryContainer,
         },
-        confirmButton: {
-
-        },
+        confirmButton: {},
       }),
-    [theme]
+    [theme],
   );
 
   return (

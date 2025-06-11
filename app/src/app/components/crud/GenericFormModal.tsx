@@ -4,7 +4,7 @@ import React, {
   useState,
   useCallback,
   useRef,
-} from "react";
+} from 'react';
 import {
   View,
   StyleSheet,
@@ -12,7 +12,7 @@ import {
   ScrollView,
   StyleProp,
   ViewStyle,
-} from "react-native";
+} from 'react-native';
 import {
   Modal,
   Portal,
@@ -22,7 +22,7 @@ import {
   Switch,
   HelperText,
   ActivityIndicator,
-} from "react-native-paper";
+} from 'react-native-paper';
 import {
   useForm,
   Controller,
@@ -34,23 +34,23 @@ import {
   DefaultValues,
   Control,
   FieldError, // Importar FieldError
-} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ZodSchema } from "zod";
-import { useAppTheme, AppTheme } from "../../styles/theme";
-import CustomImagePicker, { FileObject } from "../common/CustomImagePicker";
+} from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ZodSchema } from 'zod';
+import { useAppTheme, AppTheme } from '../../styles/theme';
+import CustomImagePicker, { FileObject } from '../common/CustomImagePicker';
 import {
   ImageUploadService,
   EntityWithOptionalPhoto,
-} from "../../lib/imageUploadService";
+} from '../../lib/imageUploadService';
 
 type FieldType =
-  | "text"
-  | "textarea"
-  | "switch"
-  | "number"
-  | "email"
-  | "password";
+  | 'text'
+  | 'textarea'
+  | 'switch'
+  | 'number'
+  | 'email'
+  | 'password';
 
 export interface FormFieldConfig<TFormData extends FieldValues> {
   name: Path<TFormData>;
@@ -70,7 +70,7 @@ export interface ImagePickerConfig<TFormData extends FieldValues> {
   onImageUpload: (file: FileObject) => Promise<{ id: string } | null>;
   determineFinalPhotoId?: (
     currentImageUri: string | null,
-    editingItem: EntityWithOptionalPhoto | undefined
+    editingItem: EntityWithOptionalPhoto | undefined,
   ) => string | null | undefined;
   imagePickerSize?: number;
 }
@@ -83,7 +83,7 @@ interface GenericFormModalProps<
   onDismiss: () => void;
   onSubmit: (
     data: TFormData,
-    photoId: string | null | undefined
+    photoId: string | null | undefined,
   ) => Promise<void>;
   formSchema: ZodSchema<TFormData>;
   formFields: FormFieldConfig<TFormData>[];
@@ -100,17 +100,17 @@ interface GenericFormModalProps<
 }
 
 const getDefaultValueForType = (
-  type: FieldType
+  type: FieldType,
 ): string | number | boolean | null | undefined => {
   switch (type) {
-    case "text":
-    case "textarea":
-    case "email":
-    case "password":
-      return "";
-    case "number":
+    case 'text':
+    case 'textarea':
+    case 'email':
+    case 'password':
+      return '';
+    case 'number':
       return null;
-    case "switch":
+    case 'switch':
       return false;
     default:
       return undefined;
@@ -125,8 +125,8 @@ const getStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
-      maxHeight: "90%",
-      overflow: "hidden",
+      maxHeight: '90%',
+      overflow: 'hidden',
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
@@ -134,7 +134,7 @@ const getStyles = (theme: AppTheme) =>
       paddingHorizontal: theme.spacing.l,
     },
     formContainer: {
-      maxHeight: "100%",
+      maxHeight: '100%',
     },
     scrollViewContent: {
       padding: theme.spacing.l,
@@ -142,8 +142,8 @@ const getStyles = (theme: AppTheme) =>
     },
     modalTitle: {
       color: theme.colors.onPrimary,
-      fontWeight: "700",
-      textAlign: "center",
+      fontWeight: '700',
+      textAlign: 'center',
     },
     input: {
       marginBottom: theme.spacing.m,
@@ -157,19 +157,19 @@ const getStyles = (theme: AppTheme) =>
       flexShrink: 1,
     },
     switchComponentContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-start",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
       marginBottom: theme.spacing.m,
       paddingVertical: theme.spacing.s,
     },
     imagePickerContainer: {
-      alignItems: "center",
+      alignItems: 'center',
       marginBottom: theme.spacing.l,
     },
     modalActions: {
-      flexDirection: "row",
-      justifyContent: "center",
+      flexDirection: 'row',
+      justifyContent: 'center',
       paddingVertical: theme.spacing.m,
       paddingHorizontal: theme.spacing.l,
       borderTopWidth: 1,
@@ -188,9 +188,9 @@ const getStyles = (theme: AppTheme) =>
     cancelButton: {},
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.3)",
-      justifyContent: "center",
-      alignItems: "center",
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      justifyContent: 'center',
+      alignItems: 'center',
       borderRadius: theme.roundness * 2,
       zIndex: 10,
     },
@@ -214,8 +214,8 @@ const GenericFormModal = <
   editingItem,
   isSubmitting: isParentSubmitting,
   modalTitle,
-  submitButtonLabel = (isEditing: boolean) => (isEditing ? "Guardar" : "Crear"),
-  cancelButtonLabel = "Cancelar",
+  submitButtonLabel = (isEditing: boolean) => (isEditing ? 'Guardar' : 'Crear'),
+  cancelButtonLabel = 'Cancelar',
   modalStyle,
   formContainerStyle,
   onFileSelected,
@@ -225,7 +225,7 @@ const GenericFormModal = <
   const [isInternalImageUploading, setIsInternalImageUploading] =
     useState(false);
   const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(
-    null
+    null,
   );
   const prevVisibleRef = useRef(visible);
   const prevEditingItemIdRef = useRef(editingItem?.id);
@@ -250,7 +250,7 @@ const GenericFormModal = <
             field.defaultValue ?? getDefaultValueForType(field.type);
           return acc;
         },
-        {} as DefaultValues<TFormData>
+        {} as DefaultValues<TFormData>,
       );
       return { ...defaults, ...(initialValues as DefaultValues<TFormData>) };
     }, [formFields, initialValues]),
@@ -260,7 +260,7 @@ const GenericFormModal = <
     ? watch(imagePickerConfig.imageUriField)
     : undefined;
   const currentImageUri =
-    typeof watchedImageUri === "string" ? watchedImageUri : null;
+    typeof watchedImageUri === 'string' ? watchedImageUri : null;
 
   useEffect(() => {
     const justOpened = visible && !prevVisibleRef.current;
@@ -274,7 +274,7 @@ const GenericFormModal = <
             field.defaultValue ?? getDefaultValueForType(field.type);
           return acc;
         },
-        {} as DefaultValues<TFormData>
+        {} as DefaultValues<TFormData>,
       );
       const resetValues = {
         ...defaultFormValues,
@@ -314,7 +314,7 @@ const GenericFormModal = <
         onFileSelected?.(file);
       }
     },
-    [setValue, getValues, imagePickerConfig, onFileSelected]
+    [setValue, getValues, imagePickerConfig, onFileSelected],
   );
 
   const handleImageRemoved = useCallback(() => {
@@ -338,7 +338,7 @@ const GenericFormModal = <
         : null;
 
       const isNewLocalImage =
-        typeof formImageUri === "string" && formImageUri.startsWith("file://");
+        typeof formImageUri === 'string' && formImageUri.startsWith('file://');
       if (isNewLocalImage && localSelectedFile) {
         setIsInternalImageUploading(true);
         try {
@@ -349,14 +349,14 @@ const GenericFormModal = <
             finalPhotoId = uploadResult.id;
             console.log('[GenericFormModal] New photo ID:', finalPhotoId);
           } else {
-            throw new Error("La subida de la imagen no devolvió un ID.");
+            throw new Error('La subida de la imagen no devolvió un ID.');
           }
         } catch (error) {
-          console.error("Error subiendo imagen:", error);
-          console.error("[GenericFormModal] Error subiendo imagen:", error);
+          console.error('Error subiendo imagen:', error);
+          console.error('[GenericFormModal] Error subiendo imagen:', error);
           Alert.alert(
-            "Error",
-            `No se pudo subir la imagen: ${error instanceof Error ? error.message : "Error desconocido"}`
+            'Error',
+            `No se pudo subir la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
           );
           setIsInternalImageUploading(false);
           return;
@@ -372,7 +372,10 @@ const GenericFormModal = <
       }
     }
 
-    console.log('[GenericFormModal] Calling onSubmit with finalPhotoId:', finalPhotoId);
+    console.log(
+      '[GenericFormModal] Calling onSubmit with finalPhotoId:',
+      finalPhotoId,
+    );
     await onSubmit(formData, finalPhotoId);
   };
 
@@ -382,11 +385,11 @@ const GenericFormModal = <
     const errorMessage = fieldError?.message;
 
     switch (fieldConfig.type) {
-      case "textarea":
-      case "text":
-      case "number":
-      case "email":
-      case "password":
+      case 'textarea':
+      case 'text':
+      case 'number':
+      case 'email':
+      case 'password':
         return (
           <View key={String(fieldName)}>
             {/* Controller para campos numéricos con manejo de string local y decimales */}
@@ -394,24 +397,24 @@ const GenericFormModal = <
               name={fieldName}
               control={control as Control<FieldValues>}
               render={({ field: { onChange, onBlur, value } }) => {
-                if (fieldConfig.type === "number") {
+                if (fieldConfig.type === 'number') {
                   const [inputValue, setInputValue] = useState<string>(
-                    value === null || value === undefined ? "" : String(value)
+                    value === null || value === undefined ? '' : String(value),
                   );
 
                   useEffect(() => {
                     const stringValue =
                       value === null || value === undefined
-                        ? ""
+                        ? ''
                         : String(value);
                     if (stringValue !== inputValue) {
                       const numericValueFromInput = parseFloat(inputValue);
                       if (
                         !(
-                          inputValue.endsWith(".") &&
+                          inputValue.endsWith('.') &&
                           numericValueFromInput === value
                         ) &&
-                        !(inputValue === "." && value === null)
+                        !(inputValue === '.' && value === null)
                       ) {
                         setInputValue(stringValue);
                       }
@@ -423,11 +426,11 @@ const GenericFormModal = <
                       label={fieldConfig.label}
                       value={inputValue}
                       onChangeText={(text) => {
-                        const formattedText = text.replace(/,/g, ".");
+                        const formattedText = text.replace(/,/g, '.');
                         if (/^(\d*\.?\d*)$/.test(formattedText)) {
                           setInputValue(formattedText);
 
-                          if (formattedText === "" || formattedText === ".") {
+                          if (formattedText === '' || formattedText === '.') {
                             if (value !== null) onChange(null);
                           } else {
                             const numericValue = parseFloat(formattedText);
@@ -447,7 +450,7 @@ const GenericFormModal = <
                       style={styles.input}
                       placeholder={fieldConfig.placeholder}
                       keyboardType={
-                        fieldConfig.inputProps?.keyboardType ?? "decimal-pad"
+                        fieldConfig.inputProps?.keyboardType ?? 'decimal-pad'
                       }
                       error={!!errorMessage}
                       disabled={isActuallySubmitting}
@@ -458,22 +461,22 @@ const GenericFormModal = <
                   return (
                     <TextInput
                       label={fieldConfig.label}
-                      value={value ?? ""}
+                      value={value ?? ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
                       mode="outlined"
                       style={styles.input}
                       placeholder={fieldConfig.placeholder}
-                      secureTextEntry={fieldConfig.type === "password"}
+                      secureTextEntry={fieldConfig.type === 'password'}
                       keyboardType={
-                        fieldConfig.type === "email"
-                          ? "email-address"
-                          : "default"
+                        fieldConfig.type === 'email'
+                          ? 'email-address'
+                          : 'default'
                       }
-                      multiline={fieldConfig.type === "textarea"}
+                      multiline={fieldConfig.type === 'textarea'}
                       numberOfLines={
                         fieldConfig.numberOfLines ??
-                        (fieldConfig.type === "textarea" ? 3 : 1)
+                        (fieldConfig.type === 'textarea' ? 3 : 1)
                       }
                       error={!!errorMessage}
                       disabled={isActuallySubmitting}
@@ -494,7 +497,7 @@ const GenericFormModal = <
             )}
           </View>
         );
-      case "switch":
+      case 'switch':
         return (
           <View key={String(fieldName)} style={styles.switchComponentContainer}>
             <Text variant="bodyLarge" style={styles.switchLabel}>

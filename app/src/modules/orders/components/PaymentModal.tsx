@@ -24,13 +24,13 @@ import {
   Surface,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { 
-  PaymentMethodEnum, 
+import {
+  PaymentMethodEnum,
   PaymentStatusEnum,
   type Payment,
   type PaymentMethod,
 } from '../types/payment.types';
-import { 
+import {
   useGetPaymentsByOrderIdQuery,
   useCreatePaymentMutation,
   useUpdatePaymentMutation,
@@ -73,31 +73,34 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const scrollViewRef = useRef<ScrollView>(null);
   const amountInputRef = useRef<View>(null);
-  
+
   // Estado del formulario
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethodEnum.CASH);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
+    PaymentMethodEnum.CASH,
+  );
   const [amount, setAmount] = useState('');
   const [showChangeCalculator, setShowChangeCalculator] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  
+
   // Queries y mutations
-  const { data: payments = [], isLoading: isLoadingPayments } = useGetPaymentsByOrderIdQuery(orderId);
+  const { data: payments = [], isLoading: isLoadingPayments } =
+    useGetPaymentsByOrderIdQuery(orderId);
   const createPaymentMutation = useCreatePaymentMutation();
   const updatePaymentMutation = useUpdatePaymentMutation();
   const deletePaymentMutation = useDeletePaymentMutation();
-  
+
   // Calcular totales
   const totalPaid = useMemo(() => {
     return (payments || [])
-      .filter(p => p.paymentStatus === PaymentStatusEnum.COMPLETED)
+      .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
       .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
   }, [payments]);
-  
+
   const pendingAmount = orderTotal - totalPaid;
   const isFullyPaid = pendingAmount <= 0;
-  
+
   // Resetear formulario cuando se abre el modal
   useEffect(() => {
     if (visible) {
@@ -106,66 +109,72 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setSelectedMethod(PaymentMethodEnum.CASH);
     }
   }, [visible, pendingAmount]);
-  
+
   // Manejar el teclado
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-      // Pequeño delay para asegurar que el layout esté actualizado
-      setTimeout(() => {
-        if (amountInputRef.current && scrollViewRef.current) {
-          amountInputRef.current.measureLayout(
-            scrollViewRef.current as any,
-            (x, y) => {
-              scrollViewRef.current?.scrollTo({ y: y - 50, animated: true });
-            },
-            () => {}
-          );
-        }
-      }, 100);
-    });
-    
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-    
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+        // Pequeño delay para asegurar que el layout esté actualizado
+        setTimeout(() => {
+          if (amountInputRef.current && scrollViewRef.current) {
+            amountInputRef.current.measureLayout(
+              scrollViewRef.current as any,
+              (x, y) => {
+                scrollViewRef.current?.scrollTo({ y: y - 50, animated: true });
+              },
+              () => {},
+            );
+          }
+        }, 100);
+      },
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
-  
+
   const handleSubmit = async () => {
     const parsedAmount = parseFloat(amount);
-    
+
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       return;
     }
-    
+
     // Si es efectivo, mostrar calculadora de cambio
     if (selectedMethod === PaymentMethodEnum.CASH) {
       setShowChangeCalculator(true);
       return;
     }
-    
+
     // Para otros métodos de pago, procesar directamente
     await processPayment();
   };
-  
+
   const processPayment = async () => {
     const parsedAmount = parseFloat(amount);
-    
+
     try {
       await createPaymentMutation.mutateAsync({
         orderId,
         paymentMethod: selectedMethod,
         amount: parsedAmount,
       });
-      
+
       // Resetear formulario
       setAmount('');
       setShowChangeCalculator(false);
-      
+
       // Si ya está totalmente pagado, cerrar el modal
       if (pendingAmount - parsedAmount <= 0) {
         onDismiss();
@@ -174,10 +183,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       console.error('Error al crear pago:', error);
     }
   };
-  
+
   const handleDeletePayment = async () => {
     if (!paymentToDelete) return;
-    
+
     try {
       await deletePaymentMutation.mutateAsync(paymentToDelete);
       setShowDeleteConfirm(false);
@@ -186,7 +195,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       console.error('Error al eliminar pago:', error);
     }
   };
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case PaymentStatusEnum.COMPLETED:
@@ -203,7 +212,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         return theme.colors.onSurfaceVariant;
     }
   };
-  
+
   const getStatusText = (status: string) => {
     switch (status) {
       case PaymentStatusEnum.COMPLETED:
@@ -220,36 +229,35 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         return status;
     }
   };
-  
+
   return (
     <Portal>
       <Modal
-        visible={visible}
+        visible={visible && !showChangeCalculator}
         onDismiss={onDismiss}
         contentContainerStyle={styles.modalContainer}
       >
         <View style={styles.modalWrapper}>
           <Surface style={styles.modalContent} elevation={3}>
-              {/* Header */}
-              <View style={styles.header}>
-                <View style={styles.headerTextContainer}>
-                  <Text style={styles.title}>Pagos</Text>
-                  {orderNumber && (
-                    <Text style={styles.orderNumber}>Orden #{orderNumber}</Text>
-                  )}
-                </View>
-                <IconButton
-                  icon="close"
-                  size={24}
-                  onPress={onDismiss}
-                />
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.title}>Pagos</Text>
+                {orderNumber && (
+                  <Text style={styles.orderNumber}>Orden #{orderNumber}</Text>
+                )}
               </View>
-              
-              <Divider />
-              
-              <ScrollView 
+              <IconButton icon="close" size={24} onPress={onDismiss} />
+            </View>
+
+            <Divider />
+
+            <ScrollView
               ref={scrollViewRef}
-              style={[styles.scrollView, keyboardVisible && styles.scrollViewWithKeyboard]} 
+              style={[
+                styles.scrollView,
+                keyboardVisible && styles.scrollViewWithKeyboard,
+              ]}
               contentContainerStyle={styles.scrollViewContent}
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
@@ -260,7 +268,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <View style={styles.summaryContainer}>
                 <View style={styles.summaryItem}>
                   <Text style={styles.summaryLabel}>Total</Text>
-                  <Text style={styles.summaryAmount}>${orderTotal.toFixed(2)}</Text>
+                  <Text style={styles.summaryAmount}>
+                    ${orderTotal.toFixed(2)}
+                  </Text>
                 </View>
                 <View style={styles.summaryDividerVertical} />
                 <View style={styles.summaryItem}>
@@ -274,18 +284,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>
                     Pendiente
                   </Text>
-                  <Text style={[
-                    styles.summaryAmount, 
-                    { 
-                      fontWeight: 'bold',
-                      color: pendingAmount > 0 ? theme.colors.error : '#4CAF50' 
-                    }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.summaryAmount,
+                      {
+                        fontWeight: 'bold',
+                        color:
+                          pendingAmount > 0 ? theme.colors.error : '#4CAF50',
+                      },
+                    ]}
+                  >
                     ${pendingAmount.toFixed(2)}
                   </Text>
                 </View>
               </View>
-              
+
               {/* Lista de pagos existentes */}
               {isLoadingPayments ? (
                 <ActivityIndicator style={styles.loader} />
@@ -301,29 +314,36 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           </Text>
                         </View>
                         <Text style={styles.paymentDateCompact}>
-                          {new Date(payment.createdAt).toLocaleTimeString('es-MX', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                          {new Date(payment.createdAt).toLocaleTimeString(
+                            'es-MX',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
+                          )}
                         </Text>
                       </View>
-                      
+
                       <View style={styles.paymentRightInfo}>
                         <Text style={styles.paymentAmountCompact}>
                           ${(Number(payment.amount) || 0).toFixed(2)}
                         </Text>
-                        
+
                         <Chip
                           mode="flat"
                           style={[
                             styles.statusChipCompact,
-                            { backgroundColor: getStatusColor(payment.paymentStatus) }
+                            {
+                              backgroundColor: getStatusColor(
+                                payment.paymentStatus,
+                              ),
+                            },
                           ]}
                           textStyle={styles.statusChipTextCompact}
                         >
                           {getStatusText(payment.paymentStatus)}
                         </Chip>
-                        
+
                         <IconButton
                           icon="delete"
                           size={20}
@@ -340,50 +360,64 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   ))}
                 </View>
               ) : null}
-              
+
               {/* Formulario para nuevo pago */}
               {!isFullyPaid && (
                 <View style={styles.formSection}>
                   <Text style={styles.sectionTitle}>Registrar nuevo pago</Text>
-                  
+
                   {/* Métodos de pago */}
                   <View style={styles.methodsContainer}>
                     {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-                      const isDisabled = disabledMethods.includes(value as PaymentMethod);
+                      const isDisabled = disabledMethods.includes(
+                        value as PaymentMethod,
+                      );
                       return (
                         <TouchableOpacity
                           key={key}
                           style={[
                             styles.methodCard,
-                            selectedMethod === value && styles.methodCardSelected,
+                            selectedMethod === value &&
+                              styles.methodCardSelected,
                             isDisabled && styles.methodCardDisabled,
                           ]}
-                          onPress={() => !isDisabled && setSelectedMethod(value)}
+                          onPress={() =>
+                            !isDisabled && setSelectedMethod(value)
+                          }
                           disabled={isDisabled}
                         >
                           <RadioButton
                             value={value}
-                            status={selectedMethod === value ? 'checked' : 'unchecked'}
-                            onPress={() => !isDisabled && setSelectedMethod(value)}
+                            status={
+                              selectedMethod === value ? 'checked' : 'unchecked'
+                            }
+                            onPress={() =>
+                              !isDisabled && setSelectedMethod(value)
+                            }
                             disabled={isDisabled}
                           />
                           <View style={styles.methodLabelContainer}>
-                            <Text style={[
-                              styles.methodText,
-                              selectedMethod === value && styles.methodTextSelected,
-                              isDisabled && styles.methodTextDisabled,
-                            ]}>
+                            <Text
+                              style={[
+                                styles.methodText,
+                                selectedMethod === value &&
+                                  styles.methodTextSelected,
+                                isDisabled && styles.methodTextDisabled,
+                              ]}
+                            >
                               {paymentMethodLabels[value]}
                             </Text>
                             {isDisabled && (
-                              <Text style={styles.comingSoonText}>Próximamente</Text>
+                              <Text style={styles.comingSoonText}>
+                                Próximamente
+                              </Text>
                             )}
                           </View>
                         </TouchableOpacity>
                       );
                     })}
                   </View>
-                  
+
                   {/* Campo de monto */}
                   <View style={styles.amountContainer} ref={amountInputRef}>
                     <View style={styles.amountRow}>
@@ -395,7 +429,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         mode="outlined"
                         left={<TextInput.Affix text="$" />}
                         style={styles.amountInput}
-                        error={amount !== '' && (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)}
+                        error={
+                          amount !== '' &&
+                          (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)
+                        }
                       />
                       <Button
                         mode="outlined"
@@ -408,10 +445,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         Total a pagar
                       </Button>
                     </View>
-                    <HelperText type="error" visible={amount !== '' && (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)}>
+                    <HelperText
+                      type="error"
+                      visible={
+                        amount !== '' &&
+                        (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)
+                      }
+                    >
                       Ingrese un monto válido
                     </HelperText>
-                    
+
                     {/* Botones de monto rápido */}
                     {pendingAmount > 100 && (
                       <View style={styles.quickAmounts}>
@@ -445,7 +488,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 </View>
               )}
             </ScrollView>
-            
+
             {/* Botones de acción */}
             <View style={styles.footer}>
               <Button
@@ -461,8 +504,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   mode="contained"
                   onPress={handleSubmit}
                   disabled={
-                    !amount || 
-                    isNaN(parseFloat(amount)) || 
+                    !amount ||
+                    isNaN(parseFloat(amount)) ||
                     parseFloat(amount) <= 0 ||
                     createPaymentMutation.isPending
                   }
@@ -477,7 +520,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </Surface>
         </View>
       </Modal>
-      
+
       {/* Modal de confirmación para eliminar */}
       <ConfirmationModal
         visible={showDeleteConfirm}
@@ -492,11 +535,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         cancelText="No, cancelar"
         confirmButtonColor={theme.colors.error}
       />
-      
+
       {/* Modal de cálculo de cambio */}
       <ChangeCalculatorModal
         visible={showChangeCalculator}
-        onDismiss={() => setShowChangeCalculator(false)}
+        onDismiss={() => {
+          setShowChangeCalculator(false);
+        }}
         onConfirm={() => {
           setShowChangeCalculator(false);
           processPayment();

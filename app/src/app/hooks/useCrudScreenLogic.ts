@@ -14,7 +14,7 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
   entityName,
   queryKey,
   deleteMutationFn,
-}: CrudLogicParams) { 
+}: CrudLogicParams) {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.showSnackbar);
   const [isFormModalVisible, setIsFormModalVisible] = useState(false);
@@ -23,15 +23,21 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
   const [selectedItem, setSelectedItem] = useState<TItem | null>(null);
 
   const deleteMutation = useMutation({
-      mutationFn: deleteMutationFn,
-      onSuccess: (_, _deletedId) => {
-          queryClient.invalidateQueries({ queryKey });
-          showSnackbar({ message: `${entityName} eliminado con éxito`, type: 'success' });
-          handleCloseModals();
-      },
-      onError: (error) => {
-          showSnackbar({ message: `Error al eliminar ${entityName}: ${getApiErrorMessage(error)}`, type: 'error' });
-      }
+    mutationFn: deleteMutationFn,
+    onSuccess: (_, _deletedId) => {
+      queryClient.invalidateQueries({ queryKey });
+      showSnackbar({
+        message: `${entityName} eliminado con éxito`,
+        type: 'success',
+      });
+      handleCloseModals();
+    },
+    onError: (error) => {
+      showSnackbar({
+        message: `Error al eliminar ${entityName}: ${getApiErrorMessage(error)}`,
+        type: 'error',
+      });
+    },
   });
 
   const handleOpenCreateModal = useCallback(() => {
@@ -48,13 +54,12 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     setIsDetailModalVisible(false);
   }, []);
 
-   const handleOpenDetailModal = useCallback((item: TItem) => {
+  const handleOpenDetailModal = useCallback((item: TItem) => {
     setSelectedItem(item);
     setEditingItem(null);
     setIsDetailModalVisible(true);
     setIsFormModalVisible(false);
   }, []);
-
 
   const handleCloseModals = useCallback(() => {
     setIsFormModalVisible(false);
@@ -63,20 +68,23 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     setSelectedItem(null);
   }, []);
 
-  const handleDeleteItem = useCallback((id: string) => {
+  const handleDeleteItem = useCallback(
+    (id: string) => {
       Alert.alert(
-          `Confirmar Eliminación`,
-          `¿Estás seguro de que deseas eliminar este ${entityName.toLowerCase()}?`,
-          [
-              { text: "Cancelar", style: "cancel" },
-              {
-                  text: "Eliminar",
-                  style: "destructive",
-                  onPress: () => deleteMutation.mutate(id),
-              },
-          ]
+        `Confirmar Eliminación`,
+        `¿Estás seguro de que deseas eliminar este ${entityName.toLowerCase()}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar',
+            style: 'destructive',
+            onPress: () => deleteMutation.mutate(id),
+          },
+        ],
       );
-  }, [deleteMutation, entityName]);
+    },
+    [deleteMutation, entityName],
+  );
 
   return {
     isFormModalVisible,

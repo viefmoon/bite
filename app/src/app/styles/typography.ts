@@ -1,35 +1,34 @@
-
-import { Platform } from "react-native";
+import { Platform } from 'react-native';
 
 export const typography = {
   fonts: {
     regular: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Text',
+      android: 'Roboto',
+      default: 'System',
     }),
     medium: Platform.select({
-      ios: "SF Pro Text-Medium",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text-Medium',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     light: Platform.select({
-      ios: "SF Pro Text-Light",
-      android: "Roboto-Light",
-      default: "System-Light",
+      ios: 'SF Pro Text-Light',
+      android: 'Roboto-Light',
+      default: 'System-Light',
     }),
     thin: Platform.select({
-      ios: "SF Pro Text-Thin",
-      android: "Roboto-Thin",
-      default: "System-Thin",
+      ios: 'SF Pro Text-Thin',
+      android: 'Roboto-Thin',
+      default: 'System-Thin',
     }),
   },
 
   displayLarge: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 57,
     lineHeight: 64,
@@ -37,9 +36,9 @@ export const typography = {
   },
   displayMedium: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 45,
     lineHeight: 52,
@@ -47,9 +46,9 @@ export const typography = {
   },
   displaySmall: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 36,
     lineHeight: 44,
@@ -57,9 +56,9 @@ export const typography = {
   },
   headlineLarge: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 32,
     lineHeight: 40,
@@ -67,9 +66,9 @@ export const typography = {
   },
   headlineMedium: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 28,
     lineHeight: 36,
@@ -77,9 +76,9 @@ export const typography = {
   },
   headlineSmall: {
     fontFamily: Platform.select({
-      ios: "SF Pro Display",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Display',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 24,
     lineHeight: 32,
@@ -87,9 +86,9 @@ export const typography = {
   },
   titleLarge: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Text',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 22,
     lineHeight: 28,
@@ -97,9 +96,9 @@ export const typography = {
   },
   titleMedium: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     fontSize: 16,
     lineHeight: 24,
@@ -107,9 +106,9 @@ export const typography = {
   },
   titleSmall: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     fontSize: 14,
     lineHeight: 20,
@@ -117,9 +116,9 @@ export const typography = {
   },
   labelLarge: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     fontSize: 14,
     lineHeight: 20,
@@ -127,9 +126,9 @@ export const typography = {
   },
   labelMedium: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     fontSize: 12,
     lineHeight: 16,
@@ -137,9 +136,9 @@ export const typography = {
   },
   labelSmall: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto-Medium",
-      default: "System-Medium",
+      ios: 'SF Pro Text',
+      android: 'Roboto-Medium',
+      default: 'System-Medium',
     }),
     fontSize: 11,
     lineHeight: 16,
@@ -147,9 +146,9 @@ export const typography = {
   },
   bodyLarge: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Text',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 16,
     lineHeight: 24,
@@ -157,9 +156,9 @@ export const typography = {
   },
   bodyMedium: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Text',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 14,
     lineHeight: 20,
@@ -167,9 +166,9 @@ export const typography = {
   },
   bodySmall: {
     fontFamily: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      default: "System",
+      ios: 'SF Pro Text',
+      android: 'Roboto',
+      default: 'System',
     }),
     fontSize: 12,
     lineHeight: 16,
@@ -178,15 +177,15 @@ export const typography = {
 };
 
 export const iosFontFamily = {
-  regular: "System",
-  medium: "System",
-  light: "System",
-  thin: "System",
+  regular: 'System',
+  medium: 'System',
+  light: 'System',
+  thin: 'System',
 };
 
 export const androidFontFamily = {
-  regular: "sans-serif",
-  medium: "sans-serif-medium",
-  light: "sans-serif-light",
-  thin: "sans-serif-thin",
+  regular: 'sans-serif',
+  medium: 'sans-serif-medium',
+  light: 'sans-serif-light',
+  thin: 'sans-serif-thin',
 };

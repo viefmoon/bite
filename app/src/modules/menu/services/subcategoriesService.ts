@@ -1,22 +1,24 @@
-import apiClient from "../../../app/services/apiClient";
-import { ApiError } from "../../../app/lib/errors";
-import { API_PATHS } from "../../../app/constants/apiPaths";
+import apiClient from '../../../app/services/apiClient';
+import { ApiError } from '../../../app/lib/errors';
+import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
   SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
   findAllSubcategoriesDtoSchema,
-} from "../schema/subcategories.schema";
+} from '../schema/subcategories.schema';
 import { z } from 'zod';
-import { PaginatedResponse } from "../../../app/types/api.types";
-
+import { PaginatedResponse } from '../../../app/types/api.types';
 
 type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 
 export const createSubcategory = async (
-  data: CreateSubCategoryDto
+  data: CreateSubCategoryDto,
 ): Promise<SubCategory> => {
-  const response = await apiClient.post<SubCategory>(API_PATHS.SUBCATEGORIES, data);
+  const response = await apiClient.post<SubCategory>(
+    API_PATHS.SUBCATEGORIES,
+    data,
+  );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -24,7 +26,7 @@ export const createSubcategory = async (
 };
 
 export const findAllSubcategories = async (
-  params: FindAllSubcategoriesDto
+  params: FindAllSubcategoriesDto,
 ): Promise<PaginatedResponse<SubCategory>> => {
   const queryParams = Object.entries(params).reduce(
     (acc, [key, value]) => {
@@ -33,7 +35,7 @@ export const findAllSubcategories = async (
       }
       return acc;
     },
-    {} as Record<string, any>
+    {} as Record<string, any>,
   );
 
   const response = await apiClient.get<{
@@ -43,10 +45,7 @@ export const findAllSubcategories = async (
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(
-    API_PATHS.SUBCATEGORIES,
-    queryParams
-  );
+  }>(API_PATHS.SUBCATEGORIES, queryParams);
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -63,7 +62,9 @@ export const findAllSubcategories = async (
 };
 
 export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
-  const response = await apiClient.get<SubCategory>(`${API_PATHS.SUBCATEGORIES}/${id}`);
+  const response = await apiClient.get<SubCategory>(
+    `${API_PATHS.SUBCATEGORIES}/${id}`,
+  );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -72,11 +73,11 @@ export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
 
 export const updateSubcategory = async (
   id: string,
-  data: UpdateSubCategoryDto
+  data: UpdateSubCategoryDto,
 ): Promise<SubCategory> => {
   const response = await apiClient.patch<SubCategory>(
     `${API_PATHS.SUBCATEGORIES}/${id}`,
-    data
+    data,
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -92,7 +93,9 @@ export const removeSubcategory = async (id: string): Promise<void> => {
       throw ApiError.fromApiResponse(response.data, response.status);
     } else if (response.status !== 404) {
       // No hay cuerpo de error, pero no es un 404 esperado
-      throw new Error(`Error deleting subcategory ${id}: Status ${response.status}`);
+      throw new Error(
+        `Error deleting subcategory ${id}: Status ${response.status}`,
+      );
     }
     // Si es 404, no se lanza error.
   }

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Platform, StyleProp, ViewStyle } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import InfoModal from './InfoModal';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -16,12 +18,14 @@ interface TimeSelectorProps {
 const TimeSelector: React.FC<TimeSelectorProps> = ({
   initialDate,
   onTimeChange,
-  label = "Seleccionar hora",
+  label = 'Seleccionar hora',
   disabled = false,
   style,
 }) => {
   const theme = useAppTheme();
-  const [selectedTime, setSelectedTime] = useState<Date | null>(initialDate ?? null);
+  const [selectedTime, setSelectedTime] = useState<Date | null>(
+    initialDate ?? null,
+  );
   const [showPicker, setShowPicker] = useState(false);
   const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
   const [infoModalTitle, setInfoModalTitle] = useState('');
@@ -47,12 +51,14 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
         now.getMonth(),
         now.getDate(),
         date.getHours(),
-        date.getMinutes()
+        date.getMinutes(),
       );
 
       if (newSelectedTime < now) {
-        setInfoModalTitle("Hora inválida");
-        setInfoModalMessage("No puedes seleccionar una hora anterior a la actual para hoy.");
+        setInfoModalTitle('Hora inválida');
+        setInfoModalMessage(
+          'No puedes seleccionar una hora anterior a la actual para hoy.',
+        );
         setIsInfoModalVisible(true);
         return;
       }
@@ -75,7 +81,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 
   const hideInfoModal = () => setIsInfoModalVisible(false);
 
-const formatTime = (date: Date | null): string => {
+  const formatTime = (date: Date | null): string => {
     if (!date) return label;
     let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -130,8 +136,11 @@ const formatTime = (date: Date | null): string => {
           is24Hour={false}
           display="default"
           onChange={handlePickerChange}
-          positiveButton={{label: 'Confirmar', textColor: theme.colors.primary}}
-          negativeButton={{label: 'Cancelar', textColor: theme.colors.error}}
+          positiveButton={{
+            label: 'Confirmar',
+            textColor: theme.colors.primary,
+          }}
+          negativeButton={{ label: 'Cancelar', textColor: theme.colors.error }}
         />
       )}
       <InfoModal

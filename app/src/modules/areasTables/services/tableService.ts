@@ -9,12 +9,11 @@ import {
   CreateTableDto,
   UpdateTableDto,
   FindAllTablesDto,
-} from '../schema/table.schema'; 
-
+} from '../schema/table.schema';
 
 export const getTables = async (
   filterOptions: FindAllTablesDto = {},
-  paginationOptions: BaseListQuery = { page: 1, limit: 10 }
+  paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Table[]> => {
   const response = await apiClient.get<{
     items: Table[];
@@ -33,40 +32,46 @@ export const getTables = async (
     console.error('[tableService.getTables] Failed to fetch tables:', response);
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data.items;
 };
 
 export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
-    const response = await apiClient.get<{
-        items: Table[];
-        total: number;
-        page: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-    }>(`${API_PATHS.TABLES}/area/${areaId}`);
+  const response = await apiClient.get<{
+    items: Table[];
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>(`${API_PATHS.TABLES}/area/${areaId}`);
 
-    if (!response.ok || !response.data) {
-        console.error(`[tableService.getTablesByAreaId] Failed to fetch tables for area ${areaId}:`, response);
-        throw ApiError.fromApiResponse(
-            response.data as BackendErrorResponse | undefined,
-            response.status
-        );
-    }
-    return response.data.items;
+  if (!response.ok || !response.data) {
+    console.error(
+      `[tableService.getTablesByAreaId] Failed to fetch tables for area ${areaId}:`,
+      response,
+    );
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status,
+    );
+  }
+  return response.data.items;
 };
 
 export const getTableById = async (id: string): Promise<Table> => {
   const response = await apiClient.get<Table>(`${API_PATHS.TABLES}/${id}`);
 
   if (!response.ok || !response.data) {
-    console.error(`[tableService.getTableById] Failed to fetch table ${id}:`, response);
+    console.error(
+      `[tableService.getTableById] Failed to fetch table ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -76,10 +81,13 @@ export const createTable = async (data: CreateTableDto): Promise<Table> => {
   const response = await apiClient.post<Table>(API_PATHS.TABLES, data);
 
   if (!response.ok || !response.data) {
-     console.error('[tableService.createTable] Failed to create table:', response);
+    console.error(
+      '[tableService.createTable] Failed to create table:',
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -87,15 +95,21 @@ export const createTable = async (data: CreateTableDto): Promise<Table> => {
 
 export const updateTable = async (
   id: string,
-  data: UpdateTableDto
+  data: UpdateTableDto,
 ): Promise<Table> => {
-  const response = await apiClient.patch<Table>(`${API_PATHS.TABLES}/${id}`, data);
+  const response = await apiClient.patch<Table>(
+    `${API_PATHS.TABLES}/${id}`,
+    data,
+  );
 
   if (!response.ok || !response.data) {
-    console.error(`[tableService.updateTable] Failed to update table ${id}:`, response);
+    console.error(
+      `[tableService.updateTable] Failed to update table ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -105,10 +119,13 @@ export const deleteTable = async (id: string): Promise<void> => {
   const response = await apiClient.delete(`${API_PATHS.TABLES}/${id}`);
 
   if (!response.ok) {
-    console.error(`[tableService.deleteTable] Failed to delete table ${id}:`, response);
+    console.error(
+      `[tableService.deleteTable] Failed to delete table ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
 };
@@ -116,7 +133,8 @@ export const deleteTable = async (id: string): Promise<void> => {
 // Claves de Query para tablas relacionadas con áreas
 const tableQueryKeys = {
   base: ['tables'] as const, // Clave base para todas las tablas
-  byArea: (areaId: string | null | undefined) => [...tableQueryKeys.base, 'area', areaId] as const,
+  byArea: (areaId: string | null | undefined) =>
+    [...tableQueryKeys.base, 'area', areaId] as const,
 };
 
 export function useGetTablesByArea(areaId: string | null | undefined) {

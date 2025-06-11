@@ -1,6 +1,11 @@
 import { useMemo } from 'react'; // Importar useMemo
 
-import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query'; // Añadir useQueries y QueryObserverResult
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from '@tanstack/react-query'; // Añadir useQueries y QueryObserverResult
 import { orderService } from '../services/orderService';
 import type { Order } from '../../../app/schemas/domain/order.schema'; // Ruta corregida
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
@@ -34,7 +39,7 @@ export const useCreateOrderMutation = () => {
       // Invalidar queries relevantes si es necesario (ej. lista de órdenes)
       // queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       // El mensaje de éxito se maneja en el componente que llama a la mutación
-      console.log("Orden creada con éxito en backend:", newOrder);
+      console.log('Orden creada con éxito en backend:', newOrder);
     },
     onError: (error) => {
       // El mensaje de error se maneja en el componente que llama a la mutación
@@ -58,7 +63,8 @@ export const useUpdateOrderMutation = () => {
   type UpdateVariables = { orderId: string; payload: UpdateOrderPayload };
 
   return useMutation<Order, ApiError, UpdateVariables>({
-    mutationFn: ({ orderId, payload }) => orderService.updateOrder(orderId, payload),
+    mutationFn: ({ orderId, payload }) =>
+      orderService.updateOrder(orderId, payload),
     onSuccess: (updatedOrder, variables) => {
       // Invalidar queries relevantes para refrescar datos
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() }); // Invalida todas las listas
@@ -66,11 +72,17 @@ export const useUpdateOrderMutation = () => {
       // Opcional: invalidar detalle específico si se implementa query de detalle
       // queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
 
-      showSnackbar({ message: `Orden #${updatedOrder.dailyNumber} actualizada`, type: 'success' });
+      showSnackbar({
+        message: `Orden #${updatedOrder.dailyNumber} actualizada`,
+        type: 'success',
+      });
     },
     onError: (error, variables) => {
       const message = getApiErrorMessage(error);
-      showSnackbar({ message: `Error al actualizar orden #${variables.orderId}: ${message}`, type: 'error' });
+      showSnackbar({
+        message: `Error al actualizar orden #${variables.orderId}: ${message}`,
+        type: 'error',
+      });
       console.error(`Error updating order ${variables.orderId}:`, error);
     },
   });
@@ -89,15 +101,18 @@ export const useCancelOrderMutation = () => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
-      
-      showSnackbar({ 
-        message: `Orden #${cancelledOrder.dailyNumber} cancelada`, 
-        type: 'info' 
+
+      showSnackbar({
+        message: `Orden #${cancelledOrder.dailyNumber} cancelada`,
+        type: 'info',
       });
     },
     onError: (error) => {
       const message = getApiErrorMessage(error);
-      showSnackbar({ message: `Error al cancelar orden: ${message}`, type: 'error' });
+      showSnackbar({
+        message: `Error al cancelar orden: ${message}`,
+        type: 'error',
+      });
       console.error('Error en useCancelOrderMutation:', error);
     },
   });
@@ -110,7 +125,7 @@ export const useCancelOrderMutation = () => {
  */
 export const useGetOrdersQuery = (
   filters: FindAllOrdersDto = {},
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<PaginatedResponse<Order>, ApiError> => {
   const queryKey = orderKeys.list(filters);
   return useQuery<PaginatedResponse<Order>, ApiError>({
@@ -133,24 +148,32 @@ export const usePrintKitchenTicketMutation = () => {
   type PrintVariables = { orderId: string; printerId: string };
 
   return useMutation<void, ApiError, PrintVariables>({
-    mutationFn: ({ orderId, printerId }) => orderService.printOrderTicket(orderId, printerId), // Usar la función renombrada
+    mutationFn: ({ orderId, printerId }) =>
+      orderService.printOrderTicket(orderId, printerId), // Usar la función renombrada
     onSuccess: (_, variables) => {
       // Usar el número diario si está disponible en las variables o buscarlo si es necesario
       // Por ahora, usamos solo el ID para el mensaje
-      showSnackbar({ message: `Ticket de cocina para orden ID ${variables.orderId} enviado a impresora.`, type: 'success' });
+      showSnackbar({
+        message: `Ticket de cocina para orden ID ${variables.orderId} enviado a impresora.`,
+        type: 'success',
+      });
       // No es necesario invalidar queries aquí, ya que solo es una acción
     },
     onError: (error) => {
       const message = getApiErrorMessage(error);
-      showSnackbar({ message: `Error al imprimir ticket: ${message}`, type: 'error' });
+      showSnackbar({
+        message: `Error al imprimir ticket: ${message}`,
+        type: 'error',
+      });
       console.error('Error printing kitchen ticket:', error);
     },
   });
 };
 
-export const useGetOpenOrdersQuery = (
-  options?: { enabled?: boolean }
-): UseQueryResult<Order[], ApiError> => { // Devuelve Order[] directamente
+export const useGetOpenOrdersQuery = (options?: {
+  enabled?: boolean;
+}): UseQueryResult<Order[], ApiError> => {
+  // Devuelve Order[] directamente
   const queryKey = orderKeys.openToday(); // Usar la nueva clave específica
 
   return useQuery<Order[], ApiError>({
@@ -163,23 +186,26 @@ export const useGetOpenOrdersQuery = (
   // La lógica de useQueries y combinación se elimina
 };
 
-
 /**
  * Hook para obtener los detalles completos de una orden por su ID.
  */
 export const useGetOrderByIdQuery = (
   orderId: string | null | undefined,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<Order, ApiError> => {
   // Definir la clave de detalle usando el orderId
-  const detailQueryKey = useMemo(() => orderId ? [...orderKeys.details(), orderId] : [...orderKeys.details()], [orderId]);
+  const detailQueryKey = useMemo(
+    () =>
+      orderId ? [...orderKeys.details(), orderId] : [...orderKeys.details()],
+    [orderId],
+  );
 
   return useQuery<Order, ApiError>({
     queryKey: detailQueryKey,
     queryFn: () => {
       if (!orderId) {
         // Si no hay orderId, no intentar hacer fetch y devolver un error o estado inicial
-        return Promise.reject(new Error("Order ID no proporcionado"));
+        return Promise.reject(new Error('Order ID no proporcionado'));
       }
       return orderService.getOrderById(orderId);
     },
@@ -187,4 +213,3 @@ export const useGetOrderByIdQuery = (
     // Sin staleTime, se usará la configuración global (0)
   });
 };
-

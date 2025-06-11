@@ -26,7 +26,6 @@ export class AdjustmentMapper extends BaseMapper<AdjustmentEntity, Adjustment> {
 
     const domain = new Adjustment();
     domain.id = entity.id;
-    domain.type = entity.type;
     domain.orderId = entity.orderId;
     domain.orderItemId = entity.orderItemId;
     domain.name = entity.name;
@@ -61,7 +60,6 @@ export class AdjustmentMapper extends BaseMapper<AdjustmentEntity, Adjustment> {
 
     const entity = new AdjustmentEntity();
     entity.id = domain.id;
-    entity.type = domain.type;
     entity.orderId = domain.orderId;
     entity.orderItemId = domain.orderItemId;
     entity.name = domain.name;

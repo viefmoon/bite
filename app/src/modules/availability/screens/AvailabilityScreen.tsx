@@ -1,5 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  FlatList,
+} from 'react-native';
 import {
   Searchbar,
   SegmentedButtons,
@@ -10,7 +16,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryAvailabilityItem } from '../components/CategoryAvailabilityItem';
 import { ModifierGroupAvailabilityItem } from '../components/ModifierGroupAvailabilityItem';
-import { useMenuAvailability, useModifierGroupsAvailability } from '../hooks/useAvailabilityQueries';
+import {
+  useMenuAvailability,
+  useModifierGroupsAvailability,
+} from '../hooks/useAvailabilityQueries';
 import EmptyState from '@/app/components/common/EmptyState';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -82,13 +91,16 @@ export const AvailabilityScreen: React.FC = () => {
   }, [modifiersData, searchQuery]);
 
   const isLoading = viewMode === 'menu' ? isLoadingMenu : isLoadingModifiers;
-  const isEmpty = viewMode === 'menu' 
-    ? filteredMenuData.length === 0 
-    : filteredModifiersData.length === 0;
-
+  const isEmpty =
+    viewMode === 'menu'
+      ? filteredMenuData.length === 0
+      : filteredModifiersData.length === 0;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <Surface style={styles.header} elevation={2}>
         <Searchbar
           placeholder={`Buscar ${viewMode === 'menu' ? 'productos' : 'modificadores'}...`}
@@ -103,15 +115,15 @@ export const AvailabilityScreen: React.FC = () => {
           value={viewMode}
           onValueChange={setViewMode as any}
           buttons={[
-            { 
-              value: 'menu', 
+            {
+              value: 'menu',
               label: 'Menú',
-              icon: 'food'
+              icon: 'food',
             },
-            { 
-              value: 'modifiers', 
+            {
+              value: 'modifiers',
               label: 'Modificadores',
-              icon: 'tune'
+              icon: 'tune',
             },
           ]}
           style={styles.segmentedButtons}
@@ -122,7 +134,12 @@ export const AvailabilityScreen: React.FC = () => {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              style={[
+                styles.loadingText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Cargando {viewMode === 'menu' ? 'categorías' : 'modificadores'}...
             </Text>
           </View>
@@ -138,9 +155,11 @@ export const AvailabilityScreen: React.FC = () => {
           />
         ) : (
           <FlatList
-            data={viewMode === 'menu' ? filteredMenuData : filteredModifiersData}
+            data={
+              viewMode === 'menu' ? filteredMenuData : filteredModifiersData
+            }
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => 
+            renderItem={({ item }) =>
               viewMode === 'menu' ? (
                 <CategoryAvailabilityItem
                   category={item}
@@ -154,8 +173,8 @@ export const AvailabilityScreen: React.FC = () => {
               )
             }
             refreshControl={
-              <RefreshControl 
-                refreshing={isLoading} 
+              <RefreshControl
+                refreshing={isLoading}
                 onRefresh={handleRefresh}
                 colors={[theme.colors.primary]}
               />

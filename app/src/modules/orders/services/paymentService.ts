@@ -1,10 +1,10 @@
 import apiClient from '../../../app/services/apiClient';
-import type { 
-  Payment, 
-  CreatePaymentDto, 
+import type {
+  Payment,
+  CreatePaymentDto,
   UpdatePaymentDto,
   PaymentMethod,
-  PaymentStatus 
+  PaymentStatus,
 } from '../types/payment.types';
 
 class PaymentService {
@@ -20,7 +20,9 @@ class PaymentService {
     paymentMethod?: PaymentMethod;
     paymentStatus?: PaymentStatus;
   }): Promise<Payment[]> {
-    const { data } = await apiClient.get<Payment[]>(this.baseUrl, { params: filters });
+    const { data } = await apiClient.get<Payment[]>(this.baseUrl, {
+      params: filters,
+    });
     return data;
   }
 
@@ -30,12 +32,17 @@ class PaymentService {
   }
 
   async getPaymentsByOrderId(orderId: string): Promise<Payment[]> {
-    const { data } = await apiClient.get<Payment[]>(`${this.baseUrl}/order/${orderId}`);
+    const { data } = await apiClient.get<Payment[]>(
+      `${this.baseUrl}/order/${orderId}`,
+    );
     return data;
   }
 
   async updatePayment(id: string, dto: UpdatePaymentDto): Promise<Payment> {
-    const { data } = await apiClient.patch<Payment>(`${this.baseUrl}/${id}`, dto);
+    const { data } = await apiClient.patch<Payment>(
+      `${this.baseUrl}/${id}`,
+      dto,
+    );
     return data;
   }
 

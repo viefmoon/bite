@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
   Portal,
@@ -14,33 +14,33 @@ import {
   Card,
   Checkbox,
   TouchableRipple,
-} from "react-native-paper";
+} from 'react-native-paper';
 import {
   useForm,
   Controller,
   useFieldArray,
   SubmitHandler,
-} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+} from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useAppTheme, AppTheme } from "@/app/styles/theme";
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   ProductFormInputs,
   productSchema,
   ProductVariant,
   Product,
-} from "../schema/products.schema";
-import { ModifierGroup } from "../../modifiers/schema/modifierGroup.schema";
-import { getApiErrorMessage } from "@/app/lib/errorMapping";
-import { useSnackbarStore } from "@/app/store/snackbarStore";
-import VariantFormModal from "./VariantFormModal";
+} from '../schema/products.schema';
+import { ModifierGroup } from '../../modifiers/schema/modifierGroup.schema';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import VariantFormModal from './VariantFormModal';
 import CustomImagePicker, {
   FileObject,
-} from "@/app/components/common/CustomImagePicker";
-import { ImageUploadService } from "@/app/lib/imageUploadService";
-import { getImageUrl } from "@/app/lib/imageUtils";
-import { useModifierGroupsQuery } from "../../modifiers/hooks/useModifierGroupsQueries";
-import { modifierService } from "../../modifiers/services/modifierService";
+} from '@/app/components/common/CustomImagePicker';
+import { ImageUploadService } from '@/app/lib/imageUploadService';
+import { getImageUrl } from '@/app/lib/imageUtils';
+import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQueries';
+import { modifierService } from '../../modifiers/services/modifierService';
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -48,7 +48,7 @@ interface ProductFormModalProps {
   onSubmit: (
     data: ProductFormInputs,
     photoId: string | null | undefined,
-    file?: FileObject | null
+    file?: FileObject | null,
   ) => Promise<void>;
   initialData?: Product | null;
   isSubmitting: boolean;
@@ -72,18 +72,20 @@ function ProductFormModal({
 
   const [isVariantModalVisible, setIsVariantModalVisible] = useState(false);
   const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(
-    null
+    null,
   );
   const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(
-    null
+    null,
   );
   const [isInternalImageUploading, setIsInternalImageUploading] =
     useState(false);
-  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>({});
+  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>(
+    {},
+  );
 
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
-      name: "",
+      name: '',
       description: null,
       price: null,
       hasVariants: false,
@@ -97,7 +99,7 @@ function ProductFormModal({
       imageUri: null,
       modifierGroupIds: [],
     }),
-    [subcategoryId]
+    [subcategoryId],
   );
 
   const {
@@ -119,7 +121,7 @@ function ProductFormModal({
     update: updateVariant,
   } = useFieldArray({
     control,
-    name: "variants",
+    name: 'variants',
   });
 
   useEffect(() => {
@@ -156,29 +158,32 @@ function ProductFormModal({
     }
   }, [visible, isEditing, initialData, reset, defaultValues, subcategoryId]);
 
-  const hasVariants = watch("hasVariants");
-  const currentImageUri = watch("imageUri");
+  const hasVariants = watch('hasVariants');
+  const currentImageUri = watch('imageUri');
 
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
-  
+
   const allModifierGroups = modifierGroupsResponse?.data || [];
 
   // Cargar los modificadores de cada grupo
   useEffect(() => {
     const loadModifiers = async () => {
       const modifiersMap: Record<string, any[]> = {};
-      
+
       for (const group of allModifierGroups) {
         try {
           const modifiers = await modifierService.findByGroupId(group.id);
-          modifiersMap[group.id] = modifiers.filter(mod => mod.isActive);
+          modifiersMap[group.id] = modifiers.filter((mod) => mod.isActive);
         } catch (error) {
-          console.error(`Error loading modifiers for group ${group.id}:`, error);
+          console.error(
+            `Error loading modifiers for group ${group.id}:`,
+            error,
+          );
           modifiersMap[group.id] = [];
         }
       }
-      
+
       setGroupModifiers(modifiersMap);
     };
 
@@ -192,30 +197,30 @@ function ProductFormModal({
       if (isEditing && initialData?.modifierGroups) {
         if (Array.isArray(initialData.modifierGroups)) {
           const assignedIds = initialData.modifierGroups.map(
-            (group: ModifierGroup) => group.id
+            (group: ModifierGroup) => group.id,
           );
-          setValue("modifierGroupIds", assignedIds);
+          setValue('modifierGroupIds', assignedIds);
         } else {
-          setValue("modifierGroupIds", []);
+          setValue('modifierGroupIds', []);
         }
       } else if (!isEditing) {
-        setValue("modifierGroupIds", []);
+        setValue('modifierGroupIds', []);
       } else if (isEditing && !initialData?.modifierGroups) {
-        setValue("modifierGroupIds", []);
+        setValue('modifierGroupIds', []);
       }
     }
   }, [visible, isEditing, initialData, setValue, reset, defaultValues]);
 
   const handleImageSelected = useCallback(
     (uri: string, file: FileObject) => {
-      setValue("imageUri", uri, { shouldValidate: true, shouldDirty: true });
+      setValue('imageUri', uri, { shouldValidate: true, shouldDirty: true });
       setLocalSelectedFile(file);
     },
-    [setValue]
+    [setValue],
   );
 
   const handleImageRemoved = useCallback(() => {
-    setValue("imageUri", null, { shouldValidate: true, shouldDirty: true });
+    setValue('imageUri', null, { shouldValidate: true, shouldDirty: true });
     setLocalSelectedFile(null);
   }, [setValue]);
 
@@ -234,13 +239,13 @@ function ProductFormModal({
           finalPhotoId = uploadResult.photoId;
         } else {
           throw new Error(
-            uploadResult.error || "La subida de la imagen falló."
+            uploadResult.error || 'La subida de la imagen falló.',
           );
         }
       } catch (error) {
         showSnackbar({
           message: `Error al subir imagen: ${getApiErrorMessage(error)}`,
-          type: "error",
+          type: 'error',
         });
         setIsInternalImageUploading(false);
         return;
@@ -250,7 +255,7 @@ function ProductFormModal({
     } else {
       finalPhotoId = ImageUploadService.determinePhotoId(
         currentImageUri,
-        initialData ?? undefined
+        initialData ?? undefined,
       );
     }
     // 2. Preparar los datos finales
@@ -285,9 +290,10 @@ function ProductFormModal({
       };
 
       // Crear un nuevo objeto sin 'id' si no había uno original, usando desestructuración
-      const finalDataToUpdate = !originalVariantId && "id" in dataToUpdate
-        ? (({ id, ...rest }) => rest)(dataToUpdate) // Correcto: crea un nuevo objeto sin 'id'
-        : dataToUpdate;
+      const finalDataToUpdate =
+        !originalVariantId && 'id' in dataToUpdate
+          ? (({ id, ...rest }) => rest)(dataToUpdate) // Correcto: crea un nuevo objeto sin 'id'
+          : dataToUpdate;
 
       updateVariant(editingVariantIndex, finalDataToUpdate as ProductVariant);
     } else {
@@ -306,8 +312,8 @@ function ProductFormModal({
   const handleRemoveVariant = (index: number) => {
     const variantToRemove = variantFields[index];
     if (variantToRemove.id) {
-      const currentToDelete = watch("variantsToDelete") || [];
-      setValue("variantsToDelete", [...currentToDelete, variantToRemove.id]);
+      const currentToDelete = watch('variantsToDelete') || [];
+      setValue('variantsToDelete', [...currentToDelete, variantToRemove.id]);
     }
     removeVariant(index);
   };
@@ -327,7 +333,7 @@ function ProductFormModal({
       >
         <View style={styles.modalHeader}>
           <Text variant="titleLarge" style={styles.modalTitle}>
-            {isEditing ? "Editar Producto" : "Nuevo Producto"}
+            {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
           </Text>
         </View>
 
@@ -377,7 +383,7 @@ function ProductFormModal({
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     label="Descripción"
-                    value={value || ""}
+                    value={value || ''}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     error={!!errors.description}
@@ -405,7 +411,7 @@ function ProductFormModal({
                       onValueChange={(newValue) => {
                         onChange(newValue);
                         if (newValue) {
-                          setValue("price", null, { shouldValidate: true });
+                          setValue('price', null, { shouldValidate: true });
                         }
                       }}
                       disabled={isSubmitting}
@@ -430,14 +436,14 @@ function ProductFormModal({
                         React.useState<string>(
                           field.value !== null && field.value !== undefined
                             ? field.value.toString()
-                            : ""
+                            : '',
                         );
 
                       React.useEffect(() => {
                         setInputValue(
                           field.value !== null && field.value !== undefined
                             ? field.value.toString()
-                            : ""
+                            : '',
                         );
                       }, [field.value]);
 
@@ -448,15 +454,15 @@ function ProductFormModal({
                           keyboardType="decimal-pad"
                           value={inputValue}
                           onChangeText={(text) => {
-                            const formattedText = text.replace(/,/g, ".");
+                            const formattedText = text.replace(/,/g, '.');
 
                             if (/^(\d*\.?\d*)$/.test(formattedText)) {
                               setInputValue(formattedText); // Actualizar estado local
 
                               // Actualizar valor del formulario (number | null)
-                              if (formattedText === "") {
+                              if (formattedText === '') {
                                 field.onChange(null);
-                              } else if (formattedText !== ".") {
+                              } else if (formattedText !== '.') {
                                 field.onChange(parseFloat(formattedText));
                               }
                             }
@@ -470,7 +476,7 @@ function ProductFormModal({
                   />
                   {errors.price && (
                     <HelperText type="error" visible={!!errors.price}>
-                      {errors.price?.message || "Precio inválido"}
+                      {errors.price?.message || 'Precio inválido'}
                     </HelperText>
                   )}
                 </>
@@ -500,30 +506,36 @@ function ProductFormModal({
                       key={field.id || `new-${index}`}
                       style={[
                         styles.variantCard,
-                        field.isActive === false && styles.variantCardInactive
+                        field.isActive === false && styles.variantCardInactive,
                       ]}
                     >
                       <View style={styles.variantContent}>
                         <View style={styles.variantInfo}>
                           <View style={styles.variantHeader}>
-                            <Text 
+                            <Text
                               style={[
                                 styles.variantName,
-                                field.isActive === false && styles.variantNameInactive
+                                field.isActive === false &&
+                                  styles.variantNameInactive,
                               ]}
                               numberOfLines={1}
                               ellipsizeMode="tail"
                             >
-                              {field.name || "Nueva Variante"}
+                              {field.name || 'Nueva Variante'}
                             </Text>
                             {field.isActive === false && (
                               <View style={styles.inactiveBadge}>
-                                <Text style={styles.inactiveBadgeText}>Inactiva</Text>
+                                <Text style={styles.inactiveBadgeText}>
+                                  Inactiva
+                                </Text>
                               </View>
                             )}
                           </View>
                           <Text style={styles.variantPrice}>
-                            ${!isNaN(Number(field.price)) ? Number(field.price).toFixed(2) : "0.00"}
+                            $
+                            {!isNaN(Number(field.price))
+                              ? Number(field.price).toFixed(2)
+                              : '0.00'}
                           </Text>
                         </View>
                         <View style={styles.variantActions}>
@@ -576,7 +588,7 @@ function ProductFormModal({
                   <TextInput
                     label="Tiempo Prep. Estimado (min)"
                     value={
-                      value !== null && value !== undefined ? String(value) : ""
+                      value !== null && value !== undefined ? String(value) : ''
                     }
                     onChangeText={(text) =>
                       onChange(text ? parseInt(text, 10) : 0)
@@ -638,7 +650,7 @@ function ProductFormModal({
                           {availableGroups.map((group: ModifierGroup) => {
                             const isSelected = currentIds.includes(group.id);
                             const modifiers = groupModifiers[group.id] || [];
-                            
+
                             return (
                               <TouchableRipple
                                 key={group.id}
@@ -653,18 +665,30 @@ function ProductFormModal({
                               >
                                 <View style={styles.modifierGroupContent}>
                                   <Checkbox
-                                    status={isSelected ? "checked" : "unchecked"}
+                                    status={
+                                      isSelected ? 'checked' : 'unchecked'
+                                    }
                                     disabled={isSubmitting}
                                   />
-                                  <View style={styles.modifierGroupTextContainer}>
-                                    <Text style={styles.modifierGroupName}>{group.name}</Text>
+                                  <View
+                                    style={styles.modifierGroupTextContainer}
+                                  >
+                                    <Text style={styles.modifierGroupName}>
+                                      {group.name}
+                                    </Text>
                                     {modifiers.length > 0 && (
-                                      <View style={styles.modifiersListContainer}>
+                                      <View
+                                        style={styles.modifiersListContainer}
+                                      >
                                         {modifiers.map((modifier, index) => (
-                                          <Text key={modifier.id} style={styles.modifierItem}>
-                                            {modifier.isDefault && "✓ "}
+                                          <Text
+                                            key={modifier.id}
+                                            style={styles.modifierItem}
+                                          >
+                                            {modifier.isDefault && '✓ '}
                                             {modifier.name}
-                                            {index < modifiers.length - 1 && ", "}
+                                            {index < modifiers.length - 1 &&
+                                              ', '}
                                           </Text>
                                         ))}
                                       </View>
@@ -720,7 +744,7 @@ function ProductFormModal({
             disabled={isSubmitting || isInternalImageUploading}
             style={styles.formButton}
           >
-            {isEditing ? "Guardar" : "Crear"}
+            {isEditing ? 'Guardar' : 'Crear'}
           </Button>
         </View>
       </Modal>
@@ -743,8 +767,8 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
-      maxHeight: "90%",
-      overflow: "hidden",
+      maxHeight: '90%',
+      overflow: 'hidden',
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
@@ -755,8 +779,8 @@ const createStyles = (theme: AppTheme) =>
     },
     modalTitle: {
       color: theme.colors.onPrimary,
-      fontWeight: "bold",
-      textAlign: "center",
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
     scrollContent: {
       padding: theme.spacing.l,
@@ -771,9 +795,9 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.surfaceVariant,
     },
     switchContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingVertical: theme.spacing.m,
     },
     label: {
@@ -788,9 +812,9 @@ const createStyles = (theme: AppTheme) =>
       marginTop: theme.spacing.s,
     },
     variantsHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: theme.spacing.s,
     },
     variantCard: {
@@ -805,22 +829,22 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.surfaceVariant,
     },
     variantContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     variantInfo: {
       flex: 1,
       marginRight: theme.spacing.s,
     },
     variantHeader: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       marginBottom: 2,
     },
     variantName: {
       fontSize: 15,
-      fontWeight: "500",
+      fontWeight: '500',
       color: theme.colors.onSurface,
       flex: 1,
     },
@@ -830,7 +854,7 @@ const createStyles = (theme: AppTheme) =>
     variantPrice: {
       fontSize: 14,
       color: theme.colors.primary,
-      fontWeight: "600",
+      fontWeight: '600',
     },
     inactiveBadge: {
       backgroundColor: theme.colors.errorContainer,
@@ -842,23 +866,23 @@ const createStyles = (theme: AppTheme) =>
     inactiveBadgeText: {
       fontSize: 10,
       color: theme.colors.onErrorContainer,
-      fontWeight: "600",
+      fontWeight: '600',
     },
     variantActions: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     variantActionButton: {
       margin: 0,
     },
     noVariantsText: {
-      textAlign: "center",
+      textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
       marginVertical: theme.spacing.s,
-      fontStyle: "italic",
+      fontStyle: 'italic',
     },
     imagePickerContainer: {
-      alignItems: "center",
+      alignItems: 'center',
       marginBottom: theme.spacing.l,
     },
     modifierGroupSection: {
@@ -869,10 +893,10 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: theme.spacing.xs,
     },
     noItemsText: {
-      textAlign: "center",
+      textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
       marginVertical: theme.spacing.s,
-      fontStyle: "italic",
+      fontStyle: 'italic',
     },
     modifierGroupTouchable: {
       paddingVertical: theme.spacing.s,
@@ -880,8 +904,8 @@ const createStyles = (theme: AppTheme) =>
       marginHorizontal: -theme.spacing.m,
     },
     modifierGroupContent: {
-      flexDirection: "row",
-      alignItems: "flex-start",
+      flexDirection: 'row',
+      alignItems: 'flex-start',
     },
     modifierGroupTextContainer: {
       flex: 1,
@@ -894,13 +918,13 @@ const createStyles = (theme: AppTheme) =>
     modifiersList: {
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
-      fontStyle: "italic",
+      fontStyle: 'italic',
       marginTop: 2,
     },
     modifiersListContainer: {
       marginTop: 4,
-      flexDirection: "row",
-      flexWrap: "wrap",
+      flexDirection: 'row',
+      flexWrap: 'wrap',
     },
     modifierItem: {
       fontSize: 13,
@@ -910,13 +934,13 @@ const createStyles = (theme: AppTheme) =>
     noModifiersText: {
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
-      fontStyle: "italic",
+      fontStyle: 'italic',
       marginTop: 4,
       opacity: 0.7,
     },
     modalActions: {
-      flexDirection: "row",
-      justifyContent: "flex-end",
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
       paddingVertical: theme.spacing.m,
       paddingHorizontal: theme.spacing.l,
       borderTopWidth: 1,
@@ -932,9 +956,9 @@ const createStyles = (theme: AppTheme) =>
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.3)",
-      justifyContent: "center",
-      alignItems: "center",
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      justifyContent: 'center',
+      alignItems: 'center',
       zIndex: 10,
       borderRadius: theme.roundness * 2,
     },

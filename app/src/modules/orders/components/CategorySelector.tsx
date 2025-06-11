@@ -10,13 +10,13 @@ interface CategorySelectorProps {
   onSelectCategory: (categoryId: string) => void;
 }
 
-const CategorySelector = ({ 
-  categories, 
-  selectedCategoryId, 
-  onSelectCategory 
+const CategorySelector = ({
+  categories,
+  selectedCategoryId,
+  onSelectCategory,
 }: CategorySelectorProps) => {
   const theme = useAppTheme();
-  
+
   const styles = StyleSheet.create({
     categoriesContainer: {
       flexDirection: 'row',
@@ -42,7 +42,7 @@ const CategorySelector = ({
       color: theme.colors.onPrimary,
     },
   });
-  
+
   return (
     <ScrollView
       horizontal

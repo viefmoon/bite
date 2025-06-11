@@ -7,6 +7,7 @@ import { FindAllAdjustmentsDto } from '../../../../dto/find-all-adjustments.dto'
 import { AdjustmentEntity } from '../entities/adjustment.entity';
 import { AdjustmentMapper } from '../mappers/adjustment.mapper';
 import { AdjustmentRepository } from '../../adjustment.repository';
+import { mapArray } from '../../../../../common/mappers/base.mapper';
 
 @Injectable()
 export class AdjustmentRelationalRepository
@@ -30,9 +31,6 @@ export class AdjustmentRelationalRepository
   ): FindOptionsWhere<AdjustmentEntity> {
     const where: FindOptionsWhere<AdjustmentEntity> = {};
 
-    if (filters.type) {
-      where.type = filters.type;
-    }
     if (filters.orderId) {
       where.orderId = filters.orderId;
     }
@@ -47,7 +45,7 @@ export class AdjustmentRelationalRepository
   }
 
   async findByOrderId(orderId: string): Promise<Adjustment[]> {
-    const entities = await this.repository.find({
+    const entities = await this.ormRepo.find({
       where: {
         orderId,
       },
@@ -57,11 +55,11 @@ export class AdjustmentRelationalRepository
       },
     });
 
-    return this.mapper.mapArray(entities);
+    return mapArray(entities, (entity) => this.mapper.toDomain(entity));
   }
 
   async findByOrderItemId(orderItemId: string): Promise<Adjustment[]> {
-    const entities = await this.repository.find({
+    const entities = await this.ormRepo.find({
       where: {
         orderItemId,
       },
@@ -71,11 +69,11 @@ export class AdjustmentRelationalRepository
       },
     });
 
-    return this.mapper.mapArray(entities);
+    return mapArray(entities, (entity) => this.mapper.toDomain(entity));
   }
 
   async calculateOrderAdjustments(orderId: string): Promise<number> {
-    const result = await this.repository
+    const result = await this.ormRepo
       .createQueryBuilder('adjustment')
       .select('SUM(adjustment.amount)', 'total')
       .where('adjustment.orderId = :orderId', { orderId })
@@ -86,7 +84,7 @@ export class AdjustmentRelationalRepository
   }
 
   async calculateOrderItemAdjustments(orderItemId: string): Promise<number> {
-    const result = await this.repository
+    const result = await this.ormRepo
       .createQueryBuilder('adjustment')
       .select('SUM(adjustment.amount)', 'total')
       .where('adjustment.orderItemId = :orderItemId', { orderItemId })

@@ -1,10 +1,10 @@
-import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Surface, Text } from "react-native-paper";
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Surface, Text } from 'react-native-paper';
 
-import { RegisterForm } from "../components/RegisterForm";
-import { useAppTheme } from "../../../app/styles/theme";
+import { RegisterForm } from '../components/RegisterForm';
+import { useAppTheme } from '../../../app/styles/theme';
 
 export default function RegisterScreen() {
   const theme = useAppTheme();
@@ -26,10 +26,10 @@ export default function RegisterScreen() {
         },
         title: {
           marginBottom: theme.spacing.m,
-          textAlign: "center",
+          textAlign: 'center',
         },
       }),
-    [theme]
+    [theme],
   );
 
   return (

@@ -1,18 +1,29 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Portal, IconButton } from 'react-native-paper';
-import { useFocusEffect, useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useRoute,
+  RouteProp,
+  useNavigation,
+} from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import GenericList from '../../../app/components/crud/GenericList';
 import GenericDetailModal from '../../../app/components/crud/GenericDetailModal';
-import GenericFormModal, { FormFieldConfig, ImagePickerConfig } from '../../../app/components/crud/GenericFormModal';
+import GenericFormModal, {
+  FormFieldConfig,
+  ImagePickerConfig,
+} from '../../../app/components/crud/GenericFormModal';
 import { FilterOption } from '../../../app/components/crud/GenericList';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
 
-import { ImageUploadService, FileObject } from '../../../app/lib/imageUploadService';
+import {
+  ImageUploadService,
+  FileObject,
+} from '../../../app/lib/imageUploadService';
 import {
   useFindAllSubcategories,
   useCreateSubcategory,
@@ -31,8 +42,14 @@ import { z } from 'zod';
 import { getImageUrl } from '../../../app/lib/imageUtils';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 
-type SubcategoriesScreenRouteProp = RouteProp<MenuStackParamList, 'SubcategoriesScreen'>;
-type SubcategoriesScreenNavigationProp = NativeStackNavigationProp<MenuStackParamList, 'SubcategoriesScreen'>;
+type SubcategoriesScreenRouteProp = RouteProp<
+  MenuStackParamList,
+  'SubcategoriesScreen'
+>;
+type SubcategoriesScreenNavigationProp = NativeStackNavigationProp<
+  MenuStackParamList,
+  'SubcategoriesScreen'
+>;
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
@@ -55,7 +72,7 @@ const SubcategoriesScreen: React.FC = () => {
 
     const params: FindAllSubcategoriesDto = { categoryId, page: 1, limit: 100 };
     if (isActive !== undefined) {
-        params.isActive = isActive;
+      params.isActive = isActive;
     }
     return params;
   }, [statusFilter, categoryId]);
@@ -96,12 +113,12 @@ const SubcategoriesScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       refetchList();
-    }, [refetchList])
+    }, [refetchList]),
   );
 
   const handleFormSubmit = async (
     formData: SubCategoryFormInputs | UpdateSubCategoryFormInputs,
-    photoId: string | null | undefined
+    photoId: string | null | undefined,
   ) => {
     const { imageUri, ...dataToSubmit } = formData;
     const finalData = {
@@ -110,7 +127,7 @@ const SubcategoriesScreen: React.FC = () => {
     };
 
     if (finalData.photoId === undefined && !editingItem) {
-        delete (finalData as any).photoId;
+      delete (finalData as any).photoId;
     }
 
     try {
@@ -124,7 +141,7 @@ const SubcategoriesScreen: React.FC = () => {
       }
       handleCloseModals();
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error('Error submitting form:', error);
     }
   };
 
@@ -140,7 +157,10 @@ const SubcategoriesScreen: React.FC = () => {
     },
   };
 
-  const detailFieldsToDisplay: Array<{ field: keyof SubCategory; label: string }> = [];
+  const detailFieldsToDisplay: Array<{
+    field: keyof SubCategory;
+    label: string;
+  }> = [];
 
   const filterOptions: FilterOption<StatusFilter>[] = [
     { value: 'all', label: 'Todas' },
@@ -148,13 +168,29 @@ const SubcategoriesScreen: React.FC = () => {
     { value: 'inactive', label: 'Inactivas' },
   ];
 
-  const formFields: FormFieldConfig<SubCategoryFormInputs | UpdateSubCategoryFormInputs>[] = [
+  const formFields: FormFieldConfig<
+    SubCategoryFormInputs | UpdateSubCategoryFormInputs
+  >[] = [
     { name: 'name', label: 'Nombre *', type: 'text', required: true },
-    { name: 'description', label: 'Descripción', type: 'textarea', numberOfLines: 3 },
-    { name: 'isActive', label: 'Activo', type: 'switch', switchLabel: 'Activo', defaultValue: true },
+    {
+      name: 'description',
+      label: 'Descripción',
+      type: 'textarea',
+      numberOfLines: 3,
+    },
+    {
+      name: 'isActive',
+      label: 'Activo',
+      type: 'switch',
+      switchLabel: 'Activo',
+      defaultValue: true,
+    },
   ];
 
-  const imagePickerConfig: ImagePickerConfig<SubCategoryFormInputs | UpdateSubCategoryFormInputs> = { // Eliminado segundo tipo genérico
+  const imagePickerConfig: ImagePickerConfig<
+    SubCategoryFormInputs | UpdateSubCategoryFormInputs
+  > = {
+    // Eliminado segundo tipo genérico
     imageUriField: 'imageUri',
     onImageUpload: async (file: FileObject) => {
       const result = await ImageUploadService.uploadImage(file);
@@ -171,7 +207,12 @@ const SubcategoriesScreen: React.FC = () => {
     <IconButton
       icon="chevron-right"
       size={24}
-      onPress={() => navigation.navigate('Products', { subcategoryId: item.id, subCategoryName: item.name })}
+      onPress={() =>
+        navigation.navigate('Products', {
+          subcategoryId: item.id,
+          subCategoryName: item.name,
+        })
+      }
     />
   );
 
@@ -186,12 +227,12 @@ const SubcategoriesScreen: React.FC = () => {
     },
   });
 
-  const handleFilterChange = (value: string | number) => { 
-      if (value === 'all' || value === 'active' || value === 'inactive') {
-          setStatusFilter(value);
-      } else {
-          setStatusFilter('all');
-      }
+  const handleFilterChange = (value: string | number) => {
+    if (value === 'all' || value === 'active' || value === 'inactive') {
+      setStatusFilter(value);
+    } else {
+      setStatusFilter('all');
+    }
   };
 
   return (
@@ -218,7 +259,7 @@ const SubcategoriesScreen: React.FC = () => {
         isModalOpen={isDetailModalVisible || isFormModalVisible}
         showImagePlaceholder={true}
         isDrawerOpen={isDrawerOpen}
-    />
+      />
 
       <Portal>
         <GenericDetailModal<SubCategory>
@@ -231,19 +272,26 @@ const SubcategoriesScreen: React.FC = () => {
           statusConfig={listRenderConfig.statusConfig}
           fieldsToDisplay={detailFieldsToDisplay}
           onEdit={() => {
-              if (selectedItem) {
-                  handleOpenEditModal(selectedItem);
-              }
+            if (selectedItem) {
+              handleOpenEditModal(selectedItem);
+            }
           }}
           onDelete={handleDeleteItem}
           isDeleting={isDeleting}
         />
 
-        <GenericFormModal<SubCategoryFormInputs | UpdateSubCategoryFormInputs, SubCategory>
+        <GenericFormModal<
+          SubCategoryFormInputs | UpdateSubCategoryFormInputs,
+          SubCategory
+        >
           visible={isFormModalVisible}
           onDismiss={handleCloseModals}
           onSubmit={handleFormSubmit}
-          formSchema={editingItem ? updateSubCategoryDtoSchema : createSubCategoryDtoSchema} // Corregido nombre de schema
+          formSchema={
+            editingItem
+              ? updateSubCategoryDtoSchema
+              : createSubCategoryDtoSchema
+          } // Corregido nombre de schema
           formFields={formFields}
           imagePickerConfig={imagePickerConfig}
           initialValues={
@@ -253,7 +301,9 @@ const SubcategoriesScreen: React.FC = () => {
                   description: editingItem.description ?? '',
                   isActive: editingItem.isActive,
                   categoryId: editingItem.categoryId,
-                  imageUri: editingItem.photo?.path ? getImageUrl(editingItem.photo.path) : null,
+                  imageUri: editingItem.photo?.path
+                    ? getImageUrl(editingItem.photo.path)
+                    : null,
                 }
               : {
                   name: '',
@@ -265,7 +315,9 @@ const SubcategoriesScreen: React.FC = () => {
           }
           editingItem={editingItem}
           isSubmitting={createMutation.isPending || updateMutation.isPending}
-          modalTitle={(editing) => editing ? 'Editar Subcategoría' : 'Crear Subcategoría'}
+          modalTitle={(editing) =>
+            editing ? 'Editar Subcategoría' : 'Crear Subcategoría'
+          }
         />
       </Portal>
     </View>

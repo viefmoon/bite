@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'; 
+import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../app/services/apiClient';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
@@ -9,12 +9,11 @@ import {
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,
-} from '../schema/area.schema'; 
-
+} from '../schema/area.schema';
 
 export const getAreas = async (
   filterOptions: FindAllAreasDto = {},
-  paginationOptions: BaseListQuery = { page: 1, limit: 10 }
+  paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Area[]> => {
   const response = await apiClient.get<{
     items: Area[];
@@ -33,7 +32,7 @@ export const getAreas = async (
     console.error('[areaService.getAreas] Failed to fetch areas:', response);
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data.items;
@@ -43,10 +42,13 @@ export const getAreaById = async (id: string): Promise<Area> => {
   const response = await apiClient.get<Area>(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok || !response.data) {
-     console.error(`[areaService.getAreaById] Failed to fetch area ${id}:`, response);
+    console.error(
+      `[areaService.getAreaById] Failed to fetch area ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -59,7 +61,7 @@ export const createArea = async (data: CreateAreaDto): Promise<Area> => {
     console.error('[areaService.createArea] Failed to create area:', response);
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -67,15 +69,21 @@ export const createArea = async (data: CreateAreaDto): Promise<Area> => {
 
 export const updateArea = async (
   id: string,
-  data: UpdateAreaDto
+  data: UpdateAreaDto,
 ): Promise<Area> => {
-  const response = await apiClient.patch<Area>(`${API_PATHS.AREAS}/${id}`, data);
+  const response = await apiClient.patch<Area>(
+    `${API_PATHS.AREAS}/${id}`,
+    data,
+  );
 
   if (!response.ok || !response.data) {
-     console.error(`[areaService.updateArea] Failed to update area ${id}:`, response);
+    console.error(
+      `[areaService.updateArea] Failed to update area ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
   return response.data;
@@ -85,10 +93,13 @@ export const deleteArea = async (id: string): Promise<void> => {
   const response = await apiClient.delete(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok) {
-     console.error(`[areaService.deleteArea] Failed to delete area ${id}:`, response);
+    console.error(
+      `[areaService.deleteArea] Failed to delete area ${id}:`,
+      response,
+    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
-      response.status
+      response.status,
     );
   }
 };

@@ -15,8 +15,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
-import { useOrdersForFinalization, useFinalizeOrders } from '../hooks/useOrderFinalizationQueries';
-import { OrderFinalizationFilter, OrderSelectionState, OrderForFinalization } from '../types/orderFinalization.types';
+import {
+  useOrdersForFinalization,
+  useFinalizeOrders,
+} from '../hooks/useOrderFinalizationQueries';
+import {
+  OrderFinalizationFilter,
+  OrderSelectionState,
+  OrderForFinalization,
+} from '../types/orderFinalization.types';
 import EmptyState from '@/app/components/common/EmptyState';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -30,7 +37,8 @@ export const OrderFinalizationScreen: React.FC = () => {
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [notes, setNotes] = useState('');
-  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<OrderForFinalization | null>(null);
+  const [selectedOrderForDetails, setSelectedOrderForDetails] =
+    useState<OrderForFinalization | null>(null);
 
   const {
     data: orders = [],
@@ -45,8 +53,9 @@ export const OrderFinalizationScreen: React.FC = () => {
 
   // Filtrar órdenes según el filtro seleccionado
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      if (filter === 'takeout') return order.orderType === 'TAKEOUT' || order.orderType === 'DELIVERY';
+    return orders.filter((order) => {
+      if (filter === 'takeout')
+        return order.orderType === 'TAKEOUT' || order.orderType === 'DELIVERY';
       return order.orderType === 'DINE_IN';
     });
   }, [orders, filter]);
@@ -61,29 +70,35 @@ export const OrderFinalizationScreen: React.FC = () => {
 
   // Ya no necesitamos agrupar porque filtramos desde el inicio
 
-  const handleToggleOrderSelection = useCallback((orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
+  const handleToggleOrderSelection = useCallback(
+    (orderId: string) => {
+      const order = orders.find((o) => o.id === orderId);
+      if (!order) return;
 
-    setSelectionState(prevState => {
-      const newSelectedOrders = new Set(prevState.selectedOrders);
-      let newTotalAmount = prevState.totalAmount;
-      const orderTotal = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      setSelectionState((prevState) => {
+        const newSelectedOrders = new Set(prevState.selectedOrders);
+        let newTotalAmount = prevState.totalAmount;
+        const orderTotal =
+          typeof order.total === 'string'
+            ? parseFloat(order.total)
+            : order.total;
 
-      if (newSelectedOrders.has(orderId)) {
-        newSelectedOrders.delete(orderId);
-        newTotalAmount -= orderTotal;
-      } else {
-        newSelectedOrders.add(orderId);
-        newTotalAmount += orderTotal;
-      }
+        if (newSelectedOrders.has(orderId)) {
+          newSelectedOrders.delete(orderId);
+          newTotalAmount -= orderTotal;
+        } else {
+          newSelectedOrders.add(orderId);
+          newTotalAmount += orderTotal;
+        }
 
-      return {
-        selectedOrders: newSelectedOrders,
-        totalAmount: newTotalAmount,
-      };
-    });
-  }, [orders]);
+        return {
+          selectedOrders: newSelectedOrders,
+          totalAmount: newTotalAmount,
+        };
+      });
+    },
+    [orders],
+  );
 
   const handleFinalizeOrders = useCallback(async () => {
     if (selectionState.selectedOrders.size === 0) return;
@@ -108,21 +123,29 @@ export const OrderFinalizationScreen: React.FC = () => {
     setSelectedOrderForDetails(order);
   }, []);
 
-  const renderOrderCard = useCallback(({ item }) => (
-    <OrderCard
-      order={item}
-      isSelected={selectionState.selectedOrders.has(item.id)}
-      onToggleSelection={handleToggleOrderSelection}
-      onShowDetails={handleShowOrderDetails}
-    />
-  ), [selectionState.selectedOrders, handleToggleOrderSelection, handleShowOrderDetails]);
-
+  const renderOrderCard = useCallback(
+    ({ item }) => (
+      <OrderCard
+        order={item}
+        isSelected={selectionState.selectedOrders.has(item.id)}
+        onToggleSelection={handleToggleOrderSelection}
+        onShowDetails={handleShowOrderDetails}
+      />
+    ),
+    [
+      selectionState.selectedOrders,
+      handleToggleOrderSelection,
+      handleShowOrderDetails,
+    ],
+  );
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
+        <Text
+          style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}
+        >
           Cargando órdenes...
         </Text>
       </View>
@@ -130,7 +153,10 @@ export const OrderFinalizationScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <Surface style={styles.header} elevation={2}>
         <View style={styles.headerContent}>
           <SegmentedButtons
@@ -138,7 +164,11 @@ export const OrderFinalizationScreen: React.FC = () => {
             onValueChange={setFilter as any}
             buttons={[
               { value: 'takeout', label: 'Para llevar', icon: 'bag-personal' },
-              { value: 'dine_in', label: 'Mesa', icon: 'silverware-fork-knife' },
+              {
+                value: 'dine_in',
+                label: 'Mesa',
+                icon: 'silverware-fork-knife',
+              },
             ]}
             style={styles.segmentedButtons}
           />
@@ -185,31 +215,60 @@ export const OrderFinalizationScreen: React.FC = () => {
             style={styles.finalizeButton}
             labelStyle={styles.finalizeButtonLabel}
           >
-            Finalizar ({selectionState.selectedOrders.size}) - ${(selectionState.totalAmount || 0).toFixed(2)}
+            Finalizar ({selectionState.selectedOrders.size}) - $
+            {(selectionState.totalAmount || 0).toFixed(2)}
           </Button>
         </Surface>
       )}
 
       {/* Dialog de finalización */}
       <Portal>
-        <Dialog visible={showFinalizeDialog} onDismiss={() => setShowFinalizeDialog(false)}>
+        <Dialog
+          visible={showFinalizeDialog}
+          onDismiss={() => setShowFinalizeDialog(false)}
+        >
           <Dialog.Title>Finalizar Órdenes</Dialog.Title>
           <Dialog.Content>
             <Text style={{ marginBottom: 16 }}>
-              ¿Finalizar {selectionState.selectedOrders.size} {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'} por un total de ${(selectionState.totalAmount || 0).toFixed(2)}?
+              ¿Finalizar {selectionState.selectedOrders.size}{' '}
+              {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}{' '}
+              por un total de ${(selectionState.totalAmount || 0).toFixed(2)}?
             </Text>
-            
-            <Text style={{ marginBottom: 8, fontWeight: '600' }}>Método de pago:</Text>
-            <RadioButton.Group onValueChange={setPaymentMethod} value={paymentMethod}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+
+            <Text style={{ marginBottom: 8, fontWeight: '600' }}>
+              Método de pago:
+            </Text>
+            <RadioButton.Group
+              onValueChange={setPaymentMethod}
+              value={paymentMethod}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                }}
+              >
                 <RadioButton value="cash" />
                 <Text>Efectivo</Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                }}
+              >
                 <RadioButton value="card" />
                 <Text>Tarjeta</Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 16,
+                }}
+              >
                 <RadioButton value="transfer" />
                 <Text>Transferencia</Text>
               </View>
@@ -225,9 +284,11 @@ export const OrderFinalizationScreen: React.FC = () => {
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowFinalizeDialog(false)}>Cancelar</Button>
-            <Button 
-              mode="contained" 
+            <Button onPress={() => setShowFinalizeDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              mode="contained"
               onPress={handleFinalizeOrders}
               loading={finalizeOrdersMutation.isPending}
             >

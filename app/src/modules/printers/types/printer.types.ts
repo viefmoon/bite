@@ -1,4 +1,4 @@
-import { z } from "zod"; // Importar z para inferir tipos si es necesario
+import { z } from 'zod'; // Importar z para inferir tipos si es necesario
 // Importar tipos y esquemas Zod desde el nuevo archivo
 import {
   thermalPrinterSchema,
@@ -7,8 +7,8 @@ import {
   findAllThermalPrintersFilterSchema,
   discoveredPrinterSchema,
   PrinterConnectionTypeSchema,
-} from "../schema/printer.schema";
-import type { BaseListQueryDto } from "../../../app/types/api.types";
+} from '../schema/printer.schema';
+import type { BaseListQueryDto } from '../../../app/types/api.types';
 
 // Exportar tipos inferidos de Zod
 export type ThermalPrinter = z.infer<typeof thermalPrinterSchema>;
@@ -20,7 +20,8 @@ export type UpdateThermalPrinterDto = z.infer<
 >;
 export type FindAllThermalPrintersDto = z.infer<
   typeof findAllThermalPrintersFilterSchema
-> & BaseListQueryDto; // Combinar con paginación base
+> &
+  BaseListQueryDto; // Combinar con paginación base
 export type DiscoveredPrinter = z.infer<typeof discoveredPrinterSchema>;
 export type PrinterConnectionType = z.infer<typeof PrinterConnectionTypeSchema>;
 

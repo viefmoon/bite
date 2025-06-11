@@ -19,10 +19,10 @@ export const ERROR_CODES = {
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   UNKNOWN_API_ERROR: 'UNKNOWN_API_ERROR',
   UNKNOWN_ERROR: 'UNKNOWN_ERROR',
-  
+
   // Errores de archivos
   UPLOAD_FAILED: 'UPLOAD_FAILED',
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
 } as const;
 
-export type ApiErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
+export type ApiErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

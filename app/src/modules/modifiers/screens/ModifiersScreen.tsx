@@ -1,6 +1,12 @@
 import React, { useLayoutEffect, useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { FAB, ActivityIndicator, Text, Portal, Button } from 'react-native-paper';
+import {
+  FAB,
+  ActivityIndicator,
+  Text,
+  Portal,
+  Button,
+} from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -15,8 +21,13 @@ import { debounce } from 'lodash';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 
 import ModifierFormModal from '@/modules/modifiers/components/ModifierFormModal';
-import GenericList, { RenderItemConfig, FilterOption } from '@/app/components/crud/GenericList';
-import GenericDetailModal, { DisplayFieldConfig } from '@/app/components/crud/GenericDetailModal';
+import GenericList, {
+  RenderItemConfig,
+  FilterOption,
+} from '@/app/components/crud/GenericList';
+import GenericDetailModal, {
+  DisplayFieldConfig,
+} from '@/app/components/crud/GenericDetailModal';
 import { useListState } from '@/app/hooks/useListState';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -26,7 +37,10 @@ type ModifiersScreenRouteParams = {
   groupName: string;
 };
 
-type ModifiersScreenRouteProp = RouteProp<{ params: ModifiersScreenRouteParams }, 'params'>;
+type ModifiersScreenRouteProp = RouteProp<
+  { params: ModifiersScreenRouteParams },
+  'params'
+>;
 
 type NavigationProps = {
   goBack: () => void;
@@ -52,7 +66,7 @@ const ModifiersScreen = () => {
 
   const debouncedSetSearch = useCallback(
     debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    []
+    [],
   );
 
   const handleSearchChange = (query: string) => {
@@ -62,9 +76,9 @@ const ModifiersScreen = () => {
 
   useLayoutEffect(() => {
     if (groupName) {
-        navigation.setOptions({
+      navigation.setOptions({
         headerTitle: `Modificadores: ${groupName}`,
-        });
+      });
     }
   }, [navigation, groupName]);
 
@@ -79,7 +93,14 @@ const ModifiersScreen = () => {
     return params;
   }, [statusFilter, debouncedSearchQuery]);
 
-  const { data: modifiers = [], isLoading, isError, error, refetch, isRefetching } = useQuery<Modifier[], Error>({
+  const {
+    data: modifiers = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery<Modifier[], Error>({
     queryKey: [QUERY_KEY[0], groupId, queryParams],
     queryFn: () => modifierService.findByGroupId(groupId, queryParams),
     enabled: !!groupId,
@@ -121,12 +142,12 @@ const ModifiersScreen = () => {
     isError,
     data: modifiers,
     emptyConfig: {
-      title: searchQuery 
-        ? 'No se encontraron modificadores' 
+      title: searchQuery
+        ? 'No se encontraron modificadores'
         : 'No hay modificadores',
       message: searchQuery
         ? `No se encontraron modificadores para "${searchQuery}"`
-        : statusFilter !== 'all' 
+        : statusFilter !== 'all'
           ? `No hay modificadores ${statusFilter === 'active' ? 'activos' : 'inactivos'} en este grupo.`
           : `No hay modificadores en "${groupName}". Presiona el botón + para crear el primero.`,
       icon: 'format-list-bulleted',
@@ -134,12 +155,14 @@ const ModifiersScreen = () => {
   });
 
   if (!groupId) {
-      return (
-          <View style={styles.centered}>
-              <Text style={styles.errorText}>Error: No se proporcionó ID del grupo.</Text>
-              <Button onPress={() => navigation.goBack()}>Volver</Button>
-          </View>
-      );
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          Error: No se proporcionó ID del grupo.
+        </Text>
+        <Button onPress={() => navigation.goBack()}>Volver</Button>
+      </View>
+    );
   }
 
   if (isLoading && !isRefetching) {
@@ -148,10 +171,12 @@ const ModifiersScreen = () => {
 
   if (isError) {
     return (
-        <View style={styles.centered}>
-            <Text style={styles.errorText}>Error al cargar modificadores: {getApiErrorMessage(error)}</Text>
-            <Button onPress={() => refetch()}>Reintentar</Button>
-        </View>
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          Error al cargar modificadores: {getApiErrorMessage(error)}
+        </Text>
+        <Button onPress={() => refetch()}>Reintentar</Button>
+      </View>
     );
   }
 
@@ -161,18 +186,22 @@ const ModifiersScreen = () => {
     sortOrderField: 'sortOrder',
     isDefaultField: 'isDefault',
     statusConfig: {
-        field: 'isActive',
-        activeValue: true,
-        activeLabel: 'Activo',
-        inactiveLabel: 'Inactivo',
-    }
+      field: 'isActive',
+      activeValue: true,
+      activeLabel: 'Activo',
+      inactiveLabel: 'Inactivo',
+    },
   };
 
   const detailFields: DisplayFieldConfig<Modifier>[] = [
     {
       field: 'price',
       label: 'Precio Adicional',
-      render: (value) => <Text style={styles.fieldValue}>{value !== null ? `$${Number(value).toFixed(2)}` : 'N/A'}</Text>,
+      render: (value) => (
+        <Text style={styles.fieldValue}>
+          {value !== null ? `$${Number(value).toFixed(2)}` : 'N/A'}
+        </Text>
+      ),
     },
     {
       field: 'sortOrder',
@@ -192,87 +221,88 @@ const ModifiersScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-       <GenericList<Modifier>
-         items={modifiers}
-         renderConfig={listRenderConfig}
-         onItemPress={handleOpenDetailModal}
-         onRefresh={refetch}
-         isRefreshing={isRefetching}
-         ListEmptyComponent={ListEmptyComponent}
-         isLoading={isLoading && !isRefetching}
-         enableSearch={true}
-         searchQuery={searchQuery}
-         onSearchChange={handleSearchChange}
-         searchPlaceholder="Buscar modificadores..."
-         filterValue={statusFilter}
-         onFilterChange={handleFilterChange}
-         filterOptions={filterOptions}
-         showFab={true}
-         onFabPress={handleOpenCreateModal}
-         fabLabel="Añadir Modificador"
-         isModalOpen={isFormModalVisible || isDetailModalVisible}
-         showImagePlaceholder={false}
-         isDrawerOpen={isDrawerOpen}
-       />
- 
-       <Portal>
-           <ModifierFormModal
-             visible={isFormModalVisible}
-             onDismiss={handleCloseModals}
-             onSaveSuccess={handleFormModalSave}
-             initialData={editingItem}
-             groupId={groupId}
-           />
- 
-           <GenericDetailModal<Modifier>
-             visible={isDetailModalVisible}
-             onDismiss={handleCloseModals}
-             item={selectedItem}
-             titleField="name"
-             descriptionField="description"
-             statusConfig={listRenderConfig.statusConfig}
-             fieldsToDisplay={detailFields}
-             onEdit={handleEditFromDetails}
-             onDelete={handleDeleteItem}
-             isDeleting={isDeleting}
-           />
+      <GenericList<Modifier>
+        items={modifiers}
+        renderConfig={listRenderConfig}
+        onItemPress={handleOpenDetailModal}
+        onRefresh={refetch}
+        isRefreshing={isRefetching}
+        ListEmptyComponent={ListEmptyComponent}
+        isLoading={isLoading && !isRefetching}
+        enableSearch={true}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Buscar modificadores..."
+        filterValue={statusFilter}
+        onFilterChange={handleFilterChange}
+        filterOptions={filterOptions}
+        showFab={true}
+        onFabPress={handleOpenCreateModal}
+        fabLabel="Añadir Modificador"
+        isModalOpen={isFormModalVisible || isDetailModalVisible}
+        showImagePlaceholder={false}
+        isDrawerOpen={isDrawerOpen}
+      />
+
+      <Portal>
+        <ModifierFormModal
+          visible={isFormModalVisible}
+          onDismiss={handleCloseModals}
+          onSaveSuccess={handleFormModalSave}
+          initialData={editingItem}
+          groupId={groupId}
+        />
+
+        <GenericDetailModal<Modifier>
+          visible={isDetailModalVisible}
+          onDismiss={handleCloseModals}
+          item={selectedItem}
+          titleField="name"
+          descriptionField="description"
+          statusConfig={listRenderConfig.statusConfig}
+          fieldsToDisplay={detailFields}
+          onEdit={handleEditFromDetails}
+          onDelete={handleDeleteItem}
+          isDeleting={isDeleting}
+        />
       </Portal>
     </SafeAreaView>
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) => StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
+      flex: 1,
+      backgroundColor: theme.colors.background,
     },
     centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
     },
     emptyText: {
-        textAlign: 'center',
-        fontSize: 18,
-        color: theme.colors.onSurfaceVariant,
-        marginBottom: 8,
+      textAlign: 'center',
+      fontSize: 18,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 8,
     },
     emptySubText: {
-        textAlign: 'center',
-        fontSize: 14,
-        color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
     },
     errorText: {
-        color: theme.colors.error,
-        marginBottom: 10,
-        textAlign: 'center',
+      color: theme.colors.error,
+      marginBottom: 10,
+      textAlign: 'center',
     },
     fieldValue: {
-       flexShrink: 1,
-       textAlign: "right",
-       color: theme.colors.onSurface,
+      flexShrink: 1,
+      textAlign: 'right',
+      color: theme.colors.onSurface,
     },
-});
+  });
 
 export default ModifiersScreen;

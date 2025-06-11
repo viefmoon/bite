@@ -1,14 +1,14 @@
-import apiClient from "@/app/services/apiClient";
-import { ApiError } from "@/app/lib/errors";
-import { API_PATHS } from "@/app/constants/apiPaths";
+import apiClient from '@/app/services/apiClient';
+import { ApiError } from '@/app/lib/errors';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Modifier,
   CreateModifierInput,
   UpdateModifierInput,
   modifierApiSchema,
-} from "../schema/modifier.schema";
-import { z } from "zod";
-import { PaginatedResponse } from "@/app/types/api.types";
+} from '../schema/modifier.schema';
+import { z } from 'zod';
+import { PaginatedResponse } from '@/app/types/api.types';
 
 const modifiersListSchema = z.array(modifierApiSchema);
 
@@ -32,7 +32,9 @@ export const modifierService = {
   /**
    * Obtiene todos los modificadores con paginación.
    */
-  async findAll(params?: FindAllModifiersParams): Promise<PaginatedResponse<Modifier>> {
+  async findAll(
+    params?: FindAllModifiersParams,
+  ): Promise<PaginatedResponse<Modifier>> {
     const queryParams = {
       page: params?.page ?? 1,
       limit: params?.limit ?? 10,
@@ -40,14 +42,14 @@ export const modifierService = {
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIERS,
-      queryParams
+      queryParams,
     );
 
     if (!response.ok || !response.data) {
       console.error(
-        "Error fetching modifiers:",
+        'Error fetching modifiers:',
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -61,15 +63,14 @@ export const modifierService = {
         total: paginatedResult.data.total,
         page: paginatedResult.data.page,
         limit: paginatedResult.data.limit,
-        totalPages: Math.ceil(paginatedResult.data.total / paginatedResult.data.limit),
+        totalPages: Math.ceil(
+          paginatedResult.data.total / paginatedResult.data.limit,
+        ),
       };
     }
 
-    console.error(
-      "Invalid data received for modifiers:",
-      response.data
-    );
-    throw new Error("Received invalid data format for modifiers.");
+    console.error('Invalid data received for modifiers:', response.data);
+    throw new Error('Received invalid data format for modifiers.');
   },
 
   /**
@@ -77,14 +78,14 @@ export const modifierService = {
    */
   async findOne(id: string): Promise<Modifier> {
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIERS}/${id}`
+      `${API_PATHS.MODIFIERS}/${id}`,
     );
 
     if (!response.ok || !response.data) {
       console.error(
         `Error fetching modifier ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -93,7 +94,7 @@ export const modifierService = {
     if (!validationResult.success) {
       console.error(
         `Invalid data received for modifier ${id}:`,
-        validationResult.error.flatten()
+        validationResult.error.flatten(),
       );
       throw new Error(`Received invalid data format for modifier ${id}.`);
     }
@@ -105,7 +106,7 @@ export const modifierService = {
    */
   async findByGroupId(
     groupId: string,
-    params: { isActive?: boolean; search?: string } = {}
+    params: { isActive?: boolean; search?: string } = {},
   ): Promise<Modifier[]> {
     const queryParams = {
       ...(params.isActive !== undefined && { isActive: params.isActive }),
@@ -113,14 +114,14 @@ export const modifierService = {
     };
     const response = await apiClient.get<unknown>(
       `${API_PATHS.MODIFIERS}/by-group/${groupId}`,
-      queryParams
+      queryParams,
     );
 
     if (!response.ok || !response.data) {
       console.error(
         `Error fetching modifiers for group ${groupId}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -129,10 +130,10 @@ export const modifierService = {
     if (!validationResult.success) {
       console.error(
         `Invalid data received for modifiers of group ${groupId}:`,
-        validationResult.error.flatten()
+        validationResult.error.flatten(),
       );
       throw new Error(
-        `Received invalid data format for modifiers of group ${groupId}.`
+        `Received invalid data format for modifiers of group ${groupId}.`,
       );
     }
     return validationResult.data;
@@ -146,9 +147,9 @@ export const modifierService = {
 
     if (!response.ok || !response.data) {
       console.error(
-        "Error creating modifier:",
+        'Error creating modifier:',
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -156,10 +157,10 @@ export const modifierService = {
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       console.error(
-        "Invalid data received after creating modifier:",
-        validationResult.error.flatten()
+        'Invalid data received after creating modifier:',
+        validationResult.error.flatten(),
       );
-      throw new Error("Received invalid data format after creating modifier.");
+      throw new Error('Received invalid data format after creating modifier.');
     }
     return validationResult.data;
   },
@@ -170,14 +171,14 @@ export const modifierService = {
   async update(id: string, data: UpdateModifierInput): Promise<Modifier> {
     const response = await apiClient.patch<unknown>(
       `${API_PATHS.MODIFIERS}/${id}`,
-      data
+      data,
     );
 
     if (!response.ok || !response.data) {
       console.error(
         `Error updating modifier ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
@@ -186,10 +187,10 @@ export const modifierService = {
     if (!validationResult.success) {
       console.error(
         `Invalid data received after updating modifier ${id}:`,
-        validationResult.error.flatten()
+        validationResult.error.flatten(),
       );
       throw new Error(
-        `Received invalid data format after updating modifier ${id}.`
+        `Received invalid data format after updating modifier ${id}.`,
       );
     }
     return validationResult.data;
@@ -205,7 +206,7 @@ export const modifierService = {
       console.error(
         `Error deleting modifier ${id}:`,
         response.problem,
-        response.data
+        response.data,
       );
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }

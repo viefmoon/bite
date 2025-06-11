@@ -10,10 +10,9 @@ interface CategoryAvailabilityItemProps {
   onRefresh?: () => void;
 }
 
-export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> = ({
-  category,
-  onRefresh,
-}) => {
+export const CategoryAvailabilityItem: React.FC<
+  CategoryAvailabilityItemProps
+> = ({ category, onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useUpdateAvailability();
@@ -28,7 +27,10 @@ export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> =
     onRefresh?.();
   };
 
-  const handleSubcategoryToggle = async (subcategoryId: string, value: boolean) => {
+  const handleSubcategoryToggle = async (
+    subcategoryId: string,
+    value: boolean,
+  ) => {
     await updateAvailability.mutateAsync({
       type: 'subcategory',
       id: subcategoryId,
@@ -48,63 +50,70 @@ export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> =
   };
 
   const unavailableCount = category.subcategories.reduce((acc, sub) => {
-    return acc + sub.products.filter(p => !p.isActive).length;
+    return acc + sub.products.filter((p) => !p.isActive).length;
   }, 0);
 
-  const totalProducts = category.subcategories.reduce((acc, sub) => acc + sub.products.length, 0);
+  const totalProducts = category.subcategories.reduce(
+    (acc, sub) => acc + sub.products.length,
+    0,
+  );
   const activeProducts = totalProducts - unavailableCount;
 
   return (
-    <Surface style={[styles.container, { backgroundColor: theme.colors.surface }]} elevation={1}>
+    <Surface
+      style={[styles.container, { backgroundColor: theme.colors.surface }]}
+      elevation={1}
+    >
       {/* Header de la categoría */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.categoryHeader,
-          { 
+          {
             backgroundColor: theme.colors.elevation.level2,
-            opacity: category.isActive ? 1 : 0.7
-          }
+            opacity: category.isActive ? 1 : 0.7,
+          },
         ]}
         onPress={() => setExpanded(!expanded)}
         activeOpacity={0.7}
       >
         <View style={styles.categoryLeft}>
-          <View style={[
-            styles.categoryIcon,
-            { 
-              backgroundColor: category.isActive 
-                ? theme.colors.primaryContainer 
-                : theme.colors.surfaceVariant 
-            }
-          ]}>
+          <View
+            style={[
+              styles.categoryIcon,
+              {
+                backgroundColor: category.isActive
+                  ? theme.colors.primaryContainer
+                  : theme.colors.surfaceVariant,
+              },
+            ]}
+          >
             <IconButton
               icon="folder-outline"
               size={20}
-              iconColor={category.isActive ? theme.colors.primary : theme.colors.outline}
+              iconColor={
+                category.isActive ? theme.colors.primary : theme.colors.outline
+              }
               style={{ margin: 0 }}
             />
           </View>
           <View style={styles.categoryInfo}>
-            <Text 
-              style={[
-                styles.categoryTitle,
-                { color: theme.colors.onSurface }
-              ]}
+            <Text
+              style={[styles.categoryTitle, { color: theme.colors.onSurface }]}
               numberOfLines={1}
             >
               {category.name}
             </Text>
-            <Text 
+            <Text
               style={[
                 styles.categorySubtitle,
-                { color: theme.colors.onSurfaceVariant }
+                { color: theme.colors.onSurfaceVariant },
               ]}
             >
               {activeProducts}/{totalProducts} productos activos
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.categoryRight}>
           <Switch
             value={category.isActive}
@@ -123,30 +132,41 @@ export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> =
 
       {/* Contenido expandible */}
       {expanded && (
-        <View style={[styles.expandedContent, { backgroundColor: theme.colors.elevation.level1 }]}>
+        <View
+          style={[
+            styles.expandedContent,
+            { backgroundColor: theme.colors.elevation.level1 },
+          ]}
+        >
           {category.subcategories.map((subcategory, index) => (
             <View key={subcategory.id}>
               {index > 0 && <Divider style={styles.divider} />}
-              
+
               {/* Subcategoría */}
-              <View style={[
-                styles.subcategoryHeader,
-                { 
-                  backgroundColor: theme.colors.elevation.level3,
-                  opacity: subcategory.isActive ? 1 : 0.6
-                }
-              ]}>
+              <View
+                style={[
+                  styles.subcategoryHeader,
+                  {
+                    backgroundColor: theme.colors.elevation.level3,
+                    opacity: subcategory.isActive ? 1 : 0.6,
+                  },
+                ]}
+              >
                 <View style={styles.subcategoryLeft}>
                   <IconButton
                     icon="folder-open-outline"
                     size={16}
-                    iconColor={subcategory.isActive ? theme.colors.primary : theme.colors.outline}
+                    iconColor={
+                      subcategory.isActive
+                        ? theme.colors.primary
+                        : theme.colors.outline
+                    }
                     style={{ margin: 0, marginRight: 8 }}
                   />
-                  <Text 
+                  <Text
                     style={[
                       styles.subcategoryTitle,
-                      { color: theme.colors.onSurface }
+                      { color: theme.colors.onSurface },
                     ]}
                   >
                     {subcategory.name}
@@ -154,37 +174,54 @@ export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> =
                 </View>
                 <Switch
                   value={subcategory.isActive}
-                  onValueChange={(value) => handleSubcategoryToggle(subcategory.id, value)}
+                  onValueChange={(value) =>
+                    handleSubcategoryToggle(subcategory.id, value)
+                  }
                   color={theme.colors.primary}
                   disabled={!category.isActive}
                 />
               </View>
-              
+
               {/* Productos */}
               <View style={styles.productsContainer}>
                 {subcategory.products.map((product) => (
-                  <View 
-                    key={product.id} 
+                  <View
+                    key={product.id}
                     style={[
                       styles.productItem,
-                      { 
+                      {
                         backgroundColor: theme.colors.surface,
-                        opacity: (!category.isActive || !subcategory.isActive || !product.isActive) ? 0.5 : 1
-                      }
+                        opacity:
+                          !category.isActive ||
+                          !subcategory.isActive ||
+                          !product.isActive
+                            ? 0.5
+                            : 1,
+                      },
                     ]}
                   >
                     <View style={styles.productLeft}>
-                      <View style={[
-                        styles.productDot,
-                        { backgroundColor: product.isActive ? theme.colors.primary : theme.colors.error }
-                      ]} />
-                      <Text 
+                      <View
+                        style={[
+                          styles.productDot,
+                          {
+                            backgroundColor: product.isActive
+                              ? theme.colors.primary
+                              : theme.colors.error,
+                          },
+                        ]}
+                      />
+                      <Text
                         style={[
                           styles.productTitle,
-                          { 
-                            color: product.isActive ? theme.colors.onSurface : theme.colors.onSurfaceDisabled,
-                            textDecorationLine: !product.isActive ? 'line-through' : 'none'
-                          }
+                          {
+                            color: product.isActive
+                              ? theme.colors.onSurface
+                              : theme.colors.onSurfaceDisabled,
+                            textDecorationLine: !product.isActive
+                              ? 'line-through'
+                              : 'none',
+                          },
                         ]}
                         numberOfLines={1}
                       >
@@ -193,7 +230,9 @@ export const CategoryAvailabilityItem: React.FC<CategoryAvailabilityItemProps> =
                     </View>
                     <Switch
                       value={product.isActive}
-                      onValueChange={(value) => handleProductToggle(product.id, value)}
+                      onValueChange={(value) =>
+                        handleProductToggle(product.id, value)
+                      }
                       color={theme.colors.primary}
                       disabled={!category.isActive || !subcategory.isActive}
                     />

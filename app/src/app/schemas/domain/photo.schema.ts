@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Esquema Zod para validar la estructura de una foto en el dominio.
@@ -6,7 +6,7 @@ import { z } from "zod";
  */
 export const photoSchema = z.object({
   id: z.string().uuid(), // Usar UUID como en products/subcategories
-  path: z.string().url(),   // Usar url() como en products/subcategories
+  path: z.string().url(), // Usar url() como en products/subcategories
 });
 
 // Tipo TypeScript inferido y exportado centralmente

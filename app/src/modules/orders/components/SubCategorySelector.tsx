@@ -55,14 +55,16 @@ const SubCategorySelector = ({
           key={subcategory.id}
           style={[
             styles.subCategoryCard,
-            selectedSubcategoryId === subcategory.id && styles.selectedSubCategory,
+            selectedSubcategoryId === subcategory.id &&
+              styles.selectedSubCategory,
           ]}
           onPress={() => onSelectSubCategory(subcategory.id)}
         >
           <Text
             style={[
               styles.subCategoryText,
-              selectedSubcategoryId === subcategory.id && styles.selectedSubCategoryText,
+              selectedSubcategoryId === subcategory.id &&
+                styles.selectedSubCategoryText,
             ]}
           >
             {subcategory.name}

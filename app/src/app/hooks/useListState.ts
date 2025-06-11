@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import EmptyState from "../components/common/EmptyState";
+import React, { useMemo } from 'react';
+import EmptyState from '../components/common/EmptyState';
 
 interface UseListStateProps {
   isLoading: boolean;
@@ -28,20 +28,21 @@ export const useListState = ({
     // Return a function component instead of JSX directly
     return () => {
       if (isLoading) return null;
-      
+
       if (isError) {
         return React.createElement(EmptyState, {
-          icon: "alert-circle",
-          title: "Error al cargar los datos",
-          message: "Ocurrió un error al cargar la información. Por favor, intenta de nuevo.",
-          actionLabel: "Reintentar",
+          icon: 'alert-circle',
+          title: 'Error al cargar los datos',
+          message:
+            'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
+          actionLabel: 'Reintentar',
           onAction: emptyConfig.onAction,
         });
       }
 
       if (isEmpty) {
         return React.createElement(EmptyState, {
-          icon: emptyConfig.icon || "folder-open",
+          icon: emptyConfig.icon || 'folder-open',
           title: emptyConfig.title,
           message: emptyConfig.message,
           actionLabel: emptyConfig.actionLabel,

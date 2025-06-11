@@ -1,11 +1,11 @@
-import apiClient from "../../../app/services/apiClient";
-import { ApiError } from "../../../app/lib/errors";
-import { API_PATHS } from "../../../app/constants/apiPaths";
+import apiClient from '../../../app/services/apiClient';
+import { ApiError } from '../../../app/lib/errors';
+import { API_PATHS } from '../../../app/constants/apiPaths';
 import type {
   Category,
   CreateCategoryDto,
   UpdateCategoryDto,
-} from "../schema/category.schema";
+} from '../schema/category.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
 
 export const getCategories = async (params?: {
@@ -20,10 +20,7 @@ export const getCategories = async (params?: {
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(
-    API_PATHS.CATEGORIES,
-    params
-  );
+  }>(API_PATHS.CATEGORIES, params);
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
@@ -41,7 +38,7 @@ export const getCategories = async (params?: {
 
 export const getCategory = async (id: string): Promise<Category> => {
   const response = await apiClient.get<Category>(
-    `${API_PATHS.CATEGORIES}/${id}`
+    `${API_PATHS.CATEGORIES}/${id}`,
   );
 
   if (!response.ok || !response.data) {
@@ -51,7 +48,7 @@ export const getCategory = async (id: string): Promise<Category> => {
 };
 
 export const createCategory = async (
-  data: CreateCategoryDto
+  data: CreateCategoryDto,
 ): Promise<Category> => {
   const response = await apiClient.post<Category>(API_PATHS.CATEGORIES, data);
 
@@ -63,19 +60,19 @@ export const createCategory = async (
 
 export const updateCategory = async (
   id: string,
-  data: UpdateCategoryDto
+  data: UpdateCategoryDto,
 ): Promise<Category> => {
   console.log('[categoryService] updateCategory called with:', { id, data });
-  
+
   const response = await apiClient.patch<Category>(
     `${API_PATHS.CATEGORIES}/${id}`,
-    data
+    data,
   );
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
   }
-  
+
   console.log('[categoryService] updateCategory response:', response.data);
   return response.data;
 };
@@ -90,7 +87,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
 
 export async function getFullMenu(): Promise<Category[]> {
   const response = await apiClient.get<Category[]>(
-    `${API_PATHS.CATEGORIES}/full-menu`
+    `${API_PATHS.CATEGORIES}/full-menu`,
   );
 
   if (!response.ok || !response.data) {

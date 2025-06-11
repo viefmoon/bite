@@ -1,36 +1,36 @@
-import React from "react";
+import React from 'react';
 import GenericFormModal, {
   FormFieldConfig,
-} from "../../../app/components/crud/GenericFormModal";
+} from '../../../app/components/crud/GenericFormModal';
 import {
   Table,
   CreateTableDto,
   UpdateTableDto,
   CreateTableSchema,
   UpdateTableSchema,
-} from "../schema/table.schema";
-import { z } from "zod";
+} from '../schema/table.schema';
+import { z } from 'zod';
 
 const tableFormFields: FormFieldConfig<CreateTableDto | UpdateTableDto>[] = [
   {
-    name: "name",
-    label: "Nombre de la Mesa",
-    type: "text",
-    placeholder: "Ej: Mesa 1, Barra 2",
+    name: 'name',
+    label: 'Nombre de la Mesa',
+    type: 'text',
+    placeholder: 'Ej: Mesa 1, Barra 2',
     required: true,
   },
   {
-    name: "capacity",
-    label: "Capacidad (Opcional)",
-    type: "number",
-    placeholder: "Ej: 4",
-    inputProps: { keyboardType: "numeric" },
+    name: 'capacity',
+    label: 'Capacidad (Opcional)',
+    type: 'number',
+    placeholder: 'Ej: 4',
+    inputProps: { keyboardType: 'numeric' },
   },
   {
-    name: "isActive",
-    label: "¿Está activa?",
-    type: "switch",
-    switchLabel: "Activa",
+    name: 'isActive',
+    label: '¿Está activa?',
+    type: 'switch',
+    switchLabel: 'Activa',
     defaultValue: true,
   },
 ];
@@ -40,7 +40,7 @@ interface TableFormModalProps {
   onDismiss: () => void;
   onSubmit: (
     data: CreateTableDto | UpdateTableDto,
-    photoId: string | null | undefined
+    photoId: string | null | undefined,
   ) => Promise<void>;
   editingItem: Table | null;
   isSubmitting: boolean;
@@ -63,7 +63,7 @@ const TableFormModal: React.FC<TableFormModalProps> = ({
         isActive: editingItem?.isActive,
       }
     : {
-        name: "",
+        name: '',
         capacity: undefined,
         isActive: true,
       };
@@ -79,7 +79,7 @@ const TableFormModal: React.FC<TableFormModalProps> = ({
       editingItem={editingItem}
       isSubmitting={isSubmitting}
       modalTitle={(isEditing) =>
-        isEditing ? "Editar Mesa" : "Crear Nueva Mesa"
+        isEditing ? 'Editar Mesa' : 'Crear Nueva Mesa'
       }
     />
   );

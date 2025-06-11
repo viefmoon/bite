@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import {
   View,
@@ -55,13 +54,12 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
   const isActive = value != null && value !== '';
   const animation = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
-
   const finalActiveLabelColor = activeLabelColor || theme.colors.primary;
-  const finalInactiveLabelColor = inactiveLabelColor || theme.colors.onSurfaceVariant;
+  const finalInactiveLabelColor =
+    inactiveLabelColor || theme.colors.onSurfaceVariant;
   const finalBorderColor = defaultBorderColor || theme.colors.outline;
   const finalActiveBorderColor = focusedBorderColor || theme.colors.primary;
   const finalErrorColor = customErrorColor || theme.colors.error;
-
 
   const currentBorderColor = error
     ? finalErrorColor
@@ -77,7 +75,6 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     }).start();
   }, [isActive, animation]);
 
-
   const labelTranslateY = animation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -26],
@@ -92,7 +89,6 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     inputRange: [0, 1],
     outputRange: [finalInactiveLabelColor, finalActiveLabelColor],
   });
-
 
   const styles = StyleSheet.create({
     container: {
@@ -150,28 +146,24 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
       backgroundColor: 'rgba(230, 230, 230, 0.4)',
       zIndex: 3,
       borderRadius: theme.roundness,
-    }
+    },
   });
 
-
   const animatedLabelStyle = {
-    transform: [
-      { translateY: labelTranslateY },
-      { scale: labelScale },
-    ],
+    transform: [{ translateY: labelTranslateY }, { scale: labelScale }],
     color: labelColor,
     backgroundColor: animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['transparent', theme.colors.background]
+      inputRange: [0, 1],
+      outputRange: ['transparent', theme.colors.background],
     }),
     paddingHorizontal: animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 4]
+      inputRange: [0, 1],
+      outputRange: [0, 4],
     }),
 
     zIndex: animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 2]
+      inputRange: [0, 1],
+      outputRange: [0, 2],
     }),
   };
 
@@ -180,34 +172,47 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={disabled || isLoading}
-        style={[styles.container, { borderColor: currentBorderColor }, containerStyle]}
+        style={[
+          styles.container,
+          { borderColor: currentBorderColor },
+          containerStyle,
+        ]}
         activeOpacity={0.7}
         {...rest}
       >
-        <Animated.Text style={[styles.label, labelStyle, animatedLabelStyle]} numberOfLines={1}>
+        <Animated.Text
+          style={[styles.label, labelStyle, animatedLabelStyle]}
+          numberOfLines={1}
+        >
           {label}
         </Animated.Text>
         <View style={styles.valueContainer}>
           <Text style={[styles.valueText, valueStyle]} numberOfLines={1}>
-
             {!isLoading ? value || ' ' : ' '}
           </Text>
           <View style={styles.iconsContainer}>
             {isLoading ? (
-              <ActivityIndicator size="small" color={theme.colors.primary} style={styles.loader} />
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.primary}
+                style={styles.loader}
+              />
             ) : (
-                <Icon
-                  source="chevron-down"
-                  size={20}
-                  color={disabled ? theme.colors.onSurfaceDisabled : theme.colors.onSurfaceVariant}
-                />
+              <Icon
+                source="chevron-down"
+                size={20}
+                color={
+                  disabled
+                    ? theme.colors.onSurfaceDisabled
+                    : theme.colors.onSurfaceVariant
+                }
+              />
             )}
           </View>
         </View>
 
         {disabled && <View style={styles.disabledOverlay} />}
       </TouchableOpacity>
-
 
       {isActive && !disabled && !isLoading && onClear && (
         <View style={styles.clearButtonContainer}>

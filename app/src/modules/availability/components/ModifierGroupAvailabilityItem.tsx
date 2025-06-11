@@ -10,10 +10,9 @@ interface ModifierGroupAvailabilityItemProps {
   onRefresh?: () => void;
 }
 
-export const ModifierGroupAvailabilityItem: React.FC<ModifierGroupAvailabilityItemProps> = ({
-  modifierGroup,
-  onRefresh,
-}) => {
+export const ModifierGroupAvailabilityItem: React.FC<
+  ModifierGroupAvailabilityItemProps
+> = ({ modifierGroup, onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useUpdateAvailability();
@@ -37,61 +36,69 @@ export const ModifierGroupAvailabilityItem: React.FC<ModifierGroupAvailabilityIt
     onRefresh?.();
   };
 
-  const unavailableCount = modifierGroup.modifiers.filter(m => !m.isActive).length;
+  const unavailableCount = modifierGroup.modifiers.filter(
+    (m) => !m.isActive,
+  ).length;
   const totalModifiers = modifierGroup.modifiers.length;
   const activeModifiers = totalModifiers - unavailableCount;
 
   return (
-    <Surface style={[styles.container, { backgroundColor: theme.colors.surface }]} elevation={1}>
+    <Surface
+      style={[styles.container, { backgroundColor: theme.colors.surface }]}
+      elevation={1}
+    >
       {/* Header del grupo de modificadores */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.groupHeader,
-          { 
+          {
             backgroundColor: theme.colors.elevation.level2,
-            opacity: modifierGroup.isActive ? 1 : 0.7
-          }
+            opacity: modifierGroup.isActive ? 1 : 0.7,
+          },
         ]}
         onPress={() => setExpanded(!expanded)}
         activeOpacity={0.7}
       >
         <View style={styles.groupLeft}>
-          <View style={[
-            styles.groupIcon,
-            { 
-              backgroundColor: modifierGroup.isActive 
-                ? theme.colors.secondaryContainer 
-                : theme.colors.surfaceVariant 
-            }
-          ]}>
+          <View
+            style={[
+              styles.groupIcon,
+              {
+                backgroundColor: modifierGroup.isActive
+                  ? theme.colors.secondaryContainer
+                  : theme.colors.surfaceVariant,
+              },
+            ]}
+          >
             <IconButton
               icon="tune-variant"
               size={20}
-              iconColor={modifierGroup.isActive ? theme.colors.secondary : theme.colors.outline}
+              iconColor={
+                modifierGroup.isActive
+                  ? theme.colors.secondary
+                  : theme.colors.outline
+              }
               style={{ margin: 0 }}
             />
           </View>
           <View style={styles.groupInfo}>
-            <Text 
-              style={[
-                styles.groupTitle,
-                { color: theme.colors.onSurface }
-              ]}
+            <Text
+              style={[styles.groupTitle, { color: theme.colors.onSurface }]}
               numberOfLines={1}
             >
               {modifierGroup.name}
             </Text>
-            <Text 
+            <Text
               style={[
                 styles.groupSubtitle,
-                { color: theme.colors.onSurfaceVariant }
+                { color: theme.colors.onSurfaceVariant },
               ]}
             >
               {activeModifiers}/{totalModifiers} modificadores activos
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.groupRight}>
           <Switch
             value={modifierGroup.isActive}
@@ -110,31 +117,47 @@ export const ModifierGroupAvailabilityItem: React.FC<ModifierGroupAvailabilityIt
 
       {/* Contenido expandible */}
       {expanded && (
-        <View style={[styles.expandedContent, { backgroundColor: theme.colors.elevation.level1 }]}>
+        <View
+          style={[
+            styles.expandedContent,
+            { backgroundColor: theme.colors.elevation.level1 },
+          ]}
+        >
           <View style={styles.modifiersContainer}>
             {modifierGroup.modifiers.map((modifier, index) => (
-              <View 
-                key={modifier.id} 
+              <View
+                key={modifier.id}
                 style={[
                   styles.modifierItem,
-                  { 
+                  {
                     backgroundColor: theme.colors.surface,
-                    opacity: (!modifierGroup.isActive || !modifier.isActive) ? 0.5 : 1
-                  }
+                    opacity:
+                      !modifierGroup.isActive || !modifier.isActive ? 0.5 : 1,
+                  },
                 ]}
               >
                 <View style={styles.modifierLeft}>
-                  <View style={[
-                    styles.modifierDot,
-                    { backgroundColor: modifier.isActive ? theme.colors.secondary : theme.colors.error }
-                  ]} />
-                  <Text 
+                  <View
+                    style={[
+                      styles.modifierDot,
+                      {
+                        backgroundColor: modifier.isActive
+                          ? theme.colors.secondary
+                          : theme.colors.error,
+                      },
+                    ]}
+                  />
+                  <Text
                     style={[
                       styles.modifierTitle,
-                      { 
-                        color: modifier.isActive ? theme.colors.onSurface : theme.colors.onSurfaceDisabled,
-                        textDecorationLine: !modifier.isActive ? 'line-through' : 'none'
-                      }
+                      {
+                        color: modifier.isActive
+                          ? theme.colors.onSurface
+                          : theme.colors.onSurfaceDisabled,
+                        textDecorationLine: !modifier.isActive
+                          ? 'line-through'
+                          : 'none',
+                      },
                     ]}
                     numberOfLines={1}
                   >
@@ -143,7 +166,9 @@ export const ModifierGroupAvailabilityItem: React.FC<ModifierGroupAvailabilityIt
                 </View>
                 <Switch
                   value={modifier.isActive}
-                  onValueChange={(value) => handleModifierToggle(modifier.id, value)}
+                  onValueChange={(value) =>
+                    handleModifierToggle(modifier.id, value)
+                  }
                   color={theme.colors.primary}
                   disabled={!modifierGroup.isActive}
                 />

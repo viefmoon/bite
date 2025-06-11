@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator<ReceiptsStackParamList>();
 
 export const ReceiptsStackNavigator = () => {
   const theme = useAppTheme();
-  
+
   return (
     <Stack.Navigator screenOptions={getStackHeaderOptions(theme)}>
       <Stack.Screen

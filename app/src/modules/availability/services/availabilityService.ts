@@ -1,5 +1,9 @@
 import apiClient from '@/app/services/apiClient';
-import { AvailabilityUpdatePayload, CategoryAvailability, ModifierGroupAvailability } from '../types/availability.types';
+import {
+  AvailabilityUpdatePayload,
+  CategoryAvailability,
+  ModifierGroupAvailability,
+} from '../types/availability.types';
 
 export const availabilityService = {
   // Obtener la disponibilidad del menú completo
@@ -10,7 +14,9 @@ export const availabilityService = {
 
   // Obtener la disponibilidad de grupos de modificadores
   async getModifierGroupsAvailability(): Promise<ModifierGroupAvailability[]> {
-    const response = await apiClient.get('/api/v1/availability/modifier-groups');
+    const response = await apiClient.get(
+      '/api/v1/availability/modifier-groups',
+    );
     return response.data;
   },
 
@@ -20,7 +26,9 @@ export const availabilityService = {
   },
 
   // Actualización masiva de disponibilidad
-  async bulkUpdateAvailability(updates: AvailabilityUpdatePayload[]): Promise<void> {
+  async bulkUpdateAvailability(
+    updates: AvailabilityUpdatePayload[],
+  ): Promise<void> {
     await apiClient.patch('/api/v1/availability/bulk-update', { updates });
   },
 };

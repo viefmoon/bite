@@ -2,7 +2,9 @@ import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { DrawerNavigationOptions } from '@react-navigation/drawer';
 import { AppTheme } from '../styles/theme';
 
-export const getDrawerHeaderOptions = (theme: AppTheme): DrawerNavigationOptions => ({
+export const getDrawerHeaderOptions = (
+  theme: AppTheme,
+): DrawerNavigationOptions => ({
   headerStyle: {
     backgroundColor: theme.colors.primary,
   },
@@ -15,7 +17,9 @@ export const getDrawerHeaderOptions = (theme: AppTheme): DrawerNavigationOptions
   headerShadowVisible: false,
 });
 
-export const getStackHeaderOptions = (theme: AppTheme): NativeStackNavigationOptions => ({
+export const getStackHeaderOptions = (
+  theme: AppTheme,
+): NativeStackNavigationOptions => ({
   headerStyle: {
     backgroundColor: theme.colors.elevation.level2,
   },

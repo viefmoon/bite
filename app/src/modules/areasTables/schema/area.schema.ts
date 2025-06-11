@@ -1,16 +1,16 @@
-import { z } from "zod";
+import { z } from 'zod';
 // Importar el tipo central
-import type { Area } from "../../../app/schemas/domain/area.schema";
+import type { Area } from '../../../app/schemas/domain/area.schema';
 
 // Schemas específicos para DTOs (Create, Update, FindAll) permanecen aquí
 export const CreateAreaSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional(),
   isActive: z.boolean().optional().default(true),
 });
 
 export const UpdateAreaSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido").optional(),
+  name: z.string().min(1, 'El nombre es requerido').optional(),
   description: z.string().optional(),
   isActive: z.boolean().optional(),
 });

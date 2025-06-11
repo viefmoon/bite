@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
   StyleProp,
   ViewStyle,
   TextStyle,
-} from "react-native";
+} from 'react-native';
 import {
   Modal,
   Portal,
@@ -13,10 +13,10 @@ import {
   Button,
   Chip,
   ActivityIndicator,
-} from "react-native-paper";
-import AutoImage from "../common/AutoImage";
-import { useAppTheme, AppTheme } from "../../styles/theme";
-import { getImageUrl } from "../../lib/imageUtils";
+} from 'react-native-paper';
+import AutoImage from '../common/AutoImage';
+import { useAppTheme, AppTheme } from '../../styles/theme';
+import { getImageUrl } from '../../lib/imageUtils';
 
 export interface DisplayFieldConfig<TItem> {
   field: keyof TItem;
@@ -67,11 +67,11 @@ const getStyles = (theme: AppTheme) =>
     },
     modalTitle: {
       marginBottom: theme.spacing.m,
-      textAlign: "center",
-      fontWeight: "700",
+      textAlign: 'center',
+      fontWeight: '700',
     },
     detailContent: {
-      alignItems: "center",
+      alignItems: 'center',
       marginBottom: theme.spacing.m,
     },
     detailImage: {
@@ -83,7 +83,7 @@ const getStyles = (theme: AppTheme) =>
     },
     detailDescription: {
       marginBottom: theme.spacing.m,
-      textAlign: "center",
+      textAlign: 'center',
       lineHeight: 22,
     },
     statusChipContainer: {
@@ -95,15 +95,15 @@ const getStyles = (theme: AppTheme) =>
       height: 36,
     },
     fieldsContainer: {
-      width: "100%",
+      width: '100%',
       marginBottom: theme.spacing.m,
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
       padding: theme.spacing.m,
     },
     fieldRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       marginBottom: theme.spacing.s,
       paddingVertical: theme.spacing.xs,
       borderBottomWidth: 1,
@@ -114,33 +114,33 @@ const getStyles = (theme: AppTheme) =>
       borderBottomWidth: 0,
     },
     fieldLabel: {
-      fontWeight: "600",
+      fontWeight: '600',
       marginRight: theme.spacing.s,
       color: theme.colors.onSurfaceVariant,
     },
     fieldValue: {
       flexShrink: 1,
-      textAlign: "right",
+      textAlign: 'right',
       color: theme.colors.onSurface,
     },
     detailActions: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
       gap: theme.spacing.m,
       marginTop: theme.spacing.xs,
-      width: "100%",
+      width: '100%',
     },
     closeButton: {
       marginTop: theme.spacing.l,
-      alignSelf: "center",
+      alignSelf: 'center',
       borderRadius: theme.roundness,
       backgroundColor: theme.colors.surfaceVariant,
       minWidth: 120,
     },
     loadingContainer: {
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       minHeight: 200,
     },
     actionButton: {
@@ -163,9 +163,9 @@ const GenericDetailModal = <TItem extends { id: string }>({
   onEdit,
   onDelete,
   isDeleting = false,
-  editButtonLabel = "Editar",
-  deleteButtonLabel = "Eliminar",
-  closeButtonLabel = "Cerrar",
+  editButtonLabel = 'Editar',
+  deleteButtonLabel = 'Eliminar',
+  closeButtonLabel = 'Cerrar',
   modalStyle,
   titleStyle,
   imageStyle,
@@ -199,25 +199,25 @@ const GenericDetailModal = <TItem extends { id: string }>({
       );
     }
 
-    const title = String(item[titleField] ?? "Detalle");
+    const title = String(item[titleField] ?? 'Detalle');
     let imageSource: string | undefined = undefined;
     if (imageField && item.hasOwnProperty(imageField)) {
       const imageFieldValue = item[imageField];
       if (
-        typeof imageFieldValue === "object" &&
+        typeof imageFieldValue === 'object' &&
         imageFieldValue !== null &&
-        "path" in imageFieldValue &&
-        typeof imageFieldValue.path === "string"
+        'path' in imageFieldValue &&
+        typeof imageFieldValue.path === 'string'
       ) {
         const url = getImageUrl(imageFieldValue.path);
         imageSource = url ?? undefined;
-      } else if (typeof imageFieldValue === "string") {
+      } else if (typeof imageFieldValue === 'string') {
         imageSource = imageFieldValue;
       }
     }
     const description =
       descriptionField && item.hasOwnProperty(descriptionField)
-        ? String(item[descriptionField] ?? "")
+        ? String(item[descriptionField] ?? '')
         : null;
 
     let statusChip = null;
@@ -255,7 +255,7 @@ const GenericDetailModal = <TItem extends { id: string }>({
           {imageSource && (
             <AutoImage
               source={imageSource}
-              placeholder={require("../../../../assets/icon.png")}
+              placeholder={require('../../../../assets/icon.png')}
               style={[styles.detailImage, imageStyle]}
               contentFit="contain"
               transition={300}
@@ -288,11 +288,11 @@ const GenericDetailModal = <TItem extends { id: string }>({
                     render(value, item)
                   ) : (
                     <Text style={[styles.fieldValue, fieldValueStyle]}>
-                      {typeof value === "boolean"
+                      {typeof value === 'boolean'
                         ? value
-                          ? "Sí"
-                          : "No"
-                        : String(value ?? "N/A")}
+                          ? 'Sí'
+                          : 'No'
+                        : String(value ?? 'N/A')}
                     </Text>
                   )}
                 </View>
@@ -311,7 +311,7 @@ const GenericDetailModal = <TItem extends { id: string }>({
                 mode="contained-tonal"
                 onPress={handleEdit}
                 disabled={isDeleting}
-                style={[styles.actionButton]}
+                style={styles.actionButton}
                 buttonColor={theme.colors.secondaryContainer}
                 textColor={theme.colors.onSecondaryContainer}
               >

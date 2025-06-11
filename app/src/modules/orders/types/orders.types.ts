@@ -8,9 +8,15 @@ import type { SubCategory } from '@/app/schemas/domain/subcategory.schema'; // A
 import type { Category } from '@/app/schemas/domain/category.schema';
 import {
   orderStatusSchema, // Importar el schema Zod
-  orderTypeSchema,   // Importar el schema Zod
+  orderTypeSchema, // Importar el schema Zod
 } from '@/app/schemas/domain/order.schema';
-import type { OrderItemModifier, OrderItem, OrderStatus, OrderType, Order } from '@/app/schemas/domain/order.schema'; // Mantener importación de tipos
+import type {
+  OrderItemModifier,
+  OrderItem,
+  OrderStatus,
+  OrderType,
+  Order,
+} from '@/app/schemas/domain/order.schema'; // Mantener importación de tipos
 
 // Re-exportar tipos de dominio para que otros archivos dentro de este módulo puedan importarlos desde aquí
 export type {
@@ -61,9 +67,9 @@ export interface FindAllOrdersDto {
   orderStatus?: OrderStatus | OrderStatus[]; // Permitir un array de estados
   orderType?: OrderType;
   startDate?: string; // Usar string para fechas en DTOs
-  endDate?: string;   // Usar string para fechas en DTOs
-  page?: number;      // Añadir paginación
-  limit?: number;     // Añadir paginación
+  endDate?: string; // Usar string para fechas en DTOs
+  page?: number; // Añadir paginación
+  limit?: number; // Añadir paginación
   // Añadir otros campos de filtro si existen en el backend DTO
 }
 

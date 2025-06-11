@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 import { photoSchema } from './photo.schema'; // Importar schema de Photo centralizado
 // import { productSchema } from './product.schema'; // Opcional: Importar si se incluyen productos
 
@@ -8,10 +8,10 @@ import { photoSchema } from './photo.schema'; // Importar schema de Photo centra
  */
 export const subCategorySchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
-  categoryId: z.string().uuid("El ID de categoría no es válido"),
+  categoryId: z.string().uuid('El ID de categoría no es válido'),
   photo: photoSchema.nullable().optional(), // Usar photoSchema centralizado
   // Opcional: Incluir productos si es relevante en el dominio general
   // products: z.array(productSchema).optional(),

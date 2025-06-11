@@ -1,10 +1,10 @@
-import React, { ReactElement } from "react";
-import { View, StyleSheet } from "react-native";
-import { Portal } from "react-native-paper";
-import { useDrawerStatus } from "@react-navigation/drawer";
-import GenericList, { FilterOption, RenderItemConfig } from "./GenericList";
-import { useListState } from "../../hooks/useListState";
-import { useAppTheme, AppTheme } from "../../styles/theme";
+import React, { ReactElement } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Portal } from 'react-native-paper';
+import { useDrawerStatus } from '@react-navigation/drawer';
+import GenericList, { FilterOption, RenderItemConfig } from './GenericList';
+import { useListState } from '../../hooks/useListState';
+import { useAppTheme, AppTheme } from '../../styles/theme';
 
 interface CrudListScreenProps<TItem extends { id: string }> {
   // Data props
@@ -72,14 +72,14 @@ export function CrudListScreen<TItem extends { id: string }>({
   onItemPress,
   renderItemActions,
   enableSearch = true,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = 'Buscar...',
   enableSort = true,
   filterOptions,
   filterValue,
   onFilterChange,
   showFab = true,
   onFabPress,
-  fabIcon = "plus",
+  fabIcon = 'plus',
   fabLabel,
   emptyStateConfig,
   modals = [],
@@ -89,7 +89,7 @@ export function CrudListScreen<TItem extends { id: string }>({
   const theme = useAppTheme();
   const styles = getStyles(theme);
   const drawerStatus = useDrawerStatus();
-  const isDrawerOpen = drawerStatus === "open";
+  const isDrawerOpen = drawerStatus === 'open';
 
   const { ListEmptyComponent } = useListState({
     isLoading,

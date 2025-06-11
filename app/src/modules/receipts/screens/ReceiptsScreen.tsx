@@ -50,23 +50,23 @@ export const ReceiptsScreen: React.FC = () => {
   // Preparar filtros para la query
   const filters = useMemo(() => {
     const baseFilters: any = {};
-    
+
     if (searchQuery.trim()) {
       baseFilters.search = searchQuery.trim();
     }
-    
+
     if (statusFilter !== 'all') {
       baseFilters.status = statusFilter;
     }
-    
+
     if (startDate) {
       baseFilters.startDate = startDate;
     }
-    
+
     if (endDate) {
       baseFilters.endDate = endDate;
     }
-    
+
     return baseFilters;
   }, [searchQuery, statusFilter, startDate, endDate]);
 
@@ -80,7 +80,6 @@ export const ReceiptsScreen: React.FC = () => {
     refetch,
     isRefetching,
   } = useReceiptsInfinite(filters);
-
 
   // Aplanar los datos paginados
   const receipts = useMemo(() => {
@@ -184,11 +183,11 @@ export const ReceiptsScreen: React.FC = () => {
               </Text>
             )}
             <Text variant="bodySmall" style={styles.itemsCountText}>
-              {(item.orderItems?.length || item.items?.length || 0)} productos
+              {item.orderItems?.length || item.items?.length || 0} productos
             </Text>
           </View>
           <Text variant="titleLarge" style={styles.totalText}>
-            ${(parseFloat(item.total || '0')).toFixed(2)}
+            ${parseFloat(item.total || '0').toFixed(2)}
           </Text>
         </View>
       </Surface>
@@ -284,7 +283,9 @@ export const ReceiptsScreen: React.FC = () => {
               />
               <Divider />
               <Menu.Item
-                title={startDate ? format(startDate, 'd/M/yyyy') : 'Fecha inicio'}
+                title={
+                  startDate ? format(startDate, 'd/M/yyyy') : 'Fecha inicio'
+                }
                 onPress={() => {
                   setShowStartDatePicker(true);
                   setShowFilterMenu(false);
@@ -313,12 +314,7 @@ export const ReceiptsScreen: React.FC = () => {
                 </>
               )}
             </Menu>
-            {hasActiveFilters && (
-              <Badge
-                size={8}
-                style={styles.filterBadge}
-              />
-            )}
+            {hasActiveFilters && <Badge size={8} style={styles.filterBadge} />}
           </View>
         </View>
 
@@ -357,7 +353,6 @@ export const ReceiptsScreen: React.FC = () => {
             )}
           </View>
         )}
-
       </Surface>
 
       {/* Lista de recibos */}

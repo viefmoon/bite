@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  StyleSheet,
-} from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import {
   Modal,
   Portal,
@@ -10,7 +7,6 @@ import {
   Button,
   TextInput,
   HelperText,
-  Divider,
   Surface,
   IconButton,
 } from 'react-native-paper';
@@ -31,39 +27,39 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  
+
   const [receivedAmount, setReceivedAmount] = useState('');
-  
+
   // Calcular cambio
   const changeAmount = useMemo(() => {
     const received = parseFloat(receivedAmount);
     if (isNaN(received)) return 0;
     return Math.max(0, received - amountToPay);
   }, [receivedAmount, amountToPay]);
-  
+
   // Determinar qué botones de billetes mostrar
   const availableBills = useMemo(() => {
     const bills = [50, 100, 200, 500, 1000];
     // Filtrar billetes que sean mayores o iguales al monto a pagar
-    const validBills = bills.filter(bill => bill >= amountToPay);
+    const validBills = bills.filter((bill) => bill >= amountToPay);
     // Tomar máximo 4 opciones para que quepan en una línea
     return validBills.slice(0, 4);
   }, [amountToPay]);
-  
+
   // Resetear cuando se abre
   useEffect(() => {
     if (visible) {
       setReceivedAmount(amountToPay.toFixed(2));
     }
   }, [visible, amountToPay]);
-  
+
   const handleConfirm = () => {
     const received = parseFloat(receivedAmount);
     if (!isNaN(received) && received >= amountToPay) {
       onConfirm();
     }
   };
-  
+
   return (
     <Portal>
       <Modal
@@ -71,77 +67,99 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
         onDismiss={onDismiss}
         contentContainerStyle={styles.modalContainer}
       >
-        <Surface style={styles.modalContent} elevation={5}>
+        <Pressable style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Cálculo de Cambio</Text>
             <IconButton
               icon="close"
-              size={24}
+              size={20}
               onPress={onDismiss}
+              iconColor={theme.colors.onSurfaceVariant}
+              style={styles.closeButton}
             />
           </View>
-          
-          <Divider />
-          
+
           <View style={styles.content}>
             {/* Monto a pagar */}
-            <View style={styles.amountToPayContainer}>
-              <Text style={styles.amountToPayLabel}>Total a pagar:</Text>
-              <Text style={styles.amountToPayValue}>${amountToPay.toFixed(2)}</Text>
+            <View style={styles.totalSection}>
+              <Text style={styles.totalLabel}>Total a pagar</Text>
+              <Text style={styles.totalAmount}>${amountToPay.toFixed(2)}</Text>
             </View>
-            
-            {/* Botones de billetes comunes - solo mostrar opciones válidas */}
-            {availableBills.length > 0 && (
-              <View style={styles.quickAmountsRow}>
-                {availableBills.map((bill) => (
-                  <Button
-                    key={bill}
-                    mode="outlined"
-                    onPress={() => setReceivedAmount(`${bill}.00`)}
-                    style={styles.quickAmountButton}
-                    labelStyle={styles.quickAmountButtonLabel}
-                    contentStyle={styles.quickAmountButtonContent}
-                  >
-                    ${bill >= 1000 ? '1k' : bill}
-                  </Button>
-                ))}
-              </View>
-            )}
-            
+
             {/* Monto recibido */}
-            <TextInput
-              label="Monto recibido"
-              value={receivedAmount}
-              onChangeText={setReceivedAmount}
-              keyboardType="decimal-pad"
-              mode="outlined"
-              left={<TextInput.Affix text="$" />}
-              style={styles.receivedAmountInput}
-              error={receivedAmount !== '' && (isNaN(parseFloat(receivedAmount)) || parseFloat(receivedAmount) < amountToPay)}
-              autoFocus
-              dense
-            />
-            
-            <HelperText type="error" visible={receivedAmount !== '' && (isNaN(parseFloat(receivedAmount)) || parseFloat(receivedAmount) < amountToPay)}>
-              Monto insuficiente
-            </HelperText>
-            
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Monto recibido</Text>
+              <TextInput
+                value={receivedAmount}
+                onChangeText={setReceivedAmount}
+                keyboardType="decimal-pad"
+                mode="flat"
+                left={<TextInput.Affix text="$" />}
+                style={styles.receivedAmountInput}
+                error={
+                  receivedAmount !== '' &&
+                  (isNaN(parseFloat(receivedAmount)) ||
+                    parseFloat(receivedAmount) < amountToPay)
+                }
+                autoFocus
+                dense
+                theme={{
+                  colors: {
+                    primary: theme.colors.primary,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
+              />
+
+              {/* Botones de billetes comunes */}
+              {availableBills.length > 0 && (
+                <View style={styles.quickAmountsRow}>
+                  {availableBills.map((bill) => (
+                    <Pressable
+                      key={bill}
+                      onPress={() => setReceivedAmount(`${bill}.00`)}
+                      style={({ pressed }) => [
+                        styles.quickAmountButton,
+                        pressed && styles.quickAmountButtonPressed,
+                      ]}
+                    >
+                      <Text style={styles.quickAmountButtonText}>
+                        ${bill >= 1000 ? '1k' : bill}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Error message */}
+            {receivedAmount !== '' &&
+              (isNaN(parseFloat(receivedAmount)) ||
+                parseFloat(receivedAmount) < amountToPay) && (
+                <Text style={styles.errorText}>Monto insuficiente</Text>
+              )}
+
             {/* Mostrar cambio */}
-            {receivedAmount !== '' && !isNaN(parseFloat(receivedAmount)) && parseFloat(receivedAmount) >= amountToPay && (
-              <View style={styles.changeDisplayContainer}>
-                <Text style={styles.changeLabel}>Cambio:</Text>
-                <Text style={styles.changeAmount}>${changeAmount.toFixed(2)}</Text>
-              </View>
-            )}
+            {receivedAmount !== '' &&
+              !isNaN(parseFloat(receivedAmount)) &&
+              parseFloat(receivedAmount) >= amountToPay && (
+                <View style={styles.changeSection}>
+                  <Text style={styles.changeLabel}>Cambio</Text>
+                  <Text style={styles.changeAmount}>
+                    ${changeAmount.toFixed(2)}
+                  </Text>
+                </View>
+              )}
           </View>
-          
+
           {/* Footer */}
           <View style={styles.footer}>
             <Button
               mode="outlined"
               onPress={onDismiss}
-              style={[styles.footerButton, styles.cancelButton]}
+              style={styles.cancelButton}
+              labelStyle={styles.cancelButtonLabel}
               contentStyle={styles.footerButtonContent}
             >
               Cancelar
@@ -150,17 +168,18 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
               mode="contained"
               onPress={handleConfirm}
               disabled={
-                !receivedAmount || 
-                isNaN(parseFloat(receivedAmount)) || 
+                !receivedAmount ||
+                isNaN(parseFloat(receivedAmount)) ||
                 parseFloat(receivedAmount) < amountToPay
               }
-              style={styles.footerButton}
+              style={styles.confirmButton}
               contentStyle={styles.footerButtonContent}
+              labelStyle={styles.confirmButtonLabel}
             >
               Confirmar Pago
             </Button>
           </View>
-        </Surface>
+        </Pressable>
       </Modal>
     </Portal>
   );
@@ -174,108 +193,166 @@ const createStyles = (theme: AppTheme) =>
       padding: theme.spacing.m,
     },
     modalContent: {
-      borderRadius: theme.roundness * 2,
-      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      backgroundColor: theme.dark ? '#1C1C1E' : '#FFFFFF',
       width: '100%',
-      maxWidth: 380,
+      maxWidth: 340,
       overflow: 'hidden',
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 12,
     },
     title: {
       ...theme.fonts.titleMedium,
-      color: theme.colors.onSurface,
-      fontWeight: 'bold',
+      color: theme.dark ? '#FFFFFF' : '#000000',
+      fontWeight: '600',
+      letterSpacing: -0.3,
+    },
+    closeButton: {
+      margin: -8,
     },
     content: {
-      padding: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
     },
-    amountToPayContainer: {
-      backgroundColor: theme.colors.secondaryContainer,
-      padding: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
-      borderRadius: theme.roundness,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    totalSection: {
+      backgroundColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(0, 0, 0, 0.04)',
+      padding: 12,
+      borderRadius: 12,
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
+      marginBottom: 16,
     },
-    amountToPayLabel: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onSecondaryContainer,
-    },
-    amountToPayValue: {
-      ...theme.fonts.titleMedium,
-      fontWeight: 'bold',
-      color: theme.colors.onSecondaryContainer,
-    },
-    receivedAmountInput: {
-      backgroundColor: theme.colors.surface,
+    totalLabel: {
+      ...theme.fonts.bodySmall,
+      color: theme.dark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
       marginBottom: 2,
     },
-    changeDisplayContainer: {
-      backgroundColor: '#4CAF50',
-      padding: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
-      borderRadius: theme.roundness,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: theme.spacing.xs,
+    totalAmount: {
+      ...theme.fonts.titleMedium,
+      color: theme.dark ? '#FFFFFF' : '#000000',
+      fontWeight: '600',
+      letterSpacing: -0.3,
     },
-    changeLabel: {
-      ...theme.fonts.bodyMedium,
-      color: 'white',
-      fontWeight: '500',
+    inputSection: {
+      marginBottom: 12,
     },
-    changeAmount: {
-      ...theme.fonts.titleLarge,
-      fontWeight: 'bold',
-      color: 'white',
+    inputLabel: {
+      ...theme.fonts.bodySmall,
+      color: theme.dark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      marginBottom: 6,
+    },
+    receivedAmountInput: {
+      backgroundColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(0, 0, 0, 0.04)',
+      borderRadius: 10,
+      fontSize: 18,
+      height: 44,
+      paddingHorizontal: 12,
     },
     quickAmountsRow: {
       flexDirection: 'row',
-      gap: theme.spacing.xs,
-      marginBottom: theme.spacing.s,
+      gap: 6,
+      marginTop: 8,
       justifyContent: 'center',
     },
     quickAmountButton: {
-      borderColor: theme.colors.primary,
-      flex: 1,
-      maxWidth: 85,
+      backgroundColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(0, 0, 0, 0.05)',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 10,
+      minWidth: 70,
+      alignItems: 'center',
     },
-    quickAmountButtonLabel: {
-      fontSize: 13,
+    quickAmountButtonPressed: {
+      backgroundColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.2)'
+        : 'rgba(0, 0, 0, 0.1)',
+    },
+    quickAmountButtonText: {
+      ...theme.fonts.labelMedium,
+      color: theme.dark ? '#FFFFFF' : '#000000',
       fontWeight: '600',
     },
-    quickAmountButtonContent: {
-      height: 38,
-      paddingHorizontal: theme.spacing.xs,
+    errorText: {
+      ...theme.fonts.bodySmall,
+      color: '#FF4444',
+      marginTop: 4,
+      marginLeft: 2,
+    },
+    changeSection: {
+      backgroundColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(0, 0, 0, 0.04)',
+      padding: 12,
+      borderRadius: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    changeLabel: {
+      ...theme.fonts.bodySmall,
+      color: theme.dark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      fontWeight: '500',
+    },
+    changeAmount: {
+      ...theme.fonts.titleMedium,
+      color: '#10B981',
+      fontWeight: '700',
+      letterSpacing: -0.3,
     },
     footer: {
       flexDirection: 'row',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      gap: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 16,
       borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-    },
-    footerButton: {
-      minWidth: 110,
-    },
-    footerButtonContent: {
-      height: 36,
+      borderTopColor: theme.dark
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(0, 0, 0, 0.05)',
     },
     cancelButton: {
-      borderColor: theme.colors.outline,
+      flex: 1,
+      marginRight: 8,
+      borderColor: '#DC2626',
+      borderWidth: 1,
+    },
+    cancelButtonLabel: {
+      color: '#DC2626',
+      fontWeight: '500',
+    },
+    confirmButton: {
+      flex: 2,
+      marginLeft: 8,
+      backgroundColor: '#10B981',
+      borderRadius: 12,
+    },
+    confirmButtonLabel: {
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    footerButtonContent: {
+      height: 40,
     },
   });
 

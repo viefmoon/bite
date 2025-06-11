@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Asumiendo que existe un schema base para Product en el módulo de productos
 // Si no existe, se puede definir uno básico aquí o importar el tipo directamente.
@@ -12,7 +12,7 @@ const productSchemaPlaceholder = z.object({
 // Schema base para PreparationScreen (refleja el dominio/entidad)
 export const preparationScreenSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1, "El nombre es requerido").max(100),
+  name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
   isActive: z.boolean().default(true),
   createdAt: z.string().datetime().optional(), // O z.date() si se transforma
@@ -25,7 +25,7 @@ export type PreparationScreen = z.infer<typeof preparationScreenSchema>;
 
 // Schema para el DTO de creación (coincide con el backend)
 export const createPreparationScreenDtoSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido").max(100),
+  name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
   isActive: z.boolean().optional().default(true),
   productIds: z.array(z.string().uuid()).optional().default([]), // Array de UUIDs
@@ -38,7 +38,7 @@ export type CreatePreparationScreenDto = z.infer<
 
 // Schema para el DTO de actualización (coincide con el backend)
 export const updatePreparationScreenDtoSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido").max(100).optional(),
+  name: z.string().min(1, 'El nombre es requerido').max(100).optional(),
   description: z.string().max(255).nullable().optional(),
   isActive: z.boolean().optional(),
   productIds: z.array(z.string().uuid()).optional(), // Permitir enviar array vacío o no enviar nada
@@ -64,7 +64,7 @@ export type FindAllPreparationScreensFilter = z.infer<
 // Schema para el formulario (puede ser igual a Create/Update o tener variaciones)
 // Usaremos Create como base. El manejo de productIds será específico del componente de formulario.
 export const preparationScreenFormSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido").max(100),
+  name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
   isActive: z.boolean().optional().default(true),
   // productIds no se incluye aquí, se manejará por separado en el estado del form modal

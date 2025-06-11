@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import React, { useEffect } from 'react';
 import Toast from 'react-native-root-toast';
 import {
   useSnackbarStore,
   SnackbarType,
-} from "../../../app/store/snackbarStore";
-import { useAppTheme } from "../../../app/styles/theme";
+} from '../../../app/store/snackbarStore';
+import { useAppTheme } from '../../../app/styles/theme';
 
 const GlobalSnackbar: React.FC = () => {
   const { visible, message, type, duration, hideSnackbar } = useSnackbarStore();
@@ -15,7 +14,7 @@ const GlobalSnackbar: React.FC = () => {
     if (visible && message) {
       const backgroundColor = getBackgroundColor(type);
       const textColor = getTextColor(type);
-      
+
       const toast = Toast.show(message, {
         duration: duration || 4000,
         position: Toast.positions.BOTTOM,
@@ -56,13 +55,13 @@ const GlobalSnackbar: React.FC = () => {
 
   const getBackgroundColor = (snackbarType: SnackbarType) => {
     switch (snackbarType) {
-      case "success":
+      case 'success':
         return theme.colors.successContainer;
-      case "error":
+      case 'error':
         return theme.colors.errorContainer;
-      case "warning":
+      case 'warning':
         return theme.colors.warningContainer || theme.colors.tertiaryContainer;
-      case "info":
+      case 'info':
         return theme.colors.infoContainer || theme.colors.surfaceVariant;
       default:
         return theme.colors.inverseSurface;
@@ -75,13 +74,15 @@ const GlobalSnackbar: React.FC = () => {
       : theme.colors.onSurface;
 
     switch (snackbarType) {
-      case "success":
+      case 'success':
         return theme.colors.onSuccessContainer || defaultTextColor;
-      case "error":
+      case 'error':
         return theme.colors.onErrorContainer;
-      case "warning":
-        return theme.colors.onWarningContainer || theme.colors.onTertiaryContainer;
-      case "info":
+      case 'warning':
+        return (
+          theme.colors.onWarningContainer || theme.colors.onTertiaryContainer
+        );
+      case 'info':
         return theme.colors.onInfoContainer || theme.colors.onSurfaceVariant;
       default:
         return theme.colors.inverseOnSurface;

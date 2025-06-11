@@ -1,16 +1,16 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { Button, HelperText, TextInput } from "react-native-paper";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { useNavigation } from "@react-navigation/native";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, HelperText, TextInput } from 'react-native-paper';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
 
-import { RegisterFormInputs, registerSchema } from "../schema/auth.schema"; // Corregida ruta de importación
-import { authService } from "../services/authService";
-import { useAppTheme } from "../../../app/styles/theme";
-import { useSnackbarStore } from "../../../app/store/snackbarStore";
-import { getApiErrorMessage } from "../../../app/lib/errorMapping";
+import { RegisterFormInputs, registerSchema } from '../schema/auth.schema'; // Corregida ruta de importación
+import { authService } from '../services/authService';
+import { useAppTheme } from '../../../app/styles/theme';
+import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
 export function RegisterForm() {
   const theme = useAppTheme();
@@ -24,11 +24,11 @@ export function RegisterForm() {
   } = useForm<RegisterFormInputs>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: "",
-      username: "",
-      password: "",
-      firstName: "",
-      lastName: "",
+      email: '',
+      username: '',
+      password: '',
+      firstName: '',
+      lastName: '',
     },
   });
 
@@ -36,8 +36,8 @@ export function RegisterForm() {
     mutationFn: (data: RegisterFormInputs) => authService.register(data),
     onSuccess: () => {
       showSnackbar({
-        message: "Registro exitoso. Por favor verifica tu correo electrónico.",
-        type: "success",
+        message: 'Registro exitoso. Por favor verifica tu correo electrónico.',
+        type: 'success',
       });
       navigation.goBack();
     },
@@ -45,7 +45,7 @@ export function RegisterForm() {
       const userMessage = getApiErrorMessage(error);
       showSnackbar({
         message: userMessage,
-        type: "error",
+        type: 'error',
         duration: 5000,
       });
     },
@@ -65,7 +65,7 @@ export function RegisterForm() {
           backgroundColor: theme.colors.background,
         },
       }),
-    [theme]
+    [theme],
   );
 
   return (

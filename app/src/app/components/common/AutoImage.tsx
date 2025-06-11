@@ -1,11 +1,20 @@
- import React, { useState, useEffect } from 'react';
-import { StyleSheet, Platform, View, ActivityIndicator, StyleProp, ViewStyle, DimensionValue } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Platform,
+  View,
+  ActivityIndicator,
+  StyleProp,
+  ViewStyle,
+  DimensionValue,
+} from 'react-native';
 import { Image, ImageProps as ExpoImageProps } from 'expo-image';
 import { getCachedImageUri } from '../../lib/imageCache';
 import { getImageUrl } from '../../lib/imageUtils';
 import { useAppTheme } from '../../styles/theme';
 
-export interface AutoImageProps extends Omit<ExpoImageProps, 'source' | 'style'> {
+export interface AutoImageProps
+  extends Omit<ExpoImageProps, 'source' | 'style'> {
   source: string | null | undefined;
   maxWidth?: number;
   maxHeight?: number;
@@ -16,11 +25,14 @@ export interface AutoImageProps extends Omit<ExpoImageProps, 'source' | 'style'>
   style?: StyleProp<ViewStyle>;
 }
 
-function useAutoImageSize(maxWidth?: number, maxHeight?: number): { width?: number | string, height?: number | string } {
-    return {
-        width: maxWidth ?? '100%',
-        height: maxHeight ?? '100%'
-    };
+function useAutoImageSize(
+  maxWidth?: number,
+  maxHeight?: number,
+): { width?: number | string; height?: number | string } {
+  return {
+    width: maxWidth ?? '100%',
+    height: maxHeight ?? '100%',
+  };
 }
 
 export const AutoImage: React.FC<AutoImageProps> = ({
@@ -46,48 +58,59 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     setProcessedUri(null);
 
     if (!originalSourceProp) {
-         if (isMounted) {
-             setIsLoadingUri(false);
-         }
-         return;
+      if (isMounted) {
+        setIsLoadingUri(false);
+      }
+      return;
     }
 
     const processSource = async () => {
-        const fullRemoteUrl = getImageUrl(originalSourceProp);
+      const fullRemoteUrl = getImageUrl(originalSourceProp);
 
-        if (!fullRemoteUrl) {
-            console.warn(`[AutoImage] No se pudo construir la URL para: ${originalSourceProp}`);
-            if (isMounted) setIsLoadingUri(false);
-            return;
-        }
+      if (!fullRemoteUrl) {
+        console.warn(
+          `[AutoImage] No se pudo construir la URL para: ${originalSourceProp}`,
+        );
+        if (isMounted) setIsLoadingUri(false);
+        return;
+      }
 
-        // Si NO se usa caché, o es web, o es una URI local, usar la URL construida directamente
-        if (!useCache || Platform.OS === 'web' || fullRemoteUrl.startsWith('file://')) {
-            if (isMounted) {
-                setProcessedUri(fullRemoteUrl);
-                setIsLoadingUri(false);
-            }
-            return;
+      // Si NO se usa caché, o es web, o es una URI local, usar la URL construida directamente
+      if (
+        !useCache ||
+        Platform.OS === 'web' ||
+        fullRemoteUrl.startsWith('file://')
+      ) {
+        if (isMounted) {
+          setProcessedUri(fullRemoteUrl);
+          setIsLoadingUri(false);
         }
+        return;
+      }
 
-        try {
-            const cachedUri = await getCachedImageUri(fullRemoteUrl);
-            if (isMounted) {
-                setProcessedUri(cachedUri ?? fullRemoteUrl);
-                setIsLoadingUri(false);
-            }
-        } catch (error) {
-            console.error(`❌ [AutoImage] Error obteniendo imagen (${originalSourceProp}):`, error);
-            if (isMounted) {
-                setProcessedUri(fullRemoteUrl);
-                setIsLoadingUri(false);
-            }
+      try {
+        const cachedUri = await getCachedImageUri(fullRemoteUrl);
+        if (isMounted) {
+          setProcessedUri(cachedUri ?? fullRemoteUrl);
+          setIsLoadingUri(false);
         }
+      } catch (error) {
+        console.error(
+          `❌ [AutoImage] Error obteniendo imagen (${originalSourceProp}):`,
+          error,
+        );
+        if (isMounted) {
+          setProcessedUri(fullRemoteUrl);
+          setIsLoadingUri(false);
+        }
+      }
     };
 
     processSource();
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [originalSourceProp, useCache]);
 
   const styles = StyleSheet.create({
@@ -107,20 +130,20 @@ export const AutoImage: React.FC<AutoImageProps> = ({
   });
 
   const containerStyle: StyleProp<ViewStyle> = [
-      styles.container,
-      { width: width as DimensionValue, height: height as DimensionValue },
-      style
+    styles.container,
+    { width: width as DimensionValue, height: height as DimensionValue },
+    style,
   ];
 
   return (
     <View style={containerStyle}>
       {(isLoadingUri || !processedUri) && (
-         <ActivityIndicator
-             style={styles.loadingIndicator}
-             animating={true}
-             color={theme.colors.primary}
-             size="small"
-         />
+        <ActivityIndicator
+          style={styles.loadingIndicator}
+          animating={true}
+          color={theme.colors.primary}
+          size="small"
+        />
       )}
       {!isLoadingUri && processedUri && (
         <Image

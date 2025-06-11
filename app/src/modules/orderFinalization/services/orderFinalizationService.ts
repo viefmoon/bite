@@ -1,5 +1,8 @@
 import apiClient from '@/app/services/apiClient';
-import { OrderForFinalization, FinalizeOrdersPayload } from '../types/orderFinalization.types';
+import {
+  OrderForFinalization,
+  FinalizeOrdersPayload,
+} from '../types/orderFinalization.types';
 
 export const orderFinalizationService = {
   // Obtener órdenes listas para finalizar

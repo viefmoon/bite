@@ -1,4 +1,3 @@
-
 import {
   useMutation,
   UseMutationResult,
@@ -6,29 +5,29 @@ import {
   UseQueryResult,
   useQueryClient,
   QueryKey,
-} from "@tanstack/react-query";
-import { printerService } from "../services/printerService";
+} from '@tanstack/react-query';
+import { printerService } from '../services/printerService';
 import {
   DiscoveredPrinter,
   ThermalPrinter,
   CreateThermalPrinterDto,
   UpdateThermalPrinterDto,
   FindAllThermalPrintersDto,
-} from "../types/printer.types";
-import { ApiError } from "../../../app/lib/errors";
-import { PaginatedResponse } from "../../../app/types/api.types";
-import { useSnackbarStore } from "../../../app/store/snackbarStore";
-import { getApiErrorMessage } from "../../../app/lib/errorMapping";
+} from '../types/printer.types';
+import { ApiError } from '../../../app/lib/errors';
+import { PaginatedResponse } from '../../../app/types/api.types';
+import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
 // --- Query Keys ---
 const printerKeys = {
-  all: ["thermalPrinters"] as const,
-  lists: () => [...printerKeys.all, "list"] as const,
+  all: ['thermalPrinters'] as const,
+  lists: () => [...printerKeys.all, 'list'] as const,
   list: (filters: FindAllThermalPrintersDto) =>
     [...printerKeys.lists(), filters] as const,
-  details: () => [...printerKeys.all, "detail"] as const,
+  details: () => [...printerKeys.all, 'detail'] as const,
   detail: (id: string) => [...printerKeys.details(), id] as const,
-  discover: ["discoverPrinters"] as const, // Clave para descubrimiento
+  discover: ['discoverPrinters'] as const, // Clave para descubrimiento
 };
 
 /**
@@ -37,8 +36,8 @@ const printerKeys = {
  */
 export const useDiscoverPrinters = (): UseMutationResult<
   DiscoveredPrinter[], // Tipo de dato que devuelve la mutación en caso de éxito
-  ApiError,            // Tipo de error esperado
-  number | undefined   // Tipo del argumento que recibe la función mutate (duration o undefined)
+  ApiError, // Tipo de error esperado
+  number | undefined // Tipo del argumento que recibe la función mutate (duration o undefined)
 > => {
   // No necesita invalidar caché, es una acción puntual
   return useMutation<DiscoveredPrinter[], ApiError, number | undefined>({
@@ -54,7 +53,7 @@ export const useDiscoverPrinters = (): UseMutationResult<
 export const usePrintersQuery = (
   // Proporcionar valores por defecto para page y limit si params está vacío
   params: FindAllThermalPrintersDto = { page: 1, limit: 10 },
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<PaginatedResponse<ThermalPrinter>, ApiError> => {
   const queryKey = printerKeys.list(params);
   return useQuery<PaginatedResponse<ThermalPrinter>, ApiError>({
@@ -69,7 +68,7 @@ export const usePrintersQuery = (
  */
 export const usePrinterQuery = (
   id: string | undefined,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<ThermalPrinter, ApiError> => {
   const queryKey = printerKeys.detail(id!);
   return useQuery<ThermalPrinter, ApiError>({
@@ -96,13 +95,13 @@ export const useCreatePrinterMutation = (): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
       showSnackbar({
         message: `Impresora "${newPrinter.name}" creada con éxito`,
-        type: "success",
+        type: 'success',
       });
     },
     onError: (error) => {
       showSnackbar({
         message: `Error al crear impresora: ${getApiErrorMessage(error)}`,
-        type: "error",
+        type: 'error',
       });
     },
   });
@@ -135,13 +134,13 @@ export const useUpdatePrinterMutation = (): UseMutationResult<
       // queryClient.setQueryData(printerKeys.detail(variables.id), updatedPrinter);
       showSnackbar({
         message: `Impresora "${updatedPrinter.name}" actualizada`,
-        type: "success",
+        type: 'success',
       });
     },
     onError: (error, variables) => {
       showSnackbar({
         message: `Error al actualizar impresora: ${getApiErrorMessage(error)}`,
-        type: "error",
+        type: 'error',
       });
     },
   });
@@ -164,34 +163,34 @@ export const useDeletePrinterMutation = (): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
       // Opcional: Remover de la caché de detalle
       queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
-      showSnackbar({ message: "Impresora eliminada", type: "success" });
+      showSnackbar({ message: 'Impresora eliminada', type: 'success' });
     },
     onError: (error) => {
       showSnackbar({
         message: `Error al eliminar impresora: ${getApiErrorMessage(error)}`,
-        type: "error",
+        type: 'error',
       });
     },
   });
 };
-
 
 /**
  * Hook para realizar un ping a una impresora.
  */
 export const usePingPrinterMutation = (): UseMutationResult<
   { status: string }, // Tipo de dato que devuelve la mutación en caso de éxito
-  ApiError,           // Tipo de error esperado
-  string              // Tipo del argumento que recibe la función mutate (printer ID)
+  ApiError, // Tipo de error esperado
+  string // Tipo del argumento que recibe la función mutate (printer ID)
 > => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   return useMutation<{ status: string }, ApiError, string>({
     mutationFn: (printerId: string) => printerService.pingPrinter(printerId),
     onSuccess: (data, printerId) => {
-      const message = data.status === 'online'
-        ? `Impresora conectada (ping exitoso).`
-        : `Impresora desconectada (ping fallido).`;
+      const message =
+        data.status === 'online'
+          ? `Impresora conectada (ping exitoso).`
+          : `Impresora desconectada (ping fallido).`;
       const type = data.status === 'online' ? 'success' : 'warning';
       showSnackbar({ message, type });
     },
@@ -215,21 +214,25 @@ export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
 > => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation<{ success: boolean; message?: string }, ApiError, DiscoveredPrinter>({
-    mutationFn: (printer: DiscoveredPrinter) => printerService.testPrintDiscoveredPrinter(printer),
+  return useMutation<
+    { success: boolean; message?: string },
+    ApiError,
+    DiscoveredPrinter
+  >({
+    mutationFn: (printer: DiscoveredPrinter) =>
+      printerService.testPrintDiscoveredPrinter(printer),
     onSuccess: (data) => {
       showSnackbar({
-        message: data.message || "Ticket de prueba impreso correctamente",
-        type: "success",
+        message: data.message || 'Ticket de prueba impreso correctamente',
+        type: 'success',
       });
     },
     onError: (error) => {
       showSnackbar({
         message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
-        type: "error",
+        type: 'error',
       });
       console.error('Error printing test ticket:', error);
     },
   });
 };
-

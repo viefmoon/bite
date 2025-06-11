@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
+import React, { useCallback, useMemo, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import {
   StyleSheet,
   RefreshControl,
@@ -7,8 +7,8 @@ import {
   StyleProp,
   View,
   TextStyle,
-} from "react-native";
-import { FlashList } from "@shopify/flash-list"; 
+} from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import {
   List,
   Chip,
@@ -18,10 +18,10 @@ import {
   SegmentedButtons,
   FAB,
   Portal,
-} from "react-native-paper";
-import AutoImage from "../common/AutoImage";
-import { useAppTheme, AppTheme } from "../../styles/theme";
-import { getImageUrl } from "../../lib/imageUtils";
+} from 'react-native-paper';
+import AutoImage from '../common/AutoImage';
+import { useAppTheme, AppTheme } from '../../styles/theme';
+import { getImageUrl } from '../../lib/imageUtils';
 export interface FilterOption<TValue> {
   value: TValue;
   label: string;
@@ -100,7 +100,7 @@ const getStyles = (theme: AppTheme) => {
       marginHorizontal: theme.spacing.m,
       borderRadius: theme.roundness * 1.5,
       elevation: 2,
-      overflow: "hidden",
+      overflow: 'hidden',
     },
     listItemContent: {
       paddingVertical: theme.spacing.xs,
@@ -115,10 +115,10 @@ const getStyles = (theme: AppTheme) => {
     statusChip: {
       borderRadius: theme.roundness * 1.5,
       height: 40,
-      alignSelf: "center",
+      alignSelf: 'center',
     },
     title: {
-      fontWeight: "600",
+      fontWeight: '600',
       color: theme.colors.onSurface,
     },
     description: {
@@ -126,8 +126,8 @@ const getStyles = (theme: AppTheme) => {
     },
     emptyListContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: theme.spacing.l,
     },
     defaultContentContainer: {
@@ -135,8 +135,8 @@ const getStyles = (theme: AppTheme) => {
       paddingTop: theme.spacing.xs,
     },
     itemActionsContainer: {
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       paddingLeft: theme.spacing.s,
     },
     filtersOuterContainer: {
@@ -146,7 +146,7 @@ const getStyles = (theme: AppTheme) => {
       backgroundColor: theme.colors.background,
     },
     segmentedButtons: {
-      backgroundColor: "transparent",
+      backgroundColor: 'transparent',
       borderRadius: theme.roundness,
       minHeight: 40,
     },
@@ -160,7 +160,7 @@ const getStyles = (theme: AppTheme) => {
       paddingVertical: theme.spacing.xs,
     },
     fab: {
-      position: "absolute",
+      position: 'absolute',
       margin: 16,
       right: 0,
       bottom: 0,
@@ -182,7 +182,7 @@ const GenericList = <TItem extends { id: string }>({
   renderItemActions,
   itemActionsContainerStyle,
   enableSearch = false,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = 'Buscar...',
   enableSort = false,
   filterValue,
   onFilterChange,
@@ -191,7 +191,7 @@ const GenericList = <TItem extends { id: string }>({
   onSearchChange,
   showFab = false,
   onFabPress,
-  fabIcon = "plus",
+  fabIcon = 'plus',
   fabLabel,
   fabVisible = true,
   showImagePlaceholder = true,
@@ -200,7 +200,7 @@ const GenericList = <TItem extends { id: string }>({
 }: GenericListProps<TItem>) => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  const [internalSearchTerm, setInternalSearchTerm] = useState("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const isSearchControlled =
     externalSearchQuery !== undefined && onSearchChange !== undefined;
   const currentSearchTerm = isSearchControlled
@@ -213,8 +213,8 @@ const GenericList = <TItem extends { id: string }>({
 
     if (enableSort && renderConfig.titleField) {
       processed.sort((a, b) => {
-        const titleA = String(a[renderConfig.titleField] ?? "").toLowerCase();
-        const titleB = String(b[renderConfig.titleField] ?? "").toLowerCase();
+        const titleA = String(a[renderConfig.titleField] ?? '').toLowerCase();
+        const titleB = String(b[renderConfig.titleField] ?? '').toLowerCase();
         return titleA.localeCompare(titleB);
       });
     }
@@ -222,13 +222,13 @@ const GenericList = <TItem extends { id: string }>({
     if (enableSearch && !isSearchControlled && currentSearchTerm.trim()) {
       const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
       processed = processed.filter((item) => {
-        const title = String(item[renderConfig.titleField] ?? "").toLowerCase();
+        const title = String(item[renderConfig.titleField] ?? '').toLowerCase();
         if (title.includes(lowerCaseSearchTerm)) {
           return true;
         }
         if (renderConfig.descriptionField) {
           const description = String(
-            item[renderConfig.descriptionField] ?? ""
+            item[renderConfig.descriptionField] ?? '',
           ).toLowerCase();
           if (description.includes(lowerCaseSearchTerm)) {
             return true;
@@ -249,17 +249,17 @@ const GenericList = <TItem extends { id: string }>({
   ]);
   const renderGenericItem = useCallback(
     ({ item }: { item: TItem }) => {
-      const title = String(item[renderConfig.titleField] ?? "");
+      const title = String(item[renderConfig.titleField] ?? '');
 
-      let description = "";
+      let description = '';
       if (
         renderConfig.descriptionField &&
         item.hasOwnProperty(renderConfig.descriptionField)
       ) {
         const rawDescription = String(
-          item[renderConfig.descriptionField] || ""
+          item[renderConfig.descriptionField] || '',
         );
-        if (rawDescription && rawDescription.toLowerCase() !== "null") {
+        if (rawDescription && rawDescription.toLowerCase() !== 'null') {
           const maxLength = renderConfig.descriptionMaxLength ?? 50;
           description =
             rawDescription.length > maxLength
@@ -290,8 +290,8 @@ const GenericList = <TItem extends { id: string }>({
           if (!isNaN(numericPrice)) {
             priceString = `$${numericPrice.toFixed(2)}`;
           } else if (
-            typeof priceValue === "string" &&
-            priceValue.trim() !== ""
+            typeof priceValue === 'string' &&
+            priceValue.trim() !== ''
           ) {
             priceString = String(priceValue);
           }
@@ -305,14 +305,14 @@ const GenericList = <TItem extends { id: string }>({
       ) {
         const imageFieldValue = item[renderConfig.imageField];
         if (
-          typeof imageFieldValue === "object" &&
+          typeof imageFieldValue === 'object' &&
           imageFieldValue !== null &&
-          "path" in imageFieldValue &&
-          typeof imageFieldValue.path === "string"
+          'path' in imageFieldValue &&
+          typeof imageFieldValue.path === 'string'
         ) {
           const url = getImageUrl(imageFieldValue.path);
           imageSource = url ?? undefined;
-        } else if (typeof imageFieldValue === "string") {
+        } else if (typeof imageFieldValue === 'string') {
           imageSource = imageFieldValue;
         }
       }
@@ -362,28 +362,28 @@ const GenericList = <TItem extends { id: string }>({
             description={() => {
               // Construir las partes del texto
               const parts = [];
-              
+
               // Verificar si es por defecto
               if (
                 renderConfig.isDefaultField &&
                 item.hasOwnProperty(renderConfig.isDefaultField) &&
                 item[renderConfig.isDefaultField] === true
               ) {
-                parts.push("✓ Por defecto");
+                parts.push('✓ Por defecto');
               }
-              
+
               if (sortOrderString) {
                 parts.push(sortOrderString);
               }
-              
+
               if (description) {
                 parts.push(description);
               }
-              
+
               if (priceString) {
                 parts.push(priceString);
               }
-              
+
               // Unir las partes con el separador apropiado
               const combinedText = parts.join(' - ');
 
@@ -406,7 +406,7 @@ const GenericList = <TItem extends { id: string }>({
                 return (
                   <AutoImage
                     source={imageSource}
-                    placeholder={require("../../../../assets/icon.png")}
+                    placeholder={require('../../../../assets/icon.png')}
                     style={[styles.listItemImage, imageStyle]}
                     contentFit="cover"
                     transition={300}
@@ -419,7 +419,7 @@ const GenericList = <TItem extends { id: string }>({
               }
             }}
             right={() => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {statusChip && statusChip({ color: theme.colors.onSurface })}
                 {renderItemActions && (
                   <View
@@ -448,13 +448,16 @@ const GenericList = <TItem extends { id: string }>({
       imageStyle,
       renderItemActions,
       itemActionsContainerStyle,
-    ]
+    ],
   );
 
   // Simplificado: contentContainerStyle solo debe tener padding/backgroundColor.
   // El centrado del contenido vacío se maneja en el ListEmptyComponent.
   const finalContentContainerStyle = useMemo(() => {
-    return StyleSheet.flatten([styles.defaultContentContainer, contentContainerStyle]);
+    return StyleSheet.flatten([
+      styles.defaultContentContainer,
+      contentContainerStyle,
+    ]);
   }, [styles.defaultContentContainer, contentContainerStyle]);
 
   return (
@@ -465,7 +468,7 @@ const GenericList = <TItem extends { id: string }>({
             value={String(filterValue)}
             onValueChange={(value) => {
               const selectedOption = filterOptions.find(
-                (opt) => String(opt.value) === value
+                (opt) => String(opt.value) === value,
               );
               if (selectedOption) {
                 onFilterChange(selectedOption.value);
@@ -505,8 +508,8 @@ const GenericList = <TItem extends { id: string }>({
             }
             onClearIconPress={() =>
               isSearchControlled
-                ? onSearchChange("")
-                : setInternalSearchTerm("")
+                ? onSearchChange('')
+                : setInternalSearchTerm('')
             }
           />
         </View>
@@ -526,9 +529,9 @@ const GenericList = <TItem extends { id: string }>({
             refreshing={isRefreshing}
             onRefresh={() => {
               if (isSearchControlled) {
-                onSearchChange("");
+                onSearchChange('');
               } else {
-                setInternalSearchTerm("");
+                setInternalSearchTerm('');
               }
               onRefresh();
             }}

@@ -3,8 +3,13 @@ import { StyleSheet } from 'react-native';
 import { ActivityIndicator, Text, IconButton } from 'react-native-paper';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import GenericList, { RenderItemConfig, FilterOption } from '../../../app/components/crud/GenericList';
-import GenericDetailModal, { DisplayFieldConfig } from '../../../app/components/crud/GenericDetailModal';
+import GenericList, {
+  RenderItemConfig,
+  FilterOption,
+} from '../../../app/components/crud/GenericList';
+import GenericDetailModal, {
+  DisplayFieldConfig,
+} from '../../../app/components/crud/GenericDetailModal';
 import AreaFormModal from '../components/AreaFormModal';
 import {
   useGetAreas,
@@ -34,8 +39,11 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     refetch: refetchAreas,
     isRefetching,
   } = useGetAreas(
-      { name: searchQuery || undefined, isActive: filterStatus === 'all' ? undefined : filterStatus === 'true' },
-      { page: 1, limit: 100 }
+    {
+      name: searchQuery || undefined,
+      isActive: filterStatus === 'all' ? undefined : filterStatus === 'true',
+    },
+    { page: 1, limit: 100 },
   );
 
   const createAreaMutation = useCreateArea();
@@ -55,19 +63,29 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     handleDeleteItem,
   } = useCrudScreenLogic<Area>({
     entityName: 'Área',
-    queryKey: ['areas', { name: searchQuery || undefined, isActive: filterStatus === 'all' ? undefined : filterStatus === 'true' }],
+    queryKey: [
+      'areas',
+      {
+        name: searchQuery || undefined,
+        isActive: filterStatus === 'all' ? undefined : filterStatus === 'true',
+      },
+    ],
     deleteMutationFn: deleteArea,
   });
 
-  const isSubmitting = createAreaMutation.isPending || updateAreaMutation.isPending;
+  const isSubmitting =
+    createAreaMutation.isPending || updateAreaMutation.isPending;
 
   const handleFormSubmit = async (
     data: CreateAreaDto | UpdateAreaDto,
-    _photoId: string | null | undefined
+    _photoId: string | null | undefined,
   ) => {
     try {
       if (editingItem) {
-        await updateAreaMutation.mutateAsync({ id: editingItem.id, data: data as UpdateAreaDto });
+        await updateAreaMutation.mutateAsync({
+          id: editingItem.id,
+          data: data as UpdateAreaDto,
+        });
       } else {
         await createAreaMutation.mutateAsync(data as CreateAreaDto);
       }
@@ -97,24 +115,27 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   ];
   const areaDetailStatusConfig = listRenderConfig.statusConfig;
 
-  const filterOptions: FilterOption<string>[] = useMemo(() => [
+  const filterOptions: FilterOption<string>[] = useMemo(
+    () => [
       { label: 'Todas', value: 'all' },
       { label: 'Activas', value: 'true' },
       { label: 'Inactivas', value: 'false' },
-  ], []);
+    ],
+    [],
+  );
 
   const handleFilterChange = (value: string | number) => {
-      setFilterStatus(String(value)); 
+    setFilterStatus(String(value));
   };
 
   const handleSearchChange = (query: string) => {
-      setSearchQuery(query);
+    setSearchQuery(query);
   };
 
   const handleRefresh = useCallback(() => {
-      setSearchQuery('');
-      setFilterStatus('all');
-      refetchAreas();
+    setSearchQuery('');
+    setFilterStatus('all');
+    refetchAreas();
   }, [refetchAreas]);
 
   const renderItemActions = (item: Area) => (
@@ -132,7 +153,8 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     data: areasData,
     emptyConfig: {
       title: 'No hay áreas',
-      message: 'No hay áreas registradas. Presiona el botón + para crear la primera.',
+      message:
+        'No hay áreas registradas. Presiona el botón + para crear la primera.',
       icon: 'map-marker-outline',
     },
   });
@@ -196,7 +218,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         fieldsToDisplay={areaDetailFields}
         onEdit={() => {
           if (selectedItem) {
-             handleOpenEditModal(selectedItem);
+            handleOpenEditModal(selectedItem);
           }
         }}
         onDelete={handleDeleteItem}
@@ -206,18 +228,18 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   );
 };
 
-const getStyles = (theme: AppTheme) => StyleSheet.create({
+const getStyles = (theme: AppTheme) =>
+  StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
+      flex: 1,
+      backgroundColor: theme.colors.background,
     },
     centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: theme.spacing.l,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.l,
     },
-});
-
+  });
 
 export default AreasScreen;

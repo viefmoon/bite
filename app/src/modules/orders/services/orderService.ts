@@ -1,12 +1,12 @@
-import apiClient from "@/app/services/apiClient";
-import { handleApiResponse } from "@/app/lib/apiHelpers";
-import { API_PATHS } from "@/app/constants/apiPaths";
-import { ApiError } from "@/app/lib/errors"; // Importar ApiError
-import type { Order } from "../../../app/schemas/domain/order.schema";
-import type { FindAllOrdersDto } from "../types/orders.types"; // FindAllOrdersDto se queda aquí
-import type { PaginatedResponse } from "../../../app/types/api.types"; // Importar PaginatedResponse
-import type { OrderDetailsForBackend } from "../components/OrderCartDetail"; // Importar la interfaz del payload de creación
-import type { UpdateOrderPayload } from "../types/update-order.types"; // Importar la interfaz del payload de actualización
+import apiClient from '@/app/services/apiClient';
+import { handleApiResponse } from '@/app/lib/apiHelpers';
+import { API_PATHS } from '@/app/constants/apiPaths';
+import { ApiError } from '@/app/lib/errors'; // Importar ApiError
+import type { Order } from '../../../app/schemas/domain/order.schema';
+import type { FindAllOrdersDto } from '../types/orders.types'; // FindAllOrdersDto se queda aquí
+import type { PaginatedResponse } from '../../../app/types/api.types'; // Importar PaginatedResponse
+import type { OrderDetailsForBackend } from '../components/OrderCartDetail'; // Importar la interfaz del payload de creación
+import type { UpdateOrderPayload } from '../types/update-order.types'; // Importar la interfaz del payload de actualización
 
 /**
  * Crea una nueva orden en el backend.
@@ -14,7 +14,9 @@ import type { UpdateOrderPayload } from "../types/update-order.types"; // Import
  * @returns Una promesa que resuelve a la orden creada.
  * @throws {ApiError} Si la petición falla.
  */
-const createOrder = async (orderData: OrderDetailsForBackend): Promise<Order> => {
+const createOrder = async (
+  orderData: OrderDetailsForBackend,
+): Promise<Order> => {
   // Asegúrate de que la ruta sea correcta para crear órdenes
   const response = await apiClient.post<Order>(API_PATHS.ORDERS, orderData);
   return handleApiResponse(response);
@@ -28,14 +30,16 @@ export const orderService = {
    * @returns Una promesa que resuelve a una respuesta paginada de órdenes.
    * @throws {ApiError} Si la petición falla.
    */
-  getOrders: async (filters: FindAllOrdersDto = {}): Promise<PaginatedResponse<Order>> => {
+  getOrders: async (
+    filters: FindAllOrdersDto = {},
+  ): Promise<PaginatedResponse<Order>> => {
     // Limpiar filtros undefined y preparar parámetros
     const queryParams: Record<string, any> = {};
     for (const [key, value] of Object.entries(filters)) {
       if (value !== undefined) {
         // Pasar el array directamente, el cliente API (axios) lo manejará
         if (key !== 'page' && key !== 'limit') {
-           queryParams[key] = value;
+          queryParams[key] = value;
         }
       }
     }
@@ -47,10 +51,21 @@ export const orderService = {
     queryParams.limit = limit;
 
     // Revertir a esperar la respuesta original [data, totalCount]
-    const response = await apiClient.get<[Order[], number]>(API_PATHS.ORDERS, queryParams);
+    const response = await apiClient.get<[Order[], number]>(
+      API_PATHS.ORDERS,
+      queryParams,
+    );
 
-    if (!response.ok || !response.data || !Array.isArray(response.data) || response.data.length !== 2) {
-      console.error("[orderService.getOrders] Failed to fetch orders:", response);
+    if (
+      !response.ok ||
+      !response.data ||
+      !Array.isArray(response.data) ||
+      response.data.length !== 2
+    ) {
+      console.error(
+        '[orderService.getOrders] Failed to fetch orders:',
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -74,7 +89,10 @@ export const orderService = {
     const response = await apiClient.get<Order[]>(API_PATHS.ORDERS_OPEN_TODAY);
 
     if (!response.ok || !response.data || !Array.isArray(response.data)) {
-      console.error("[orderService.getOpenOrdersToday] Failed to fetch open orders:", response);
+      console.error(
+        '[orderService.getOpenOrdersToday] Failed to fetch open orders:',
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     return response.data;
@@ -86,7 +104,11 @@ export const orderService = {
    * @returns Una promesa que resuelve si la solicitud fue exitosa (puede no devolver datos).
    * @throws {ApiError} Si la petición falla.
    */
-  printOrderTicket: async (orderId: string, printerId: string): Promise<void> => { // Renombrar función para claridad
+  printOrderTicket: async (
+    orderId: string,
+    printerId: string,
+  ): Promise<void> => {
+    // Renombrar función para claridad
     const url = API_PATHS.PRINT_ORDER_TICKET; // Usar la nueva ruta fija
     // El cuerpo ahora contiene orderId y printerId
     const body = { orderId, printerId };
@@ -94,7 +116,10 @@ export const orderService = {
 
     // Asumimos que una respuesta OK (2xx) significa éxito, incluso si no hay cuerpo.
     if (!response.ok) {
-      console.error(`[orderService.printOrderTicket] Failed for order ${orderId} on printer ${printerId}:`, response);
+      console.error(
+        `[orderService.printOrderTicket] Failed for order ${orderId} on printer ${printerId}:`,
+        response,
+      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     // No se retorna nada en caso de éxito
@@ -106,14 +131,16 @@ export const orderService = {
    * @throws {ApiError} Si la petición falla.
    */
   getOrderById: async (orderId: string): Promise<Order> => {
-    const response = await apiClient.get<Order>(`${API_PATHS.ORDERS}/${orderId}`);
+    const response = await apiClient.get<Order>(
+      `${API_PATHS.ORDERS}/${orderId}`,
+    );
 
     if (!response.ok || !response.data) {
-      console.error(`[orderService.getOrderById] Failed to fetch order ${orderId}:`, response);
-      throw ApiError.fromApiResponse(
-        response.data,
-        response.status
+      console.error(
+        `[orderService.getOrderById] Failed to fetch order ${orderId}:`,
+        response,
       );
+      throw ApiError.fromApiResponse(response.data, response.status);
     }
     // TODO: Considerar validar la respuesta con Zod si es necesario
     return response.data;
@@ -126,22 +153,25 @@ export const orderService = {
    * @returns Una promesa que resuelve a la orden actualizada.
    * @throws {ApiError} Si la petición falla.
    */
-  updateOrder: async (orderId: string, payload: UpdateOrderPayload): Promise<Order> => {
+  updateOrder: async (
+    orderId: string,
+    payload: UpdateOrderPayload,
+  ): Promise<Order> => {
     const response = await apiClient.patch<Order>(
       `${API_PATHS.ORDERS}/${orderId}`,
-      payload
+      payload,
     );
 
     if (!response.ok || !response.data) {
-      console.error(`[orderService.updateOrder] Failed to update order ${orderId}:`, response);
-      throw ApiError.fromApiResponse(
-        response.data,
-        response.status
+      console.error(
+        `[orderService.updateOrder] Failed to update order ${orderId}:`,
+        response,
       );
+      throw ApiError.fromApiResponse(response.data, response.status);
     }
     return response.data;
   },
-  
+
   /**
    * Cancela una orden existente.
    * @param orderId - El ID de la orden a cancelar.
@@ -151,20 +181,20 @@ export const orderService = {
   cancelOrder: async (orderId: string): Promise<Order> => {
     // Actualizar el estado de la orden a CANCELLED
     const payload: UpdateOrderPayload = {
-      orderStatus: 'CANCELLED'
+      orderStatus: 'CANCELLED',
     };
-    
+
     const response = await apiClient.patch<Order>(
       `${API_PATHS.ORDERS}/${orderId}`,
-      payload
+      payload,
     );
 
     if (!response.ok || !response.data) {
-      console.error(`[orderService.cancelOrder] Failed to cancel order ${orderId}:`, response);
-      throw ApiError.fromApiResponse(
-        response.data,
-        response.status
+      console.error(
+        `[orderService.cancelOrder] Failed to cancel order ${orderId}:`,
+        response,
       );
+      throw ApiError.fromApiResponse(response.data, response.status);
     }
     return response.data;
   },

@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as areaService from '../services/areaService';
 import {
   Area,
@@ -25,7 +21,7 @@ const areasQueryKeys = {
 
 export const useGetAreas = (
   filters: FindAllAreasDto = {},
-  pagination: BaseListQuery = { page: 1, limit: 10 }
+  pagination: BaseListQuery = { page: 1, limit: 10 },
 ) => {
   const queryKey = areasQueryKeys.list({ ...filters, ...pagination });
   return useQuery<Area[], Error>({
@@ -34,7 +30,10 @@ export const useGetAreas = (
   });
 };
 
-export const useGetAreaById = (id: string | null, options?: { enabled?: boolean }) => {
+export const useGetAreaById = (
+  id: string | null,
+  options?: { enabled?: boolean },
+) => {
   const queryKey = areasQueryKeys.detail(id!); // Use non-null assertion as it's enabled conditionally
   return useQuery<Area, Error>({
     queryKey,
@@ -49,7 +48,8 @@ export const useCreateArea = () => {
 
   return useMutation<Area, Error, CreateAreaDto>({
     mutationFn: areaService.createArea,
-    onSuccess: (_newArea) => { // Prefijado parámetro no usado
+    onSuccess: (_newArea) => {
+      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
       showSnackbar({ message: 'Área creada con éxito', type: 'success' });
     },
@@ -67,7 +67,12 @@ export const useUpdateArea = () => {
 
   type UpdateAreaContext = { previousAreas?: Area[]; previousDetail?: Area };
 
-  return useMutation<Area, Error, { id: string; data: UpdateAreaDto }, UpdateAreaContext>({
+  return useMutation<
+    Area,
+    Error,
+    { id: string; data: UpdateAreaDto },
+    UpdateAreaContext
+  >({
     mutationFn: ({ id, data }) => areaService.updateArea(id, data),
 
     onMutate: async (variables) => {
@@ -82,16 +87,21 @@ export const useUpdateArea = () => {
       const previousDetail = queryClient.getQueryData<Area>(detailQueryKey);
 
       if (previousAreas) {
-        queryClient.setQueryData<Area[]>(listQueryKey, (old) =>
-          old?.map(area =>
-            area.id === id ? { ...area, ...data } : area
-          ) ?? []
+        queryClient.setQueryData<Area[]>(
+          listQueryKey,
+          (old) =>
+            old?.map((area) =>
+              area.id === id ? { ...area, ...data } : area,
+            ) ?? [],
         );
       }
 
       if (previousDetail) {
-        queryClient.setQueryData<Area>(detailQueryKey, (old: Area | undefined) => // Añadido tipo explícito
-          old ? { ...old, ...data } : undefined
+        queryClient.setQueryData<Area>(
+          detailQueryKey,
+          (
+            old: Area | undefined, // Añadido tipo explícito
+          ) => (old ? { ...old, ...data } : undefined),
         );
       }
 
@@ -107,16 +117,25 @@ export const useUpdateArea = () => {
         queryClient.setQueryData(areasQueryKeys.lists(), context.previousAreas);
       }
       if (context?.previousDetail) {
-        queryClient.setQueryData(areasQueryKeys.detail(variables.id), context.previousDetail);
+        queryClient.setQueryData(
+          areasQueryKeys.detail(variables.id),
+          context.previousDetail,
+        );
       }
     },
 
-    onSettled: (data, error, variables, _context) => { // Prefijado parámetro no usado
+    onSettled: (data, error, variables, _context) => {
+      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: areasQueryKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: areasQueryKeys.detail(variables.id),
+      });
 
       if (!error && data) {
-        showSnackbar({ message: 'Área actualizada con éxito', type: 'success' });
+        showSnackbar({
+          message: 'Área actualizada con éxito',
+          type: 'success',
+        });
       }
     },
   });
@@ -132,15 +151,15 @@ export const useDeleteArea = () => {
     mutationFn: areaService.deleteArea,
 
     onMutate: async (deletedId) => {
-        const detailQueryKey = areasQueryKeys.detail(deletedId);
+      const detailQueryKey = areasQueryKeys.detail(deletedId);
 
-        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+      await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-        const previousDetail = queryClient.getQueryData<Area>(detailQueryKey);
+      const previousDetail = queryClient.getQueryData<Area>(detailQueryKey);
 
-        queryClient.removeQueries({ queryKey: detailQueryKey });
+      queryClient.removeQueries({ queryKey: detailQueryKey });
 
-        return { previousDetail };
+      return { previousDetail };
     },
 
     onError: (error, deletedId, context) => {
@@ -149,15 +168,21 @@ export const useDeleteArea = () => {
       console.error(`Error deleting area ${deletedId}:`, error);
 
       if (context?.previousDetail) {
-        queryClient.setQueryData(areasQueryKeys.detail(deletedId), context.previousDetail);
+        queryClient.setQueryData(
+          areasQueryKeys.detail(deletedId),
+          context.previousDetail,
+        );
       }
     },
 
-    onSettled: (_data, error, deletedId) => { // Prefijado parámetro no usado
+    onSettled: (_data, error, deletedId) => {
+      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
       if (!error) {
-          queryClient.removeQueries({ queryKey: areasQueryKeys.detail(deletedId) });
-          showSnackbar({ message: 'Área eliminada con éxito', type: 'success' });
+        queryClient.removeQueries({
+          queryKey: areasQueryKeys.detail(deletedId),
+        });
+        showSnackbar({ message: 'Área eliminada con éxito', type: 'success' });
       }
     },
   });

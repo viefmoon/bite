@@ -24,7 +24,7 @@ export const useFinalizeOrders = () => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   return useMutation({
-    mutationFn: (payload: FinalizeOrdersPayload) => 
+    mutationFn: (payload: FinalizeOrdersPayload) =>
       orderFinalizationService.finalizeOrders(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });

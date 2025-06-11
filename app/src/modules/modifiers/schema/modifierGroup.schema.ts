@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 // Importar tipo de dominio centralizado
-import { modifierGroupSchema as domainModifierGroupSchema } from "../../../app/schemas/domain/modifier-group.schema"; // Importar el schema Zod
-import type { ModifierGroup } from "../../../app/schemas/domain/modifier-group.schema"; // Mantener importación de tipo
+import { modifierGroupSchema as domainModifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema'; // Importar el schema Zod
+import type { ModifierGroup } from '../../../app/schemas/domain/modifier-group.schema'; // Mantener importación de tipo
 
 // Schema base local para validaciones y transformaciones de DTO/Form
 const modifierGroupBaseSchemaForForm = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   minSelections: z.number().int().min(0).optional(),
   maxSelections: z.number().int().min(1).optional(),
@@ -21,17 +21,17 @@ export const modifierGroupFormValidationSchema =
       if (data.maxSelections === undefined || data.maxSelections === null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["maxSelections"],
+          path: ['maxSelections'],
           message:
-            "Máx. selecciones es requerido si se permiten múltiples selecciones.",
+            'Máx. selecciones es requerido si se permiten múltiples selecciones.',
         });
       } else {
         if (data.maxSelections <= 1) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["maxSelections"],
+            path: ['maxSelections'],
             message:
-              "Máx. selecciones debe ser mayor que 1 si se permiten múltiples selecciones.",
+              'Máx. selecciones debe ser mayor que 1 si se permiten múltiples selecciones.',
           });
         }
 
@@ -39,15 +39,15 @@ export const modifierGroupFormValidationSchema =
         if (data.maxSelections > 1 && min > data.maxSelections) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["minSelections"],
+            path: ['minSelections'],
             message:
-              "Mín. selecciones no puede ser mayor que Máx. selecciones.",
+              'Mín. selecciones no puede ser mayor que Máx. selecciones.',
           });
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["maxSelections"],
+            path: ['maxSelections'],
             message:
-              "Máx. selecciones no puede ser menor que Mín. selecciones.",
+              'Máx. selecciones no puede ser menor que Mín. selecciones.',
           });
         }
       }
@@ -65,23 +65,23 @@ export type ModifierGroupFormInputs = z.infer<
 >;
 
 // Schema para DTO de creación (usa el schema base local y transforma)
-export const createModifierGroupSchema = modifierGroupBaseSchemaForForm.transform(
-  (data) => ({
+export const createModifierGroupSchema =
+  modifierGroupBaseSchemaForForm.transform((data) => ({
     ...data,
     minSelections: data.minSelections ?? 0,
     isRequired: data.isRequired ?? false,
     allowMultipleSelections: data.allowMultipleSelections ?? false,
     isActive: data.isActive ?? true,
     maxSelections: data.allowMultipleSelections ? (data.maxSelections ?? 1) : 1,
-  })
-);
+  }));
 // Tipo inferido para DTO de creación
 export type CreateModifierGroupInput = z.infer<
   typeof createModifierGroupSchema
 >;
 
 // Schema para DTO de actualización (usa el schema base local y lo hace parcial)
-export const updateModifierGroupSchema = modifierGroupBaseSchemaForForm.partial();
+export const updateModifierGroupSchema =
+  modifierGroupBaseSchemaForForm.partial();
 // Tipo inferido para DTO de actualización
 export type UpdateModifierGroupInput = z.infer<
   typeof updateModifierGroupSchema

@@ -67,9 +67,15 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedSubcategories, setExpandedSubcategories] = useState<
+    Set<string>
+  >(new Set());
 
   // Inicializar productos seleccionados
   useEffect(() => {
@@ -100,7 +106,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
           .map((subcategory) => ({
             ...subcategory,
             products: subcategory.products.filter((product) =>
-              product.name.toLowerCase().includes(query)
+              product.name.toLowerCase().includes(query),
             ),
           }))
           .filter((subcategory) => subcategory.products.length > 0),
@@ -141,63 +147,72 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const toggleAllInCategory = (category: Category) => {
     const newSelected = new Set(selectedProducts);
     const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id)
+      sub.products.map((p) => p.id),
     );
-    
+
     const allSelected = categoryProducts.every((id) => newSelected.has(id));
-    
+
     if (allSelected) {
       categoryProducts.forEach((id) => newSelected.delete(id));
     } else {
       categoryProducts.forEach((id) => newSelected.add(id));
     }
-    
+
     setSelectedProducts(newSelected);
   };
 
   const toggleAllInSubcategory = (subcategory: Subcategory) => {
     const newSelected = new Set(selectedProducts);
     const subcategoryProducts = subcategory.products.map((p) => p.id);
-    
+
     const allSelected = subcategoryProducts.every((id) => newSelected.has(id));
-    
+
     if (allSelected) {
       subcategoryProducts.forEach((id) => newSelected.delete(id));
     } else {
       subcategoryProducts.forEach((id) => newSelected.add(id));
     }
-    
+
     setSelectedProducts(newSelected);
   };
 
   const isCategoryPartiallySelected = (category: Category) => {
     const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id)
+      sub.products.map((p) => p.id),
     );
-    const selectedCount = categoryProducts.filter((id) => selectedProducts.has(id)).length;
+    const selectedCount = categoryProducts.filter((id) =>
+      selectedProducts.has(id),
+    ).length;
     return selectedCount > 0 && selectedCount < categoryProducts.length;
   };
 
   const isCategoryFullySelected = (category: Category) => {
     const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id)
+      sub.products.map((p) => p.id),
     );
-    return categoryProducts.length > 0 && categoryProducts.every((id) => selectedProducts.has(id));
+    return (
+      categoryProducts.length > 0 &&
+      categoryProducts.every((id) => selectedProducts.has(id))
+    );
   };
 
   const isSubcategoryPartiallySelected = (subcategory: Subcategory) => {
-    const selectedCount = subcategory.products.filter((p) => selectedProducts.has(p.id)).length;
+    const selectedCount = subcategory.products.filter((p) =>
+      selectedProducts.has(p.id),
+    ).length;
     return selectedCount > 0 && selectedCount < subcategory.products.length;
   };
 
   const isSubcategoryFullySelected = (subcategory: Subcategory) => {
-    return subcategory.products.length > 0 && subcategory.products.every((p) => selectedProducts.has(p.id));
+    return (
+      subcategory.products.length > 0 &&
+      subcategory.products.every((p) => selectedProducts.has(p.id))
+    );
   };
 
   const handleSave = () => {
     onSave(Array.from(selectedProducts));
   };
-
 
   return (
     <Portal>
@@ -225,7 +240,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : (
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+          >
             {filteredMenu.map((category) => (
               <View key={category.id} style={styles.categoryContainer}>
                 <TouchableOpacity
@@ -234,7 +252,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 >
                   <View style={styles.categoryTitleContainer}>
                     <IconButton
-                      icon={expandedCategories.has(category.id) ? 'chevron-down' : 'chevron-right'}
+                      icon={
+                        expandedCategories.has(category.id)
+                          ? 'chevron-down'
+                          : 'chevron-right'
+                      }
                       size={20}
                     />
                     <Text variant="titleMedium" style={styles.categoryTitle}>
@@ -246,8 +268,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       isCategoryFullySelected(category)
                         ? 'checked'
                         : isCategoryPartiallySelected(category)
-                        ? 'indeterminate'
-                        : 'unchecked'
+                          ? 'indeterminate'
+                          : 'unchecked'
                     }
                     onPress={() => toggleAllInCategory(category)}
                   />
@@ -256,17 +278,27 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 {expandedCategories.has(category.id) && (
                   <View style={styles.subcategoriesContainer}>
                     {category.subcategories.map((subcategory) => (
-                      <View key={subcategory.id} style={styles.subcategoryContainer}>
+                      <View
+                        key={subcategory.id}
+                        style={styles.subcategoryContainer}
+                      >
                         <TouchableOpacity
                           style={styles.subcategoryHeader}
                           onPress={() => toggleSubcategory(subcategory.id)}
                         >
                           <View style={styles.subcategoryTitleContainer}>
                             <IconButton
-                              icon={expandedSubcategories.has(subcategory.id) ? 'chevron-down' : 'chevron-right'}
+                              icon={
+                                expandedSubcategories.has(subcategory.id)
+                                  ? 'chevron-down'
+                                  : 'chevron-right'
+                              }
                               size={16}
                             />
-                            <Text variant="titleSmall" style={styles.subcategoryTitle}>
+                            <Text
+                              variant="titleSmall"
+                              style={styles.subcategoryTitle}
+                            >
                               {subcategory.name}
                             </Text>
                           </View>
@@ -275,8 +307,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                               isSubcategoryFullySelected(subcategory)
                                 ? 'checked'
                                 : isSubcategoryPartiallySelected(subcategory)
-                                ? 'indeterminate'
-                                : 'unchecked'
+                                  ? 'indeterminate'
+                                  : 'unchecked'
                             }
                             onPress={() => toggleAllInSubcategory(subcategory)}
                           />
@@ -291,22 +323,36 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                                 onPress={() => toggleProduct(product.id)}
                               >
                                 <View style={styles.productInfo}>
-                                  <Text variant="bodyMedium">{product.name}</Text>
-                                  {product.currentPreparationScreenId && product.currentPreparationScreenId !== screenId && (
-                                    <View style={styles.warningContainer}>
-                                      <MaterialCommunityIcons
-                                        name="alert"
-                                        size={12}
-                                        color={theme.colors.error}
-                                      />
-                                      <Text variant="bodySmall" style={[styles.warningText, { color: theme.colors.error }]}>
-                                        Asignado a otra pantalla
-                                      </Text>
-                                    </View>
-                                  )}
+                                  <Text variant="bodyMedium">
+                                    {product.name}
+                                  </Text>
+                                  {product.currentPreparationScreenId &&
+                                    product.currentPreparationScreenId !==
+                                      screenId && (
+                                      <View style={styles.warningContainer}>
+                                        <MaterialCommunityIcons
+                                          name="alert"
+                                          size={12}
+                                          color={theme.colors.error}
+                                        />
+                                        <Text
+                                          variant="bodySmall"
+                                          style={[
+                                            styles.warningText,
+                                            { color: theme.colors.error },
+                                          ]}
+                                        >
+                                          Asignado a otra pantalla
+                                        </Text>
+                                      </View>
+                                    )}
                                 </View>
                                 <Checkbox.Android
-                                  status={selectedProducts.has(product.id) ? 'checked' : 'unchecked'}
+                                  status={
+                                    selectedProducts.has(product.id)
+                                      ? 'checked'
+                                      : 'unchecked'
+                                  }
                                   onPress={() => toggleProduct(product.id)}
                                 />
                               </TouchableOpacity>

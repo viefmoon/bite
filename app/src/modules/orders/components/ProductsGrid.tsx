@@ -1,14 +1,9 @@
-import React from "react";
-import {
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  Text,
-} from "react-native";
-import type { Product } from "../../../app/schemas/domain/product.schema"; // Ruta corregida
-import { FlashList, ListRenderItemInfo } from "@shopify/flash-list"; // Importar FlashList y tipo
-import ProductCard from "./ProductCard";
-import { useAppTheme } from "@/app/styles/theme";
+import React from 'react';
+import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import type { Product } from '../../../app/schemas/domain/product.schema'; // Ruta corregida
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list'; // Importar FlashList y tipo
+import ProductCard from './ProductCard';
+import { useAppTheme } from '@/app/styles/theme';
 
 interface ProductsGridProps {
   products: Product[];
@@ -31,19 +26,19 @@ const ProductsGrid = ({
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: 20,
     },
     errorText: {
       fontSize: 16,
-      textAlign: "center",
+      textAlign: 'center',
       marginTop: 50,
       color: theme.colors.error,
       paddingHorizontal: theme.spacing.m,
     },
     emptyText: {
-      textAlign: "center",
+      textAlign: 'center',
       fontSize: 16,
       color: theme.colors.onSurfaceVariant,
       marginTop: 40,
@@ -63,7 +58,7 @@ const ProductsGrid = ({
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>
-          Error al cargar los productos: {error?.message || "Error desconocido"}
+          Error al cargar los productos: {error?.message || 'Error desconocido'}
         </Text>
       </View>
     );
@@ -83,11 +78,10 @@ const ProductsGrid = ({
     <FlashList
       data={products}
       keyExtractor={(item: Product) => item.id} // Añadir tipo Product
-      renderItem={({ item }: ListRenderItemInfo<Product>) => ( // Añadir tipo Product
-        <ProductCard 
-          product={item} 
-          onPress={() => onProductPress(item)}
-        /> // Asegurar que onProductPress reciba el item
+      renderItem={(
+        { item }: ListRenderItemInfo<Product>, // Añadir tipo Product
+      ) => (
+        <ProductCard product={item} onPress={() => onProductPress(item)} /> // Asegurar que onProductPress reciba el item
       )}
       estimatedItemSize={250} // Añadir tamaño estimado
       contentContainerStyle={{ paddingBottom: 80 }}

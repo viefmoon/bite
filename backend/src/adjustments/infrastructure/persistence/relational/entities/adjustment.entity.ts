@@ -12,7 +12,6 @@ import {
 import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity';
 import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
-import { AdjustmentType } from '../../../../domain/enums/adjustment-type.enum';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
 @Entity({
@@ -23,12 +22,6 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 export class AdjustmentEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column({
-    type: 'enum',
-    enum: AdjustmentType,
-  })
-  type: AdjustmentType;
 
   @Column({ type: 'uuid', nullable: true })
   orderId?: string | null;

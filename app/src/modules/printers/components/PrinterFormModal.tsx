@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useMemo } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
   Portal,
@@ -9,23 +9,23 @@ import {
   HelperText,
   ActivityIndicator,
   RadioButton,
-} from "react-native-paper";
-import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+} from 'react-native-paper';
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useAppTheme, AppTheme } from "../../../app/styles/theme";
+import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import {
   PrinterFormData,
   printerFormSchema,
   ThermalPrinter,
   CreateThermalPrinterDto,
   UpdateThermalPrinterDto,
-} from "../schema/printer.schema";
+} from '../schema/printer.schema';
 import {
   useCreatePrinterMutation,
   useUpdatePrinterMutation,
-} from "../hooks/usePrintersQueries";
-import AnimatedLabelInput from "../../../app/components/common/AnimatedLabelInput";
+} from '../hooks/usePrintersQueries';
+import AnimatedLabelInput from '../../../app/components/common/AnimatedLabelInput';
 
 interface PrinterFormModalProps {
   visible: boolean;
@@ -42,8 +42,8 @@ const getStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
-      maxHeight: "90%",
-      overflow: "hidden",
+      maxHeight: '90%',
+      overflow: 'hidden',
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
@@ -51,7 +51,7 @@ const getStyles = (theme: AppTheme) =>
       paddingHorizontal: theme.spacing.l,
     },
     formContainer: {
-      maxHeight: "100%",
+      maxHeight: '100%',
     },
     scrollViewContent: {
       padding: theme.spacing.l,
@@ -59,8 +59,8 @@ const getStyles = (theme: AppTheme) =>
     },
     modalTitle: {
       color: theme.colors.onPrimary,
-      fontWeight: "700",
-      textAlign: "center",
+      fontWeight: '700',
+      textAlign: 'center',
     },
     input: {
       marginBottom: theme.spacing.m,
@@ -72,9 +72,9 @@ const getStyles = (theme: AppTheme) =>
       flexShrink: 1,
     },
     switchComponentContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: theme.spacing.m,
       paddingVertical: theme.spacing.s,
     },
@@ -87,8 +87,8 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 12,
     },
     radioGroupHorizontal: {
-      flexDirection: "row",
-      justifyContent: "space-around",
+      flexDirection: 'row',
+      justifyContent: 'space-around',
       flexWrap: 'wrap',
     },
     radioButtonItem: {
@@ -101,8 +101,8 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 14,
     },
     modalActions: {
-      flexDirection: "row",
-      justifyContent: "center",
+      flexDirection: 'row',
+      justifyContent: 'center',
       paddingVertical: theme.spacing.m,
       paddingHorizontal: theme.spacing.l,
       borderTopWidth: 1,
@@ -119,9 +119,9 @@ const getStyles = (theme: AppTheme) =>
     cancelButton: {},
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.3)",
-      justifyContent: "center",
-      alignItems: "center",
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      justifyContent: 'center',
+      alignItems: 'center',
       borderRadius: theme.roundness * 2,
       zIndex: 10,
     },
@@ -148,8 +148,8 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
 
   const defaultValues = useMemo((): PrinterFormData => {
     const baseDefaults: PrinterFormData = {
-      name: "",
-      connectionType: "NETWORK",
+      name: '',
+      connectionType: 'NETWORK',
       ipAddress: undefined,
       port: undefined,
       path: undefined,
@@ -170,18 +170,19 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
     }
     // Aplicar valores desde descubrimiento si se está creando y existen
     if (!isEditing && initialDataFromDiscovery) {
-       return {
-         ...baseDefaults,
-         name: initialDataFromDiscovery.name || `Impresora ${initialDataFromDiscovery.ipAddress}`,
-         connectionType: "NETWORK",
-         ipAddress: initialDataFromDiscovery.ipAddress,
-         port: initialDataFromDiscovery.port,
-         macAddress: initialDataFromDiscovery.macAddress,
-       };
+      return {
+        ...baseDefaults,
+        name:
+          initialDataFromDiscovery.name ||
+          `Impresora ${initialDataFromDiscovery.ipAddress}`,
+        connectionType: 'NETWORK',
+        ipAddress: initialDataFromDiscovery.ipAddress,
+        port: initialDataFromDiscovery.port,
+        macAddress: initialDataFromDiscovery.macAddress,
+      };
     }
     return baseDefaults;
   }, [editingItem, isEditing, initialDataFromDiscovery]);
-
 
   const {
     control,
@@ -194,30 +195,28 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
     defaultValues: defaultValues,
   });
 
-  const connectionType = watch("connectionType");
+  const connectionType = watch('connectionType');
 
-   useEffect(() => {
-     if (visible) {
-       reset(defaultValues);
-     }
-   }, [visible, editingItem, initialDataFromDiscovery, reset, defaultValues]);
+  useEffect(() => {
+    if (visible) {
+      reset(defaultValues);
+    }
+  }, [visible, editingItem, initialDataFromDiscovery, reset, defaultValues]);
 
   const onSubmit: SubmitHandler<PrinterFormData> = async (formData) => {
     const dataToSend = { ...formData };
-    if (dataToSend.connectionType === "NETWORK") {
+    if (dataToSend.connectionType === 'NETWORK') {
       dataToSend.path = undefined;
     } else {
       dataToSend.ipAddress = undefined;
       dataToSend.port = undefined;
     }
-     if (dataToSend.port && typeof dataToSend.port === 'string') {
-        dataToSend.port = parseInt(dataToSend.port, 10);
-        if (isNaN(dataToSend.port)) {
-            dataToSend.port = undefined;
-        }
-     }
-
-
+    if (dataToSend.port && typeof dataToSend.port === 'string') {
+      dataToSend.port = parseInt(dataToSend.port, 10);
+      if (isNaN(dataToSend.port)) {
+        dataToSend.port = undefined;
+      }
+    }
 
     try {
       if (isEditing && editingItem) {
@@ -229,8 +228,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
         await createMutation.mutateAsync(dataToSend as CreateThermalPrinterDto);
       }
       onDismiss();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   return (
@@ -244,7 +242,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
         <View style={styles.formContainer}>
           <View style={styles.modalHeader}>
             <Text variant="titleLarge" style={styles.modalTitle}>
-              {isEditing ? "Editar Impresora" : "Nueva Impresora"}
+              {isEditing ? 'Editar Impresora' : 'Nueva Impresora'}
             </Text>
           </View>
 
@@ -266,35 +264,57 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               )}
             />
             {errors.name && (
-              <HelperText type="error" visible={!!errors.name} style={styles.helperText}>
+              <HelperText
+                type="error"
+                visible={!!errors.name}
+                style={styles.helperText}
+              >
                 {errors.name.message}
               </HelperText>
             )}
 
             {/* Tipo de Conexión */}
             <View style={styles.radioGroupContainer}>
-               <Text style={styles.radioGroupLabel}>Tipo de Conexión *</Text>
-               <Controller
-                 name="connectionType"
-                 control={control}
-                 render={({ field: { onChange, value } }) => (
-                   <RadioButton.Group onValueChange={onChange} value={value}>
-                     <View style={styles.radioGroupHorizontal}>
-                       <RadioButton.Item label="Red" value="NETWORK" style={styles.radioButtonItem} labelStyle={styles.radioLabel} position="leading" disabled={isSubmitting}/>
-                       <RadioButton.Item label="USB" value="USB" style={styles.radioButtonItem} labelStyle={styles.radioLabel} position="leading" disabled={true}/>
-                     </View>
-                   </RadioButton.Group>
-                 )}
-               />
-                {errors.connectionType && (
-                  <HelperText type="error" visible={!!errors.connectionType} style={styles.helperText}>
-                    {errors.connectionType.message}
-                  </HelperText>
+              <Text style={styles.radioGroupLabel}>Tipo de Conexión *</Text>
+              <Controller
+                name="connectionType"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <RadioButton.Group onValueChange={onChange} value={value}>
+                    <View style={styles.radioGroupHorizontal}>
+                      <RadioButton.Item
+                        label="Red"
+                        value="NETWORK"
+                        style={styles.radioButtonItem}
+                        labelStyle={styles.radioLabel}
+                        position="leading"
+                        disabled={isSubmitting}
+                      />
+                      <RadioButton.Item
+                        label="USB"
+                        value="USB"
+                        style={styles.radioButtonItem}
+                        labelStyle={styles.radioLabel}
+                        position="leading"
+                        disabled={true}
+                      />
+                    </View>
+                  </RadioButton.Group>
                 )}
+              />
+              {errors.connectionType && (
+                <HelperText
+                  type="error"
+                  visible={!!errors.connectionType}
+                  style={styles.helperText}
+                >
+                  {errors.connectionType.message}
+                </HelperText>
+              )}
             </View>
 
             {/* Campos Condicionales */}
-            {connectionType === "NETWORK" && (
+            {connectionType === 'NETWORK' && (
               <>
                 <Controller
                   name="ipAddress"
@@ -302,7 +322,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                   render={({ field: { onChange, onBlur, value } }) => (
                     <AnimatedLabelInput
                       label="Dirección IP *"
-                      value={value ?? ""}
+                      value={value ?? ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
                       error={!!errors.ipAddress}
@@ -313,7 +333,11 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                   )}
                 />
                 {errors.ipAddress && (
-                  <HelperText type="error" visible={!!errors.ipAddress} style={styles.helperText}>
+                  <HelperText
+                    type="error"
+                    visible={!!errors.ipAddress}
+                    style={styles.helperText}
+                  >
                     {errors.ipAddress.message}
                   </HelperText>
                 )}
@@ -322,56 +346,68 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                   name="port"
                   control={control}
                   render={({ field: { onChange, onBlur, value } }) => (
-                     <AnimatedLabelInput
-                       label="Puerto *"
-                       value={value !== undefined && value !== null ? String(value) : ""}
-                       onChangeText={(text) => {
-                         if (!text) {
-                           onChange(undefined);
-                           return;
-                         }
-                         const parsedPort = parseInt(text, 10);
-                         onChange(isNaN(parsedPort) ? undefined : parsedPort);
-                       }}
-                       onBlur={onBlur}
-                       error={!!errors.port}
-                       disabled={isSubmitting}
-                       containerStyle={styles.input}
-                       keyboardType="number-pad"
-                     />
+                    <AnimatedLabelInput
+                      label="Puerto *"
+                      value={
+                        value !== undefined && value !== null
+                          ? String(value)
+                          : ''
+                      }
+                      onChangeText={(text) => {
+                        if (!text) {
+                          onChange(undefined);
+                          return;
+                        }
+                        const parsedPort = parseInt(text, 10);
+                        onChange(isNaN(parsedPort) ? undefined : parsedPort);
+                      }}
+                      onBlur={onBlur}
+                      error={!!errors.port}
+                      disabled={isSubmitting}
+                      containerStyle={styles.input}
+                      keyboardType="number-pad"
+                    />
                   )}
                 />
-                 {errors.port && (
-                   <HelperText type="error" visible={!!errors.port} style={styles.helperText}>
-                     {errors.port.message}
-                   </HelperText>
-                 )}
+                {errors.port && (
+                  <HelperText
+                    type="error"
+                    visible={!!errors.port}
+                    style={styles.helperText}
+                  >
+                    {errors.port.message}
+                  </HelperText>
+                )}
 
-                 <Controller
-                   name="macAddress"
-                   control={control}
-                   render={({ field: { onChange, onBlur, value } }) => (
-                     <AnimatedLabelInput
-                       label="Dirección MAC (Opcional)"
-                       value={value ?? ""}
-                       onChangeText={onChange}
-                       onBlur={onBlur}
-                       error={!!errors.macAddress}
-                       disabled={isSubmitting}
-                       containerStyle={styles.input}
-                       autoCapitalize="characters"
-                     />
-                   )}
-                 />
-                 {errors.macAddress && (
-                   <HelperText type="error" visible={!!errors.macAddress} style={styles.helperText}>
-                     {errors.macAddress.message}
-                   </HelperText>
-                 )}
+                <Controller
+                  name="macAddress"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AnimatedLabelInput
+                      label="Dirección MAC (Opcional)"
+                      value={value ?? ''}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={!!errors.macAddress}
+                      disabled={isSubmitting}
+                      containerStyle={styles.input}
+                      autoCapitalize="characters"
+                    />
+                  )}
+                />
+                {errors.macAddress && (
+                  <HelperText
+                    type="error"
+                    visible={!!errors.macAddress}
+                    style={styles.helperText}
+                  >
+                    {errors.macAddress.message}
+                  </HelperText>
+                )}
               </>
             )}
 
-            {connectionType !== "NETWORK" && (
+            {connectionType !== 'NETWORK' && (
               <>
                 <Controller
                   name="path"
@@ -379,18 +415,28 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                   render={({ field: { onChange, onBlur, value } }) => (
                     <AnimatedLabelInput
                       label="Ruta / Identificador *"
-                      value={value ?? ""}
+                      value={value ?? ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
                       error={!!errors.path}
                       disabled={isSubmitting}
                       containerStyle={styles.input}
-                      placeholder={connectionType === 'USB' ? '/dev/usb/lp0' : connectionType === 'SERIAL' ? '/dev/ttyS0' : 'Dirección BT'}
+                      placeholder={
+                        connectionType === 'USB'
+                          ? '/dev/usb/lp0'
+                          : connectionType === 'SERIAL'
+                            ? '/dev/ttyS0'
+                            : 'Dirección BT'
+                      }
                     />
                   )}
                 />
                 {errors.path && (
-                  <HelperText type="error" visible={!!errors.path} style={styles.helperText}>
+                  <HelperText
+                    type="error"
+                    visible={!!errors.path}
+                    style={styles.helperText}
+                  >
                     {errors.path.message}
                   </HelperText>
                 )}
@@ -414,12 +460,15 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                 )}
               />
             </View>
-             {errors.isActive && (
-               <HelperText type="error" visible={!!errors.isActive} style={styles.helperText}>
-                 {errors.isActive.message}
-               </HelperText>
-             )}
-
+            {errors.isActive && (
+              <HelperText
+                type="error"
+                visible={!!errors.isActive}
+                style={styles.helperText}
+              >
+                {errors.isActive.message}
+              </HelperText>
+            )}
           </ScrollView>
 
           {isSubmitting && (
@@ -448,7 +497,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               disabled={isSubmitting}
               style={styles.formButton}
             >
-              {isEditing ? "Guardar" : "Crear"}
+              {isEditing ? 'Guardar' : 'Crear'}
             </Button>
           </View>
         </View>

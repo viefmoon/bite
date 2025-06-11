@@ -1,7 +1,7 @@
-import { MD3LightTheme, MD3DarkTheme, useTheme } from "react-native-paper";
-import type { MD3Typescale } from "react-native-paper/lib/typescript/types";
-import { lightColors, darkColors } from "./colors";
-import { typography } from "./typography";
+import { MD3LightTheme, MD3DarkTheme, useTheme } from 'react-native-paper';
+import type { MD3Typescale } from 'react-native-paper/lib/typescript/types';
+import { lightColors, darkColors } from './colors';
+import { typography } from './typography';
 
 declare global {
   namespace ReactNativePaper {
@@ -31,24 +31,24 @@ const spacing = {
 const typescale: MD3Typescale = {
   default: {
     fontFamily: typography.bodyMedium.fontFamily,
-    fontWeight: "normal",
+    fontWeight: 'normal',
     letterSpacing: typography.bodyMedium.letterSpacing,
   },
-  displayLarge: { ...typography.displayLarge, fontWeight: "normal" },
-  displayMedium: { ...typography.displayMedium, fontWeight: "normal" },
-  displaySmall: { ...typography.displaySmall, fontWeight: "normal" },
-  headlineLarge: { ...typography.headlineLarge, fontWeight: "normal" },
-  headlineMedium: { ...typography.headlineMedium, fontWeight: "normal" },
-  headlineSmall: { ...typography.headlineSmall, fontWeight: "normal" },
-  titleLarge: { ...typography.titleLarge, fontWeight: "normal" },
-  titleMedium: { ...typography.titleMedium, fontWeight: "500" },
-  titleSmall: { ...typography.titleSmall, fontWeight: "500" },
-  bodyLarge: { ...typography.bodyLarge, fontWeight: "normal" },
-  bodyMedium: { ...typography.bodyMedium, fontWeight: "normal" },
-  bodySmall: { ...typography.bodySmall, fontWeight: "normal" },
-  labelLarge: { ...typography.labelLarge, fontWeight: "500" },
-  labelMedium: { ...typography.labelMedium, fontWeight: "500" },
-  labelSmall: { ...typography.labelSmall, fontWeight: "500" },
+  displayLarge: { ...typography.displayLarge, fontWeight: 'normal' },
+  displayMedium: { ...typography.displayMedium, fontWeight: 'normal' },
+  displaySmall: { ...typography.displaySmall, fontWeight: 'normal' },
+  headlineLarge: { ...typography.headlineLarge, fontWeight: 'normal' },
+  headlineMedium: { ...typography.headlineMedium, fontWeight: 'normal' },
+  headlineSmall: { ...typography.headlineSmall, fontWeight: 'normal' },
+  titleLarge: { ...typography.titleLarge, fontWeight: 'normal' },
+  titleMedium: { ...typography.titleMedium, fontWeight: '500' },
+  titleSmall: { ...typography.titleSmall, fontWeight: '500' },
+  bodyLarge: { ...typography.bodyLarge, fontWeight: 'normal' },
+  bodyMedium: { ...typography.bodyMedium, fontWeight: 'normal' },
+  bodySmall: { ...typography.bodySmall, fontWeight: 'normal' },
+  labelLarge: { ...typography.labelLarge, fontWeight: '500' },
+  labelMedium: { ...typography.labelMedium, fontWeight: '500' },
+  labelSmall: { ...typography.labelSmall, fontWeight: '500' },
 };
 
 export const lightTheme = {

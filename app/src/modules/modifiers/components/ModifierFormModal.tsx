@@ -1,20 +1,20 @@
-import React, { useMemo, useCallback } from "react";
-import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useMemo, useCallback } from 'react';
+import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useSnackbarStore } from "@/app/store/snackbarStore";
-import { getApiErrorMessage } from "@/app/lib/errorMapping";
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import GenericFormModal, {
   FormFieldConfig,
-} from "@/app/components/crud/GenericFormModal";
-import { modifierService } from "../services/modifierService";
-import { ModifierFormInputs } from "../types/modifier.types";
+} from '@/app/components/crud/GenericFormModal';
+import { modifierService } from '../services/modifierService';
+import { ModifierFormInputs } from '../types/modifier.types';
 import {
   Modifier,
   modifierFormValidationSchema, // Cambiado de modifierSchema
   CreateModifierInput,
   UpdateModifierInput,
-} from "../schema/modifier.schema";
+} from '../schema/modifier.schema';
 
 interface Props {
   visible: boolean;
@@ -25,33 +25,33 @@ interface Props {
 }
 
 const formFields: FormFieldConfig<ModifierFormInputs>[] = [
-  { name: "name", label: "Nombre *", type: "text", required: true },
+  { name: 'name', label: 'Nombre *', type: 'text', required: true },
   {
-    name: "description",
-    label: "Descripción (Opcional)",
-    type: "textarea",
+    name: 'description',
+    label: 'Descripción (Opcional)',
+    type: 'textarea',
     numberOfLines: 3,
   },
   {
-    name: "price",
-    label: "Precio Adicional (Opcional)",
-    type: "number",
-    inputProps: { keyboardType: "numeric" },
+    name: 'price',
+    label: 'Precio Adicional (Opcional)',
+    type: 'number',
+    inputProps: { keyboardType: 'numeric' },
   },
   {
-    name: "sortOrder",
-    label: "Orden de Visualización",
-    type: "number",
+    name: 'sortOrder',
+    label: 'Orden de Visualización',
+    type: 'number',
     defaultValue: 0,
-    inputProps: { keyboardType: "numeric" },
+    inputProps: { keyboardType: 'numeric' },
   },
   {
-    name: "isDefault",
-    label: "Seleccionado por Defecto",
-    type: "switch",
+    name: 'isDefault',
+    label: 'Seleccionado por Defecto',
+    type: 'switch',
     defaultValue: false,
   },
-  { name: "isActive", label: "Activo", type: "switch", defaultValue: true },
+  { name: 'isActive', label: 'Activo', type: 'switch', defaultValue: true },
 ];
 
 const formSchema = modifierFormValidationSchema;
@@ -67,7 +67,7 @@ const ModifierFormModal: React.FC<Props> = ({
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const isEditing = !!initialData;
-  const QUERY_KEY_TO_INVALIDATE = ["modifiers", groupId];
+  const QUERY_KEY_TO_INVALIDATE = ['modifiers', groupId];
 
   const mutation = useMutation<
     Modifier,
@@ -78,7 +78,7 @@ const ModifierFormModal: React.FC<Props> = ({
       if (isEditing && initialData) {
         return modifierService.update(
           initialData.id,
-          data as UpdateModifierInput
+          data as UpdateModifierInput,
         );
       } else {
         return modifierService.create(data as CreateModifierInput);
@@ -87,15 +87,15 @@ const ModifierFormModal: React.FC<Props> = ({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY_TO_INVALIDATE });
       showSnackbar({
-        message: `Modificador "${data.name}" ${isEditing ? "actualizado" : "creado"} correctamente`,
-        type: "success",
+        message: `Modificador "${data.name}" ${isEditing ? 'actualizado' : 'creado'} correctamente`,
+        type: 'success',
       });
       onSaveSuccess();
     },
     onError: (error) => {
       const message = getApiErrorMessage(error);
-      showSnackbar({ message, type: "error" });
-      console.error("Error saving modifier:", error);
+      showSnackbar({ message, type: 'error' });
+      console.error('Error saving modifier:', error);
     },
   });
 
@@ -118,7 +118,7 @@ const ModifierFormModal: React.FC<Props> = ({
       try {
         await mutation.mutateAsync(dataToSend);
       } catch (error) {
-        console.error("Mutation failed in submit handler:", error);
+        console.error('Mutation failed in submit handler:', error);
       }
     },
     [
@@ -129,7 +129,7 @@ const ModifierFormModal: React.FC<Props> = ({
       onSaveSuccess,
       queryClient,
       showSnackbar,
-    ]
+    ],
   );
 
   return (
@@ -142,7 +142,7 @@ const ModifierFormModal: React.FC<Props> = ({
       editingItem={initialData ?? null}
       isSubmitting={mutation.isPending}
       modalTitle={(isEditing) =>
-        isEditing ? "Editar Modificador" : "Crear Nuevo Modificador"
+        isEditing ? 'Editar Modificador' : 'Crear Nuevo Modificador'
       }
       initialValues={useMemo(
         () =>
@@ -156,14 +156,14 @@ const ModifierFormModal: React.FC<Props> = ({
                 isActive: initialData.isActive,
               }
             : {
-                name: "",
+                name: '',
                 description: null,
                 price: null,
                 sortOrder: 0,
                 isDefault: false,
                 isActive: true,
               },
-        [initialData]
+        [initialData],
       )}
     />
   );

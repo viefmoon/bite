@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpStatus,
   HttpCode,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -81,15 +82,15 @@ export class AdjustmentsController {
     const page = query?.page ?? 1;
     const limit = query?.limit ?? 10;
 
-    const data = await this.adjustmentsService.findAllPaginated({
-      filterOptions: query,
-      paginationOptions: {
-        page,
-        limit,
-      },
-    });
+    // For now, using simple findAll without pagination
+    const items = await this.adjustmentsService.findAll(query);
 
-    return infinityPagination(data.items, { page, limit }, data.totalItems);
+    // Simple pagination simulation
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedItems = items.slice(startIndex, endIndex);
+
+    return infinityPagination(paginatedItems, { page, limit });
   }
 
   @Get('order/:orderId')
@@ -184,7 +185,14 @@ export class AdjustmentsController {
     @Param('id') id: string,
     @Body() updateAdjustmentDto: UpdateAdjustmentDto,
   ): Promise<Adjustment> {
-    return this.adjustmentsService.update(id, updateAdjustmentDto);
+    const result = await this.adjustmentsService.update(
+      id,
+      updateAdjustmentDto,
+    );
+    if (!result) {
+      throw new NotFoundException(`Adjustment with ID ${id} not found`);
+    }
+    return result;
   }
 
   @Delete(':id')
@@ -196,6 +204,6 @@ export class AdjustmentsController {
     description: 'Adjustment deleted successfully',
   })
   async remove(@Param('id') id: string): Promise<void> {
-    await this.adjustmentsService.softDelete(id);
+    await this.adjustmentsService.remove(id);
   }
 }

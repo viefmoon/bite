@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleProp,
   ViewStyle,
-} from "react-native"; 
+} from 'react-native';
 import {
   ActivityIndicator,
   Avatar,
@@ -14,10 +14,10 @@ import {
   Surface,
   Text,
   useTheme,
-} from "react-native-paper";
-import * as ImagePicker from "expo-image-picker";
-import { Image } from "expo-image";
-import { AppTheme } from "../../styles/theme";
+} from 'react-native-paper';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
+import { AppTheme } from '../../styles/theme';
 
 export interface FileObject {
   uri: string;
@@ -43,8 +43,8 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
   onImageRemoved,
   style,
   size = 150,
-  placeholderIcon = "camera-plus-outline",
-  placeholderText = "Añadir imagen",
+  placeholderIcon = 'camera-plus-outline',
+  placeholderText = 'Añadir imagen',
   isLoading = false,
   disabled = false,
 }) => {
@@ -56,7 +56,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     (async () => {
       try {
         const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
-        setHasPermission(status === "granted");
+        setHasPermission(status === 'granted');
       } catch {
         setHasPermission(false);
       }
@@ -68,21 +68,21 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     try {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status === "granted") {
+      if (status === 'granted') {
         setHasPermission(true);
         return true;
       } else {
         Alert.alert(
-          "Permiso requerido",
-          "Se necesita acceso a la galería para seleccionar imágenes."
+          'Permiso requerido',
+          'Se necesita acceso a la galería para seleccionar imágenes.',
         );
         setHasPermission(false);
         return false;
       }
     } catch (e) {
       Alert.alert(
-        "Error",
-        "No se pudieron solicitar los permisos de la galería."
+        'Error',
+        'No se pudieron solicitar los permisos de la galería.',
       );
       setHasPermission(false);
       return false;
@@ -97,7 +97,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -106,12 +106,12 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
         const selectedUri = selectedAsset.uri;
-        const fileName = selectedUri.split("/").pop() || "image.jpg";
+        const fileName = selectedUri.split('/').pop() || 'image.jpg';
         const fileType =
           selectedAsset.mimeType ||
-          (fileName.toLowerCase().endsWith(".png")
-            ? "image/png"
-            : "image/jpeg");
+          (fileName.toLowerCase().endsWith('.png')
+            ? 'image/png'
+            : 'image/jpeg');
 
         const fileObject: FileObject = {
           uri: selectedUri,
@@ -123,8 +123,8 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
       }
     } catch (error) {
       Alert.alert(
-        "Error",
-        `No se pudo abrir la galería: ${error instanceof Error ? error.message : "Inténtalo de nuevo."}`
+        'Error',
+        `No se pudo abrir la galería: ${error instanceof Error ? error.message : 'Inténtalo de nuevo.'}`,
       );
     }
   };
@@ -140,44 +140,44 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
       width: size,
       height: size,
       borderRadius: theme.roundness * 1.5,
-      justifyContent: "center",
-      alignItems: "center",
-      overflow: "hidden",
-      position: "relative",
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+      position: 'relative',
       backgroundColor: theme.colors.surfaceVariant,
     },
     touchable: {
-      width: "100%",
-      height: "100%",
-      justifyContent: "center",
-      alignItems: "center",
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     image: {
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
     },
     placeholderContainer: {
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: theme.spacing.s,
     },
     placeholderText: {
       marginTop: theme.spacing.xs,
       color: theme.colors.onSurfaceVariant,
-      textAlign: "center",
+      textAlign: 'center',
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0,0,0,0.4)",
-      justifyContent: "center",
-      alignItems: "center",
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
       borderRadius: theme.roundness * 1.5,
     },
     removeButton: {
-      position: "absolute",
+      position: 'absolute',
       top: 4,
       right: 4,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
   });
 
@@ -193,14 +193,14 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
             source={{ uri: imageUri }}
             style={styles.image}
             contentFit="cover"
-            placeholder={require("../../../../assets/icon.png")}
+            placeholder={require('../../../../assets/icon.png')}
           />
         ) : (
           <View style={styles.placeholderContainer}>
             <Avatar.Icon
               size={size * 0.4}
               icon={placeholderIcon}
-              style={{ backgroundColor: "transparent" }}
+              style={{ backgroundColor: 'transparent' }}
               color={theme.colors.onSurfaceVariant}
             />
             <Text style={styles.placeholderText} variant="bodySmall">

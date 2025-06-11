@@ -1,22 +1,30 @@
-import { z } from "zod";
-import { baseListQuerySchema } from "../../../app/types/query.types";
+import { z } from 'zod';
+import { baseListQuerySchema } from '../../../app/types/query.types';
 // Importar tipos de dominio centralizados
-import { photoSchema, type Photo } from "../../../app/schemas/domain/photo.schema";
-import { productVariantSchema, type ProductVariant } from "../../../app/schemas/domain/product-variant.schema";
-import { modifierGroupSchema } from "../../../app/schemas/domain/modifier-group.schema";
+import {
+  photoSchema,
+  type Photo,
+} from '../../../app/schemas/domain/photo.schema';
+import {
+  productVariantSchema,
+  type ProductVariant,
+} from '../../../app/schemas/domain/product-variant.schema';
+import { modifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
 // Importar el tipo Product centralizado
-import type { Product } from "../../../app/schemas/domain/product.schema";
+import type { Product } from '../../../app/schemas/domain/product.schema';
 
 // --- Schemas Zod ---
 
 // Schema para variantes en el formulario (sin requerir ID)
 const productVariantFormSchema = z.object({
   id: z.string().uuid().optional(),
-  name: z.string().min(1, "El nombre es requerido"),
-  price: z.coerce.number({
-    invalid_type_error: "El precio debe ser un número",
-    required_error: "El precio es requerido",
-  }).positive("El precio debe ser mayor a 0"),
+  name: z.string().min(1, 'El nombre es requerido'),
+  price: z.coerce
+    .number({
+      invalid_type_error: 'El precio debe ser un número',
+      required_error: 'El precio es requerido',
+    })
+    .positive('El precio debe ser mayor a 0'),
   isActive: z.boolean(),
 });
 
@@ -24,34 +32,35 @@ const productVariantFormSchema = z.object({
 // y también como base para productResponseSchema
 const productBaseSchema = z.object({
   id: z.string().uuid().optional(), // ID opcional para creación/formulario
-  name: z.string().min(1, "El nombre es requerido"),
+  name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(), // Campo descripción agregado
   price: z
     .number()
-    .positive("El precio debe ser positivo")
-    .refine(
-      (val) => /^\d+(\.\d{1,2})?$/.test(String(val)),
-      { message: "El precio debe tener como máximo dos decimales" }
-    )
+    .positive('El precio debe ser positivo')
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+      message: 'El precio debe tener como máximo dos decimales',
+    })
     .optional()
     .nullable(),
   hasVariants: z.boolean(),
   isActive: z.boolean(),
-  subcategoryId: z.string().uuid("La subcategoría es requerida"),
+  subcategoryId: z.string().uuid('La subcategoría es requerida'),
   photoId: z.string().uuid().optional().nullable(), // ID de la foto guardada en backend
   imageUri: z // Campo temporal para el formulario
     .string()
     .url()
-    .or(z.string().startsWith("file://"))
+    .or(z.string().startsWith('file://'))
     .optional()
     .nullable(),
-  estimatedPrepTime: z.number().min(1, "El tiempo debe ser al menos 1 minuto").optional(),
+  estimatedPrepTime: z
+    .number()
+    .min(1, 'El tiempo debe ser al menos 1 minuto')
+    .optional(),
   preparationScreenId: z.string().uuid().optional().nullable(),
   variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
   variantsToDelete: z.array(z.string().uuid()).optional(), // Para manejar eliminación en edición
   modifierGroupIds: z.array(z.string().uuid()).optional(), // IDs para asignar/actualizar
 });
-
 
 // Esquema para el formulario, con la validación condicional
 export const productSchema = productBaseSchema.superRefine((data, ctx) => {
@@ -59,30 +68,32 @@ export const productSchema = productBaseSchema.superRefine((data, ctx) => {
     if (!data.variants || data.variants.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Debe añadir al menos una variante si marca esta opción.",
-        path: ["variants"],
+        message: 'Debe añadir al menos una variante si marca esta opción.',
+        path: ['variants'],
       });
     }
     if (data.price !== null && data.price !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "El precio principal debe estar vacío si el producto tiene variantes.",
-        path: ["price"],
+        message:
+          'El precio principal debe estar vacío si el producto tiene variantes.',
+        path: ['price'],
       });
     }
   } else {
     if (data.price === null || data.price === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "El precio es requerido si el producto no tiene variantes.",
-        path: ["price"],
+        message: 'El precio es requerido si el producto no tiene variantes.',
+        path: ['price'],
       });
     }
     if (data.variants && data.variants.length > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'No debe haber variantes si el producto no está marcado como "Tiene Variantes".',
-        path: ["variants"],
+        message:
+          'No debe haber variantes si el producto no está marcado como "Tiene Variantes".',
+        path: ['variants'],
       });
     }
   }
@@ -126,7 +137,7 @@ export type FindAllProductsQuery = z.infer<typeof findAllProductsQuerySchema>;
 export const assignModifierGroupsSchema = z.object({
   modifierGroupIds: z
     .array(z.string().uuid())
-    .min(1, "Se requiere al menos un ID de grupo"),
+    .min(1, 'Se requiere al menos un ID de grupo'),
 });
 export type AssignModifierGroupsInput = z.infer<
   typeof assignModifierGroupsSchema

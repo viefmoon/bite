@@ -1,6 +1,19 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, TouchableWithoutFeedback, Keyboard, Platform, Animated } from "react-native";
-import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+  Animated,
+} from 'react-native';
+import {
+  Swipeable,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import {
   Text,
   Divider,
@@ -13,33 +26,33 @@ import {
   Modal,
   Portal,
   Appbar,
-} from "react-native-paper";
-import { useAppTheme } from "@/app/styles/theme";
-import { OrderTypeEnum, type OrderType } from "../types/orders.types"; // Importar OrderTypeEnum y el tipo OrderType
-import { useGetAreas } from "@/modules/areasTables/services/areaService";
-import OrderHeader from "./OrderHeader";
-import AnimatedLabelSelector from "@/app/components/common/AnimatedLabelSelector";
-import SpeechRecognitionInput from "@/app/components/common/SpeechRecognitionInput";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import ConfirmationModal from "@/app/components/common/ConfirmationModal";
+} from 'react-native-paper';
+import { useAppTheme } from '@/app/styles/theme';
+import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
+import { useGetAreas } from '@/modules/areasTables/services/areaService';
+import OrderHeader from './OrderHeader';
+import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
+import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import ProductSelectionModal from "./ProductSelectionModal";
-import ProductCustomizationModal from "./ProductCustomizationModal";
-import type { FullMenuProduct as Product } from "../types/orders.types";
-import { useGetTablesByArea } from "@/modules/areasTables/services/tableService";
-import type { Table } from "@/modules/areasTables/types/areasTables.types";
-import { useCart, CartItem, CartItemModifier } from "../context/CartContext"; // Importar CartItem y CartItemModifier
-import { useAuthStore } from "@/app/store/authStore"; // Importar authStore
-import { useSnackbarStore } from "@/app/store/snackbarStore"; // Importar snackbar store
-import { useGetOrderByIdQuery } from "../hooks/useOrdersQueries"; // Para cargar datos en modo edición
-import { useGetFullMenu } from "../hooks/useMenuQueries"; // Para obtener productos completos
-import type { FullMenuCategory } from "../types/orders.types"; // Tipo con subcategorías
-import OrderHistoryModal from "./OrderHistoryModal"; // Modal de historial
-import PaymentModal from "./PaymentModal"; // Modal de pagos
-import { FAB } from "react-native-paper"; // Para el floating action button
-import { useGetPaymentsByOrderIdQuery } from "../hooks/usePaymentQueries"; // Para consultar pagos existentes
-import { PaymentStatusEnum } from "../types/payment.types"; // Para verificar estados de pago
+import ProductSelectionModal from './ProductSelectionModal';
+import ProductCustomizationModal from './ProductCustomizationModal';
+import type { FullMenuProduct as Product } from '../types/orders.types';
+import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
+import type { Table } from '@/modules/areasTables/types/areasTables.types';
+import { useCart, CartItem, CartItemModifier } from '../context/CartContext'; // Importar CartItem y CartItemModifier
+import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
+import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
+import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
+import { useGetFullMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
+import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subcategorías
+import OrderHistoryModal from './OrderHistoryModal'; // Modal de historial
+import PaymentModal from './PaymentModal'; // Modal de pagos
+import { FAB } from 'react-native-paper'; // Para el floating action button
+import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
+import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
@@ -141,39 +154,46 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  
+
   // Query para cargar datos de la orden en modo edición
   const {
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
-  } = useGetOrderByIdQuery(orderId, { 
-    enabled: isEditMode && !!orderId && visible 
+  } = useGetOrderByIdQuery(orderId, {
+    enabled: isEditMode && !!orderId && visible,
   });
-  
+
   // Query para obtener el menú completo (para poder editar productos)
   const { data: menu } = useGetFullMenu();
-  
+
   // Query para obtener los pagos de la orden (solo en modo edición)
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
-    enabled: isEditMode && !!orderId && visible
+    enabled: isEditMode && !!orderId && visible,
   });
-  
+
   // Estados locales para modo edición (cuando no usamos el contexto del carrito)
   const [editItems, setEditItems] = useState<CartItem[]>([]);
-  const [editOrderType, setEditOrderType] = useState<OrderType>(OrderTypeEnum.DINE_IN);
-  const [editSelectedAreaId, setEditSelectedAreaId] = useState<string | null>(null);
-  const [editSelectedTableId, setEditSelectedTableId] = useState<string | null>(null);
+  const [editOrderType, setEditOrderType] = useState<OrderType>(
+    OrderTypeEnum.DINE_IN,
+  );
+  const [editSelectedAreaId, setEditSelectedAreaId] = useState<string | null>(
+    null,
+  );
+  const [editSelectedTableId, setEditSelectedTableId] = useState<string | null>(
+    null,
+  );
   const [editScheduledTime, setEditScheduledTime] = useState<Date | null>(null);
   const [editCustomerName, setEditCustomerName] = useState<string>('');
   const [editPhoneNumber, setEditPhoneNumber] = useState<string>('');
   const [editDeliveryAddress, setEditDeliveryAddress] = useState<string>('');
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
-  const [additionalItemsProcessed, setAdditionalItemsProcessed] = useState(false);
-  
+  const [additionalItemsProcessed, setAdditionalItemsProcessed] =
+    useState(false);
+
   // Obtener estado del carrito Y del formulario desde el contexto SOLO si NO estamos en modo edición
   const cartContext = !isEditMode ? useCart() : null;
-  
+
   const cartItems = cartContext?.items || [];
   const removeCartItem = cartContext?.removeItem || (() => {});
   const updateCartItemQuantity = cartContext?.updateItemQuantity || (() => {});
@@ -194,96 +214,119 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setCartDeliveryAddress = cartContext?.setDeliveryAddress || (() => {});
   const cartOrderNotes = cartContext?.orderNotes || '';
   const setCartOrderNotes = cartContext?.setOrderNotes || (() => {});
-  
+
   // Usar valores del contexto o locales según el modo
   const items = isEditMode ? editItems : cartItems;
   const orderType = isEditMode ? editOrderType : cartOrderType;
   const selectedAreaId = isEditMode ? editSelectedAreaId : cartSelectedAreaId;
-  const selectedTableId = isEditMode ? editSelectedTableId : cartSelectedTableId;
+  const selectedTableId = isEditMode
+    ? editSelectedTableId
+    : cartSelectedTableId;
   const scheduledTime = isEditMode ? editScheduledTime : cartScheduledTime;
   const customerName = isEditMode ? editCustomerName : cartCustomerName;
   const phoneNumber = isEditMode ? editPhoneNumber : cartPhoneNumber;
-  const deliveryAddress = isEditMode ? editDeliveryAddress : cartDeliveryAddress;
+  const deliveryAddress = isEditMode
+    ? editDeliveryAddress
+    : cartDeliveryAddress;
   const orderNotes = isEditMode ? editOrderNotes : cartOrderNotes;
-  
+
   const setOrderType = isEditMode ? setEditOrderType : setCartOrderType;
-  const setSelectedAreaId = isEditMode ? setEditSelectedAreaId : setCartSelectedAreaId;
-  const setSelectedTableId = isEditMode ? setEditSelectedTableId : setCartSelectedTableId;
-  const setScheduledTime = isEditMode ? setEditScheduledTime : setCartScheduledTime;
-  const setCustomerName = isEditMode ? setEditCustomerName : setCartCustomerName;
+  const setSelectedAreaId = isEditMode
+    ? setEditSelectedAreaId
+    : setCartSelectedAreaId;
+  const setSelectedTableId = isEditMode
+    ? setEditSelectedTableId
+    : setCartSelectedTableId;
+  const setScheduledTime = isEditMode
+    ? setEditScheduledTime
+    : setCartScheduledTime;
+  const setCustomerName = isEditMode
+    ? setEditCustomerName
+    : setCartCustomerName;
   const setPhoneNumber = isEditMode ? setEditPhoneNumber : setCartPhoneNumber;
-  const setDeliveryAddress = isEditMode ? setEditDeliveryAddress : setCartDeliveryAddress;
+  const setDeliveryAddress = isEditMode
+    ? setEditDeliveryAddress
+    : setCartDeliveryAddress;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
-  
+
   const removeItem = (itemId: string) => {
     if (isEditMode) {
-      const item = editItems.find(i => i.id === itemId);
+      const item = editItems.find((i) => i.id === itemId);
       if (!item) return;
-      
+
       // Verificar el estado del item
-      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
+      if (
+        item.preparationStatus === 'READY' ||
+        item.preparationStatus === 'DELIVERED'
+      ) {
         // No permitir eliminar items listos o entregados
-        showSnackbar({ 
-          message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
-          type: "error" 
+        showSnackbar({
+          message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+          type: 'error',
         });
         return;
       }
-      
+
       if (item.preparationStatus === 'IN_PROGRESS') {
         // Pedir confirmación para items en preparación
         setModifyingItemName(item.productName);
         setPendingModifyAction(() => () => {
-          setEditItems(prev => prev.filter(i => i.id !== itemId));
+          setEditItems((prev) => prev.filter((i) => i.id !== itemId));
         });
         setShowModifyInProgressConfirmation(true);
       } else {
         // Permitir eliminar items pendientes o cancelados sin confirmación
-        setEditItems(prev => prev.filter(i => i.id !== itemId));
+        setEditItems((prev) => prev.filter((i) => i.id !== itemId));
       }
     } else {
       removeCartItem(itemId);
     }
   };
-  
+
   const updateItemQuantity = (itemId: string, quantity: number) => {
     if (isEditMode) {
       if (quantity <= 0) {
         removeItem(itemId);
         return;
       }
-      
-      const item = editItems.find(i => i.id === itemId);
+
+      const item = editItems.find((i) => i.id === itemId);
       if (!item) return;
-      
+
       // Verificar el estado del item
-      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
+      if (
+        item.preparationStatus === 'READY' ||
+        item.preparationStatus === 'DELIVERED'
+      ) {
         // No permitir modificar items listos o entregados
-        showSnackbar({ 
-          message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
-          type: "error" 
+        showSnackbar({
+          message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+          type: 'error',
         });
         return;
       }
-      
+
       const updateQuantity = () => {
-        setEditItems(prev => prev.map(item => {
-          if (item.id === itemId) {
-            const modifiersPrice = item.modifiers.reduce(
-              (sum, mod) => sum + Number(mod.price || 0),
-              0
-            );
-            const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
-            return {
-              ...item,
-              quantity,
-              totalPrice: newTotalPrice,
-            };
-          }
-          return item;
-        }));
+        setEditItems((prev) =>
+          prev.map((item) => {
+            if (item.id === itemId) {
+              const modifiersPrice = item.modifiers.reduce(
+                (sum, mod) => sum + Number(mod.price || 0),
+                0,
+              );
+              const newTotalPrice =
+                (item.unitPrice + modifiersPrice) * quantity;
+              return {
+                ...item,
+                quantity,
+                totalPrice: newTotalPrice,
+              };
+            }
+            return item;
+          }),
+        );
       };
-      
+
       if (item.preparationStatus === 'IN_PROGRESS') {
         // Pedir confirmación para items en preparación
         setModifyingItemName(item.productName);
@@ -297,32 +340,32 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       updateCartItemQuantity(itemId, quantity);
     }
   };
-  
+
   // Calcular totales
   const subtotal = useMemo(() => {
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
   }, [items]);
-  
+
   const total = useMemo(() => {
     return subtotal;
   }, [subtotal]);
-  
+
   const totalItemsCount = useMemo(() => {
     return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
-  
+
   // Calcular total pagado
   const totalPaid = useMemo(() => {
     if (!isEditMode || !payments) return 0;
     return payments
-      .filter(p => p.paymentStatus === PaymentStatusEnum.COMPLETED)
+      .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
       .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
   }, [payments, isEditMode]);
-  
+
   const pendingAmount = useMemo(() => {
     return Math.max(0, total - totalPaid);
   }, [total, totalPaid]);
-  
+
   const { user } = useAuthStore(); // Obtener usuario autenticado
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
@@ -331,24 +374,31 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [tableMenuVisible, setTableMenuVisible] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [tableError, setTableError] = useState<string | null>(null);
-  const [customerNameError, setCustomerNameError] = useState<string | null>(null);
+  const [customerNameError, setCustomerNameError] = useState<string | null>(
+    null,
+  );
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  const [editingItemFromList, setEditingItemFromList] = useState<CartItem | null>(null);
+  const [editingItemFromList, setEditingItemFromList] =
+    useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalReady, setIsModalReady] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [showModifyInProgressConfirmation, setShowModifyInProgressConfirmation] = useState(false);
-  const [pendingModifyAction, setPendingModifyAction] = useState<(() => void) | null>(null);
+  const [
+    showModifyInProgressConfirmation,
+    setShowModifyInProgressConfirmation,
+  ] = useState(false);
+  const [pendingModifyAction, setPendingModifyAction] = useState<
+    (() => void) | null
+  >(null);
   const [modifyingItemName, setModifyingItemName] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-
 
   // --- Queries para Áreas y Mesas (sin cambios) ---
   const {
@@ -365,35 +415,40 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   // Cargar datos de la orden cuando esté en modo edición
   useEffect(() => {
     if (!isEditMode || !orderData || !visible) return;
-    
+
     // Establecer los valores del formulario
     setEditOrderType(orderData.orderType);
     setEditSelectedTableId(orderData.tableId ?? null);
-    setEditScheduledTime(orderData.scheduledAt ? new Date(orderData.scheduledAt) : null);
+    setEditScheduledTime(
+      orderData.scheduledAt ? new Date(orderData.scheduledAt) : null,
+    );
     setEditCustomerName(orderData.customerName ?? '');
-    
+
     // Procesar el teléfono - si viene con +52, quitarlo para mostrarlo sin prefijo
     let phoneForDisplay = orderData.phoneNumber ?? '';
     if (phoneForDisplay.startsWith('+52')) {
       phoneForDisplay = phoneForDisplay.substring(3);
-    } else if (phoneForDisplay.startsWith('52') && phoneForDisplay.length === 12) {
+    } else if (
+      phoneForDisplay.startsWith('52') &&
+      phoneForDisplay.length === 12
+    ) {
       phoneForDisplay = phoneForDisplay.substring(2);
     }
     setEditPhoneNumber(phoneForDisplay);
-    
+
     setEditDeliveryAddress(orderData.deliveryAddress ?? '');
     setEditOrderNotes(orderData.notes ?? '');
-    
+
     // Si hay una mesa, necesitamos encontrar el área
     if (orderData.tableId && orderData.table) {
       setEditSelectedAreaId(orderData.table.areaId);
     }
-    
+
     // Mapear y agrupar los items de la orden
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
       // Mapa para agrupar items idénticos
       const groupedItemsMap = new Map<string, CartItem>();
-      
+
       orderData.orderItems.forEach((item: any) => {
         // Calcular el precio de los modificadores
         const modifiers = (item.modifiers || []).map((mod: any) => ({
@@ -402,21 +457,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           name: mod.modifier?.name || 'Modificador',
           price: parseFloat(mod.price || '0'),
         }));
-        
-        const modifiersPrice = modifiers.reduce((sum: number, mod: any) => sum + (mod.price || 0), 0);
+
+        const modifiersPrice = modifiers.reduce(
+          (sum: number, mod: any) => sum + (mod.price || 0),
+          0,
+        );
         const unitPrice = parseFloat(item.basePrice || '0');
-        
+
         // Crear una clave única para agrupar items idénticos (incluyendo estado de preparación)
-        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${
-          JSON.stringify(modifiers.map(m => m.id).sort())
-        }-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
-        
+        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${JSON.stringify(
+          modifiers.map((m) => m.id).sort(),
+        )}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
+
         const existingItem = groupedItemsMap.get(groupKey);
-        
+
         if (existingItem) {
           // Si ya existe un item idéntico con el mismo estado, incrementar la cantidad
           existingItem.quantity += 1;
-          existingItem.totalPrice = (unitPrice + modifiersPrice) * existingItem.quantity;
+          existingItem.totalPrice =
+            (unitPrice + modifiersPrice) * existingItem.quantity;
         } else {
           // Si es un nuevo item, agregarlo al mapa
           const cartItem: CartItem = {
@@ -435,28 +494,33 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           groupedItemsMap.set(groupKey, cartItem);
         }
       });
-      
+
       // Convertir el mapa a array
       const mappedItems = Array.from(groupedItemsMap.values());
       console.log('Cargando items de la orden en OrderCartDetail:', {
         orderItemsCount: orderData.orderItems?.length || 0,
         mappedItemsCount: mappedItems.length,
-        mappedItems
+        mappedItems,
       });
       setEditItems(mappedItems);
     }
   }, [isEditMode, orderData, visible]);
-  
+
   // Agregar items adicionales cuando se proporcionen
   useEffect(() => {
-    if (isEditMode && additionalItems && additionalItems.length > 0 && !additionalItemsProcessed) {
+    if (
+      isEditMode &&
+      additionalItems &&
+      additionalItems.length > 0 &&
+      !additionalItemsProcessed
+    ) {
       // Generar nuevos IDs únicos para evitar duplicados
       const itemsWithNewIds = additionalItems.map((item, index) => ({
         ...item,
-        id: `new-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`
+        id: `new-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
       }));
-      
-      setEditItems(prev => [...prev, ...itemsWithNewIds]);
+
+      setEditItems((prev) => [...prev, ...itemsWithNewIds]);
       setAdditionalItemsProcessed(true);
     }
   }, [isEditMode, additionalItems, additionalItemsProcessed]);
@@ -469,7 +533,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setPhoneError(null);
     setAddressError(null);
   }, [orderType]);
-  
+
   // Resetear estados cuando el modal se cierre
   useEffect(() => {
     if (!visible && isEditMode) {
@@ -490,7 +554,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setAdditionalItemsProcessed(false);
     }
   }, [visible, isEditMode]);
-  
+
   // Manejar la preparación del modal con un pequeño delay
   useEffect(() => {
     if (visible && !isModalReady) {
@@ -501,10 +565,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   }, [visible, isModalReady]);
 
-
   const handleConfirm = async () => {
     if (isConfirming) return; // Prevenir múltiples clics
-    
+
     setAreaError(null);
     setTableError(null);
     setCustomerNameError(null);
@@ -517,44 +580,44 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     let isValid = true;
 
-    if (orderType === OrderTypeEnum.DINE_IN) { // Usar Enum
+    if (orderType === OrderTypeEnum.DINE_IN) {
+      // Usar Enum
       if (!selectedAreaId) {
-        setAreaError("Debe seleccionar un área");
+        setAreaError('Debe seleccionar un área');
         isValid = false;
       }
       if (!selectedTableId) {
-        setTableError("Debe seleccionar una mesa");
+        setTableError('Debe seleccionar una mesa');
         isValid = false;
       }
-    } else if (orderType === OrderTypeEnum.TAKE_AWAY) { // Usar Enum
-        if (!customerName || customerName.trim() === '') {
-            setCustomerNameError("El nombre del cliente es obligatorio");
-            isValid = false;
-        }
-        // Phone is optional for take away
-    } else if (orderType === OrderTypeEnum.DELIVERY) { // Usar Enum
-        // Customer name not required for delivery as per new spec
-        if (!deliveryAddress || deliveryAddress.trim() === '') {
-            setAddressError("La dirección es obligatoria para Domicilio");
-            isValid = false;
-        }
-        if (!phoneNumber || phoneNumber.trim() === '') {
-            setPhoneError("El teléfono es obligatorio para Domicilio");
-            isValid = false;
-        }
+    } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
+      // Usar Enum
+      if (!customerName || customerName.trim() === '') {
+        setCustomerNameError('El nombre del cliente es obligatorio');
+        isValid = false;
+      }
+      // Phone is optional for take away
+    } else if (orderType === OrderTypeEnum.DELIVERY) {
+      // Usar Enum
+      // Customer name not required for delivery as per new spec
+      if (!deliveryAddress || deliveryAddress.trim() === '') {
+        setAddressError('La dirección es obligatoria para Domicilio');
+        isValid = false;
+      }
+      if (!phoneNumber || phoneNumber.trim() === '') {
+        setPhoneError('El teléfono es obligatorio para Domicilio');
+        isValid = false;
+      }
     }
 
-
-    
     if (!isValid) {
       return;
     }
 
-    
     // Mapear items del carrito al formato esperado por el DTO del backend
     // IMPORTANTE: Expandir items según su cantidad ya que el backend no maneja quantity
     const itemsForBackend: OrderItemDtoForBackend[] = [];
-    
+
     items.forEach((item: CartItem) => {
       // Crear un item individual por cada unidad de la cantidad
       for (let i = 0; i < item.quantity; i++) {
@@ -567,14 +630,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
           preparationNotes: item.preparationNotes || null,
           // Mapear modificadores al formato del backend
-          modifiers: item.modifiers && item.modifiers.length > 0 
-            ? item.modifiers.map(mod => ({
-                modifierId: mod.id, // ID del ProductModifier (la opción específica)
-                modifierOptionId: null, // Campo opcional, no se usa actualmente
-                quantity: 1, // Por defecto 1
-                price: mod.price || null
-              }))
-            : undefined
+          modifiers:
+            item.modifiers && item.modifiers.length > 0
+              ? item.modifiers.map((mod) => ({
+                  modifierId: mod.id, // ID del ProductModifier (la opción específica)
+                  modifierOptionId: null, // Campo opcional, no se usa actualmente
+                  quantity: 1, // Por defecto 1
+                  price: mod.price || null,
+                }))
+              : undefined,
         });
       }
     });
@@ -584,20 +648,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     if (phoneNumber && phoneNumber.trim() !== '') {
       // Mantener el formato original del teléfono, solo validar longitud
       formattedPhone = phoneNumber.trim();
-      
+
       // Si no empieza con +, agregar +52 por defecto (México)
       if (!formattedPhone.startsWith('+')) {
         formattedPhone = `+52${formattedPhone}`;
       }
-      
+
       // Validar longitud mínima y máxima (contando solo dígitos)
       const digitsOnly = formattedPhone.replace(/\D/g, '');
       if (digitsOnly.length < 10) {
-        setPhoneError("El teléfono debe tener al menos 10 dígitos");
+        setPhoneError('El teléfono debe tener al menos 10 dígitos');
         return;
       }
       if (digitsOnly.length > 15) {
-        setPhoneError("El teléfono no puede tener más de 15 dígitos");
+        setPhoneError('El teléfono no puede tener más de 15 dígitos');
         return;
       }
     }
@@ -608,21 +672,34 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       subtotal,
       total,
       items: itemsForBackend,
-      tableId: orderType === OrderTypeEnum.DINE_IN ? selectedTableId ?? undefined : undefined, // Usar Enum
+      tableId:
+        orderType === OrderTypeEnum.DINE_IN
+          ? (selectedTableId ?? undefined)
+          : undefined, // Usar Enum
       scheduledAt: scheduledTime ?? undefined,
-      customerName: (orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY) ? customerName : undefined, // Include for both TAKE_AWAY and DELIVERY
-      phoneNumber: (orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY) && formattedPhone ? formattedPhone : undefined, // Usar teléfono formateado
-      deliveryAddress: orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined, // Usar Enum
+      customerName:
+        orderType === OrderTypeEnum.TAKE_AWAY ||
+        orderType === OrderTypeEnum.DELIVERY
+          ? customerName
+          : undefined, // Include for both TAKE_AWAY and DELIVERY
+      phoneNumber:
+        (orderType === OrderTypeEnum.TAKE_AWAY ||
+          orderType === OrderTypeEnum.DELIVERY) &&
+        formattedPhone
+          ? formattedPhone
+          : undefined, // Usar teléfono formateado
+      deliveryAddress:
+        orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined, // Usar Enum
       notes: orderNotes || undefined,
     };
 
     if (!orderDetails.userId) {
-        console.error("Error: Falta el ID del usuario al confirmar la orden.");
-        return; // Detener el proceso si falta el userId
+      console.error('Error: Falta el ID del usuario al confirmar la orden.');
+      return; // Detener el proceso si falta el userId
     }
 
     setIsConfirming(true); // Marcar como procesando
-    
+
     try {
       await onConfirmOrder(orderDetails);
       // Si llegamos aquí, la orden fue exitosa
@@ -634,18 +711,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     } catch (error) {
       // Solo re-habilitar si hubo un error
       setIsConfirming(false);
-      console.error("Error en handleConfirm:", error);
+      console.error('Error en handleConfirm:', error);
     }
   };
 
-  
   const selectedAreaName = useMemo(
     () => areasData?.find((a: any) => a.id === selectedAreaId)?.name,
-    [areasData, selectedAreaId]
+    [areasData, selectedAreaId],
   );
   const selectedTableName = useMemo(
     () => tablesData?.find((t) => t.id === selectedTableId)?.name,
-    [tablesData, selectedTableId]
+    [tablesData, selectedTableId],
   );
 
   const showTimePicker = () => setTimePickerVisible(true);
@@ -668,31 +744,39 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const formattedScheduledTime = useMemo(() => {
     if (!scheduledTime) return null;
     try {
-      return format(scheduledTime, "p", { locale: es });
+      return format(scheduledTime, 'p', { locale: es });
     } catch (error) {
-      console.error("Error formatting time:", error);
-      return "Hora inválida";
+      console.error('Error formatting time:', error);
+      return 'Hora inválida';
     }
   }, [scheduledTime]);
-  
+
   // Función para detectar si hay cambios en modo edición
   const hasUnsavedChanges = useCallback(() => {
     if (!isEditMode || !orderData) return false;
-    
+
     // Comparar tipo de orden
     if (editOrderType !== orderData.orderType) return true;
-    
+
     // Comparar mesa (solo para DINE_IN)
-    if (editOrderType === OrderTypeEnum.DINE_IN && editSelectedTableId !== orderData.tableId) return true;
-    
+    if (
+      editOrderType === OrderTypeEnum.DINE_IN &&
+      editSelectedTableId !== orderData.tableId
+    )
+      return true;
+
     // Comparar hora programada
-    const originalScheduledTime = orderData.scheduledAt ? new Date(orderData.scheduledAt).getTime() : null;
-    const currentScheduledTime = editScheduledTime ? editScheduledTime.getTime() : null;
+    const originalScheduledTime = orderData.scheduledAt
+      ? new Date(orderData.scheduledAt).getTime()
+      : null;
+    const currentScheduledTime = editScheduledTime
+      ? editScheduledTime.getTime()
+      : null;
     if (originalScheduledTime !== currentScheduledTime) return true;
-    
+
     // Comparar datos del cliente
     if (editCustomerName !== (orderData.customerName || '')) return true;
-    
+
     // Comparar teléfono considerando el formato
     let originalPhone = orderData.phoneNumber || '';
     if (originalPhone.startsWith('+52')) {
@@ -701,182 +785,230 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       originalPhone = originalPhone.substring(2);
     }
     if (editPhoneNumber !== originalPhone) return true;
-    
+
     if (editDeliveryAddress !== (orderData.deliveryAddress || '')) return true;
     if (editOrderNotes !== (orderData.notes || '')) return true;
-    
+
     // Comparar items
     const originalItems = orderData.orderItems || [];
-    
+
     // Si algún item tiene un ID temporal (new-*), hay cambios
-    if (editItems.some(item => item.id.startsWith('new-'))) return true;
-    
+    if (editItems.some((item) => item.id.startsWith('new-'))) return true;
+
     // Calcular la cantidad total de items originales
     const originalTotalQuantity = originalItems.length; // Backend envía items individuales
-    const editTotalQuantity = editItems.reduce((sum, item) => sum + item.quantity, 0);
-    
+    const editTotalQuantity = editItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+
     // Si la cantidad total de items cambió, hay cambios
     if (originalTotalQuantity !== editTotalQuantity) return true;
-    
+
     // Crear un mapa de items agrupados desde los items originales para comparación
     const originalGroupedMap = new Map<string, number>();
-    
+
     originalItems.forEach((item: any) => {
       // Crear una clave única para agrupar items idénticos
-      const modifierIds = (item.modifiers || []).map((m: any) => m.modifierId).sort().join(',');
+      const modifierIds = (item.modifiers || [])
+        .map((m: any) => m.modifierId)
+        .sort()
+        .join(',');
       const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
-      
+
       const currentQuantity = originalGroupedMap.get(groupKey) || 0;
       originalGroupedMap.set(groupKey, currentQuantity + 1);
     });
-    
+
     // Crear un mapa similar para los items editados
     const editGroupedMap = new Map<string, number>();
-    
+
     editItems.forEach((item) => {
       if (!item.id.startsWith('new-')) {
-        const modifierIds = item.modifiers.map(m => m.id).sort().join(',');
+        const modifierIds = item.modifiers
+          .map((m) => m.id)
+          .sort()
+          .join(',');
         const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
-        
+
         editGroupedMap.set(groupKey, item.quantity);
       }
     });
-    
+
     // Comparar los mapas
     if (originalGroupedMap.size !== editGroupedMap.size) return true;
-    
+
     for (const [key, originalQuantity] of originalGroupedMap) {
       const editQuantity = editGroupedMap.get(key);
       if (editQuantity === undefined || editQuantity !== originalQuantity) {
         return true;
       }
     }
-    
+
     return false;
-  }, [isEditMode, orderData, editOrderType, editSelectedTableId, editScheduledTime, 
-      editCustomerName, editPhoneNumber, editDeliveryAddress, editOrderNotes, editItems]);
+  }, [
+    isEditMode,
+    orderData,
+    editOrderType,
+    editSelectedTableId,
+    editScheduledTime,
+    editCustomerName,
+    editPhoneNumber,
+    editDeliveryAddress,
+    editOrderNotes,
+    editItems,
+  ]);
 
   // Función para manejar la edición de un item del carrito
-  const handleEditCartItem = useCallback((item: CartItem) => {
-    if (!isEditMode) {
-      // En modo creación, usar la función pasada por props
-      if (onEditItem) {
-        onEditItem(item);
-      }
-    } else {
-      // Verificar el estado del item antes de permitir edición
-      if (item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED') {
-        // No permitir editar items listos o entregados
-        showSnackbar({ 
-          message: `No se puede editar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`, 
-          type: "error" 
-        });
-        return;
-      }
-      
-      const proceedWithEdit = () => {
-        // En modo edición, buscar el producto real del menú
-        if (!menu || !Array.isArray(menu)) {
-          console.warn("El menú no está disponible");
+  const handleEditCartItem = useCallback(
+    (item: CartItem) => {
+      if (!isEditMode) {
+        // En modo creación, usar la función pasada por props
+        if (onEditItem) {
+          onEditItem(item);
+        }
+      } else {
+        // Verificar el estado del item antes de permitir edición
+        if (
+          item.preparationStatus === 'READY' ||
+          item.preparationStatus === 'DELIVERED'
+        ) {
+          // No permitir editar items listos o entregados
+          showSnackbar({
+            message: `No se puede editar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+            type: 'error',
+          });
           return;
         }
-        
-        // Buscar el producto en la estructura anidada del menú
-        let product: Product | undefined;
-        
-        for (const category of menu as FullMenuCategory[]) {
-          if (category.subcategories && Array.isArray(category.subcategories)) {
-            for (const subcategory of category.subcategories) {
-              if (subcategory.products && Array.isArray(subcategory.products)) {
-                product = subcategory.products.find((p: Product) => p.id === item.productId);
-                if (product) break;
+
+        const proceedWithEdit = () => {
+          // En modo edición, buscar el producto real del menú
+          if (!menu || !Array.isArray(menu)) {
+            console.warn('El menú no está disponible');
+            return;
+          }
+
+          // Buscar el producto en la estructura anidada del menú
+          let product: Product | undefined;
+
+          for (const category of menu as FullMenuCategory[]) {
+            if (
+              category.subcategories &&
+              Array.isArray(category.subcategories)
+            ) {
+              for (const subcategory of category.subcategories) {
+                if (
+                  subcategory.products &&
+                  Array.isArray(subcategory.products)
+                ) {
+                  product = subcategory.products.find(
+                    (p: Product) => p.id === item.productId,
+                  );
+                  if (product) break;
+                }
               }
             }
+            if (product) break;
           }
-          if (product) break;
-        }
-        
-        if (product) {
-          setEditingItemFromList(item);
-          setEditingProduct(product);
-        } else {
-          // Si no encontramos el producto en el menú, crear uno temporal
-          console.warn("Producto no encontrado en el menú, usando datos temporales");
-          setEditingItemFromList(item);
-          
-          const tempProduct: Product = {
-            id: item.productId,
-            name: item.productName,
-            price: item.unitPrice,
-            hasVariants: !!item.variantId,
-            variants: item.variantId ? [{
-              id: item.variantId,
-              name: item.variantName || '',
-              price: item.unitPrice,
-            }] : [],
-            modifierGroups: [], // Sin grupos de modificadores
-            photo: null,
-            subcategoryId: '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          
-          setEditingProduct(tempProduct);
-        }
-      };
-      
-      if (item.preparationStatus === 'IN_PROGRESS') {
-        // Pedir confirmación para items en preparación
-        setModifyingItemName(item.productName);
-        setPendingModifyAction(() => proceedWithEdit);
-        setShowModifyInProgressConfirmation(true);
-      } else {
-        // Permitir editar items pendientes o cancelados sin confirmación
-        proceedWithEdit();
-      }
-    }
-  }, [isEditMode, onEditItem, menu, showSnackbar]);
-  
-  // Función para actualizar un item editado
-  const handleUpdateEditedItem = useCallback((
-    itemId: string,
-    quantity: number,
-    modifiers: CartItemModifier[],
-    preparationNotes?: string,
-    variantId?: string,
-    variantName?: string,
-    unitPrice?: number
-  ) => {
-    if (!isEditMode) return;
-    
-    setEditItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const modifiersPrice = modifiers.reduce(
-          (sum, mod) => sum + Number(mod.price || 0),
-          0
-        );
-        const finalUnitPrice = unitPrice !== undefined ? unitPrice : item.unitPrice;
-        const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
-        
-        return {
-          ...item,
-          quantity,
-          modifiers,
-          preparationNotes: preparationNotes !== undefined ? preparationNotes : item.preparationNotes,
-          variantId: variantId !== undefined ? variantId : item.variantId,
-          variantName: variantName !== undefined ? variantName : item.variantName,
-          unitPrice: finalUnitPrice,
-          totalPrice: newTotalPrice,
-        };
-      }
-      return item;
-    }));
-    
-    // Cerrar el modal de edición
-    setEditingItemFromList(null);
-    setEditingProduct(null);
-  }, [isEditMode]);
 
+          if (product) {
+            setEditingItemFromList(item);
+            setEditingProduct(product);
+          } else {
+            // Si no encontramos el producto en el menú, crear uno temporal
+            console.warn(
+              'Producto no encontrado en el menú, usando datos temporales',
+            );
+            setEditingItemFromList(item);
+
+            const tempProduct: Product = {
+              id: item.productId,
+              name: item.productName,
+              price: item.unitPrice,
+              hasVariants: !!item.variantId,
+              variants: item.variantId
+                ? [
+                    {
+                      id: item.variantId,
+                      name: item.variantName || '',
+                      price: item.unitPrice,
+                    },
+                  ]
+                : [],
+              modifierGroups: [], // Sin grupos de modificadores
+              photo: null,
+              subcategoryId: '',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+
+            setEditingProduct(tempProduct);
+          }
+        };
+
+        if (item.preparationStatus === 'IN_PROGRESS') {
+          // Pedir confirmación para items en preparación
+          setModifyingItemName(item.productName);
+          setPendingModifyAction(() => proceedWithEdit);
+          setShowModifyInProgressConfirmation(true);
+        } else {
+          // Permitir editar items pendientes o cancelados sin confirmación
+          proceedWithEdit();
+        }
+      }
+    },
+    [isEditMode, onEditItem, menu, showSnackbar],
+  );
+
+  // Función para actualizar un item editado
+  const handleUpdateEditedItem = useCallback(
+    (
+      itemId: string,
+      quantity: number,
+      modifiers: CartItemModifier[],
+      preparationNotes?: string,
+      variantId?: string,
+      variantName?: string,
+      unitPrice?: number,
+    ) => {
+      if (!isEditMode) return;
+
+      setEditItems((prev) =>
+        prev.map((item) => {
+          if (item.id === itemId) {
+            const modifiersPrice = modifiers.reduce(
+              (sum, mod) => sum + Number(mod.price || 0),
+              0,
+            );
+            const finalUnitPrice =
+              unitPrice !== undefined ? unitPrice : item.unitPrice;
+            const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
+
+            return {
+              ...item,
+              quantity,
+              modifiers,
+              preparationNotes:
+                preparationNotes !== undefined
+                  ? preparationNotes
+                  : item.preparationNotes,
+              variantId: variantId !== undefined ? variantId : item.variantId,
+              variantName:
+                variantName !== undefined ? variantName : item.variantName,
+              unitPrice: finalUnitPrice,
+              totalPrice: newTotalPrice,
+            };
+          }
+          return item;
+        }),
+      );
+
+      // Cerrar el modal de edición
+      setEditingItemFromList(null);
+      setEditingProduct(null);
+    },
+    [isEditMode],
+  );
 
   // Helper function to render fields in order
   const renderFields = () => {
@@ -918,12 +1050,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   )}
                 </Menu>
                 {areaError && !errorAreas && (
-                  <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                  <HelperText
+                    type="error"
+                    visible={true}
+                    style={styles.helperTextFix}
+                  >
                     {areaError}
                   </HelperText>
                 )}
                 {errorAreas && (
-                  <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                  <HelperText
+                    type="error"
+                    visible={true}
+                    style={styles.helperTextFix}
+                  >
                     Error al cargar áreas
                   </HelperText>
                 )}
@@ -941,7 +1081,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       onPress={() => setTableMenuVisible(true)}
                       isLoading={isLoadingTables}
                       error={!!tableError || !!errorTables}
-                      disabled={!selectedAreaId || isLoadingTables || isLoadingAreas}
+                      disabled={
+                        !selectedAreaId || isLoadingTables || isLoadingAreas
+                      }
                     />
                   }
                 >
@@ -956,20 +1098,29 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       title={table.name}
                     />
                   ))}
-                  {selectedAreaId && tablesData?.length === 0 && !isLoadingTables && !errorTables && (
-                    <Menu.Item title="No hay mesas" disabled />
-                  )}
+                  {selectedAreaId &&
+                    tablesData?.length === 0 &&
+                    !isLoadingTables &&
+                    !errorTables && <Menu.Item title="No hay mesas" disabled />}
                   {errorTables && (
                     <Menu.Item title="Error al cargar mesas" disabled />
                   )}
                 </Menu>
                 {tableError && !errorTables && (
-                  <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                  <HelperText
+                    type="error"
+                    visible={true}
+                    style={styles.helperTextFix}
+                  >
                     {tableError}
                   </HelperText>
                 )}
                 {errorTables && (
-                  <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                  <HelperText
+                    type="error"
+                    visible={true}
+                    style={styles.helperTextFix}
+                  >
                     Error al cargar mesas
                   </HelperText>
                 )}
@@ -1018,7 +1169,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 autoCorrect={false}
               />
               {customerNameError && (
-                <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                <HelperText
+                  type="error"
+                  visible={true}
+                  style={styles.helperTextFix}
+                >
                   {customerNameError}
                 </HelperText>
               )}
@@ -1047,7 +1202,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 )}
               </View>
               {phoneError && (
-                <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                <HelperText
+                  type="error"
+                  visible={true}
+                  style={styles.helperTextFix}
+                >
                   {phoneError}
                 </HelperText>
               )}
@@ -1111,7 +1270,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 isInModal={true}
               />
               {addressError && (
-                <HelperText type="error" visible={true} style={styles.helperTextFix}>
+                <HelperText
+                  type="error"
+                  visible={true}
+                  style={styles.helperTextFix}
+                >
                   {addressError}
                 </HelperText>
               )}
@@ -1123,7 +1286,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 key={`phone-input-delivery-${orderType}`} // Key única y específica
                 label="Teléfono *"
                 value={phoneNumber}
-                onChangeText={(text) => { // Asegurar que la función esté bien definida aquí
+                onChangeText={(text) => {
+                  // Asegurar que la función esté bien definida aquí
                   setPhoneNumber(text);
                   if (phoneError) {
                     setPhoneError(null);
@@ -1136,7 +1300,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               />
               <View style={styles.phoneHelperContainer}>
                 {phoneError ? (
-                  <HelperText type="error" visible={true} style={[styles.helperTextFix, styles.phoneError]}>
+                  <HelperText
+                    type="error"
+                    visible={true}
+                    style={[styles.helperTextFix, styles.phoneError]}
+                  >
                     {phoneError}
                   </HelperText>
                 ) : (
@@ -1194,7 +1362,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       </Portal>
     );
   }
-  
+
   // Mostrar error si falló la carga en modo edición
   if (isEditMode && isErrorOrder) {
     return (
@@ -1229,7 +1397,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         dismissableBackButton={false}
       >
         <GestureHandlerRootView style={styles.container}>
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
             <View>
               {isEditMode ? (
                 <View style={styles.customHeader}>
@@ -1245,16 +1416,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     }}
                     iconColor={theme.colors.onSurface}
                   />
-                  
+
                   <Text style={styles.headerTitle}>
-                    {orderNumber && orderDate 
+                    {orderNumber && orderDate
                       ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
-                      : orderNumber 
+                      : orderNumber
                         ? `Editando Orden #${orderNumber}`
-                        : "Editar Orden"
-                    }
+                        : 'Editar Orden'}
                   </Text>
-                  
+
                   <Menu
                     visible={showOptionsMenu}
                     onDismiss={() => setShowOptionsMenu(false)}
@@ -1287,7 +1457,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 </View>
               ) : (
                 <OrderHeader
-                  title={orderNumber ? `Orden #${orderNumber}` : "Resumen de Orden"}
+                  title={
+                    orderNumber ? `Orden #${orderNumber}` : 'Resumen de Orden'
+                  }
                   onBackPress={() => onClose?.()}
                   itemCount={totalItemsCount}
                   onCartPress={() => {}}
@@ -1297,7 +1469,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             </View>
           </TouchableWithoutFeedback>
 
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -1365,22 +1537,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   });
 
                   return (
-                    <Animated.View 
+                    <Animated.View
                       style={[
                         styles.deleteActionContainer,
                         {
                           opacity,
                           transform: [{ translateX }],
-                        }
+                        },
                       ]}
                     >
-                      <Animated.View 
+                      <Animated.View
                         style={[
                           styles.deleteAction,
-                          { 
+                          {
                             backgroundColor: theme.colors.error,
-                            transform: [{ scale }]
-                          }
+                            transform: [{ scale }],
+                          },
                         ]}
                       >
                         <View style={styles.deleteIconContainer}>
@@ -1396,7 +1568,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     </Animated.View>
                   );
                 };
-                
+
                 return (
                   <Swipeable
                     key={item.id}
@@ -1420,108 +1592,171 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       activeOpacity={0.7}
                     >
                       <List.Item
-                      // Mover title y description a un View contenedor para controlar el ancho
-                      title={() => (
-                      <View style={styles.itemTextContainer}>
-                        <View style={styles.itemHeaderRow}>
-                          <Text style={styles.itemTitleText}>
-                            {`${item.quantity}x ${String(item.productName ?? "")}${item.variantName ? ` (${String(item.variantName ?? "")})` : ""}`}
-                          </Text>
-                          {/* Mostrar estado de preparación solo en modo edición */}
-                          {isEditMode && item.preparationStatus && (
-                            <View style={[
-                              styles.statusBadge, 
-                              { backgroundColor: getPreparationStatusColor(item.preparationStatus, theme) + '20' }
-                            ]}>
-                              <View style={[
-                                styles.statusDot,
-                                { backgroundColor: getPreparationStatusColor(item.preparationStatus, theme) }
-                              ]} />
-                              <Text style={[
-                                styles.statusText,
-                                { color: getPreparationStatusColor(item.preparationStatus, theme) }
-                              ]}>
-                                {getPreparationStatusText(item.preparationStatus)}
+                        // Mover title y description a un View contenedor para controlar el ancho
+                        title={() => (
+                          <View style={styles.itemTextContainer}>
+                            <View style={styles.itemHeaderRow}>
+                              <Text style={styles.itemTitleText}>
+                                {`${item.quantity}x ${String(item.productName ?? '')}${item.variantName ? ` (${String(item.variantName ?? '')})` : ''}`}
                               </Text>
+                              {/* Mostrar estado de preparación solo en modo edición */}
+                              {isEditMode && item.preparationStatus && (
+                                <View
+                                  style={[
+                                    styles.statusBadge,
+                                    {
+                                      backgroundColor:
+                                        getPreparationStatusColor(
+                                          item.preparationStatus,
+                                          theme,
+                                        ) + '20',
+                                    },
+                                  ]}
+                                >
+                                  <View
+                                    style={[
+                                      styles.statusDot,
+                                      {
+                                        backgroundColor:
+                                          getPreparationStatusColor(
+                                            item.preparationStatus,
+                                            theme,
+                                          ),
+                                      },
+                                    ]}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.statusText,
+                                      {
+                                        color: getPreparationStatusColor(
+                                          item.preparationStatus,
+                                          theme,
+                                        ),
+                                      },
+                                    ]}
+                                  >
+                                    {getPreparationStatusText(
+                                      item.preparationStatus,
+                                    )}
+                                  </Text>
+                                </View>
+                              )}
                             </View>
-                          )}
-                        </View>
-                        {(() => { // Render description condicionalmente
-                          const hasModifiers = item.modifiers && item.modifiers.length > 0;
-                          const hasNotes = item.preparationNotes && item.preparationNotes.trim() !== "";
+                            {(() => {
+                              // Render description condicionalmente
+                              const hasModifiers =
+                                item.modifiers && item.modifiers.length > 0;
+                              const hasNotes =
+                                item.preparationNotes &&
+                                item.preparationNotes.trim() !== '';
 
-                          if (hasModifiers && hasNotes) {
-                            return (
-                              <View>
-                                {item.modifiers.map((mod, index) => (
-                                  <Text key={mod.id || index} style={styles.itemDescription}>
-                                    • {mod.name} {mod.price && mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
+                              if (hasModifiers && hasNotes) {
+                                return (
+                                  <View>
+                                    {item.modifiers.map((mod, index) => (
+                                      <Text
+                                        key={mod.id || index}
+                                        style={styles.itemDescription}
+                                      >
+                                        • {mod.name}{' '}
+                                        {mod.price && mod.price > 0
+                                          ? `(+$${mod.price.toFixed(2)})`
+                                          : ''}
+                                      </Text>
+                                    ))}
+                                    <Text
+                                      style={[
+                                        styles.itemDescription,
+                                        styles.notesText,
+                                      ]}
+                                    >
+                                      Notas: {item.preparationNotes}
+                                    </Text>
+                                  </View>
+                                );
+                              } else if (hasModifiers) {
+                                return (
+                                  <View>
+                                    {item.modifiers.map((mod, index) => (
+                                      <Text
+                                        key={mod.id || index}
+                                        style={styles.itemDescription}
+                                      >
+                                        • {mod.name}{' '}
+                                        {mod.price && mod.price > 0
+                                          ? `(+$${mod.price.toFixed(2)})`
+                                          : ''}
+                                      </Text>
+                                    ))}
+                                  </View>
+                                );
+                              } else if (hasNotes) {
+                                return (
+                                  <Text
+                                    style={[
+                                      styles.itemDescription,
+                                      styles.notesText,
+                                    ]}
+                                  >
+                                    Notas: {item.preparationNotes}
                                   </Text>
-                                ))}
-                                <Text style={[styles.itemDescription, styles.notesText]}>
-                                  Notas: {item.preparationNotes}
-                                </Text>
-                              </View>
-                            );
-                          } else if (hasModifiers) {
-                            return (
-                              <View>
-                                {item.modifiers.map((mod, index) => (
-                                  <Text key={mod.id || index} style={styles.itemDescription}>
-                                    • {mod.name} {mod.price && mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
-                                  </Text>
-                                ))}
-                              </View>
-                            );
-                          } else if (hasNotes) {
-                            return (
-                              <Text style={[styles.itemDescription, styles.notesText]}>
-                                Notas: {item.preparationNotes}
+                                );
+                              } else {
+                                return null;
+                              }
+                            })()}
+                          </View>
+                        )}
+                        // titleNumberOfLines y description ya no se usan directamente aquí
+                        right={() => (
+                          // Usar paréntesis para retorno implícito si es una sola expresión
+                          <View style={styles.itemActionsContainer}>
+                            <View style={styles.quantityActions}>
+                              <IconButton
+                                icon="minus-circle-outline"
+                                size={20} // Reducir tamaño de icono
+                                onPress={() =>
+                                  updateItemQuantity(item.id, item.quantity - 1)
+                                }
+                                style={styles.quantityButton}
+                                disabled={item.quantity <= 1} // Deshabilitar si es 1
+                              />
+                              <Text style={styles.quantityText}>
+                                {item.quantity}
                               </Text>
-                            );
-                          } else {
-                            return null;
-                          }
-                        })()}
-                      </View>
-                    )}
-                    // titleNumberOfLines y description ya no se usan directamente aquí
-                    right={() => ( // Usar paréntesis para retorno implícito si es una sola expresión
-                      <View style={styles.itemActionsContainer}>
-                        <View style={styles.quantityActions}>
-                          <IconButton
-                            icon="minus-circle-outline"
-                            size={20} // Reducir tamaño de icono
-                            onPress={() =>
-                              updateItemQuantity(item.id, item.quantity - 1)
-                            }
-                            style={styles.quantityButton}
-                            disabled={item.quantity <= 1} // Deshabilitar si es 1
-                          />
-                          <Text style={styles.quantityText}>{item.quantity}</Text>
-                          <IconButton
-                            icon="plus-circle-outline"
-                            size={20} // Reducir tamaño de icono
-                            onPress={() =>
-                              updateItemQuantity(item.id, item.quantity + 1)
-                            }
-                            style={styles.quantityButton}
-                          />
-                        </View>
-                        <View style={styles.priceContainer}>
-                          <Text style={styles.itemPrice}>
-                            ${item.totalPrice.toFixed(2)}
-                          </Text>
-                          {item.quantity > 1 && (
-                            <Text style={styles.unitPriceText}>
-                              (${((item.unitPrice + item.modifiers.reduce((sum, mod) => sum + Number(mod.price || 0), 0))).toFixed(2)} c/u)
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    )}
-                    style={styles.listItem}
-                  />
+                              <IconButton
+                                icon="plus-circle-outline"
+                                size={20} // Reducir tamaño de icono
+                                onPress={() =>
+                                  updateItemQuantity(item.id, item.quantity + 1)
+                                }
+                                style={styles.quantityButton}
+                              />
+                            </View>
+                            <View style={styles.priceContainer}>
+                              <Text style={styles.itemPrice}>
+                                ${item.totalPrice.toFixed(2)}
+                              </Text>
+                              {item.quantity > 1 && (
+                                <Text style={styles.unitPriceText}>
+                                  ($
+                                  {(
+                                    item.unitPrice +
+                                    item.modifiers.reduce(
+                                      (sum, mod) =>
+                                        sum + Number(mod.price || 0),
+                                      0,
+                                    )
+                                  ).toFixed(2)}{' '}
+                                  c/u)
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                        )}
+                        style={styles.listItem}
+                      />
                     </TouchableOpacity>
                   </Swipeable>
                 );
@@ -1530,26 +1765,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
             {/* Botón para añadir productos en modo edición */}
             {isEditMode && (
-              <Button 
+              <Button
                 onPress={() => {
-                  console.log('Botón Añadir Productos presionado', { 
-                    hasNavigation: !!navigation, 
+                  console.log('Botón Añadir Productos presionado', {
+                    hasNavigation: !!navigation,
                     hasOnAddProducts: !!onAddProducts,
                     orderId,
                     itemsCount: items.length,
                     isEditMode,
-                    items: items
+                    items: items,
                   });
-                  
+
                   // Si hay un callback onAddProducts, usarlo
                   if (onAddProducts) {
                     onAddProducts(items);
-                  } 
+                  }
                   // Si no, intentar navegar directamente
                   else if (navigation) {
                     // Cerrar el modal primero para evitar problemas de navegación
                     onClose?.();
-                    
+
                     // Pequeño delay para asegurar que el modal se cierre antes de navegar
                     setTimeout(() => {
                       console.log('Navegando a CreateOrder con params:', {
@@ -1573,11 +1808,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       });
                     }, 100);
                   } else {
-                    console.error('Ni navigation ni onAddProducts están disponibles en OrderCartDetail');
+                    console.error(
+                      'Ni navigation ni onAddProducts están disponibles en OrderCartDetail',
+                    );
                   }
-                }} 
-                mode="outlined" 
-                style={{ marginTop: theme.spacing.m, marginBottom: theme.spacing.m }}
+                }}
+                mode="outlined"
+                style={{
+                  marginTop: theme.spacing.m,
+                  marginBottom: theme.spacing.m,
+                }}
                 icon="plus-circle-outline"
               >
                 Añadir Productos
@@ -1597,7 +1837,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 ${total.toFixed(2)}
               </Text>
             </View>
-            
+
             {/* Mostrar información de pagos solo en modo edición */}
             {isEditMode && totalPaid > 0 && (
               <>
@@ -1612,13 +1852,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Text style={[styles.totalsText, { fontWeight: 'bold' }]}>
                       Pendiente:
                     </Text>
-                    <Text style={[
-                      styles.totalsValue, 
-                      { 
-                        fontWeight: 'bold',
-                        color: theme.colors.error
-                      }
-                    ]}>
+                    <Text
+                      style={[
+                        styles.totalsValue,
+                        {
+                          fontWeight: 'bold',
+                          color: theme.colors.error,
+                        },
+                      ]}
+                    >
                       ${pendingAmount.toFixed(2)}
                     </Text>
                   </View>
@@ -1635,161 +1877,167 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               disabled={
                 isConfirming || // Deshabilitar mientras se procesa
                 items.length === 0 ||
-                (orderType === OrderTypeEnum.DINE_IN && (!selectedAreaId || !selectedTableId)) || // Usar Enum
-                (orderType === OrderTypeEnum.TAKE_AWAY && (!customerName || customerName.trim() === '')) || // Usar Enum
-                (orderType === OrderTypeEnum.DELIVERY && (!deliveryAddress || deliveryAddress.trim() === '')) || // Usar Enum
-                (orderType === OrderTypeEnum.DELIVERY && (!phoneNumber || phoneNumber.trim() === '')) // Usar Enum
+                (orderType === OrderTypeEnum.DINE_IN &&
+                  (!selectedAreaId || !selectedTableId)) || // Usar Enum
+                (orderType === OrderTypeEnum.TAKE_AWAY &&
+                  (!customerName || customerName.trim() === '')) || // Usar Enum
+                (orderType === OrderTypeEnum.DELIVERY &&
+                  (!deliveryAddress || deliveryAddress.trim() === '')) || // Usar Enum
+                (orderType === OrderTypeEnum.DELIVERY &&
+                  (!phoneNumber || phoneNumber.trim() === '')) // Usar Enum
               }
               style={styles.confirmButton}
               loading={isConfirming} // Mostrar indicador de carga
             >
-              {isConfirming 
-                ? (isEditMode ? "Guardando..." : "Enviando...") 
-                : (isEditMode ? "Guardar Cambios" : "Enviar Orden")
-              }
+              {isConfirming
+                ? isEditMode
+                  ? 'Guardando...'
+                  : 'Enviando...'
+                : isEditMode
+                  ? 'Guardar Cambios'
+                  : 'Enviar Orden'}
             </Button>
           </View>
 
-        {/* Modals */}
-        <DateTimePickerModal
-          isVisible={isTimePickerVisible}
-          mode="time"
-          minimumDate={new Date()}
-          onConfirm={handleTimeConfirm}
-          onCancel={hideTimePicker}
-          date={scheduledTime || new Date()}
-          locale="es_ES"
-          minuteInterval={15}
-        />
+          {/* Modals */}
+          <DateTimePickerModal
+            isVisible={isTimePickerVisible}
+            mode="time"
+            minimumDate={new Date()}
+            onConfirm={handleTimeConfirm}
+            onCancel={hideTimePicker}
+            date={scheduledTime || new Date()}
+            locale="es_ES"
+            minuteInterval={15}
+          />
 
-        <ConfirmationModal
-          visible={isTimeAlertVisible}
-          title="Hora Inválida"
-          message="No puedes seleccionar una hora que ya ha pasado. Por favor, elige una hora futura."
-          confirmText="Entendido"
-          onConfirm={() => setTimeAlertVisible(false)}
-        />
-        
-        
-        {/* Modal de confirmación para descartar cambios */}
-        <ConfirmationModal
-          visible={showExitConfirmation}
-          title="¿Descartar cambios?"
-          message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
-          confirmText="Descartar"
-          cancelText="Cancelar"
-          onConfirm={() => {
-            setShowExitConfirmation(false);
-            onClose?.();
-          }}
-          onCancel={() => setShowExitConfirmation(false)}
-        />
-        
-        {/* Modal de confirmación para cancelar la orden */}
-        <ConfirmationModal
-          visible={showCancelConfirmation}
-          title="¿Cancelar orden?"
-          message={`¿Estás seguro de que quieres cancelar la orden #${orderNumber}? Esta acción no se puede deshacer.`}
-          confirmText="Cancelar Orden"
-          cancelText="No, mantener"
-          onConfirm={() => {
-            setShowCancelConfirmation(false);
-            if (onCancelOrder) {
-              onCancelOrder();
-            }
-          }}
-          onCancel={() => setShowCancelConfirmation(false)}
-        />
-        
-        {/* Modal de confirmación para modificar items en preparación */}
-        <ConfirmationModal
-          visible={showModifyInProgressConfirmation}
-          title="¿Modificar producto en preparación?"
-          message={`El producto "${modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
-          confirmText="Sí, modificar"
-          cancelText="No, cancelar"
-          onConfirm={() => {
-            setShowModifyInProgressConfirmation(false);
-            if (pendingModifyAction) {
-              pendingModifyAction();
-              setPendingModifyAction(null);
-            }
-            setModifyingItemName('');
-          }}
-          onCancel={() => {
-            setShowModifyInProgressConfirmation(false);
-            setPendingModifyAction(null);
-            setModifyingItemName('');
-          }}
-        />
-        
-        {/* Modal de personalización de producto para edición */}
-        {isEditMode && editingProduct && editingItemFromList && (
-          <ProductCustomizationModal
-            visible={true}
-            product={editingProduct}
-            editingItem={editingItemFromList}
-            onDismiss={() => {
-              setEditingItemFromList(null);
-              setEditingProduct(null);
+          <ConfirmationModal
+            visible={isTimeAlertVisible}
+            title="Hora Inválida"
+            message="No puedes seleccionar una hora que ya ha pasado. Por favor, elige una hora futura."
+            confirmText="Entendido"
+            onConfirm={() => setTimeAlertVisible(false)}
+          />
+
+          {/* Modal de confirmación para descartar cambios */}
+          <ConfirmationModal
+            visible={showExitConfirmation}
+            title="¿Descartar cambios?"
+            message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+            confirmText="Descartar"
+            cancelText="Cancelar"
+            onConfirm={() => {
+              setShowExitConfirmation(false);
+              onClose?.();
             }}
-            onAddToCart={() => {}} // No usado en modo edición
-            onUpdateItem={handleUpdateEditedItem}
+            onCancel={() => setShowExitConfirmation(false)}
           />
-        )}
-        
-        {/* Modal de historial de cambios */}
-        {isEditMode && (
-          <OrderHistoryModal
-            visible={showHistoryModal}
-            onDismiss={() => setShowHistoryModal(false)}
-            orderId={orderId}
-            orderNumber={orderNumber}
-          />
-        )}
-        
-        {/* FAB para pagos - solo en modo edición */}
-        {isEditMode && orderId && visible && (
-          <FAB
-            icon={pendingAmount <= 0 ? "check-circle" : "cash-multiple"}
-            style={[
-              styles.paymentFab,
-              { 
-                backgroundColor: pendingAmount <= 0 ? '#4CAF50' : theme.colors.primary
+
+          {/* Modal de confirmación para cancelar la orden */}
+          <ConfirmationModal
+            visible={showCancelConfirmation}
+            title="¿Cancelar orden?"
+            message={`¿Estás seguro de que quieres cancelar la orden #${orderNumber}? Esta acción no se puede deshacer.`}
+            confirmText="Cancelar Orden"
+            cancelText="No, mantener"
+            onConfirm={() => {
+              setShowCancelConfirmation(false);
+              if (onCancelOrder) {
+                onCancelOrder();
               }
-            ]}
-            color="white"
-            onPress={() => setShowPaymentModal(true)}
-            visible={true}
+            }}
+            onCancel={() => setShowCancelConfirmation(false)}
           />
-        )}
-        
-        {/* Modal de pagos */}
-        {showPaymentModal && isEditMode && orderId && (
-          <PaymentModal
-            visible={showPaymentModal}
-            onDismiss={() => setShowPaymentModal(false)}
-            orderId={orderId}
-            orderTotal={total}
-            orderNumber={orderNumber}
+
+          {/* Modal de confirmación para modificar items en preparación */}
+          <ConfirmationModal
+            visible={showModifyInProgressConfirmation}
+            title="¿Modificar producto en preparación?"
+            message={`El producto "${modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
+            confirmText="Sí, modificar"
+            cancelText="No, cancelar"
+            onConfirm={() => {
+              setShowModifyInProgressConfirmation(false);
+              if (pendingModifyAction) {
+                pendingModifyAction();
+                setPendingModifyAction(null);
+              }
+              setModifyingItemName('');
+            }}
+            onCancel={() => {
+              setShowModifyInProgressConfirmation(false);
+              setPendingModifyAction(null);
+              setModifyingItemName('');
+            }}
           />
-        )}
+
+          {/* Modal de personalización de producto para edición */}
+          {isEditMode && editingProduct && editingItemFromList && (
+            <ProductCustomizationModal
+              visible={true}
+              product={editingProduct}
+              editingItem={editingItemFromList}
+              onDismiss={() => {
+                setEditingItemFromList(null);
+                setEditingProduct(null);
+              }}
+              onAddToCart={() => {}} // No usado en modo edición
+              onUpdateItem={handleUpdateEditedItem}
+            />
+          )}
+
+          {/* Modal de historial de cambios */}
+          {isEditMode && (
+            <OrderHistoryModal
+              visible={showHistoryModal}
+              onDismiss={() => setShowHistoryModal(false)}
+              orderId={orderId}
+              orderNumber={orderNumber}
+            />
+          )}
+
+          {/* FAB para pagos - solo en modo edición */}
+          {isEditMode && orderId && visible && (
+            <FAB
+              icon={pendingAmount <= 0 ? 'check-circle' : 'cash-multiple'}
+              style={[
+                styles.paymentFab,
+                {
+                  backgroundColor:
+                    pendingAmount <= 0 ? '#4CAF50' : theme.colors.primary,
+                },
+              ]}
+              color="white"
+              onPress={() => setShowPaymentModal(true)}
+              visible={true}
+            />
+          )}
+
+          {/* Modal de pagos */}
+          {showPaymentModal && isEditMode && orderId && (
+            <PaymentModal
+              visible={showPaymentModal}
+              onDismiss={() => setShowPaymentModal(false)}
+              orderId={orderId}
+              orderTotal={total}
+              orderNumber={orderNumber}
+            />
+          )}
         </GestureHandlerRootView>
       </Modal>
     </Portal>
   );
 };
 
-
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
     modalContent: {
       backgroundColor: theme.colors.background,
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
       margin: 0,
       padding: 0,
-      position: "absolute",
+      position: 'absolute',
       top: 0,
       left: 0,
     },
@@ -1806,45 +2054,48 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     // List Item Styles
     listItem: {
-      flexDirection: 'row',           // 1) Fila
+      flexDirection: 'row', // 1) Fila
       alignItems: 'center',
-      justifyContent: 'space-between',// 2) Separar título y acciones
+      justifyContent: 'space-between', // 2) Separar título y acciones
       paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.s, // controla el “gap” desde el borde
       backgroundColor: theme.colors.surface,
       minHeight: 80, // Altura mínima para mejor experiencia de swipe
     },
 
-    itemTextContainer: { // Contenedor para título y descripción
-      flex: 3,                        // Darle aún más espacio al texto ahora que no hay botón de eliminar
-      marginRight: theme.spacing.xs,  // Pequeño margen para separar de las acciones
-      justifyContent: 'center',       // Centrar texto verticalmente
+    itemTextContainer: {
+      // Contenedor para título y descripción
+      flex: 3, // Darle aún más espacio al texto ahora que no hay botón de eliminar
+      marginRight: theme.spacing.xs, // Pequeño margen para separar de las acciones
+      justifyContent: 'center', // Centrar texto verticalmente
       // backgroundColor: 'lightyellow', // Debug
     },
-    itemTitleText: { // Estilo para el texto del título
-      fontSize: 15,                   // Aumentar tamaño del título
+    itemTitleText: {
+      // Estilo para el texto del título
+      fontSize: 15, // Aumentar tamaño del título
       fontWeight: '500',
       color: theme.colors.onSurface,
-      flexWrap: 'wrap',              // Permitir que el texto se ajuste
-      lineHeight: 20,                // Ajustar altura de línea
+      flexWrap: 'wrap', // Permitir que el texto se ajuste
+      lineHeight: 20, // Ajustar altura de línea
     },
     itemDescription: {
-      fontSize: 13,                  // Aumentar tamaño de descripción
+      fontSize: 13, // Aumentar tamaño de descripción
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
-      flexWrap: 'wrap',             // Permitir que el texto se ajuste
-      lineHeight: 18,               // Ajustar altura de línea
+      flexWrap: 'wrap', // Permitir que el texto se ajuste
+      lineHeight: 18, // Ajustar altura de línea
     },
-    itemActionsContainer: { // Contenedor para acciones (cantidad, precio, borrar)
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-end",
-      flexShrink: 0,                // No permitir que se encoja
+    itemActionsContainer: {
+      // Contenedor para acciones (cantidad, precio, borrar)
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      flexShrink: 0, // No permitir que se encoja
       // backgroundColor: 'lightblue', // Debug
     },
     quantityActions: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       // marginRight: theme.spacing.s, // Adjust spacing as needed
     }, // <<< COMA RESTAURADA
     // quantityButton: { // <<< ESTILO DUPLICADO/INCORRECTO ELIMINADO
@@ -1855,27 +2106,28 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     //   alignItems: "center",
     //   // marginRight: theme.spacing.xs,
     // },
-    quantityButton: { // <<< ESTILO CORRECTO
-        marginHorizontal: -4, // Reducir espacio horizontal entre botones
-        padding: 0,          // Eliminar padding interno
-        // backgroundColor: 'lightgreen', // Debug
+    quantityButton: {
+      // <<< ESTILO CORRECTO
+      marginHorizontal: -4, // Reducir espacio horizontal entre botones
+      padding: 0, // Eliminar padding interno
+      // backgroundColor: 'lightgreen', // Debug
     }, // <<< COMA RESTAURADA
     quantityText: {
-        fontSize: 14,        // Aumentar tamaño
-        fontWeight: 'bold',
-        minWidth: 20,        // Ajustar ancho mínimo
-        textAlign: 'center',
-        marginHorizontal: 2, // Ajustar margen horizontal
-        // backgroundColor: 'pink', // Debug
+      fontSize: 14, // Aumentar tamaño
+      fontWeight: 'bold',
+      minWidth: 20, // Ajustar ancho mínimo
+      textAlign: 'center',
+      marginHorizontal: 2, // Ajustar margen horizontal
+      // backgroundColor: 'pink', // Debug
     }, // <<< COMA RESTAURADA
     itemPrice: {
-      alignSelf: "center",
+      alignSelf: 'center',
       marginRight: theme.spacing.xs, // Reducir espacio
       color: theme.colors.onSurfaceVariant,
-      fontSize: 15,          // Aumentar tamaño
+      fontSize: 15, // Aumentar tamaño
       fontWeight: 'bold',
-      minWidth: 55,          // Ajustar ancho mínimo
-      textAlign: "right",
+      minWidth: 55, // Ajustar ancho mínimo
+      textAlign: 'right',
       // backgroundColor: 'lightcoral', // Debug
     }, // <<< COMA RESTAURADA
     priceContainer: {
@@ -1934,8 +2186,8 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     }, // <<< COMA RESTAURADA
     // End List Item Styles
     totalsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       marginBottom: theme.spacing.xs,
       paddingHorizontal: theme.spacing.xs,
     }, // <<< COMA RESTAURADA
@@ -1944,10 +2196,10 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     }, // <<< COMA RESTAURADA
     totalsValue: {
       fontSize: 16,
-      fontWeight: "bold",
+      fontWeight: 'bold',
     }, // <<< COMA RESTAURADA
     totalLabel: {
-      fontWeight: "bold",
+      fontWeight: 'bold',
       fontSize: 18,
     }, // <<< COMA RESTAURADA
     totalValue: {
@@ -1972,8 +2224,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     dineInSelectorContainer: {
       flex: 1,
     }, // <<< COMA RESTAURADA
-    selectorLoader: {
-    }, // <<< COMA RESTAURADA
+    selectorLoader: {}, // <<< COMA RESTAURADA
     sectionTitleContainer: {
       flexDirection: 'row',
       alignItems: 'baseline',
@@ -1981,7 +2232,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     }, // <<< COMA RESTAURADA
     sectionTitle: {
       fontSize: 16,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       marginBottom: theme.spacing.xs,
     }, // <<< COMA RESTAURADA
     sectionTitleOptional: {
@@ -1990,16 +2241,16 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginLeft: theme.spacing.xs,
     }, // <<< COMA RESTAURADA
     radioGroupHorizontal: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      alignItems: "center",
-      width: "100%",
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      width: '100%',
       paddingVertical: theme.spacing.xs,
     }, // <<< COMA RESTAURADA
     radioLabel: {
       marginLeft: 0,
       fontSize: 11,
-      textTransform: "uppercase",
+      textTransform: 'uppercase',
       textAlign: 'center',
     }, // <<< COMA RESTAURADA
     radioButtonItem: {
@@ -2009,12 +2260,9 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       flex: 1,
       marginHorizontal: 2,
     }, // <<< COMA RESTAURADA
-    dropdownAnchor: {
-    }, // <<< COMA RESTAURADA
-    dropdownContent: {
-    }, // <<< COMA RESTAURADA
-    dropdownLabel: {
-    }, // <<< COMA RESTAURADA
+    dropdownAnchor: {}, // <<< COMA RESTAURADA
+    dropdownContent: {}, // <<< COMA RESTAURADA
+    dropdownLabel: {}, // <<< COMA RESTAURADA
     helperTextFix: {
       marginTop: -6,
       marginBottom: 0,
@@ -2029,8 +2277,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     confirmButton: {
       paddingVertical: theme.spacing.xs,
     }, // <<< COMA RESTAURADA
-    input: {
-    }, // <<< COMA RESTAURADA
+    input: {}, // <<< COMA RESTAURADA
     fieldContainer: {
       marginTop: theme.spacing.s,
     },

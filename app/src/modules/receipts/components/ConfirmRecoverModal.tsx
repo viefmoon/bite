@@ -1,11 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Text,
-  Portal,
-  Modal,
-  Button,
-} from 'react-native-paper';
+import { Text, Portal, Modal, Button } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface ConfirmRecoverModalProps {
@@ -38,13 +33,14 @@ export const ConfirmRecoverModal: React.FC<ConfirmRecoverModalProps> = ({
         <Text variant="titleLarge" style={styles.title}>
           Recuperar Orden
         </Text>
-        
+
         <Text variant="bodyMedium" style={styles.message}>
           ¿Estás seguro de que deseas recuperar la orden #{orderNumber}?
         </Text>
-        
+
         <Text variant="bodySmall" style={styles.description}>
-          La orden se marcará como entregada y volverá a estar visible en las órdenes activas.
+          La orden se marcará como entregada y volverá a estar visible en las
+          órdenes activas.
         </Text>
 
         <View style={styles.actions}>

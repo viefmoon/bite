@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native'; // FlatList eliminado
-import { FlashList, ListRenderItemInfo } from "@shopify/flash-list"; // Importar FlashList y tipo
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list'; // Importar FlashList y tipo
 import {
   Modal,
   Portal,
@@ -10,13 +9,15 @@ import {
   ActivityIndicator,
   List,
   Icon, // Añadir Icon a la importación
-
   Divider,
   IconButton,
   Card,
   Appbar, // Importar Appbar
 } from 'react-native-paper';
-import { useDiscoverPrinters, useTestPrintDiscoveredPrinter } from '../hooks/usePrintersQueries';
+import {
+  useDiscoverPrinters,
+  useTestPrintDiscoveredPrinter,
+} from '../hooks/usePrintersQueries';
 import { DiscoveredPrinter } from '../types/printer.types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
@@ -42,17 +43,14 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-
-
-      discoverMutation.mutate(undefined, { // undefined para usar la duración por defecto
+      discoverMutation.mutate(undefined, {
+        // undefined para usar la duración por defecto
         onError: (error) => {
-           showSnackbar({
-             message: `Error descubriendo impresoras: ${getApiErrorMessage(error)}`,
-             type: 'error',
-           });
+          showSnackbar({
+            message: `Error descubriendo impresoras: ${getApiErrorMessage(error)}`,
+            type: 'error',
+          });
         },
-
-
       });
     }
   }, [visible]); // Ejecutar solo cuando 'visible' cambia
@@ -65,7 +63,9 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
     testPrintMutation.mutate(printer);
   };
 
-  const renderPrinterItem = ({ item }: ListRenderItemInfo<DiscoveredPrinter>) => ( // Añadir tipo
+  const renderPrinterItem = (
+    { item }: ListRenderItemInfo<DiscoveredPrinter>, // Añadir tipo
+  ) => (
     <List.Item
       title={item.name || item.ip} // Mostrar nombre o IP si no hay nombre
       description={`IP: ${item.ip}:${item.port}${item.mac ? ` | MAC: ${item.mac}` : ''}${item.model ? ` (${item.model})` : ''}`}
@@ -78,7 +78,10 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
             size={24}
             onPress={() => handleTestPrint(item)}
             disabled={testPrintMutation.isPending}
-            loading={testPrintMutation.isPending && testPrintMutation.variables?.ip === item.ip}
+            loading={
+              testPrintMutation.isPending &&
+              testPrintMutation.variables?.ip === item.ip
+            }
             tooltip="Imprimir prueba"
           />
           <IconButton
@@ -103,11 +106,19 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
         visible={visible}
         onDismiss={onDismiss}
         contentContainerStyle={styles.modalContent}
-        dismissable={!discoverMutation.isPending && !testPrintMutation.isPending} // No permitir cerrar mientras busca o imprime
+        dismissable={
+          !discoverMutation.isPending && !testPrintMutation.isPending
+        } // No permitir cerrar mientras busca o imprime
       >
         <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction onPress={onDismiss} disabled={discoverMutation.isPending || testPrintMutation.isPending} />
-          <Appbar.Content title="Descubrir Impresoras" titleStyle={styles.appBarTitle} />
+          <Appbar.BackAction
+            onPress={onDismiss}
+            disabled={discoverMutation.isPending || testPrintMutation.isPending}
+          />
+          <Appbar.Content
+            title="Descubrir Impresoras"
+            titleStyle={styles.appBarTitle}
+          />
           {/* Botón de Refrescar/Re-escanear */}
           <Appbar.Action
             icon="refresh"
@@ -122,16 +133,25 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
           {discoverMutation.isPending && (
             <View style={styles.centeredView}>
               <ActivityIndicator animating={true} size="large" />
-              <Text style={styles.statusText}>Buscando impresoras en la red...</Text>
-              <Text style={styles.statusSubText}>(Esto puede tardar unos segundos)</Text>
+              <Text style={styles.statusText}>
+                Buscando impresoras en la red...
+              </Text>
+              <Text style={styles.statusSubText}>
+                (Esto puede tardar unos segundos)
+              </Text>
             </View>
           )}
 
           {discoverMutation.isError && !discoverMutation.isPending && (
             <View style={styles.centeredView}>
-              <Icon source="alert-circle-outline" color={theme.colors.error} size={48} />
+              <Icon
+                source="alert-circle-outline"
+                color={theme.colors.error}
+                size={48}
+              />
               <Text style={styles.errorText}>
-                Error al buscar impresoras: {getApiErrorMessage(discoverMutation.error)}
+                Error al buscar impresoras:{' '}
+                {getApiErrorMessage(discoverMutation.error)}
               </Text>
               {/* Botón eliminado, se usa el icono en Appbar */}
             </View>
@@ -141,9 +161,17 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
             <>
               {discoverMutation.data.length === 0 ? (
                 <View style={styles.centeredView}>
-                   <Icon source="printer-off" color={theme.colors.onSurfaceVariant} size={48} />
-                  <Text style={styles.statusText}>No se encontraron impresoras.</Text>
-                  <Text style={styles.statusSubText}>Asegúrate de que estén encendidas y en la misma red.</Text>
+                  <Icon
+                    source="printer-off"
+                    color={theme.colors.onSurfaceVariant}
+                    size={48}
+                  />
+                  <Text style={styles.statusText}>
+                    No se encontraron impresoras.
+                  </Text>
+                  <Text style={styles.statusSubText}>
+                    Asegúrate de que estén encendidas y en la misma red.
+                  </Text>
                   {/* Botón eliminado, se usa el icono en Appbar */}
                 </View>
               ) : (
@@ -153,11 +181,15 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
                   <FlashList
                     data={discoverMutation.data}
                     renderItem={renderPrinterItem}
-                    keyExtractor={(item: DiscoveredPrinter) => `${item.ip}:${item.port}`} // Añadir tipo y clave única
+                    keyExtractor={(item: DiscoveredPrinter) =>
+                      `${item.ip}:${item.port}`
+                    } // Añadir tipo y clave única
                     estimatedItemSize={70} // Añadir tamaño estimado
-                    ItemSeparatorComponent={() => <Divider style={styles.divider} />}
+                    ItemSeparatorComponent={() => (
+                      <Divider style={styles.divider} />
+                    )}
                   />
-                   {/* Botón eliminado, se usa el icono en Appbar */}
+                  {/* Botón eliminado, se usa el icono en Appbar */}
                 </>
               )}
             </>
@@ -207,10 +239,10 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.onSurface,
     },
     statusSubText: {
-        marginTop: theme.spacing.xs,
-        fontSize: 14,
-        textAlign: 'center',
-        color: theme.colors.onSurfaceVariant,
+      marginTop: theme.spacing.xs,
+      fontSize: 14,
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
     },
     errorText: {
       marginTop: theme.spacing.m,
@@ -219,10 +251,10 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: theme.spacing.m,
     },
     foundText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: theme.spacing.m,
-        color: theme.colors.primary, // Color primario para destacar
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: theme.spacing.m,
+      color: theme.colors.primary, // Color primario para destacar
     },
     list: {
       flex: 1, // Permitir que la lista ocupe espacio
@@ -234,11 +266,11 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: theme.spacing.xs,
     },
     itemTitle: {
-        fontWeight: '500',
+      fontWeight: '500',
     },
     itemDescription: {
-        fontSize: 12,
-        color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
     },
     itemActions: {
       flexDirection: 'row',
@@ -246,7 +278,6 @@ const createStyles = (theme: AppTheme) =>
     },
     divider: {
       height: 0, // Ocultar divider si no se desea
-
     },
     button: {
       marginTop: theme.spacing.m,

@@ -1,8 +1,8 @@
-import React from "react";
-import { StyleSheet, ScrollView } from "react-native";
-import { Modal, Portal, Text, Title } from "react-native-paper";
-import type { Product } from "@/app/schemas/domain/product.schema";
-import { useAppTheme } from "@/app/styles/theme";
+import React from 'react';
+import { StyleSheet, ScrollView } from 'react-native';
+import { Modal, Portal, Text, Title } from 'react-native-paper';
+import type { Product } from '@/app/schemas/domain/product.schema';
+import { useAppTheme } from '@/app/styles/theme';
 
 interface SimpleProductDescriptionModalProps {
   visible: boolean;
@@ -10,11 +10,9 @@ interface SimpleProductDescriptionModalProps {
   onDismiss: () => void;
 }
 
-const SimpleProductDescriptionModal: React.FC<SimpleProductDescriptionModalProps> = ({
-  visible,
-  product,
-  onDismiss,
-}) => {
+const SimpleProductDescriptionModal: React.FC<
+  SimpleProductDescriptionModalProps
+> = ({ visible, product, onDismiss }) => {
   const theme = useAppTheme();
 
   const styles = StyleSheet.create({
@@ -23,11 +21,11 @@ const SimpleProductDescriptionModal: React.FC<SimpleProductDescriptionModalProps
       margin: 20,
       padding: 20,
       borderRadius: 8,
-      maxHeight: "60%",
+      maxHeight: '60%',
     },
     title: {
       fontSize: 20,
-      fontWeight: "bold",
+      fontWeight: 'bold',
       marginBottom: 16,
       color: theme.colors.onBackground,
     },

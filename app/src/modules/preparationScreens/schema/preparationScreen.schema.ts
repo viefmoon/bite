@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Esquema principal para la entidad PreparationScreen
 export const PreparationScreenSchema = z.object({
@@ -6,10 +6,14 @@ export const PreparationScreenSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
-  products: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-  })).optional(),
+  products: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+      }),
+    )
+    .optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -18,11 +22,11 @@ export const PreparationScreenSchema = z.object({
 export const CreatePreparationScreenSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre es requerido")
-    .max(100, "El nombre no puede exceder los 100 caracteres"),
+    .min(1, 'El nombre es requerido')
+    .max(100, 'El nombre no puede exceder los 100 caracteres'),
   description: z
     .string()
-    .max(255, "La descripción no puede exceder los 255 caracteres")
+    .max(255, 'La descripción no puede exceder los 255 caracteres')
     .nullable()
     .optional(),
   isActive: z.boolean().optional().default(true),
@@ -33,12 +37,12 @@ export const CreatePreparationScreenSchema = z.object({
 export const UpdatePreparationScreenSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre es requerido")
-    .max(100, "El nombre no puede exceder los 100 caracteres")
+    .min(1, 'El nombre es requerido')
+    .max(100, 'El nombre no puede exceder los 100 caracteres')
     .optional(),
   description: z
     .string()
-    .max(255, "La descripción no puede exceder los 255 caracteres")
+    .max(255, 'La descripción no puede exceder los 255 caracteres')
     .nullable()
     .optional(),
   isActive: z.boolean().optional(),

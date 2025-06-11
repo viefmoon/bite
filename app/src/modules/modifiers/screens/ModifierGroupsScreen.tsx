@@ -1,6 +1,11 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { ActivityIndicator, Text, Button, IconButton } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Text,
+  Button,
+  IconButton,
+} from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -12,8 +17,13 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { debounce } from 'lodash';
 import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
-import GenericList, { RenderItemConfig, FilterOption } from '@/app/components/crud/GenericList';
-import GenericDetailModal, { DisplayFieldConfig } from '@/app/components/crud/GenericDetailModal';
+import GenericList, {
+  RenderItemConfig,
+  FilterOption,
+} from '@/app/components/crud/GenericList';
+import GenericDetailModal, {
+  DisplayFieldConfig,
+} from '@/app/components/crud/GenericDetailModal';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { PaginatedResponse } from '@/app/types/api.types';
 import { useListState } from '@/app/hooks/useListState';
@@ -29,7 +39,7 @@ const QUERY_KEY = ['modifierGroups'];
 const ModifierGroupsScreen = () => {
   const theme = useAppTheme();
   const navigation = useNavigation<NavigationProps>();
-const drawerStatus = useDrawerStatus();
+  const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -38,7 +48,7 @@ const drawerStatus = useDrawerStatus();
 
   const debouncedSetSearch = useCallback(
     debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    []
+    [],
   );
 
   const handleSearchChange = (query: string) => {
@@ -57,7 +67,14 @@ const drawerStatus = useDrawerStatus();
     return params;
   }, [statusFilter, debouncedSearchQuery]);
 
-  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useQuery<PaginatedResponse<ModifierGroup>, Error>({
+  const {
+    data: paginatedData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery<PaginatedResponse<ModifierGroup>, Error>({
     queryKey: [QUERY_KEY[0], queryParams],
     queryFn: () => modifierGroupService.findAll(queryParams),
   });
@@ -95,7 +112,9 @@ const drawerStatus = useDrawerStatus();
       setStatusFilter(value as StatusFilter);
     } else {
       // Opcional: manejar valor inesperado, por ahora default a 'all'
-      console.warn(`Valor de filtro inesperado recibido: ${value}, usando 'all'.`);
+      console.warn(
+        `Valor de filtro inesperado recibido: ${value}, usando 'all'.`,
+      );
       setStatusFilter('all');
     }
   };
@@ -108,11 +127,11 @@ const drawerStatus = useDrawerStatus();
     titleField: 'name',
     descriptionField: 'description',
     statusConfig: {
-        field: 'isActive',
-        activeValue: true,
-        activeLabel: 'Activo',
-        inactiveLabel: 'Inactivo',
-    }
+      field: 'isActive',
+      activeValue: true,
+      activeLabel: 'Activo',
+      inactiveLabel: 'Inactivo',
+    },
   };
 
   const detailFields: DisplayFieldConfig<ModifierGroup>[] = [
@@ -121,12 +140,20 @@ const drawerStatus = useDrawerStatus();
     {
       field: 'isRequired',
       label: 'Requerido',
-      render: (value) => <Text style={{ color: theme.colors.onSurface }}>{value ? 'Sí' : 'No'}</Text>
+      render: (value) => (
+        <Text style={{ color: theme.colors.onSurface }}>
+          {value ? 'Sí' : 'No'}
+        </Text>
+      ),
     },
     {
       field: 'allowMultipleSelections',
       label: 'Permite Múltiples',
-      render: (value) => <Text style={{ color: theme.colors.onSurface }}>{value ? 'Sí' : 'No'}</Text>
+      render: (value) => (
+        <Text style={{ color: theme.colors.onSurface }}>
+          {value ? 'Sí' : 'No'}
+        </Text>
+      ),
     },
   ];
 
@@ -143,18 +170,17 @@ const drawerStatus = useDrawerStatus();
     isError,
     data: modifierGroups,
     emptyConfig: {
-      title: searchQuery 
-        ? 'No se encontraron grupos' 
+      title: searchQuery
+        ? 'No se encontraron grupos'
         : 'No hay grupos de modificadores',
       message: searchQuery
         ? `No se encontraron grupos para "${searchQuery}"`
-        : statusFilter !== 'all' 
+        : statusFilter !== 'all'
           ? `No hay grupos de modificadores ${statusFilter === 'active' ? 'activos' : 'inactivos'}.`
           : 'No hay grupos de modificadores registrados. Presiona el botón + para crear el primero.',
       icon: 'folder-multiple-outline',
     },
   });
-
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -191,11 +217,11 @@ const drawerStatus = useDrawerStatus();
       />
 
       <ModifierGroupFormModal
-            visible={isFormModalVisible}
-            onDismiss={handleCloseModals}
-            onSaveSuccess={handleFormSaveSuccess}
-            initialData={editingItem}
-          />
+        visible={isFormModalVisible}
+        onDismiss={handleCloseModals}
+        onSaveSuccess={handleFormSaveSuccess}
+        initialData={editingItem}
+      />
 
       <GenericDetailModal<ModifierGroup>
         visible={isDetailModalVisible}
@@ -206,48 +232,47 @@ const drawerStatus = useDrawerStatus();
         statusConfig={listRenderConfig.statusConfig}
         fieldsToDisplay={detailFields}
         onEdit={() => {
-            if (selectedItem) {
-                handleOpenEditModal(selectedItem);
-            }
+          if (selectedItem) {
+            handleOpenEditModal(selectedItem);
+          }
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}
         editButtonLabel="Editar"
         deleteButtonLabel="Eliminar"
-      >
-      </GenericDetailModal>
-
+      ></GenericDetailModal>
     </SafeAreaView>
   );
 };
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 18,
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: theme.colors.error,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  detailActionButton: {
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    emptyText: {
+      textAlign: 'center',
+      fontSize: 18,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 8,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    detailActionButton: {
       marginTop: theme.spacing.m,
       alignSelf: 'stretch',
       borderRadius: theme.roundness,
-  },
-});
+    },
+  });
 
 export default ModifierGroupsScreen;

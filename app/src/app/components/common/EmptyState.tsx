@@ -1,7 +1,7 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, Button, Icon } from "react-native-paper";
-import { useAppTheme, AppTheme } from "../../styles/theme";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Text, Button, Icon } from 'react-native-paper';
+import { useAppTheme, AppTheme } from '../../styles/theme';
 
 interface EmptyStateProps {
   icon?: string;
@@ -15,20 +15,20 @@ const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: theme.spacing.xl,
     },
     iconContainer: {
       marginBottom: theme.spacing.l,
     },
     title: {
-      textAlign: "center",
+      textAlign: 'center',
       marginBottom: theme.spacing.s,
       color: theme.colors.onSurface,
     },
     message: {
-      textAlign: "center",
+      textAlign: 'center',
       marginBottom: theme.spacing.l,
       color: theme.colors.onSurfaceVariant,
       paddingHorizontal: theme.spacing.xl,
@@ -39,7 +39,7 @@ const getStyles = (theme: AppTheme) =>
   });
 
 const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = "folder-open",
+  icon = 'folder-open',
   title,
   message,
   actionLabel,
@@ -51,11 +51,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Icon
-          source={icon}
-          size={64}
-          color={theme.colors.onSurfaceVariant}
-        />
+        <Icon source={icon} size={64} color={theme.colors.onSurfaceVariant} />
       </View>
       <Text variant="headlineSmall" style={styles.title}>
         {title}
@@ -66,11 +62,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </Text>
       )}
       {actionLabel && onAction && (
-        <Button
-          mode="contained"
-          onPress={onAction}
-          style={styles.button}
-        >
+        <Button mode="contained" onPress={onAction} style={styles.button}>
           {actionLabel}
         </Button>
       )}

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useEffect, useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
 import {
   Modal,
   Portal,
@@ -9,21 +9,23 @@ import {
   Switch,
   Text,
   HelperText,
-} from "react-native-paper";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ProductVariant } from "../schema/products.schema";
-import { z } from "zod";
-import { useAppTheme } from "@/app/styles/theme";
+} from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ProductVariant } from '../schema/products.schema';
+import { z } from 'zod';
+import { useAppTheme } from '@/app/styles/theme';
 
 // Schema local para el formulario de variantes
 const variantFormSchema = z.object({
   id: z.string().uuid().optional(),
-  name: z.string().min(1, "El nombre es requerido"),
-  price: z.coerce.number({
-    invalid_type_error: "El precio debe ser un número",
-    required_error: "El precio es requerido",
-  }).positive("El precio debe ser mayor a 0"),
+  name: z.string().min(1, 'El nombre es requerido'),
+  price: z.coerce
+    .number({
+      invalid_type_error: 'El precio debe ser un número',
+      required_error: 'El precio es requerido',
+    })
+    .positive('El precio debe ser mayor a 0'),
   isActive: z.boolean(),
 });
 
@@ -32,8 +34,8 @@ type VariantFormData = z.infer<typeof variantFormSchema>;
 interface VariantFormModalProps {
   visible: boolean;
   onDismiss: () => void;
-  onSubmit: (data: ProductVariant) => void; 
-  initialData?: Partial<ProductVariant>; 
+  onSubmit: (data: ProductVariant) => void;
+  initialData?: Partial<ProductVariant>;
 }
 
 function VariantFormModal({
@@ -54,7 +56,7 @@ function VariantFormModal({
   } = useForm<VariantFormData>({
     resolver: zodResolver(variantFormSchema),
     defaultValues: {
-      name: initialData?.name ?? "",
+      name: initialData?.name ?? '',
       price: initialData?.price ?? 0,
       isActive: initialData?.isActive ?? true,
       id: initialData?.id,
@@ -64,7 +66,7 @@ function VariantFormModal({
   useEffect(() => {
     if (visible) {
       reset({
-        name: initialData?.name ?? "",
+        name: initialData?.name ?? '',
         price: initialData?.price ?? 0,
         isActive: initialData?.isActive ?? true,
         id: initialData?.id,
@@ -90,7 +92,7 @@ function VariantFormModal({
       >
         <Card style={styles.card}>
           <Card.Title
-            title={isEditing ? "Editar Variante" : "Nueva Variante"}
+            title={isEditing ? 'Editar Variante' : 'Nueva Variante'}
           />
           <Card.Content style={styles.content}>
             <View style={styles.fieldContainer}>
@@ -125,7 +127,7 @@ function VariantFormModal({
                   const [inputValue, setInputValue] = React.useState<string>(
                     field.value !== undefined && field.value !== null
                       ? String(field.value)
-                      : ""
+                      : '',
                   );
 
                   // Actualizar el estado local cuando cambia el valor del formulario
@@ -133,7 +135,7 @@ function VariantFormModal({
                     setInputValue(
                       field.value !== undefined && field.value !== null
                         ? String(field.value)
-                        : ""
+                        : '',
                     );
                   }, [field.value]);
 
@@ -143,7 +145,7 @@ function VariantFormModal({
                       value={inputValue}
                       onChangeText={(text) => {
                         // Reemplazar comas por puntos
-                        const formattedText = text.replace(/,/g, ".");
+                        const formattedText = text.replace(/,/g, '.');
 
                         // Validar que solo tenga números y como máximo un punto decimal
                         if (/^(\d*\.?\d*)$/.test(formattedText)) {
@@ -151,9 +153,9 @@ function VariantFormModal({
                           setInputValue(formattedText);
 
                           // Actualizar el valor del formulario solo si es un número válido o vacío
-                          if (formattedText === "") {
+                          if (formattedText === '') {
                             field.onChange(undefined); // Usar undefined si está vacío
-                          } else if (formattedText !== ".") {
+                          } else if (formattedText !== '.') {
                             // Solo actualizar el valor numérico si no es solo un punto
                             const numericValue = parseFloat(formattedText);
                             if (!isNaN(numericValue)) {
@@ -224,18 +226,17 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     fieldContainer: {
       marginBottom: theme.spacing.m, // Espacio uniforme debajo de cada campo/grupo
     },
-    input: {
-    },
+    input: {},
     switchContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
     label: {
       color: theme.colors.onSurfaceVariant,
     },
     actions: {
-      justifyContent: "flex-end",
+      justifyContent: 'flex-end',
       padding: theme.spacing.m, // Padding uniforme para las acciones
     },
   });

@@ -1,11 +1,9 @@
-import { AdjustmentType } from './enums/adjustment-type.enum';
 import { Order } from '../../orders/domain/order';
 import { OrderItem } from '../../orders/domain/order-item';
 import { User } from '../../users/domain/user';
 
 export class Adjustment {
   id: string;
-  type: AdjustmentType;
   orderId?: string | null;
   orderItemId?: string | null;
   name: string;

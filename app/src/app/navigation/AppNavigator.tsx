@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
 import {
   NavigationContainer,
   Theme as NavigationTheme,
-} from "@react-navigation/native";
-import { useAuthStore } from "../store/authStore";
-import { AuthStack } from "./AuthStack";
-import { AppDrawerNavigator } from "./AppDrawerNavigator";
-import { useAppTheme } from "../styles/theme";
+} from '@react-navigation/native';
+import { useAuthStore } from '../store/authStore';
+import { AuthStack } from './AuthStack';
+import { AppDrawerNavigator } from './AppDrawerNavigator';
+import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
 
 export function AppNavigator() {

@@ -15,7 +15,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export type ActiveFilter = "all" | "active" | "inactive";
+export type ActiveFilter = 'all' | 'active' | 'inactive';
 
 // Los tipos inferidos de Zod (CreateCategoryDto, UpdateCategoryDto, CategoryFormData)
 // se definen y exportan directamente desde ../schema/category.schema.ts

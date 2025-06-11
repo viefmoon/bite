@@ -1,22 +1,18 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
-  "PENDING",
-  "IN_PROGRESS",
-  "READY",
-  "DELIVERED",
-  "COMPLETED",
-  "CANCELLED",
+  'PENDING',
+  'IN_PROGRESS',
+  'READY',
+  'DELIVERED',
+  'COMPLETED',
+  'CANCELLED',
 ]);
 export type OrderStatus = z.infer<typeof orderStatusSchema>;
 
 // Enum para los tipos de orden
-export const orderTypeSchema = z.enum([
-  "DINE_IN",
-  "TAKE_AWAY",
-  "DELIVERY",
-]);
+export const orderTypeSchema = z.enum(['DINE_IN', 'TAKE_AWAY', 'DELIVERY']);
 export type OrderType = z.infer<typeof orderTypeSchema>;
 
 // Schema para los modificadores dentro de un ítem de orden

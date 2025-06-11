@@ -1,31 +1,31 @@
-import React, { useMemo, useCallback, useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { ActivityIndicator, Text, Portal } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import React, { useMemo, useCallback, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Text, Portal } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
-import { debounce } from "lodash";
-import { useQueryClient } from "@tanstack/react-query";
+import { debounce } from 'lodash';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   useProductsQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
-} from "../hooks/useProductsQueries";
-import { Product, ProductFormInputs } from "../schema/products.schema";
-import { MenuStackParamList } from "@/modules/menu/navigation/types";
-import { useAppTheme, AppTheme } from "@/app/styles/theme";
-import { getApiErrorMessage } from "@/app/lib/errorMapping";
-import { ApiError } from "@/app/lib/errors";
-import GenericList, { FilterOption } from "@/app/components/crud/GenericList";
-import ProductFormModal from "../components/ProductFormModal";
-import { useSnackbarStore } from "@/app/store/snackbarStore";
-import { FileObject } from "@/app/components/common/CustomImagePicker";
-import { useCrudScreenLogic } from "@/app/hooks/useCrudScreenLogic";
-import { useListState } from "@/app/hooks/useListState";
+} from '../hooks/useProductsQueries';
+import { Product, ProductFormInputs } from '../schema/products.schema';
+import { MenuStackParamList } from '@/modules/menu/navigation/types';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { ApiError } from '@/app/lib/errors';
+import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
+import ProductFormModal from '../components/ProductFormModal';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { FileObject } from '@/app/components/common/CustomImagePicker';
+import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
+import { useListState } from '@/app/hooks/useListState';
 
-type ProductsScreenRouteProp = RouteProp<MenuStackParamList, "Products">;
+type ProductsScreenRouteProp = RouteProp<MenuStackParamList, 'Products'>;
 
 function ProductsScreen(): JSX.Element {
   const theme = useAppTheme();
@@ -39,15 +39,15 @@ function ProductsScreen(): JSX.Element {
 
   const { subcategoryId, subCategoryName } = route.params;
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+    'all' | 'active' | 'inactive'
+  >('all');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
   const debouncedSetSearch = useCallback(
     debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    []
+    [],
   );
 
   const handleSearchChange = (query: string) => {
@@ -56,10 +56,10 @@ function ProductsScreen(): JSX.Element {
   };
 
   const handleFilterChange = (value: string | number) => {
-    if (value === "all" || value === "active" || value === "inactive") {
-        setStatusFilter(value);
+    if (value === 'all' || value === 'active' || value === 'inactive') {
+      setStatusFilter(value);
     } else {
-        setStatusFilter("all");
+      setStatusFilter('all');
     }
   };
 
@@ -69,9 +69,9 @@ function ProductsScreen(): JSX.Element {
       search: debouncedSearchQuery || undefined,
       limit: 20,
       page: 1,
-      isActive: statusFilter === "all" ? undefined : statusFilter === "active",
+      isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
     }),
-    [subcategoryId, debouncedSearchQuery, statusFilter]
+    [subcategoryId, debouncedSearchQuery, statusFilter],
   );
 
   const {
@@ -94,19 +94,19 @@ function ProductsScreen(): JSX.Element {
     handleCloseModals,
   } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
-    queryKey: ["products", queryFilters],
+    queryKey: ['products', queryFilters],
     deleteMutationFn: deleteProduct,
   });
 
-
   const products = useMemo(() => {
-    return (productsResponse?.data ?? []).map((p: Product) => ({ // Añadido tipo explícito
+    return (productsResponse?.data ?? []).map((p: Product) => ({
+      // Añadido tipo explícito
       ...p,
       _displayDescription: p.hasVariants
         ? `${p.variants?.length || 0} variante(s)`
         : !isNaN(parseFloat(String(p.price)))
           ? `$${parseFloat(String(p.price)).toFixed(2)}`
-          : "Precio no definido",
+          : 'Precio no definido',
     }));
   }, [productsResponse]);
 
@@ -114,7 +114,7 @@ function ProductsScreen(): JSX.Element {
     async (
       formData: ProductFormInputs,
       photoId: string | null | undefined,
-      _file?: FileObject | null
+      _file?: FileObject | null,
     ) => {
       const isEditing = !!editingItem;
 
@@ -128,36 +128,37 @@ function ProductsScreen(): JSX.Element {
 
       try {
         let productResult: Product;
-        
+
         if (isEditing && editingItem) {
-          productResult = await updateMutation.mutateAsync(
-            { id: editingItem.id, data: mutationData }
-          );
+          productResult = await updateMutation.mutateAsync({
+            id: editingItem.id,
+            data: mutationData,
+          });
         } else {
           productResult = await createMutation.mutateAsync(mutationData);
         }
-        
+
         // Éxito
         const message = isEditing
-          ? "Producto actualizado con éxito"
-          : "Producto creado con éxito";
+          ? 'Producto actualizado con éxito'
+          : 'Producto creado con éxito';
 
-        showSnackbar({ message, type: "success" });
+        showSnackbar({ message, type: 'success' });
         handleCloseModals();
-        
+
         queryClient.invalidateQueries({
-          queryKey: ["products", queryFilters],
+          queryKey: ['products', queryFilters],
         });
         if (productResult?.id) {
           queryClient.invalidateQueries({
-            queryKey: ["product", productResult.id],
+            queryKey: ['product', productResult.id],
           });
         }
       } catch (err) {
         const errorMessage = getApiErrorMessage(err);
         showSnackbar({
-          message: `Error al ${isEditing ? "actualizar" : "crear"} producto: ${errorMessage}`,
-          type: "error",
+          message: `Error al ${isEditing ? 'actualizar' : 'crear'} producto: ${errorMessage}`,
+          type: 'error',
         });
       }
     },
@@ -169,27 +170,27 @@ function ProductsScreen(): JSX.Element {
       handleCloseModals,
       queryClient,
       queryFilters,
-    ]
+    ],
   );
 
   const listRenderConfig = {
-    titleField: "name" as keyof Product,
-    descriptionField: "_displayDescription" as keyof (Product & {
+    titleField: 'name' as keyof Product,
+    descriptionField: '_displayDescription' as keyof (Product & {
       _displayDescription: string;
     }),
-    imageField: "photo" as keyof Product,
+    imageField: 'photo' as keyof Product,
     statusConfig: {
-      field: "isActive" as keyof Product,
+      field: 'isActive' as keyof Product,
       activeValue: true,
-      activeLabel: "Activo",
-      inactiveLabel: "Inactivo",
+      activeLabel: 'Activo',
+      inactiveLabel: 'Inactivo',
     },
   };
 
-  const filterOptions: FilterOption<"all" | "active" | "inactive">[] = [
-    { value: "all", label: "Todos" },
-    { value: "active", label: "Activos" },
-    { value: "inactive", label: "Inactivos" },
+  const filterOptions: FilterOption<'all' | 'active' | 'inactive'>[] = [
+    { value: 'all', label: 'Todos' },
+    { value: 'active', label: 'Activos' },
+    { value: 'inactive', label: 'Inactivos' },
   ];
 
   const { ListEmptyComponent } = useListState({
@@ -197,8 +198,8 @@ function ProductsScreen(): JSX.Element {
     isError: !!error,
     data: products,
     emptyConfig: {
-      title: debouncedSearchQuery 
-        ? `No se encontraron productos` 
+      title: debouncedSearchQuery
+        ? `No se encontraron productos`
         : 'No hay productos',
       message: debouncedSearchQuery
         ? `No se encontraron productos para "${debouncedSearchQuery}"`
@@ -209,12 +210,12 @@ function ProductsScreen(): JSX.Element {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      title: subCategoryName ? `Productos de ${subCategoryName}` : "Productos",
+      title: subCategoryName ? `Productos de ${subCategoryName}` : 'Productos',
     });
   }, [navigation, subCategoryName]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <GenericList<Product & { _displayDescription: string }>
         items={products}
         renderConfig={listRenderConfig}
@@ -262,13 +263,13 @@ const createStyles = (theme: AppTheme) =>
     },
     centered: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: theme.spacing.l,
     },
     errorText: {
       color: theme.colors.error,
-      textAlign: "center",
+      textAlign: 'center',
     },
     contentContainer: {
       paddingBottom: 80,

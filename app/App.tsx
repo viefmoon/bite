@@ -1,16 +1,16 @@
-import React from "react";
-import { ActivityIndicator, View } from "react-native";
-import { Provider as PaperProvider } from "react-native-paper";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import {
   useThemeStore,
   useSystemThemeDetector,
-} from "./src/app/store/themeStore";
-import { AppNavigator } from "./src/app/navigation/AppNavigator";
-import GlobalSnackbar from "./src/app/components/common/GlobalSnackbar";
-import { useInitializeAuth } from "./src/app/hooks/useInitializeAuth";
+} from './src/app/store/themeStore';
+import { AppNavigator } from './src/app/navigation/AppNavigator';
+import GlobalSnackbar from './src/app/components/common/GlobalSnackbar';
+import { useInitializeAuth } from './src/app/hooks/useInitializeAuth';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,8 +42,8 @@ export default function App() {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+          justifyContent: 'center',
+          alignItems: 'center',
           backgroundColor: activeTheme.colors.background,
         }}
       >

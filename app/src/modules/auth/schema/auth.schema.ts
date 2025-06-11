@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Schemas moved from auth.types.ts
 export const loginSchema = z.object({
   emailOrUsername: z
     .string()
-    .min(1, "El correo o nombre de usuario es requerido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+    .min(1, 'El correo o nombre de usuario es requerido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
 
 export type LoginFormInputs = z.infer<typeof loginSchema>;
@@ -16,7 +16,7 @@ export const authResponseSchema = z.object({
     id: z.string(),
     email: z.string().email(),
     username: z.string(),
-    role: z.enum(["admin", "staff"]),
+    role: z.enum(['admin', 'staff']),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     avatar: z.string().url().optional(),
@@ -33,7 +33,7 @@ export const authEmailLoginDtoSchema = z.object({
 export type AuthEmailLoginDto = z.infer<typeof authEmailLoginDtoSchema>;
 
 export const userSchema = z.object({
-  id: z.string().uuid("El ID de usuario debe ser un UUID válido"), // Cambiado a string().uuid()
+  id: z.string().uuid('El ID de usuario debe ser un UUID válido'), // Cambiado a string().uuid()
   email: z.string().email().nullable(),
   username: z.string().nullable(),
   firstName: z.string().nullable(),
@@ -56,17 +56,17 @@ export const loginResponseDtoSchema = z.object({
 export type LoginResponseDto = z.infer<typeof loginResponseDtoSchema>;
 
 export const registerSchema = z.object({
-  email: z.string().email("Correo electrónico inválido"),
+  email: z.string().email('Correo electrónico inválido'),
   username: z
     .string()
-    .min(3, "El nombre de usuario debe tener al menos 3 caracteres")
+    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Solo se permiten letras, números y guiones bajos"
+      'Solo se permiten letras, números y guiones bajos',
     ),
-  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
-  firstName: z.string().min(1, "El nombre es requerido"),
-  lastName: z.string().min(1, "El apellido es requerido"),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
+  firstName: z.string().min(1, 'El nombre es requerido'),
+  lastName: z.string().min(1, 'El apellido es requerido'),
 });
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;

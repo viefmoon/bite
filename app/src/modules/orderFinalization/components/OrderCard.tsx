@@ -76,17 +76,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   };
 
   return (
-    <Surface 
+    <Surface
       style={[
-        styles.container, 
-        { 
-          backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surface,
+        styles.container,
+        {
+          backgroundColor: isSelected
+            ? theme.colors.primaryContainer
+            : theme.colors.surface,
           borderColor: isSelected ? theme.colors.primary : 'transparent',
-        }
-      ]} 
+        },
+      ]}
       elevation={isSelected ? 2 : 1}
     >
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.content}
         onPress={() => onToggleSelection(order.id)}
         activeOpacity={0.7}
@@ -95,20 +97,34 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <View style={styles.headerLeft}>
             <View style={styles.orderInfo}>
               <View style={styles.orderNumberRow}>
-                <Text style={[styles.orderNumber, { color: theme.colors.onSurface }]}>
+                <Text
+                  style={[
+                    styles.orderNumber,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
                   Orden #{order.dailyNumber}
                 </Text>
-                <Chip 
+                <Chip
                   icon={getOrderTypeIcon()}
-                  style={[styles.typeChip, { backgroundColor: theme.colors.secondaryContainer }]}
-                  textStyle={[styles.chipText, { color: theme.colors.onSecondaryContainer }]}
+                  style={[
+                    styles.typeChip,
+                    { backgroundColor: theme.colors.secondaryContainer },
+                  ]}
+                  textStyle={[
+                    styles.chipText,
+                    { color: theme.colors.onSecondaryContainer },
+                  ]}
                   compact={true}
                   mode="flat"
                 >
                   {getOrderTypeLabel()}
                 </Chip>
-                <Chip 
-                  style={[styles.statusChip, { backgroundColor: getStatusColor() + '20' }]}
+                <Chip
+                  style={[
+                    styles.statusChip,
+                    { backgroundColor: getStatusColor() + '20' },
+                  ]}
                   textStyle={[styles.chipText, { color: getStatusColor() }]}
                   compact={true}
                   mode="flat"
@@ -120,14 +136,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </View>
           <View style={styles.headerRight}>
             <Text style={[styles.time, { color: theme.colors.primary }]}>
-              {new Date(order.createdAt).toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+              {new Date(order.createdAt).toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             </Text>
             <View style={styles.priceAndCheckbox}>
               <Text style={[styles.total, { color: theme.colors.primary }]}>
-                ${typeof order.total === 'string' ? parseFloat(order.total).toFixed(2) : order.total.toFixed(2)}
+                $
+                {typeof order.total === 'string'
+                  ? parseFloat(order.total).toFixed(2)
+                  : order.total.toFixed(2)}
               </Text>
               <Checkbox
                 status={isSelected ? 'checked' : 'unchecked'}
@@ -142,34 +161,62 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         <View style={styles.details}>
           <View style={styles.detailsContent}>
             {order.customerName && (
-              <Text style={[styles.customerName, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                {order.customerName} {order.phoneNumber && `• ${order.phoneNumber}`}
+              <Text
+                style={[
+                  styles.customerName,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+                numberOfLines={1}
+              >
+                {order.customerName}{' '}
+                {order.phoneNumber && `• ${order.phoneNumber}`}
               </Text>
             )}
-            
+
             {order.orderType === 'DINE_IN' && order.table && (
-              <Text style={[styles.tableInfo, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                Mesa {order.table.number} {order.table.area?.name && `- ${order.table.area.name}`}
+              <Text
+                style={[
+                  styles.tableInfo,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+                numberOfLines={1}
+              >
+                Mesa {order.table.number}{' '}
+                {order.table.area?.name && `- ${order.table.area.name}`}
               </Text>
             )}
-            
+
             {order.orderType === 'DELIVERY' && order.deliveryAddress && (
-              <Text 
-                style={[styles.address, { color: theme.colors.onSurfaceVariant }]}
+              <Text
+                style={[
+                  styles.address,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 {order.deliveryAddress}
               </Text>
             )}
-            
+
             <View style={styles.itemsInfo}>
-              <Text style={[styles.itemsCount, { color: theme.colors.onSurfaceVariant }]}>
-                {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)} {order.orderItems.reduce((sum, item) => sum + item.quantity, 0) === 1 ? 'artículo' : 'artículos'}
+              <Text
+                style={[
+                  styles.itemsCount,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+              >
+                {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)}{' '}
+                {order.orderItems.reduce(
+                  (sum, item) => sum + item.quantity,
+                  0,
+                ) === 1
+                  ? 'artículo'
+                  : 'artículos'}
               </Text>
             </View>
           </View>
-          
+
           <IconButton
             icon="format-list-bulleted"
             size={18}
@@ -178,7 +225,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             iconColor={theme.colors.primary}
           />
         </View>
-
       </TouchableOpacity>
     </Surface>
   );

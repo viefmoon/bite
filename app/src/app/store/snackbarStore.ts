@@ -1,6 +1,6 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-export type SnackbarType = "info" | "success" | "error" | "warning";
+export type SnackbarType = 'info' | 'success' | 'error' | 'warning';
 
 export interface SnackbarState {
   visible: boolean;
@@ -17,10 +17,10 @@ export interface SnackbarState {
 
 export const useSnackbarStore = create<SnackbarState>((set) => ({
   visible: false,
-  message: "",
-  type: "info",
+  message: '',
+  type: 'info',
   duration: 3000,
-  showSnackbar: ({ message, type = "info", duration = 3000 }) =>
+  showSnackbar: ({ message, type = 'info', duration = 3000 }) =>
     set({ visible: true, message, type, duration }),
   hideSnackbar: () => set({ visible: false }),
 }));

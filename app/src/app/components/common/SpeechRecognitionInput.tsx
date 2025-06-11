@@ -12,7 +12,11 @@ import { useAppTheme } from '../../styles/theme';
 
 let activeRecognizerId: string | null = null;
 
-interface SpeechRecognitionInputProps extends Omit<React.ComponentProps<typeof AnimatedLabelInput>, 'value' | 'onChangeText'> {
+interface SpeechRecognitionInputProps
+  extends Omit<
+    React.ComponentProps<typeof AnimatedLabelInput>,
+    'value' | 'onChangeText'
+  > {
   value: string;
   onChangeText: (text: string) => void;
   label: string;
@@ -54,9 +58,9 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
         try {
           ExpoSpeechRecognitionModule.stop();
         } catch (err) {
-            console.error("Error stopping on unmount:", err);
+          console.error('Error stopping on unmount:', err);
         } finally {
-            activeRecognizerId = null;
+          activeRecognizerId = null;
         }
       }
     };
@@ -73,10 +77,10 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
   const handleRecognitionStart = useCallback(() => {
     if (isMounted.current && activeRecognizerId === instanceId) {
       if (!isRecognizingSpeech) {
-          setIsRecognizingSpeech(true);
-          if (clearOnStart) {
-            onChangeText('');
-          }
+        setIsRecognizingSpeech(true);
+        if (clearOnStart) {
+          onChangeText('');
+        }
       }
     }
   }, [clearOnStart, onChangeText, instanceId, isRecognizingSpeech]);
@@ -88,82 +92,100 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
     }
   }, [instanceId]);
 
-  const handleRecognitionResult = useCallback((event: ExpoSpeechRecognitionResultEvent) => {
-    if (isMounted.current && activeRecognizerId === instanceId && event.results && event.results[0]) {
-      const transcript = event.results[0].transcript;
-      if (replaceContent) {
-        if (rest.keyboardType === 'phone-pad') {
+  const handleRecognitionResult = useCallback(
+    (event: ExpoSpeechRecognitionResultEvent) => {
+      if (
+        isMounted.current &&
+        activeRecognizerId === instanceId &&
+        event.results &&
+        event.results[0]
+      ) {
+        const transcript = event.results[0].transcript;
+        if (replaceContent) {
+          if (rest.keyboardType === 'phone-pad') {
             const numericTranscript = transcript.replace(/\D/g, '');
             onChangeText(numericTranscript);
-        } else {
+          } else {
             onChangeText(transcript);
+          }
+        } else {
+          const newValue = value ? value + ' ' + transcript : transcript;
+          onChangeText(newValue);
         }
-      } else {
-        const newValue = value ? value + ' ' + transcript : transcript;
-        onChangeText(newValue);
       }
-    }
-  }, [instanceId, onChangeText, replaceContent, rest.keyboardType, value]);
+    },
+    [instanceId, onChangeText, replaceContent, rest.keyboardType, value],
+  );
 
-  const handleRecognitionError = useCallback((event: ExpoSpeechRecognitionErrorEvent) => {
-    if (isMounted.current && activeRecognizerId === instanceId) {
-      console.error("Speech recognition error:", event.error, event.message);
-      setIsRecognizingSpeech(false);
-      activeRecognizerId = null;
-      onError?.(event.message || event.error || 'Unknown recognition error');
-    }
-  }, [instanceId, onError]);
+  const handleRecognitionError = useCallback(
+    (event: ExpoSpeechRecognitionErrorEvent) => {
+      if (isMounted.current && activeRecognizerId === instanceId) {
+        console.error('Speech recognition error:', event.error, event.message);
+        setIsRecognizingSpeech(false);
+        activeRecognizerId = null;
+        onError?.(event.message || event.error || 'Unknown recognition error');
+      }
+    },
+    [instanceId, onError],
+  );
 
   // Only register event listeners when this instance is active
-  useSpeechRecognitionEvent("start", (event) => {
+  useSpeechRecognitionEvent('start', (_event) => {
     if (activeRecognizerId === instanceId) {
       handleRecognitionStart();
     }
   });
-  
-  useSpeechRecognitionEvent("end", (event) => {
+
+  useSpeechRecognitionEvent('end', (_event) => {
     if (activeRecognizerId === instanceId) {
       handleRecognitionEnd();
     }
   });
-  
-  useSpeechRecognitionEvent("result", (event: ExpoSpeechRecognitionResultEvent) => {
-    if (activeRecognizerId === instanceId) {
-      handleRecognitionResult(event);
-    }
-  });
-  
-  useSpeechRecognitionEvent("error", (event: ExpoSpeechRecognitionErrorEvent) => {
-    if (activeRecognizerId === instanceId) {
-      handleRecognitionError(event);
-    }
-  });
+
+  useSpeechRecognitionEvent(
+    'result',
+    (event: ExpoSpeechRecognitionResultEvent) => {
+      if (activeRecognizerId === instanceId) {
+        handleRecognitionResult(event);
+      }
+    },
+  );
+
+  useSpeechRecognitionEvent(
+    'error',
+    (event: ExpoSpeechRecognitionErrorEvent) => {
+      if (activeRecognizerId === instanceId) {
+        handleRecognitionError(event);
+      }
+    },
+  );
 
   const toggleRecognition = async () => {
     if (activeRecognizerId === instanceId) {
       try {
         await ExpoSpeechRecognitionModule.stop();
       } catch (err) {
-        console.error("Failed to stop speech recognition:", err);
+        console.error('Failed to stop speech recognition:', err);
       } finally {
         if (isMounted.current) {
           setIsRecognizingSpeech(false);
         }
         if (activeRecognizerId === instanceId) {
-             activeRecognizerId = null;
+          activeRecognizerId = null;
         }
       }
     } else if (!activeRecognizerId) {
-      const permissions = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      const permissions =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
       if (!permissions.granted) {
-        console.warn("Permissions not granted for speech recognition");
-        onError?.("Permiso de micrófono denegado");
+        console.warn('Permissions not granted for speech recognition');
+        onError?.('Permiso de micrófono denegado');
         return;
       }
       try {
         activeRecognizerId = instanceId;
         if (isMounted.current) {
-            setIsRecognizingSpeech(true);
+          setIsRecognizingSpeech(true);
         }
         await ExpoSpeechRecognitionModule.start({
           lang: speechLang,
@@ -171,22 +193,26 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
           continuous: false,
         });
       } catch (err: any) {
-        console.error("Failed to start speech recognition:", err);
-         if (isMounted.current) {
-            setIsRecognizingSpeech(false);
-         }
-         if (activeRecognizerId === instanceId) {
-             activeRecognizerId = null;
-         }
-         onError?.(err.message || 'Error al iniciar');
+        console.error('Failed to start speech recognition:', err);
+        if (isMounted.current) {
+          setIsRecognizingSpeech(false);
+        }
+        if (activeRecognizerId === instanceId) {
+          activeRecognizerId = null;
+        }
+        onError?.(err.message || 'Error al iniciar');
       }
     } else {
-      console.log(`Recognizer ${activeRecognizerId} is already active. Cannot start ${instanceId}.`);
+      console.log(
+        `Recognizer ${activeRecognizerId} is already active. Cannot start ${instanceId}.`,
+      );
       onError?.('Otro micrófono ya está activo');
     }
   };
 
-  const micIconColor = isRecognizingSpeech ? theme.colors.error : theme.colors.primary;
+  const micIconColor = isRecognizingSpeech
+    ? theme.colors.error
+    : theme.colors.primary;
 
   return (
     <View style={styles.wrapper}>
@@ -207,7 +233,7 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <IconButton
           key={isRecognizingSpeech ? 'mic-active' : 'mic-inactive'}
-          icon={isRecognizingSpeech ? "microphone-off" : "microphone"}
+          icon={isRecognizingSpeech ? 'microphone-off' : 'microphone'}
           size={24}
           iconColor={micIconColor}
           onPress={toggleRecognition}

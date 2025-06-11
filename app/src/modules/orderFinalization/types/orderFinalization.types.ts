@@ -5,7 +5,13 @@ export interface OrderForFinalization {
   phoneNumber?: string;
   deliveryAddress?: string;
   orderType: 'TAKEOUT' | 'DELIVERY' | 'DINE_IN';
-  orderStatus: 'PENDING' | 'IN_PROGRESS' | 'READY' | 'DELIVERED' | 'COMPLETED' | 'CANCELLED';
+  orderStatus:
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'READY'
+    | 'DELIVERED'
+    | 'COMPLETED'
+    | 'CANCELLED';
   total: string | number;
   orderItems: OrderItemForFinalization[];
   createdAt: string;
