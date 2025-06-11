@@ -10,7 +10,7 @@ import { API_URL } from '@env';
 export const getImageUrl = (
   imagePath: string | null | undefined,
 ): string | null => {
-  if (!imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') {
     return null;
   }
 

@@ -33,9 +33,6 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @Column({ name: 'product_variant_id', type: 'uuid', nullable: true })
   productVariantId: string | null;
 
-  @Column({ type: 'int', nullable: false })
-  quantity: number;
-
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
   basePrice: number;
 

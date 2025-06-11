@@ -60,7 +60,6 @@ export class OrdersService {
           orderId: order.id,
           productId: itemDto.productId,
           productVariantId: itemDto.productVariantId,
-          quantity: itemDto.quantity,
           basePrice: itemDto.basePrice,
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
@@ -99,7 +98,6 @@ export class OrdersService {
     orderItem.orderId = createOrderItemDto.orderId;
     orderItem.productId = createOrderItemDto.productId;
     orderItem.productVariantId = createOrderItemDto.productVariantId || null;
-    orderItem.quantity = createOrderItemDto.quantity;
     orderItem.basePrice = createOrderItemDto.basePrice;
     orderItem.finalPrice = createOrderItemDto.finalPrice;
     orderItem.preparationStatus = PreparationStatus.PENDING;
@@ -170,78 +168,27 @@ export class OrdersService {
       updateOrderDto.items !== undefined &&
       Array.isArray(updateOrderDto.items)
     ) {
-      // Obtener items existentes con sus detalles completos
+      // Obtener items existentes
       const existingItems = await this.orderItemRepository.findByOrderId(id);
 
-      // Crear mapas para comparación eficiente
-      const existingItemsMap = new Map(
-        existingItems.map((item) => [
-          `${item.productId}-${item.productVariantId || 'null'}`,
-          item,
-        ]),
-      );
-
-      const newItemsMap = new Map(
-        updateOrderDto.items.map((item) => [
-          `${item.productId}-${item.productVariantId || 'null'}`,
-          item,
-        ]),
-      );
-
-      // Identificar items a eliminar
-      const itemsToDelete = existingItems.filter(
-        (item) =>
-          !newItemsMap.has(
-            `${item.productId}-${item.productVariantId || 'null'}`,
-          ),
-      );
-
-      // Identificar items a crear
-      const itemsToCreate = updateOrderDto.items.filter(
-        (item) =>
-          !existingItemsMap.has(
-            `${item.productId}-${item.productVariantId || 'null'}`,
-          ),
-      );
-
-      // Identificar items a actualizar
-      const itemsToUpdate = updateOrderDto.items.filter((newItem) => {
-        const key = `${newItem.productId}-${newItem.productVariantId || 'null'}`;
-        const existingItem = existingItemsMap.get(key);
-        if (!existingItem) return false;
-
-        // Verificar si hay cambios reales
-        return (
-          existingItem.quantity !== newItem.quantity ||
-          existingItem.basePrice !== newItem.basePrice ||
-          existingItem.finalPrice !== newItem.finalPrice ||
-          existingItem.preparationNotes !== newItem.preparationNotes ||
-          this.modifiersChanged(
-            existingItem.modifiers || [],
-            newItem.modifiers || [],
-          )
-        );
-      });
-
-      // Eliminar items que ya no están
-      for (const item of itemsToDelete) {
-        // Eliminar modificadores del item
+      // Eliminar TODOS los items existentes y sus modificadores
+      for (const item of existingItems) {
+        // Primero eliminar los modificadores del item
         const modifiers =
           await this.orderItemModifierRepository.findByOrderItemId(item.id);
         for (const modifier of modifiers) {
           await this.orderItemModifierRepository.delete(modifier.id);
         }
-        // Eliminar el item
+        // Luego eliminar el item
         await this.orderItemRepository.delete(item.id);
       }
 
-      // Crear nuevos items
-      for (const itemDto of itemsToCreate) {
+      // Crear TODOS los items nuevos
+      for (const itemDto of updateOrderDto.items) {
         const createOrderItemDto: CreateOrderItemDto = {
           orderId: id,
           productId: itemDto.productId,
           productVariantId: itemDto.productVariantId,
-          quantity: itemDto.quantity,
           basePrice: itemDto.basePrice,
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
@@ -251,7 +198,7 @@ export class OrdersService {
         const savedOrderItem =
           await this.createOrderItemInternal(createOrderItemDto);
 
-        // Crear modificadores asociados
+        // Crear modificadores asociados si existen
         if (itemDto.modifiers && itemDto.modifiers.length > 0) {
           for (const modifierDto of itemDto.modifiers) {
             await this.createOrderItemModifier({
@@ -261,50 +208,6 @@ export class OrdersService {
               quantity: modifierDto.quantity,
               price: modifierDto.price,
             });
-          }
-        }
-      }
-
-      // Actualizar items existentes que han cambiado
-      for (const updatedItemDto of itemsToUpdate) {
-        const key = `${updatedItemDto.productId}-${updatedItemDto.productVariantId || 'null'}`;
-        const existingItem = existingItemsMap.get(key)!;
-
-        // Actualizar el item
-        await this.updateOrderItem(existingItem.id, {
-          quantity: updatedItemDto.quantity,
-          basePrice: updatedItemDto.basePrice,
-          finalPrice: updatedItemDto.finalPrice,
-          preparationNotes: updatedItemDto.preparationNotes,
-        });
-
-        // Actualizar modificadores si han cambiado
-        if (
-          this.modifiersChanged(
-            existingItem.modifiers || [],
-            updatedItemDto.modifiers || [],
-          )
-        ) {
-          // Eliminar modificadores existentes
-          const existingModifiers =
-            await this.orderItemModifierRepository.findByOrderItemId(
-              existingItem.id,
-            );
-          for (const modifier of existingModifiers) {
-            await this.orderItemModifierRepository.delete(modifier.id);
-          }
-
-          // Crear nuevos modificadores
-          if (updatedItemDto.modifiers && updatedItemDto.modifiers.length > 0) {
-            for (const modifierDto of updatedItemDto.modifiers) {
-              await this.createOrderItemModifier({
-                orderItemId: existingItem.id,
-                modifierId: modifierDto.modifierId,
-                modifierOptionId: modifierDto.modifierOptionId,
-                quantity: modifierDto.quantity,
-                price: modifierDto.price,
-              });
-            }
           }
         }
       }
@@ -374,7 +277,6 @@ export class OrdersService {
       productVariantId:
         updateOrderItemDto.productVariantId ??
         existingOrderItem.productVariantId,
-      quantity: updateOrderItemDto.quantity ?? existingOrderItem.quantity,
       basePrice: updateOrderItemDto.basePrice ?? existingOrderItem.basePrice,
       finalPrice: updateOrderItemDto.finalPrice ?? existingOrderItem.finalPrice,
       preparationStatus:
@@ -395,7 +297,6 @@ export class OrdersService {
     updatedOrderItem.orderId = updatedData.orderId;
     updatedOrderItem.productId = updatedData.productId;
     updatedOrderItem.productVariantId = updatedData.productVariantId;
-    updatedOrderItem.quantity = updatedData.quantity;
     updatedOrderItem.basePrice = updatedData.basePrice;
     updatedOrderItem.finalPrice = updatedData.finalPrice;
     updatedOrderItem.preparationStatus = updatedData.preparationStatus;
@@ -512,28 +413,6 @@ export class OrdersService {
   async deleteOrderItemModifier(id: string): Promise<void> {
     const orderItemModifier = await this.findOrderItemModifierById(id);
     await this.orderItemModifierRepository.delete(orderItemModifier.id);
-  }
-
-  // Helper para comparar modificadores
-  private modifiersChanged(
-    existingModifiers: any[],
-    newModifiers: any[],
-  ): boolean {
-    if (existingModifiers.length !== newModifiers.length) return true;
-
-    const existingSet = new Set(
-      existingModifiers.map(
-        (m) =>
-          `${m.modifierId}-${m.modifierOptionId || 'null'}-${m.quantity}-${m.price}`,
-      ),
-    );
-
-    for (const newMod of newModifiers) {
-      const key = `${newMod.modifierId}-${newMod.modifierOptionId || 'null'}-${newMod.quantity}-${newMod.price}`;
-      if (!existingSet.has(key)) return true;
-    }
-
-    return false;
   }
 
   // --- Ticket Impression Methods ---

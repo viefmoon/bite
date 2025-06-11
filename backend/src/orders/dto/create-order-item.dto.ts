@@ -26,11 +26,6 @@ export class CreateOrderItemDto {
 
   @IsNotEmpty()
   @IsNumber()
-  @Min(1)
-  quantity: number;
-
-  @IsNotEmpty()
-  @IsNumber()
   @Min(0)
   basePrice: number;
 

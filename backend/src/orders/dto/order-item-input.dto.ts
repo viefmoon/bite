@@ -38,17 +38,6 @@ export class OrderItemInputDto {
 
   @ApiProperty({
     type: Number,
-    example: 2,
-    description: 'Cantidad del producto',
-    minimum: 1,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(1)
-  quantity: number;
-
-  @ApiProperty({
-    type: Number,
     example: 10.99,
     description: 'Precio base del producto',
     minimum: 0,

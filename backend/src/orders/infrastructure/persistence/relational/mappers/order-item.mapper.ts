@@ -37,7 +37,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     domain.productVariant = this.productVariantMapper.toDomain(
       entity.productVariant!,
     )!;
-    domain.quantity = entity.quantity;
     domain.basePrice = entity.basePrice;
     domain.finalPrice = entity.finalPrice;
     domain.preparationStatus = entity.preparationStatus;
@@ -70,7 +69,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
       } as ProductVariantEntity;
     }
 
-    entity.quantity = domain.quantity;
     entity.basePrice = domain.basePrice;
     entity.finalPrice = domain.finalPrice;
     entity.preparationStatus = domain.preparationStatus;

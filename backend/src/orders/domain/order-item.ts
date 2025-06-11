@@ -17,7 +17,6 @@ export class OrderItem {
   orderId: string;
   productId: string;
   productVariantId: string | null;
-  quantity: number;
   basePrice: number;
   finalPrice: number;
   preparationStatus: PreparationStatus;
