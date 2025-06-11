@@ -67,6 +67,8 @@ export const useCreatePaymentMutation = () => {
       queryClient.invalidateQueries({
         queryKey: paymentKeys.byOrder(data.orderId),
       });
+      // Invalidar también las queries de órdenes para que se actualice el estado de pago
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
 
       showSnackbar({
         message: 'Pago registrado exitosamente',
@@ -96,6 +98,8 @@ export const useUpdatePaymentMutation = () => {
       queryClient.invalidateQueries({
         queryKey: paymentKeys.byOrder(data.orderId),
       });
+      // Invalidar también las queries de órdenes para que se actualice el estado de pago
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
 
       showSnackbar({
         message: 'Pago actualizado exitosamente',
@@ -120,6 +124,8 @@ export const useDeletePaymentMutation = () => {
     onSuccess: () => {
       // Invalidar todas las queries de pagos
       queryClient.invalidateQueries({ queryKey: paymentKeys.all });
+      // Invalidar también las queries de órdenes para que se actualice el estado de pago
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
 
       showSnackbar({
         message: 'Pago eliminado exitosamente',

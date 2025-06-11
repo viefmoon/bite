@@ -1999,7 +1999,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           {/* FAB para pagos - solo en modo edición */}
           {isEditMode && orderId && visible && (
             <FAB
-              icon={pendingAmount <= 0 ? 'check-circle' : 'cash-multiple'}
+              icon="cash-multiple"
               style={[
                 styles.paymentFab,
                 {

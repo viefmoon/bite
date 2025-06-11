@@ -528,6 +528,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           setShowDeleteConfirm(false);
           setPaymentToDelete(null);
         }}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setPaymentToDelete(null);
+        }}
         onConfirm={handleDeletePayment}
         title="Eliminar pago"
         message="¿Está seguro de que desea eliminar este pago? Esta acción no se puede deshacer."

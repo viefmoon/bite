@@ -9,8 +9,10 @@ interface ConfirmationModalProps {
   message: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  onDismiss?: () => void;
   confirmText?: string;
   cancelText?: string;
+  confirmButtonColor?: string;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,8 +21,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   onConfirm,
   onCancel,
+  onDismiss,
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
+  confirmButtonColor,
 }) => {
   const theme = useAppTheme();
 
@@ -58,7 +62,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onCancel} style={styles.dialog}>
+      <Dialog visible={visible} onDismiss={onDismiss || onCancel} style={styles.dialog}>
         <Dialog.Title style={styles.title}>{title}</Dialog.Title>
         <Dialog.Content>
           <Paragraph style={styles.paragraph}>{message}</Paragraph>
@@ -76,7 +80,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Button
             onPress={onConfirm}
             mode="contained"
-            buttonColor={theme.colors.primary}
+            buttonColor={confirmButtonColor || theme.colors.primary}
             style={[styles.button, styles.confirmButton]}
           >
             {confirmText}

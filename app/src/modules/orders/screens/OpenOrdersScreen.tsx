@@ -91,6 +91,28 @@ const formatOrderTypeShort = (type: OrderType): string => {
   }
 };
 
+// Helper para determinar el estado de pago de una orden
+const getPaymentStatus = (order: Order): 'unpaid' | 'partial' | 'paid' => {
+  if (!order.payments || order.payments.length === 0) {
+    return 'unpaid';
+  }
+  
+  // Sumar todos los pagos completados
+  const totalPaid = order.payments
+    .filter((payment: any) => payment.paymentStatus === 'COMPLETED')
+    .reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0);
+  
+  const orderTotal = order.total || 0;
+  
+  if (totalPaid === 0) {
+    return 'unpaid';
+  } else if (totalPaid >= orderTotal) {
+    return 'paid';
+  } else {
+    return 'partial';
+  }
+};
+
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -202,9 +224,39 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   {orderTitle}
                   <Text style={styles.orderPrice}> • ${order.total}</Text>
                 </Text>
-                <Text style={styles.orderTime}>
-                  {format(new Date(order.createdAt), 'p', { locale: es })}
-                </Text>
+                <View style={styles.timeAndPaymentRow}>
+                  <Text style={styles.orderTime}>
+                    {format(new Date(order.createdAt), 'p', { locale: es })}
+                  </Text>
+                  {(() => {
+                    const paymentStatus = getPaymentStatus(order);
+                    if (paymentStatus === 'paid') {
+                      return (
+                        <View style={[styles.paymentBadge, { backgroundColor: '#10B981' }]}>
+                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                            💵 Pagado
+                          </Text>
+                        </View>
+                      );
+                    } else if (paymentStatus === 'partial') {
+                      return (
+                        <View style={[styles.paymentBadge, { backgroundColor: '#F59E0B' }]}>
+                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                            💵 Parcial
+                          </Text>
+                        </View>
+                      );
+                    } else {
+                      return (
+                        <View style={[styles.paymentBadge, { backgroundColor: '#EF4444' }]}>
+                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                            💵 Pendiente
+                          </Text>
+                        </View>
+                      );
+                    }
+                  })()}
+                </View>
               </View>
 
               {/* Right Side - Status and Print */}
@@ -673,10 +725,39 @@ const createStyles = (
       color: 'white',
       lineHeight: 16,
     },
+    paidChip: {
+      height: 28,
+      minHeight: 28,
+      marginBottom: theme.spacing.xs,
+    },
+    paidChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'white',
+      lineHeight: 16,
+    },
     orderTime: {
       ...theme.fonts.titleMedium,
       color: theme.colors.primary,
       fontWeight: '600',
+    },
+    timeAndPaymentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    paymentBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    paymentBadgeText: {
+      ...theme.fonts.labelSmall,
+      fontWeight: '600',
+      fontSize: 11,
+      lineHeight: 14,
     },
     printButton: {
       margin: 0,
