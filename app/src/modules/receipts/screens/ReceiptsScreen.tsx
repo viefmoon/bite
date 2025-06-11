@@ -19,7 +19,7 @@ import {
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/app/styles/theme';
-import { useReceiptsInfinite, useReceiptsCount } from '../hooks/useReceiptsQueries';
+import { useReceiptsInfinite } from '../hooks/useReceiptsQueries';
 import { Order } from '@/app/schemas/domain/order.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
@@ -81,8 +81,6 @@ export const ReceiptsScreen: React.FC = () => {
     isRefetching,
   } = useReceiptsInfinite(filters);
 
-  // Query para obtener contadores
-  const { data: totalCount } = useReceiptsCount(filters);
 
   // Aplanar los datos paginados
   const receipts = useMemo(() => {
@@ -234,7 +232,7 @@ export const ReceiptsScreen: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {/* Header con búsqueda y filtros */}
       <Surface style={styles.header} elevation={2}>
         <View style={styles.searchContainer}>
@@ -360,14 +358,6 @@ export const ReceiptsScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Contador de resultados */}
-        {totalCount !== undefined && (
-          <View style={styles.resultsCount}>
-            <Text variant="bodySmall" style={styles.resultsText}>
-              {totalCount} {totalCount === 1 ? 'recibo' : 'recibos'}
-            </Text>
-          </View>
-        )}
       </Surface>
 
       {/* Lista de recibos */}
@@ -466,12 +456,6 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     height: 32,
-  },
-  resultsCount: {
-    marginTop: 8,
-  },
-  resultsText: {
-    opacity: 0.7,
   },
   listContent: {
     padding: 16,

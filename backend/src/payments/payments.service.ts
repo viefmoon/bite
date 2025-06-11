@@ -6,6 +6,7 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { PaymentStatus } from './domain/enums/payment-status.enum';
+import { PaymentMethod } from './domain/enums/payment-method.enum';
 import { PAYMENT_REPOSITORY } from '../common/tokens';
 
 @Injectable()
@@ -21,7 +22,10 @@ export class PaymentsService {
     payment.orderId = createPaymentDto.orderId;
     payment.paymentMethod = createPaymentDto.paymentMethod;
     payment.amount = createPaymentDto.amount;
-    payment.paymentStatus = PaymentStatus.PENDING;
+    // Los pagos en efectivo se crean como completados
+    payment.paymentStatus = createPaymentDto.paymentMethod === PaymentMethod.CASH
+      ? PaymentStatus.COMPLETED
+      : PaymentStatus.PENDING;
 
     return this.paymentRepository.create(payment);
   }

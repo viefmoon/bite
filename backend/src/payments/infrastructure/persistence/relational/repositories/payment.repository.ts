@@ -34,7 +34,8 @@ export class RelationalPaymentRepository implements PaymentRepository {
 
   async findByOrderId(orderId: string): Promise<Payment[]> {
     const paymentEntities = await this.paymentRepository.find({
-      where: { orderId },
+      where: { order: { id: orderId } },
+      relations: ['order'],
     });
     return paymentEntities
       .map((entity) => this.paymentMapper.toDomain(entity))

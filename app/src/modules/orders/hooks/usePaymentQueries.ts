@@ -1,0 +1,126 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { paymentService } from '../services/paymentService';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import type { 
+  CreatePaymentDto, 
+  UpdatePaymentDto,
+  PaymentMethod,
+  PaymentStatus 
+} from '../types/payment.types';
+
+// Query Keys
+export const paymentKeys = {
+  all: ['payments'] as const,
+  lists: () => [...paymentKeys.all, 'list'] as const,
+  list: (filters?: { orderId?: string; paymentMethod?: PaymentMethod; paymentStatus?: PaymentStatus }) => 
+    [...paymentKeys.lists(), filters] as const,
+  details: () => [...paymentKeys.all, 'detail'] as const,
+  detail: (id: string) => [...paymentKeys.details(), id] as const,
+  byOrder: (orderId: string) => [...paymentKeys.all, 'order', orderId] as const,
+};
+
+// Queries
+export const useGetPaymentsQuery = (filters?: {
+  orderId?: string;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+}) => {
+  return useQuery({
+    queryKey: paymentKeys.list(filters),
+    queryFn: () => paymentService.getPayments(filters),
+  });
+};
+
+export const useGetPaymentByIdQuery = (id: string) => {
+  return useQuery({
+    queryKey: paymentKeys.detail(id),
+    queryFn: () => paymentService.getPaymentById(id),
+    enabled: !!id,
+  });
+};
+
+export const useGetPaymentsByOrderIdQuery = (orderId: string, options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: paymentKeys.byOrder(orderId),
+    queryFn: () => paymentService.getPaymentsByOrderId(orderId),
+    enabled: options?.enabled !== undefined ? options.enabled : !!orderId,
+    initialData: [],
+  });
+};
+
+// Mutations
+export const useCreatePaymentMutation = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation({
+    mutationFn: (dto: CreatePaymentDto) => paymentService.createPayment(dto),
+    onSuccess: (data) => {
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: paymentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: paymentKeys.byOrder(data.orderId) });
+      
+      showSnackbar({ 
+        message: 'Pago registrado exitosamente', 
+        type: 'success' 
+      });
+    },
+    onError: (error: any) => {
+      showSnackbar({ 
+        message: error.response?.data?.message || 'Error al registrar el pago', 
+        type: 'error' 
+      });
+    },
+  });
+};
+
+export const useUpdatePaymentMutation = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdatePaymentDto }) => 
+      paymentService.updatePayment(id, dto),
+    onSuccess: (data) => {
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: paymentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: paymentKeys.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: paymentKeys.byOrder(data.orderId) });
+      
+      showSnackbar({ 
+        message: 'Pago actualizado exitosamente', 
+        type: 'success' 
+      });
+    },
+    onError: (error: any) => {
+      showSnackbar({ 
+        message: error.response?.data?.message || 'Error al actualizar el pago', 
+        type: 'error' 
+      });
+    },
+  });
+};
+
+export const useDeletePaymentMutation = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation({
+    mutationFn: (id: string) => paymentService.deletePayment(id),
+    onSuccess: () => {
+      // Invalidar todas las queries de pagos
+      queryClient.invalidateQueries({ queryKey: paymentKeys.all });
+      
+      showSnackbar({ 
+        message: 'Pago eliminado exitosamente', 
+        type: 'success' 
+      });
+    },
+    onError: (error: any) => {
+      showSnackbar({ 
+        message: error.response?.data?.message || 'Error al eliminar el pago', 
+        type: 'error' 
+      });
+    },
+  });
+};

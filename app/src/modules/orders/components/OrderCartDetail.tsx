@@ -36,6 +36,10 @@ import { useGetOrderByIdQuery } from "../hooks/useOrdersQueries"; // Para cargar
 import { useGetFullMenu } from "../hooks/useMenuQueries"; // Para obtener productos completos
 import type { FullMenuCategory } from "../types/orders.types"; // Tipo con subcategorías
 import OrderHistoryModal from "./OrderHistoryModal"; // Modal de historial
+import PaymentModal from "./PaymentModal"; // Modal de pagos
+import { FAB } from "react-native-paper"; // Para el floating action button
+import { useGetPaymentsByOrderIdQuery } from "../hooks/usePaymentQueries"; // Para consultar pagos existentes
+import { PaymentStatusEnum } from "../types/payment.types"; // Para verificar estados de pago
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
@@ -149,6 +153,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   
   // Query para obtener el menú completo (para poder editar productos)
   const { data: menu } = useGetFullMenu();
+  
+  // Query para obtener los pagos de la orden (solo en modo edición)
+  const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
+    enabled: isEditMode && !!orderId && visible
+  });
   
   // Estados locales para modo edición (cuando no usamos el contexto del carrito)
   const [editItems, setEditItems] = useState<CartItem[]>([]);
@@ -302,6 +311,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
   
+  // Calcular total pagado
+  const totalPaid = useMemo(() => {
+    if (!isEditMode || !payments) return 0;
+    return payments
+      .filter(p => p.paymentStatus === PaymentStatusEnum.COMPLETED)
+      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+  }, [payments, isEditMode]);
+  
+  const pendingAmount = useMemo(() => {
+    return Math.max(0, total - totalPaid);
+  }, [total, totalPaid]);
+  
   const { user } = useAuthStore(); // Obtener usuario autenticado
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
@@ -326,6 +347,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [pendingModifyAction, setPendingModifyAction] = useState<(() => void) | null>(null);
   const [modifyingItemName, setModifyingItemName] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
 
   // --- Queries para Áreas y Mesas (sin cambios) ---
@@ -1575,6 +1597,34 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 ${total.toFixed(2)}
               </Text>
             </View>
+            
+            {/* Mostrar información de pagos solo en modo edición */}
+            {isEditMode && totalPaid > 0 && (
+              <>
+                <View style={styles.totalsContainer}>
+                  <Text style={styles.totalsText}>Pagado:</Text>
+                  <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
+                    ${totalPaid.toFixed(2)}
+                  </Text>
+                </View>
+                {pendingAmount > 0 && (
+                  <View style={styles.totalsContainer}>
+                    <Text style={[styles.totalsText, { fontWeight: 'bold' }]}>
+                      Pendiente:
+                    </Text>
+                    <Text style={[
+                      styles.totalsValue, 
+                      { 
+                        fontWeight: 'bold',
+                        color: theme.colors.error
+                      }
+                    ]}>
+                      ${pendingAmount.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
 
           {/* Footer Button */}
@@ -1694,6 +1744,33 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             visible={showHistoryModal}
             onDismiss={() => setShowHistoryModal(false)}
             orderId={orderId}
+            orderNumber={orderNumber}
+          />
+        )}
+        
+        {/* FAB para pagos - solo en modo edición */}
+        {isEditMode && orderId && visible && (
+          <FAB
+            icon={pendingAmount <= 0 ? "check-circle" : "cash-multiple"}
+            style={[
+              styles.paymentFab,
+              { 
+                backgroundColor: pendingAmount <= 0 ? '#4CAF50' : theme.colors.primary
+              }
+            ]}
+            color="white"
+            onPress={() => setShowPaymentModal(true)}
+            visible={true}
+          />
+        )}
+        
+        {/* Modal de pagos */}
+        {showPaymentModal && isEditMode && orderId && (
+          <PaymentModal
+            visible={showPaymentModal}
+            onDismiss={() => setShowPaymentModal(false)}
+            orderId={orderId}
+            orderTotal={total}
             orderNumber={orderNumber}
           />
         )}
@@ -2058,6 +2135,18 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
+    },
+    paymentFab: {
+      position: 'absolute',
+      margin: 16,
+      right: 0,
+      bottom: 140, // Más arriba para mejor visibilidad
+      zIndex: 1000,
+      elevation: 6,
+      width: 56, // Tamaño estándar para FAB pequeño
+      height: 56,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 export default OrderCartDetail;

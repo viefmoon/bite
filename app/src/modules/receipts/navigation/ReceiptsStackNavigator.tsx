@@ -20,7 +20,7 @@ export const ReceiptsStackNavigator = () => {
         component={ReceiptsScreen}
         options={{
           title: 'Recibos',
-          headerShown: true,
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

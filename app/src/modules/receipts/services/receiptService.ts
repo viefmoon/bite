@@ -114,10 +114,13 @@ export const receiptService = {
       );
     }
 
+    // Si estamos filtrando del lado del cliente, actualizar el total
+    const actualTotal = filteredData.length;
+    
     return {
       data: filteredData,
       totalPages,
-      totalData: search ? filteredData.length : total,
+      totalData: actualTotal, // Usar el total real después del filtrado
       page,
       limit
     };

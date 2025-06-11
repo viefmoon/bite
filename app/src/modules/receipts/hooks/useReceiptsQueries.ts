@@ -48,6 +48,7 @@ export const useReceipt = (id: string) => {
 export const useReceiptsCount = (
   filters?: {
     status?: 'COMPLETED' | 'CANCELLED';
+    search?: string;
     startDate?: Date;
     endDate?: Date;
   }
@@ -58,7 +59,7 @@ export const useReceiptsCount = (
       const response = await receiptService.getReceipts({
         ...filters,
         page: 1,
-        limit: 1,
+        limit: 20, // Usar un límite más alto para obtener un conteo más preciso
       });
       return response.totalData;
     },

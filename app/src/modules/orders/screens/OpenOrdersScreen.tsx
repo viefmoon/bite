@@ -42,6 +42,16 @@ const formatOrderType = (type: OrderType): string => {
   }
 };
 
+// Helper para formatear el tipo de orden corto (para el título)
+const formatOrderTypeShort = (type: OrderType): string => {
+  switch (type) {
+    case OrderTypeEnum.DINE_IN: return '🍽️ Local';
+    case OrderTypeEnum.TAKE_AWAY: return '🥡 Llevar';
+    case OrderTypeEnum.DELIVERY: return '🚚 Envío';
+    default: return type;
+  }
+};
+
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -109,14 +119,25 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   };
 
   const renderOrderItem = useCallback(({ item: order }: { item: Order }) => {
-    // Get customer info based on order type
-    let customerInfo = '';
-    if (order.orderType === OrderTypeEnum.DELIVERY) {
-      customerInfo = order.deliveryAddress || '';
+    // Construir el título según el tipo de orden
+    let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
+    
+    if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
+      orderTitle += ` • ${order.table.area?.name || 'Sin área'} • Mesa ${order.table.name || order.table.number || 'N/A'}`;
     } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
-      customerInfo = order.customerName || '';
-    } else if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
-      customerInfo = `Mesa ${order.table.name || order.table.number || 'N/A'}`;
+      if (order.customerName) {
+        orderTitle += ` • ${order.customerName}`;
+      }
+      if (order.phoneNumber) {
+        orderTitle += ` • ${order.phoneNumber}`;
+      }
+    } else if (order.orderType === OrderTypeEnum.DELIVERY) {
+      if (order.deliveryAddress) {
+        orderTitle += ` • ${order.deliveryAddress}`;
+      }
+      if (order.phoneNumber) {
+        orderTitle += ` • ${order.phoneNumber}`;
+      }
     }
 
     return (
@@ -125,37 +146,37 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         mode="elevated"
         onPress={() => handleOrderItemPress(order)}
       >
-        <Card.Content>
-          {/* Header Row */}
-          <View style={styles.orderHeader}>
-            <Text style={styles.orderNumber}>Orden #{order.dailyNumber}</Text>
-            <Chip 
-              mode="flat" 
-              style={[styles.statusChip, { backgroundColor: getStatusColor(order.orderStatus) }]}
-              textStyle={styles.statusChipText}
-            >
-              {formatOrderStatus(order.orderStatus)}
-            </Chip>
-          </View>
+        <Card.Content style={styles.cardContent}>
+          {/* Main Container */}
+          <View style={styles.mainContainer}>
+            {/* Left Side - Title and Time */}
+            <View style={styles.leftContainer}>
+              <Text style={styles.orderNumber} numberOfLines={2}>
+                {orderTitle}
+                <Text style={styles.orderPrice}> • ${order.total}</Text>
+              </Text>
+              <Text style={styles.orderTime}>
+                {format(new Date(order.createdAt), 'p', { locale: es })}
+              </Text>
+            </View>
 
-          {/* Order Type and Time Row */}
-          <View style={styles.orderTypeRow}>
-            <Text style={styles.orderType}>{formatOrderType(order.orderType)}</Text>
-            <Text style={styles.orderTime}>
-              {format(new Date(order.createdAt), 'p', { locale: es })}
-            </Text>
-          </View>
-
-          {/* Customer Info */}
-          {customerInfo ? (
-            <Text style={styles.customerInfo} numberOfLines={1}>
-              📍 {customerInfo}
-            </Text>
-          ) : null}
-
-          {/* Total Amount */}
-          <View style={styles.totalRow}>
-            <Text style={styles.totalAmount}>Total: ${order.total}</Text>
+            {/* Right Side - Status and Print */}
+            <View style={styles.rightContainer}>
+              <Chip 
+                mode="flat" 
+                style={[styles.statusChip, { backgroundColor: getStatusColor(order.orderStatus) }]}
+                textStyle={styles.statusChipText}
+              >
+                {formatOrderStatus(order.orderStatus)}
+              </Chip>
+              <IconButton
+                icon="printer"
+                size={28}
+                style={styles.printButton}
+                onPress={() => handleOpenPrinterModal(order.id)}
+                disabled={printKitchenTicketMutation.isPending && printKitchenTicketMutation.variables?.orderId === order.id}
+              />
+            </View>
           </View>
 
           {/* Notes if any */}
@@ -165,16 +186,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             </Text>
           ) : null}
         </Card.Content>
-
-        {/* Action Buttons */}
-        <Card.Actions style={styles.cardActions}>
-          <IconButton
-            icon="printer-outline"
-            size={20}
-            onPress={() => handleOpenPrinterModal(order.id)}
-            disabled={printKitchenTicketMutation.isPending && printKitchenTicketMutation.variables?.orderId === order.id}
-          />
-        </Card.Actions>
       </Card>
     );
   }, [handleOrderItemPress, handleOpenPrinterModal, printKitchenTicketMutation.isPending, printKitchenTicketMutation.variables?.orderId, theme, styles]);
@@ -200,9 +211,11 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       headerRight: () => (
         <Appbar.Action
           icon="refresh"
+          iconColor={theme.colors.onPrimary}
+          size={28}
           onPress={handleRefresh}
           disabled={isFetching} // Deshabilitar mientras se refresca
-          color={theme.colors.onPrimary} // Usar color del header
+          style={{ marginRight: 8 }} // Agregar margen para mejor accesibilidad
         />
       ),
     });
@@ -508,73 +521,76 @@ const createStyles = (theme: AppTheme) => // Usar AppTheme directamente
       paddingTop: 56, // Mismo height que filterContainer
     },
     listContentContainer: {
-      padding: theme.spacing.m,
+      padding: theme.spacing.s, // Reducido de theme.spacing.m
       paddingBottom: theme.spacing.l * 2,
       flexGrow: 1,
     },
     orderCard: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s, // Reducido de theme.spacing.m
       backgroundColor: theme.colors.surface,
     },
-    orderHeader: {
+    cardContent: {
+      paddingBottom: theme.spacing.s,
+    },
+    mainContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    leftContainer: {
+      flex: 1,
+      paddingRight: theme.spacing.s,
+    },
+    rightContainer: {
       alignItems: 'center',
-      marginBottom: theme.spacing.xs,
+      justifyContent: 'flex-start',
     },
     orderNumber: {
-      ...theme.fonts.titleMedium,
+      ...theme.fonts.bodyLarge,
       fontWeight: 'bold',
       color: theme.colors.onSurface,
+      lineHeight: 22,
+      marginBottom: theme.spacing.xs,
+    },
+    orderPrice: {
+      color: theme.colors.primary,
+      fontWeight: '700',
     },
     statusChip: {
-      height: 24,
+      height: 28,
+      minHeight: 28,
+      marginBottom: theme.spacing.xs,
     },
     statusChipText: {
       fontSize: 12,
       fontWeight: '600',
       color: 'white',
-    },
-    orderTypeRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacing.s,
-    },
-    orderType: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onSurface,
-      fontWeight: '500',
+      lineHeight: 16,
     },
     orderTime: {
-      ...theme.fonts.bodySmall,
-      color: theme.colors.onSurfaceVariant,
+      ...theme.fonts.titleMedium,
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    printButton: {
+      margin: 0,
+      padding: theme.spacing.xs, // Aumentar el área táctil
     },
     customerInfo: {
       ...theme.fonts.bodyMedium,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs, // Reducido de theme.spacing.s
     },
-    totalRow: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      marginTop: theme.spacing.xs,
-    },
-    totalAmount: {
-      ...theme.fonts.titleSmall,
-      fontWeight: 'bold',
-      color: theme.colors.primary,
+    phoneInfo: {
+      ...theme.fonts.bodySmall,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: theme.spacing.xs,
     },
     notes: {
       ...theme.fonts.bodySmall,
       color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.s,
+      marginTop: theme.spacing.xs, // Reducido de theme.spacing.s
       fontStyle: 'italic',
-    },
-    cardActions: {
-      justifyContent: 'flex-end',
-      paddingTop: 0,
     },
   });
 
