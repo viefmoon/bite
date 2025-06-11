@@ -16,28 +16,15 @@ export type AuthStackParamList = {
 
 export type OrdersStackParamList = {
   Orders: undefined; // Pantalla principal del módulo de órdenes
-  CreateOrder:
-    | {
-        isAddingToOrder?: boolean; // Indica si estamos agregando productos a una orden existente
-        orderId?: string; // ID de la orden a la que estamos agregando productos
-        orderNumber?: number; // Número de la orden
-        orderDate?: string; // Fecha de la orden en ISO string
-        existingItems?: any[]; // Items existentes de la orden
-        orderType?: string; // Tipo de orden
-        tableId?: string; // ID de la mesa
-        customerName?: string; // Nombre del cliente
-        phoneNumber?: string; // Teléfono
-        deliveryAddress?: string; // Dirección
-        notes?: string; // Notas
-        scheduledAt?: string; // Hora programada en ISO string
-      }
-    | undefined; // Pantalla para crear una nueva orden
-  OpenOrders:
-    | {
-        addedItems?: any[]; // Items agregados desde CreateOrder
-        orderId?: string; // ID de la orden a la que se agregaron items
-      }
-    | undefined; // Pantalla para ver órdenes abiertas
+  CreateOrder: undefined; // Pantalla para crear una nueva orden
+  OpenOrders: undefined; // Pantalla para ver órdenes abiertas
+  AddProductsToOrder: {
+    orderId: string; // ID de la orden a la que se están agregando productos
+    orderNumber: number; // Número de la orden
+    existingOrderItemsCount?: number; // Número de items que ya están en la orden
+    existingTempProducts?: import('../../modules/orders/context/CartContext').CartItem[]; // Productos temporales existentes
+    onProductsAdded?: (products: import('../../modules/orders/context/CartContext').CartItem[]) => void; // Callback cuando se añaden productos
+  }; // Pantalla para añadir productos a una orden existente
 };
 
 export type OrdersStackScreenProps<T extends keyof OrdersStackParamList> =

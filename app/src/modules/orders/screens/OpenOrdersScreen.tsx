@@ -37,6 +37,7 @@ import OrderCartDetail, {
 } from '../components/OrderCartDetail';
 import { useSnackbarStore } from '../../../app/store/snackbarStore'; // Para mostrar mensajes
 import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
+import { CartItem } from '../context/CartContext'; // Para el tipo CartItem
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
@@ -124,7 +125,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
-  const [currentOrderItems, setCurrentOrderItems] = useState<any[]>([]); // Para almacenar los items actuales
+  const [pendingProductsToAdd, setPendingProductsToAdd] = useState<CartItem[]>([]);
+  const [shouldAddProducts, setShouldAddProducts] = useState(false);
+  // Estado para mantener productos temporales mientras se navega
+  const [temporaryProducts, setTemporaryProducts] = useState<{ [orderId: string]: CartItem[] }>({});
+  // Estado para rastrear el conteo de items existentes en cada orden
+  const [existingItemsCount, setExistingItemsCount] = useState<{ [orderId: string]: number }>({});
 
   // Estado para filtro de tipo de orden
   const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>(
@@ -341,6 +347,13 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     });
   }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
 
+  // Efecto para sincronizar productos temporales con pendientes
+  useEffect(() => {
+    if (isEditModalVisible && editingOrderId && temporaryProducts[editingOrderId]) {
+      setPendingProductsToAdd(temporaryProducts[editingOrderId]);
+    }
+  }, [isEditModalVisible, editingOrderId, temporaryProducts]);
+
   // Función que se ejecuta al seleccionar una impresora en el modal
   const handlePrinterSelect = useCallback(
     (printer: ThermalPrinter) => {
@@ -504,9 +517,50 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 : undefined
             }
             navigation={navigation}
+            pendingProductsToAdd={editingOrderId && temporaryProducts[editingOrderId] ? temporaryProducts[editingOrderId] : pendingProductsToAdd}
+            onItemsCountChanged={(count) => {
+              // Actualizar el conteo de items existentes para esta orden
+              setExistingItemsCount(prev => ({
+                ...prev,
+                [editingOrderId]: count
+              }));
+            }}
             onClose={() => {
               setIsEditModalVisible(false);
               setEditingOrderId(null);
+              setPendingProductsToAdd([]);
+              // NO limpiar temporaryProducts aquí para mantener los productos
+              // Refrescar la lista de órdenes por si hubo cambios
+              refetch();
+            }}
+            onAddProducts={() => {
+              // Cerrar el modal temporalmente para navegar
+              setIsEditModalVisible(false);
+              
+              const orderId = editingOrderId;
+              const orderNumber = ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber;
+              
+              // Navegar a añadir productos
+              setTimeout(() => {
+                const existingProducts = temporaryProducts[orderId!] || [];
+                navigation.navigate('AddProductsToOrder', {
+                  orderId: orderId!,
+                  orderNumber: orderNumber!,
+                  // Pasar productos temporales existentes si los hay
+                  existingTempProducts: existingProducts,
+                  existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
+                  onProductsAdded: (newProducts) => {
+                    // Actualizar productos temporales para esta orden
+                    setTemporaryProducts(prev => ({
+                      ...prev,
+                      [orderId!]: newProducts
+                    }));
+                    // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
+                    // Reabrir el modal cuando regresemos
+                    setIsEditModalVisible(true);
+                  },
+                });
+              }, 100);
             }}
             onConfirmOrder={async (details: OrderDetailsForBackend) => {
               // Formatear el número de teléfono si existe
@@ -560,48 +614,22 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
+                // Limpiar productos temporales y conteo para esta orden
+                if (editingOrderId) {
+                  setTemporaryProducts(prev => {
+                    const newState = { ...prev };
+                    delete newState[editingOrderId];
+                    return newState;
+                  });
+                  setExistingItemsCount(prev => {
+                    const newState = { ...prev };
+                    delete newState[editingOrderId];
+                    return newState;
+                  });
+                }
               } catch (error) {
                 console.error('Error al actualizar la orden:', error);
                 // No cerrar el modal en caso de error para que el usuario pueda reintentar
-              }
-            }}
-            onAddProducts={(currentItems) => {
-              console.log(
-                'onAddProducts llamado con items:',
-                currentItems?.length || 0,
-              );
-              // Guardar los items actuales
-              setCurrentOrderItems(currentItems || []);
-
-              // Cerrar el modal de edición antes de navegar
-              setIsEditModalVisible(false);
-
-              // Obtener la orden actual
-              const currentOrder = ordersData?.find(
-                (o) => o.id === editingOrderId,
-              );
-
-              if (currentOrder) {
-                console.log('Navegando a CreateOrder con:', {
-                  itemsCount: currentItems?.length || 0,
-                  orderNumber: currentOrder.dailyNumber,
-                });
-
-                // Navegar a CreateOrderScreen con los datos de la orden
-                navigation.navigate('CreateOrder', {
-                  isAddingToOrder: true,
-                  orderId: editingOrderId || undefined,
-                  orderNumber: currentOrder.dailyNumber,
-                  orderDate: currentOrder.createdAt,
-                  existingItems: currentItems || [], // Pasar los items actuales del modal
-                  orderType: currentOrder.orderType,
-                  tableId: currentOrder.tableId || undefined,
-                  customerName: currentOrder.customerName || undefined,
-                  phoneNumber: currentOrder.phoneNumber || undefined,
-                  deliveryAddress: currentOrder.deliveryAddress || undefined,
-                  notes: currentOrder.notes || undefined,
-                  scheduledAt: currentOrder.scheduledAt || undefined,
-                } as any);
               }
             }}
             onCancelOrder={() => {

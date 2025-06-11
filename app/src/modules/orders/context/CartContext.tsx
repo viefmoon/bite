@@ -35,6 +35,7 @@ export interface CartItem {
   preparationNotes?: string;
   notes?: string; // Add notes field for backward compatibility
   preparationStatus?:
+    | 'NEW'
     | 'PENDING'
     | 'IN_PROGRESS'
     | 'READY'

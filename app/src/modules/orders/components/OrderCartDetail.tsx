@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
-  Platform,
   Animated,
 } from 'react-native';
 import {
@@ -25,7 +24,6 @@ import {
   IconButton,
   Modal,
   Portal,
-  Appbar,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
@@ -37,7 +35,6 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import ProductSelectionModal from './ProductSelectionModal';
 import ProductCustomizationModal from './ProductCustomizationModal';
 import type { FullMenuProduct as Product } from '../types/orders.types';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
@@ -65,7 +62,6 @@ interface OrderItemModifierDto {
 interface OrderItemDtoForBackend {
   productId: string;
   productVariantId?: string | null;
-  quantity: number; // NOTA: Siempre será 1, el backend ya no maneja cantidades
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
@@ -96,15 +92,18 @@ interface OrderCartDetailProps {
   orderId?: string | null;
   orderNumber?: number;
   orderDate?: Date;
-  onAddProducts?: (currentItems: CartItem[]) => void;
-  additionalItems?: CartItem[]; // Items agregados desde CreateOrderScreen
-  navigation?: any; // Prop de navegación opcional
   onCancelOrder?: () => void; // Función para cancelar la orden
+  navigation?: any; // Prop de navegación opcional para añadir productos
+  onAddProducts?: () => void; // Callback para añadir productos
+  pendingProductsToAdd?: CartItem[]; // Productos pendientes de añadir
+  onItemsCountChanged?: (count: number) => void; // Callback cuando cambia el conteo de items
 }
 
 // Helper para obtener el color del estado de preparación
 const getPreparationStatusColor = (status: string | undefined, theme: any) => {
   switch (status) {
+    case 'NEW':
+      return '#2196F3'; // Azul brillante para nuevo
     case 'PENDING':
       return theme.colors.error; // Rojo para pendiente
     case 'IN_PROGRESS':
@@ -123,6 +122,8 @@ const getPreparationStatusColor = (status: string | undefined, theme: any) => {
 // Helper para obtener el texto del estado de preparación
 const getPreparationStatusText = (status: string | undefined): string => {
   switch (status) {
+    case 'NEW':
+      return 'Nuevo';
     case 'PENDING':
       return 'Pendiente';
     case 'IN_PROGRESS':
@@ -147,10 +148,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   orderId,
   orderNumber,
   orderDate,
-  onAddProducts,
-  additionalItems,
-  navigation,
   onCancelOrder,
+  navigation,
+  onAddProducts,
+  pendingProductsToAdd = [],
+  onItemsCountChanged,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -160,6 +162,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
+    isSuccess: isSuccessOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
@@ -188,8 +191,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editPhoneNumber, setEditPhoneNumber] = useState<string>('');
   const [editDeliveryAddress, setEditDeliveryAddress] = useState<string>('');
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
-  const [additionalItemsProcessed, setAdditionalItemsProcessed] =
-    useState(false);
 
   // Obtener estado del carrito Y del formulario desde el contexto SOLO si NO estamos en modo edición
   const cartContext = !isEditMode ? useCart() : null;
@@ -354,6 +355,27 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
 
+  // Calcular conteo de items existentes (no temporales)
+  const existingItemsCount = useMemo(() => {
+    if (!isEditMode) return 0;
+    return editItems
+      .filter(item => !item.id.startsWith('new-'))
+      .reduce((sum, item) => sum + item.quantity, 0);
+  }, [isEditMode, editItems]);
+
+  // Notificar cambios en el conteo de items (solo en modo edición)
+  const [lastNotifiedCount, setLastNotifiedCount] = useState<number | null>(null);
+  
+  useEffect(() => {
+    if (isEditMode && onItemsCountChanged && visible && orderDataLoaded) {
+      // Solo notificar si el conteo realmente cambió
+      if (existingItemsCount !== lastNotifiedCount) {
+        onItemsCountChanged(existingItemsCount);
+        setLastNotifiedCount(existingItemsCount);
+      }
+    }
+  }, [isEditMode, existingItemsCount, visible, orderDataLoaded, lastNotifiedCount, onItemsCountChanged]);
+
   // Calcular total pagado
   const totalPaid = useMemo(() => {
     if (!isEditMode || !payments) return 0;
@@ -471,7 +493,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
         const existingItem = groupedItemsMap.get(groupKey);
 
-        if (existingItem) {
+        if (existingItem && existingItem.preparationStatus === item.preparationStatus) {
           // Si ya existe un item idéntico con el mismo estado, incrementar la cantidad
           existingItem.quantity += 1;
           existingItem.totalPrice =
@@ -497,33 +519,102 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
       // Convertir el mapa a array
       const mappedItems = Array.from(groupedItemsMap.values());
-      console.log('Cargando items de la orden en OrderCartDetail:', {
-        orderItemsCount: orderData.orderItems?.length || 0,
-        mappedItemsCount: mappedItems.length,
-        mappedItems,
-      });
       setEditItems(mappedItems);
     }
+    
+    // Marcar que los datos de la orden ya se cargaron
+    setOrderDataLoaded(true);
   }, [isEditMode, orderData, visible]);
 
-  // Agregar items adicionales cuando se proporcionen
-  useEffect(() => {
-    if (
-      isEditMode &&
-      additionalItems &&
-      additionalItems.length > 0 &&
-      !additionalItemsProcessed
-    ) {
-      // Generar nuevos IDs únicos para evitar duplicados
-      const itemsWithNewIds = additionalItems.map((item, index) => ({
-        ...item,
-        id: `new-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
-      }));
+  // Función para agrupar items idénticos
+  const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
+    const groupedMap = new Map<string, CartItem>();
+    
+    items.forEach(item => {
+      // Crear una clave única basada en todas las propiedades que deben ser idénticas
+      const modifierIds = item.modifiers
+        .map(m => m.id)
+        .sort()
+        .join(',');
+      
+      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'NEW'}`;
+      
+      const existingItem = groupedMap.get(groupKey);
+      
+      if (existingItem) {
+        // Si ya existe un item idéntico, incrementar la cantidad
+        existingItem.quantity += item.quantity;
+        // Recalcular el precio total considerando modificadores
+        const modifiersPrice = existingItem.modifiers.reduce(
+          (sum, mod) => sum + (mod.price || 0),
+          0,
+        );
+        existingItem.totalPrice = (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
+      } else {
+        // Si es nuevo, agregarlo al mapa con una copia completa
+        groupedMap.set(groupKey, { ...item });
+      }
+    });
+    
+    return Array.from(groupedMap.values());
+  }, []);
 
-      setEditItems((prev) => [...prev, ...itemsWithNewIds]);
-      setAdditionalItemsProcessed(true);
+  // Estado para controlar si ya procesamos los productos pendientes
+  const [processedPendingProductsIds, setProcessedPendingProductsIds] = useState<string[]>([]);
+  // Estado para controlar si los datos de la orden ya se cargaron
+  const [orderDataLoaded, setOrderDataLoaded] = useState(false);
+  
+  // Manejar productos pendientes de añadir
+  useEffect(() => {
+    // Solo procesar cuando:
+    // 1. Hay productos pendientes
+    // 2. Estamos en modo edición
+    // 3. El modal es visible
+    // 4. Los datos de la orden ya se cargaron
+    if (pendingProductsToAdd.length > 0 && isEditMode && visible && orderDataLoaded) {
+      // Filtrar productos que no han sido procesados aún
+      const unprocessedProducts = pendingProductsToAdd.filter(item => {
+        // Usar una clave única para cada producto basada en sus propiedades
+        const productKey = `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map(m => m.id).sort())}-${item.preparationNotes || ''}`;
+        return !processedPendingProductsIds.includes(productKey);
+      });
+
+      if (unprocessedProducts.length > 0) {
+        console.log('Procesando productos pendientes:', unprocessedProducts.length);
+        
+        // Marcar los nuevos productos con estado "NEW"
+        const newProductsWithStatus = unprocessedProducts.map(item => ({
+          ...item,
+          preparationStatus: 'NEW' as const,
+          id: `new-${Date.now()}-${Math.random()}`, // Asegurar IDs únicos para nuevos items
+        }));
+        
+        // Combinar con items existentes y agrupar
+        setEditItems(prevItems => {
+          const allItems = [...prevItems, ...newProductsWithStatus];
+          const grouped = groupIdenticalItems(allItems);
+          console.log('Items después de agrupar:', grouped.length);
+          return grouped;
+        });
+        
+        // Marcar estos productos como procesados
+        const newProcessedIds = unprocessedProducts.map(item => 
+          `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map(m => m.id).sort())}-${item.preparationNotes || ''}`
+        );
+        setProcessedPendingProductsIds(prev => [...prev, ...newProcessedIds]);
+        
+        // Calcular cuántos items únicos se añadieron
+        const uniqueNewItems = newProductsWithStatus.length;
+        showSnackbar({
+          message: `${uniqueNewItems} producto${uniqueNewItems > 1 ? 's' : ''} añadido${uniqueNewItems > 1 ? 's' : ''}`,
+          type: 'success',
+        });
+      }
     }
-  }, [isEditMode, additionalItems, additionalItemsProcessed]);
+  }, [pendingProductsToAdd, isEditMode, visible, orderDataLoaded, processedPendingProductsIds, groupIdenticalItems, showSnackbar]);
+  
+  // Resetear los IDs procesados cuando el modal se cierre o cambie de orden
+  // (esto se maneja en el useEffect de reseteo de estados)
 
   // Limpiar errores locales al cambiar tipo de orden (más simple)
   useEffect(() => {
@@ -551,7 +642,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setEditingItemFromList(null);
       setEditingProduct(null);
       setIsModalReady(false);
-      setAdditionalItemsProcessed(false);
+      setOrderDataLoaded(false); // Resetear el flag de datos cargados
+      setProcessedPendingProductsIds([]); // Resetear los IDs de productos procesados
+      setLastNotifiedCount(null); // Resetear el conteo notificado
     }
   }, [visible, isEditMode]);
 
@@ -615,17 +708,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
 
     // Mapear items del carrito al formato esperado por el DTO del backend
-    // IMPORTANTE: Expandir items según su cantidad ya que el backend no maneja quantity
     const itemsForBackend: OrderItemDtoForBackend[] = [];
 
+    console.log('Items a enviar al backend:', items.length);
+    console.log('Items con estado NEW:', items.filter(item => item.preparationStatus === 'NEW').length);
+    
+    // En ambos modos (creación y edición), expandir items según su cantidad
+    // El backend identifica items únicos por productId + variantId, así que necesitamos
+    // enviar items individuales para poder tener múltiples del mismo producto
     items.forEach((item: CartItem) => {
       // Crear un item individual por cada unidad de la cantidad
       for (let i = 0; i < item.quantity; i++) {
         itemsForBackend.push({
           productId: item.productId,
           productVariantId: item.variantId || null,
-          // quantity se elimina del backend, pero mantenemos el campo para compatibilidad temporal
-          quantity: 1, // Siempre 1 porque cada item es individual
           basePrice: Number(item.unitPrice), // Precio unitario
           finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
           preparationNotes: item.preparationNotes || null,
@@ -692,6 +788,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined, // Usar Enum
       notes: orderNotes || undefined,
     };
+
+    console.log('Payload final a enviar:', JSON.stringify(orderDetails, null, 2));
 
     if (!orderDetails.userId) {
       console.error('Error: Falta el ID del usuario al confirmar la orden.');
@@ -1393,7 +1491,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           }
         }}
         contentContainerStyle={styles.modalContent}
-        dismissable={false}
+        dismissable={true}
         dismissableBackButton={false}
       >
         <GestureHandlerRootView style={styles.container}>
@@ -1595,51 +1693,53 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         // Mover title y description a un View contenedor para controlar el ancho
                         title={() => (
                           <View style={styles.itemTextContainer}>
-                            <View style={styles.itemHeaderRow}>
+                            <View>
                               <Text style={styles.itemTitleText}>
                                 {`${item.quantity}x ${String(item.productName ?? '')}${item.variantName ? ` (${String(item.variantName ?? '')})` : ''}`}
                               </Text>
-                              {/* Mostrar estado de preparación solo en modo edición */}
+                              {/* Mostrar estado de preparación solo en modo edición - siempre en nueva línea */}
                               {isEditMode && item.preparationStatus && (
-                                <View
-                                  style={[
-                                    styles.statusBadge,
-                                    {
-                                      backgroundColor:
-                                        getPreparationStatusColor(
-                                          item.preparationStatus,
-                                          theme,
-                                        ) + '20',
-                                    },
-                                  ]}
-                                >
+                                <View style={styles.statusContainer}>
                                   <View
                                     style={[
-                                      styles.statusDot,
+                                      styles.statusBadge,
                                       {
                                         backgroundColor:
                                           getPreparationStatusColor(
                                             item.preparationStatus,
                                             theme,
-                                          ),
-                                      },
-                                    ]}
-                                  />
-                                  <Text
-                                    style={[
-                                      styles.statusText,
-                                      {
-                                        color: getPreparationStatusColor(
-                                          item.preparationStatus,
-                                          theme,
-                                        ),
+                                          ) + '20',
                                       },
                                     ]}
                                   >
-                                    {getPreparationStatusText(
-                                      item.preparationStatus,
-                                    )}
-                                  </Text>
+                                    <View
+                                      style={[
+                                        styles.statusDot,
+                                        {
+                                          backgroundColor:
+                                            getPreparationStatusColor(
+                                              item.preparationStatus,
+                                              theme,
+                                            ),
+                                        },
+                                      ]}
+                                    />
+                                    <Text
+                                      style={[
+                                        styles.statusText,
+                                        {
+                                          color: getPreparationStatusColor(
+                                            item.preparationStatus,
+                                            theme,
+                                          ),
+                                        },
+                                      ]}
+                                    >
+                                      {getPreparationStatusText(
+                                        item.preparationStatus,
+                                      )}
+                                    </Text>
+                                  </View>
                                 </View>
                               )}
                             </View>
@@ -1736,13 +1836,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             </View>
                             <View style={styles.priceContainer}>
                               <Text style={styles.itemPrice}>
-                                ${item.totalPrice.toFixed(2)}
+                                ${Number(item.totalPrice || 0).toFixed(2)}
                               </Text>
                               {item.quantity > 1 && (
                                 <Text style={styles.unitPriceText}>
                                   ($
                                   {(
-                                    item.unitPrice +
+                                    Number(item.unitPrice || 0) +
                                     item.modifiers.reduce(
                                       (sum, mod) =>
                                         sum + Number(mod.price || 0),
@@ -1767,50 +1867,39 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {isEditMode && (
               <Button
                 onPress={() => {
-                  console.log('Botón Añadir Productos presionado', {
-                    hasNavigation: !!navigation,
-                    hasOnAddProducts: !!onAddProducts,
-                    orderId,
-                    itemsCount: items.length,
-                    isEditMode,
-                    items: items,
-                  });
-
-                  // Si hay un callback onAddProducts, usarlo
                   if (onAddProducts) {
-                    onAddProducts(items);
-                  }
-                  // Si no, intentar navegar directamente
-                  else if (navigation) {
-                    // Cerrar el modal primero para evitar problemas de navegación
-                    onClose?.();
-
-                    // Pequeño delay para asegurar que el modal se cierre antes de navegar
-                    setTimeout(() => {
-                      console.log('Navegando a CreateOrder con params:', {
-                        isAddingToOrder: true,
-                        orderId: orderId || undefined,
-                        orderNumber: orderNumber,
+                    // Si tenemos un callback personalizado, usarlo
+                    onAddProducts();
+                  } else if (navigation && orderId && orderNumber) {
+                    // Si no, usar navegación directa
+                    try {
+                      navigation.navigate('AddProductsToOrder', {
+                        orderId,
+                        orderNumber,
+                        // Pasar el conteo de items existentes (no incluir los temporales "NEW")
+                        existingOrderItemsCount: editItems.filter(item => !item.id.startsWith('new-')).reduce((sum, item) => sum + item.quantity, 0),
+                        onProductsAdded: (newProducts: CartItem[]) => {
+                          // Marcar los nuevos productos con estado "NEW"
+                          const newProductsWithStatus = newProducts.map(item => ({
+                            ...item,
+                            preparationStatus: 'NEW' as const,
+                            id: `new-${Date.now()}-${Math.random()}`,
+                          }));
+                          
+                          // Combinar con items existentes y agrupar
+                          const allItems = [...editItems, ...newProductsWithStatus];
+                          const groupedItems = groupIdenticalItems(allItems);
+                          
+                          setEditItems(groupedItems);
+                          showSnackbar({
+                            message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
+                            type: 'success',
+                          });
+                        },
                       });
-                      navigation.navigate('CreateOrder', {
-                        isAddingToOrder: true,
-                        orderId: orderId || undefined,
-                        orderNumber: orderNumber,
-                        orderDate: orderDate?.toISOString(),
-                        existingItems: items, // Pasar los items actuales
-                        orderType: orderType,
-                        tableId: selectedTableId || undefined,
-                        customerName: customerName || undefined,
-                        phoneNumber: phoneNumber || undefined,
-                        deliveryAddress: deliveryAddress || undefined,
-                        notes: orderNotes || undefined,
-                        scheduledAt: scheduledTime?.toISOString() || undefined,
-                      });
-                    }, 100);
-                  } else {
-                    console.error(
-                      'Ni navigation ni onAddProducts están disponibles en OrderCartDetail',
-                    );
+                    } catch (error) {
+                      console.error('Error al navegar:', error);
+                    }
                   }
                 }}
                 mode="outlined"
@@ -2357,18 +2446,17 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       textAlign: 'center',
       flex: 1,
     },
-    itemHeaderRow: {
+    statusContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      flexWrap: 'wrap',
-      gap: theme.spacing.xs,
+      marginTop: 2, // Pequeño margen para separar del nombre
+      justifyContent: 'flex-start', // Alinear a la izquierda
     },
     statusBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.s,
-      paddingVertical: 4,
+      paddingVertical: 2, // Reducido de 4 a 2 para ser más compacto
       borderRadius: 12,
       gap: 4,
     },

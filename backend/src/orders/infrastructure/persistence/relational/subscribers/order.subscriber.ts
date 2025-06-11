@@ -131,7 +131,6 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
           productId: item.productId || item.product?.id,
           productVariantId:
             item.productVariantId || item.productVariant?.id || null,
-          quantity: item.quantity,
           basePrice: item.basePrice,
           finalPrice: item.finalPrice,
           preparationStatus: item.preparationStatus,
