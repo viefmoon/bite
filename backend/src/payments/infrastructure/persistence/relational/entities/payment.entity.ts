@@ -31,9 +31,9 @@ export class PaymentEntity extends EntityRelationalHelper {
   })
   paymentMethod: PaymentMethod;
 
-  @Column({ 
-    type: 'decimal', 
-    precision: 10, 
+  @Column({
+    type: 'decimal',
+    precision: 10,
     scale: 2,
     transformer: {
       to: (value: number) => value,

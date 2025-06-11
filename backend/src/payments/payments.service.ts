@@ -23,9 +23,10 @@ export class PaymentsService {
     payment.paymentMethod = createPaymentDto.paymentMethod;
     payment.amount = createPaymentDto.amount;
     // Los pagos en efectivo se crean como completados
-    payment.paymentStatus = createPaymentDto.paymentMethod === PaymentMethod.CASH
-      ? PaymentStatus.COMPLETED
-      : PaymentStatus.PENDING;
+    payment.paymentStatus =
+      createPaymentDto.paymentMethod === PaymentMethod.CASH
+        ? PaymentStatus.COMPLETED
+        : PaymentStatus.PENDING;
 
     return this.paymentRepository.create(payment);
   }

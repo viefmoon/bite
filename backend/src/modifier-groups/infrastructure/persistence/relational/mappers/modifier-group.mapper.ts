@@ -7,7 +7,6 @@ import {
   mapArray,
 } from '../../../../../common/mappers/base.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
-import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Injectable()
 export class ModifierGroupMapper extends BaseMapper<

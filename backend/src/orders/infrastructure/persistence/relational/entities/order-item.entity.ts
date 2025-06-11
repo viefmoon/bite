@@ -8,7 +8,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { OrderEntity } from './order.entity';
@@ -16,6 +15,7 @@ import { ProductEntity } from '../../../../../products/infrastructure/persistenc
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { OrderItemModifierEntity } from './order-item-modifier.entity';
 import { PreparationStatus } from '../../../../domain/order-item';
+import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
 
 @Entity({
   name: 'order_item',
@@ -85,6 +85,9 @@ export class OrderItemEntity extends EntityRelationalHelper {
     (orderItemModifier) => orderItemModifier.orderItem,
   )
   modifiers: OrderItemModifierEntity[];
+
+  @OneToMany(() => AdjustmentEntity, (adjustment) => adjustment.orderItem)
+  adjustments: AdjustmentEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

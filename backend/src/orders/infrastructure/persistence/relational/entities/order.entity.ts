@@ -18,6 +18,7 @@ import { OrderType } from '../../../../domain/enums/order-type.enum';
 import { OrderItemEntity } from './order-item.entity';
 import { PaymentEntity } from '../../../../../payments/infrastructure/persistence/relational/entities/payment.entity';
 import { TicketImpressionEntity } from './ticket-impression.entity';
+import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
 
 @Entity({
   name: 'orders',
@@ -87,6 +88,9 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @OneToMany(() => TicketImpressionEntity, (impression) => impression.order)
   ticketImpressions: TicketImpressionEntity[];
+
+  @OneToMany(() => AdjustmentEntity, (adjustment) => adjustment.order)
+  adjustments: AdjustmentEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

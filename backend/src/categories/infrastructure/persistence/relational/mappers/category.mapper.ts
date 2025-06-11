@@ -3,7 +3,6 @@ import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import {
   BaseMapper,
   mapArray,

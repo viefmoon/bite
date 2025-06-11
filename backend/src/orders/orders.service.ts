@@ -128,7 +128,7 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    const existingOrder = await this.findOne(id); // Asegurarse de que la orden existe
+    await this.findOne(id); // Verificar que la orden existe
 
     // Actualizar datos básicos de la orden
     const updatePayload: Partial<Order> = {};
@@ -559,10 +559,7 @@ export class OrdersService {
     return this.ticketImpressionRepository.findByOrderId(orderId);
   }
 
-  async recoverOrder(
-    id: string,
-    userId: string,
-  ): Promise<Order> {
+  async recoverOrder(id: string, userId: string): Promise<Order> {
     const order = await this.findOne(id);
 
     // Verificar que la orden esté en un estado recuperable
@@ -578,12 +575,10 @@ export class OrdersService {
     // Actualizar el estado de la orden a DELIVERED y agregar nota
     const currentNotes = order.notes || '';
     const recoveryNote = `[Recuperada por usuario ${userId} el ${new Date().toLocaleString()}]`;
-    
+
     const updateData: UpdateOrderDto = {
       orderStatus: OrderStatus.DELIVERED,
-      notes: currentNotes
-        ? `${currentNotes}\n${recoveryNote}`
-        : recoveryNote,
+      notes: currentNotes ? `${currentNotes}\n${recoveryNote}` : recoveryNote,
     };
 
     return this.update(id, updateData);

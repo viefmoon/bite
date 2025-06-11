@@ -23,7 +23,9 @@ export interface IProductModifierRepository {
     filterOptions: FindAllProductModifiersDto;
     paginationOptions: IPaginationOptions;
   }): Promise<Paginated<ProductModifier>>;
-  findAll(filters: { modifierGroupId?: string }): Promise<Paginated<ProductModifier>>;
+  findAll(filters: {
+    modifierGroupId?: string;
+  }): Promise<Paginated<ProductModifier>>;
   update(
     id: string,
     data: Partial<ProductModifier>,
@@ -203,11 +205,18 @@ export class ProductModifierRepository implements IProductModifierRepository {
     }
   }
 
-  async findAll(filters: { modifierGroupId?: string }): Promise<Paginated<ProductModifier>> {
-    const queryBuilder = this.productModifierEntityRepository.createQueryBuilder('product_modifier');
+  async findAll(filters: {
+    modifierGroupId?: string;
+  }): Promise<Paginated<ProductModifier>> {
+    const queryBuilder =
+      this.productModifierEntityRepository.createQueryBuilder(
+        'product_modifier',
+      );
 
     if (filters.modifierGroupId) {
-      queryBuilder.where('product_modifier.group_id = :groupId', { groupId: filters.modifierGroupId });
+      queryBuilder.where('product_modifier.group_id = :groupId', {
+        groupId: filters.modifierGroupId,
+      });
     }
 
     queryBuilder.orderBy('product_modifier.sort_order', 'ASC');

@@ -27,7 +27,6 @@ import { OrderItem } from './domain/order-item';
 import { OrderItemModifier } from './domain/order-item-modifier';
 import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto';
 import { CreateOrderItemModifierDto } from './dto/create-order-item-modifier.dto';
-import { RecoverOrderDto } from './dto/recover-order.dto';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import {
   ApiBearerAuth,
@@ -194,7 +193,8 @@ export class OrdersController {
   @ApiOperation({ summary: 'Recover a completed or cancelled order' })
   @ApiResponse({
     status: 200,
-    description: 'The order has been successfully recovered to DELIVERED status.',
+    description:
+      'The order has been successfully recovered to DELIVERED status.',
     type: Order,
   })
   @ApiBearerAuth()

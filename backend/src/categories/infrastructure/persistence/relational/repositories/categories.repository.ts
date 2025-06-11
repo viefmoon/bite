@@ -6,9 +6,6 @@ import { Category } from '../../../../domain/category';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { BaseRelationalRepository } from '../../../../../common/infrastructure/persistence/relational/base-relational.repository';
 import { FindAllCategoriesDto } from '../../../../dto/find-all-categories.dto'; // Asegúrate que este DTO ya no tenga page/limit
-import { CreateCategoryDto } from '../../../../dto/create-category.dto';
-import { UpdateCategoryDto } from '../../../../dto/update-category.dto';
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 
 @Injectable()
 export class CategoriesRelationalRepository extends BaseRelationalRepository<

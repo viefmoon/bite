@@ -19,7 +19,6 @@ import { UpdateProductModifierDto } from './dto/update-product-modifier.dto';
 import { FindAllProductModifiersDto } from './dto/find-all-product-modifiers.dto';
 import { ProductModifier } from './domain/product-modifier';
 import { Paginated } from '../common/types/paginated.type';
-import { Transform } from 'class-transformer';
 
 @ApiTags('Product Modifiers')
 @Controller({ path: 'product-modifiers', version: '1' })

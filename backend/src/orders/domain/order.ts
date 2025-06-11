@@ -5,6 +5,7 @@ import { OrderStatus } from './enums/order-status.enum';
 import { OrderType } from './enums/order-type.enum';
 import { Payment } from '../../payments/domain/payment';
 import { OrderItem } from './order-item'; // Importar OrderItem
+import { Adjustment } from '../../adjustments/domain/adjustment';
 
 export class Order {
   id: string;
@@ -35,6 +36,7 @@ export class Order {
 
   orderItems: OrderItem[];
   payments: Payment[] | null;
+  adjustments?: Adjustment[];
 
   createdAt: Date;
 

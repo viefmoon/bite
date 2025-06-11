@@ -2,6 +2,7 @@ import { Order } from './order';
 import { Product } from '../../products/domain/product';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { OrderItemModifier } from './order-item-modifier';
+import { Adjustment } from '../../adjustments/domain/adjustment';
 
 export enum PreparationStatus {
   PENDING = 'PENDING',
@@ -26,6 +27,7 @@ export class OrderItem {
   product?: Product;
   productVariant?: ProductVariant | null;
   modifiers?: OrderItemModifier[];
+  adjustments?: Adjustment[];
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
