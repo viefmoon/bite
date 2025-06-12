@@ -16,6 +16,7 @@ import { ProductVariantEntity } from '../../../../../product-variants/infrastruc
 import { OrderItemModifierEntity } from './order-item-modifier.entity';
 import { PreparationStatus } from '../../../../domain/order-item';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
+import { SelectedPizzaIngredientEntity } from '../../../../../selected-pizza-ingredients/infrastructure/persistence/relational/entities/selected-pizza-ingredient.entity';
 
 @Entity({
   name: 'order_item',
@@ -85,6 +86,12 @@ export class OrderItemEntity extends EntityRelationalHelper {
 
   @OneToMany(() => AdjustmentEntity, (adjustment) => adjustment.orderItem)
   adjustments: AdjustmentEntity[];
+
+  @OneToMany(
+    () => SelectedPizzaIngredientEntity,
+    (selectedIngredient) => selectedIngredient.orderItem,
+  )
+  selectedPizzaIngredients: SelectedPizzaIngredientEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

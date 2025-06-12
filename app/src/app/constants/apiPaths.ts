@@ -36,4 +36,6 @@ export const API_PATHS = {
 
   PAYMENTS: '/api/v1/payments',
   PAYMENTS_BY_ORDER: '/api/v1/payments/order/:orderId',
+
+  PIZZA_INGREDIENTS: '/api/v1/pizza-ingredients',
 } as const;
