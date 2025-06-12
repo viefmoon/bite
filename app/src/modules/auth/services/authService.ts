@@ -40,7 +40,7 @@ class AuthService {
 
   async verifyToken(): Promise<boolean> {
     try {
-      const response = await apiClient.get('/auth/me');
+      const response = await apiClient.get(API_PATHS.AUTH_ME);
       return response.status === 200;
     } catch (error) {
       console.log('[AuthService] Token inválido o expirado');

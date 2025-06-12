@@ -1,4 +1,5 @@
 import apiClient from '../../../app/services/apiClient';
+import { API_PATHS } from '../../../app/constants/apiPaths';
 import type {
   Payment,
   CreatePaymentDto,
@@ -8,10 +9,8 @@ import type {
 } from '../types/payment.types';
 
 class PaymentService {
-  private baseUrl = '/api/v1/payments';
-
   async createPayment(dto: CreatePaymentDto): Promise<Payment> {
-    const { data } = await apiClient.post<Payment>(this.baseUrl, dto);
+    const { data } = await apiClient.post<Payment>(API_PATHS.PAYMENTS, dto);
     return data;
   }
 
@@ -20,34 +19,34 @@ class PaymentService {
     paymentMethod?: PaymentMethod;
     paymentStatus?: PaymentStatus;
   }): Promise<Payment[]> {
-    const { data } = await apiClient.get<Payment[]>(this.baseUrl, {
+    const { data } = await apiClient.get<Payment[]>(API_PATHS.PAYMENTS, {
       params: filters,
     });
     return data;
   }
 
   async getPaymentById(id: string): Promise<Payment> {
-    const { data } = await apiClient.get<Payment>(`${this.baseUrl}/${id}`);
+    const { data } = await apiClient.get<Payment>(`${API_PATHS.PAYMENTS}/${id}`);
     return data;
   }
 
   async getPaymentsByOrderId(orderId: string): Promise<Payment[]> {
     const { data } = await apiClient.get<Payment[]>(
-      `${this.baseUrl}/order/${orderId}`,
+      API_PATHS.PAYMENTS_BY_ORDER.replace(':orderId', orderId),
     );
     return data;
   }
 
   async updatePayment(id: string, dto: UpdatePaymentDto): Promise<Payment> {
     const { data } = await apiClient.patch<Payment>(
-      `${this.baseUrl}/${id}`,
+      `${API_PATHS.PAYMENTS}/${id}`,
       dto,
     );
     return data;
   }
 
   async deletePayment(id: string): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${id}`);
+    await apiClient.delete(`${API_PATHS.PAYMENTS}/${id}`);
   }
 }
 
