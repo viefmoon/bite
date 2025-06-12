@@ -16,6 +16,8 @@ export class Product {
 
   isActive: boolean;
 
+  isPizza: boolean;
+
   subcategoryId: string;
 
   preparationScreenId: string | null;

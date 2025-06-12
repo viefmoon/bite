@@ -23,6 +23,12 @@ export class RestaurantConfigEntity extends EntityRelationalHelper {
   @Column({ type: 'int', default: 45 })
   estimatedDeliveryTime: number;
 
+  @Column({ type: 'time', nullable: true })
+  openingTime: string | null;
+
+  @Column({ type: 'time', nullable: true })
+  closingTime: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

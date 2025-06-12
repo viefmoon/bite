@@ -100,6 +100,16 @@ export class CreateProductDto {
   isActive?: boolean;
 
   @ApiProperty({
+    type: Boolean,
+    example: false,
+    default: false,
+    description: 'Indica si el producto es una pizza',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isPizza?: boolean;
+
+  @ApiProperty({
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'ID de la subcategoría a la que pertenece el producto',

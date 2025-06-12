@@ -41,6 +41,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     domain.price = entity.price;
     domain.hasVariants = entity.hasVariants;
     domain.isActive = entity.isActive;
+    domain.isPizza = entity.isPizza;
     domain.subcategoryId = entity.subcategoryId;
     domain.photoId = entity.photoId;
     domain.estimatedPrepTime = entity.estimatedPrepTime;
@@ -75,6 +76,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     entity.price = domain.price;
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
+    entity.isPizza = domain.isPizza;
     entity.subcategoryId = domain.subcategoryId;
     entity.subcategory = { id: domain.subcategoryId } as SubcategoryEntity;
     entity.photoId = domain.photoId || null;

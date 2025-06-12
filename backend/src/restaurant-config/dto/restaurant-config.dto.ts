@@ -27,6 +27,22 @@ export class RestaurantConfigDto {
   })
   estimatedDeliveryTime: number;
 
+  @ApiProperty({
+    type: String,
+    example: '09:00:00',
+    description: 'Opening time in HH:mm:ss format',
+    nullable: true,
+  })
+  openingTime: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: '22:00:00',
+    description: 'Closing time in HH:mm:ss format',
+    nullable: true,
+  })
+  closingTime: string | null;
+
   @ApiProperty()
   createdAt: Date;
 

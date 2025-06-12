@@ -90,6 +90,7 @@ function ProductFormModal({
       price: null,
       hasVariants: false,
       isActive: true,
+      isPizza: false,
       subcategoryId: subcategoryId,
       photoId: null,
       estimatedPrepTime: 10,
@@ -141,6 +142,7 @@ function ProductFormModal({
           price: parsedPrice,
           hasVariants: initialData.hasVariants,
           isActive: initialData.isActive,
+          isPizza: initialData.isPizza ?? false,
           subcategoryId: initialData.subcategoryId,
           photoId: initialData.photo?.id ?? null,
           estimatedPrepTime: initialData.estimatedPrepTime,
@@ -612,6 +614,21 @@ function ProductFormModal({
                 <Controller
                   control={control}
                   name="isActive"
+                  render={({ field: { onChange, value } }) => (
+                    <Switch
+                      value={value}
+                      onValueChange={onChange}
+                      disabled={isSubmitting}
+                    />
+                  )}
+                />
+              </View>
+
+              <View style={styles.switchContainer}>
+                <Text style={styles.label}>Es Pizza</Text>
+                <Controller
+                  control={control}
+                  name="isPizza"
                   render={({ field: { onChange, value } }) => (
                     <Switch
                       value={value}

@@ -44,6 +44,7 @@ const productBaseSchema = z.object({
     .nullable(),
   hasVariants: z.boolean(),
   isActive: z.boolean(),
+  isPizza: z.boolean().default(false),
   subcategoryId: z.string().uuid('La subcategoría es requerida'),
   photoId: z.string().uuid().optional().nullable(), // ID de la foto guardada en backend
   imageUri: z // Campo temporal para el formulario

@@ -56,6 +56,7 @@ export class ProductsService {
     product.price = createProductDto.price ?? null;
     product.hasVariants = createProductDto.hasVariants ?? false;
     product.isActive = createProductDto.isActive ?? true;
+    product.isPizza = createProductDto.isPizza ?? false;
     product.subcategoryId = createProductDto.subcategoryId;
     product.estimatedPrepTime = createProductDto.estimatedPrepTime;
     product.photoId = createProductDto.photoId ?? null;
@@ -215,6 +216,7 @@ export class ProductsService {
         : (updateProductDto.price ?? product.price);
     product.hasVariants = updateProductDto.hasVariants ?? product.hasVariants;
     product.isActive = updateProductDto.isActive ?? product.isActive;
+    product.isPizza = updateProductDto.isPizza ?? product.isPizza;
     product.subcategoryId =
       updateProductDto.subcategoryId ?? product.subcategoryId;
     product.estimatedPrepTime =

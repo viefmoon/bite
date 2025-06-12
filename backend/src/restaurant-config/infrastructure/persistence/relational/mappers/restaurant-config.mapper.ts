@@ -8,6 +8,8 @@ export class RestaurantConfigMapper {
     domainEntity.acceptingOrders = raw.acceptingOrders;
     domainEntity.estimatedPickupTime = raw.estimatedPickupTime;
     domainEntity.estimatedDeliveryTime = raw.estimatedDeliveryTime;
+    domainEntity.openingTime = raw.openingTime;
+    domainEntity.closingTime = raw.closingTime;
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
 
@@ -23,6 +25,8 @@ export class RestaurantConfigMapper {
     persistenceEntity.estimatedPickupTime = domainEntity.estimatedPickupTime;
     persistenceEntity.estimatedDeliveryTime =
       domainEntity.estimatedDeliveryTime;
+    persistenceEntity.openingTime = domainEntity.openingTime;
+    persistenceEntity.closingTime = domainEntity.closingTime;
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;
 

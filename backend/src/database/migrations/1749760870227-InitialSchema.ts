@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialSchema1749737621899 implements MigrationInterface {
-  name = 'InitialSchema1749737621899';
+export class InitialSchema1749760870227 implements MigrationInterface {
+  name = 'InitialSchema1749760870227';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -20,25 +20,13 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `CREATE INDEX "IDX_f0e1b4ecdca13b177e2e3a0613" ON "user" ("lastName") `,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "thermal_printer" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "connectionType" "public"."thermal_printer_connectiontype_enum" NOT NULL, "ipAddress" character varying, "port" integer, "path" character varying, "isActive" boolean NOT NULL DEFAULT true, "macAddress" character varying(17), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_cd20a8ea69e128597672d5c7813" UNIQUE ("ipAddress"), CONSTRAINT "PK_fa2e4d506b3ae2a00b5c62d894c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_cd20a8ea69e128597672d5c781" ON "thermal_printer" ("ipAddress") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_7f20d400228dc58a946e3b4ecb" ON "thermal_printer" ("macAddress") `,
-    );
-    await queryRunner.query(
       `CREATE TABLE "file" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "path" character varying NOT NULL, CONSTRAINT "PK_36b46d232307066b3a2c9ea3a1d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "restaurant_config" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "acceptingOrders" boolean NOT NULL DEFAULT true, "estimatedPickupTime" integer NOT NULL DEFAULT '30', "estimatedDeliveryTime" integer NOT NULL DEFAULT '45', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7507a8162b2370c15747a6e546d" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "category" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_23c05c292c439d77b0de816b500" UNIQUE ("name"), CONSTRAINT "PK_9c4e4a89e3674fc9f382d733f03" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "category" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_23c05c292c439d77b0de816b500" UNIQUE ("name"), CONSTRAINT "PK_9c4e4a89e3674fc9f382d733f03" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "subcategory" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "category_id" uuid NOT NULL, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_5ad0b82340b411f9463c8e9554d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "area" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying NOT NULL DEFAULT '', "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_644ffaf8fbde4db798cb47712fe" UNIQUE ("name"), CONSTRAINT "PK_39d5e4de490139d6535d75f42ff" PRIMARY KEY ("id"))`,
@@ -104,10 +92,31 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `CREATE TABLE "preparation_screens" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "description" character varying(255), "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_7ac7b3fa4460e49952d274aa1d5" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "product" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" text, "price" numeric(10,2), "hasVariants" boolean NOT NULL DEFAULT false, "isActive" boolean NOT NULL DEFAULT true, "subcategory_id" uuid NOT NULL, "photo_id" uuid, "estimatedPrepTime" integer NOT NULL, "preparation_screen_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_bebc9158e480b949565b4dc7a82" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "product" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" text, "price" numeric(10,2), "hasVariants" boolean NOT NULL DEFAULT false, "isActive" boolean NOT NULL DEFAULT true, "is_pizza" boolean NOT NULL DEFAULT false, "subcategory_id" uuid NOT NULL, "photo_id" uuid, "estimatedPrepTime" integer NOT NULL, "preparation_screen_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_bebc9158e480b949565b4dc7a82" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "subcategory" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "category_id" uuid NOT NULL, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_5ad0b82340b411f9463c8e9554d" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "pizza_ingredient" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "ingredient_value" integer NOT NULL DEFAULT '1', "product_id" uuid NOT NULL, "ingredients" text, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_2784bedf720d3a864516f8557c2" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."selected_pizza_ingredient_half_enum" AS ENUM('left', 'right', 'full')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."selected_pizza_ingredient_action_enum" AS ENUM('add', 'remove')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "selected_pizza_ingredient" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "half" "public"."selected_pizza_ingredient_half_enum" NOT NULL DEFAULT 'full', "pizza_ingredient_id" uuid NOT NULL, "order_item_id" uuid NOT NULL, "action" "public"."selected_pizza_ingredient_action_enum" NOT NULL DEFAULT 'add', "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_d25db3c7c03e42f30e89b96b994" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "thermal_printer" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "connectionType" "public"."thermal_printer_connectiontype_enum" NOT NULL, "ipAddress" character varying, "port" integer, "path" character varying, "isActive" boolean NOT NULL DEFAULT true, "macAddress" character varying(17), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_cd20a8ea69e128597672d5c7813" UNIQUE ("ipAddress"), CONSTRAINT "PK_fa2e4d506b3ae2a00b5c62d894c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_cd20a8ea69e128597672d5c781" ON "thermal_printer" ("ipAddress") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_7f20d400228dc58a946e3b4ecb" ON "thermal_printer" ("macAddress") `,
     );
     await queryRunner.query(
       `CREATE TABLE "session" ("id" SERIAL NOT NULL, "hash" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "userId" uuid, CONSTRAINT "PK_f55da76ac1c3ac420f444d2ff11" PRIMARY KEY ("id"))`,
@@ -116,10 +125,7 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `CREATE INDEX "IDX_3d2f174ef04fb312fdebd0ddc5" ON "session" ("userId") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "order_history" ("id" SERIAL NOT NULL, "order_id" uuid NOT NULL, "operation" character varying(10) NOT NULL, "changed_by" uuid NOT NULL, "changed_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "diff" jsonb, "snapshot" jsonb NOT NULL, CONSTRAINT "PK_cc71513680d03ecb01b96655b0c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_a2937c330238ea84f26c912104" ON "order_history" ("order_id", "changed_at") `,
+      `CREATE TABLE "restaurant_config" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "acceptingOrders" boolean NOT NULL DEFAULT true, "estimatedPickupTime" integer NOT NULL DEFAULT '30', "estimatedDeliveryTime" integer NOT NULL DEFAULT '45', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7507a8162b2370c15747a6e546d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "address" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "street" character varying(200) NOT NULL, "number" character varying(50) NOT NULL, "interiorNumber" character varying(50), "neighborhood" character varying(150), "city" character varying(100), "state" character varying(100), "zipCode" character varying(10), "country" character varying(100), "references" text, "isDefault" boolean NOT NULL DEFAULT false, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "customer_id" uuid NOT NULL, CONSTRAINT "PK_d92de1f82754668b5f5f5dd4fd5" PRIMARY KEY ("id"))`,
@@ -143,6 +149,12 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `CREATE UNIQUE INDEX "uq_customer_email" ON "customer" ("email") WHERE email IS NOT NULL`,
     );
     await queryRunner.query(
+      `CREATE TABLE "order_history" ("id" SERIAL NOT NULL, "order_id" uuid NOT NULL, "operation" character varying(10) NOT NULL, "changed_by" uuid NOT NULL, "changed_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "diff" jsonb, "snapshot" jsonb NOT NULL, CONSTRAINT "PK_cc71513680d03ecb01b96655b0c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_a2937c330238ea84f26c912104" ON "order_history" ("order_id", "changed_at") `,
+    );
+    await queryRunner.query(
       `CREATE TABLE "product_modifier_group" ("product_id" uuid NOT NULL, "modifier_group_id" uuid NOT NULL, CONSTRAINT "PK_37bc0163dbdbccfc385cf524d57" PRIMARY KEY ("product_id", "modifier_group_id"))`,
     );
     await queryRunner.query(
@@ -156,6 +168,12 @@ export class InitialSchema1749737621899 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "category" ADD CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62" FOREIGN KEY ("photo_id") REFERENCES "file"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subcategory" ADD CONSTRAINT "FK_b36496504b71c57762246db74d7" FOREIGN KEY ("photo_id") REFERENCES "file"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subcategory" ADD CONSTRAINT "FK_23584d8b8d26287e4fca0e1aaab" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "table" ADD CONSTRAINT "FK_65407279bef3b9e1458bb4ac588" FOREIGN KEY ("area_id") REFERENCES "area"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -218,10 +236,13 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `ALTER TABLE "product" ADD CONSTRAINT "FK_43b6baaae5d58553d5269e26f6e" FOREIGN KEY ("preparation_screen_id") REFERENCES "preparation_screens"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subcategory" ADD CONSTRAINT "FK_b36496504b71c57762246db74d7" FOREIGN KEY ("photo_id") REFERENCES "file"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "pizza_ingredient" ADD CONSTRAINT "FK_b177c2f166d5b6e4e4258782fd4" FOREIGN KEY ("product_id") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subcategory" ADD CONSTRAINT "FK_23584d8b8d26287e4fca0e1aaab" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "selected_pizza_ingredient" ADD CONSTRAINT "FK_a61cd24cbb211f8287af8bcb795" FOREIGN KEY ("pizza_ingredient_id") REFERENCES "pizza_ingredient"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "selected_pizza_ingredient" ADD CONSTRAINT "FK_6dc311128c16973bff785df2eda" FOREIGN KEY ("order_item_id") REFERENCES "order_item"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "session" ADD CONSTRAINT "FK_3d2f174ef04fb312fdebd0ddc53" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -251,10 +272,13 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `ALTER TABLE "session" DROP CONSTRAINT "FK_3d2f174ef04fb312fdebd0ddc53"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subcategory" DROP CONSTRAINT "FK_23584d8b8d26287e4fca0e1aaab"`,
+      `ALTER TABLE "selected_pizza_ingredient" DROP CONSTRAINT "FK_6dc311128c16973bff785df2eda"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subcategory" DROP CONSTRAINT "FK_b36496504b71c57762246db74d7"`,
+      `ALTER TABLE "selected_pizza_ingredient" DROP CONSTRAINT "FK_a61cd24cbb211f8287af8bcb795"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pizza_ingredient" DROP CONSTRAINT "FK_b177c2f166d5b6e4e4258782fd4"`,
     );
     await queryRunner.query(
       `ALTER TABLE "product" DROP CONSTRAINT "FK_43b6baaae5d58553d5269e26f6e"`,
@@ -317,6 +341,12 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `ALTER TABLE "table" DROP CONSTRAINT "FK_65407279bef3b9e1458bb4ac588"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "subcategory" DROP CONSTRAINT "FK_23584d8b8d26287e4fca0e1aaab"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subcategory" DROP CONSTRAINT "FK_b36496504b71c57762246db74d7"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "category" DROP CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62"`,
     );
     await queryRunner.query(
@@ -329,6 +359,10 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `DROP INDEX "public"."IDX_e35ee74f60bf7607fcfa5b5a44"`,
     );
     await queryRunner.query(`DROP TABLE "product_modifier_group"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_a2937c330238ea84f26c912104"`,
+    );
+    await queryRunner.query(`DROP TABLE "order_history"`);
     await queryRunner.query(`DROP INDEX "public"."uq_customer_email"`);
     await queryRunner.query(`DROP INDEX "public"."uq_customer_phone"`);
     await queryRunner.query(
@@ -342,15 +376,29 @@ export class InitialSchema1749737621899 implements MigrationInterface {
       `DROP INDEX "public"."IDX_49bc1e3cd91c06dc434318abd9"`,
     );
     await queryRunner.query(`DROP TABLE "address"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_a2937c330238ea84f26c912104"`,
-    );
-    await queryRunner.query(`DROP TABLE "order_history"`);
+    await queryRunner.query(`DROP TABLE "restaurant_config"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_3d2f174ef04fb312fdebd0ddc5"`,
     );
     await queryRunner.query(`DROP TABLE "session"`);
-    await queryRunner.query(`DROP TABLE "subcategory"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_7f20d400228dc58a946e3b4ecb"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_cd20a8ea69e128597672d5c781"`,
+    );
+    await queryRunner.query(`DROP TABLE "thermal_printer"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
+    );
+    await queryRunner.query(`DROP TABLE "selected_pizza_ingredient"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."selected_pizza_ingredient_action_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."selected_pizza_ingredient_half_enum"`,
+    );
+    await queryRunner.query(`DROP TABLE "pizza_ingredient"`);
     await queryRunner.query(`DROP TABLE "product"`);
     await queryRunner.query(`DROP TABLE "preparation_screens"`);
     await queryRunner.query(`DROP TABLE "product_variant"`);
@@ -381,19 +429,9 @@ export class InitialSchema1749737621899 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "daily_order_counter"`);
     await queryRunner.query(`DROP TABLE "table"`);
     await queryRunner.query(`DROP TABLE "area"`);
+    await queryRunner.query(`DROP TABLE "subcategory"`);
     await queryRunner.query(`DROP TABLE "category"`);
     await queryRunner.query(`DROP TABLE "file"`);
-    await queryRunner.query(`DROP TABLE "restaurant_config"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_7f20d400228dc58a946e3b4ecb"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_cd20a8ea69e128597672d5c781"`,
-    );
-    await queryRunner.query(`DROP TABLE "thermal_printer"`);
-    await queryRunner.query(
-      `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
-    );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_f0e1b4ecdca13b177e2e3a0613"`,
     );

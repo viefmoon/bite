@@ -18,6 +18,7 @@ import { ProductVariantEntity } from '../../../../../product-variants/infrastruc
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
+import { PizzaIngredientEntity } from '../../../../../pizza-ingredients/infrastructure/persistence/relational/entities/pizza-ingredient.entity';
 
 @Entity({
   name: 'product',
@@ -40,6 +41,9 @@ export class ProductEntity extends EntityRelationalHelper {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ name: 'is_pizza', default: false })
+  isPizza: boolean;
 
   @Column({ name: 'subcategory_id' })
   subcategoryId: string;
@@ -92,6 +96,9 @@ export class ProductEntity extends EntityRelationalHelper {
   )
   @JoinColumn({ name: 'preparation_screen_id' })
   preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
+
+  @OneToMany(() => PizzaIngredientEntity, (ingredient) => ingredient.product)
+  pizzaIngredients: PizzaIngredientEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
