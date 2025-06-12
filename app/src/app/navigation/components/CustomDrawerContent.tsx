@@ -148,14 +148,14 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const handleClearCache = async () => {
     try {
       await clearImageCache();
-      showSnackbar({ 
-        message: 'Caché de imágenes limpiado exitosamente', 
-        type: 'success' 
+      showSnackbar({
+        message: 'Caché de imágenes limpiado exitosamente',
+        type: 'success',
       });
     } catch (error) {
-      showSnackbar({ 
-        message: 'Error al limpiar el caché', 
-        type: 'error' 
+      showSnackbar({
+        message: 'Error al limpiar el caché',
+        type: 'error',
       });
     }
   };
@@ -365,30 +365,35 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               );
             })}
 
-            {renderDrawerItem('PizzaIngredientsStack', 'Ingredientes Pizza', 'pizza', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 6,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    {
-                      name: 'PizzaIngredientsStack',
-                      state: {
-                        routes: [{ name: 'PizzaIngredientsList' }],
+            {renderDrawerItem(
+              'PizzaIngredientsStack',
+              'Ingredientes Pizza',
+              'pizza',
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 6,
+                    routes: [
+                      { name: 'OrdersStack' },
+                      { name: 'ReceiptsStack' },
+                      { name: 'OrderFinalizationStack' },
+                      { name: 'MenuStack' },
+                      { name: 'AvailabilityStack' },
+                      { name: 'ModifiersStack' },
+                      {
+                        name: 'PizzaIngredientsStack',
+                        state: {
+                          routes: [{ name: 'PizzaIngredientsList' }],
+                        },
                       },
-                    },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                  ],
-                }),
-              );
-            })}
+                      { name: 'PreparationScreensStack' },
+                      { name: 'AreasTablesStack' },
+                      { name: 'PrintersStack' },
+                    ],
+                  }),
+                );
+              },
+            )}
 
             {renderDrawerItem(
               'PreparationScreensStack',
@@ -473,31 +478,36 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                 }),
               );
             })}
-            
-            {renderDrawerItem('RestaurantConfigStack', 'Configuración', 'cog-outline', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 9,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                    {
-                      name: 'RestaurantConfigStack',
-                      state: {
-                        routes: [{ name: 'RestaurantConfig' }],
+
+            {renderDrawerItem(
+              'RestaurantConfigStack',
+              'Configuración',
+              'cog-outline',
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 9,
+                    routes: [
+                      { name: 'OrdersStack' },
+                      { name: 'ReceiptsStack' },
+                      { name: 'OrderFinalizationStack' },
+                      { name: 'MenuStack' },
+                      { name: 'AvailabilityStack' },
+                      { name: 'ModifiersStack' },
+                      { name: 'PreparationScreensStack' },
+                      { name: 'AreasTablesStack' },
+                      { name: 'PrintersStack' },
+                      {
+                        name: 'RestaurantConfigStack',
+                        state: {
+                          routes: [{ name: 'RestaurantConfig' }],
+                        },
                       },
-                    },
-                  ],
-                }),
-              );
-            })}
+                    ],
+                  }),
+                );
+              },
+            )}
           </PaperDrawer.Section>
         </View>
       </DrawerContentScrollView>
@@ -550,16 +560,16 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={styles.drawerItemIconContainer}>
-              <Icon 
-                source="broom" 
-                size={24} 
-                color={theme.colors.onSurfaceVariant} 
+              <Icon
+                source="broom"
+                size={24}
+                color={theme.colors.onSurfaceVariant}
               />
             </View>
             <Text
               style={[
-                styles.drawerItemLabel, 
-                { color: theme.colors.onSurfaceVariant }
+                styles.drawerItemLabel,
+                { color: theme.colors.onSurfaceVariant },
               ]}
             >
               Limpiar Caché

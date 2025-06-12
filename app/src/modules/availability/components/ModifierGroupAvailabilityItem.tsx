@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Surface, Text, IconButton, Switch, Divider } from 'react-native-paper';
+import { Surface, Text, IconButton, Switch } from 'react-native-paper';
 import { ModifierGroupAvailability } from '../types/availability.types';
 import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';
 import { useAppTheme } from '@/app/styles/theme';
@@ -124,7 +124,7 @@ export const ModifierGroupAvailabilityItem: React.FC<
           ]}
         >
           <View style={styles.modifiersContainer}>
-            {modifierGroup.modifiers.map((modifier, index) => (
+            {modifierGroup.modifiers.map((modifier) => (
               <View
                 key={modifier.id}
                 style={[

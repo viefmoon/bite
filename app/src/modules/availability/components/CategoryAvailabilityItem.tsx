@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Surface, Text, IconButton, Switch, Divider } from 'react-native-paper';
 import { CategoryAvailability } from '../types/availability.types';
 import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';

@@ -61,7 +61,7 @@ export function useCreateProductMutation(): UseMutationResult<
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
-    onError: (error) => {},
+    onError: () => {},
   });
 }
 

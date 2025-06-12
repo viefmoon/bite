@@ -26,7 +26,9 @@ class PaymentService {
   }
 
   async getPaymentById(id: string): Promise<Payment> {
-    const { data } = await apiClient.get<Payment>(`${API_PATHS.PAYMENTS}/${id}`);
+    const { data } = await apiClient.get<Payment>(
+      `${API_PATHS.PAYMENTS}/${id}`,
+    );
     return data;
   }
 

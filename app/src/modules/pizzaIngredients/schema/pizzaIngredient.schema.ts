@@ -7,4 +7,6 @@ export const pizzaIngredientFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export type PizzaIngredientFormInputs = z.infer<typeof pizzaIngredientFormSchema>;
+export type PizzaIngredientFormInputs = z.infer<
+  typeof pizzaIngredientFormSchema
+>;

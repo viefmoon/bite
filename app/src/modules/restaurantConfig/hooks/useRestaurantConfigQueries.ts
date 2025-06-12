@@ -24,15 +24,17 @@ export const useRestaurantConfigQueries = () => {
         restaurantConfigService.updateConfig(data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.config });
-        showSnackbar({ 
-          message: 'Configuración actualizada exitosamente', 
-          type: 'success' 
+        showSnackbar({
+          message: 'Configuración actualizada exitosamente',
+          type: 'success',
         });
       },
       onError: (error: any) => {
         showSnackbar({
-          message: error.response?.data?.message || 'Error al actualizar la configuración',
-          type: 'error'
+          message:
+            error.response?.data?.message ||
+            'Error al actualizar la configuración',
+          type: 'error',
         });
       },
     });

@@ -2,7 +2,6 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   RefreshControl,
   FlatList,
 } from 'react-native';
@@ -146,32 +145,44 @@ export const AvailabilityScreen: React.FC = () => {
         ) : isEmpty ? (
           <EmptyState
             title="No se encontraron resultados"
-            description={
+            message={
               searchQuery
                 ? 'Intenta con otros términos de búsqueda'
                 : 'No hay elementos para mostrar'
             }
             icon="magnify"
           />
+        ) : viewMode === 'menu' ? (
+          <FlatList
+            data={filteredMenuData}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <CategoryAvailabilityItem
+                category={item}
+                onRefresh={handleRefresh}
+              />
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+              />
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          />
         ) : (
           <FlatList
-            data={
-              viewMode === 'menu' ? filteredMenuData : filteredModifiersData
-            }
+            data={filteredModifiersData}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) =>
-              viewMode === 'menu' ? (
-                <CategoryAvailabilityItem
-                  category={item}
-                  onRefresh={handleRefresh}
-                />
-              ) : (
-                <ModifierGroupAvailabilityItem
-                  modifierGroup={item}
-                  onRefresh={handleRefresh}
-                />
-              )
-            }
+            renderItem={({ item }) => (
+              <ModifierGroupAvailabilityItem
+                modifierGroup={item}
+                onRefresh={handleRefresh}
+              />
+            )}
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}

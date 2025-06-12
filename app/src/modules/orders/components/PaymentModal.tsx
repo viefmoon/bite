@@ -205,7 +205,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     try {
       await completeOrderMutation.mutateAsync(orderId);
       setShowFinalizeConfirm(false);
-      
+
       // Llamar al callback si existe
       if (onOrderCompleted) {
         onOrderCompleted();

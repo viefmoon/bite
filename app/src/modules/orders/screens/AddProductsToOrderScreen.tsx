@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 import { StyleSheet, View, FlatList } from 'react-native';
 import {
   Text,
@@ -10,13 +16,13 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { useGetFullMenu } from '../hooks/useMenuQueries';
 import {
-  Product,
-  Category,
-  SubCategory,
-} from '../types/orders.types';
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
+import { useGetFullMenu } from '../hooks/useMenuQueries';
+import { Product, Category, SubCategory } from '../types/orders.types';
 import { Image } from 'expo-image';
 import { getImageUrl } from '@/app/lib/imageUtils';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
@@ -45,33 +51,50 @@ const AddProductsToOrderScreen = () => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
   const navigation = useNavigation();
-  const route = useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
+  const route =
+    useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<CartButtonHandle>(null);
 
   // Obtener parámetros de navegación
-  const { orderId, orderNumber, existingTempProducts, existingOrderItemsCount, onProductsAdded } = route.params as AddProductsRouteProps;
+  const {
+    orderId,
+    orderNumber,
+    existingTempProducts,
+    existingOrderItemsCount,
+    onProductsAdded,
+  } = route.params as AddProductsRouteProps;
 
   // Estados para navegación y selección
   const [navigationLevel, setNavigationLevel] = useState<
     'categories' | 'subcategories' | 'products'
   >('categories');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
+    string | null
+  >(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [selectedProductForDescription, setSelectedProductForDescription] =
     useState<Product | null>(null);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
-  
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
+
   // Estado local para productos seleccionados - inicializar con productos existentes si los hay
-  const [selectedProducts, setSelectedProducts] = useState<CartItem[]>(existingTempProducts || []);
+  const [selectedProducts, setSelectedProducts] = useState<CartItem[]>(
+    existingTempProducts || [],
+  );
 
   const { data: menu, isLoading } = useGetFullMenu();
 
   // Calcular total de items (incluir items existentes de la orden)
   const totalItemsCount = useMemo(() => {
-    const newItemsCount = selectedProducts.reduce((sum, item) => sum + item.quantity, 0);
+    const newItemsCount = selectedProducts.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
     const existingItemsCount = existingOrderItemsCount || 0;
     return newItemsCount + existingItemsCount;
   }, [selectedProducts, existingOrderItemsCount]);
@@ -79,7 +102,10 @@ const AddProductsToOrderScreen = () => {
   // Mostrar mensaje si hay productos existentes al entrar
   useEffect(() => {
     if (existingTempProducts && existingTempProducts.length > 0) {
-      const totalItems = existingTempProducts.reduce((sum, item) => sum + item.quantity, 0);
+      const totalItems = existingTempProducts.reduce(
+        (sum, item) => sum + item.quantity,
+        0,
+      );
       showSnackbar({
         message: `${totalItems} producto${totalItems > 1 ? 's' : ''} recuperado${totalItems > 1 ? 's' : ''}`,
         type: 'info',
@@ -128,43 +154,53 @@ const AddProductsToOrderScreen = () => {
     selectedModifiers?: CartItemModifier[],
     preparationNotes?: string,
   ) => {
-    const selectedVariant = product.variants?.find(v => v.id === selectedVariantId);
+    const selectedVariant = product.variants?.find(
+      (v) => v.id === selectedVariantId,
+    );
     const variantPrice = selectedVariant?.price || product.price;
-    const modifiersPrice = selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
+    const modifiersPrice =
+      selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
     const unitPrice = variantPrice + modifiersPrice;
 
     // Buscar si ya existe un item idéntico en la selección actual
-    const existingIndex = selectedProducts.findIndex(item => {
+    const existingIndex = selectedProducts.findIndex((item) => {
       // Verificar si es el mismo producto, variante, modificadores y notas
       if (item.productId !== product.id) return false;
       if (item.variantId !== selectedVariantId) return false;
       if (item.preparationNotes !== preparationNotes) return false;
-      
+
       // Comparar modificadores
-      const itemModifierIds = item.modifiers.map(m => m.id).sort().join(',');
-      const newModifierIds = (selectedModifiers || []).map(m => m.id).sort().join(',');
-      
+      const itemModifierIds = item.modifiers
+        .map((m) => m.id)
+        .sort()
+        .join(',');
+      const newModifierIds = (selectedModifiers || [])
+        .map((m) => m.id)
+        .sort()
+        .join(',');
+
       return itemModifierIds === newModifierIds;
     });
 
     if (existingIndex !== -1) {
       // Si existe, actualizar la cantidad
-      setSelectedProducts(prev => {
+      setSelectedProducts((prev) => {
         const updated = [...prev];
         const existingItem = updated[existingIndex];
         const newQuantity = existingItem.quantity + quantity;
-        
+
         // Recalcular el precio total correctamente
         const modifiersTotal = existingItem.modifiers.reduce(
           (sum, mod) => sum + Number(mod.price || 0),
-          0
+          0,
         );
-        const unitPriceWithModifiers = Number(existingItem.unitPrice || 0) + modifiersTotal;
-        
+        const unitPriceWithModifiers =
+          Number(existingItem.unitPrice || 0) + modifiersTotal;
+
         updated[existingIndex] = {
           ...existingItem,
           quantity: newQuantity,
-          totalPrice: unitPriceWithModifiers * newQuantity
+          totalPrice: unitPriceWithModifiers * newQuantity,
         };
         return updated;
       });
@@ -183,12 +219,12 @@ const AddProductsToOrderScreen = () => {
         preparationNotes,
       };
 
-      setSelectedProducts(prev => [...prev, newItem]);
+      setSelectedProducts((prev) => [...prev, newItem]);
     }
-    
+
     // Animar el carrito
     cartButtonRef.current?.animate();
-    
+
     showSnackbar({
       message: `${product.name} añadido`,
       type: 'success',
@@ -204,8 +240,8 @@ const AddProductsToOrderScreen = () => {
     variantName?: string,
     unitPrice?: number,
   ) => {
-    setSelectedProducts(prev =>
-      prev.map(item => {
+    setSelectedProducts((prev) =>
+      prev.map((item) => {
         if (item.id === itemId) {
           const modifiersPrice = modifiers.reduce(
             (sum, mod) => sum + Number(mod.price || 0),
@@ -250,15 +286,21 @@ const AddProductsToOrderScreen = () => {
         selectedModifiers || [],
         preparationNotes,
         selectedVariantId,
-        product.variants?.find(v => v.id === selectedVariantId)?.name,
+        product.variants?.find((v) => v.id === selectedVariantId)?.name,
         selectedVariantId
-          ? product.variants?.find(v => v.id === selectedVariantId)?.price
+          ? product.variants?.find((v) => v.id === selectedVariantId)?.price
           : product.price,
       );
       setEditingItem(null);
     } else {
       // Si es nuevo, añadir a la selección
-      addItemToSelection(product, quantity, selectedVariantId, selectedModifiers, preparationNotes);
+      addItemToSelection(
+        product,
+        quantity,
+        selectedVariantId,
+        selectedModifiers,
+        preparationNotes,
+      );
     }
     setSelectedProduct(null);
   };
@@ -296,7 +338,7 @@ const AddProductsToOrderScreen = () => {
   const handleConfirmSelection = () => {
     // No mostrar mensaje si no hay productos nuevos seleccionados
     // pero permitir salir igualmente
-    
+
     // Llamar callback con todos los productos (existentes + nuevos)
     if (onProductsAdded) {
       onProductsAdded(selectedProducts);
@@ -341,7 +383,9 @@ const AddProductsToOrderScreen = () => {
     return selectedSubCategory.products;
   };
 
-  const selectedCategory = menu?.find((cat: Category) => cat.id === selectedCategoryId);
+  const selectedCategory = menu?.find(
+    (cat: Category) => cat.id === selectedCategoryId,
+  );
   const selectedSubCategory = selectedCategory?.subcategories?.find(
     (sub: SubCategory) => sub.id === selectedSubcategoryId,
   );
@@ -497,11 +541,7 @@ const AddProductsToOrderScreen = () => {
   const blurhash =
     '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-  const renderItem = ({
-    item,
-  }: {
-    item: Category | SubCategory | Product;
-  }) => {
+  const renderItem = ({ item }: { item: Category | SubCategory | Product }) => {
     const imageUrl = (() => {
       const photoPath = item.photo?.path || item.photo;
       return photoPath ? getImageUrl(photoPath) : null;
@@ -521,12 +561,14 @@ const AddProductsToOrderScreen = () => {
     };
 
     const handleLongPress = () => {
-      if (navigationLevel === 'products' && 
-          'price' in item && 
-          isActive &&
-          'description' in item &&
-          (item as Product).description &&
-          (item as Product).description.trim() !== '') {
+      if (
+        navigationLevel === 'products' &&
+        'price' in item &&
+        isActive &&
+        'description' in item &&
+        (item as Product).description &&
+        (item as Product).description.trim() !== ''
+      ) {
         handleShowProductDescription(item as Product);
       }
     };
@@ -570,10 +612,7 @@ const AddProductsToOrderScreen = () => {
           />
         ) : (
           <View
-            style={[
-              styles.imagePlaceholder,
-              !isActive && styles.imageInactive,
-            ]}
+            style={[styles.imagePlaceholder, !isActive && styles.imageInactive]}
           >
             <Text style={styles.placeholderText}>
               {navigationLevel === 'categories'
@@ -589,9 +628,7 @@ const AddProductsToOrderScreen = () => {
           'price' in item &&
           (item as Product).description ? (
             <View style={styles.cardHeader}>
-              <Title style={[styles.cardTitle, { flex: 1 }]}>
-                {item.name}
-              </Title>
+              <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
               <IconButton
                 icon="information-outline"
                 size={20}
@@ -669,7 +706,6 @@ const AddProductsToOrderScreen = () => {
           )}
         </View>
 
-
         {/* Modal de personalización de producto */}
         <Portal>
           {selectedProduct && (
@@ -679,8 +715,24 @@ const AddProductsToOrderScreen = () => {
               editingItem={editingItem}
               onDismiss={handleCloseProductModal}
               onAddToCart={handleAddToCart}
-              onUpdateItem={(itemId, quantity, modifiers, notes, variantId, variantName, unitPrice) => {
-                updateItemInSelection(itemId, quantity, modifiers, notes, variantId, variantName, unitPrice);
+              onUpdateItem={(
+                itemId,
+                quantity,
+                modifiers,
+                notes,
+                variantId,
+                variantName,
+                unitPrice,
+              ) => {
+                updateItemInSelection(
+                  itemId,
+                  quantity,
+                  modifiers,
+                  notes,
+                  variantId,
+                  variantName,
+                  unitPrice,
+                );
                 setEditingItem(null);
                 setSelectedProduct(null);
               }}
@@ -695,7 +747,6 @@ const AddProductsToOrderScreen = () => {
               onDismiss={handleCloseDescriptionModal}
             />
           )}
-
         </Portal>
       </View>
     </SafeAreaView>

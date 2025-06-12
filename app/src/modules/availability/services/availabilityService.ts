@@ -9,16 +9,16 @@ import {
 export const availabilityService = {
   // Obtener la disponibilidad del menú completo
   async getMenuAvailability(): Promise<CategoryAvailability[]> {
-    const response = await apiClient.get(API_PATHS.AVAILABILITY_MENU);
-    return response.data;
+    const response = await apiClient.get<CategoryAvailability[]>(API_PATHS.AVAILABILITY_MENU);
+    return response.data || [];
   },
 
   // Obtener la disponibilidad de grupos de modificadores
   async getModifierGroupsAvailability(): Promise<ModifierGroupAvailability[]> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<ModifierGroupAvailability[]>(
       API_PATHS.AVAILABILITY_MODIFIER_GROUPS,
     );
-    return response.data;
+    return response.data || [];
   },
 
   // Actualizar disponibilidad (con opción de cascada)

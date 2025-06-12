@@ -285,7 +285,7 @@ const createStyles = (theme: AppTheme) =>
     },
     changeSection: {
       backgroundColor: theme.dark
-        ? 'rgba(16, 185, 129, 0.1)' 
+        ? 'rgba(16, 185, 129, 0.1)'
         : 'rgba(16, 185, 129, 0.08)',
       padding: 12,
       borderRadius: 10,

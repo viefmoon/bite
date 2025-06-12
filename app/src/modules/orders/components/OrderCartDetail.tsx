@@ -363,7 +363,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const totalAdjustments = useMemo(() => {
     if (!isEditMode) return 0;
     return editAdjustments
-      .filter(adj => !adj.isDeleted)
+      .filter((adj) => !adj.isDeleted)
       .reduce((sum, adj) => sum + (adj.amount || 0), 0);
   }, [isEditMode, editAdjustments]);
 
@@ -379,13 +379,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const existingItemsCount = useMemo(() => {
     if (!isEditMode) return 0;
     return editItems
-      .filter(item => !item.id.startsWith('new-'))
+      .filter((item) => !item.id.startsWith('new-'))
       .reduce((sum, item) => sum + item.quantity, 0);
   }, [isEditMode, editItems]);
 
   // Notificar cambios en el conteo de items (solo en modo edición)
-  const [lastNotifiedCount, setLastNotifiedCount] = useState<number | null>(null);
-  
+  const [lastNotifiedCount, setLastNotifiedCount] = useState<number | null>(
+    null,
+  );
+
   useEffect(() => {
     if (isEditMode && onItemsCountChanged && visible && orderDataLoaded) {
       // Solo notificar si el conteo realmente cambió
@@ -394,7 +396,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         setLastNotifiedCount(existingItemsCount);
       }
     }
-  }, [isEditMode, existingItemsCount, visible, orderDataLoaded, lastNotifiedCount, onItemsCountChanged]);
+  }, [
+    isEditMode,
+    existingItemsCount,
+    visible,
+    orderDataLoaded,
+    lastNotifiedCount,
+    onItemsCountChanged,
+  ]);
 
   // Calcular total pagado
   const totalPaid = useMemo(() => {
@@ -442,9 +451,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
-  const [adjustmentToEdit, setAdjustmentToEdit] = useState<OrderAdjustment | null>(null);
+  const [adjustmentToEdit, setAdjustmentToEdit] =
+    useState<OrderAdjustment | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+
   // Estado original de la orden para detectar cambios
   const [originalOrderState, setOriginalOrderState] = useState<{
     items: CartItem[];
@@ -500,14 +510,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Cargar ajustes si existen
     if (orderData.adjustments && Array.isArray(orderData.adjustments)) {
       console.log('Ajustes recibidos del backend:', orderData.adjustments);
-      setEditAdjustments(orderData.adjustments.map(adj => ({
-        id: adj.id,
-        name: adj.name,
-        description: adj.description || '',
-        isPercentage: adj.isPercentage,
-        value: adj.value,
-        amount: adj.amount,
-      })));
+      setEditAdjustments(
+        orderData.adjustments.map((adj) => ({
+          id: adj.id,
+          name: adj.name,
+          description: adj.description || '',
+          isPercentage: adj.isPercentage,
+          value: adj.value,
+          amount: adj.amount,
+        })),
+      );
     } else {
       setEditAdjustments([]);
     }
@@ -519,10 +531,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     // Mapa para agrupar items idénticos
     const groupedItemsMap = new Map<string, CartItem>();
-    
+
     // Mapear y agrupar los items de la orden
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-
       orderData.orderItems.forEach((item: any) => {
         // Calcular el precio de los modificadores
         const modifiers = (item.modifiers || []).map((mod: any) => ({
@@ -545,7 +556,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
         const existingItem = groupedItemsMap.get(groupKey);
 
-        if (existingItem && existingItem.preparationStatus === item.preparationStatus) {
+        if (
+          existingItem &&
+          existingItem.preparationStatus === item.preparationStatus
+        ) {
           // Si ya existe un item idéntico con el mismo estado, incrementar la cantidad
           existingItem.quantity += 1;
           existingItem.totalPrice =
@@ -573,21 +587,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       const mappedItems = Array.from(groupedItemsMap.values());
       setEditItems(mappedItems);
     }
-    
+
     // Marcar que los datos de la orden ya se cargaron
     setOrderDataLoaded(true);
-    
+
     // Guardar el estado original de la orden para detectar cambios
     const originalItems = Array.from(groupedItemsMap.values());
-    const originalAdjustments = orderData.adjustments?.map(adj => ({
-      id: adj.id,
-      name: adj.name,
-      description: adj.description,
-      isPercentage: adj.isPercentage,
-      value: adj.value,
-      amount: adj.amount,
-    })) || [];
-    
+    const originalAdjustments =
+      orderData.adjustments?.map((adj) => ({
+        id: adj.id,
+        name: adj.name,
+        description: adj.description,
+        isPercentage: adj.isPercentage,
+        value: adj.value,
+        amount: adj.amount,
+      })) || [];
+
     setOriginalOrderState({
       items: originalItems,
       orderType: orderData.orderType,
@@ -596,10 +611,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       phoneNumber: phoneForDisplay,
       deliveryAddress: orderData.deliveryAddress ?? '',
       notes: orderData.notes ?? '',
-      scheduledAt: orderData.scheduledAt ? new Date(orderData.scheduledAt) : null,
+      scheduledAt: orderData.scheduledAt
+        ? new Date(orderData.scheduledAt)
+        : null,
       adjustments: originalAdjustments,
     });
-    
+
     // Resetear el flag de cambios no guardados
     setHasUnsavedChanges(false);
   }, [isEditMode, orderData, visible]);
@@ -607,18 +624,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   // Función para agrupar items idénticos
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       // Crear una clave única basada en todas las propiedades que deben ser idénticas
       const modifierIds = item.modifiers
-        .map(m => m.id)
+        .map((m) => m.id)
         .sort()
         .join(',');
-      
+
       const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'NEW'}`;
-      
+
       const existingItem = groupedMap.get(groupKey);
-      
+
       if (existingItem) {
         // Si ya existe un item idéntico, incrementar la cantidad
         existingItem.quantity += item.quantity;
@@ -627,21 +644,23 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           (sum, mod) => sum + (mod.price || 0),
           0,
         );
-        existingItem.totalPrice = (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
+        existingItem.totalPrice =
+          (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
       } else {
         // Si es nuevo, agregarlo al mapa con una copia completa
         groupedMap.set(groupKey, { ...item });
       }
     });
-    
+
     return Array.from(groupedMap.values());
   }, []);
 
   // Estado para controlar si ya procesamos los productos pendientes
-  const [processedPendingProductsIds, setProcessedPendingProductsIds] = useState<string[]>([]);
+  const [processedPendingProductsIds, setProcessedPendingProductsIds] =
+    useState<string[]>([]);
   // Estado para controlar si los datos de la orden ya se cargaron
   const [orderDataLoaded, setOrderDataLoaded] = useState(false);
-  
+
   // Manejar productos pendientes de añadir
   useEffect(() => {
     // Solo procesar cuando:
@@ -649,38 +668,47 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // 2. Estamos en modo edición
     // 3. El modal es visible
     // 4. Los datos de la orden ya se cargaron
-    if (pendingProductsToAdd.length > 0 && isEditMode && visible && orderDataLoaded) {
+    if (
+      pendingProductsToAdd.length > 0 &&
+      isEditMode &&
+      visible &&
+      orderDataLoaded
+    ) {
       // Filtrar productos que no han sido procesados aún
-      const unprocessedProducts = pendingProductsToAdd.filter(item => {
+      const unprocessedProducts = pendingProductsToAdd.filter((item) => {
         // Usar una clave única para cada producto basada en sus propiedades
-        const productKey = `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map(m => m.id).sort())}-${item.preparationNotes || ''}`;
+        const productKey = `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`;
         return !processedPendingProductsIds.includes(productKey);
       });
 
       if (unprocessedProducts.length > 0) {
-        console.log('Procesando productos pendientes:', unprocessedProducts.length);
-        
+        console.log(
+          'Procesando productos pendientes:',
+          unprocessedProducts.length,
+        );
+
         // Marcar los nuevos productos con estado "NEW"
-        const newProductsWithStatus = unprocessedProducts.map(item => ({
+        const newProductsWithStatus = unprocessedProducts.map((item) => ({
           ...item,
           preparationStatus: 'NEW' as const,
           id: `new-${Date.now()}-${Math.random()}`, // Asegurar IDs únicos para nuevos items
         }));
-        
+
         // Combinar con items existentes y agrupar
-        setEditItems(prevItems => {
+        setEditItems((prevItems) => {
           const allItems = [...prevItems, ...newProductsWithStatus];
           const grouped = groupIdenticalItems(allItems);
           console.log('Items después de agrupar:', grouped.length);
           return grouped;
         });
-        
+
         // Marcar estos productos como procesados
-        const newProcessedIds = unprocessedProducts.map(item => 
-          `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map(m => m.id).sort())}-${item.preparationNotes || ''}`
+        const newProcessedIds = unprocessedProducts.map(
+          (item) =>
+            `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`,
         );
-        setProcessedPendingProductsIds(prev => [...prev, ...newProcessedIds]);
-        
+        setProcessedPendingProductsIds((prev) => [...prev, ...newProcessedIds]);
+
         // Calcular cuántos items únicos se añadieron
         const uniqueNewItems = newProductsWithStatus.length;
         showSnackbar({
@@ -689,8 +717,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         });
       }
     }
-  }, [pendingProductsToAdd, isEditMode, visible, orderDataLoaded, processedPendingProductsIds, groupIdenticalItems, showSnackbar]);
-  
+  }, [
+    pendingProductsToAdd,
+    isEditMode,
+    visible,
+    orderDataLoaded,
+    processedPendingProductsIds,
+    groupIdenticalItems,
+    showSnackbar,
+  ]);
+
   // Resetear los IDs procesados cuando el modal se cierre o cambie de orden
   // (esto se maneja en el useEffect de reseteo de estados)
 
@@ -702,16 +738,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setPhoneError(null);
     setAddressError(null);
   }, [orderType]);
-  
+
   // Detectar cambios sin guardar
   useEffect(() => {
     if (!isEditMode || !originalOrderState || !visible) {
       setHasUnsavedChanges(false);
       return;
     }
-    
+
     // Comparar el estado actual con el original
-    const hasChanges = 
+    const hasChanges =
       // Cambios en items
       JSON.stringify(editItems) !== JSON.stringify(originalOrderState.items) ||
       // Cambios en tipo de orden
@@ -724,10 +760,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       editDeliveryAddress !== originalOrderState.deliveryAddress ||
       editOrderNotes !== originalOrderState.notes ||
       // Cambios en hora programada
-      (editScheduledTime?.getTime() || null) !== (originalOrderState.scheduledAt?.getTime() || null) ||
+      (editScheduledTime?.getTime() || null) !==
+        (originalOrderState.scheduledAt?.getTime() || null) ||
       // Cambios en ajustes
-      JSON.stringify(editAdjustments) !== JSON.stringify(originalOrderState.adjustments);
-    
+      JSON.stringify(editAdjustments) !==
+        JSON.stringify(originalOrderState.adjustments);
+
     setHasUnsavedChanges(hasChanges);
   }, [
     isEditMode,
@@ -780,31 +818,42 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   }, [visible, isModalReady]);
 
   // Funciones para manejar ajustes
-  const handleAddAdjustment = useCallback((adjustment: OrderAdjustment) => {
-    if (isEditMode) {
-      // Asegurar que el ajuste tenga un ID único
-      const newAdjustment = {
-        ...adjustment,
-        id: adjustment.id || `new-adjustment-${Date.now()}-${Math.random()}`,
-        isNew: true
-      };
-      setEditAdjustments(prev => [...prev, newAdjustment]);
-    }
-  }, [isEditMode]);
+  const handleAddAdjustment = useCallback(
+    (adjustment: OrderAdjustment) => {
+      if (isEditMode) {
+        // Asegurar que el ajuste tenga un ID único
+        const newAdjustment = {
+          ...adjustment,
+          id: adjustment.id || `new-adjustment-${Date.now()}-${Math.random()}`,
+          isNew: true,
+        };
+        setEditAdjustments((prev) => [...prev, newAdjustment]);
+      }
+    },
+    [isEditMode],
+  );
 
-  const handleUpdateAdjustment = useCallback((id: string, updatedAdjustment: OrderAdjustment) => {
-    if (isEditMode) {
-      setEditAdjustments(prev => 
-        prev.map(adj => adj.id === id ? { ...adj, ...updatedAdjustment, id } : adj)
-      );
-    }
-  }, [isEditMode]);
+  const handleUpdateAdjustment = useCallback(
+    (id: string, updatedAdjustment: OrderAdjustment) => {
+      if (isEditMode) {
+        setEditAdjustments((prev) =>
+          prev.map((adj) =>
+            adj.id === id ? { ...adj, ...updatedAdjustment, id } : adj,
+          ),
+        );
+      }
+    },
+    [isEditMode],
+  );
 
-  const handleRemoveAdjustment = useCallback((id: string) => {
-    if (isEditMode) {
-      setEditAdjustments(prev => prev.filter(adj => adj.id !== id));
-    }
-  }, [isEditMode]);
+  const handleRemoveAdjustment = useCallback(
+    (id: string) => {
+      if (isEditMode) {
+        setEditAdjustments((prev) => prev.filter((adj) => adj.id !== id));
+      }
+    },
+    [isEditMode],
+  );
 
   const handleConfirm = async () => {
     if (isConfirming) return; // Prevenir múltiples clics
@@ -859,8 +908,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     const itemsForBackend: OrderItemDtoForBackend[] = [];
 
     console.log('Items a enviar al backend:', items.length);
-    console.log('Items con estado NEW:', items.filter(item => item.preparationStatus === 'NEW').length);
-    
+    console.log(
+      'Items con estado NEW:',
+      items.filter((item) => item.preparationStatus === 'NEW').length,
+    );
+
     // En ambos modos (creación y edición), expandir items según su cantidad
     // El backend identifica items únicos por productId + variantId, así que necesitamos
     // enviar items individuales para poder tener múltiples del mismo producto
@@ -937,8 +989,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       notes: orderNotes || undefined,
       adjustments: isEditMode
         ? editAdjustments
-            .filter(adj => !adj.isDeleted)
-            .map(adj => {
+            .filter((adj) => !adj.isDeleted)
+            .map((adj) => {
               console.log('Mapeando ajuste:', adj);
               return {
                 orderId: orderId || undefined,
@@ -952,7 +1004,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         : undefined,
     };
 
-    console.log('Payload final a enviar:', JSON.stringify(orderDetails, null, 2));
+    console.log(
+      'Payload final a enviar:',
+      JSON.stringify(orderDetails, null, 2),
+    );
 
     if (!orderDetails.userId) {
       console.error('Error: Falta el ID del usuario al confirmar la orden.');
@@ -965,7 +1020,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       await onConfirmOrder(orderDetails);
       // Si llegamos aquí, la orden fue exitosa
       setIsConfirming(false);
-      
+
       // Actualizar el estado original después de guardar exitosamente
       if (isEditMode) {
         setOriginalOrderState({
@@ -979,13 +1034,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           scheduledAt: editScheduledTime,
         });
         setHasUnsavedChanges(false);
-        
+
         // Mostrar mensaje de éxito
         showSnackbar({
           message: 'Cambios guardados exitosamente',
           type: 'success',
         });
-        
+
         // Cerrar el modal después de una actualización exitosa
         onClose?.();
       }
@@ -2044,115 +2099,140 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   </Swipeable>
                 );
               })}
-              
+
               {/* Renderizar ajustes como OrderItems - dentro del mismo List.Section */}
-              {isEditMode && adjustments.filter(adj => !adj.isDeleted).map((adjustment, index) => {
-                const renderRightActions = (progress, dragX) => {
-                  const translateX = dragX.interpolate({
-                    inputRange: [-100, 0],
-                    outputRange: [0, 100],
-                    extrapolate: 'clamp',
-                  });
+              {isEditMode &&
+                adjustments
+                  .filter((adj) => !adj.isDeleted)
+                  .map((adjustment, index) => {
+                    const renderRightActions = (progress, dragX) => {
+                      const translateX = dragX.interpolate({
+                        inputRange: [-100, 0],
+                        outputRange: [0, 100],
+                        extrapolate: 'clamp',
+                      });
 
-                  const scale = dragX.interpolate({
-                    inputRange: [-100, -50, 0],
-                    outputRange: [1, 0.8, 0.5],
-                    extrapolate: 'clamp',
-                  });
+                      const scale = dragX.interpolate({
+                        inputRange: [-100, -50, 0],
+                        outputRange: [1, 0.8, 0.5],
+                        extrapolate: 'clamp',
+                      });
 
-                  const opacity = dragX.interpolate({
-                    inputRange: [-100, -20, 0],
-                    outputRange: [1, 0.5, 0],
-                    extrapolate: 'clamp',
-                  });
+                      const opacity = dragX.interpolate({
+                        inputRange: [-100, -20, 0],
+                        outputRange: [1, 0.5, 0],
+                        extrapolate: 'clamp',
+                      });
 
-                  return (
-                    <Animated.View
-                      style={[
-                        styles.deleteActionContainer,
-                        {
-                          opacity,
-                          transform: [{ translateX }],
-                        },
-                      ]}
-                    >
-                      <Animated.View
-                        style={[
-                          styles.deleteAction,
-                          {
-                            backgroundColor: theme.colors.error,
-                            transform: [{ scale }],
-                          },
-                        ]}
-                      >
-                        <View style={styles.deleteIconContainer}>
-                          <IconButton
-                            icon="delete-sweep"
-                            size={28}
-                            iconColor="white"
-                            style={styles.deleteIcon}
-                          />
-                        </View>
-                        <Text style={styles.deleteActionText}>ELIMINAR</Text>
-                      </Animated.View>
-                    </Animated.View>
-                  );
-                };
-
-                return (
-                  <Swipeable
-                    key={adjustment.id || `new-${index}`}
-                    renderRightActions={renderRightActions}
-                    overshootRight={false}
-                    friction={2}
-                    rightThreshold={90}
-                    leftThreshold={100}
-                    onSwipeableOpen={(direction) => {
-                      if (direction === 'right') {
-                        setTimeout(() => {
-                          if (adjustment.id) {
-                            handleRemoveAdjustment(adjustment.id);
-                          }
-                        }, 150);
-                      }
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={() => {
-                        setAdjustmentToEdit(adjustment);
-                        setShowAdjustmentModal(true);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <List.Item
-                        title={() => (
-                          <View style={styles.itemTextContainer}>
-                            <Text style={[styles.itemTitleText, { color: adjustment.amount < 0 ? theme.colors.error : theme.colors.primary }]}>
-                              {adjustment.name}
-                              {adjustment.isPercentage 
-                                ? ` (${adjustment.value}%)`
-                                : ''}
-                            </Text>
-                          </View>
-                        )}
-                        right={() => (
-                          <View style={styles.itemActionsContainer}>
-                            <View style={styles.priceContainer}>
-                              <Text style={[
-                                styles.itemPrice,
-                                { color: adjustment.amount < 0 ? theme.colors.error : theme.colors.primary }
-                              ]}>
-                                {adjustment.amount < 0 ? '-' : '+'}${Math.abs(adjustment.amount || 0).toFixed(2)}
-                              </Text>
+                      return (
+                        <Animated.View
+                          style={[
+                            styles.deleteActionContainer,
+                            {
+                              opacity,
+                              transform: [{ translateX }],
+                            },
+                          ]}
+                        >
+                          <Animated.View
+                            style={[
+                              styles.deleteAction,
+                              {
+                                backgroundColor: theme.colors.error,
+                                transform: [{ scale }],
+                              },
+                            ]}
+                          >
+                            <View style={styles.deleteIconContainer}>
+                              <IconButton
+                                icon="delete-sweep"
+                                size={28}
+                                iconColor="white"
+                                style={styles.deleteIcon}
+                              />
                             </View>
-                          </View>
-                        )}
-                        style={styles.listItem}
-                      />
-                    </TouchableOpacity>
-                  </Swipeable>
-                );
-              })}
+                            <Text style={styles.deleteActionText}>
+                              ELIMINAR
+                            </Text>
+                          </Animated.View>
+                        </Animated.View>
+                      );
+                    };
+
+                    return (
+                      <Swipeable
+                        key={adjustment.id || `new-${index}`}
+                        renderRightActions={renderRightActions}
+                        overshootRight={false}
+                        friction={2}
+                        rightThreshold={90}
+                        leftThreshold={100}
+                        onSwipeableOpen={(direction) => {
+                          if (direction === 'right') {
+                            setTimeout(() => {
+                              if (adjustment.id) {
+                                handleRemoveAdjustment(adjustment.id);
+                              }
+                            }, 150);
+                          }
+                        }}
+                      >
+                        <TouchableOpacity
+                          onPress={() => {
+                            setAdjustmentToEdit(adjustment);
+                            setShowAdjustmentModal(true);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <List.Item
+                            title={() => (
+                              <View style={styles.itemTextContainer}>
+                                <Text
+                                  style={[
+                                    styles.itemTitleText,
+                                    {
+                                      color:
+                                        adjustment.amount < 0
+                                          ? theme.colors.error
+                                          : theme.colors.primary,
+                                    },
+                                  ]}
+                                >
+                                  {adjustment.name}
+                                  {adjustment.isPercentage
+                                    ? ` (${adjustment.value}%)`
+                                    : ''}
+                                </Text>
+                              </View>
+                            )}
+                            right={() => (
+                              <View style={styles.itemActionsContainer}>
+                                <View style={styles.priceContainer}>
+                                  <Text
+                                    style={[
+                                      styles.itemPrice,
+                                      {
+                                        color:
+                                          adjustment.amount < 0
+                                            ? theme.colors.error
+                                            : theme.colors.primary,
+                                      },
+                                    ]}
+                                  >
+                                    {adjustment.amount < 0 ? '-' : '+'}$
+                                    {Math.abs(adjustment.amount || 0).toFixed(
+                                      2,
+                                    )}
+                                  </Text>
+                                </View>
+                              </View>
+                            )}
+                            style={styles.listItem}
+                          />
+                        </TouchableOpacity>
+                      </Swipeable>
+                    );
+                  })}
             </List.Section>
 
             {/* Botón de ajustes - Solo en modo edición */}
@@ -2184,19 +2264,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         orderId,
                         orderNumber,
                         // Pasar el conteo de items existentes (no incluir los temporales "NEW")
-                        existingOrderItemsCount: editItems.filter(item => !item.id.startsWith('new-')).reduce((sum, item) => sum + item.quantity, 0),
+                        existingOrderItemsCount: editItems
+                          .filter((item) => !item.id.startsWith('new-'))
+                          .reduce((sum, item) => sum + item.quantity, 0),
                         onProductsAdded: (newProducts: CartItem[]) => {
                           // Marcar los nuevos productos con estado "NEW"
-                          const newProductsWithStatus = newProducts.map(item => ({
-                            ...item,
-                            preparationStatus: 'NEW' as const,
-                            id: `new-${Date.now()}-${Math.random()}`,
-                          }));
-                          
+                          const newProductsWithStatus = newProducts.map(
+                            (item) => ({
+                              ...item,
+                              preparationStatus: 'NEW' as const,
+                              id: `new-${Date.now()}-${Math.random()}`,
+                            }),
+                          );
+
                           // Combinar con items existentes y agrupar
-                          const allItems = [...editItems, ...newProductsWithStatus];
+                          const allItems = [
+                            ...editItems,
+                            ...newProductsWithStatus,
+                          ];
                           const groupedItems = groupIdenticalItems(allItems);
-                          
+
                           setEditItems(groupedItems);
                           showSnackbar({
                             message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
@@ -2220,7 +2307,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               </Button>
             )}
 
-
             <Divider style={styles.divider} />
 
             {/* Totals */}
@@ -2231,8 +2317,19 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {isEditMode && totalAdjustments !== 0 && (
               <View style={styles.totalsContainer}>
                 <Text style={styles.totalsText}>Ajustes:</Text>
-                <Text style={[styles.totalsValue, { color: totalAdjustments < 0 ? theme.colors.error : theme.colors.primary }]}>
-                  {totalAdjustments < 0 ? '-' : '+'}${Math.abs(totalAdjustments).toFixed(2)}
+                <Text
+                  style={[
+                    styles.totalsValue,
+                    {
+                      color:
+                        totalAdjustments < 0
+                          ? theme.colors.error
+                          : theme.colors.primary,
+                    },
+                  ]}
+                >
+                  {totalAdjustments < 0 ? '-' : '+'}$
+                  {Math.abs(totalAdjustments).toFixed(2)}
                 </Text>
               </View>
             )}
@@ -2261,7 +2358,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       styles.totalsValue,
                       {
                         fontWeight: 'bold',
-                        color: pendingAmount > 0 ? theme.colors.error : '#4CAF50',
+                        color:
+                          pendingAmount > 0 ? theme.colors.error : '#4CAF50',
                       },
                     ]}
                   >
@@ -2291,9 +2389,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               }
               style={[
                 styles.confirmButton,
-                isEditMode && hasUnsavedChanges && {
-                  backgroundColor: '#FF6B35', // Naranja vibrante para indicar acción requerida
-                },
+                isEditMode &&
+                  hasUnsavedChanges && {
+                    backgroundColor: '#FF6B35', // Naranja vibrante para indicar acción requerida
+                  },
               ]}
               loading={isConfirming} // Mostrar indicador de carga
             >
@@ -2416,15 +2515,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   backgroundColor: hasUnsavedChanges
                     ? '#9CA3AF' // Gris sólido pero visible
                     : pendingAmount <= 0
-                    ? '#4CAF50'
-                    : theme.colors.primary,
+                      ? '#4CAF50'
+                      : theme.colors.primary,
                 },
               ]}
               color="white"
               onPress={() => {
                 if (hasUnsavedChanges) {
                   showSnackbar({
-                    message: 'Debes guardar los cambios antes de registrar pagos',
+                    message:
+                      'Debes guardar los cambios antes de registrar pagos',
                     type: 'warning',
                   });
                 } else {

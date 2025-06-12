@@ -24,10 +24,10 @@ export const useUpdateAvailability = () => {
     mutationFn: availabilityService.updateAvailability,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['availability'] });
-      showSnackbar('Disponibilidad actualizada', 'success');
+      showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
     onError: () => {
-      showSnackbar('Error al actualizar disponibilidad', 'error');
+      showSnackbar({ message: 'Error al actualizar disponibilidad', type: 'error' });
     },
   });
 };
@@ -40,10 +40,10 @@ export const useBulkUpdateAvailability = () => {
     mutationFn: availabilityService.bulkUpdateAvailability,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['availability'] });
-      showSnackbar('Disponibilidad actualizada', 'success');
+      showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
     onError: () => {
-      showSnackbar('Error al actualizar disponibilidad', 'error');
+      showSnackbar({ message: 'Error al actualizar disponibilidad', type: 'error' });
     },
   });
 };

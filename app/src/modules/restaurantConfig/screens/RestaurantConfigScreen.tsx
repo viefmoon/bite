@@ -23,7 +23,7 @@ import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  
+
   const { useGetConfig, useUpdateConfig } = useRestaurantConfigQueries();
   const { data: config, isLoading, error } = useGetConfig();
   const updateConfigMutation = useUpdateConfig();
@@ -141,7 +141,7 @@ const RestaurantConfigScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -158,21 +158,21 @@ const RestaurantConfigScreen: React.FC = () => {
         {/* Service Status Card */}
         <Surface style={styles.statusCard} elevation={1}>
           <View style={styles.statusHeader}>
-            <MaterialCommunityIcons 
-              name="store-check" 
-              size={24} 
-              color={theme.colors.primary} 
+            <MaterialCommunityIcons
+              name="store-check"
+              size={24}
+              color={theme.colors.primary}
             />
             <Text style={styles.statusTitle}>Estado del Servicio</Text>
           </View>
-          
+
           <View style={styles.statusContent}>
             <View style={styles.statusRow}>
               <View style={styles.statusInfo}>
                 <Text style={styles.statusLabel}>Recepción de Órdenes</Text>
                 <Text style={styles.statusDescription}>
-                  {formData.acceptingOrders 
-                    ? 'Las órdenes están siendo aceptadas' 
+                  {formData.acceptingOrders
+                    ? 'Las órdenes están siendo aceptadas'
                     : 'No se están aceptando órdenes nuevas'}
                 </Text>
               </View>
@@ -183,7 +183,9 @@ const RestaurantConfigScreen: React.FC = () => {
                 }
                 disabled={!isEditing}
                 color={theme.colors.primary}
-                thumbColor={formData.acceptingOrders ? theme.colors.primary : undefined}
+                thumbColor={
+                  formData.acceptingOrders ? theme.colors.primary : undefined
+                }
                 trackColor={{
                   false: theme.colors.surfaceVariant,
                   true: theme.colors.primaryContainer,
@@ -196,10 +198,10 @@ const RestaurantConfigScreen: React.FC = () => {
         {/* Delivery Times Card */}
         <Surface style={styles.timesCard} elevation={1}>
           <View style={styles.timesHeader}>
-            <MaterialCommunityIcons 
-              name="clock-time-four" 
-              size={24} 
-              color={theme.colors.primary} 
+            <MaterialCommunityIcons
+              name="clock-time-four"
+              size={24}
+              color={theme.colors.primary}
             />
             <Text style={styles.timesTitle}>Tiempos de Entrega</Text>
           </View>
@@ -207,10 +209,10 @@ const RestaurantConfigScreen: React.FC = () => {
           <View style={styles.timesContent}>
             <View style={styles.timeInputContainer}>
               <View style={styles.timeIconWrapper}>
-                <MaterialCommunityIcons 
-                  name="walk" 
-                  size={20} 
-                  color={theme.colors.onSurfaceVariant} 
+                <MaterialCommunityIcons
+                  name="walk"
+                  size={20}
+                  color={theme.colors.onSurfaceVariant}
                 />
               </View>
               <TextInput
@@ -233,10 +235,10 @@ const RestaurantConfigScreen: React.FC = () => {
 
             <View style={styles.timeInputContainer}>
               <View style={styles.timeIconWrapper}>
-                <MaterialCommunityIcons 
-                  name="moped" 
-                  size={20} 
-                  color={theme.colors.onSurfaceVariant} 
+                <MaterialCommunityIcons
+                  name="moped"
+                  size={20}
+                  color={theme.colors.onSurfaceVariant}
                 />
               </View>
               <TextInput
@@ -258,8 +260,8 @@ const RestaurantConfigScreen: React.FC = () => {
             </View>
 
             <View style={styles.infoChip}>
-              <Chip 
-                icon="information" 
+              <Chip
+                icon="information"
                 mode="flat"
                 style={styles.chip}
                 textStyle={styles.chipText}
@@ -273,10 +275,10 @@ const RestaurantConfigScreen: React.FC = () => {
         {/* Schedule Card */}
         <Surface style={styles.scheduleCard} elevation={1}>
           <View style={styles.scheduleHeader}>
-            <MaterialCommunityIcons 
-              name="calendar-clock" 
-              size={24} 
-              color={theme.colors.primary} 
+            <MaterialCommunityIcons
+              name="calendar-clock"
+              size={24}
+              color={theme.colors.primary}
             />
             <Text style={styles.scheduleTitle}>Horario de Operación</Text>
           </View>
@@ -284,10 +286,10 @@ const RestaurantConfigScreen: React.FC = () => {
           <View style={styles.scheduleContent}>
             <View style={styles.scheduleInputContainer}>
               <View style={styles.scheduleIconWrapper}>
-                <MaterialCommunityIcons 
-                  name="store-clock" 
-                  size={20} 
-                  color={theme.colors.onSurfaceVariant} 
+                <MaterialCommunityIcons
+                  name="store-clock"
+                  size={20}
+                  color={theme.colors.onSurfaceVariant}
                 />
               </View>
               <View style={styles.scheduleInput}>
@@ -295,7 +297,9 @@ const RestaurantConfigScreen: React.FC = () => {
                   label="Hora de apertura"
                   value={formatTimeForDisplay(formData.openingTime || null)}
                   onPress={() => isEditing && setShowOpeningTimePicker(true)}
-                  onClear={() => isEditing && setFormData({ ...formData, openingTime: null })}
+                  onClear={() =>
+                    isEditing && setFormData({ ...formData, openingTime: null })
+                  }
                   disabled={!isEditing}
                 />
               </View>
@@ -303,10 +307,10 @@ const RestaurantConfigScreen: React.FC = () => {
 
             <View style={styles.scheduleInputContainer}>
               <View style={styles.scheduleIconWrapper}>
-                <MaterialCommunityIcons 
-                  name="store-off" 
-                  size={20} 
-                  color={theme.colors.onSurfaceVariant} 
+                <MaterialCommunityIcons
+                  name="store-off"
+                  size={20}
+                  color={theme.colors.onSurfaceVariant}
                 />
               </View>
               <View style={styles.scheduleInput}>
@@ -314,15 +318,17 @@ const RestaurantConfigScreen: React.FC = () => {
                   label="Hora de cierre"
                   value={formatTimeForDisplay(formData.closingTime || null)}
                   onPress={() => isEditing && setShowClosingTimePicker(true)}
-                  onClear={() => isEditing && setFormData({ ...formData, closingTime: null })}
+                  onClear={() =>
+                    isEditing && setFormData({ ...formData, closingTime: null })
+                  }
                   disabled={!isEditing}
                 />
               </View>
             </View>
 
             <View style={styles.infoChip}>
-              <Chip 
-                icon="information" 
+              <Chip
+                icon="information"
                 mode="flat"
                 style={styles.chip}
                 textStyle={styles.chipText}
@@ -339,7 +345,10 @@ const RestaurantConfigScreen: React.FC = () => {
             <Button
               mode="contained"
               onPress={() => setIsEditing(true)}
-              style={[styles.editButton, { backgroundColor: theme.colors.tertiary }]}
+              style={[
+                styles.editButton,
+                { backgroundColor: theme.colors.tertiary },
+              ]}
               contentStyle={styles.editButtonContent}
               labelStyle={styles.editButtonLabel}
               icon="pencil"
@@ -376,17 +385,17 @@ const RestaurantConfigScreen: React.FC = () => {
         {config && (
           <Surface style={styles.infoCard} elevation={1}>
             <View style={styles.infoContent}>
-              <MaterialCommunityIcons 
-                name="information-outline" 
-                size={20} 
-                color={theme.colors.onSurfaceVariant} 
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
               />
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoTitle}>Última actualización</Text>
                 <Text style={styles.infoText}>
                   {new Date(config.updatedAt).toLocaleString('es-MX', {
                     dateStyle: 'medium',
-                    timeStyle: 'short'
+                    timeStyle: 'short',
                   })}
                 </Text>
               </View>
@@ -396,7 +405,10 @@ const RestaurantConfigScreen: React.FC = () => {
       </ScrollView>
 
       <Portal>
-        <Dialog visible={showDiscardDialog} onDismiss={() => setShowDiscardDialog(false)}>
+        <Dialog
+          visible={showDiscardDialog}
+          onDismiss={() => setShowDiscardDialog(false)}
+        >
           <Dialog.Title>Descartar cambios</Dialog.Title>
           <Dialog.Content>
             <Paragraph>
@@ -404,7 +416,9 @@ const RestaurantConfigScreen: React.FC = () => {
             </Paragraph>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowDiscardDialog(false)}>Cancelar</Button>
+            <Button onPress={() => setShowDiscardDialog(false)}>
+              Cancelar
+            </Button>
             <Button onPress={confirmDiscard}>Descartar</Button>
           </Dialog.Actions>
         </Dialog>

@@ -340,7 +340,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                 ))}
               </Surface>
             )}
-
           </ScrollView>
         </Modal>
       </Portal>

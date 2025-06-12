@@ -126,7 +126,7 @@ export const useCompleteOrderMutation = () => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   return useMutation<Order, ApiError, string>({
-    mutationFn: (orderId) => 
+    mutationFn: (orderId) =>
       orderService.updateOrder(orderId, { orderStatus: 'COMPLETED' }),
     onSuccess: (completedOrder) => {
       // Invalidar queries relevantes

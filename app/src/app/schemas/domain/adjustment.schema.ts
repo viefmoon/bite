@@ -13,7 +13,7 @@ export const adjustmentSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable().optional(),
-  
+
   // Relaciones opcionales
   order: z.any().optional(),
   orderItem: z.any().optional(),
@@ -33,27 +33,34 @@ const createAdjustmentBaseSchema = z.object({
 });
 
 // Schema para crear un ajuste con validaciones
-export const createAdjustmentSchema = createAdjustmentBaseSchema.refine(
-  (data) => {
-    // Debe tener orderId O orderItemId, pero no ambos
-    return (data.orderId && !data.orderItemId) || (!data.orderId && data.orderItemId);
-  },
-  {
-    message: "El ajuste debe aplicarse a una orden o a un item de orden, pero no a ambos",
-  }
-).refine(
-  (data) => {
-    // Si es porcentaje, debe tener value. Si no, debe tener amount
-    if (data.isPercentage) {
-      return data.value !== undefined;
-    } else {
-      return data.amount !== undefined;
-    }
-  },
-  {
-    message: "Si es porcentaje debe incluir 'value', si no debe incluir 'amount'",
-  }
-);
+export const createAdjustmentSchema = createAdjustmentBaseSchema
+  .refine(
+    (data) => {
+      // Debe tener orderId O orderItemId, pero no ambos
+      return (
+        (data.orderId && !data.orderItemId) ||
+        (!data.orderId && data.orderItemId)
+      );
+    },
+    {
+      message:
+        'El ajuste debe aplicarse a una orden o a un item de orden, pero no a ambos',
+    },
+  )
+  .refine(
+    (data) => {
+      // Si es porcentaje, debe tener value. Si no, debe tener amount
+      if (data.isPercentage) {
+        return data.value !== undefined;
+      } else {
+        return data.amount !== undefined;
+      }
+    },
+    {
+      message:
+        "Si es porcentaje debe incluir 'value', si no debe incluir 'amount'",
+    },
+  );
 
 export type CreateAdjustment = z.infer<typeof createAdjustmentSchema>;
 

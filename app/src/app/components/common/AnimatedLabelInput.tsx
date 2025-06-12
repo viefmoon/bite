@@ -193,7 +193,6 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
         >
           <Animated.Text
             style={[styles.label, labelStyle, animatedLabelStyle]}
-            pointerEvents="none"
           >
             {label}
           </Animated.Text>

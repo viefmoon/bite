@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { ActivityIndicator, Text, Portal } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
+import { Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -17,7 +17,6 @@ import { Product, ProductFormInputs } from '../schema/products.schema';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import { ApiError } from '@/app/lib/errors';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
 import ProductFormModal from '../components/ProductFormModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';

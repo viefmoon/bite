@@ -1,6 +1,5 @@
 import type { OrderType } from './orders.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
-import type { OrderAdjustment } from './adjustments.types';
 
 // Interfaz para modificadores de items
 export interface OrderItemModifierDto {

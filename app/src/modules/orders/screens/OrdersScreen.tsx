@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Text } from 'react-native-paper'; // useTheme no se usa directamente aquí ahora
+import { Button } from 'react-native-paper'; // useTheme no se usa directamente aquí ahora
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme } from '@/app/styles/theme';

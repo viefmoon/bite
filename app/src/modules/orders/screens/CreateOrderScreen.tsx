@@ -102,7 +102,6 @@ const CreateOrderScreen = () => {
 
   const { data: menu, isLoading } = useGetFullMenu();
 
-
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(null);
@@ -334,12 +333,7 @@ const CreateOrderScreen = () => {
       default:
         return 'Categorías';
     }
-  }, [
-    navigationLevel,
-    selectedCategory,
-    selectedSubCategory,
-    selectedProduct,
-  ]);
+  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct]);
 
   const styles = useMemo(
     () =>

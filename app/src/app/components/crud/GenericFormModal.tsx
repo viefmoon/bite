@@ -99,6 +99,84 @@ interface GenericFormModalProps<
   onFileSelected?: (file: FileObject | null) => void;
 }
 
+// Componente separado para manejar campos numéricos correctamente
+interface NumericInputProps {
+  value: number | null | undefined;
+  onChange: (value: number | null) => void;
+  onBlur: () => void;
+  label: string;
+  placeholder?: string;
+  keyboardType?: any; // Permitir cualquier KeyboardTypeOptions
+  error?: boolean;
+  disabled?: boolean;
+  inputProps?: any;
+}
+
+const NumericInput: React.FC<NumericInputProps> = ({
+  value,
+  onChange,
+  onBlur,
+  label,
+  placeholder,
+  keyboardType = 'decimal-pad',
+  error,
+  disabled,
+  inputProps,
+}) => {
+  const [inputValue, setInputValue] = useState<string>(
+    value === null || value === undefined ? '' : String(value),
+  );
+
+  useEffect(() => {
+    const stringValue =
+      value === null || value === undefined ? '' : String(value);
+    if (stringValue !== inputValue) {
+      const numericValueFromInput = parseFloat(inputValue);
+      if (
+        !(inputValue.endsWith('.') && numericValueFromInput === value) &&
+        !(inputValue === '.' && value === null)
+      ) {
+        setInputValue(stringValue);
+      }
+    }
+  }, [value, inputValue]);
+
+  const theme = useAppTheme();
+  const styles = getStyles(theme);
+
+  return (
+    <TextInput
+      label={label}
+      value={inputValue}
+      onChangeText={(text) => {
+        const formattedText = text.replace(/,/g, '.');
+        if (/^(\d*\.?\d*)$/.test(formattedText)) {
+          setInputValue(formattedText);
+
+          if (formattedText === '' || formattedText === '.') {
+            if (value !== null) onChange(null);
+          } else {
+            const numericValue = parseFloat(formattedText);
+            if (!isNaN(numericValue) && numericValue !== value) {
+              onChange(numericValue);
+            } else if (isNaN(numericValue) && value !== null) {
+              onChange(null);
+            }
+          }
+        }
+      }}
+      onBlur={onBlur}
+      mode="outlined"
+      style={styles.input}
+      placeholder={placeholder}
+      keyboardType={keyboardType}
+      error={error}
+      disabled={disabled}
+      {...inputProps}
+    />
+  );
+};
+
 const getDefaultValueForType = (
   type: FieldType,
 ): string | number | boolean | null | undefined => {
@@ -398,63 +476,19 @@ const GenericFormModal = <
               control={control as Control<FieldValues>}
               render={({ field: { onChange, onBlur, value } }) => {
                 if (fieldConfig.type === 'number') {
-                  const [inputValue, setInputValue] = useState<string>(
-                    value === null || value === undefined ? '' : String(value),
-                  );
-
-                  useEffect(() => {
-                    const stringValue =
-                      value === null || value === undefined
-                        ? ''
-                        : String(value);
-                    if (stringValue !== inputValue) {
-                      const numericValueFromInput = parseFloat(inputValue);
-                      if (
-                        !(
-                          inputValue.endsWith('.') &&
-                          numericValueFromInput === value
-                        ) &&
-                        !(inputValue === '.' && value === null)
-                      ) {
-                        setInputValue(stringValue);
-                      }
-                    }
-                  }, [value, inputValue]);
-
                   return (
-                    <TextInput
-                      label={fieldConfig.label}
-                      value={inputValue}
-                      onChangeText={(text) => {
-                        const formattedText = text.replace(/,/g, '.');
-                        if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                          setInputValue(formattedText);
-
-                          if (formattedText === '' || formattedText === '.') {
-                            if (value !== null) onChange(null);
-                          } else {
-                            const numericValue = parseFloat(formattedText);
-                            if (
-                              !isNaN(numericValue) &&
-                              numericValue !== value
-                            ) {
-                              onChange(numericValue);
-                            } else if (isNaN(numericValue) && value !== null) {
-                              onChange(null);
-                            }
-                          }
-                        }
-                      }}
+                    <NumericInput
+                      value={value}
+                      onChange={onChange}
                       onBlur={onBlur}
-                      mode="outlined"
-                      style={styles.input}
+                      label={fieldConfig.label}
                       placeholder={fieldConfig.placeholder}
                       keyboardType={
                         fieldConfig.inputProps?.keyboardType ?? 'decimal-pad'
                       }
                       error={!!errorMessage}
                       disabled={isActuallySubmitting}
-                      {...fieldConfig.inputProps}
+                      inputProps={fieldConfig.inputProps}
                     />
                   );
                 } else {

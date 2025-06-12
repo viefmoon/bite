@@ -22,7 +22,6 @@ import {
 } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import {
   useCreateBulkAdjustmentsMutation,
-  useDeleteAdjustmentMutation,
 } from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
 import {
   Order,
@@ -39,7 +38,6 @@ import type { ThermalPrinter } from '../../printers/types/printer.types';
 import OrderCartDetail, {
   OrderDetailsForBackend,
 } from '../components/OrderCartDetail';
-import { useSnackbarStore } from '../../../app/store/snackbarStore'; // Para mostrar mensajes
 import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
 import { CartItem } from '../context/CartContext'; // Para el tipo CartItem
 
@@ -101,14 +99,14 @@ const getPaymentStatus = (order: Order): 'unpaid' | 'partial' | 'paid' => {
   if (!order.payments || order.payments.length === 0) {
     return 'unpaid';
   }
-  
+
   // Sumar todos los pagos completados
   const totalPaid = order.payments
     .filter((payment: any) => payment.paymentStatus === 'COMPLETED')
     .reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0);
-  
+
   const orderTotal = order.total || 0;
-  
+
   if (totalPaid === 0) {
     return 'unpaid';
   } else if (totalPaid >= orderTotal) {
@@ -129,12 +127,17 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
-  const [pendingProductsToAdd, setPendingProductsToAdd] = useState<CartItem[]>([]);
-  const [shouldAddProducts, setShouldAddProducts] = useState(false);
+  const [pendingProductsToAdd, setPendingProductsToAdd] = useState<CartItem[]>(
+    [],
+  );
   // Estado para mantener productos temporales mientras se navega
-  const [temporaryProducts, setTemporaryProducts] = useState<{ [orderId: string]: CartItem[] }>({});
+  const [temporaryProducts, setTemporaryProducts] = useState<{
+    [orderId: string]: CartItem[];
+  }>({});
   // Estado para rastrear el conteo de items existentes en cada orden
-  const [existingItemsCount, setExistingItemsCount] = useState<{ [orderId: string]: number }>({});
+  const [existingItemsCount, setExistingItemsCount] = useState<{
+    [orderId: string]: number;
+  }>({});
 
   // Estado para filtro de tipo de orden
   const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>(
@@ -149,12 +152,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const {
     data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
     isLoading,
-    isError,
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
-
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Filtrar órdenes por tipo
   const filteredOrders = React.useMemo(() => {
@@ -243,24 +243,54 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     const paymentStatus = getPaymentStatus(order);
                     if (paymentStatus === 'paid') {
                       return (
-                        <View style={[styles.paymentBadge, { backgroundColor: '#10B981' }]}>
-                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                        <View
+                          style={[
+                            styles.paymentBadge,
+                            { backgroundColor: '#10B981' },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.paymentBadgeText,
+                              { color: '#FFFFFF' },
+                            ]}
+                          >
                             💵 Pagado
                           </Text>
                         </View>
                       );
                     } else if (paymentStatus === 'partial') {
                       return (
-                        <View style={[styles.paymentBadge, { backgroundColor: '#F59E0B' }]}>
-                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                        <View
+                          style={[
+                            styles.paymentBadge,
+                            { backgroundColor: '#F59E0B' },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.paymentBadgeText,
+                              { color: '#FFFFFF' },
+                            ]}
+                          >
                             💵 Parcial
                           </Text>
                         </View>
                       );
                     } else {
                       return (
-                        <View style={[styles.paymentBadge, { backgroundColor: '#EF4444' }]}>
-                          <Text style={[styles.paymentBadgeText, { color: '#FFFFFF' }]}>
+                        <View
+                          style={[
+                            styles.paymentBadge,
+                            { backgroundColor: '#EF4444' },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.paymentBadgeText,
+                              { color: '#FFFFFF' },
+                            ]}
+                          >
                             💵 Pendiente
                           </Text>
                         </View>
@@ -317,7 +347,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   const { ListEmptyComponent } = useListState({
     isLoading,
-    isError,
+    isError: false, // Ya no usamos isError porque no está disponible desde useGetOpenOrdersQuery
     data: filteredOrders,
     emptyConfig: {
       title:
@@ -326,7 +356,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           : `No hay órdenes de tipo ${formatOrderType(
               selectedOrderType as OrderType,
             )
-              .replace(/[🍽️🥡🚚]/g, '')
+              .replace(/[\u{1F37D}\u{FE0F}\u{1F961}\u{1F69A}]/gu, '')
               .trim()}`,
       message:
         selectedOrderType === 'ALL'
@@ -354,7 +384,11 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   // Efecto para sincronizar productos temporales con pendientes
   useEffect(() => {
-    if (isEditModalVisible && editingOrderId && temporaryProducts[editingOrderId]) {
+    if (
+      isEditModalVisible &&
+      editingOrderId &&
+      temporaryProducts[editingOrderId]
+    ) {
       setPendingProductsToAdd(temporaryProducts[editingOrderId]);
     }
   }, [isEditModalVisible, editingOrderId, temporaryProducts]);
@@ -522,12 +556,16 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 : undefined
             }
             navigation={navigation}
-            pendingProductsToAdd={editingOrderId && temporaryProducts[editingOrderId] ? temporaryProducts[editingOrderId] : pendingProductsToAdd}
+            pendingProductsToAdd={
+              editingOrderId && temporaryProducts[editingOrderId]
+                ? temporaryProducts[editingOrderId]
+                : pendingProductsToAdd
+            }
             onItemsCountChanged={(count) => {
               // Actualizar el conteo de items existentes para esta orden
-              setExistingItemsCount(prev => ({
+              setExistingItemsCount((prev) => ({
                 ...prev,
-                [editingOrderId]: count
+                [editingOrderId]: count,
               }));
             }}
             onClose={() => {
@@ -541,10 +579,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             onAddProducts={() => {
               // Cerrar el modal temporalmente para navegar
               setIsEditModalVisible(false);
-              
+
               const orderId = editingOrderId;
-              const orderNumber = ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber;
-              
+              const orderNumber = ordersData?.find(
+                (o) => o.id === editingOrderId,
+              )?.dailyNumber;
+
               // Navegar a añadir productos
               setTimeout(() => {
                 const existingProducts = temporaryProducts[orderId!] || [];
@@ -556,9 +596,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
                   onProductsAdded: (newProducts) => {
                     // Actualizar productos temporales para esta orden
-                    setTemporaryProducts(prev => ({
+                    setTemporaryProducts((prev) => ({
                       ...prev,
-                      [orderId!]: newProducts
+                      [orderId!]: newProducts,
                     }));
                     // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
                     // Reabrir el modal cuando regresemos
@@ -618,29 +658,33 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   orderId: editingOrderId,
                   payload,
                 });
-                
+
                 // Luego, si hay ajustes, crearlos
                 if (details.adjustments && details.adjustments.length > 0) {
                   // Asegurarse de que cada ajuste tenga el orderId correcto
-                  const adjustmentsWithOrderId = details.adjustments.map(adj => ({
-                    ...adj,
-                    orderId: editingOrderId
-                  }));
+                  const adjustmentsWithOrderId = details.adjustments.map(
+                    (adj) => ({
+                      ...adj,
+                      orderId: editingOrderId,
+                    }),
+                  );
                   console.log('Ajustes a crear:', adjustmentsWithOrderId);
-                  await createBulkAdjustmentsMutation.mutateAsync(adjustmentsWithOrderId);
+                  await createBulkAdjustmentsMutation.mutateAsync(
+                    adjustmentsWithOrderId,
+                  );
                 }
-                
+
                 // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
                 // Limpiar productos temporales y conteo para esta orden
                 if (editingOrderId) {
-                  setTemporaryProducts(prev => {
+                  setTemporaryProducts((prev) => {
                     const newState = { ...prev };
                     delete newState[editingOrderId];
                     return newState;
                   });
-                  setExistingItemsCount(prev => {
+                  setExistingItemsCount((prev) => {
                     const newState = { ...prev };
                     delete newState[editingOrderId];
                     return newState;

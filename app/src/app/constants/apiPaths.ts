@@ -24,7 +24,7 @@ export const API_PATHS = {
   PRINT_ORDER_TICKET: '/api/v1/print/order', // Ruta para solicitar impresión de ticket
 
   THERMAL_PRINTERS: '/api/v1/thermal-printers',
-  
+
   ADJUSTMENTS: '/api/v1/adjustments',
 
   RESTAURANT_CONFIG: '/api/v1/restaurant-config',

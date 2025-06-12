@@ -10,7 +10,13 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, IconButton, Surface, TouchableRipple, Button } from 'react-native-paper';
+import {
+  Text,
+  IconButton,
+  Surface,
+  TouchableRipple,
+  Button,
+} from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
@@ -24,7 +30,10 @@ import { useAuthStore } from '../../../app/store/authStore';
 import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
 import { authService } from '../services/authService';
 import LoginForm from '../components/LoginForm';
-import { runNetworkDiagnostics, formatDiagnosticResult } from '../../../app/utils/networkDiagnostics';
+import {
+  runNetworkDiagnostics,
+  formatDiagnosticResult,
+} from '../../../app/utils/networkDiagnostics';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
@@ -127,7 +136,7 @@ const LoginScreen = () => {
           status: error.status,
           details: error.details,
         });
-        
+
         // Mostrar opción de diagnóstico en errores de red
         if (error.code === 'NETWORK_ERROR' || error.status === 0) {
           setShowNetworkError(true);
@@ -200,15 +209,15 @@ const LoginScreen = () => {
     try {
       const result = await runNetworkDiagnostics();
       const formattedResult = formatDiagnosticResult(result);
-      
+
       Alert.alert(
         'Diagnóstico de Red',
         formattedResult,
         [
           { text: 'Copiar', onPress: () => console.log('Copiar resultado') },
-          { text: 'Cerrar', style: 'cancel' }
+          { text: 'Cerrar', style: 'cancel' },
         ],
-        { cancelable: true }
+        { cancelable: true },
       );
     } catch (error) {
       console.error('Error ejecutando diagnóstico:', error);

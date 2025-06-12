@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import type { User } from '../../modules/auth/schema/auth.schema'; // Corregida ruta de importación
+import { authService } from '../../modules/auth/services/authService';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -130,9 +131,6 @@ export const initializeAuthStore = async () => {
 
       // Verificamos si el token es válido con el backend actual
       console.log('Verificando validez del token almacenado...');
-      const { authService } = await import(
-        '../../modules/auth/services/authService'
-      );
       const isTokenValid = await authService.verifyToken();
 
       if (isTokenValid) {

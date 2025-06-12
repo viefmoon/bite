@@ -14,13 +14,15 @@ import {
   useDeletePizzaIngredient,
 } from '../hooks/usePizzaIngredientsQueries';
 import { PizzaIngredient } from '../types/pizzaIngredient.types';
-import { 
+import {
   PizzaIngredientFormInputs,
-  pizzaIngredientFormSchema 
+  pizzaIngredientFormSchema,
 } from '../schema/pizzaIngredient.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
-import GenericFormModal, { FormFieldConfig } from '@/app/components/crud/GenericFormModal';
+import GenericFormModal, {
+  FormFieldConfig,
+} from '@/app/components/crud/GenericFormModal';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
@@ -40,7 +42,8 @@ function PizzaIngredientsScreen(): JSX.Element {
     'all' | 'active' | 'inactive'
   >('all');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [selectedIngredient, setSelectedIngredient] = useState<PizzaIngredient | null>(null);
+  const [selectedIngredient, setSelectedIngredient] =
+    useState<PizzaIngredient | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   const debouncedSetSearch = useCallback(
@@ -95,10 +98,13 @@ function PizzaIngredientsScreen(): JSX.Element {
     deleteMutationFn: deleteIngredient,
   });
 
-  const handleOpenEditModal = useCallback((item: PizzaIngredient) => {
-    setDetailModalVisible(false);
-    originalHandleOpenEditModal(item);
-  }, [originalHandleOpenEditModal]);
+  const handleOpenEditModal = useCallback(
+    (item: PizzaIngredient) => {
+      setDetailModalVisible(false);
+      originalHandleOpenEditModal(item);
+    },
+    [originalHandleOpenEditModal],
+  );
 
   const handleOpenDetailModal = useCallback((item: PizzaIngredient) => {
     setSelectedIngredient(item);
@@ -112,10 +118,12 @@ function PizzaIngredientsScreen(): JSX.Element {
   }, [originalHandleCloseModals]);
 
   const pizzaIngredients = useMemo(() => {
-    return (pizzaIngredientsResponse?.data ?? []).map((ingredient: PizzaIngredient) => ({
-      ...ingredient,
-      _displayDescription: `Valor: ${ingredient.ingredientValue}`,
-    }));
+    return (pizzaIngredientsResponse?.data ?? []).map(
+      (ingredient: PizzaIngredient) => ({
+        ...ingredient,
+        _displayDescription: `Valor: ${ingredient.ingredientValue}`,
+      }),
+    );
   }, [pizzaIngredientsResponse]);
 
   const handleFormSubmit = useCallback(
@@ -128,15 +136,15 @@ function PizzaIngredientsScreen(): JSX.Element {
             id: editingItem.id,
             data: formData,
           });
-          showSnackbar({ 
-            message: 'Ingrediente de pizza actualizado con éxito', 
-            type: 'success' 
+          showSnackbar({
+            message: 'Ingrediente de pizza actualizado con éxito',
+            type: 'success',
           });
         } else {
           await createMutation.mutateAsync(formData);
-          showSnackbar({ 
-            message: 'Ingrediente de pizza creado con éxito', 
-            type: 'success' 
+          showSnackbar({
+            message: 'Ingrediente de pizza creado con éxito',
+            type: 'success',
           });
         }
 
@@ -162,70 +170,74 @@ function PizzaIngredientsScreen(): JSX.Element {
     ],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    Alert.alert(
-      'Confirmar Eliminación',
-      '¿Estás seguro de que quieres eliminar este ingrediente? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteIngredient(id);
-              showSnackbar({ 
-                message: 'Ingrediente eliminado con éxito', 
-                type: 'success' 
-              });
-              setDetailModalVisible(false);
-            } catch (error) {
-              showSnackbar({ 
-                message: 'Error al eliminar el ingrediente', 
-                type: 'error' 
-              });
-            }
+  const handleDelete = useCallback(
+    (id: string) => {
+      Alert.alert(
+        'Confirmar Eliminación',
+        '¿Estás seguro de que quieres eliminar este ingrediente? Esta acción no se puede deshacer.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteIngredient(id);
+                showSnackbar({
+                  message: 'Ingrediente eliminado con éxito',
+                  type: 'success',
+                });
+                setDetailModalVisible(false);
+              } catch (error) {
+                showSnackbar({
+                  message: 'Error al eliminar el ingrediente',
+                  type: 'error',
+                });
+              }
+            },
           },
+        ],
+      );
+    },
+    [deleteIngredient, showSnackbar],
+  );
+
+  const formFieldsConfig: FormFieldConfig<PizzaIngredientFormInputs>[] =
+    useMemo(
+      () => [
+        {
+          name: 'name',
+          label: 'Nombre del Ingrediente',
+          type: 'text',
+          placeholder: 'Ej: Pepperoni',
+          required: true,
+        },
+        {
+          name: 'ingredientValue',
+          label: 'Valor del Ingrediente',
+          type: 'number',
+          placeholder: '1',
+          defaultValue: 1,
+          required: true,
+        },
+        {
+          name: 'ingredients',
+          label: 'Ingredientes/Descripción',
+          type: 'textarea',
+          placeholder: 'Ej: Pork, beef, spices...',
+          numberOfLines: 3,
+          required: false,
+        },
+        {
+          name: 'isActive',
+          label: 'Estado',
+          type: 'switch',
+          switchLabel: 'Ingrediente activo',
+          defaultValue: true,
         },
       ],
+      [],
     );
-  }, [deleteIngredient, showSnackbar]);
-
-  const formFieldsConfig: FormFieldConfig<PizzaIngredientFormInputs>[] = useMemo(
-    () => [
-      {
-        name: 'name',
-        label: 'Nombre del Ingrediente',
-        type: 'text',
-        placeholder: 'Ej: Pepperoni',
-        required: true,
-      },
-      {
-        name: 'ingredientValue',
-        label: 'Valor del Ingrediente',
-        type: 'number',
-        placeholder: '1',
-        defaultValue: 1,
-        required: true,
-      },
-      {
-        name: 'ingredients',
-        label: 'Ingredientes/Descripción',
-        type: 'textarea',
-        placeholder: 'Ej: Pork, beef, spices...',
-        numberOfLines: 3,
-        required: false,
-      },
-      {
-        name: 'isActive',
-        label: 'Estado',
-        type: 'switch',
-        switchLabel: 'Ingrediente activo',
-        defaultValue: true,
-      },
-    ],
-    [],
-  );
 
   const formInitialValues = useMemo(() => {
     if (editingItem) {

@@ -1,6 +1,7 @@
 import apiClient from '@/app/services/apiClient';
 import type { Order } from '@/modules/orders/types/orders.types';
-import type { QueryOptions, InfiniteQueryOptions } from '@tanstack/react-query';
+import type { QueryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions } from '@tanstack/react-query';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import { ApiError } from '@/app/lib/errors';
 
@@ -95,7 +96,6 @@ export const receiptService = {
       data.map((o) => ({
         id: o.id,
         orderStatus: o.orderStatus,
-        status: o.status,
         dailyNumber: o.dailyNumber,
       })),
     );
@@ -104,9 +104,7 @@ export const receiptService = {
     let filteredData = data.filter(
       (order) =>
         order.orderStatus === 'COMPLETED' ||
-        order.orderStatus === 'CANCELLED' ||
-        order.status === 'completed' ||
-        order.status === 'cancelled',
+        order.orderStatus === 'CANCELLED',
     );
 
     // Si hay búsqueda, filtrar adicionalmente del lado del cliente
@@ -168,9 +166,8 @@ export const receiptService = {
 
 // Query options para React Query
 export const receiptQueryOptions = {
-  receiptsInfinite: (
-    filters?: Omit<GetReceiptsParams, 'page'>,
-  ): InfiniteQueryOptions<PaginatedResponse<Order>, Error> => ({
+  receiptsInfinite: (filters?: Omit<GetReceiptsParams, 'page'>) =>
+    infiniteQueryOptions({
     queryKey: ['receipts', 'infinite', filters],
     queryFn: ({ pageParam = 1 }) =>
       receiptService.getReceipts({
@@ -192,6 +189,5 @@ export const receiptQueryOptions = {
   receipt: (id: string): QueryOptions<Order, Error> => ({
     queryKey: ['receipt', id],
     queryFn: () => receiptService.getReceiptById(id),
-    enabled: !!id,
   }),
 };

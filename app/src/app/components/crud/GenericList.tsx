@@ -55,7 +55,6 @@ interface GenericListProps<TItem extends { id: string }> {
   isRefreshing: boolean;
   ListEmptyComponent: React.ComponentType<any> | React.ReactElement | null;
   isLoading?: boolean;
-  listStyle?: StyleProp<ViewStyle>;
   listItemStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ViewStyle>;
@@ -175,7 +174,6 @@ const GenericList = <TItem extends { id: string }>({
   onRefresh,
   isRefreshing,
   ListEmptyComponent,
-  listStyle,
   listItemStyle,
   contentContainerStyle,
   imageStyle,

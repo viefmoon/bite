@@ -26,9 +26,7 @@ class PizzaIngredientsService {
     return handleApiResponse(response);
   }
 
-  async create(
-    data: CreatePizzaIngredientDto,
-  ): Promise<PizzaIngredient> {
+  async create(data: CreatePizzaIngredientDto): Promise<PizzaIngredient> {
     const response = await apiClient.post<PizzaIngredient>(
       API_PATHS.PIZZA_INGREDIENTS,
       data,

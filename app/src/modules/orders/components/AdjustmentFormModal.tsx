@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, Platform } from 'react-native';
 import {
   Modal,
   Portal,
@@ -17,7 +12,10 @@ import {
   Icon,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import type { OrderAdjustment, AdjustmentFormData } from '../types/adjustments.types';
+import type {
+  OrderAdjustment,
+  AdjustmentFormData,
+} from '../types/adjustments.types';
 
 interface AdjustmentFormModalProps {
   visible: boolean;
@@ -90,12 +88,12 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
   useEffect(() => {
     if (formData.isPercentage && formData.value !== undefined) {
       const calculatedAmount = (orderSubtotal * formData.value) / 100;
-      setFormData(prev => ({ ...prev, amount: calculatedAmount }));
+      setFormData((prev) => ({ ...prev, amount: calculatedAmount }));
     }
   }, [formData.isPercentage, formData.value, orderSubtotal]);
 
   const handleTypeChange = (isPercentage: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       isPercentage,
       value: isPercentage ? 0 : undefined,
@@ -158,12 +156,17 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
         onDismiss={onDismiss}
         contentContainerStyle={[
           styles.modal,
-          { backgroundColor: theme.colors.surface }
+          { backgroundColor: theme.colors.surface },
         ]}
       >
         {/* Header simplificado */}
-        <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onPrimary }]}>
+        <View
+          style={[styles.header, { backgroundColor: theme.colors.primary }]}
+        >
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onPrimary }]}
+          >
             {adjustment ? 'Editar Ajuste' : 'Nuevo Ajuste'}
           </Text>
           <IconButton
@@ -182,9 +185,11 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
             label="Nombre"
             value={formData.name}
             onChangeText={(text) => {
-              setFormData(prev => ({ ...prev, name: text }));
+              setFormData((prev) => ({ ...prev, name: text }));
               // Detectar si el usuario editó manualmente el nombre
-              setNameWasEdited(text !== 'Descuento' && text !== 'Cargo adicional');
+              setNameWasEdited(
+                text !== 'Descuento' && text !== 'Cargo adicional',
+              );
             }}
             mode="outlined"
             error={!!errors.name}
@@ -199,7 +204,10 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
 
           {/* Tipo de ajuste con chips */}
           <View style={styles.typeContainer}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurface }]}>
+            <Text
+              variant="labelLarge"
+              style={[styles.label, { color: theme.colors.onSurface }]}
+            >
               Tipo de ajuste
             </Text>
             <View style={styles.chipGroup}>
@@ -209,9 +217,15 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                 selected={formData.isPercentage}
                 style={[
                   styles.chip,
-                  formData.isPercentage && { backgroundColor: theme.colors.primaryContainer }
+                  formData.isPercentage && {
+                    backgroundColor: theme.colors.primaryContainer,
+                  },
                 ]}
-                textStyle={formData.isPercentage && { color: theme.colors.onPrimaryContainer }}
+                textStyle={
+                  formData.isPercentage && {
+                    color: theme.colors.onPrimaryContainer,
+                  }
+                }
               >
                 Porcentaje
               </Chip>
@@ -221,9 +235,15 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                 selected={!formData.isPercentage}
                 style={[
                   styles.chip,
-                  !formData.isPercentage && { backgroundColor: theme.colors.primaryContainer }
+                  !formData.isPercentage && {
+                    backgroundColor: theme.colors.primaryContainer,
+                  },
                 ]}
-                textStyle={!formData.isPercentage && { color: theme.colors.onPrimaryContainer }}
+                textStyle={
+                  !formData.isPercentage && {
+                    color: theme.colors.onPrimaryContainer,
+                  }
+                }
               >
                 Monto fijo
               </Chip>
@@ -232,7 +252,10 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
 
           {/* Tipo de operación (descuento o cargo) */}
           <View style={styles.operationContainer}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurface }]}>
+            <Text
+              variant="labelLarge"
+              style={[styles.label, { color: theme.colors.onSurface }]}
+            >
               Tipo de operación
             </Text>
             <View style={styles.operationButtons}>
@@ -242,14 +265,14 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                   setIsDiscount(true);
                   // Siempre actualizar el nombre si no fue editado manualmente
                   if (!nameWasEdited) {
-                    setFormData(prev => ({ ...prev, name: 'Descuento' }));
+                    setFormData((prev) => ({ ...prev, name: 'Descuento' }));
                   }
                   if (formData.isPercentage) {
                     const absValue = Math.abs(parseFloat(percentageText) || 0);
-                    setFormData(prev => ({ ...prev, value: -absValue }));
+                    setFormData((prev) => ({ ...prev, value: -absValue }));
                   } else {
                     const absValue = Math.abs(parseFloat(amountText) || 0);
-                    setFormData(prev => ({ ...prev, amount: -absValue }));
+                    setFormData((prev) => ({ ...prev, amount: -absValue }));
                   }
                 }}
                 style={[
@@ -257,12 +280,12 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                   isDiscount && {
                     backgroundColor: theme.colors.errorContainer,
                     borderColor: theme.colors.error,
-                  }
+                  },
                 ]}
                 labelStyle={{
                   color: isDiscount
                     ? theme.colors.onErrorContainer
-                    : theme.colors.error
+                    : theme.colors.error,
                 }}
                 icon="minus"
               >
@@ -274,14 +297,17 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                   setIsDiscount(false);
                   // Siempre actualizar el nombre si no fue editado manualmente
                   if (!nameWasEdited) {
-                    setFormData(prev => ({ ...prev, name: 'Cargo adicional' }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      name: 'Cargo adicional',
+                    }));
                   }
                   if (formData.isPercentage) {
                     const absValue = Math.abs(parseFloat(percentageText) || 0);
-                    setFormData(prev => ({ ...prev, value: absValue }));
+                    setFormData((prev) => ({ ...prev, value: absValue }));
                   } else {
                     const absValue = Math.abs(parseFloat(amountText) || 0);
-                    setFormData(prev => ({ ...prev, amount: absValue }));
+                    setFormData((prev) => ({ ...prev, amount: absValue }));
                   }
                 }}
                 style={[
@@ -289,12 +315,12 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                   !isDiscount && {
                     backgroundColor: theme.colors.primaryContainer,
                     borderColor: theme.colors.primary,
-                  }
+                  },
                 ]}
                 labelStyle={{
                   color: !isDiscount
                     ? theme.colors.onPrimaryContainer
-                    : theme.colors.primary
+                    : theme.colors.primary,
                 }}
                 icon="plus"
               >
@@ -314,7 +340,10 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                 if (regex.test(text) || text === '') {
                   setPercentageText(text);
                   const value = parseFloat(text) || 0;
-                  setFormData(prev => ({ ...prev, value: isDiscount ? -value : value }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    value: isDiscount ? -value : value,
+                  }));
                 }
               }}
               mode="outlined"
@@ -333,7 +362,10 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
                 if (regex.test(text) || text === '') {
                   setAmountText(text);
                   const amount = parseFloat(text) || 0;
-                  setFormData(prev => ({ ...prev, amount: isDiscount ? -amount : amount }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    amount: isDiscount ? -amount : amount,
+                  }));
                 }
               }}
               mode="outlined"
@@ -351,16 +383,21 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
         </View>
 
         {/* Botones de acción */}
-        <View style={[styles.actions, { borderTopColor: theme.colors.outlineVariant }]}>
+        <View
+          style={[
+            styles.actions,
+            { borderTopColor: theme.colors.outlineVariant },
+          ]}
+        >
           <Button
             mode="outlined"
             onPress={onDismiss}
             style={[
               styles.actionButton,
-              { 
+              {
                 borderColor: theme.colors.outline,
-                backgroundColor: theme.colors.secondaryContainer
-              }
+                backgroundColor: theme.colors.secondaryContainer,
+              },
             ]}
             textColor={theme.colors.onSecondaryContainer}
           >

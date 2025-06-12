@@ -62,7 +62,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss || onCancel} style={styles.dialog}>
+      <Dialog
+        visible={visible}
+        onDismiss={onDismiss || onCancel}
+        style={styles.dialog}
+      >
         <Dialog.Title style={styles.title}>{title}</Dialog.Title>
         <Dialog.Content>
           <Paragraph style={styles.paragraph}>{message}</Paragraph>

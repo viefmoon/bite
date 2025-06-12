@@ -25,7 +25,9 @@ export type OrdersStackParamList = {
     orderNumber: number; // Número de la orden
     existingOrderItemsCount?: number; // Número de items que ya están en la orden
     existingTempProducts?: import('../../modules/orders/context/CartContext').CartItem[]; // Productos temporales existentes
-    onProductsAdded?: (products: import('../../modules/orders/context/CartContext').CartItem[]) => void; // Callback cuando se añaden productos
+    onProductsAdded?: (
+      products: import('../../modules/orders/context/CartContext').CartItem[],
+    ) => void; // Callback cuando se añaden productos
   }; // Pantalla para añadir productos a una orden existente
 };
 

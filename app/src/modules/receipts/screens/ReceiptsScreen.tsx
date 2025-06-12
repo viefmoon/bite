@@ -17,9 +17,11 @@ import {
   Divider,
   Badge,
 } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/app/styles/theme';
-import { useReceiptsInfinite, useRecoverOrder } from '../hooks/useReceiptsQueries';
+import {
+  useReceiptsInfinite,
+  useRecoverOrder,
+} from '../hooks/useReceiptsQueries';
 import { Order } from '@/app/schemas/domain/order.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
@@ -33,7 +35,6 @@ type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 
 export const ReceiptsScreen: React.FC = () => {
   const theme = useAppTheme();
-  const insets = useSafeAreaInsets();
 
   // Estados para filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,11 +48,11 @@ export const ReceiptsScreen: React.FC = () => {
   // Estado para el modal de detalle
   const [selectedReceipt, setSelectedReceipt] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  
+
   // Estado para recuperación de orden
   const [orderToRecover, setOrderToRecover] = useState<Order | null>(null);
   const [showRecoverConfirm, setShowRecoverConfirm] = useState(false);
-  
+
   // Mutation para recuperar orden
   const recoverOrderMutation = useRecoverOrder();
 
@@ -120,7 +121,7 @@ export const ReceiptsScreen: React.FC = () => {
 
   const handleConfirmRecover = useCallback(async () => {
     if (!orderToRecover) return;
-    
+
     try {
       await recoverOrderMutation.mutateAsync(orderToRecover.id);
       setShowRecoverConfirm(false);
@@ -208,15 +209,16 @@ export const ReceiptsScreen: React.FC = () => {
               </Text>
             )}
             <Text variant="bodySmall" style={styles.itemsCountText}>
-              {item.orderItems?.length || item.items?.length || 0} productos
+              {item.orderItems?.length || 0} productos
             </Text>
           </View>
           <View style={styles.receiptActions}>
             <Text variant="titleLarge" style={styles.totalText}>
-              ${parseFloat(item.total || '0').toFixed(2)}
+              ${parseFloat(item.total?.toString() || '0').toFixed(2)}
             </Text>
             {/* Botón de recuperar solo para órdenes completadas o canceladas */}
-            {(item.orderStatus === 'COMPLETED' || item.orderStatus === 'CANCELLED') && (
+            {(item.orderStatus === 'COMPLETED' ||
+              item.orderStatus === 'CANCELLED') && (
               <IconButton
                 icon="restore"
                 mode="contained"
@@ -426,12 +428,12 @@ export const ReceiptsScreen: React.FC = () => {
       {/* Modal de confirmación de recuperación */}
       <ConfirmRecoverModal
         visible={showRecoverConfirm}
-        onDismiss={() => {
+        onClose={() => {
           setShowRecoverConfirm(false);
           setOrderToRecover(null);
         }}
         onConfirm={handleConfirmRecover}
-        order={orderToRecover}
+        orderNumber={orderToRecover?.dailyNumber?.toString()}
         isLoading={recoverOrderMutation.isPending}
       />
 
