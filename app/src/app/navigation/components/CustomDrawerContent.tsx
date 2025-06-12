@@ -356,6 +356,32 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                         routes: [{ name: 'ModifierGroupsScreen' }],
                       },
                     },
+                    { name: 'PizzaIngredientsStack' },
+                    { name: 'PreparationScreensStack' },
+                    { name: 'AreasTablesStack' },
+                    { name: 'PrintersStack' },
+                  ],
+                }),
+              );
+            })}
+
+            {renderDrawerItem('PizzaIngredientsStack', 'Ingredientes Pizza', 'pizza', () => {
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 6,
+                  routes: [
+                    { name: 'OrdersStack' },
+                    { name: 'ReceiptsStack' },
+                    { name: 'OrderFinalizationStack' },
+                    { name: 'MenuStack' },
+                    { name: 'AvailabilityStack' },
+                    { name: 'ModifiersStack' },
+                    {
+                      name: 'PizzaIngredientsStack',
+                      state: {
+                        routes: [{ name: 'PizzaIngredientsList' }],
+                      },
+                    },
                     { name: 'PreparationScreensStack' },
                     { name: 'AreasTablesStack' },
                     { name: 'PrintersStack' },
@@ -371,7 +397,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 6,
+                    index: 7,
                     routes: [
                       { name: 'OrdersStack' },
                       { name: 'ReceiptsStack' },
@@ -379,6 +405,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaIngredientsStack' },
                       {
                         name: 'PreparationScreensStack',
                         state: {

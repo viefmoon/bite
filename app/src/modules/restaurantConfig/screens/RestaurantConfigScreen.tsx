@@ -10,15 +10,15 @@ import {
   Portal,
   Dialog,
   Paragraph,
-  IconButton,
   Surface,
   Chip,
-  Divider,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries';
 import { UpdateRestaurantConfigDto } from '../types/restaurantConfig.types';
+import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
@@ -31,6 +31,8 @@ const RestaurantConfigScreen: React.FC = () => {
   const [formData, setFormData] = useState<UpdateRestaurantConfigDto>({});
   const [isEditing, setIsEditing] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [showOpeningTimePicker, setShowOpeningTimePicker] = useState(false);
+  const [showClosingTimePicker, setShowClosingTimePicker] = useState(false);
 
   React.useEffect(() => {
     if (config) {
@@ -38,6 +40,8 @@ const RestaurantConfigScreen: React.FC = () => {
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
+        openingTime: config.openingTime,
+        closingTime: config.closingTime,
       });
     }
   }, [config]);
@@ -64,7 +68,9 @@ const RestaurantConfigScreen: React.FC = () => {
     return (
       formData.acceptingOrders !== config.acceptingOrders ||
       formData.estimatedPickupTime !== config.estimatedPickupTime ||
-      formData.estimatedDeliveryTime !== config.estimatedDeliveryTime
+      formData.estimatedDeliveryTime !== config.estimatedDeliveryTime ||
+      formData.openingTime !== config.openingTime ||
+      formData.closingTime !== config.closingTime
     );
   };
 
@@ -74,6 +80,8 @@ const RestaurantConfigScreen: React.FC = () => {
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
+        openingTime: config.openingTime,
+        closingTime: config.closingTime,
       });
     }
     setIsEditing(false);
@@ -82,6 +90,37 @@ const RestaurantConfigScreen: React.FC = () => {
   const confirmDiscard = () => {
     resetForm();
     setShowDiscardDialog(false);
+  };
+
+  // Helper functions for time handling
+  const parseTimeString = (timeString: string | null): Date | null => {
+    if (!timeString) return null;
+    const [hours, minutes, seconds] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, seconds || 0);
+    return date;
+  };
+
+  const formatTimeToString = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}:00`;
+  };
+
+  const formatTimeForDisplay = (timeString: string | null): string => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}:${minutes}`;
+  };
+
+  const handleOpeningTimeConfirm = (date: Date) => {
+    setFormData({ ...formData, openingTime: formatTimeToString(date) });
+    setShowOpeningTimePicker(false);
+  };
+
+  const handleClosingTimeConfirm = (date: Date) => {
+    setFormData({ ...formData, closingTime: formatTimeToString(date) });
+    setShowClosingTimePicker(false);
   };
 
   if (isLoading) {
@@ -231,6 +270,69 @@ const RestaurantConfigScreen: React.FC = () => {
           </View>
         </Surface>
 
+        {/* Schedule Card */}
+        <Surface style={styles.scheduleCard} elevation={1}>
+          <View style={styles.scheduleHeader}>
+            <MaterialCommunityIcons 
+              name="calendar-clock" 
+              size={24} 
+              color={theme.colors.primary} 
+            />
+            <Text style={styles.scheduleTitle}>Horario de Operación</Text>
+          </View>
+
+          <View style={styles.scheduleContent}>
+            <View style={styles.scheduleInputContainer}>
+              <View style={styles.scheduleIconWrapper}>
+                <MaterialCommunityIcons 
+                  name="store-clock" 
+                  size={20} 
+                  color={theme.colors.onSurfaceVariant} 
+                />
+              </View>
+              <View style={styles.scheduleInput}>
+                <AnimatedLabelSelector
+                  label="Hora de apertura"
+                  value={formatTimeForDisplay(formData.openingTime || null)}
+                  onPress={() => isEditing && setShowOpeningTimePicker(true)}
+                  onClear={() => isEditing && setFormData({ ...formData, openingTime: null })}
+                  disabled={!isEditing}
+                />
+              </View>
+            </View>
+
+            <View style={styles.scheduleInputContainer}>
+              <View style={styles.scheduleIconWrapper}>
+                <MaterialCommunityIcons 
+                  name="store-off" 
+                  size={20} 
+                  color={theme.colors.onSurfaceVariant} 
+                />
+              </View>
+              <View style={styles.scheduleInput}>
+                <AnimatedLabelSelector
+                  label="Hora de cierre"
+                  value={formatTimeForDisplay(formData.closingTime || null)}
+                  onPress={() => isEditing && setShowClosingTimePicker(true)}
+                  onClear={() => isEditing && setFormData({ ...formData, closingTime: null })}
+                  disabled={!isEditing}
+                />
+              </View>
+            </View>
+
+            <View style={styles.infoChip}>
+              <Chip 
+                icon="information" 
+                mode="flat"
+                style={styles.chip}
+                textStyle={styles.chipText}
+              >
+                Formato 24 horas (ej: 09:00:00, 22:30:00)
+              </Chip>
+            </View>
+          </View>
+        </Surface>
+
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
           {!isEditing ? (
@@ -307,6 +409,27 @@ const RestaurantConfigScreen: React.FC = () => {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* Time Picker Modals */}
+      <DateTimePickerModal
+        isVisible={showOpeningTimePicker}
+        mode="time"
+        onConfirm={handleOpeningTimeConfirm}
+        onCancel={() => setShowOpeningTimePicker(false)}
+        date={parseTimeString(formData.openingTime || null) || new Date()}
+        locale="es_ES"
+        is24Hour={true}
+      />
+
+      <DateTimePickerModal
+        isVisible={showClosingTimePicker}
+        mode="time"
+        onConfirm={handleClosingTimeConfirm}
+        onCancel={() => setShowClosingTimePicker(false)}
+        date={parseTimeString(formData.closingTime || null) || new Date()}
+        locale="es_ES"
+        is24Hour={true}
+      />
     </SafeAreaView>
   );
 };
@@ -451,6 +574,45 @@ const createStyles = (theme: AppTheme) =>
     },
     chipText: {
       fontSize: 12,
+    },
+    // Schedule Card styles
+    scheduleCard: {
+      marginHorizontal: theme.spacing.m,
+      marginTop: theme.spacing.m,
+      borderRadius: 16,
+      padding: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
+    },
+    scheduleHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.m,
+    },
+    scheduleTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      marginLeft: theme.spacing.s,
+    },
+    scheduleContent: {
+      gap: theme.spacing.m,
+    },
+    scheduleInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    scheduleIconWrapper: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surfaceVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scheduleInput: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
     },
     // Action styles
     actionContainer: {

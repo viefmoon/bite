@@ -134,6 +134,7 @@ npm run compile         # TypeScript check
 - `payments/` - Payment processing
 - `customers/` - Customer and address management
 - `areas/` & `tables/` - Restaurant layout management
+- `restaurant-config/` - Restaurant configuration (hours, acceptance status)
 
 **Infrastructure Patterns:**
 - Repository pattern with TypeORM entities
@@ -141,6 +142,7 @@ npm run compile         # TypeScript check
 - DTOs for request/response validation
 - Mappers for entity-domain conversion
 - Module-based organization following NestJS conventions
+- Subscriber pattern for order history tracking
 
 **Key Features:**
 - JWT authentication with refresh tokens
@@ -148,6 +150,7 @@ npm run compile         # TypeScript check
 - File uploads supporting local/S3 storage (configurable via FILE_DRIVER)
 - Swagger API documentation on all endpoints
 - Order change tracking with jsondiffpatch
+- Thermal printer integration via node-thermal-printer
 
 ### App Architecture
 
@@ -155,11 +158,13 @@ npm run compile         # TypeScript check
 - React Navigation with drawer and stack navigators
 - Authentication flow separate from main app flow
 - Module-based navigation structure
+- Each module has its own navigation stack
 
 **State Management:**
 - Zustand stores for global state (auth, theme, snackbar)
 - React Query for API state and caching
 - AsyncStorage for persistence
+- React Hook Form for form state management
 
 **Key Screens:**
 - Order creation with product customization
@@ -167,12 +172,27 @@ npm run compile         # TypeScript check
 - Product catalog with categories and variants
 - Table and area configuration
 - Thermal printer setup and testing
+- Restaurant configuration management
 
 **API Integration:**
 - Custom API client with interceptors
 - Automatic token refresh
 - Error mapping and handling
 - Image caching system
+- Axios with retry mechanism
+
+**Module Structure:**
+```
+app/src/modules/
+├── auth/           # Authentication screens and logic
+├── orders/         # Order management and creation
+├── products/       # Product catalog and management
+├── tables/         # Table and area management
+├── printers/       # Thermal printer configuration
+├── payments/       # Payment processing
+├── customers/      # Customer management
+└── restaurantConfig/ # Restaurant settings
+```
 
 ## Important Configuration
 
@@ -188,14 +208,30 @@ Create `.env` from `env-example-relational`:
 - Module-specific services in each module's `services/` directory
 - Global configuration in `app/constants/`
 - Theme configuration in `app/styles/`
+- Path aliases: `@/` resolves to `src/`
 
 ## Development Notes
 
-1. Backend uses PostgreSQL with TypeORM
-2. Order changes are automatically tracked via subscribers
+### Backend
+1. Uses PostgreSQL with TypeORM
+2. Order changes automatically tracked via subscribers
 3. Thermal printer discovery uses network scanning
-4. App supports both light and dark themes
-5. Both projects use TypeScript with strict configurations
-6. Backend includes Hygen generators for scaffolding
-7. App uses React Hook Form for form validation
-8. File uploads support multiple storage backends
+4. Hygen generators for scaffolding new resources
+5. TypeORM migrations must be generated after entity changes
+6. Seeds can be run with `npm run seed:run:relational`
+
+### App
+1. Supports both light and dark themes
+2. Material Design 3 with React Native Paper
+3. Custom theme system with consistent spacing
+4. React Hook Form with Zod validation
+5. FlashList for performant lists
+6. Image caching with expo-image
+
+### Common Patterns
+1. All API responses follow consistent format with data/message/errors
+2. Error handling uses custom error types
+3. Form validation uses Zod schemas
+4. Lists use FlashList for performance
+5. Navigation types are strictly typed
+6. Services layer abstracts API calls from components

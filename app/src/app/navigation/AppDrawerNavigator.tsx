@@ -11,6 +11,7 @@ import { ReceiptsStackNavigator } from '../../modules/receipts/navigation/Receip
 import { AvailabilityStackNavigator } from '../../modules/availability/navigation/AvailabilityStackNavigator';
 import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator';
 import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
+import { PizzaIngredientsStackNavigator } from '../../modules/pizzaIngredients/navigation/PizzaIngredientsStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -122,6 +123,9 @@ export function AppDrawerNavigator() {
               case 'RestaurantConfigStack':
                 title = 'Configuración';
                 break;
+              case 'PizzaIngredientsStack':
+                title = 'Ingredientes Pizza';
+                break;
 
               default:
                 title = children?.toString() || '';
@@ -200,6 +204,16 @@ export function AppDrawerNavigator() {
             title: 'Modificadores',
             drawerIcon: ({ color, size }) => (
               <Icon source="tune" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="PizzaIngredientsStack"
+          component={PizzaIngredientsStackNavigator}
+          options={{
+            title: 'Ingredientes Pizza',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="pizza" color={color} size={size} />
             ),
           }}
         />
