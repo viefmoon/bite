@@ -3,7 +3,6 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
-  Card,
   Switch,
   TextInput,
   Button,
@@ -11,7 +10,12 @@ import {
   Portal,
   Dialog,
   Paragraph,
+  IconButton,
+  Surface,
+  Chip,
+  Divider,
 } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries';
 import { UpdateRestaurantConfigDto } from '../types/restaurantConfig.types';
@@ -98,38 +102,80 @@ const RestaurantConfigScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Card style={styles.card}>
-          <Card.Title
-            title="Configuración del Restaurante"
-            subtitle="Ajusta los parámetros generales del restaurante"
-            titleStyle={styles.cardTitle}
-          />
-          <Card.Content>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Estado del Servicio</Text>
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Aceptando órdenes</Text>
-                <Switch
-                  value={formData.acceptingOrders}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, acceptingOrders: value })
-                  }
-                  disabled={!isEditing}
-                  color={theme.colors.primary}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Configuración General</Text>
+            <Text style={styles.headerSubtitle}>
+              Administra los ajustes principales de tu restaurante
+            </Text>
+          </View>
+        </View>
+
+        {/* Service Status Card */}
+        <Surface style={styles.statusCard} elevation={1}>
+          <View style={styles.statusHeader}>
+            <MaterialCommunityIcons 
+              name="store-check" 
+              size={24} 
+              color={theme.colors.primary} 
+            />
+            <Text style={styles.statusTitle}>Estado del Servicio</Text>
+          </View>
+          
+          <View style={styles.statusContent}>
+            <View style={styles.statusRow}>
+              <View style={styles.statusInfo}>
+                <Text style={styles.statusLabel}>Recepción de Órdenes</Text>
+                <Text style={styles.statusDescription}>
+                  {formData.acceptingOrders 
+                    ? 'Las órdenes están siendo aceptadas' 
+                    : 'No se están aceptando órdenes nuevas'}
+                </Text>
+              </View>
+              <Switch
+                value={formData.acceptingOrders}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, acceptingOrders: value })
+                }
+                disabled={!isEditing}
+                color={theme.colors.primary}
+                thumbColor={formData.acceptingOrders ? theme.colors.primary : undefined}
+                trackColor={{
+                  false: theme.colors.surfaceVariant,
+                  true: theme.colors.primaryContainer,
+                }}
+              />
+            </View>
+          </View>
+        </Surface>
+
+        {/* Delivery Times Card */}
+        <Surface style={styles.timesCard} elevation={1}>
+          <View style={styles.timesHeader}>
+            <MaterialCommunityIcons 
+              name="clock-time-four" 
+              size={24} 
+              color={theme.colors.primary} 
+            />
+            <Text style={styles.timesTitle}>Tiempos de Entrega</Text>
+          </View>
+
+          <View style={styles.timesContent}>
+            <View style={styles.timeInputContainer}>
+              <View style={styles.timeIconWrapper}>
+                <MaterialCommunityIcons 
+                  name="walk" 
+                  size={20} 
+                  color={theme.colors.onSurfaceVariant} 
                 />
               </View>
-              {!formData.acceptingOrders && (
-                <Text style={styles.warningText}>
-                  El restaurante no está aceptando órdenes nuevas
-                </Text>
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Tiempos Estimados</Text>
               <TextInput
-                label="Tiempo de preparación para recoger (minutos)"
+                label="Para recoger en tienda"
                 value={formData.estimatedPickupTime?.toString() || ''}
                 onChangeText={(text) =>
                   setFormData({
@@ -140,10 +186,22 @@ const RestaurantConfigScreen: React.FC = () => {
                 keyboardType="numeric"
                 mode="outlined"
                 disabled={!isEditing}
-                style={styles.input}
+                style={styles.timeInput}
+                right={<TextInput.Affix text="min" />}
+                outlineStyle={styles.inputOutline}
               />
+            </View>
+
+            <View style={styles.timeInputContainer}>
+              <View style={styles.timeIconWrapper}>
+                <MaterialCommunityIcons 
+                  name="moped" 
+                  size={20} 
+                  color={theme.colors.onSurfaceVariant} 
+                />
+              </View>
               <TextInput
-                label="Tiempo de entrega a domicilio (minutos)"
+                label="Entrega a domicilio"
                 value={formData.estimatedDeliveryTime?.toString() || ''}
                 onChangeText={(text) =>
                   setFormData({
@@ -154,51 +212,84 @@ const RestaurantConfigScreen: React.FC = () => {
                 keyboardType="numeric"
                 mode="outlined"
                 disabled={!isEditing}
-                style={styles.input}
+                style={styles.timeInput}
+                right={<TextInput.Affix text="min" />}
+                outlineStyle={styles.inputOutline}
               />
             </View>
-          </Card.Content>
-          <Card.Actions style={styles.cardActions}>
-            {!isEditing ? (
+
+            <View style={styles.infoChip}>
+              <Chip 
+                icon="information" 
+                mode="flat"
+                style={styles.chip}
+                textStyle={styles.chipText}
+              >
+                Los tiempos son estimados y pueden variar
+              </Chip>
+            </View>
+          </View>
+        </Surface>
+
+        {/* Action Buttons */}
+        <View style={styles.actionContainer}>
+          {!isEditing ? (
+            <Button
+              mode="contained"
+              onPress={() => setIsEditing(true)}
+              style={[styles.editButton, { backgroundColor: theme.colors.tertiary }]}
+              contentStyle={styles.editButtonContent}
+              labelStyle={styles.editButtonLabel}
+              icon="pencil"
+              textColor={theme.colors.onTertiary}
+            >
+              Editar Configuración
+            </Button>
+          ) : (
+            <View style={styles.editActions}>
+              <Button
+                mode="outlined"
+                onPress={handleCancel}
+                style={styles.cancelButton}
+                contentStyle={styles.buttonContent}
+              >
+                Cancelar
+              </Button>
               <Button
                 mode="contained"
-                onPress={() => setIsEditing(true)}
-                style={styles.editButton}
+                onPress={handleSubmit}
+                loading={updateConfigMutation.isPending}
+                disabled={updateConfigMutation.isPending || !hasChanges()}
+                style={styles.saveButton}
+                contentStyle={styles.buttonContent}
+                icon="check"
               >
-                Editar Configuración
+                Guardar
               </Button>
-            ) : (
-              <>
-                <Button
-                  mode="outlined"
-                  onPress={handleCancel}
-                  style={styles.cancelButton}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleSubmit}
-                  loading={updateConfigMutation.isPending}
-                  disabled={updateConfigMutation.isPending || !hasChanges()}
-                  style={styles.saveButton}
-                >
-                  Guardar Cambios
-                </Button>
-              </>
-            )}
-          </Card.Actions>
-        </Card>
+            </View>
+          )}
+        </View>
 
+        {/* System Info Card */}
         {config && (
-          <Card style={[styles.card, styles.infoCard]}>
-            <Card.Content>
-              <Text style={styles.infoTitle}>Información del Sistema</Text>
-              <Text style={styles.infoText}>
-                Última actualización: {new Date(config.updatedAt).toLocaleString('es-MX')}
-              </Text>
-            </Card.Content>
-          </Card>
+          <Surface style={styles.infoCard} elevation={1}>
+            <View style={styles.infoContent}>
+              <MaterialCommunityIcons 
+                name="information-outline" 
+                size={20} 
+                color={theme.colors.onSurfaceVariant} 
+              />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoTitle}>Última actualización</Text>
+                <Text style={styles.infoText}>
+                  {new Date(config.updatedAt).toLocaleString('es-MX', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                  })}
+                </Text>
+              </View>
+            </View>
+          </Surface>
         )}
       </ScrollView>
 
@@ -227,7 +318,7 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.background,
     },
     scrollContent: {
-      padding: theme.spacing.m,
+      paddingBottom: theme.spacing.xl,
     },
     loadingContainer: {
       flex: 1,
@@ -245,66 +336,178 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.error,
       textAlign: 'center',
     },
-    card: {
-      marginBottom: theme.spacing.m,
-      elevation: 2,
+    // Header styles
+    header: {
+      backgroundColor: theme.colors.primaryContainer,
+      paddingTop: theme.spacing.m,
+      paddingBottom: theme.spacing.m,
+      paddingHorizontal: theme.spacing.m,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
     },
-    cardTitle: {
+    headerContent: {
+      alignItems: 'center',
+    },
+    headerTitle: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: '600',
+      color: theme.colors.onPrimaryContainer,
+      marginBottom: theme.spacing.xs,
     },
-    section: {
-      marginBottom: theme.spacing.l,
+    headerSubtitle: {
+      fontSize: 13,
+      color: theme.colors.onPrimaryContainer,
+      opacity: 0.8,
+      textAlign: 'center',
     },
-    sectionTitle: {
-      fontSize: 16,
+    // Status Card styles
+    statusCard: {
+      marginHorizontal: theme.spacing.m,
+      marginTop: theme.spacing.l,
+      borderRadius: 16,
+      padding: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
+    },
+    statusHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.m,
+    },
+    statusTitle: {
+      fontSize: 18,
       fontWeight: '600',
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.s,
+      marginLeft: theme.spacing.s,
     },
-    switchRow: {
+    statusContent: {
+      gap: theme.spacing.m,
+    },
+    statusRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: theme.spacing.s,
     },
-    switchLabel: {
+    statusInfo: {
+      flex: 1,
+      marginRight: theme.spacing.m,
+    },
+    statusLabel: {
       fontSize: 16,
+      fontWeight: '500',
       color: theme.colors.onSurface,
+      marginBottom: theme.spacing.xs,
     },
-    warningText: {
+    statusDescription: {
       fontSize: 14,
-      color: theme.colors.error,
-      marginTop: theme.spacing.xs,
-      fontStyle: 'italic',
+      color: theme.colors.onSurfaceVariant,
     },
-    input: {
+    // Times Card styles
+    timesCard: {
+      marginHorizontal: theme.spacing.m,
+      marginTop: theme.spacing.m,
+      borderRadius: 16,
+      padding: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
+    },
+    timesHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
       marginBottom: theme.spacing.m,
     },
-    cardActions: {
-      paddingHorizontal: theme.spacing.m,
-      paddingBottom: theme.spacing.m,
+    timesTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      marginLeft: theme.spacing.s,
+    },
+    timesContent: {
+      gap: theme.spacing.m,
+    },
+    timeInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    timeIconWrapper: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surfaceVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    timeInput: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    inputOutline: {
+      borderRadius: 12,
+    },
+    infoChip: {
+      marginTop: theme.spacing.xs,
+    },
+    chip: {
+      backgroundColor: theme.colors.secondaryContainer,
+    },
+    chipText: {
+      fontSize: 12,
+    },
+    // Action styles
+    actionContainer: {
+      marginHorizontal: theme.spacing.m,
+      marginTop: theme.spacing.l,
     },
     editButton: {
-      flex: 1,
+      borderRadius: 12,
+      elevation: 2,
+    },
+    editButtonContent: {
+      paddingVertical: theme.spacing.xs,
+    },
+    editButtonLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    editActions: {
+      flexDirection: 'row',
+      gap: theme.spacing.s,
     },
     cancelButton: {
-      marginRight: theme.spacing.s,
+      flex: 1,
+      borderRadius: 12,
     },
     saveButton: {
       flex: 1,
+      borderRadius: 12,
+      elevation: 2,
     },
+    buttonContent: {
+      paddingVertical: theme.spacing.xs,
+    },
+    // Info Card styles
     infoCard: {
+      marginHorizontal: theme.spacing.m,
+      marginTop: theme.spacing.m,
+      borderRadius: 12,
+      padding: theme.spacing.m,
       backgroundColor: theme.colors.surfaceVariant,
     },
+    infoContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    infoTextContainer: {
+      flex: 1,
+    },
     infoTitle: {
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 12,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.xs,
+      opacity: 0.7,
     },
     infoText: {
-      fontSize: 12,
+      fontSize: 14,
+      fontWeight: '500',
       color: theme.colors.onSurfaceVariant,
     },
   });

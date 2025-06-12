@@ -16,7 +16,7 @@ export const RestaurantConfigStackNavigator = () => {
         name="RestaurantConfig"
         component={RestaurantConfigScreen}
         options={{
-          title: 'Configuración del Restaurante',
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
