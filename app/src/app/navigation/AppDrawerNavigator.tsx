@@ -10,6 +10,7 @@ import PrintersStackNavigator from '../../modules/printers/navigation/PrintersSt
 import { ReceiptsStackNavigator } from '../../modules/receipts/navigation/ReceiptsStackNavigator';
 import { AvailabilityStackNavigator } from '../../modules/availability/navigation/AvailabilityStackNavigator';
 import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator';
+import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -117,6 +118,9 @@ export function AppDrawerNavigator() {
                 break;
               case 'OrderFinalizationStack':
                 title = 'Finalización';
+                break;
+              case 'RestaurantConfigStack':
+                title = 'Configuración';
                 break;
 
               default:
@@ -231,6 +235,16 @@ export function AppDrawerNavigator() {
             title: 'Impresoras',
             drawerIcon: ({ color, size }) => (
               <Icon source="printer" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="RestaurantConfigStack"
+          component={RestaurantConfigStackNavigator}
+          options={{
+            title: 'Configuración',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="cog-outline" color={color} size={size} />
             ),
           }}
         />

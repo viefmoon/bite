@@ -31,6 +31,7 @@ import { PreparationScreensModule } from './preparation-screens/preparation-scre
 import { CommonModule } from './common/common.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { AdjustmentsModule } from './adjustments/adjustments.module';
+import { RestaurantConfigModule } from './restaurant-config/restaurant-config.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -70,6 +71,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     PreparationScreensModule,
     AvailabilityModule,
     AdjustmentsModule,
+    RestaurantConfigModule,
   ],
 })
 export class AppModule {}

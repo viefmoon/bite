@@ -222,6 +222,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
+                      { name: 'RestaurantConfigStack' },
                     ],
                   }),
                 );
@@ -273,6 +274,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
+                      { name: 'RestaurantConfigStack' },
                     ],
                   }),
                 );
@@ -331,6 +333,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
+                      { name: 'RestaurantConfigStack' },
                     ],
                   }),
                 );
@@ -436,6 +439,32 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       name: 'PrintersStack',
                       state: {
                         routes: [{ name: 'PrintersList' }],
+                      },
+                    },
+                    { name: 'RestaurantConfigStack' },
+                  ],
+                }),
+              );
+            })}
+            
+            {renderDrawerItem('RestaurantConfigStack', 'Configuración', 'cog-outline', () => {
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 9,
+                  routes: [
+                    { name: 'OrdersStack' },
+                    { name: 'ReceiptsStack' },
+                    { name: 'OrderFinalizationStack' },
+                    { name: 'MenuStack' },
+                    { name: 'AvailabilityStack' },
+                    { name: 'ModifiersStack' },
+                    { name: 'PreparationScreensStack' },
+                    { name: 'AreasTablesStack' },
+                    { name: 'PrintersStack' },
+                    {
+                      name: 'RestaurantConfigStack',
+                      state: {
+                        routes: [{ name: 'RestaurantConfig' }],
                       },
                     },
                   ],
