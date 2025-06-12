@@ -200,10 +200,7 @@ export class OrdersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
-  recoverOrder(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') _userId: string,
-  ): Promise<Order> {
+  recoverOrder(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
     return this.ordersService.recoverOrder(id);
   }
 

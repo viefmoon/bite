@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialSchema1749667479305 implements MigrationInterface {
-  name = 'InitialSchema1749667479305';
+export class InitialSchema1749737621899 implements MigrationInterface {
+  name = 'InitialSchema1749737621899';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -18,12 +18,6 @@ export class InitialSchema1749667479305 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_f0e1b4ecdca13b177e2e3a0613" ON "user" ("lastName") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "area" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying NOT NULL DEFAULT '', "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_644ffaf8fbde4db798cb47712fe" UNIQUE ("name"), CONSTRAINT "PK_39d5e4de490139d6535d75f42ff" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "table" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "capacity" integer, "isActive" boolean NOT NULL DEFAULT true, "isAvailable" boolean NOT NULL DEFAULT true, "isTemporary" boolean NOT NULL DEFAULT false, "temporaryIdentifier" character varying, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "area_id" uuid NOT NULL, CONSTRAINT "PK_28914b55c485fc2d7a101b1b2a4" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
@@ -44,6 +38,12 @@ export class InitialSchema1749667479305 implements MigrationInterface {
       `CREATE TABLE "category" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "photo_id" uuid, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_23c05c292c439d77b0de816b500" UNIQUE ("name"), CONSTRAINT "PK_9c4e4a89e3674fc9f382d733f03" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
+      `CREATE TABLE "area" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying NOT NULL DEFAULT '', "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_644ffaf8fbde4db798cb47712fe" UNIQUE ("name"), CONSTRAINT "PK_39d5e4de490139d6535d75f42ff" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "table" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "capacity" integer, "isActive" boolean NOT NULL DEFAULT true, "isAvailable" boolean NOT NULL DEFAULT true, "isTemporary" boolean NOT NULL DEFAULT false, "temporaryIdentifier" character varying, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "area_id" uuid NOT NULL, CONSTRAINT "PK_28914b55c485fc2d7a101b1b2a4" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
       `CREATE TABLE "daily_order_counter" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "date" date NOT NULL, "current_number" integer NOT NULL DEFAULT '0', "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_3727dbf94985a0b5a19fbee830a" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -62,7 +62,7 @@ export class InitialSchema1749667479305 implements MigrationInterface {
       `CREATE TABLE "ticket_impression" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "order_id" uuid NOT NULL, "user_id" uuid NOT NULL, "ticketType" "public"."ticket_impression_tickettype_enum" NOT NULL, "impression_time" TIMESTAMP WITH TIME ZONE NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_58ccde2bdf3edda5fda63d62965" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "adjustment" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "orderId" uuid, "orderItemId" uuid, "name" character varying(100) NOT NULL, "description" text, "isPercentage" boolean NOT NULL DEFAULT false, "value" numeric(10,2) NOT NULL DEFAULT '0', "amount" numeric(10,2) NOT NULL, "appliedById" uuid NOT NULL, "appliedAt" TIMESTAMP NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP, CONSTRAINT "PK_f84d8d269b59850fb017ee1630b" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "adjustment" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "orderId" uuid, "orderItemId" uuid, "name" character varying(100) NOT NULL, "isPercentage" boolean NOT NULL DEFAULT false, "value" numeric(10,2) NOT NULL DEFAULT '0', "amount" numeric(10,2) NOT NULL, "appliedById" uuid NOT NULL, "appliedAt" TIMESTAMP NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP, CONSTRAINT "PK_f84d8d269b59850fb017ee1630b" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_b860d19aac2598cd33a2d77143" ON "adjustment" ("orderItemId") `,
@@ -77,7 +77,7 @@ export class InitialSchema1749667479305 implements MigrationInterface {
       `CREATE TYPE "public"."orders_ordertype_enum" AS ENUM('DINE_IN', 'TAKE_AWAY', 'DELIVERY')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "orders" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "daily_number" integer NOT NULL, "daily_order_counter_id" uuid NOT NULL, "user_id" uuid NOT NULL, "table_id" uuid, "orderStatus" "public"."orders_orderstatus_enum" NOT NULL DEFAULT 'PENDING', "orderType" "public"."orders_ordertype_enum" NOT NULL DEFAULT 'DINE_IN', "total" numeric(10,2) NOT NULL DEFAULT '0', "notes" text, "phoneNumber" character varying, "customer_name" character varying, "delivery_address" text, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_710e2d4957aa5878dfe94e4ac2f" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "orders" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "daily_number" integer NOT NULL, "daily_order_counter_id" uuid NOT NULL, "user_id" uuid NOT NULL, "table_id" uuid, "orderStatus" "public"."orders_orderstatus_enum" NOT NULL DEFAULT 'PENDING', "orderType" "public"."orders_ordertype_enum" NOT NULL DEFAULT 'DINE_IN', "scheduledAt" TIMESTAMP WITH TIME ZONE, "subtotal" numeric(10,2) NOT NULL DEFAULT '0', "total" numeric(10,2) NOT NULL DEFAULT '0', "notes" text, "phoneNumber" character varying, "customer_name" character varying, "delivery_address" text, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_710e2d4957aa5878dfe94e4ac2f" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "modifier_group" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "minSelections" integer NOT NULL DEFAULT '0', "maxSelections" integer NOT NULL, "isRequired" boolean NOT NULL DEFAULT false, "allowMultipleSelections" boolean NOT NULL DEFAULT false, "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_bda4dae1e8b5e69941a9c26b363" PRIMARY KEY ("id"))`,
@@ -152,10 +152,10 @@ export class InitialSchema1749667479305 implements MigrationInterface {
       `ALTER TABLE "user" ADD CONSTRAINT "FK_c28e52f758e7bbc53828db92194" FOREIGN KEY ("roleId") REFERENCES "role"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "table" ADD CONSTRAINT "FK_65407279bef3b9e1458bb4ac588" FOREIGN KEY ("area_id") REFERENCES "area"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "category" ADD CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62" FOREIGN KEY ("photo_id") REFERENCES "file"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "category" ADD CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62" FOREIGN KEY ("photo_id") REFERENCES "file"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "table" ADD CONSTRAINT "FK_65407279bef3b9e1458bb4ac588" FOREIGN KEY ("area_id") REFERENCES "area"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "payment" ADD CONSTRAINT "FK_f5221735ace059250daac9d9803" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -311,10 +311,10 @@ export class InitialSchema1749667479305 implements MigrationInterface {
       `ALTER TABLE "payment" DROP CONSTRAINT "FK_f5221735ace059250daac9d9803"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "category" DROP CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62"`,
+      `ALTER TABLE "table" DROP CONSTRAINT "FK_65407279bef3b9e1458bb4ac588"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "table" DROP CONSTRAINT "FK_65407279bef3b9e1458bb4ac588"`,
+      `ALTER TABLE "category" DROP CONSTRAINT "FK_0b23b34cf4f29fdcac4a65d9b62"`,
     );
     await queryRunner.query(
       `ALTER TABLE "user" DROP CONSTRAINT "FK_c28e52f758e7bbc53828db92194"`,
@@ -376,6 +376,8 @@ export class InitialSchema1749667479305 implements MigrationInterface {
     await queryRunner.query(`DROP TYPE "public"."payment_paymentstatus_enum"`);
     await queryRunner.query(`DROP TYPE "public"."payment_paymentmethod_enum"`);
     await queryRunner.query(`DROP TABLE "daily_order_counter"`);
+    await queryRunner.query(`DROP TABLE "table"`);
+    await queryRunner.query(`DROP TABLE "area"`);
     await queryRunner.query(`DROP TABLE "category"`);
     await queryRunner.query(`DROP TABLE "file"`);
     await queryRunner.query(
@@ -388,8 +390,6 @@ export class InitialSchema1749667479305 implements MigrationInterface {
     await queryRunner.query(
       `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
     );
-    await queryRunner.query(`DROP TABLE "table"`);
-    await queryRunner.query(`DROP TABLE "area"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_f0e1b4ecdca13b177e2e3a0613"`,
     );
