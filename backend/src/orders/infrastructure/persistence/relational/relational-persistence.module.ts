@@ -31,6 +31,7 @@ import { RelationalPaymentPersistenceModule } from '../../../../payments/infrast
 import { RelationalProductPersistenceModule } from '../../../../products/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalProductVariantPersistenceModule } from '../../../../product-variants/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalProductModifierPersistenceModule } from '../../../../product-modifiers/infrastructure/persistence/relational/relational-persistence.module';
+import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { RelationalProductModifierPersistenceModule } from '../../../../product-
     RelationalProductPersistenceModule,
     RelationalProductVariantPersistenceModule,
     RelationalProductModifierPersistenceModule,
+    forwardRef(() => AdjustmentsRelationalPersistenceModule), // Usar forwardRef para evitar dependencias circulares
   ],
   providers: [
     {

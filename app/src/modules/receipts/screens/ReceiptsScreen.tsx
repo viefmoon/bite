@@ -19,10 +19,11 @@ import {
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/app/styles/theme';
-import { useReceiptsInfinite } from '../hooks/useReceiptsQueries';
+import { useReceiptsInfinite, useRecoverOrder } from '../hooks/useReceiptsQueries';
 import { Order } from '@/app/schemas/domain/order.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
+import { ConfirmRecoverModal } from '../components/ConfirmRecoverModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -46,6 +47,13 @@ export const ReceiptsScreen: React.FC = () => {
   // Estado para el modal de detalle
   const [selectedReceipt, setSelectedReceipt] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  
+  // Estado para recuperación de orden
+  const [orderToRecover, setOrderToRecover] = useState<Order | null>(null);
+  const [showRecoverConfirm, setShowRecoverConfirm] = useState(false);
+  
+  // Mutation para recuperar orden
+  const recoverOrderMutation = useRecoverOrder();
 
   // Preparar filtros para la query
   const filters = useMemo(() => {
@@ -105,6 +113,23 @@ export const ReceiptsScreen: React.FC = () => {
     setEndDate(undefined);
   }, []);
 
+  const handleRecoverPress = useCallback((order: Order) => {
+    setOrderToRecover(order);
+    setShowRecoverConfirm(true);
+  }, []);
+
+  const handleConfirmRecover = useCallback(async () => {
+    if (!orderToRecover) return;
+    
+    try {
+      await recoverOrderMutation.mutateAsync(orderToRecover.id);
+      setShowRecoverConfirm(false);
+      setOrderToRecover(null);
+    } catch (error) {
+      console.error('Error al recuperar orden:', error);
+    }
+  }, [orderToRecover, recoverOrderMutation]);
+
   const getOrderTypeLabel = (type: string) => {
     switch (type) {
       case OrderTypeEnum.DINE_IN:
@@ -144,8 +169,8 @@ export const ReceiptsScreen: React.FC = () => {
 
   // Renderizar item de recibo
   const renderReceiptItem = ({ item }: { item: Order }) => (
-    <TouchableOpacity onPress={() => handleReceiptPress(item)}>
-      <Surface style={styles.receiptCard} elevation={1}>
+    <Surface style={styles.receiptCard} elevation={1}>
+      <TouchableOpacity onPress={() => handleReceiptPress(item)}>
         <View style={styles.receiptHeader}>
           <View style={styles.receiptInfo}>
             <Text variant="titleMedium" style={styles.orderNumber}>
@@ -186,12 +211,26 @@ export const ReceiptsScreen: React.FC = () => {
               {item.orderItems?.length || item.items?.length || 0} productos
             </Text>
           </View>
-          <Text variant="titleLarge" style={styles.totalText}>
-            ${parseFloat(item.total || '0').toFixed(2)}
-          </Text>
+          <View style={styles.receiptActions}>
+            <Text variant="titleLarge" style={styles.totalText}>
+              ${parseFloat(item.total || '0').toFixed(2)}
+            </Text>
+            {/* Botón de recuperar solo para órdenes completadas o canceladas */}
+            {(item.orderStatus === 'COMPLETED' || item.orderStatus === 'CANCELLED') && (
+              <IconButton
+                icon="restore"
+                mode="contained"
+                size={20}
+                onPress={() => handleRecoverPress(item)}
+                style={styles.recoverButton}
+                iconColor={theme.colors.onPrimary}
+                disabled={recoverOrderMutation.isPending}
+              />
+            )}
+          </View>
         </View>
-      </Surface>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Surface>
   );
 
   // Renderizar lista vacía
@@ -384,6 +423,18 @@ export const ReceiptsScreen: React.FC = () => {
         order={selectedReceipt}
       />
 
+      {/* Modal de confirmación de recuperación */}
+      <ConfirmRecoverModal
+        visible={showRecoverConfirm}
+        onDismiss={() => {
+          setShowRecoverConfirm(false);
+          setOrderToRecover(null);
+        }}
+        onConfirm={handleConfirmRecover}
+        order={orderToRecover}
+        isLoading={recoverOrderMutation.isPending}
+      />
+
       {/* Date pickers */}
       <DateTimePickerModal
         isVisible={showStartDatePicker}
@@ -495,8 +546,17 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     marginTop: 4,
   },
+  receiptActions: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 4,
+  },
   totalText: {
     fontWeight: 'bold',
+  },
+  recoverButton: {
+    margin: 0,
+    backgroundColor: '#10B981',
   },
   centerContainer: {
     flex: 1,

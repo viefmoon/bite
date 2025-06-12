@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   IsBoolean,
   IsNumber,
-  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -39,14 +38,6 @@ export class CreateAdjustmentDto {
   @IsNotEmpty()
   @MaxLength(100)
   name: string;
-
-  @ApiProperty({
-    description: 'Optional description',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  description?: string;
 
   @ApiProperty({
     description: 'Whether the adjustment is a percentage',

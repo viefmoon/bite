@@ -65,6 +65,12 @@ export class OrderEntity extends EntityRelationalHelper {
   })
   orderType: OrderType;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  scheduledAt: Date | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  subtotal: number;
+
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   total: number;
 

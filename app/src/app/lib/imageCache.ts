@@ -16,16 +16,23 @@ async function ensureCacheDirExists() {
 
 async function getCacheFilename(remoteUrl: string): Promise<string> {
   let urlToHash = remoteUrl;
-  if (API_URL && remoteUrl.startsWith(API_URL)) {
+  
+  // Si la URL es de nuestra API, incluir el host en el hash para evitar conflictos
+  // cuando cambia la IP del servidor
+  if (remoteUrl.includes('/api/v1/files/')) {
     try {
       const parsedUrl = new URL(remoteUrl);
-      urlToHash = parsedUrl.pathname;
+      // Incluir host + pathname para diferenciar entre diferentes servidores
+      urlToHash = `${parsedUrl.host}${parsedUrl.pathname}`;
     } catch (e) {
       console.warn(
         `[CACHE] No se pudo parsear la URL para el hash: ${remoteUrl}`,
       );
+      // Si falla el parseo, usar la URL completa
+      urlToHash = remoteUrl;
     }
   }
+  
   const digest = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
     urlToHash,

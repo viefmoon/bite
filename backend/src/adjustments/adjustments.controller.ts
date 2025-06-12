@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   UseGuards,
   HttpStatus,
   HttpCode,
@@ -25,10 +24,7 @@ import { RoleEnum } from '../roles/roles.enum';
 import { AdjustmentsService } from './adjustments.service';
 import { CreateAdjustmentDto } from './dto/create-adjustment.dto';
 import { UpdateAdjustmentDto } from './dto/update-adjustment.dto';
-import { FindAllAdjustmentsDto } from './dto/find-all-adjustments.dto';
 import { Adjustment } from './domain/adjustment';
-import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
-import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiTags('Adjustments')
 @Controller({
@@ -40,19 +36,20 @@ import { infinityPagination } from '../utils/infinity-pagination';
 export class AdjustmentsController {
   constructor(private readonly adjustmentsService: AdjustmentsService) {}
 
-  @Post()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @ApiOperation({ summary: 'Create a new adjustment' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Adjustment created successfully',
-    type: Adjustment,
-  })
-  async create(
-    @Body() createAdjustmentDto: CreateAdjustmentDto,
-  ): Promise<Adjustment> {
-    return this.adjustmentsService.create(createAdjustmentDto);
-  }
+  // Endpoint comentado - Los ajustes se crean en bulk
+  // @Post()
+  // @Roles(RoleEnum.admin, RoleEnum.user)
+  // @ApiOperation({ summary: 'Create a new adjustment' })
+  // @ApiResponse({
+  //   status: HttpStatus.CREATED,
+  //   description: 'Adjustment created successfully',
+  //   type: Adjustment,
+  // })
+  // async create(
+  //   @Body() createAdjustmentDto: CreateAdjustmentDto,
+  // ): Promise<Adjustment> {
+  //   return this.adjustmentsService.create(createAdjustmentDto);
+  // }
 
   @Post('bulk')
   @Roles(RoleEnum.admin, RoleEnum.user)
@@ -68,30 +65,31 @@ export class AdjustmentsController {
     return this.adjustmentsService.applyBulkAdjustments(createAdjustmentDtos);
   }
 
-  @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @ApiOperation({ summary: 'Get all adjustments with pagination' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'List of adjustments',
-    type: InfinityPaginationResponseDto,
-  })
-  async findAll(
-    @Query() query: FindAllAdjustmentsDto,
-  ): Promise<InfinityPaginationResponseDto<Adjustment>> {
-    const page = query?.page ?? 1;
-    const limit = query?.limit ?? 10;
+  // Endpoint comentado - No necesario para el flujo actual
+  // @Get()
+  // @Roles(RoleEnum.admin, RoleEnum.user)
+  // @ApiOperation({ summary: 'Get all adjustments with pagination' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'List of adjustments',
+  //   type: InfinityPaginationResponseDto,
+  // })
+  // async findAll(
+  //   @Query() query: FindAllAdjustmentsDto,
+  // ): Promise<InfinityPaginationResponseDto<Adjustment>> {
+  //   const page = query?.page ?? 1;
+  //   const limit = query?.limit ?? 10;
 
-    // For now, using simple findAll without pagination
-    const items = await this.adjustmentsService.findAll(query);
+  //   // For now, using simple findAll without pagination
+  //   const items = await this.adjustmentsService.findAll(query);
 
-    // Simple pagination simulation
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedItems = items.slice(startIndex, endIndex);
+  //   // Simple pagination simulation
+  //   const startIndex = (page - 1) * limit;
+  //   const endIndex = startIndex + limit;
+  //   const paginatedItems = items.slice(startIndex, endIndex);
 
-    return infinityPagination(paginatedItems, { page, limit });
-  }
+  //   return infinityPagination(paginatedItems, { page, limit });
+  // }
 
   @Get('order/:orderId')
   @Roles(RoleEnum.admin, RoleEnum.user)
@@ -119,59 +117,60 @@ export class AdjustmentsController {
     return this.adjustmentsService.findByOrderItemId(orderItemId);
   }
 
-  @Get('order/:orderId/total')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @ApiOperation({ summary: 'Calculate total adjustments for an order' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Total adjustment amount',
-    schema: {
-      type: 'object',
-      properties: {
-        total: { type: 'number' },
-      },
-    },
-  })
-  async calculateOrderTotal(
-    @Param('orderId') orderId: string,
-  ): Promise<{ total: number }> {
-    const total =
-      await this.adjustmentsService.calculateOrderAdjustments(orderId);
-    return { total };
-  }
+  // Endpoints comentados - Los totales se calculan en el frontend
+  // @Get('order/:orderId/total')
+  // @Roles(RoleEnum.admin, RoleEnum.user)
+  // @ApiOperation({ summary: 'Calculate total adjustments for an order' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Total adjustment amount',
+  //   schema: {
+  //     type: 'object',
+  //     properties: {
+  //       total: { type: 'number' },
+  //     },
+  //   },
+  // })
+  // async calculateOrderTotal(
+  //   @Param('orderId') orderId: string,
+  // ): Promise<{ total: number }> {
+  //   const total =
+  //     await this.adjustmentsService.calculateOrderAdjustments(orderId);
+  //   return { total };
+  // }
 
-  @Get('order-item/:orderItemId/total')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @ApiOperation({ summary: 'Calculate total adjustments for an order item' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Total adjustment amount',
-    schema: {
-      type: 'object',
-      properties: {
-        total: { type: 'number' },
-      },
-    },
-  })
-  async calculateOrderItemTotal(
-    @Param('orderItemId') orderItemId: string,
-  ): Promise<{ total: number }> {
-    const total =
-      await this.adjustmentsService.calculateOrderItemAdjustments(orderItemId);
-    return { total };
-  }
+  // @Get('order-item/:orderItemId/total')
+  // @Roles(RoleEnum.admin, RoleEnum.user)
+  // @ApiOperation({ summary: 'Calculate total adjustments for an order item' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Total adjustment amount',
+  //   schema: {
+  //     type: 'object',
+  //     properties: {
+  //       total: { type: 'number' },
+  //     },
+  //   },
+  // })
+  // async calculateOrderItemTotal(
+  //   @Param('orderItemId') orderItemId: string,
+  // ): Promise<{ total: number }> {
+  //   const total =
+  //     await this.adjustmentsService.calculateOrderItemAdjustments(orderItemId);
+  //   return { total };
+  // }
 
-  @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @ApiOperation({ summary: 'Get adjustment by ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Adjustment details',
-    type: Adjustment,
-  })
-  async findOne(@Param('id') id: string): Promise<Adjustment> {
-    return this.adjustmentsService.findOne(id);
-  }
+  // @Get(':id')
+  // @Roles(RoleEnum.admin, RoleEnum.user)
+  // @ApiOperation({ summary: 'Get adjustment by ID' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Adjustment details',
+  //   type: Adjustment,
+  // })
+  // async findOne(@Param('id') id: string): Promise<Adjustment> {
+  //   return this.adjustmentsService.findOne(id);
+  // }
 
   @Patch(':id')
   @Roles(RoleEnum.admin)

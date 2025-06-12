@@ -7,7 +7,6 @@ export class Adjustment {
   orderId?: string | null;
   orderItemId?: string | null;
   name: string;
-  description?: string | null;
   isPercentage: boolean;
   value: number;
   amount: number;

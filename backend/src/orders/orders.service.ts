@@ -438,7 +438,7 @@ export class OrdersService {
     return this.ticketImpressionRepository.findByOrderId(orderId);
   }
 
-  async recoverOrder(id: string, userId: string): Promise<Order> {
+  async recoverOrder(id: string): Promise<Order> {
     const order = await this.findOne(id);
 
     // Verificar que la orden esté en un estado recuperable
@@ -451,13 +451,9 @@ export class OrdersService {
       );
     }
 
-    // Actualizar el estado de la orden a DELIVERED y agregar nota
-    const currentNotes = order.notes || '';
-    const recoveryNote = `[Recuperada por usuario ${userId} el ${new Date().toLocaleString()}]`;
-
+    // Actualizar el estado de la orden a DELIVERED sin modificar las notas
     const updateData: UpdateOrderDto = {
       orderStatus: OrderStatus.DELIVERED,
-      notes: currentNotes ? `${currentNotes}\n${recoveryNote}` : recoveryNote,
     };
 
     return this.update(id, updateData);

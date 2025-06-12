@@ -29,7 +29,6 @@ export class AdjustmentMapper extends BaseMapper<AdjustmentEntity, Adjustment> {
     domain.orderId = entity.orderId;
     domain.orderItemId = entity.orderItemId;
     domain.name = entity.name;
-    domain.description = entity.description;
     domain.isPercentage = entity.isPercentage;
     domain.value = Number(entity.value);
     domain.amount = Number(entity.amount);
@@ -63,7 +62,6 @@ export class AdjustmentMapper extends BaseMapper<AdjustmentEntity, Adjustment> {
     entity.orderId = domain.orderId;
     entity.orderItemId = domain.orderItemId;
     entity.name = domain.name;
-    entity.description = domain.description;
     entity.isPercentage = domain.isPercentage;
     entity.value = domain.value;
     entity.amount = domain.amount;

@@ -9,7 +9,6 @@ import {
   Appbar,
   Chip,
   Surface,
-  IconButton,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { Order } from '@/app/schemas/domain/order.schema';
@@ -17,10 +16,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import OrderHistoryModal from '@/modules/orders/components/OrderHistoryModal';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { ConfirmRecoverModal } from './ConfirmRecoverModal';
-import { useRecoverOrder } from '../hooks/useReceiptsQueries';
-import { Button } from 'react-native-paper';
-
 interface ReceiptDetailModalProps {
   visible: boolean;
   onClose: () => void;
@@ -36,8 +31,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const [showHistory, setShowHistory] = useState(false);
-  const [showRecoverModal, setShowRecoverModal] = useState(false);
-  const recoverOrderMutation = useRecoverOrder();
 
   const getOrderTypeLabel = (type: string) => {
     switch (type) {
@@ -87,15 +80,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
         return sum + parseFloat(mod.price || '0') * (mod.quantity || 1);
       }, 0) || 0;
     return baseTotal + modifiersTotal;
-  };
-
-  const handleRecoverOrder = async () => {
-    if (!order) return;
-
-    await recoverOrderMutation.mutateAsync(order.id);
-
-    setShowRecoverModal(false);
-    onClose();
   };
 
   if (isLoading || !order) {
@@ -357,17 +341,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
               </Surface>
             )}
 
-            {/* Botón de recuperación */}
-            <Surface style={styles.actionSection} elevation={1}>
-              <Button
-                mode="contained"
-                onPress={() => setShowRecoverModal(true)}
-                icon="restore"
-                style={styles.recoverButton}
-              >
-                Recuperar Orden
-              </Button>
-            </Surface>
           </ScrollView>
         </Modal>
       </Portal>
@@ -377,15 +350,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
         visible={showHistory}
         onDismiss={() => setShowHistory(false)}
         orderId={order.id}
-      />
-
-      {/* Modal de recuperación */}
-      <ConfirmRecoverModal
-        visible={showRecoverModal}
-        onClose={() => setShowRecoverModal(false)}
-        onConfirm={handleRecoverOrder}
-        isLoading={recoverOrderMutation.isPending}
-        orderNumber={order.dailyNumber || order.orderNumber}
       />
     </>
   );
@@ -487,14 +451,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 4,
-  },
-  actionSection: {
-    margin: 16,
-    marginTop: 0,
-    padding: 16,
-    borderRadius: 8,
-  },
-  recoverButton: {
-    paddingVertical: 8,
   },
 });

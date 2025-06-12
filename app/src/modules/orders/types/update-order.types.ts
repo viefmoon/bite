@@ -1,5 +1,6 @@
 import type { OrderType } from './orders.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
+import type { OrderAdjustment } from './adjustments.types';
 
 // Interfaz para modificadores de items
 export interface OrderItemModifierDto {
@@ -20,6 +21,15 @@ export interface OrderItemDtoForBackend {
   modifiers?: OrderItemModifierDto[];
 }
 
+// Interfaz para ajustes en el DTO
+export interface OrderAdjustmentDto {
+  orderId?: string;
+  name: string;
+  isPercentage: boolean;
+  value?: number;
+  amount?: number;
+}
+
 // Interfaz para el payload de actualización de orden
 export interface UpdateOrderPayload {
   orderType?: OrderType;
@@ -33,4 +43,5 @@ export interface UpdateOrderPayload {
   status?: Order['orderStatus'];
   total?: number;
   subtotal?: number;
+  adjustments?: OrderAdjustmentDto[];
 }

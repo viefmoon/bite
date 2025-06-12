@@ -48,6 +48,8 @@ import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subca
 import OrderHistoryModal from './OrderHistoryModal'; // Modal de historial
 import PaymentModal from './PaymentModal'; // Modal de pagos
 import { FAB } from 'react-native-paper'; // Para el floating action button
+import { AdjustmentFormModal } from './AdjustmentFormModal'; // Modal de ajustes
+import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para ajustes
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
 import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
 
@@ -81,6 +83,14 @@ export interface OrderDetailsForBackend {
   phoneNumber?: string;
   deliveryAddress?: string;
   notes?: string;
+  adjustments?: {
+    orderId?: string;
+    name: string;
+    description?: string;
+    isPercentage: boolean;
+    value?: number;
+    amount?: number;
+  }[];
 }
 
 interface OrderCartDetailProps {
@@ -191,6 +201,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editPhoneNumber, setEditPhoneNumber] = useState<string>('');
   const [editDeliveryAddress, setEditDeliveryAddress] = useState<string>('');
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
+  const [editAdjustments, setEditAdjustments] = useState<OrderAdjustment[]>([]);
 
   // Obtener estado del carrito Y del formulario desde el contexto SOLO si NO estamos en modo edición
   const cartContext = !isEditMode ? useCart() : null;
@@ -230,6 +241,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     ? editDeliveryAddress
     : cartDeliveryAddress;
   const orderNotes = isEditMode ? editOrderNotes : cartOrderNotes;
+  const adjustments = isEditMode ? editAdjustments : [];
 
   const setOrderType = isEditMode ? setEditOrderType : setCartOrderType;
   const setSelectedAreaId = isEditMode
@@ -347,9 +359,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
   }, [items]);
 
+  // Calcular total de ajustes
+  const totalAdjustments = useMemo(() => {
+    if (!isEditMode) return 0;
+    return editAdjustments
+      .filter(adj => !adj.isDeleted)
+      .reduce((sum, adj) => sum + (adj.amount || 0), 0);
+  }, [isEditMode, editAdjustments]);
+
   const total = useMemo(() => {
-    return subtotal;
-  }, [subtotal]);
+    return subtotal + totalAdjustments;
+  }, [subtotal, totalAdjustments]);
 
   const totalItemsCount = useMemo(() => {
     return items.reduce((sum, item) => sum + item.quantity, 0);
@@ -421,6 +441,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [modifyingItemName, setModifyingItemName] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const [adjustmentToEdit, setAdjustmentToEdit] = useState<OrderAdjustment | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Estado original de la orden para detectar cambios
+  const [originalOrderState, setOriginalOrderState] = useState<{
+    items: CartItem[];
+    orderType: OrderType;
+    tableId: string | null;
+    customerName: string;
+    phoneNumber: string;
+    deliveryAddress: string;
+    notes: string;
+    scheduledAt: Date | null;
+    adjustments: OrderAdjustment[];
+  } | null>(null);
 
   // --- Queries para Áreas y Mesas (sin cambios) ---
   const {
@@ -461,15 +497,31 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setEditDeliveryAddress(orderData.deliveryAddress ?? '');
     setEditOrderNotes(orderData.notes ?? '');
 
+    // Cargar ajustes si existen
+    if (orderData.adjustments && Array.isArray(orderData.adjustments)) {
+      console.log('Ajustes recibidos del backend:', orderData.adjustments);
+      setEditAdjustments(orderData.adjustments.map(adj => ({
+        id: adj.id,
+        name: adj.name,
+        description: adj.description || '',
+        isPercentage: adj.isPercentage,
+        value: adj.value,
+        amount: adj.amount,
+      })));
+    } else {
+      setEditAdjustments([]);
+    }
+
     // Si hay una mesa, necesitamos encontrar el área
     if (orderData.tableId && orderData.table) {
       setEditSelectedAreaId(orderData.table.areaId);
     }
 
+    // Mapa para agrupar items idénticos
+    const groupedItemsMap = new Map<string, CartItem>();
+    
     // Mapear y agrupar los items de la orden
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-      // Mapa para agrupar items idénticos
-      const groupedItemsMap = new Map<string, CartItem>();
 
       orderData.orderItems.forEach((item: any) => {
         // Calcular el precio de los modificadores
@@ -524,6 +576,32 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     
     // Marcar que los datos de la orden ya se cargaron
     setOrderDataLoaded(true);
+    
+    // Guardar el estado original de la orden para detectar cambios
+    const originalItems = Array.from(groupedItemsMap.values());
+    const originalAdjustments = orderData.adjustments?.map(adj => ({
+      id: adj.id,
+      name: adj.name,
+      description: adj.description,
+      isPercentage: adj.isPercentage,
+      value: adj.value,
+      amount: adj.amount,
+    })) || [];
+    
+    setOriginalOrderState({
+      items: originalItems,
+      orderType: orderData.orderType,
+      tableId: orderData.tableId ?? null,
+      customerName: orderData.customerName ?? '',
+      phoneNumber: phoneForDisplay,
+      deliveryAddress: orderData.deliveryAddress ?? '',
+      notes: orderData.notes ?? '',
+      scheduledAt: orderData.scheduledAt ? new Date(orderData.scheduledAt) : null,
+      adjustments: originalAdjustments,
+    });
+    
+    // Resetear el flag de cambios no guardados
+    setHasUnsavedChanges(false);
   }, [isEditMode, orderData, visible]);
 
   // Función para agrupar items idénticos
@@ -624,6 +702,47 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setPhoneError(null);
     setAddressError(null);
   }, [orderType]);
+  
+  // Detectar cambios sin guardar
+  useEffect(() => {
+    if (!isEditMode || !originalOrderState || !visible) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+    
+    // Comparar el estado actual con el original
+    const hasChanges = 
+      // Cambios en items
+      JSON.stringify(editItems) !== JSON.stringify(originalOrderState.items) ||
+      // Cambios en tipo de orden
+      editOrderType !== originalOrderState.orderType ||
+      // Cambios en mesa
+      editSelectedTableId !== originalOrderState.tableId ||
+      // Cambios en datos del cliente
+      editCustomerName !== originalOrderState.customerName ||
+      editPhoneNumber !== originalOrderState.phoneNumber ||
+      editDeliveryAddress !== originalOrderState.deliveryAddress ||
+      editOrderNotes !== originalOrderState.notes ||
+      // Cambios en hora programada
+      (editScheduledTime?.getTime() || null) !== (originalOrderState.scheduledAt?.getTime() || null) ||
+      // Cambios en ajustes
+      JSON.stringify(editAdjustments) !== JSON.stringify(originalOrderState.adjustments);
+    
+    setHasUnsavedChanges(hasChanges);
+  }, [
+    isEditMode,
+    originalOrderState,
+    visible,
+    editItems,
+    editOrderType,
+    editSelectedTableId,
+    editCustomerName,
+    editPhoneNumber,
+    editDeliveryAddress,
+    editOrderNotes,
+    editScheduledTime,
+    editAdjustments,
+  ]);
 
   // Resetear estados cuando el modal se cierre
   useEffect(() => {
@@ -645,6 +764,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setOrderDataLoaded(false); // Resetear el flag de datos cargados
       setProcessedPendingProductsIds([]); // Resetear los IDs de productos procesados
       setLastNotifiedCount(null); // Resetear el conteo notificado
+      setOriginalOrderState(null); // Resetear el estado original
+      setHasUnsavedChanges(false); // Resetear el flag de cambios
     }
   }, [visible, isEditMode]);
 
@@ -657,6 +778,33 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       return () => clearTimeout(timer);
     }
   }, [visible, isModalReady]);
+
+  // Funciones para manejar ajustes
+  const handleAddAdjustment = useCallback((adjustment: OrderAdjustment) => {
+    if (isEditMode) {
+      // Asegurar que el ajuste tenga un ID único
+      const newAdjustment = {
+        ...adjustment,
+        id: adjustment.id || `new-adjustment-${Date.now()}-${Math.random()}`,
+        isNew: true
+      };
+      setEditAdjustments(prev => [...prev, newAdjustment]);
+    }
+  }, [isEditMode]);
+
+  const handleUpdateAdjustment = useCallback((id: string, updatedAdjustment: OrderAdjustment) => {
+    if (isEditMode) {
+      setEditAdjustments(prev => 
+        prev.map(adj => adj.id === id ? { ...adj, ...updatedAdjustment, id } : adj)
+      );
+    }
+  }, [isEditMode]);
+
+  const handleRemoveAdjustment = useCallback((id: string) => {
+    if (isEditMode) {
+      setEditAdjustments(prev => prev.filter(adj => adj.id !== id));
+    }
+  }, [isEditMode]);
 
   const handleConfirm = async () => {
     if (isConfirming) return; // Prevenir múltiples clics
@@ -787,6 +935,21 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       deliveryAddress:
         orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined, // Usar Enum
       notes: orderNotes || undefined,
+      adjustments: isEditMode
+        ? editAdjustments
+            .filter(adj => !adj.isDeleted)
+            .map(adj => {
+              console.log('Mapeando ajuste:', adj);
+              return {
+                orderId: orderId || undefined,
+                name: adj.name,
+                description: adj.description,
+                isPercentage: adj.isPercentage,
+                value: adj.value,
+                amount: adj.amount,
+              };
+            })
+        : undefined,
     };
 
     console.log('Payload final a enviar:', JSON.stringify(orderDetails, null, 2));
@@ -802,8 +965,28 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       await onConfirmOrder(orderDetails);
       // Si llegamos aquí, la orden fue exitosa
       setIsConfirming(false);
-      // Cerrar el modal después de una actualización exitosa
+      
+      // Actualizar el estado original después de guardar exitosamente
       if (isEditMode) {
+        setOriginalOrderState({
+          items: [...editItems],
+          orderType: editOrderType,
+          tableId: editSelectedTableId,
+          customerName: editCustomerName,
+          phoneNumber: editPhoneNumber,
+          deliveryAddress: editDeliveryAddress,
+          notes: editOrderNotes,
+          scheduledAt: editScheduledTime,
+        });
+        setHasUnsavedChanges(false);
+        
+        // Mostrar mensaje de éxito
+        showSnackbar({
+          message: 'Cambios guardados exitosamente',
+          type: 'success',
+        });
+        
+        // Cerrar el modal después de una actualización exitosa
         onClose?.();
       }
     } catch (error) {
@@ -849,8 +1032,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   }, [scheduledTime]);
 
-  // Función para detectar si hay cambios en modo edición
-  const hasUnsavedChanges = useCallback(() => {
+  // [FUNCIÓN ELIMINADA - hasUnsavedChanges ya existe como estado]
+  /*
     if (!isEditMode || !orderData) return false;
 
     // Comparar tipo de orden
@@ -955,7 +1138,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     editDeliveryAddress,
     editOrderNotes,
     editItems,
-  ]);
+  ]); */
 
   // Función para manejar la edición de un item del carrito
   const handleEditCartItem = useCallback(
@@ -1484,7 +1667,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       <Modal
         visible={visible}
         onDismiss={() => {
-          if (isEditMode && hasUnsavedChanges()) {
+          if (isEditMode && hasUnsavedChanges) {
             setShowExitConfirmation(true);
           } else {
             onClose?.();
@@ -1506,7 +1689,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     icon="arrow-left"
                     size={24}
                     onPress={() => {
-                      if (hasUnsavedChanges()) {
+                      if (hasUnsavedChanges) {
                         setShowExitConfirmation(true);
                       } else {
                         onClose?.();
@@ -1861,7 +2044,131 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   </Swipeable>
                 );
               })}
+              
+              {/* Renderizar ajustes como OrderItems - dentro del mismo List.Section */}
+              {isEditMode && adjustments.filter(adj => !adj.isDeleted).map((adjustment, index) => {
+                const renderRightActions = (progress, dragX) => {
+                  const translateX = dragX.interpolate({
+                    inputRange: [-100, 0],
+                    outputRange: [0, 100],
+                    extrapolate: 'clamp',
+                  });
+
+                  const scale = dragX.interpolate({
+                    inputRange: [-100, -50, 0],
+                    outputRange: [1, 0.8, 0.5],
+                    extrapolate: 'clamp',
+                  });
+
+                  const opacity = dragX.interpolate({
+                    inputRange: [-100, -20, 0],
+                    outputRange: [1, 0.5, 0],
+                    extrapolate: 'clamp',
+                  });
+
+                  return (
+                    <Animated.View
+                      style={[
+                        styles.deleteActionContainer,
+                        {
+                          opacity,
+                          transform: [{ translateX }],
+                        },
+                      ]}
+                    >
+                      <Animated.View
+                        style={[
+                          styles.deleteAction,
+                          {
+                            backgroundColor: theme.colors.error,
+                            transform: [{ scale }],
+                          },
+                        ]}
+                      >
+                        <View style={styles.deleteIconContainer}>
+                          <IconButton
+                            icon="delete-sweep"
+                            size={28}
+                            iconColor="white"
+                            style={styles.deleteIcon}
+                          />
+                        </View>
+                        <Text style={styles.deleteActionText}>ELIMINAR</Text>
+                      </Animated.View>
+                    </Animated.View>
+                  );
+                };
+
+                return (
+                  <Swipeable
+                    key={adjustment.id || `new-${index}`}
+                    renderRightActions={renderRightActions}
+                    overshootRight={false}
+                    friction={2}
+                    rightThreshold={90}
+                    leftThreshold={100}
+                    onSwipeableOpen={(direction) => {
+                      if (direction === 'right') {
+                        setTimeout(() => {
+                          if (adjustment.id) {
+                            handleRemoveAdjustment(adjustment.id);
+                          }
+                        }, 150);
+                      }
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={() => {
+                        setAdjustmentToEdit(adjustment);
+                        setShowAdjustmentModal(true);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <List.Item
+                        title={() => (
+                          <View style={styles.itemTextContainer}>
+                            <Text style={[styles.itemTitleText, { color: adjustment.amount < 0 ? theme.colors.error : theme.colors.primary }]}>
+                              {adjustment.name}
+                              {adjustment.isPercentage 
+                                ? ` (${adjustment.value}%)`
+                                : ''}
+                            </Text>
+                          </View>
+                        )}
+                        right={() => (
+                          <View style={styles.itemActionsContainer}>
+                            <View style={styles.priceContainer}>
+                              <Text style={[
+                                styles.itemPrice,
+                                { color: adjustment.amount < 0 ? theme.colors.error : theme.colors.primary }
+                              ]}>
+                                {adjustment.amount < 0 ? '-' : '+'}${Math.abs(adjustment.amount || 0).toFixed(2)}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                        style={styles.listItem}
+                      />
+                    </TouchableOpacity>
+                  </Swipeable>
+                );
+              })}
             </List.Section>
+
+            {/* Botón de ajustes - Solo en modo edición */}
+            {isEditMode && (
+              <Button
+                onPress={() => setShowAdjustmentModal(true)}
+                mode="outlined"
+                style={{
+                  marginTop: theme.spacing.m,
+                  marginBottom: theme.spacing.s,
+                }}
+                icon="calculator-variant"
+              >
+                Ajustes
+              </Button>
+            )}
 
             {/* Botón para añadir productos en modo edición */}
             {isEditMode && (
@@ -1913,6 +2220,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               </Button>
             )}
 
+
             <Divider style={styles.divider} />
 
             {/* Totals */}
@@ -1920,6 +2228,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <Text style={styles.totalsText}>Subtotal:</Text>
               <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
             </View>
+            {isEditMode && totalAdjustments !== 0 && (
+              <View style={styles.totalsContainer}>
+                <Text style={styles.totalsText}>Ajustes:</Text>
+                <Text style={[styles.totalsValue, { color: totalAdjustments < 0 ? theme.colors.error : theme.colors.primary }]}>
+                  {totalAdjustments < 0 ? '-' : '+'}${Math.abs(totalAdjustments).toFixed(2)}
+                </Text>
+              </View>
+            )}
             <View style={styles.totalsContainer}>
               <Text style={[styles.totalsText, styles.totalLabel]}>Total:</Text>
               <Text style={[styles.totalsValue, styles.totalValue]}>
@@ -1928,7 +2244,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             </View>
 
             {/* Mostrar información de pagos solo en modo edición */}
-            {isEditMode && totalPaid > 0 && (
+            {isEditMode && (
               <>
                 <View style={styles.totalsContainer}>
                   <Text style={styles.totalsText}>Pagado:</Text>
@@ -1936,24 +2252,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     ${totalPaid.toFixed(2)}
                   </Text>
                 </View>
-                {pendingAmount > 0 && (
-                  <View style={styles.totalsContainer}>
-                    <Text style={[styles.totalsText, { fontWeight: 'bold' }]}>
-                      Pendiente:
-                    </Text>
-                    <Text
-                      style={[
-                        styles.totalsValue,
-                        {
-                          fontWeight: 'bold',
-                          color: theme.colors.error,
-                        },
-                      ]}
-                    >
-                      ${pendingAmount.toFixed(2)}
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.totalsContainer}>
+                  <Text style={[styles.totalsText, { fontWeight: 'bold' }]}>
+                    Restante:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.totalsValue,
+                      {
+                        fontWeight: 'bold',
+                        color: pendingAmount > 0 ? theme.colors.error : '#4CAF50',
+                      },
+                    ]}
+                  >
+                    ${pendingAmount.toFixed(2)}
+                  </Text>
+                </View>
               </>
             )}
           </ScrollView>
@@ -1975,7 +2289,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 (orderType === OrderTypeEnum.DELIVERY &&
                   (!phoneNumber || phoneNumber.trim() === '')) // Usar Enum
               }
-              style={styles.confirmButton}
+              style={[
+                styles.confirmButton,
+                isEditMode && hasUnsavedChanges && {
+                  backgroundColor: '#FF6B35', // Naranja vibrante para indicar acción requerida
+                },
+              ]}
               loading={isConfirming} // Mostrar indicador de carga
             >
               {isConfirming
@@ -1983,7 +2302,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   ? 'Guardando...'
                   : 'Enviando...'
                 : isEditMode
-                  ? 'Guardar Cambios'
+                  ? hasUnsavedChanges
+                    ? '⚠️ Guardar Cambios'
+                    : 'Guardar Cambios'
                   : 'Enviar Orden'}
             </Button>
           </View>
@@ -2092,12 +2413,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               style={[
                 styles.paymentFab,
                 {
-                  backgroundColor:
-                    pendingAmount <= 0 ? '#4CAF50' : theme.colors.primary,
+                  backgroundColor: hasUnsavedChanges
+                    ? '#9CA3AF' // Gris sólido pero visible
+                    : pendingAmount <= 0
+                    ? '#4CAF50'
+                    : theme.colors.primary,
                 },
               ]}
               color="white"
-              onPress={() => setShowPaymentModal(true)}
+              onPress={() => {
+                if (hasUnsavedChanges) {
+                  showSnackbar({
+                    message: 'Debes guardar los cambios antes de registrar pagos',
+                    type: 'warning',
+                  });
+                } else {
+                  setShowPaymentModal(true);
+                }
+              }}
               visible={true}
             />
           )}
@@ -2110,6 +2443,34 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               orderId={orderId}
               orderTotal={total}
               orderNumber={orderNumber}
+              onOrderCompleted={() => {
+                // Cerrar el modal de pagos
+                setShowPaymentModal(false);
+                // Cerrar el modal de edición de orden
+                onClose?.();
+              }}
+            />
+          )}
+
+          {/* Modal de ajustes */}
+          {showAdjustmentModal && isEditMode && (
+            <AdjustmentFormModal
+              visible={showAdjustmentModal}
+              onDismiss={() => {
+                setShowAdjustmentModal(false);
+                setAdjustmentToEdit(null);
+              }}
+              onSave={(adjustment: OrderAdjustment) => {
+                if (adjustmentToEdit) {
+                  handleUpdateAdjustment(adjustmentToEdit.id!, adjustment);
+                } else {
+                  handleAddAdjustment(adjustment);
+                }
+                setShowAdjustmentModal(false);
+                setAdjustmentToEdit(null);
+              }}
+              adjustment={adjustmentToEdit}
+              orderSubtotal={subtotal}
             />
           )}
         </GestureHandlerRootView>

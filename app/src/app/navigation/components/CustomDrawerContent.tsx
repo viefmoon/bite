@@ -15,6 +15,8 @@ import { useThemeStore } from '../../store/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
 import { useAuthStore } from '../../store/authStore';
 import { useAppTheme } from '../../styles/theme';
+import { clearImageCache } from '../../lib/imageCache';
+import { useSnackbarStore } from '../../store/snackbarStore';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
@@ -23,6 +25,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const logout = useAuthStore((state) => state.logout);
   const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const styles = React.useMemo(
     () =>
@@ -140,6 +143,21 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         </View>
       </TouchableRipple>
     );
+  };
+
+  const handleClearCache = async () => {
+    try {
+      await clearImageCache();
+      showSnackbar({ 
+        message: 'Caché de imágenes limpiado exitosamente', 
+        type: 'success' 
+      });
+    } catch (error) {
+      showSnackbar({ 
+        message: 'Error al limpiar el caché', 
+        type: 'error' 
+      });
+    }
   };
 
   return (
@@ -466,6 +484,30 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             <View pointerEvents="none">
               <Switch value={theme.dark} color={theme.colors.primary} />
             </View>
+          </View>
+        </TouchableRipple>
+
+        <TouchableRipple
+          onPress={handleClearCache}
+          style={styles.drawerItemContainer}
+          rippleColor={`${theme.colors.primary}20`}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.drawerItemIconContainer}>
+              <Icon 
+                source="broom" 
+                size={24} 
+                color={theme.colors.onSurfaceVariant} 
+              />
+            </View>
+            <Text
+              style={[
+                styles.drawerItemLabel, 
+                { color: theme.colors.onSurfaceVariant }
+              ]}
+            >
+              Limpiar Caché
+            </Text>
           </View>
         </TouchableRipple>
 

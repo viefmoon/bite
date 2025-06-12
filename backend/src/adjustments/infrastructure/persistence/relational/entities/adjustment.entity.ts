@@ -44,9 +44,6 @@ export class AdjustmentEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'text', nullable: true })
-  description?: string | null;
-
   @Column({ type: 'boolean', default: false })
   isPercentage: boolean;
 

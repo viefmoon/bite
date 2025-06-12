@@ -118,6 +118,37 @@ export const useCancelOrderMutation = () => {
   });
 };
 
+/**
+ * Hook para completar una orden (cambiar estado a COMPLETED).
+ */
+export const useCompleteOrderMutation = () => {
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation<Order, ApiError, string>({
+    mutationFn: (orderId) => 
+      orderService.updateOrder(orderId, { orderStatus: 'COMPLETED' }),
+    onSuccess: (completedOrder) => {
+      // Invalidar queries relevantes
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+
+      showSnackbar({
+        message: `Orden #${completedOrder.dailyNumber} finalizada exitosamente`,
+        type: 'success',
+      });
+    },
+    onError: (error) => {
+      const message = getApiErrorMessage(error);
+      showSnackbar({
+        message: `Error al finalizar orden: ${message}`,
+        type: 'error',
+      });
+      console.error('Error en useCompleteOrderMutation:', error);
+    },
+  });
+};
+
 // Añadir aquí otros hooks para órdenes si son necesarios (useGetOrders, etc.)
 
 /**

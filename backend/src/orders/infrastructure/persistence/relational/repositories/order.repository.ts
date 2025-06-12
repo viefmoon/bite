@@ -64,6 +64,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
     });
 
@@ -141,6 +142,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
       order: {
         createdAt: 'DESC',
@@ -168,6 +170,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
     });
 
@@ -186,6 +189,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
       order: {
         createdAt: 'DESC',
@@ -213,6 +217,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
       order: {
         createdAt: 'DESC',
@@ -238,6 +243,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
       order: {
         dailyNumber: 'ASC',
@@ -269,6 +275,7 @@ export class OrdersRelationalRepository implements OrderRepository {
       .leftJoinAndSelect('orderItems.productVariant', 'productVariant')
       .leftJoinAndSelect('orderItems.modifiers', 'modifiers')
       .leftJoinAndSelect('order.payments', 'payments')
+      .leftJoinAndSelect('order.adjustments', 'adjustments')
       .where('order.createdAt >= :start', { start: startUtc })
       .andWhere('order.createdAt < :end', { end: endUtc })
       .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
@@ -295,6 +302,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
     });
 
@@ -341,6 +349,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
     });
 
@@ -375,6 +384,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers',
         'orderItems.modifiers.modifier',
         'payments',
+        'adjustments',
       ],
       order: {
         createdAt: 'ASC',

@@ -21,6 +21,10 @@ import {
   useCancelOrderMutation,
 } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import {
+  useCreateBulkAdjustmentsMutation,
+  useDeleteAdjustmentMutation,
+} from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
+import {
   Order,
   OrderStatusEnum,
   type OrderStatus,
@@ -140,6 +144,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   // Instanciar las mutaciones
   const updateOrderMutation = useUpdateOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
+  const createBulkAdjustmentsMutation = useCreateBulkAdjustmentsMutation();
 
   const {
     data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
@@ -604,13 +609,27 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 notes: details.notes || null,
                 total: details.total,
                 subtotal: details.subtotal,
+                // NO incluir ajustes aquí, se manejan por separado
               };
 
               try {
+                // Primero actualizar la orden
                 await updateOrderMutation.mutateAsync({
                   orderId: editingOrderId,
                   payload,
                 });
+                
+                // Luego, si hay ajustes, crearlos
+                if (details.adjustments && details.adjustments.length > 0) {
+                  // Asegurarse de que cada ajuste tenga el orderId correcto
+                  const adjustmentsWithOrderId = details.adjustments.map(adj => ({
+                    ...adj,
+                    orderId: editingOrderId
+                  }));
+                  console.log('Ajustes a crear:', adjustmentsWithOrderId);
+                  await createBulkAdjustmentsMutation.mutateAsync(adjustmentsWithOrderId);
+                }
+                
                 // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);

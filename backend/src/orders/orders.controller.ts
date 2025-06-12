@@ -202,9 +202,9 @@ export class OrdersController {
   @Roles(RoleEnum.admin)
   recoverOrder(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') _userId: string,
   ): Promise<Order> {
-    return this.ordersService.recoverOrder(id, userId);
+    return this.ordersService.recoverOrder(id);
   }
 
   @Get('user/:userId')

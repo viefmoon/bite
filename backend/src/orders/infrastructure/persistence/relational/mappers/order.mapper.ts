@@ -6,6 +6,7 @@ import { TableMapper } from '../../../../../tables/infrastructure/persistence/re
 import { DailyOrderCounterMapper } from './daily-order-counter.mapper';
 import { OrderItemMapper } from './order-item.mapper';
 import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper';
+import { AdjustmentMapper } from '../../../../../adjustments/infrastructure/persistence/relational/mappers/adjustment.mapper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
 import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
@@ -23,6 +24,8 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     private readonly orderItemMapper: OrderItemMapper,
     @Inject(forwardRef(() => PaymentMapper))
     private readonly paymentMapper: PaymentMapper,
+    @Inject(forwardRef(() => AdjustmentMapper))
+    private readonly adjustmentMapper: AdjustmentMapper,
   ) {
     super();
   }
@@ -37,11 +40,13 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.tableId = entity.tableId;
     domain.orderStatus = entity.orderStatus;
     domain.orderType = entity.orderType;
+    domain.subtotal = entity.subtotal;
     domain.total = entity.total;
     domain.notes = entity.notes || undefined;
     domain.phoneNumber = entity.phoneNumber;
     domain.customerName = entity.customerName;
     domain.deliveryAddress = entity.deliveryAddress;
+    domain.scheduledAt = entity.scheduledAt;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -58,6 +63,10 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     );
     domain.payments = mapArray(entity.payments, (payment) =>
       this.paymentMapper.toDomain(payment),
+    );
+
+    domain.adjustments = mapArray(entity.adjustments, (adjustment) =>
+      this.adjustmentMapper.toDomain(adjustment),
     );
 
     return domain;
@@ -77,11 +86,13 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       : null;
     entity.orderStatus = domain.orderStatus;
     entity.orderType = domain.orderType;
+    entity.subtotal = domain.subtotal;
     entity.total = domain.total;
     entity.notes = domain.notes || null;
     entity.phoneNumber = domain.phoneNumber || null;
     entity.customerName = domain.customerName || null;
     entity.deliveryAddress = domain.deliveryAddress || null;
+    entity.scheduledAt = domain.scheduledAt || null;
 
     return entity;
   }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { adjustmentSchema } from './adjustment.schema';
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
@@ -64,5 +65,7 @@ export const orderSchema = z.object({
   payments: z.array(z.any()).optional(),
   deletedAt: z.string().nullable().optional(),
   dailyOrderCounterId: z.string().uuid().nullable().optional(),
+  adjustments: z.array(adjustmentSchema).optional(),
+  subtotal: z.union([z.string(), z.number()]).optional(), // Subtotal antes de ajustes
 });
 export type Order = z.infer<typeof orderSchema>;

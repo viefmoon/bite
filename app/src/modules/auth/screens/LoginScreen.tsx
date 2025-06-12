@@ -7,9 +7,10 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, IconButton, Surface, TouchableRipple } from 'react-native-paper';
+import { Text, IconButton, Surface, TouchableRipple, Button } from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
@@ -23,6 +24,7 @@ import { useAuthStore } from '../../../app/store/authStore';
 import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
 import { authService } from '../services/authService';
 import LoginForm from '../components/LoginForm';
+import { runNetworkDiagnostics, formatDiagnosticResult } from '../../../app/utils/networkDiagnostics';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
@@ -40,6 +42,8 @@ const LoginScreen = () => {
   );
   const [initialRememberMe, setInitialRememberMe] = useState(false);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
+  const [showNetworkError, setShowNetworkError] = useState(false);
 
   type LoginMutationVariables = LoginFormInputs & { rememberMe: boolean };
 
@@ -123,6 +127,11 @@ const LoginScreen = () => {
           status: error.status,
           details: error.details,
         });
+        
+        // Mostrar opción de diagnóstico en errores de red
+        if (error.code === 'NETWORK_ERROR' || error.status === 0) {
+          setShowNetworkError(true);
+        }
       }
     },
   });
@@ -184,6 +193,33 @@ const LoginScreen = () => {
 
   const toggleTheme = () => {
     setThemePreference(theme.dark ? 'light' : 'dark');
+  };
+
+  const handleRunDiagnostics = async () => {
+    setIsRunningDiagnostics(true);
+    try {
+      const result = await runNetworkDiagnostics();
+      const formattedResult = formatDiagnosticResult(result);
+      
+      Alert.alert(
+        'Diagnóstico de Red',
+        formattedResult,
+        [
+          { text: 'Copiar', onPress: () => console.log('Copiar resultado') },
+          { text: 'Cerrar', style: 'cancel' }
+        ],
+        { cancelable: true }
+      );
+    } catch (error) {
+      console.error('Error ejecutando diagnóstico:', error);
+      showSnackbar({
+        message: 'Error al ejecutar el diagnóstico de red',
+        type: 'error',
+      });
+    } finally {
+      setIsRunningDiagnostics(false);
+      setShowNetworkError(false);
+    }
   };
 
   const styles = React.useMemo(
@@ -315,6 +351,19 @@ const LoginScreen = () => {
                   ¿Olvidaste tu contraseña?
                 </Text>
               </TouchableRipple>
+
+              {showNetworkError && (
+                <Button
+                  mode="outlined"
+                  onPress={handleRunDiagnostics}
+                  loading={isRunningDiagnostics}
+                  disabled={isRunningDiagnostics}
+                  icon="wifi-alert"
+                  style={{ marginTop: 16 }}
+                >
+                  Diagnosticar problemas de red
+                </Button>
+              )}
             </View>
 
             <View>

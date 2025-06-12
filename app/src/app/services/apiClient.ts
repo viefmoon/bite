@@ -8,6 +8,7 @@ import { API_URL } from '@env';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useAuthStore } from '../store/authStore';
 import { ApiError } from '../lib/errors';
+import axiosRetry from 'axios-retry';
 
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const AUTH_REFRESH_PATH = '/api/v1/auth/refresh';
@@ -20,7 +21,32 @@ const axiosInstance = axios.create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 10000, // Reducido a 10 segundos para detectar problemas de red más rápido
+});
+
+// Configurar retry automático para errores de red
+axiosRetry(axiosInstance, {
+  retries: 3, // Número de reintentos
+  retryDelay: (retryCount: number) => {
+    console.log(`[ApiClient] Reintento ${retryCount} después de error de red...`);
+    return retryCount * 1000; // Espera incremental: 1s, 2s, 3s
+  },
+  retryCondition: (error: AxiosError) => {
+    // Reintentar en errores de red y timeouts
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
+           error.code === 'ECONNABORTED' ||
+           error.code === 'ETIMEDOUT' ||
+           error.code === 'ENOTFOUND' ||
+           error.code === 'ECONNREFUSED' ||
+           error.code === 'ECONNRESET' ||
+           !error.response;
+  },
+  shouldResetTimeout: true, // Resetear timeout en cada reintento
+  onRetry: (retryCount: number, error: AxiosError, requestConfig: any) => {
+    console.log(`[ApiClient] Error de red detectado: ${error.message}`);
+    console.log(`[ApiClient] Reintentando petición a: ${requestConfig.url}`);
+    console.log(`[ApiClient] Intento ${retryCount} de 3`);
+  }
 });
 
 // --- Lógica de Refresco de Token (igual que antes) ---
@@ -116,6 +142,26 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+
+    // Log detallado para errores de red
+    if (!error.response) {
+      console.log('[ApiClient] Error de red detectado:');
+      console.log('[ApiClient] - Código:', error.code);
+      console.log('[ApiClient] - Mensaje:', error.message);
+      console.log('[ApiClient] - URL:', originalRequest?.url);
+      console.log('[ApiClient] - Timeout configurado:', originalRequest?.timeout, 'ms');
+      
+      // Información adicional para debug
+      if (error.code === 'ECONNABORTED') {
+        console.log('[ApiClient] La petición excedió el tiempo de espera');
+      } else if (error.code === 'ENOTFOUND') {
+        console.log('[ApiClient] No se pudo resolver el host');
+      } else if (error.code === 'ECONNREFUSED') {
+        console.log('[ApiClient] Conexión rechazada por el servidor');
+      } else if (error.code === 'ECONNRESET') {
+        console.log('[ApiClient] La conexión fue reiniciada');
+      }
+    }
 
     // Log para debug
     if (error.response?.status === 401) {

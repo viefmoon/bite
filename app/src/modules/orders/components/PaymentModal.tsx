@@ -36,6 +36,7 @@ import {
   useUpdatePaymentMutation,
   useDeletePaymentMutation,
 } from '../hooks/usePaymentQueries';
+import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ChangeCalculatorModal from './ChangeCalculatorModal';
 
@@ -45,6 +46,7 @@ interface PaymentModalProps {
   orderId: string;
   orderTotal: number;
   orderNumber?: number;
+  onOrderCompleted?: () => void; // Callback cuando se completa la orden
 }
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -68,6 +70,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderId,
   orderTotal,
   orderNumber,
+  onOrderCompleted,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -83,6 +86,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
 
   // Queries y mutations
   const { data: payments = [], isLoading: isLoadingPayments } =
@@ -90,6 +94,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const createPaymentMutation = useCreatePaymentMutation();
   const updatePaymentMutation = useUpdatePaymentMutation();
   const deletePaymentMutation = useDeletePaymentMutation();
+  const completeOrderMutation = useCompleteOrderMutation();
 
   // Calcular totales
   const totalPaid = useMemo(() => {
@@ -193,6 +198,23 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setPaymentToDelete(null);
     } catch (error) {
       console.error('Error al eliminar pago:', error);
+    }
+  };
+
+  const handleFinalizeOrder = async () => {
+    try {
+      await completeOrderMutation.mutateAsync(orderId);
+      setShowFinalizeConfirm(false);
+      
+      // Llamar al callback si existe
+      if (onOrderCompleted) {
+        onOrderCompleted();
+      } else {
+        // Si no hay callback, solo cerrar el modal
+        onDismiss();
+      }
+    } catch (error) {
+      console.error('Error al finalizar orden:', error);
     }
   };
 
@@ -516,6 +538,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   Registrar Pago
                 </Button>
               )}
+              {isFullyPaid && (
+                <Button
+                  mode="contained"
+                  onPress={() => setShowFinalizeConfirm(true)}
+                  disabled={completeOrderMutation.isPending}
+                  loading={completeOrderMutation.isPending}
+                  style={[styles.footerButton, { backgroundColor: '#10B981' }]}
+                  contentStyle={styles.footerButtonContent}
+                  icon="check-circle"
+                >
+                  Finalizar Orden
+                </Button>
+              )}
             </View>
           </Surface>
         </View>
@@ -551,6 +586,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           processPayment();
         }}
         amountToPay={parseFloat(amount) || 0}
+      />
+
+      {/* Modal de confirmación para finalizar orden */}
+      <ConfirmationModal
+        visible={showFinalizeConfirm}
+        onDismiss={() => setShowFinalizeConfirm(false)}
+        onCancel={() => setShowFinalizeConfirm(false)}
+        onConfirm={handleFinalizeOrder}
+        title="Finalizar orden"
+        message={`¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`}
+        confirmText="Sí, finalizar"
+        cancelText="No, cancelar"
+        confirmButtonColor="#10B981"
       />
     </Portal>
   );
