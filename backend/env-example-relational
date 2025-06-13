@@ -22,6 +22,10 @@ DATABASE_KEY=
 DATABASE_CERT=
 DATABASE_URL=
 
+# Railway database URL for cloning/backup (optional)
+# Used only for database synchronization scripts
+RAILWAY_DATABASE_URL=
+
 # Support "local", "s3", "s3-presigned"
 FILE_DRIVER=local
 ACCESS_KEY_ID=
