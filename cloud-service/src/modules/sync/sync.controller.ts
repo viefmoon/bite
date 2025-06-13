@@ -6,8 +6,7 @@ export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 
   @Get('health')
-  async health(@Headers('x-api-key') apiKey: string) {
-    this.validateApiKey(apiKey);
+  async health() {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
