@@ -1,23 +1,17 @@
 import { Module } from '@nestjs/common';
 import { WebhookController } from './webhook.controller';
 import { WebhookService } from './webhook.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { MessageLog } from '../../entities';
-import { CustomersModule } from '../customers/customers.module';
-import { OrdersModule } from '../orders/orders.module';
+import { WhatsappService } from './whatsapp.service';
 import { AiModule } from '../ai/ai.module';
-import { OtpModule } from '../otp/otp.module';
+import { SyncModule } from '../sync/sync.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MessageLog]),
-    CustomersModule,
-    OrdersModule,
     AiModule,
-    OtpModule,
+    SyncModule,
   ],
   controllers: [WebhookController],
-  providers: [WebhookService],
-  exports: [WebhookService],
+  providers: [WebhookService, WhatsappService],
+  exports: [WebhookService, WhatsappService],
 })
 export class WebhookModule {}

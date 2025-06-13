@@ -1,28 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { MessageLog } from '../../entities';
-import { WebhookBody, WhatsAppMessage } from '@shared/types';
-import { CustomersService } from '../customers/customers.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { WebhookBody, WhatsAppMessage } from '../../types';
 import { AiService } from '../ai/ai.service';
-import { OrdersService } from '../orders/orders.service';
-import { OtpService } from '../otp/otp.service';
-import { WhatsAppService } from './whatsapp.service';
+import { SyncService } from '../sync/sync.service';
+import { WhatsappService } from './whatsapp.service';
 
 @Injectable()
 export class WebhookService {
-  private whatsappService: WhatsAppService;
+  private readonly logger = new Logger(WebhookService.name);
 
   constructor(
-    @InjectRepository(MessageLog)
-    private messageLogRepository: Repository<MessageLog>,
-    private customersService: CustomersService,
     private aiService: AiService,
-    private ordersService: OrdersService,
-    private otpService: OtpService,
-  ) {
-    this.whatsappService = new WhatsAppService();
-  }
+    private syncService: SyncService,
+    private whatsappService: WhatsappService,
+  ) {}
 
   async processWebhook(body: WebhookBody): Promise<void> {
     if (body.object !== 'whatsapp_business_account') {
@@ -40,50 +30,17 @@ export class WebhookService {
 
   private async handleMessage(message: WhatsAppMessage): Promise<void> {
     try {
-      // Verificar si ya procesamos este mensaje
-      const existingLog = await this.messageLogRepository.findOne({
-        where: { messageId: message.id }
-      });
+      this.logger.log(`Processing message ${message.id} from ${message.from}`);
 
-      if (existingLog) {
-        return;
-      }
-
-      // Marcar mensaje como procesado
-      await this.messageLogRepository.save({
-        messageId: message.id,
-        processed: true,
-      });
-
-      // Obtener o crear cliente
-      const customer = await this.customersService.findOrCreateByPhone(message.from);
-      await this.customersService.updateLastInteraction(customer.id);
-
-      // Verificar si el cliente tiene información de entrega
-      if (!customer.deliveryInfo) {
-        await this.handleMissingDeliveryInfo(message.from);
-        return;
-      }
-
-      // Procesar según tipo de mensaje
-      switch (message.type) {
-        case 'text':
-          await this.handleTextMessage(message);
-          break;
-        case 'interactive':
-          await this.handleInteractiveMessage(message);
-          break;
-        case 'audio':
-          await this.handleAudioMessage(message);
-          break;
-        default:
-          await this.whatsappService.sendMessage(
-            message.from,
-            'Lo siento, solo puedo procesar mensajes de texto, audio o interactivos.'
-          );
+      // Reenviar el mensaje al backend local para procesamiento
+      const processed = await this.syncService.forwardMessageToBackend(message);
+      
+      if (!processed) {
+        // Si el backend local no puede procesarlo, usar IA como fallback
+        await this.processWithAI(message);
       }
     } catch (error) {
-      console.error('Error handling message:', error);
+      this.logger.error('Error handling message:', error);
       await this.whatsappService.sendMessage(
         message.from,
         'Ocurrió un error al procesar tu mensaje. Por favor intenta nuevamente.'
@@ -91,16 +48,24 @@ export class WebhookService {
     }
   }
 
-  private async handleMissingDeliveryInfo(phoneNumber: string): Promise<void> {
-    const otp = this.otpService.generateOTP();
-    await this.otpService.storeOTP(phoneNumber, otp);
-
-    const registrationLink = `${process.env.FRONTEND_BASE_URL}/delivery-info/${phoneNumber}?otp=${otp}`;
-    
-    await this.whatsappService.sendMessage(
-      phoneNumber,
-      `¡Hola! 👋 Antes de continuar, necesitamos que registres tu información de entrega.\\n\\nPor favor usa este enlace: ${registrationLink}\\n\\nEste enlace es válido por 10 minutos.`
-    );
+  private async processWithAI(message: WhatsAppMessage): Promise<void> {
+    // Procesar según tipo de mensaje
+    switch (message.type) {
+      case 'text':
+        await this.handleTextMessage(message);
+        break;
+      case 'interactive':
+        await this.handleInteractiveMessage(message);
+        break;
+      case 'audio':
+        await this.handleAudioMessage(message);
+        break;
+      default:
+        await this.whatsappService.sendMessage(
+          message.from,
+          'Lo siento, solo puedo procesar mensajes de texto, audio o interactivos.'
+        );
+    }
   }
 
   private async handleTextMessage(message: WhatsAppMessage): Promise<void> {
@@ -114,13 +79,11 @@ export class WebhookService {
     }
 
     if (response.orderData) {
-      const order = await this.ordersService.createOrder({
+      // Enviar datos de orden al backend local
+      await this.syncService.createOrderInBackend({
         ...response.orderData,
-        customerId: message.from,
         customerPhone: message.from,
       });
-
-      await this.whatsappService.sendOrderConfirmation(message.from, order);
     }
   }
 
@@ -128,15 +91,8 @@ export class WebhookService {
     const { interactive } = message;
     
     if (interactive.type === 'button_reply') {
-      // Manejar respuestas de botones
-      switch (interactive.button_reply.id) {
-        case 'confirm_order':
-          // Lógica para confirmar orden
-          break;
-        case 'cancel_order':
-          // Lógica para cancelar orden
-          break;
-      }
+      // Reenviar respuesta interactiva al backend local
+      await this.syncService.forwardInteractiveResponse(message);
     }
   }
 

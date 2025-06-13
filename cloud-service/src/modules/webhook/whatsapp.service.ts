@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { Order } from '../../entities';
+
+interface OrderInfo {
+  id: string;
+  dailyOrderNumber?: number;
+  orderType: 'delivery' | 'pickup';
+  totalCost: number;
+  estimatedTime: number;
+}
 
 @Injectable()
-export class WhatsAppService {
+export class WhatsappService {
   private readonly apiUrl = `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
   private readonly headers = {
     'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
@@ -51,7 +58,7 @@ export class WhatsAppService {
     }
   }
 
-  async sendOrderConfirmation(to: string, order: Order): Promise<void> {
+  async sendOrderConfirmation(to: string, order: OrderInfo): Promise<void> {
     const message = `🎉 *¡Tu orden ha sido creada!*\\n\\n` +
       `📋 *Número de orden:* ${order.dailyOrderNumber || order.id}\\n` +
       `🚚 *Tipo:* ${order.orderType === 'delivery' ? 'Entrega a domicilio' : 'Recoger en tienda'}\\n` +
@@ -87,12 +94,7 @@ export class WhatsAppService {
       }
     };
 
-    const messageId = await this.sendInteractiveMessage(to, interactive);
-    
-    if (messageId) {
-      // Actualizar orden con el ID del mensaje
-      order.whatsappMessageId = messageId;
-    }
+    await this.sendInteractiveMessage(to, interactive);
   }
 
   async downloadMedia(mediaId: string): Promise<Buffer> {

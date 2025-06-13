@@ -12,10 +12,7 @@
     "test": "jest",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "typeorm": "typeorm-ts-node-commonjs",
-    "migration:generate": "npm run typeorm migration:generate -- -d src/config/data-source.ts",
-    "migration:run": "npm run typeorm migration:run -- -d src/config/data-source.ts",
-    "migration:revert": "npm run typeorm migration:revert -- -d src/config/data-source.ts"
+    "db:test": "node -e \"require('pg').Client({connectionString: process.env.DATABASE_URL}).connect().then(() => console.log('Database connected')).catch(err => console.error('Database connection failed:', err))\""
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -24,6 +21,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/schedule": "^4.0.0",
+    "@nestjs/axios": "^3.0.0",
     "axios": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -34,7 +32,6 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
-    "sqlite3": "^5.1.6",
     "winston": "^3.11.0",
     "dotenv": "^16.3.1",
     "string-similarity": "^4.0.4"

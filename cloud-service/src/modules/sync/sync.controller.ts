@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Headers, UnauthorizedException } from '@nestjs/common';
 import { SyncService } from './sync.service';
 
 @Controller('sync')
@@ -10,10 +10,11 @@ export class SyncController {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  @Get('pending-orders')
-  async getPendingOrders(@Headers('x-api-key') apiKey: string) {
+  @Post('database')
+  async syncDatabase(@Headers('x-api-key') apiKey: string) {
     this.validateApiKey(apiKey);
-    return this.syncService.getPendingOrders();
+    await this.syncService.syncDatabaseChanges();
+    return { message: 'Sync initiated' };
   }
 
   private validateApiKey(apiKey: string): void {
