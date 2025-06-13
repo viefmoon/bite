@@ -285,7 +285,9 @@ const GenericDetailModal = <TItem extends { id: string }>({
                     {label}
                   </Text>
                   {render ? (
-                    render(value, item)
+                    <Text style={[styles.fieldValue, fieldValueStyle]}>
+                      {render(value, item)}
+                    </Text>
                   ) : (
                     <Text style={[styles.fieldValue, fieldValueStyle]}>
                       {typeof value === 'boolean'

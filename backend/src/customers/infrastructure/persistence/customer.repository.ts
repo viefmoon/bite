@@ -39,6 +39,8 @@ export abstract class CustomerRepository
     phone: Customer['phoneNumber'],
   ): Promise<NullableType<Customer>>;
 
+  abstract findBannedCustomers(): Promise<Customer[]>;
+
   // El método 'save' se elimina. Las operaciones de guardado se manejan
   // a través de los métodos heredados create y update de IBaseRepository.
 

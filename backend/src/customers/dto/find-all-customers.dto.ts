@@ -60,4 +60,12 @@ export class FindAllCustomersDto extends PaginationParams {
   @IsOptional()
   @IsDateString()
   lastInteractionAfter?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado de baneo',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isBanned?: boolean;
 }

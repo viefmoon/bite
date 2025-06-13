@@ -37,6 +37,11 @@ export interface Customer {
   totalOrders: number;
   totalSpent: number;
   isActive: boolean;
+  isBanned: boolean;
+  bannedAt?: Date | null;
+  banReason?: string | null;
+  whatsappMessageCount: number;
+  lastWhatsappMessageTime?: Date | null;
   addresses: Address[];
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +55,9 @@ export interface CreateCustomerDto {
   email?: string;
   birthDate?: string;
   isActive?: boolean;
+  isBanned?: boolean;
+  whatsappMessageCount?: number;
+  lastWhatsappMessageTime?: string;
   addresses?: CreateAddressDto[];
 }
 
@@ -60,6 +68,11 @@ export interface UpdateCustomerDto {
   email?: string | null;
   birthDate?: string | null;
   isActive?: boolean;
+  isBanned?: boolean;
+  bannedAt?: string;
+  banReason?: string | null;
+  whatsappMessageCount?: number;
+  lastWhatsappMessageTime?: string;
   fullChatHistory?: ChatMessage[];
   relevantChatHistory?: ChatMessage[];
   lastInteraction?: string;
@@ -101,6 +114,7 @@ export interface FindAllCustomersQuery {
   email?: string;
   phoneNumber?: string;
   isActive?: boolean;
+  isBanned?: boolean;
   lastInteractionAfter?: Date;
   page?: number;
   limit?: number;

@@ -8,6 +8,8 @@ import {
   IsBoolean,
   IsArray,
   IsObject,
+  IsNumber,
+  Min,
   MaxLength,
 } from 'class-validator';
 
@@ -70,6 +72,15 @@ export class UpdateCustomerDto {
   isActive?: boolean;
 
   @ApiPropertyOptional({
+    type: Boolean,
+    example: false,
+    description: 'Indica si el cliente está baneado',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isBanned?: boolean;
+
+  @ApiPropertyOptional({
     type: 'array',
     description:
       'Historial completo de chat (para actualizaciones específicas)',
@@ -94,4 +105,24 @@ export class UpdateCustomerDto {
   @IsOptional()
   @IsDateString()
   lastInteraction?: string;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 5,
+    description: 'Contador de mensajes de WhatsApp enviados por el cliente',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  whatsappMessageCount?: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    example: '2024-01-15T10:30:00Z',
+    description: 'Fecha y hora del último mensaje de WhatsApp recibido',
+  })
+  @IsOptional()
+  @IsDateString()
+  lastWhatsappMessageTime?: string;
 }

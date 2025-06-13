@@ -41,4 +41,5 @@ export const API_PATHS = {
   PRODUCTS_PIZZAS: '/api/v1/products/pizzas/all',
 
   CUSTOMERS: '/api/v1/customers',
+  ADDRESSES: '/api/v1/addresses',
 } as const;

@@ -19,6 +19,11 @@ export class Customer {
   totalOrders: number; // Total de pedidos realizados
   totalSpent: number; // Total gastado
   isActive: boolean; // Cliente activo
+  isBanned: boolean; // Si el cliente está baneado
+  bannedAt: Date | null; // Fecha de baneo
+  banReason: string | null; // Razón del baneo
+  whatsappMessageCount: number; // Contador de mensajes de WhatsApp
+  lastWhatsappMessageTime: Date | null; // Última vez que envió mensaje de WhatsApp
   addresses: Address[];
   createdAt: Date;
   updatedAt: Date;

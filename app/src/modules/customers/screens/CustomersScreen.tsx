@@ -32,7 +32,7 @@ function CustomersScreen(): JSX.Element {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
-    'all' | 'active' | 'inactive'
+    'all' | 'active' | 'inactive' | 'banned'
   >('all');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -51,7 +51,7 @@ function CustomersScreen(): JSX.Element {
   };
 
   const handleFilterChange = (value: string | number) => {
-    if (value === 'all' || value === 'active' || value === 'inactive') {
+    if (value === 'all' || value === 'active' || value === 'inactive' || value === 'banned') {
       setStatusFilter(value);
     } else {
       setStatusFilter('all');
@@ -62,7 +62,8 @@ function CustomersScreen(): JSX.Element {
     () => ({
       firstName: debouncedSearchQuery || undefined,
       lastName: debouncedSearchQuery || undefined,
-      isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
+      isActive: statusFilter === 'all' || statusFilter === 'banned' ? undefined : statusFilter === 'active',
+      isBanned: statusFilter === 'banned' ? true : undefined,
     }),
     [debouncedSearchQuery, statusFilter],
   );
@@ -92,9 +93,11 @@ function CustomersScreen(): JSX.Element {
   });
 
   const handleOpenEditModal = useCallback(
-    (item: Customer) => {
+    (item: any) => {
       setDetailModalVisible(false);
-      originalHandleOpenEditModal(item);
+      // Remover el fullName antes de pasar al modal de edición
+      const { fullName, ...originalCustomer } = item;
+      originalHandleOpenEditModal(originalCustomer as Customer);
     },
     [originalHandleOpenEditModal],
   );
@@ -138,10 +141,11 @@ function CustomersScreen(): JSX.Element {
   }, [deleteCustomer, showSnackbar, customerToDelete]);
 
 
-  const filterOptions: FilterOption<'all' | 'active' | 'inactive'>[] = [
+  const filterOptions: FilterOption<'all' | 'active' | 'inactive' | 'banned'>[] = [
     { label: 'Todos', value: 'all' },
     { label: 'Activos', value: 'active' },
     { label: 'Inactivos', value: 'inactive' },
+    { label: 'Baneados', value: 'banned' },
   ];
 
 
@@ -152,11 +156,27 @@ function CustomersScreen(): JSX.Element {
     emptyConfig: {
       title: 'No hay clientes',
       message: statusFilter !== 'all'
-        ? `No hay clientes ${statusFilter === 'active' ? 'activos' : 'inactivos'}.`
+        ? `No hay clientes ${
+            statusFilter === 'active' ? 'activos' : 
+            statusFilter === 'inactive' ? 'inactivos' : 
+            'baneados'
+          }.`
         : 'No hay clientes registrados. Presiona el botón + para crear el primero.',
       icon: 'account-group-outline',
     },
   });
+
+  // Mapear los clientes para combinar firstName y lastName
+  const mappedCustomers = useMemo(() => {
+    return customers?.map(customer => ({
+      ...customer,
+      fullName: `${customer.firstName} ${customer.lastName}`.trim(),
+      displayStatus: customer.isBanned ? 'banned' : (customer.isActive ? 'active' : 'inactive'),
+      whatsappInfo: customer.whatsappMessageCount > 0 
+        ? `💬 ${customer.whatsappMessageCount}` 
+        : null
+    })) || [];
+  }, [customers]);
 
   const handleSubmit = useCallback(
     async (data: CustomerFormInputs) => {
@@ -198,14 +218,15 @@ function CustomersScreen(): JSX.Element {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.container}>
         <GenericList
-          items={customers || []}
+          items={mappedCustomers}
           isLoading={isLoading}
           isRefreshing={isFetching}
           onRefresh={refetch}
           onItemPress={handleItemPress}
           renderConfig={{
-            titleField: 'firstName' as keyof Customer,
+            titleField: 'fullName' as keyof Customer,
             descriptionField: 'email' as keyof Customer,
+            imageField: undefined,
             statusConfig: {
               field: 'isActive' as keyof Customer,
               activeValue: true,
@@ -224,6 +245,7 @@ function CustomersScreen(): JSX.Element {
           ListEmptyComponent={ListEmptyComponent}
           isDrawerOpen={isDrawerOpen}
           enableSearch={true}
+          showImagePlaceholder={false}
         />
       </View>
 
@@ -239,9 +261,12 @@ function CustomersScreen(): JSX.Element {
         <GenericDetailModal
           visible={detailModalVisible}
           onDismiss={() => setDetailModalVisible(false)}
-          item={selectedCustomer}
-          titleField="firstName"
-          descriptionField="lastName"
+          item={selectedCustomer ? {
+            ...selectedCustomer,
+            fullName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim()
+          } : null}
+          titleField="fullName"
+          descriptionField="email"
           statusConfig={{
             field: 'isActive' as keyof Customer,
             activeValue: true,
@@ -252,6 +277,11 @@ function CustomersScreen(): JSX.Element {
           onDelete={handleDelete}
           isDeleting={false}
           fieldsToDisplay={[
+            {
+              field: 'isBanned' as keyof Customer,
+              label: 'Estado de baneo',
+              render: (value) => value ? '⛔ Baneado' : '✅ No baneado',
+            },
             {
               field: 'phoneNumber' as keyof Customer,
               label: 'Teléfono',
@@ -283,6 +313,17 @@ function CustomersScreen(): JSX.Element {
               label: 'Última interacción',
               render: (value) => 
                 value ? new Date(value as string).toLocaleString() : 'Sin interacciones',
+            },
+            {
+              field: 'whatsappMessageCount' as keyof Customer,
+              label: 'Mensajes de WhatsApp',
+              render: (value) => `${value || 0} mensajes`,
+            },
+            {
+              field: 'lastWhatsappMessageTime' as keyof Customer,
+              label: 'Último mensaje WhatsApp',
+              render: (value) => 
+                value ? new Date(value as string).toLocaleString() : 'Sin mensajes',
             },
           ]}
         />

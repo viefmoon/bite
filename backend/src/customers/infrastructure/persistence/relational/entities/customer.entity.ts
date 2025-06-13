@@ -58,6 +58,21 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isBanned: boolean;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  bannedAt: Date | null;
+
+  @Column({ type: 'text', nullable: true })
+  banReason: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  whatsappMessageCount: number;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastWhatsappMessageTime: Date | null;
+
   @OneToMany(() => AddressEntity, (address) => address.customer)
   addresses: AddressEntity[];
 

@@ -15,6 +15,7 @@ export const customerKeys = {
   details: () => [...customerKeys.all, 'detail'] as const,
   detail: (id: string) => [...customerKeys.details(), id] as const,
   activeRecent: (daysAgo: number) => [...customerKeys.all, 'active-recent', daysAgo] as const,
+  addresses: (customerId: string) => [...customerKeys.all, 'addresses', customerId] as const,
 };
 
 // Hook para obtener todos los clientes
@@ -144,5 +145,17 @@ export function useActiveCustomersWithRecentInteraction(daysAgo = 30) {
   return useQuery({
     queryKey: customerKeys.activeRecent(daysAgo),
     queryFn: () => customersService.getActiveWithRecentInteraction(daysAgo),
+  });
+}
+
+// Hook para obtener direcciones de un cliente
+export function useGetAddressesByCustomer(customerId: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: customerKeys.addresses(customerId),
+    queryFn: async () => {
+      const customer = await customersService.findOne(customerId);
+      return customer.addresses || [];
+    },
+    enabled: options?.enabled ?? true,
   });
 }

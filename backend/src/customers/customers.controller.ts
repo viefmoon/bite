@@ -15,6 +15,7 @@ import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FindAllCustomersDto } from './dto/find-all-customers.dto';
+import { BanCustomerDto } from './dto/ban-customer.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -174,5 +175,42 @@ export class CustomersController {
   ): Promise<Customer[]> {
     const days = daysAgo ? Number(daysAgo) : 30;
     return this.customersService.getActiveCustomersWithRecentInteraction(days);
+  }
+
+  // Ban/Unban endpoints
+
+  @Post(':id/ban')
+  @ApiOperation({ summary: 'Ban a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  banCustomer(
+    @Param('id') id: string,
+    @Body() banCustomerDto: BanCustomerDto,
+  ): Promise<Customer> {
+    return this.customersService.banCustomer(id, banCustomerDto.banReason);
+  }
+
+  @Post(':id/unban')
+  @ApiOperation({ summary: 'Unban a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  unbanCustomer(@Param('id') id: string): Promise<Customer> {
+    return this.customersService.unbanCustomer(id);
+  }
+
+  @Get('banned/list')
+  @ApiOperation({ summary: 'Get all banned customers' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  getBannedCustomers(): Promise<Customer[]> {
+    return this.customersService.getBannedCustomers();
   }
 }

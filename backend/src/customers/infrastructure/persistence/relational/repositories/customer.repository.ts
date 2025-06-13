@@ -62,6 +62,10 @@ export class CustomerRelationalRepository
     if (filter?.lastInteractionAfter) {
       where.lastInteraction = MoreThanOrEqual(filter.lastInteractionAfter);
     }
+    // Filtro para clientes baneados
+    if (filter?.isBanned !== undefined) {
+      where.isBanned = filter.isBanned;
+    }
 
     // Devolver undefined si no hay filtros para evitar un objeto `where` vacío
     return Object.keys(where).length > 0 ? where : undefined;
@@ -97,4 +101,17 @@ export class CustomerRelationalRepository
 
   // Los métodos create, findById, findAll (sin paginación), update, remove son heredados de BaseRelationalRepository
   // No es necesario re-implementarlos aquí a menos que se necesite lógica adicional específica.
+
+  // Método específico para obtener clientes baneados
+  async findBannedCustomers(): Promise<Customer[]> {
+    const entities = await this.ormRepo
+      .createQueryBuilder('customer')
+      .where('customer.isBanned = :isBanned', { isBanned: true })
+      .orderBy('customer.bannedAt', 'DESC')
+      .getMany();
+
+    return entities
+      .map((entity) => this.mapper.toDomain(entity))
+      .filter(Boolean) as Customer[];
+  }
 }

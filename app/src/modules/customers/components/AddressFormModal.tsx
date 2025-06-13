@@ -14,7 +14,8 @@ import {
   HelperText,
   Surface,
   Chip,
-  Divider,
+  Avatar,
+  IconButton,
 } from 'react-native-paper';
 import {
   useForm,
@@ -148,34 +149,74 @@ export default function AddressFormModal({
           onDismiss={onDismiss}
           contentContainerStyle={styles.modalContainer}
         >
-          <Surface style={styles.modalContent} elevation={4}>
-            <Text style={styles.modalTitle} variant="titleLarge">
-              {editingItem ? 'Editar Dirección' : 'Nueva Dirección'}
-            </Text>
-
-            <ScrollView style={styles.formContainer}>
-              <Controller
-                control={control}
-                name="street"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Calle *"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.street}
-                      mode="outlined"
-                      placeholder="Ej: Av. Insurgentes"
-                    />
-                    {errors.street && (
-                      <HelperText type="error" visible={!!errors.street}>
-                        {errors.street.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
+          <Surface style={styles.modalContent} elevation={5}>
+            <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
+              <View style={styles.headerLeft}>
+                <Avatar.Icon 
+                  size={32} 
+                  icon={editingItem ? 'map-marker-radius' : 'map-marker-plus'}
+                  style={[styles.headerIcon, { backgroundColor: theme.colors.onPrimary + '20' }]}
+                  color={theme.colors.onPrimary}
+                />
+                <View style={styles.headerTextContainer}>
+                  <Text style={[styles.modalTitle, { color: theme.colors.onPrimary }]} variant="titleMedium">
+                    {editingItem ? 'Editar Dirección' : 'Nueva Dirección'}
+                  </Text>
+                </View>
+              </View>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={onDismiss}
+                disabled={isSubmitting}
+                iconColor={theme.colors.onPrimary}
               />
+            </View>
+
+            <ScrollView 
+              style={styles.formContainer}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle} variant="titleMedium">
+                    Información de la Dirección
+                  </Text>
+                  <Chip 
+                    mode="flat" 
+                    compact
+                    style={styles.requiredChip}
+                    textStyle={styles.requiredChipText}
+                  >
+                    Requerido
+                  </Chip>
+                </View>
+                
+                <Controller
+                  control={control}
+                  name="street"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Calle"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.street}
+                        mode="outlined"
+                        placeholder="Ej: Av. Insurgentes"
+                        left={<TextInput.Icon icon="road" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.street && (
+                        <HelperText type="error" visible={!!errors.street}>
+                          {errors.street.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
 
               <View style={styles.row}>
                 <View style={styles.halfInput}>
@@ -185,13 +226,15 @@ export default function AddressFormModal({
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={styles.inputContainer}>
                         <TextInput
-                          label="Número *"
+                          label="Número"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
                           error={!!errors.number}
                           mode="outlined"
                           placeholder="123"
+                          left={<TextInput.Icon icon="numeric" />}
+                          outlineStyle={styles.inputOutline}
                         />
                         {errors.number && (
                           <HelperText type="error" visible={!!errors.number}>
@@ -216,6 +259,8 @@ export default function AddressFormModal({
                           onBlur={onBlur}
                           mode="outlined"
                           placeholder="Depto 4B"
+                          left={<TextInput.Icon icon="home-variant" />}
+                          outlineStyle={styles.inputOutline}
                         />
                       </View>
                     )}
@@ -223,51 +268,55 @@ export default function AddressFormModal({
                 </View>
               </View>
 
-              <Controller
-                control={control}
-                name="neighborhood"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Colonia *"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.neighborhood}
-                      mode="outlined"
-                      placeholder="Ej: Roma Norte"
-                    />
-                    {errors.neighborhood && (
-                      <HelperText type="error" visible={!!errors.neighborhood}>
-                        {errors.neighborhood.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              />
+                <Controller
+                  control={control}
+                  name="neighborhood"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Colonia"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.neighborhood}
+                        mode="outlined"
+                        placeholder="Ej: Roma Norte"
+                        left={<TextInput.Icon icon="map" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.neighborhood && (
+                        <HelperText type="error" visible={!!errors.neighborhood}>
+                          {errors.neighborhood.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
 
-              <Controller
-                control={control}
-                name="city"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Ciudad *"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.city}
-                      mode="outlined"
-                      placeholder="Ej: Ciudad de México"
-                    />
-                    {errors.city && (
-                      <HelperText type="error" visible={!!errors.city}>
-                        {errors.city.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              />
+                <Controller
+                  control={control}
+                  name="city"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Ciudad"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.city}
+                        mode="outlined"
+                        placeholder="Ej: Ciudad de México"
+                        left={<TextInput.Icon icon="city" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.city && (
+                        <HelperText type="error" visible={!!errors.city}>
+                          {errors.city.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
 
               <View style={styles.row}>
                 <View style={styles.halfInput}>
@@ -277,13 +326,15 @@ export default function AddressFormModal({
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={styles.inputContainer}>
                         <TextInput
-                          label="Estado *"
+                          label="Estado"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
                           error={!!errors.state}
                           mode="outlined"
                           placeholder="Ej: CDMX"
+                          left={<TextInput.Icon icon="map-marker" />}
+                          outlineStyle={styles.inputOutline}
                         />
                         {errors.state && (
                           <HelperText type="error" visible={!!errors.state}>
@@ -302,7 +353,7 @@ export default function AddressFormModal({
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={styles.inputContainer}>
                         <TextInput
-                          label="C.P. *"
+                          label="C.P."
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
@@ -311,6 +362,8 @@ export default function AddressFormModal({
                           placeholder="06700"
                           keyboardType="numeric"
                           maxLength={5}
+                          left={<TextInput.Icon icon="mailbox" />}
+                          outlineStyle={styles.inputOutline}
                         />
                         {errors.zipCode && (
                           <HelperText type="error" visible={!!errors.zipCode}>
@@ -323,84 +376,116 @@ export default function AddressFormModal({
                 </View>
               </View>
 
-              <Controller
-                control={control}
-                name="reference"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Referencias"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      mode="outlined"
-                      placeholder="Entre calles, color de fachada, etc."
-                      multiline
-                      numberOfLines={2}
-                    />
-                  </View>
-                )}
-              />
-
-              <Divider style={styles.divider} />
-
-              {/* Sección de Ubicación */}
-              <View style={styles.locationSection}>
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Ubicación en el mapa
-                </Text>
-                
-                {latitude && longitude ? (
-                  <View style={styles.locationInfo}>
-                    <Chip icon="map-marker" compact mode="flat">
-                      {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                    </Chip>
-                    {geocodedAddress && (
-                      <Text variant="bodySmall" style={styles.geocodedText}>
-                        {geocodedAddress}
-                      </Text>
-                    )}
-                  </View>
-                ) : (
-                  <Text variant="bodyMedium" style={styles.noLocationText}>
-                    No se ha seleccionado ubicación
-                  </Text>
-                )}
-
-                <Button
-                  mode="outlined"
-                  onPress={() => setShowLocationPicker(true)}
-                  icon="map-marker-plus"
-                  style={styles.locationButton}
-                >
-                  {latitude && longitude ? 'Cambiar ubicación' : 'Seleccionar ubicación'}
-                </Button>
               </View>
 
-              <Controller
-                control={control}
-                name="isDefault"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.switchContainer}>
-                    <Text style={styles.switchLabel}>
-                      Dirección predeterminada
-                    </Text>
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      color={theme.colors.primary}
-                    />
-                  </View>
-                )}
-              />
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle} variant="titleMedium">
+                    Información Adicional
+                  </Text>
+                  <Chip 
+                    mode="flat" 
+                    compact
+                    style={styles.optionalChip}
+                    textStyle={styles.optionalChipText}
+                  >
+                    Opcional
+                  </Chip>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="reference"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Referencias"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        mode="outlined"
+                        placeholder="Entre calles, color de fachada, etc."
+                        multiline
+                        numberOfLines={2}
+                        left={<TextInput.Icon icon="sign-direction" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                    </View>
+                  )}
+                />
+
+                {/* Sección de Ubicación */}
+                <View style={styles.locationSection}>
+                  {latitude && longitude ? (
+                    <Surface style={styles.locationCard} elevation={1}>
+                      <View style={styles.locationCardContent}>
+                        <IconButton
+                          icon="map-marker"
+                          size={20}
+                          iconColor={theme.colors.primary}
+                        />
+                        <View style={styles.locationInfo}>
+                          <Text variant="bodyMedium" style={styles.coordinatesText}>
+                            {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                          </Text>
+                          {geocodedAddress && (
+                            <Text variant="bodySmall" style={styles.geocodedText}>
+                              {geocodedAddress}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </Surface>
+                  ) : (
+                    <Surface style={styles.emptyLocationCard} elevation={0}>
+                      <Text variant="bodyMedium" style={styles.noLocationText}>
+                        No se ha seleccionado ubicación
+                      </Text>
+                    </Surface>
+                  )}
+
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowLocationPicker(true)}
+                    icon="map-marker-plus"
+                    style={styles.locationButton}
+                  >
+                    {latitude && longitude ? 'Cambiar ubicación' : 'Seleccionar ubicación'}
+                  </Button>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="isDefault"
+                  render={({ field: { onChange, value } }) => (
+                    <Surface style={styles.switchContainer} elevation={1}>
+                      <View style={styles.switchContent}>
+                        <View style={styles.switchTextContainer}>
+                          <Text style={styles.switchLabel} variant="bodyLarge">
+                            Dirección predeterminada
+                          </Text>
+                        </View>
+                        <Switch
+                          value={value}
+                          onValueChange={onChange}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    </Surface>
+                  )}
+                />
+              </View>
+
+              {/* Espacio adicional para el teclado */}
+              <View style={{ height: 20 }} />
             </ScrollView>
 
-            <View style={styles.buttonContainer}>
+            <Surface style={styles.buttonContainer} elevation={2}>
               <Button
-                mode="text"
                 onPress={onDismiss}
                 disabled={isSubmitting}
-                style={styles.button}
+                style={[styles.button, styles.cancelButton]}
+                textColor={theme.colors.onSecondaryContainer}
               >
                 Cancelar
               </Button>
@@ -409,11 +494,12 @@ export default function AddressFormModal({
                 onPress={handleSubmit(handleFormSubmit)}
                 disabled={isSubmitting}
                 loading={isSubmitting}
-                style={styles.button}
+                style={[styles.button, styles.confirmButton]}
+                buttonColor={theme.colors.primary}
               >
                 {editingItem ? 'Guardar' : 'Crear'}
               </Button>
-            </View>
+            </Surface>
           </Surface>
         </Modal>
       </Portal>
@@ -436,75 +522,151 @@ export default function AddressFormModal({
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     modalContainer: {
-      margin: theme.spacing.l,
+      margin: 20,
     },
     modalContent: {
-      padding: theme.spacing.l,
-      borderRadius: theme.roundness * 2,
+      borderRadius: theme.roundness * 3,
+      backgroundColor: theme.colors.surface,
       maxHeight: '90%',
     },
+    headerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+      borderTopLeftRadius: theme.roundness * 3,
+      borderTopRightRadius: theme.roundness * 3,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    headerIcon: {
+      marginRight: theme.spacing.s,
+    },
+    headerTextContainer: {
+      flex: 1,
+    },
     modalTitle: {
-      marginBottom: theme.spacing.l,
-      textAlign: 'center',
       fontWeight: '700',
     },
     formContainer: {
+      maxHeight: 400,
+      paddingHorizontal: theme.spacing.m,
+      paddingTop: theme.spacing.s,
+    },
+    sectionContainer: {
       marginBottom: theme.spacing.m,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.s,
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      fontSize: 15,
+    },
+    requiredChip: {
+      backgroundColor: theme.colors.errorContainer,
+    },
+    requiredChipText: {
+      color: theme.colors.onErrorContainer,
+      fontSize: 11,
+    },
+    optionalChip: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    optionalChipText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 11,
+    },
     inputContainer: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
+    },
+    inputOutline: {
+      borderRadius: theme.roundness * 2,
     },
     row: {
       flexDirection: 'row',
-      gap: theme.spacing.m,
+      gap: theme.spacing.s,
     },
     halfInput: {
       flex: 1,
     },
-    divider: {
-      marginVertical: theme.spacing.l,
-    },
     locationSection: {
-      marginBottom: theme.spacing.l,
+      marginTop: theme.spacing.s,
     },
-    sectionTitle: {
-      marginBottom: theme.spacing.m,
-      fontWeight: '600',
+    locationCard: {
+      borderRadius: theme.roundness * 2,
+      padding: theme.spacing.m,
+      marginBottom: theme.spacing.s,
+    },
+    locationCardContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
     },
     locationInfo: {
-      marginBottom: theme.spacing.m,
+      flex: 1,
+      marginLeft: theme.spacing.xs,
+    },
+    coordinatesText: {
+      fontWeight: '500',
+      color: theme.colors.onSurface,
     },
     geocodedText: {
-      marginTop: theme.spacing.s,
       color: theme.colors.onSurfaceVariant,
+      marginTop: theme.spacing.xs,
+    },
+    emptyLocationCard: {
+      padding: theme.spacing.l,
+      borderRadius: theme.roundness * 2,
+      backgroundColor: theme.colors.surfaceVariant,
+      alignItems: 'center',
+      marginBottom: theme.spacing.s,
     },
     noLocationText: {
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.m,
     },
     locationButton: {
-      marginTop: theme.spacing.s,
+      marginTop: theme.spacing.xs,
     },
     switchContainer: {
+      borderRadius: theme.roundness * 2,
+      padding: theme.spacing.s,
+      marginTop: theme.spacing.s,
+    },
+    switchContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.s,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-      marginBottom: theme.spacing.m,
+    },
+    switchTextContainer: {
+      flex: 1,
+      marginRight: theme.spacing.m,
     },
     switchLabel: {
-      ...theme.fonts.bodyLarge,
-      color: theme.colors.onSurfaceVariant,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
     },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: theme.spacing.m,
+      justifyContent: 'center',
+      padding: theme.spacing.s,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+      gap: theme.spacing.s,
     },
     button: {
-      marginLeft: theme.spacing.s,
+      flex: 1,
+      maxWidth: 150,
     },
+    cancelButton: {
+      backgroundColor: theme.colors.secondaryContainer,
+    },
+    confirmButton: {},
   });

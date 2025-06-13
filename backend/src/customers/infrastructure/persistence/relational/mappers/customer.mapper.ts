@@ -31,6 +31,11 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     domain.totalOrders = entity.totalOrders;
     domain.totalSpent = entity.totalSpent;
     domain.isActive = entity.isActive;
+    domain.isBanned = entity.isBanned;
+    domain.bannedAt = entity.bannedAt;
+    domain.banReason = entity.banReason;
+    domain.whatsappMessageCount = entity.whatsappMessageCount;
+    domain.lastWhatsappMessageTime = entity.lastWhatsappMessageTime;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -58,6 +63,11 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     entity.totalOrders = domain.totalOrders ?? 0;
     entity.totalSpent = domain.totalSpent ?? 0;
     entity.isActive = domain.isActive ?? true;
+    entity.isBanned = domain.isBanned ?? false;
+    entity.bannedAt = domain.bannedAt ?? null;
+    entity.banReason = domain.banReason ?? null;
+    entity.whatsappMessageCount = domain.whatsappMessageCount ?? 0;
+    entity.lastWhatsappMessageTime = domain.lastWhatsappMessageTime ?? null;
 
     return entity;
   }

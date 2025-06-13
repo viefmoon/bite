@@ -33,6 +33,7 @@ export const createCustomerSchema = z.object({
     .optional()
     .or(z.literal('')),
   isActive: z.boolean().optional(),
+  isBanned: z.boolean().optional(),
   addresses: z.array(addressSchema).optional(),
 });
 
@@ -56,6 +57,8 @@ export const customerFormSchema = z.object({
     .optional()
     .or(z.literal('')),
   isActive: z.boolean(),
+  isBanned: z.boolean(),
+  banReason: z.string().optional().or(z.literal('')),
 });
 
 // Types derivados de los schemas

@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Order } from './domain/order';
 import { OrderRepository } from './infrastructure/persistence/order.repository';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -25,6 +30,8 @@ import {
   TICKET_IMPRESSION_REPOSITORY,
 } from '../common/tokens';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
+import { CustomersService } from '../customers/customers.service';
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -36,9 +43,22 @@ export class OrdersService {
     private readonly orderItemRepository: OrderItemRepository,
     @Inject(TICKET_IMPRESSION_REPOSITORY)
     private readonly ticketImpressionRepository: TicketImpressionRepository,
+    private readonly customersService: CustomersService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    // Validar si el cliente está baneado
+    if (createOrderDto.customerId) {
+      const isBanned = await this.customersService.isCustomerBanned(
+        createOrderDto.customerId,
+      );
+      if (isBanned) {
+        throw new BadRequestException(
+          'No se puede crear un pedido para un cliente baneado',
+        );
+      }
+    }
+
     const order = await this.orderRepository.create({
       userId: createOrderDto.userId,
       tableId: createOrderDto.tableId || null,

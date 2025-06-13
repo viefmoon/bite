@@ -99,6 +99,7 @@ export class CustomersService extends BaseCrudService<
       email: updateCustomerDto.email,
       birthDate: updateCustomerDto.birthDate,
       isActive: updateCustomerDto.isActive,
+      isBanned: updateCustomerDto.isBanned,
       fullChatHistory: updateCustomerDto.fullChatHistory,
       relevantChatHistory: updateCustomerDto.relevantChatHistory,
       lastInteraction: updateCustomerDto.lastInteraction,
@@ -279,5 +280,67 @@ export class CustomersService extends BaseCrudService<
       isActive: true,
       lastInteractionAfter: dateThreshold,
     });
+  }
+
+  // --- Métodos de Baneo ---
+
+  async banCustomer(customerId: string, banReason: string): Promise<Customer> {
+    const customer = await this.findOne(customerId);
+
+    if (customer.isBanned) {
+      throw new BadRequestException('El cliente ya está baneado');
+    }
+
+    // Usar super.update para campos incluidos en UpdateCustomerDto
+    await super.update(customerId, {
+      isBanned: true,
+      isActive: false, // Desactivar al cliente cuando se banea
+    });
+
+    // Actualizar campos adicionales directamente con el ORM repository
+    // @ts-ignore - Acceder al repositorio ORM interno para campos específicos
+    await this.repo.ormRepo.update(customerId, {
+      bannedAt: new Date(),
+      banReason,
+    });
+
+    return this.findOne(customerId);
+  }
+
+  async unbanCustomer(customerId: string): Promise<Customer> {
+    const customer = await this.findOne(customerId);
+
+    if (!customer.isBanned) {
+      throw new BadRequestException('El cliente no está baneado');
+    }
+
+    // Usar super.update para campos incluidos en UpdateCustomerDto
+    await super.update(customerId, {
+      isBanned: false,
+      isActive: true, // Reactivar al cliente cuando se desbanea
+    });
+
+    // Actualizar campos adicionales directamente con el ORM repository
+    // @ts-ignore - Acceder al repositorio ORM interno para campos específicos
+    await this.repo.ormRepo.update(customerId, {
+      bannedAt: null,
+      banReason: null,
+    });
+
+    return this.findOne(customerId);
+  }
+
+  async getBannedCustomers(): Promise<Customer[]> {
+    return this.repo.findBannedCustomers();
+  }
+
+  async isCustomerBanned(customerId: string): Promise<boolean> {
+    try {
+      const customer = await this.findOne(customerId);
+      return customer.isBanned;
+    } catch (error) {
+      // Si el cliente no existe, considerarlo como no baneado
+      return false;
+    }
   }
 }

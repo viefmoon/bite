@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
   Modal,
-  TouchableOpacity,
-  Platform,
   Alert,
 } from 'react-native';
 import {
@@ -12,12 +10,10 @@ import {
   Text,
   Button,
   IconButton,
-  ActivityIndicator,
   TextInput,
   Chip,
+  HelperText,
 } from 'react-native-paper';
-import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
-import * as Location from 'expo-location';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 
 interface LocationPickerProps {
@@ -35,13 +31,6 @@ interface LocationPickerProps {
   address?: string;
 }
 
-const MEXICO_CITY_REGION = {
-  latitude: 19.4326,
-  longitude: -99.1332,
-  latitudeDelta: 0.0922,
-  longitudeDelta: 0.0421,
-};
-
 export default function LocationPicker({
   visible,
   onDismiss,
@@ -51,144 +40,60 @@ export default function LocationPicker({
 }: LocationPickerProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  const mapRef = useRef<MapView>(null);
 
-  const [region, setRegion] = useState<Region>(
-    initialLocation
-      ? {
-          ...initialLocation,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }
-      : MEXICO_CITY_REGION,
+  const [latitude, setLatitude] = useState(
+    initialLocation?.latitude?.toString() || ''
   );
-
-  const [selectedLocation, setSelectedLocation] = useState(
-    initialLocation || null,
+  const [longitude, setLongitude] = useState(
+    initialLocation?.longitude?.toString() || ''
   );
   const [geocodedAddress, setGeocodedAddress] = useState(address || '');
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [hasLocationPermission, setHasLocationPermission] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [latitudeError, setLatitudeError] = useState('');
+  const [longitudeError, setLongitudeError] = useState('');
 
-  useEffect(() => {
-    if (visible) {
-      checkLocationPermission();
-    }
-  }, [visible]);
+  const validateCoordinates = () => {
+    let isValid = true;
+    setLatitudeError('');
+    setLongitudeError('');
 
-  const checkLocationPermission = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    setHasLocationPermission(status === 'granted');
-  };
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
 
-  const getCurrentLocation = async () => {
-    if (!hasLocationPermission) {
-      Alert.alert(
-        'Permisos requeridos',
-        'Se necesitan permisos de ubicación para usar esta función.',
-      );
-      return;
+    if (!latitude || isNaN(lat)) {
+      setLatitudeError('Latitud inválida');
+      isValid = false;
+    } else if (lat < -90 || lat > 90) {
+      setLatitudeError('La latitud debe estar entre -90 y 90');
+      isValid = false;
     }
 
-    setIsLoadingLocation(true);
-    try {
-      const location = await Location.getCurrentPositionAsync({});
-      const newRegion = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      };
-      setRegion(newRegion);
-      setSelectedLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-      mapRef.current?.animateToRegion(newRegion, 500);
-      
-      // Geocodificar la ubicación actual
-      await reverseGeocode(
-        location.coords.latitude,
-        location.coords.longitude,
-      );
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo obtener la ubicación actual');
-    } finally {
-      setIsLoadingLocation(false);
+    if (!longitude || isNaN(lng)) {
+      setLongitudeError('Longitud inválida');
+      isValid = false;
+    } else if (lng < -180 || lng > 180) {
+      setLongitudeError('La longitud debe estar entre -180 y 180');
+      isValid = false;
     }
-  };
 
-  const handleMapPress = async (event: any) => {
-    const { coordinate } = event.nativeEvent;
-    setSelectedLocation(coordinate);
-    await reverseGeocode(coordinate.latitude, coordinate.longitude);
-  };
-
-  const reverseGeocode = async (latitude: number, longitude: number) => {
-    setIsGeocoding(true);
-    try {
-      const [result] = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-      
-      if (result) {
-        const addressParts = [];
-        
-        if (result.streetNumber) addressParts.push(result.streetNumber);
-        if (result.street) addressParts.push(result.street);
-        if (result.district) addressParts.push(result.district);
-        if (result.city) addressParts.push(result.city);
-        if (result.region) addressParts.push(result.region);
-        if (result.postalCode) addressParts.push(result.postalCode);
-        if (result.country) addressParts.push(result.country);
-        
-        const formattedAddress = addressParts.filter(Boolean).join(', ');
-        setGeocodedAddress(formattedAddress);
-      }
-    } catch (error) {
-      console.error('Error en geocodificación:', error);
-      setGeocodedAddress('');
-    } finally {
-      setIsGeocoding(false);
-    }
-  };
-
-  const searchByAddress = async () => {
-    if (!geocodedAddress.trim()) return;
-
-    setIsGeocoding(true);
-    try {
-      const results = await Location.geocodeAsync(geocodedAddress);
-      if (results.length > 0) {
-        const { latitude, longitude } = results[0];
-        const newRegion = {
-          latitude,
-          longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        };
-        setRegion(newRegion);
-        setSelectedLocation({ latitude, longitude });
-        mapRef.current?.animateToRegion(newRegion, 500);
-      } else {
-        Alert.alert('No encontrado', 'No se pudo encontrar la dirección');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Error al buscar la dirección');
-    } finally {
-      setIsGeocoding(false);
-    }
+    return isValid;
   };
 
   const handleConfirm = () => {
-    if (selectedLocation) {
+    if (validateCoordinates()) {
       onConfirm({
-        ...selectedLocation,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
         geocodedAddress: geocodedAddress || undefined,
       });
     }
+  };
+
+  const handleUseCurrentLocation = () => {
+    Alert.alert(
+      'Función no disponible',
+      'La función de mapas está temporalmente deshabilitada. Por favor, ingrese las coordenadas manualmente.',
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -196,119 +101,114 @@ export default function LocationPicker({
       visible={visible}
       animationType="slide"
       onRequestClose={onDismiss}
-      presentationStyle="fullScreen"
+      transparent
     >
-      <View style={styles.container}>
-        <Surface style={styles.header} elevation={2}>
-          <View style={styles.headerContent}>
+      <View style={styles.modalOverlay}>
+        <Surface style={styles.modalContent} elevation={4}>
+          <View style={styles.header}>
+            <Text variant="titleLarge" style={styles.title}>
+              Ubicación
+            </Text>
             <IconButton
               icon="close"
               size={24}
               onPress={onDismiss}
             />
-            <Text variant="titleLarge" style={styles.title}>
-              Seleccionar ubicación
+          </View>
+
+          <View style={styles.content}>
+            <Text variant="bodyMedium" style={styles.helperText}>
+              Ingrese las coordenadas de la ubicación o use el botón para obtener su ubicación actual.
             </Text>
-            <View style={{ width: 48 }} />
+
+            <View style={styles.coordinatesRow}>
+              <View style={styles.coordinateInput}>
+                <TextInput
+                  mode="outlined"
+                  label="Latitud"
+                  value={latitude}
+                  onChangeText={setLatitude}
+                  keyboardType="numeric"
+                  placeholder="19.4326"
+                  error={!!latitudeError}
+                />
+                {latitudeError ? (
+                  <HelperText type="error" visible={!!latitudeError}>
+                    {latitudeError}
+                  </HelperText>
+                ) : null}
+              </View>
+
+              <View style={styles.coordinateInput}>
+                <TextInput
+                  mode="outlined"
+                  label="Longitud"
+                  value={longitude}
+                  onChangeText={setLongitude}
+                  keyboardType="numeric"
+                  placeholder="-99.1332"
+                  error={!!longitudeError}
+                />
+                {longitudeError ? (
+                  <HelperText type="error" visible={!!longitudeError}>
+                    {longitudeError}
+                  </HelperText>
+                ) : null}
+              </View>
+            </View>
+
+            <Button
+              mode="outlined"
+              onPress={handleUseCurrentLocation}
+              icon="crosshairs-gps"
+              style={styles.locationButton}
+            >
+              Usar mi ubicación actual
+            </Button>
+
+            <TextInput
+              mode="outlined"
+              label="Dirección (opcional)"
+              value={geocodedAddress}
+              onChangeText={setGeocodedAddress}
+              multiline
+              numberOfLines={2}
+              placeholder="Calle, número, colonia, ciudad..."
+              style={styles.addressInput}
+            />
+
+            {latitude && longitude && !latitudeError && !longitudeError && (
+              <View style={styles.previewContainer}>
+                <Text variant="labelMedium" style={styles.previewLabel}>
+                  Vista previa de coordenadas:
+                </Text>
+                <View style={styles.chipsContainer}>
+                  <Chip icon="map-marker" compact mode="flat">
+                    {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
+                  </Chip>
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.actions}>
+            <Button
+              mode="text"
+              onPress={onDismiss}
+              style={styles.button}
+            >
+              Cancelar
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleConfirm}
+              disabled={!latitude || !longitude}
+              style={styles.button}
+            >
+              Confirmar
+            </Button>
           </View>
         </Surface>
-
-        <View style={styles.searchContainer}>
-          <TextInput
-            mode="outlined"
-            placeholder="Buscar dirección..."
-            value={geocodedAddress}
-            onChangeText={setGeocodedAddress}
-            onSubmitEditing={searchByAddress}
-            right={
-              <TextInput.Icon
-                icon={isGeocoding ? 'loading' : 'magnify'}
-                onPress={searchByAddress}
-                disabled={isGeocoding}
-              />
-            }
-            style={styles.searchInput}
-          />
-        </View>
-
-        <View style={styles.mapContainer}>
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            provider={PROVIDER_DEFAULT}
-            region={region}
-            onRegionChangeComplete={setRegion}
-            onPress={handleMapPress}
-            showsUserLocation={hasLocationPermission}
-            showsMyLocationButton={false}
-          >
-            {selectedLocation && (
-              <Marker
-                coordinate={selectedLocation}
-                title="Ubicación seleccionada"
-                description={geocodedAddress}
-              />
-            )}
-          </MapView>
-
-          <TouchableOpacity
-            style={styles.currentLocationButton}
-            onPress={getCurrentLocation}
-            disabled={isLoadingLocation}
-          >
-            <Surface style={styles.floatingButton} elevation={2}>
-              {isLoadingLocation ? (
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-              ) : (
-                <IconButton
-                  icon="crosshairs-gps"
-                  size={24}
-                  iconColor={theme.colors.primary}
-                />
-              )}
-            </Surface>
-          </TouchableOpacity>
-        </View>
-
-        {selectedLocation && (
-          <Surface style={styles.infoContainer} elevation={1}>
-            <View style={styles.coordinatesContainer}>
-              <Chip icon="map-marker" compact mode="flat">
-                Lat: {selectedLocation.latitude.toFixed(6)}
-              </Chip>
-              <Chip icon="map-marker" compact mode="flat">
-                Lng: {selectedLocation.longitude.toFixed(6)}
-              </Chip>
-            </View>
-            {geocodedAddress && (
-              <Text
-                variant="bodyMedium"
-                numberOfLines={2}
-                style={styles.addressText}
-              >
-                {geocodedAddress}
-              </Text>
-            )}
-          </Surface>
-        )}
-
-        <View style={styles.actions}>
-          <Button
-            mode="text"
-            onPress={onDismiss}
-            style={styles.button}
-          >
-            Cancelar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleConfirm}
-            disabled={!selectedLocation}
-            style={styles.button}
-          >
-            Confirmar ubicación
-          </Button>
-        </View>
       </View>
     </Modal>
   );
@@ -316,72 +216,74 @@ export default function LocationPicker({
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: {
+    modalOverlay: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.l,
+    },
+    modalContent: {
+      width: '100%',
+      maxWidth: 400,
+      borderRadius: theme.roundness * 2,
+      backgroundColor: theme.colors.surface,
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      paddingTop: Platform.OS === 'ios' ? 44 : 0,
-    },
-    headerContent: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: 56,
+      paddingLeft: theme.spacing.l,
+      paddingRight: theme.spacing.s,
+      paddingVertical: theme.spacing.s,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
     },
     title: {
       fontWeight: '600',
     },
-    searchContainer: {
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surface,
+    content: {
+      padding: theme.spacing.l,
     },
-    searchInput: {
-      backgroundColor: theme.colors.background,
+    helperText: {
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: theme.spacing.m,
     },
-    mapContainer: {
-      flex: 1,
-      position: 'relative',
-    },
-    map: {
-      flex: 1,
-    },
-    currentLocationButton: {
-      position: 'absolute',
-      bottom: theme.spacing.l,
-      right: theme.spacing.l,
-    },
-    floatingButton: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.surface,
-    },
-    infoContainer: {
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surface,
-    },
-    coordinatesContainer: {
+    coordinatesRow: {
       flexDirection: 'row',
-      gap: theme.spacing.s,
+      gap: theme.spacing.m,
+      marginBottom: theme.spacing.m,
+    },
+    coordinateInput: {
+      flex: 1,
+    },
+    locationButton: {
+      marginBottom: theme.spacing.m,
+    },
+    addressInput: {
+      marginBottom: theme.spacing.m,
+    },
+    previewContainer: {
+      marginTop: theme.spacing.s,
+    },
+    previewLabel: {
+      color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.s,
     },
-    addressText: {
-      color: theme.colors.onSurfaceVariant,
+    chipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.s,
     },
     actions: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
       padding: theme.spacing.m,
       gap: theme.spacing.s,
-      backgroundColor: theme.colors.surface,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
     },
     button: {
-      minWidth: 120,
+      minWidth: 100,
     },
   });

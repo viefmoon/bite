@@ -12,6 +12,7 @@ import { ProductVariantsModule } from '../product-variants/product-variants.modu
 import { ProductModifiersModule } from '../product-modifiers/product-modifiers.module';
 import { RelationalOrderPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { CommonModule } from '../common/common.module';
+import { CustomersModule } from '../customers/customers.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CommonModule } from '../common/common.module';
     forwardRef(() => ProductsModule),
     forwardRef(() => ProductVariantsModule),
     forwardRef(() => ProductModifiersModule),
+    CustomersModule,
   ],
   controllers: [OrdersController, TicketImpressionsController],
   providers: [OrdersService, OrderSubscriber, OrderChangeLogService],
