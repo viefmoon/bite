@@ -15,12 +15,36 @@ import { AiModule } from './modules/ai/ai.module';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
-      logging: process.env.NODE_ENV === 'development',
+    TypeOrmModule.forRootAsync({
+      useFactory: () => {
+        const databaseUrl = process.env.DATABASE_URL;
+        
+        if (!databaseUrl) {
+          console.warn('DATABASE_URL not provided, using in-memory SQLite database');
+          return {
+            type: 'sqlite',
+            database: ':memory:',
+            autoLoadEntities: true,
+            synchronize: true,
+            logging: false,
+          };
+        }
+        
+        return {
+          type: 'postgres',
+          url: databaseUrl,
+          autoLoadEntities: true,
+          synchronize: process.env.NODE_ENV !== 'production',
+          logging: process.env.NODE_ENV === 'development',
+          ssl: process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false
+          } : false,
+          extra: {
+            max: 10,
+            connectionTimeoutMillis: 10000,
+          },
+        };
+      },
     }),
     WebhookModule,
     OrdersModule,

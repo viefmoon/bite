@@ -19,18 +19,15 @@ fi
 echo -e "\n=== Checking dist structure ==="
 ls -la dist/
 
-# Buscar main.js con más detalle
-echo -e "\n=== Looking for main.js ==="
-find dist -name "main.js" -type f -ls
+# La ruta correcta generada por NestJS
+MAIN_FILE="dist/cloud-service/src/main.js"
 
-MAIN_FILE=$(find dist -name "main.js" -type f | head -1)
-
-if [ -n "$MAIN_FILE" ]; then
+if [ -f "$MAIN_FILE" ]; then
   echo -e "\n=== Starting application from: $MAIN_FILE ==="
   # Ejecutar con manejo de errores mejorado
   exec node "$MAIN_FILE"
 else
-  echo "ERROR: main.js not found in dist!"
+  echo "ERROR: main.js not found at expected location: $MAIN_FILE"
   echo "All .js files found:"
   find dist -type f -name "*.js"
   exit 1
