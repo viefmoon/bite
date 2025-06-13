@@ -5,7 +5,12 @@ import {
   IsOptional,
   IsString,
   MaxLength,
-  IsUUID, // Asegurar que IsUUID esté importado
+  IsUUID,
+  IsNumber,
+  IsLatitude,
+  IsLongitude,
+  Min,
+  Max,
 } from 'class-validator';
 
 export class CreateAddressDto {
@@ -107,6 +112,41 @@ export class CreateAddressDto {
   @IsString()
   @MaxLength(500)
   references?: string;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 19.4326,
+    description: 'Latitud de la ubicación',
+    minimum: -90,
+    maximum: 90,
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsLatitude()
+  latitude?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: -99.1332,
+    description: 'Longitud de la ubicación',
+    minimum: -180,
+    maximum: 180,
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsLongitude()
+  longitude?: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    example:
+      'Calle Falsa 123, Colonia Centro, 12345 Ciudad Ejemplo, Estado Ejemplo, México',
+    description: 'Dirección completa generada por geocodificación',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  geocodedAddress?: string;
 
   @ApiPropertyOptional({
     type: Boolean,

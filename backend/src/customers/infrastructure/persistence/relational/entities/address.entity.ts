@@ -58,6 +58,15 @@ export class AddressEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   references: string | null;
 
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  latitude: number | null;
+
+  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  longitude: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  geocodedAddress: string | null;
+
   @Column({ type: 'boolean', default: false })
   isDefault: boolean;
 

@@ -23,6 +23,12 @@ export class Address {
 
   references?: string;
 
+  latitude?: number;
+
+  longitude?: number;
+
+  geocodedAddress?: string;
+
   isDefault: boolean;
 
   customer: Customer;

@@ -22,6 +22,9 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     domain.zipCode = entity.zipCode ?? undefined;
     domain.country = entity.country ?? undefined;
     domain.references = entity.references ?? undefined;
+    domain.latitude = entity.latitude ?? undefined;
+    domain.longitude = entity.longitude ?? undefined;
+    domain.geocodedAddress = entity.geocodedAddress ?? undefined;
     domain.isDefault = entity.isDefault;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
@@ -46,6 +49,9 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     entity.zipCode = domain.zipCode ?? null;
     entity.country = domain.country ?? null;
     entity.references = domain.references ?? null;
+    entity.latitude = domain.latitude ?? null;
+    entity.longitude = domain.longitude ?? null;
+    entity.geocodedAddress = domain.geocodedAddress ?? null;
     entity.isDefault = domain.isDefault;
     return entity;
   }

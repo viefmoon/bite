@@ -10,6 +10,9 @@ export const addressSchema = z.object({
   state: z.string().min(1, 'El estado es requerido'),
   zipCode: z.string().regex(/^\d{5}$/, 'El código postal debe tener 5 dígitos'),
   reference: z.string().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  geocodedAddress: z.string().optional(),
   isDefault: z.boolean().optional(),
 });
 

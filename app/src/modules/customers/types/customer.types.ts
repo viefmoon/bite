@@ -14,6 +14,9 @@ export interface Address {
   state: string;
   zipCode: string;
   reference?: string;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
   isDefault: boolean;
   customerId: string;
   createdAt: Date;
@@ -71,6 +74,9 @@ export interface CreateAddressDto {
   state: string;
   zipCode: string;
   reference?: string;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
   isDefault?: boolean;
 }
 
@@ -83,6 +89,9 @@ export interface UpdateAddressDto {
   state?: string;
   zipCode?: string;
   reference?: string;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
   isDefault?: boolean;
 }
 
