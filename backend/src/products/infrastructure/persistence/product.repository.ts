@@ -20,4 +20,10 @@ export interface ProductRepository {
     productId: string,
     preparationScreenId: string | null,
   ): Promise<void>;
+  findOneWithPizzaIngredients(id: string): Promise<Product | null>;
+  updatePizzaIngredients(
+    productId: string,
+    pizzaIngredientIds: string[],
+  ): Promise<void>;
+  findAllPizzas(): Promise<Product[]>;
 }

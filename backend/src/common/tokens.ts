@@ -37,3 +37,6 @@ export const ORDER_HISTORY_REPOSITORY = Symbol('ORDER_HISTORY_REPOSITORY');
 
 // Adjustments Module Tokens
 export const ADJUSTMENT_REPOSITORY = Symbol('ADJUSTMENT_REPOSITORY');
+
+// Pizza Ingredients Module Tokens
+export const PIZZA_INGREDIENT_REPOSITORY = Symbol('PIZZA_INGREDIENT_REPOSITORY');

@@ -58,4 +58,15 @@ export class CreatePizzaIngredientDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'Sort order for displaying the ingredient',
+    example: 0,
+    default: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 }

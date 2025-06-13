@@ -39,28 +39,34 @@ export class PizzaIngredientRelationalRepository
       isActive?: boolean;
     } | null;
   }): Promise<PizzaIngredient[]> {
-    const where: FindOptionsWhere<PizzaIngredientEntity> = {};
+    const queryBuilder = this.pizzaIngredientRepository
+      .createQueryBuilder('ingredient')
+      .leftJoinAndSelect('ingredient.products', 'product');
 
     if (filterOptions?.productId) {
-      where.productId = filterOptions.productId;
+      queryBuilder.andWhere('product.id = :productId', {
+        productId: filterOptions.productId,
+      });
     }
 
     if (filterOptions?.search) {
-      where.name = ILike(`%${filterOptions.search}%`);
+      queryBuilder.andWhere('ingredient.name ILIKE :search', {
+        search: `%${filterOptions.search}%`,
+      });
     }
 
     if (filterOptions?.isActive !== undefined) {
-      where.isActive = filterOptions.isActive;
+      queryBuilder.andWhere('ingredient.isActive = :isActive', {
+        isActive: filterOptions.isActive,
+      });
     }
 
-    const entities = await this.pizzaIngredientRepository.find({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      where,
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const entities = await queryBuilder
+      .skip((paginationOptions.page - 1) * paginationOptions.limit)
+      .take(paginationOptions.limit)
+      .orderBy('ingredient.sortOrder', 'ASC')
+      .addOrderBy('ingredient.name', 'ASC')
+      .getMany();
 
     return entities.map((entity) => PizzaIngredientMapper.toDomain(entity));
   }
@@ -68,16 +74,21 @@ export class PizzaIngredientRelationalRepository
   async findById(id: string): Promise<PizzaIngredient | null> {
     const entity = await this.pizzaIngredientRepository.findOne({
       where: { id },
+      relations: ['products'],
     });
 
     return entity ? PizzaIngredientMapper.toDomain(entity) : null;
   }
 
   async findByProductId(productId: string): Promise<PizzaIngredient[]> {
-    const entities = await this.pizzaIngredientRepository.find({
-      where: { productId, isActive: true },
-      order: { name: 'ASC' },
-    });
+    const entities = await this.pizzaIngredientRepository
+      .createQueryBuilder('ingredient')
+      .leftJoinAndSelect('ingredient.products', 'product')
+      .where('product.id = :productId', { productId })
+      .andWhere('ingredient.isActive = :isActive', { isActive: true })
+      .orderBy('ingredient.sortOrder', 'ASC')
+      .addOrderBy('ingredient.name', 'ASC')
+      .getMany();
 
     return entities.map((entity) => PizzaIngredientMapper.toDomain(entity));
   }

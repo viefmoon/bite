@@ -3,8 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -24,21 +23,17 @@ export class PizzaIngredientEntity extends EntityRelationalHelper {
   @Column({ name: 'ingredient_value', type: 'int', default: 1 })
   ingredientValue: number;
 
-  @Column({ name: 'product_id', type: 'uuid', nullable: true })
-  productId: string | null;
-
   @Column({ type: 'text', nullable: true })
   ingredients: string | null;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => ProductEntity, (product) => product.pizzaIngredients, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
-  @JoinColumn({ name: 'product_id' })
-  product: ProductEntity | null;
+  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  sortOrder: number;
+
+  @ManyToMany(() => ProductEntity, (product) => product.pizzaIngredients)
+  products: ProductEntity[];
 
   // Importación pendiente de SelectedPizzaIngredientEntity
   // @OneToMany(() => SelectedPizzaIngredientEntity, (selected) => selected.pizzaIngredient)

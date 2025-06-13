@@ -5,12 +5,14 @@ import { RelationalProductPersistenceModule } from './infrastructure/persistence
 import { ProductVariantsModule } from '../product-variants/product-variants.module';
 import { ModifierGroupsModule } from '../modifier-groups/modifier-groups.module';
 import { RelationalPreparationScreenPersistenceModule } from '../preparation-screens/infrastructure/persistence/relational/relational-persistence.module'; // Importar el módulo faltante
+import { RelationalPizzaIngredientPersistenceModule } from '../pizza-ingredients/infrastructure/persistence/relational/relational-persistence.module';
 @Module({
   imports: [
     RelationalProductPersistenceModule,
     ProductVariantsModule,
     ModifierGroupsModule,
     RelationalPreparationScreenPersistenceModule,
+    RelationalPizzaIngredientPersistenceModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService],

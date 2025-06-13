@@ -5,6 +5,7 @@ export interface PizzaIngredient {
   productId?: string | null;
   ingredients?: string;
   isActive: boolean;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -15,6 +16,7 @@ export interface CreatePizzaIngredientDto {
   ingredientValue: number;
   ingredients?: string;
   isActive?: boolean;
+  sortOrder?: number;
 }
 
 export interface UpdatePizzaIngredientDto {
@@ -22,6 +24,7 @@ export interface UpdatePizzaIngredientDto {
   ingredientValue?: number;
   ingredients?: string;
   isActive?: boolean;
+  sortOrder?: number;
 }
 
 export interface FindAllPizzaIngredientsQuery {

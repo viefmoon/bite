@@ -1,11 +1,12 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { Portal } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Portal, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 import {
   usePizzaIngredients,
@@ -27,6 +28,7 @@ import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
+import AssociatePizzaIngredientsModal from '../components/AssociatePizzaIngredientsModal';
 
 function PizzaIngredientsScreen(): JSX.Element {
   const theme = useAppTheme();
@@ -45,6 +47,9 @@ function PizzaIngredientsScreen(): JSX.Element {
   const [selectedIngredient, setSelectedIngredient] =
     useState<PizzaIngredient | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [associateModalVisible, setAssociateModalVisible] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const debouncedSetSearch = useCallback(
     debounce((query: string) => setDebouncedSearchQuery(query), 300),
@@ -121,7 +126,7 @@ function PizzaIngredientsScreen(): JSX.Element {
     return (pizzaIngredientsResponse?.data ?? []).map(
       (ingredient: PizzaIngredient) => ({
         ...ingredient,
-        _displayDescription: `Valor: ${ingredient.ingredientValue}`,
+        _displayDescription: `Valor: ${ingredient.ingredientValue} | Orden: ${ingredient.sortOrder}`,
       }),
     );
   }, [pizzaIngredientsResponse]);
@@ -172,35 +177,31 @@ function PizzaIngredientsScreen(): JSX.Element {
 
   const handleDelete = useCallback(
     (id: string) => {
-      Alert.alert(
-        'Confirmar Eliminación',
-        '¿Estás seguro de que quieres eliminar este ingrediente? Esta acción no se puede deshacer.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Eliminar',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteIngredient(id);
-                showSnackbar({
-                  message: 'Ingrediente eliminado con éxito',
-                  type: 'success',
-                });
-                setDetailModalVisible(false);
-              } catch (error) {
-                showSnackbar({
-                  message: 'Error al eliminar el ingrediente',
-                  type: 'error',
-                });
-              }
-            },
-          },
-        ],
-      );
+      setItemToDelete(id);
+      setShowDeleteConfirmation(true);
     },
-    [deleteIngredient, showSnackbar],
+    [],
   );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      await deleteIngredient(itemToDelete);
+      showSnackbar({
+        message: 'Ingrediente eliminado con éxito',
+        type: 'success',
+      });
+      setDetailModalVisible(false);
+      setShowDeleteConfirmation(false);
+      setItemToDelete(null);
+    } catch (error) {
+      showSnackbar({
+        message: 'Error al eliminar el ingrediente',
+        type: 'error',
+      });
+    }
+  }, [deleteIngredient, showSnackbar, itemToDelete]);
 
   const formFieldsConfig: FormFieldConfig<PizzaIngredientFormInputs>[] =
     useMemo(
@@ -229,6 +230,14 @@ function PizzaIngredientsScreen(): JSX.Element {
           required: false,
         },
         {
+          name: 'sortOrder',
+          label: 'Orden de visualización',
+          type: 'number',
+          placeholder: '0',
+          defaultValue: 0,
+          required: false,
+        },
+        {
           name: 'isActive',
           label: 'Estado',
           type: 'switch',
@@ -246,6 +255,7 @@ function PizzaIngredientsScreen(): JSX.Element {
         ingredientValue: editingItem.ingredientValue,
         ingredients: editingItem.ingredients || '',
         isActive: editingItem.isActive,
+        sortOrder: editingItem.sortOrder || 0,
       };
     }
     return {
@@ -253,6 +263,7 @@ function PizzaIngredientsScreen(): JSX.Element {
       ingredientValue: 1,
       ingredients: '',
       isActive: true,
+      sortOrder: 0,
     };
   }, [editingItem]);
 
@@ -293,6 +304,15 @@ function PizzaIngredientsScreen(): JSX.Element {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Ingredientes de Pizza',
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', marginRight: 8 }}>
+          <IconButton
+            icon="link-variant"
+            size={24}
+            onPress={() => setAssociateModalVisible(true)}
+          />
+        </View>
+      ),
     });
   }, [navigation]);
 
@@ -353,7 +373,35 @@ function PizzaIngredientsScreen(): JSX.Element {
               label: 'Valor',
               value: selectedIngredient?.ingredientValue?.toString() || 'N/A',
             },
+            {
+              label: 'Orden',
+              value: selectedIngredient?.sortOrder?.toString() || '0',
+            },
           ]}
+        />
+
+        <AssociatePizzaIngredientsModal
+          visible={associateModalVisible}
+          onDismiss={() => setAssociateModalVisible(false)}
+          pizzaIngredients={pizzaIngredients}
+        />
+
+        <ConfirmationModal
+          visible={showDeleteConfirmation}
+          title="Confirmar Eliminación"
+          message="¿Estás seguro de que quieres eliminar este ingrediente? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmButtonColor={theme.colors.error}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setShowDeleteConfirmation(false);
+            setItemToDelete(null);
+          }}
+          onDismiss={() => {
+            setShowDeleteConfirmation(false);
+            setItemToDelete(null);
+          }}
         />
       </Portal>
     </SafeAreaView>

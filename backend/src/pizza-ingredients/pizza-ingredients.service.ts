@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { PizzaIngredient } from './domain/pizza-ingredient';
 import { CreatePizzaIngredientDto } from './dto/create-pizza-ingredient.dto';
 import { UpdatePizzaIngredientDto } from './dto/update-pizza-ingredient.dto';
 import { FindAllPizzaIngredientsDto } from './dto/find-all-pizza-ingredients.dto';
 import { PizzaIngredientRepository } from './infrastructure/persistence/pizza-ingredient.repository';
+import { PIZZA_INGREDIENT_REPOSITORY } from '../common/tokens';
 
 @Injectable()
 export class PizzaIngredientsService {
   constructor(
+    @Inject(PIZZA_INGREDIENT_REPOSITORY)
     private readonly pizzaIngredientRepository: PizzaIngredientRepository,
   ) {}
 
@@ -19,6 +21,7 @@ export class PizzaIngredientsService {
       ...createPizzaIngredientDto,
       ingredientValue: createPizzaIngredientDto.ingredientValue ?? 1,
       isActive: createPizzaIngredientDto.isActive ?? true,
+      sortOrder: createPizzaIngredientDto.sortOrder ?? 0,
     };
 
     return this.pizzaIngredientRepository.create(clonedPayload);
@@ -74,5 +77,14 @@ export class PizzaIngredientsService {
   async remove(id: string): Promise<void> {
     const pizzaIngredient = await this.findOne(id);
     await this.pizzaIngredientRepository.softDelete(pizzaIngredient.id);
+  }
+
+  async assignToProducts(
+    pizzaIngredientId: string,
+    productIds: string[],
+  ): Promise<PizzaIngredient> {
+    // Este método se implementará cuando se necesite asignar ingredientes a productos
+    // Por ahora, la asignación se maneja desde el lado del producto
+    return this.findOne(pizzaIngredientId);
   }
 }

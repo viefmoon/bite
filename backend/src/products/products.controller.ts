@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
   UseGuards,
   Query,
   HttpStatus,
@@ -20,6 +21,8 @@ import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
+import { ManagePizzaIngredientsDto } from './dto/manage-pizza-ingredients.dto';
+import { BulkUpdatePizzaIngredientsDto } from './dto/bulk-update-pizza-ingredients.dto';
 // AssignModifierGroupsDto ya no se usa directamente en endpoints separados
 
 @ApiTags('Productos')
@@ -51,6 +54,15 @@ export class ProductsController {
     return this.productsService.findAll(findAllProductsDto);
   }
 
+  @Get('pizzas/all')
+  @ApiOperation({
+    summary: 'Obtener todos los productos tipo pizza',
+  })
+  @HttpCode(HttpStatus.OK)
+  findAllPizzas() {
+    return this.productsService.findAllPizzas();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener un producto por ID',
@@ -58,6 +70,18 @@ export class ProductsController {
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
+  }
+
+  @Put('pizzas/ingredients/bulk')
+  @ApiOperation({
+    summary: 'Actualizar ingredientes de múltiples pizzas en masa',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  bulkUpdatePizzaIngredients(@Body() data: BulkUpdatePizzaIngredientsDto) {
+    return this.productsService.bulkUpdatePizzaIngredients(data.updates);
   }
 
   @Patch(':id')
@@ -82,6 +106,33 @@ export class ProductsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
+  }
+
+  @Get(':id/pizza-ingredients')
+  @ApiOperation({
+    summary: 'Obtener los pizza ingredients de un producto',
+  })
+  @HttpCode(HttpStatus.OK)
+  getPizzaIngredients(@Param('id') id: string) {
+    return this.productsService.getPizzaIngredients(id);
+  }
+
+  @Put(':id/pizza-ingredients')
+  @ApiOperation({
+    summary: 'Actualizar los pizza ingredients de un producto',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  updatePizzaIngredients(
+    @Param('id') id: string,
+    @Body() managePizzaIngredientsDto: ManagePizzaIngredientsDto,
+  ) {
+    return this.productsService.updatePizzaIngredients(
+      id,
+      managePizzaIngredientsDto.pizzaIngredientIds,
+    );
   }
   // Los endpoints específicos para modifier-groups se eliminan.
   // La asignación/actualización se maneja en POST /products y PATCH /products/:id.

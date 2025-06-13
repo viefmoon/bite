@@ -86,6 +86,30 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     [deleteMutation, entityName],
   );
 
+  // Alternative deletion methods for use with ConfirmationModal
+  const [deleteConfirmationState, setDeleteConfirmationState] = useState<{
+    visible: boolean;
+    itemId: string | null;
+  }>({
+    visible: false,
+    itemId: null,
+  });
+
+  const showDeleteConfirmation = useCallback((id: string) => {
+    setDeleteConfirmationState({ visible: true, itemId: id });
+  }, []);
+
+  const hideDeleteConfirmation = useCallback(() => {
+    setDeleteConfirmationState({ visible: false, itemId: null });
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (deleteConfirmationState.itemId) {
+      deleteMutation.mutate(deleteConfirmationState.itemId);
+      hideDeleteConfirmation();
+    }
+  }, [deleteConfirmationState.itemId, deleteMutation, hideDeleteConfirmation]);
+
   return {
     isFormModalVisible,
     isDetailModalVisible,
@@ -97,5 +121,14 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     handleOpenDetailModal,
     handleCloseModals,
     handleDeleteItem,
+    // New properties for ConfirmationModal integration
+    deleteConfirmation: {
+      visible: deleteConfirmationState.visible,
+      title: 'Confirmar Eliminación',
+      message: `¿Estás seguro de que deseas eliminar este ${entityName.toLowerCase()}?`,
+      onConfirm: confirmDelete,
+      onCancel: hideDeleteConfirmation,
+      show: showDeleteConfirmation,
+    },
   };
 }

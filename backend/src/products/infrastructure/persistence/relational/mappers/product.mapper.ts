@@ -6,6 +6,8 @@ import { FileMapper } from '../../../../../files/infrastructure/persistence/rela
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
 import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
+import { PizzaIngredientMapper } from '../../../../../pizza-ingredients/infrastructure/persistence/relational/mappers/pizza-ingredient.mapper';
+import { PizzaIngredient } from '../../../../../pizza-ingredients/domain/pizza-ingredient';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import {
@@ -63,6 +65,12 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     domain.preparationScreen = entity.preparationScreen
       ? this.preparationScreenMapper.toDomain(entity.preparationScreen)
       : null;
+    
+    if (entity.pizzaIngredients) {
+      domain.pizzaIngredients = entity.pizzaIngredients.map((ingredient) =>
+        PizzaIngredientMapper.toDomain(ingredient),
+      );
+    }
 
     return domain;
   }

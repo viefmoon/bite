@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDrawerStatus } from '@react-navigation/drawer'; // Importar hook
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Portal, IconButton } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
@@ -56,6 +57,8 @@ const CategoriesScreen: React.FC = () => {
   );
   const [activeFilter, setActiveFilter] = useState<string | number>('all');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
   const {
     data: categoriesResponse,
@@ -185,18 +188,16 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert(
-      'Confirmar Eliminación',
-      '¿Estás seguro de que quieres eliminar esta categoría? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => deleteCategoryMutation.mutate(id),
-        },
-      ],
-    );
+    setCategoryToDelete(id);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      deleteCategoryMutation.mutate(categoryToDelete);
+      setShowDeleteConfirmation(false);
+      setCategoryToDelete(null);
+    }
   };
 
   const categories = useMemo(() => {
@@ -356,6 +357,24 @@ const CategoriesScreen: React.FC = () => {
           onEdit={openEditModal as (item: any) => void}
           onDelete={handleDelete}
           isDeleting={deleteCategoryMutation.isPending}
+        />
+
+        <ConfirmationModal
+          visible={showDeleteConfirmation}
+          title="Confirmar Eliminación"
+          message="¿Estás seguro de que quieres eliminar esta categoría? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmButtonColor={theme.colors.error}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setShowDeleteConfirmation(false);
+            setCategoryToDelete(null);
+          }}
+          onDismiss={() => {
+            setShowDeleteConfirmation(false);
+            setCategoryToDelete(null);
+          }}
         />
       </Portal>
     </SafeAreaView>

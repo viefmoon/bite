@@ -220,4 +220,56 @@ export class ProductRelationalRepository implements ProductRepository {
       throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
     }
   }
+
+  async findOneWithPizzaIngredients(id: string): Promise<Product | null> {
+    const entity = await this.productRepository.findOne({
+      where: { id },
+      relations: ['pizzaIngredients'],
+    });
+
+    if (!entity) {
+      return null;
+    }
+
+    const domainResult = this.productMapper.toDomain(entity);
+    return domainResult;
+  }
+
+  async updatePizzaIngredients(
+    productId: string,
+    pizzaIngredientIds: string[],
+  ): Promise<void> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      relations: ['pizzaIngredients'],
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
+    }
+
+    // Obtener las entidades de pizza ingredients
+    const pizzaIngredients = await this.productRepository
+      .createQueryBuilder()
+      .relation(ProductEntity, 'pizzaIngredients')
+      .of(product)
+      .addAndRemove(
+        pizzaIngredientIds,
+        product.pizzaIngredients.map((pi) => pi.id),
+      );
+  }
+
+  async findAllPizzas(): Promise<Product[]> {
+    const entities = await this.productRepository.find({
+      where: { isPizza: true, isActive: true },
+      relations: ['photo', 'subcategory', 'pizzaIngredients'],
+      order: {
+        name: 'ASC',
+      },
+    });
+
+    return entities
+      .map((entity) => this.productMapper.toDomain(entity))
+      .filter((item): item is Product => item !== null);
+  }
 }

@@ -97,7 +97,18 @@ export class ProductEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'preparation_screen_id' })
   preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
 
-  @OneToMany(() => PizzaIngredientEntity, (ingredient) => ingredient.product)
+  @ManyToMany(() => PizzaIngredientEntity, (ingredient) => ingredient.products)
+  @JoinTable({
+    name: 'product_pizza_ingredient',
+    joinColumn: {
+      name: 'product_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'pizza_ingredient_id',
+      referencedColumnName: 'id',
+    },
+  })
   pizzaIngredients: PizzaIngredientEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })

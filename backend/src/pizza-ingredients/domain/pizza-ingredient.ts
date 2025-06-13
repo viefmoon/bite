@@ -2,9 +2,10 @@ export class PizzaIngredient {
   id: string;
   name: string;
   ingredientValue: number;
-  productId?: string | null;
   ingredients?: string | null;
   isActive: boolean;
+  sortOrder: number;
+  productIds?: string[]; // Array de IDs de productos relacionados
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

@@ -137,6 +137,45 @@ async function removeModifierGroups(
   return response.data;
 }
 
+async function findAllPizzas(): Promise<Product[]> {
+  const response = await apiClient.get<Product[]>(API_PATHS.PRODUCTS_PIZZAS);
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(response.data, response.status);
+  }
+  return response.data;
+}
+
+async function getPizzaIngredients(productId: string): Promise<any[]> {
+  const response = await apiClient.get<any[]>(`${API_PATHS.PRODUCTS}/${productId}/pizza-ingredients`);
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(response.data, response.status);
+  }
+  return response.data;
+}
+
+async function updatePizzaIngredients(productId: string, pizzaIngredientIds: string[]): Promise<Product> {
+  const response = await apiClient.put<Product>(
+    `${API_PATHS.PRODUCTS}/${productId}/pizza-ingredients`,
+    { pizzaIngredientIds }
+  );
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(response.data, response.status);
+  }
+  return response.data;
+}
+
+async function bulkUpdatePizzaIngredients(
+  updates: Array<{ productId: string; ingredientIds: string[] }>
+): Promise<void> {
+  const response = await apiClient.put(
+    `${API_PATHS.PRODUCTS}/pizzas/ingredients/bulk`,
+    { updates }
+  );
+  if (!response.ok) {
+    throw ApiError.fromApiResponse(response.data, response.status);
+  }
+}
+
 export const productsService = {
   findAll,
   findOne,
@@ -146,4 +185,8 @@ export const productsService = {
   assignModifierGroups,
   getModifierGroups,
   removeModifierGroups,
+  findAllPizzas,
+  getPizzaIngredients,
+  updatePizzaIngredients,
+  bulkUpdatePizzaIngredients,
 };

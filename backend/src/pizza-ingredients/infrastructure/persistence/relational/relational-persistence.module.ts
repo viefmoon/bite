@@ -3,15 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PizzaIngredientEntity } from './entities/pizza-ingredient.entity';
 import { PizzaIngredientRepository } from '../pizza-ingredient.repository';
 import { PizzaIngredientRelationalRepository } from './repositories/pizza-ingredient.repository';
+import { PIZZA_INGREDIENT_REPOSITORY } from '../../../../common/tokens';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PizzaIngredientEntity])],
   providers: [
     {
-      provide: PizzaIngredientRepository,
+      provide: PIZZA_INGREDIENT_REPOSITORY,
       useClass: PizzaIngredientRelationalRepository,
     },
   ],
-  exports: [PizzaIngredientRepository],
+  exports: [PIZZA_INGREDIENT_REPOSITORY],
 })
 export class RelationalPizzaIngredientPersistenceModule {}

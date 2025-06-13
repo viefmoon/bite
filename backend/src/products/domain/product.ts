@@ -3,6 +3,7 @@ import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
 import { PreparationScreen } from '../../preparation-screens/domain/preparation-screen';
+import { PizzaIngredient } from '../../pizza-ingredients/domain/pizza-ingredient';
 export class Product {
   id: string;
 
@@ -35,6 +36,8 @@ export class Product {
   modifierGroups: ModifierGroup[];
 
   preparationScreen: PreparationScreen | null;
+
+  pizzaIngredients?: PizzaIngredient[];
 
   createdAt: Date;
 

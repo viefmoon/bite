@@ -5,6 +5,7 @@ export const pizzaIngredientFormSchema = z.object({
   ingredientValue: z.number().min(1, 'El valor debe ser mayor a 0'),
   ingredients: z.string().optional(),
   isActive: z.boolean().default(true),
+  sortOrder: z.number().min(0).default(0),
 });
 
 export type PizzaIngredientFormInputs = z.infer<
