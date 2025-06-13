@@ -13,13 +13,18 @@ RUN npm install --verbose
 
 # Build cloud-service
 WORKDIR /app/cloud-service
-RUN npm run build
+RUN echo "=== Current directory before build ===" && pwd && ls -la
+RUN npm run build || (echo "Build failed. Package.json content:" && cat package.json && exit 1)
 
 # Verify build output
-RUN echo "=== Build output structure ===" && \
-    ls -la dist/ && \
-    echo "=== Main file location ===" && \
-    find dist -name "main.js" -type f -ls
+RUN echo "=== After build, current directory ===" && pwd && ls -la
+RUN if [ -d "dist" ]; then \
+      echo "=== dist found, searching for JS files ===" && \
+      find dist -type f -name "*.js" | head -20; \
+    else \
+      echo "=== dist not found! ===" && \
+      exit 1; \
+    fi
 
 EXPOSE 5000
 

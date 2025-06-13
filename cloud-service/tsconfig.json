@@ -20,6 +20,8 @@
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["../shared/src/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   }
 }
