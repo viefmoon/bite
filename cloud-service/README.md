@@ -2,54 +2,137 @@
 
 Servicio minimalista en la nube para recibir webhooks de WhatsApp y procesarlos con IA, reenviando todo al backend local para el procesamiento principal.
 
-## Arquitectura
+## 📋 Documentación Completa
+
+Para la guía completa de configuración y despliegue, consulta:
+**[CLOUD_SERVICE_SETUP.md](../CLOUD_SERVICE_SETUP.md)**
+
+## 🏗️ Arquitectura
 
 Este servicio actúa como un puente entre WhatsApp Business API y el backend local del restaurante:
 
-1. **Recibe webhooks** de WhatsApp
-2. **Procesa mensajes** con IA (OpenAI) como fallback
-3. **Reenvía todo** al backend local para procesamiento y almacenamiento
+```
+WhatsApp → Cloud Service (Railway) → Backend Local
+             ↓ (si falla)
+         Procesamiento IA
+```
 
-## Módulos
+### Características:
+- **Recibe webhooks** de WhatsApp Business API
+- **Procesa mensajes** con IA (OpenAI/Gemini/Anthropic) como fallback
+- **Reenvía todo** al backend local para procesamiento principal
+- **Sin estado propio**: Solo lee de BD clonada para verificaciones
+
+## 📦 Módulos
 
 - **webhook**: Recibe y valida webhooks de WhatsApp
 - **ai**: Procesa mensajes con IA cuando el backend local no está disponible
 - **sync**: Sincroniza y reenvía datos al backend local
 
-## Configuración
+## 🚀 Quick Start
 
-1. Clonar el repositorio
-2. Copiar `.env.example` a `.env` y configurar:
-   - `DATABASE_URL`: Conexión a la BD clonada del backend local
-   - `BACKEND_LOCAL_URL`: URL del backend local
-   - `WHATSAPP_*`: Credenciales de WhatsApp Business API
-   - `OPENAI_API_KEY`: API key de OpenAI
+### Desarrollo Local
 
-3. Instalar dependencias:
+1. **Configurar entorno**:
+   ```bash
+   cp .env.example .env
+   # Editar .env con tus credenciales
+   ```
+
+2. **Instalar y ejecutar**:
+   ```bash
+   npm install
+   npm run start:dev
+   ```
+
+### Despliegue en Railway
+
 ```bash
-npm install
+# Usar el script de deploy
+../scripts/deploy-cloud-service.sh
+
+# O manualmente
+railway link
+railway up
 ```
 
-4. Ejecutar:
+## 🔧 Configuración
+
+Variables de entorno requeridas:
+
 ```bash
-npm run start:dev # Desarrollo
-npm run start:prod # Producción
+# Base de datos (Railway la asigna automáticamente)
+DATABASE_URL=postgresql://...
+
+# Backend local
+LOCAL_BACKEND_URL=http://tu-ip:3000/api
+SYNC_API_KEY=tu_clave_secreta
+
+# WhatsApp
+WHATSAPP_VERIFY_TOKEN=tu_token
+WHATSAPP_ACCESS_TOKEN=EAAxxxxx
+META_APP_SECRET=xxxxx
+WHATSAPP_PHONE_NUMBER_ID=xxxxx
+
+# IA (al menos una)
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=AIza...
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-## Base de Datos
-
-Este servicio **NO define sus propias entidades**. Usa la base de datos clonada del backend local en modo lectura para verificaciones básicas.
-
-## Flujo de Mensajes
-
-1. WhatsApp envía webhook → `/webhook`
-2. El servicio intenta reenviar al backend local
-3. Si el backend local no responde, procesa con IA
-4. Responde al usuario vía WhatsApp API
-
-## Endpoints
+## 🌐 Endpoints
 
 - `GET /webhook` - Verificación del webhook de WhatsApp
 - `POST /webhook` - Recepción de mensajes
 - `GET /sync/health` - Estado del servicio
-- `POST /sync/database` - Trigger manual de sincronización (requiere API key)
+- `POST /sync/database` - Trigger manual de sincronización
+
+## 📊 Base de Datos
+
+Este servicio **NO define sus propias entidades**. Usa la base de datos clonada del backend local en modo lectura para:
+- Verificar clientes existentes
+- Consultar productos y precios
+- Validar configuraciones
+
+## 🔄 Flujo de Mensajes
+
+1. WhatsApp envía mensaje → `POST /webhook`
+2. Validación del webhook (firma)
+3. Intento de reenvío al backend local
+4. Si falla: procesamiento con IA
+5. Respuesta al usuario vía WhatsApp API
+
+## 🛠️ Scripts Útiles
+
+```bash
+# Verificar estado del servicio
+../scripts/check-cloud-health.sh
+
+# Sincronizar base de datos
+../scripts/sync-database.sh clone
+
+# Ver logs en Railway
+railway logs --tail
+```
+
+## 📈 Monitoreo
+
+- **Logs**: `railway logs --tail`
+- **Métricas**: Dashboard de Railway
+- **Health**: `https://tu-dominio.up.railway.app/api/sync/health`
+
+## 🤝 Desarrollo
+
+Para contribuir:
+
+1. Crea una rama: `git checkout -b feature/nueva-funcionalidad`
+2. Haz cambios y prueba localmente
+3. Commit: `git commit -m "feat: descripción"`
+4. Push y crea PR
+
+## 📝 Notas
+
+- El servicio es stateless y puede escalar horizontalmente
+- Usa timeouts cortos para el backend local (3s)
+- La IA es solo fallback, no reemplaza la lógica de negocio
+- Railway incluye SSL automáticamente
