@@ -4,11 +4,12 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type {
   CreatePizzaIngredientDto,
   UpdatePizzaIngredientDto,
+  FindAllPizzaIngredientsQuery,
 } from '../types/pizzaIngredient.types';
 
 const QUERY_KEY = 'pizzaIngredients';
 
-export const usePizzaIngredients = (params?: any) => {
+export const usePizzaIngredients = (params?: FindAllPizzaIngredientsQuery) => {
   return useQuery({
     queryKey: [QUERY_KEY, params],
     queryFn: () => pizzaIngredientsService.getAll(params),

@@ -23,3 +23,10 @@ export interface UpdatePizzaIngredientDto {
   ingredients?: string;
   isActive?: boolean;
 }
+
+export interface FindAllPizzaIngredientsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+}

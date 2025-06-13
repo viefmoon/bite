@@ -1,20 +1,21 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { PaginatedParams, PaginatedResponse } from '@/app/types/api.types';
+import { PaginatedResponse } from '@/app/types/api.types';
 import { handleApiResponse } from '@/app/lib/apiHelpers';
 import type {
   PizzaIngredient,
   CreatePizzaIngredientDto,
   UpdatePizzaIngredientDto,
+  FindAllPizzaIngredientsQuery,
 } from '../types/pizzaIngredient.types';
 
 class PizzaIngredientsService {
   async getAll(
-    params?: PaginatedParams,
+    params?: FindAllPizzaIngredientsQuery,
   ): Promise<PaginatedResponse<PizzaIngredient>> {
     const response = await apiClient.get<PaginatedResponse<PizzaIngredient>>(
       API_PATHS.PIZZA_INGREDIENTS,
-      { params },
+      params,
     );
     return handleApiResponse(response);
   }
