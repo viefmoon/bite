@@ -24,6 +24,13 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     domain.lastName = entity.lastName;
     domain.phoneNumber = entity.phoneNumber;
     domain.email = entity.email;
+    domain.birthDate = entity.birthDate;
+    domain.fullChatHistory = entity.fullChatHistory;
+    domain.relevantChatHistory = entity.relevantChatHistory;
+    domain.lastInteraction = entity.lastInteraction;
+    domain.totalOrders = entity.totalOrders;
+    domain.totalSpent = entity.totalSpent;
+    domain.isActive = entity.isActive;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -44,6 +51,13 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     entity.lastName = domain.lastName;
     entity.phoneNumber = domain.phoneNumber ?? null;
     entity.email = domain.email ?? null;
+    entity.birthDate = domain.birthDate ?? null;
+    entity.fullChatHistory = domain.fullChatHistory ?? null;
+    entity.relevantChatHistory = domain.relevantChatHistory ?? null;
+    entity.lastInteraction = domain.lastInteraction ?? null;
+    entity.totalOrders = domain.totalOrders ?? 0;
+    entity.totalSpent = domain.totalSpent ?? 0;
+    entity.isActive = domain.isActive ?? true;
 
     return entity;
   }

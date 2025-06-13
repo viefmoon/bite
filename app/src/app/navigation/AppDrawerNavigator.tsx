@@ -12,6 +12,7 @@ import { AvailabilityStackNavigator } from '../../modules/availability/navigatio
 import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator';
 import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
 import { PizzaIngredientsStackNavigator } from '../../modules/pizzaIngredients/navigation/PizzaIngredientsStackNavigator';
+import { CustomersStackNavigator } from '../../modules/customers/navigation/CustomersStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -125,6 +126,9 @@ export function AppDrawerNavigator() {
                 break;
               case 'PizzaIngredientsStack':
                 title = 'Ingredientes Pizza';
+                break;
+              case 'CustomersStack':
+                title = 'Clientes';
                 break;
 
               default:
@@ -259,6 +263,16 @@ export function AppDrawerNavigator() {
             title: 'Configuración',
             drawerIcon: ({ color, size }) => (
               <Icon source="cog-outline" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="CustomersStack"
+          component={CustomersStackNavigator}
+          options={{
+            title: 'Clientes',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="account-group-outline" color={color} size={size} />
             ),
           }}
         />

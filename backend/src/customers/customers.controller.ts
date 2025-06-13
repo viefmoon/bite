@@ -20,6 +20,7 @@ import {
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -80,5 +81,98 @@ export class CustomersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.customersService.remove(id);
+  }
+
+  // Chat History endpoints
+
+  @Post(':id/chat-message')
+  @ApiOperation({ summary: 'Append a message to customer chat history' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        role: { type: 'string', enum: ['user', 'assistant', 'system'] },
+        content: { type: 'string' },
+      },
+      required: ['role', 'content'],
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  appendChatMessage(
+    @Param('id') id: string,
+    @Body() message: { role: 'user' | 'assistant' | 'system'; content: string },
+  ): Promise<Customer> {
+    return this.customersService.appendToChatHistory(id, message);
+  }
+
+  @Patch(':id/relevant-chat-history')
+  @ApiOperation({ summary: 'Update relevant chat history for a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        relevantHistory: { type: 'array', items: { type: 'object' } },
+      },
+      required: ['relevantHistory'],
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  updateRelevantHistory(
+    @Param('id') id: string,
+    @Body() body: { relevantHistory: any[] },
+  ): Promise<Customer> {
+    return this.customersService.updateRelevantChatHistory(
+      id,
+      body.relevantHistory,
+    );
+  }
+
+  @Patch(':id/stats')
+  @ApiOperation({ summary: 'Update customer statistics' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        totalOrders: { type: 'number' },
+        totalSpent: { type: 'number' },
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  updateStats(
+    @Param('id') id: string,
+    @Body() stats: { totalOrders?: number; totalSpent?: number },
+  ): Promise<Customer> {
+    return this.customersService.updateCustomerStats(id, stats);
+  }
+
+  @Get('active/recent')
+  @ApiOperation({ summary: 'Get active customers with recent interactions' })
+  @ApiParam({
+    name: 'daysAgo',
+    required: false,
+    description: 'Number of days to look back (default: 30)',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  getActiveWithRecentInteraction(
+    @Query('daysAgo') daysAgo?: number,
+  ): Promise<Customer[]> {
+    const days = daysAgo ? Number(daysAgo) : 30;
+    return this.customersService.getActiveCustomersWithRecentInteraction(days);
   }
 }

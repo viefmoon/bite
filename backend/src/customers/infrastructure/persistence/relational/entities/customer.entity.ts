@@ -37,6 +37,27 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 255, nullable: true })
   email: string | null;
 
+  @Column({ type: 'date', nullable: true })
+  birthDate: Date | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  fullChatHistory: any[] | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  relevantChatHistory: any[] | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastInteraction: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  totalOrders: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  totalSpent: number;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
   @OneToMany(() => AddressEntity, (address) => address.customer)
   addresses: AddressEntity[];
 

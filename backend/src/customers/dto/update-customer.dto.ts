@@ -4,6 +4,10 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsString,
+  IsDateString,
+  IsBoolean,
+  IsArray,
+  IsObject,
   MaxLength,
 } from 'class-validator';
 
@@ -46,4 +50,48 @@ export class UpdateCustomerDto {
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(255)
   email?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '1990-01-15',
+    description: 'Fecha de nacimiento del cliente',
+  })
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string | null;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: true,
+    description: 'Indica si el cliente está activo',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
+    type: 'array',
+    description:
+      'Historial completo de chat (para actualizaciones específicas)',
+  })
+  @IsOptional()
+  @IsArray()
+  fullChatHistory?: any[];
+
+  @ApiPropertyOptional({
+    type: 'array',
+    description: 'Historial relevante de chat',
+  })
+  @IsOptional()
+  @IsArray()
+  relevantChatHistory?: any[];
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    description: 'Última interacción con el cliente',
+  })
+  @IsOptional()
+  @IsDateString()
+  lastInteraction?: string;
 }

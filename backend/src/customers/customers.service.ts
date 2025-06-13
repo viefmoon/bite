@@ -97,6 +97,11 @@ export class CustomersService extends BaseCrudService<
       lastName: updateCustomerDto.lastName,
       phoneNumber: updateCustomerDto.phoneNumber,
       email: updateCustomerDto.email,
+      birthDate: updateCustomerDto.birthDate,
+      isActive: updateCustomerDto.isActive,
+      fullChatHistory: updateCustomerDto.fullChatHistory,
+      relevantChatHistory: updateCustomerDto.relevantChatHistory,
+      lastInteraction: updateCustomerDto.lastInteraction,
       // Excluir 'addresses' del payload para el update base
     };
 
@@ -206,4 +211,73 @@ export class CustomersService extends BaseCrudService<
   }
 
   // Se elimina el método syncAddresses (si existía)
+
+  // --- Métodos específicos para Chat History ---
+
+  async appendToChatHistory(
+    customerId: string,
+    message: { role: 'user' | 'assistant' | 'system'; content: string },
+  ): Promise<Customer> {
+    const customer = await this.findOne(customerId);
+
+    const newMessage = {
+      ...message,
+      timestamp: new Date(),
+    };
+
+    const fullChatHistory = customer.fullChatHistory || [];
+    fullChatHistory.push(newMessage);
+
+    // Actualizar el historial completo y la última interacción
+    await super.update(customerId, {
+      fullChatHistory,
+      lastInteraction: new Date().toISOString(),
+    });
+
+    return this.findOne(customerId);
+  }
+
+  async updateRelevantChatHistory(
+    customerId: string,
+    relevantHistory: any[],
+  ): Promise<Customer> {
+    await this.findOne(customerId); // Validar que existe
+
+    await super.update(customerId, {
+      relevantChatHistory: relevantHistory,
+    });
+
+    return this.findOne(customerId);
+  }
+
+  async updateCustomerStats(
+    customerId: string,
+    stats: { totalOrders?: number; totalSpent?: number },
+  ): Promise<Customer> {
+    await this.findOne(customerId); // Validar que existe
+
+    const updatePayload: any = {};
+    if (stats.totalOrders !== undefined) {
+      updatePayload.totalOrders = stats.totalOrders;
+    }
+    if (stats.totalSpent !== undefined) {
+      updatePayload.totalSpent = stats.totalSpent;
+    }
+
+    await this.repo.update(customerId, updatePayload);
+
+    return this.findOne(customerId);
+  }
+
+  async getActiveCustomersWithRecentInteraction(
+    daysAgo: number = 30,
+  ): Promise<Customer[]> {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
+
+    return this.repo.findAll({
+      isActive: true,
+      lastInteractionAfter: dateThreshold,
+    });
+  }
 }

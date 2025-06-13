@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsString,
+  IsDateString,
+  IsBoolean,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -51,6 +53,24 @@ export class CreateCustomerDto {
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(255)
   email?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '1990-01-15',
+    description: 'Fecha de nacimiento del cliente',
+  })
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: true,
+    description: 'Indica si el cliente está activo',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
   @ApiPropertyOptional({
     type: () => [CreateAddressDto],

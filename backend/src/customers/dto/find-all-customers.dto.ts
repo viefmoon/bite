@@ -1,5 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsBoolean,
+  IsDateString,
+} from 'class-validator';
 import { PaginationParams } from '../../utils/types/pagination-params'; // Asumiendo que tienes un DTO base para paginación
 
 export class FindAllCustomersDto extends PaginationParams {
@@ -37,4 +44,20 @@ export class FindAllCustomersDto extends PaginationParams {
   @IsOptional()
   @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
   phoneNumber?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado activo',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por última interacción después de esta fecha',
+    example: '2024-01-01',
+  })
+  @IsOptional()
+  @IsDateString()
+  lastInteractionAfter?: Date;
 }

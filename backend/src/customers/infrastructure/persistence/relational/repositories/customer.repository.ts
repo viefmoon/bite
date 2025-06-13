@@ -4,6 +4,7 @@ import {
   FindOptionsWhere,
   ILike,
   Repository,
+  MoreThanOrEqual,
   // DeepPartial as TypeOrmDeepPartial no se usa
 } from 'typeorm';
 import { CustomerEntity } from '../entities/customer.entity';
@@ -54,6 +55,12 @@ export class CustomerRelationalRepository
     }
     if (filter?.phoneNumber) {
       where.phoneNumber = filter.phoneNumber;
+    }
+    if (filter?.isActive !== undefined) {
+      where.isActive = filter.isActive;
+    }
+    if (filter?.lastInteractionAfter) {
+      where.lastInteraction = MoreThanOrEqual(filter.lastInteractionAfter);
     }
 
     // Devolver undefined si no hay filtros para evitar un objeto `where` vacío

@@ -431,9 +431,7 @@ export class ProductsService {
     for (let i = 0; i < products.length; i++) {
       const product = products[i];
       if (!product) {
-        throw new NotFoundException(
-          `Producto no encontrado: ${productIds[i]}`,
-        );
+        throw new NotFoundException(`Producto no encontrado: ${productIds[i]}`);
       }
       if (!product.isPizza) {
         throw new BadRequestException(
@@ -446,9 +444,10 @@ export class ProductsService {
     const allIngredientIds = Array.from(
       new Set(updates.flatMap((u) => u.ingredientIds)),
     );
-    
+
     for (const ingredientId of allIngredientIds) {
-      const ingredient = await this.pizzaIngredientRepository.findById(ingredientId);
+      const ingredient =
+        await this.pizzaIngredientRepository.findById(ingredientId);
       if (!ingredient) {
         throw new NotFoundException(
           `Ingrediente no encontrado: ${ingredientId}`,

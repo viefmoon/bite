@@ -65,7 +65,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     domain.preparationScreen = entity.preparationScreen
       ? this.preparationScreenMapper.toDomain(entity.preparationScreen)
       : null;
-    
+
     if (entity.pizzaIngredients) {
       domain.pizzaIngredients = entity.pizzaIngredients.map((ingredient) =>
         PizzaIngredientMapper.toDomain(ingredient),
