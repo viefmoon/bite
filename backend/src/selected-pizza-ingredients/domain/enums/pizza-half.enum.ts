@@ -1,5 +1,5 @@
 export enum PizzaHalf {
-  LEFT = 'left',
-  RIGHT = 'right',
-  FULL = 'full',
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+  FULL = 'FULL',
 }

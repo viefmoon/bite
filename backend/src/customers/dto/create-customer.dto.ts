@@ -17,34 +17,34 @@ import { Type } from 'class-transformer';
 import { CreateAddressDto } from './create-address.dto';
 
 export class CreateCustomerDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'Juan',
-    description: 'Nombre del cliente',
+    description: 'Nombre del cliente (opcional)',
   })
-  @IsNotEmpty({ message: 'El nombre es obligatorio' })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  firstName: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'Pérez',
-    description: 'Apellido del cliente',
-  })
-  @IsNotEmpty({ message: 'El apellido es obligatorio' })
-  @IsString()
-  @MaxLength(100)
-  lastName: string;
+  firstName?: string;
 
   @ApiPropertyOptional({
     type: String,
-    example: '+525512345678',
-    description: 'Número de teléfono del cliente (opcional)',
+    example: 'Pérez',
+    description: 'Apellido del cliente (opcional)',
   })
   @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  lastName?: string;
+
+  @ApiProperty({
+    type: String,
+    example: '+525512345678',
+    description: 'Número de teléfono del cliente (obligatorio)',
+  })
+  @IsNotEmpty({ message: 'El número de teléfono es obligatorio' })
   @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
-  phoneNumber?: string;
+  phoneNumber: string;
 
   @ApiPropertyOptional({
     type: String,
@@ -82,26 +82,6 @@ export class CreateCustomerDto {
   @IsOptional()
   @IsBoolean()
   isBanned?: boolean;
-
-  @ApiPropertyOptional({
-    type: Number,
-    example: 0,
-    description: 'Contador de mensajes de WhatsApp enviados por el cliente',
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  whatsappMessageCount?: number;
-
-  @ApiPropertyOptional({
-    type: String,
-    format: 'date-time',
-    example: '2024-01-15T10:30:00Z',
-    description: 'Fecha y hora del último mensaje de WhatsApp recibido',
-  })
-  @IsOptional()
-  @IsDateString()
-  lastWhatsappMessageTime?: string;
 
   @ApiPropertyOptional({
     type: () => [CreateAddressDto],

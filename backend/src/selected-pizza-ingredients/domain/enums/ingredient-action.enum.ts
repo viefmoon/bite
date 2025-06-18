@@ -1,4 +1,4 @@
 export enum IngredientAction {
-  ADD = 'add',
-  REMOVE = 'remove',
+  ADD = 'ADD',
+  REMOVE = 'REMOVE',
 }

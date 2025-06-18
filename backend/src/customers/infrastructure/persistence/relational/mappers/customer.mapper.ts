@@ -34,8 +34,6 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     domain.isBanned = entity.isBanned;
     domain.bannedAt = entity.bannedAt;
     domain.banReason = entity.banReason;
-    domain.whatsappMessageCount = entity.whatsappMessageCount;
-    domain.lastWhatsappMessageTime = entity.lastWhatsappMessageTime;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -52,9 +50,9 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     }
     const entity = new CustomerEntity();
     entity.id = domain.id;
-    entity.firstName = domain.firstName;
-    entity.lastName = domain.lastName;
-    entity.phoneNumber = domain.phoneNumber ?? null;
+    entity.firstName = domain.firstName ?? null;
+    entity.lastName = domain.lastName ?? null;
+    entity.phoneNumber = domain.phoneNumber;
     entity.email = domain.email ?? null;
     entity.birthDate = domain.birthDate ?? null;
     entity.fullChatHistory = domain.fullChatHistory ?? null;
@@ -66,8 +64,6 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     entity.isBanned = domain.isBanned ?? false;
     entity.bannedAt = domain.bannedAt ?? null;
     entity.banReason = domain.banReason ?? null;
-    entity.whatsappMessageCount = domain.whatsappMessageCount ?? 0;
-    entity.lastWhatsappMessageTime = domain.lastWhatsappMessageTime ?? null;
 
     return entity;
   }

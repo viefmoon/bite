@@ -19,19 +19,16 @@ export class CustomerEntity extends EntityRelationalHelper {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
-  firstName: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  firstName: string | null;
 
   @Index()
-  @Column({ type: 'varchar', length: 100 })
-  lastName: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  lastName: string | null;
 
-  @Index('uq_customer_phone', {
-    unique: true,
-    where: '"phoneNumber" IS NOT NULL',
-  })
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phoneNumber: string | null;
+  @Index('uq_customer_phone', { unique: true })
+  @Column({ type: 'varchar', length: 20 })
+  phoneNumber: string;
 
   @Index('uq_customer_email', { unique: true, where: 'email IS NOT NULL' })
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -66,12 +63,6 @@ export class CustomerEntity extends EntityRelationalHelper {
 
   @Column({ type: 'text', nullable: true })
   banReason: string | null;
-
-  @Column({ type: 'int', default: 0 })
-  whatsappMessageCount: number;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  lastWhatsappMessageTime: Date | null;
 
   @OneToMany(() => AddressEntity, (address) => address.customer)
   addresses: AddressEntity[];
