@@ -84,7 +84,7 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @Column({ name: 'preparation_screen_id', nullable: true, type: 'varchar', length: 20 })
+  @Column({ name: 'preparation_screen_id', nullable: true, type: 'uuid' })
   preparationScreenId: string | null;
 
   @ManyToOne(

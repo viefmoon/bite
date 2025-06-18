@@ -4,14 +4,10 @@
   "workspaces": [
     "backend",
     "app",
-    "cloud-service",
     "shared"
   ],
   "scripts": {
     "backend:dev": "npm run start:dev --workspace=backend",
-    "cloud:dev": "npm run start:dev --workspace=cloud-service",
-    "cloud:build": "npm run build --workspace=cloud-service",
-    "cloud:deploy": "cd cloud-service && railway up",
     "app:start": "npm run start --workspace=app",
     "install:all": "npm install",
     "lint": "npm run lint --workspaces --if-present",

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
@@ -12,36 +12,55 @@ import {
   Paragraph,
   Surface,
   Chip,
+  SegmentedButtons,
+  IconButton,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries';
-import { UpdateRestaurantConfigDto } from '../types/restaurantConfig.types';
-import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
+import { UpdateRestaurantConfigDto, CreateBusinessHoursDto } from '../types/restaurantConfig.types';
+import BusinessHoursForm from '../components/BusinessHoursForm';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+type TabType = 'basic' | 'operation' | 'schedule' | 'delivery';
 
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
-  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const { width } = useWindowDimensions();
+  const styles = React.useMemo(() => createStyles(theme, width), [theme, width]);
 
   const { useGetConfig, useUpdateConfig } = useRestaurantConfigQueries();
   const { data: config, isLoading, error } = useGetConfig();
   const updateConfigMutation = useUpdateConfig();
 
+  const [activeTab, setActiveTab] = useState<TabType>('basic');
   const [formData, setFormData] = useState<UpdateRestaurantConfigDto>({});
   const [isEditing, setIsEditing] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [showOpeningTimePicker, setShowOpeningTimePicker] = useState(false);
-  const [showClosingTimePicker, setShowClosingTimePicker] = useState(false);
 
   React.useEffect(() => {
     if (config) {
       setFormData({
+        // Información básica
+        restaurantName: config.restaurantName,
+        phoneMain: config.phoneMain,
+        phoneSecondary: config.phoneSecondary,
+        address: config.address,
+        city: config.city,
+        state: config.state,
+        postalCode: config.postalCode,
+        country: config.country,
+        // Configuración de operación
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
-        openingTime: config.openingTime,
-        closingTime: config.closingTime,
+        openingGracePeriod: config.openingGracePeriod,
+        closingGracePeriod: config.closingGracePeriod,
+        timeZone: config.timeZone,
+        // Configuración de delivery
+        deliveryCoverageArea: config.deliveryCoverageArea,
+        // Horarios
+        businessHours: config.businessHours,
       });
     }
   }, [config]);
@@ -65,23 +84,45 @@ const RestaurantConfigScreen: React.FC = () => {
 
   const hasChanges = () => {
     if (!config) return false;
-    return (
-      formData.acceptingOrders !== config.acceptingOrders ||
-      formData.estimatedPickupTime !== config.estimatedPickupTime ||
-      formData.estimatedDeliveryTime !== config.estimatedDeliveryTime ||
-      formData.openingTime !== config.openingTime ||
-      formData.closingTime !== config.closingTime
-    );
+    return JSON.stringify(formData) !== JSON.stringify({
+      restaurantName: config.restaurantName,
+      phoneMain: config.phoneMain,
+      phoneSecondary: config.phoneSecondary,
+      address: config.address,
+      city: config.city,
+      state: config.state,
+      postalCode: config.postalCode,
+      country: config.country,
+      acceptingOrders: config.acceptingOrders,
+      estimatedPickupTime: config.estimatedPickupTime,
+      estimatedDeliveryTime: config.estimatedDeliveryTime,
+      openingGracePeriod: config.openingGracePeriod,
+      closingGracePeriod: config.closingGracePeriod,
+      timeZone: config.timeZone,
+      deliveryCoverageArea: config.deliveryCoverageArea,
+      businessHours: config.businessHours,
+    });
   };
 
   const resetForm = () => {
     if (config) {
       setFormData({
+        restaurantName: config.restaurantName,
+        phoneMain: config.phoneMain,
+        phoneSecondary: config.phoneSecondary,
+        address: config.address,
+        city: config.city,
+        state: config.state,
+        postalCode: config.postalCode,
+        country: config.country,
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
-        openingTime: config.openingTime,
-        closingTime: config.closingTime,
+        openingGracePeriod: config.openingGracePeriod,
+        closingGracePeriod: config.closingGracePeriod,
+        timeZone: config.timeZone,
+        deliveryCoverageArea: config.deliveryCoverageArea,
+        businessHours: config.businessHours,
       });
     }
     setIsEditing(false);
@@ -92,36 +133,358 @@ const RestaurantConfigScreen: React.FC = () => {
     setShowDiscardDialog(false);
   };
 
-  // Helper functions for time handling
-  const parseTimeString = (timeString: string | null): Date | null => {
-    if (!timeString) return null;
-    const [hours, minutes, seconds] = timeString.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, seconds || 0);
-    return date;
-  };
+  const renderBasicInfo = () => (
+    <View style={styles.tabContent}>
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="store-outline"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Información del Restaurante</Text>
+        </View>
 
-  const formatTimeToString = (date: Date): string => {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}:00`;
-  };
+        <View style={styles.sectionContent}>
+          <TextInput
+            label="Nombre del restaurante"
+            value={formData.restaurantName || ''}
+            onChangeText={(text) => setFormData({ ...formData, restaurantName: text })}
+            mode="outlined"
+            disabled={!isEditing}
+            style={styles.input}
+            outlineStyle={styles.inputOutline}
+          />
 
-  const formatTimeForDisplay = (timeString: string | null): string => {
-    if (!timeString) return '';
-    const [hours, minutes] = timeString.split(':');
-    return `${hours}:${minutes}`;
-  };
+          <View style={styles.row}>
+            <TextInput
+              label="Teléfono principal"
+              value={formData.phoneMain || ''}
+              onChangeText={(text) => setFormData({ ...formData, phoneMain: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+              keyboardType="phone-pad"
+              left={<TextInput.Icon icon="phone" />}
+            />
+            <TextInput
+              label="Teléfono secundario"
+              value={formData.phoneSecondary || ''}
+              onChangeText={(text) => setFormData({ ...formData, phoneSecondary: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+              keyboardType="phone-pad"
+              left={<TextInput.Icon icon="cellphone" />}
+            />
+          </View>
 
-  const handleOpeningTimeConfirm = (date: Date) => {
-    setFormData({ ...formData, openingTime: formatTimeToString(date) });
-    setShowOpeningTimePicker(false);
-  };
+          <TextInput
+            label="Dirección"
+            value={formData.address || ''}
+            onChangeText={(text) => setFormData({ ...formData, address: text })}
+            mode="outlined"
+            disabled={!isEditing}
+            style={styles.input}
+            outlineStyle={styles.inputOutline}
+            multiline
+            numberOfLines={2}
+            left={<TextInput.Icon icon="map-marker" />}
+          />
 
-  const handleClosingTimeConfirm = (date: Date) => {
-    setFormData({ ...formData, closingTime: formatTimeToString(date) });
-    setShowClosingTimePicker(false);
-  };
+          <View style={styles.row}>
+            <TextInput
+              label="Ciudad"
+              value={formData.city || ''}
+              onChangeText={(text) => setFormData({ ...formData, city: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+            />
+            <TextInput
+              label="Estado"
+              value={formData.state || ''}
+              onChangeText={(text) => setFormData({ ...formData, state: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <TextInput
+              label="Código postal"
+              value={formData.postalCode || ''}
+              onChangeText={(text) => setFormData({ ...formData, postalCode: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+              keyboardType="numeric"
+            />
+            <TextInput
+              label="País"
+              value={formData.country || ''}
+              onChangeText={(text) => setFormData({ ...formData, country: text })}
+              mode="outlined"
+              disabled={!isEditing}
+              style={[styles.input, styles.halfInput]}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+        </View>
+      </Surface>
+    </View>
+  );
+
+  const renderOperationConfig = () => (
+    <View style={styles.tabContent}>
+      {/* Service Status Card */}
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="store-check"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Estado del Servicio</Text>
+        </View>
+
+        <View style={styles.sectionContent}>
+          <View style={styles.statusRow}>
+            <View style={styles.statusInfo}>
+              <Text style={styles.statusLabel}>Recepción de Órdenes</Text>
+              <Text style={styles.statusDescription}>
+                {formData.acceptingOrders
+                  ? 'Las órdenes están siendo aceptadas'
+                  : 'No se están aceptando órdenes nuevas'}
+              </Text>
+            </View>
+            <Switch
+              value={formData.acceptingOrders}
+              onValueChange={(value) => setFormData({ ...formData, acceptingOrders: value })}
+              disabled={!isEditing}
+              color={theme.colors.primary}
+            />
+          </View>
+        </View>
+      </Surface>
+
+      {/* Delivery Times Card */}
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="clock-time-four"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Tiempos de Servicio</Text>
+        </View>
+
+        <View style={styles.sectionContent}>
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="walk"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Para recoger en tienda"
+              value={formData.estimatedPickupTime?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  estimatedPickupTime: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="moped"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Entrega a domicilio"
+              value={formData.estimatedDeliveryTime?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  estimatedDeliveryTime: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="timer-play"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Periodo de gracia al abrir"
+              value={formData.openingGracePeriod?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  openingGracePeriod: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+              helperText="Minutos después de abrir antes de aceptar pedidos"
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="timer-off"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Periodo de gracia al cerrar"
+              value={formData.closingGracePeriod?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  closingGracePeriod: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+              helperText="Minutos antes de cerrar para dejar de aceptar pedidos"
+            />
+          </View>
+
+          <View style={styles.infoChip}>
+            <Chip
+              icon="information"
+              mode="flat"
+              style={styles.chip}
+              textStyle={styles.chipText}
+            >
+              Los tiempos son estimados y pueden variar
+            </Chip>
+          </View>
+        </View>
+      </Surface>
+
+      {/* Time Zone */}
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="earth"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Zona Horaria</Text>
+        </View>
+
+        <View style={styles.sectionContent}>
+          <TextInput
+            label="Zona horaria"
+            value={formData.timeZone || ''}
+            onChangeText={(text) => setFormData({ ...formData, timeZone: text })}
+            mode="outlined"
+            disabled={!isEditing}
+            style={styles.input}
+            outlineStyle={styles.inputOutline}
+            left={<TextInput.Icon icon="map-clock" />}
+          />
+        </View>
+      </Surface>
+    </View>
+  );
+
+  const renderSchedule = () => (
+    <View style={styles.tabContent}>
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="calendar-clock"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Horario de Operación</Text>
+        </View>
+
+        <View style={styles.sectionContent}>
+          <BusinessHoursForm
+            businessHours={formData.businessHours || []}
+            isEditing={isEditing}
+            onChange={(hours: CreateBusinessHoursDto[]) =>
+              setFormData({ ...formData, businessHours: hours })
+            }
+          />
+        </View>
+      </Surface>
+    </View>
+  );
+
+  const renderDelivery = () => (
+    <View style={styles.tabContent}>
+      <Surface style={styles.section} elevation={1}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="map-marker-radius"
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle}>Área de Cobertura</Text>
+        </View>
+
+        <View style={styles.sectionContent}>
+          <View style={styles.deliveryPlaceholder}>
+            <MaterialCommunityIcons
+              name="map"
+              size={64}
+              color={theme.colors.onSurfaceVariant}
+              style={{ opacity: 0.5 }}
+            />
+            <Text style={styles.placeholderText}>
+              La configuración del área de cobertura estará disponible próximamente
+            </Text>
+          </View>
+        </View>
+      </Surface>
+    </View>
+  );
 
   if (isLoading) {
     return (
@@ -141,203 +504,63 @@ const RestaurantConfigScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Configuración del Restaurante</Text>
+          <Text style={styles.headerSubtitle}>
+            Administra todos los ajustes de tu negocio
+          </Text>
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsContent}
+        >
+          <SegmentedButtons
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as TabType)}
+            buttons={[
+              {
+                value: 'basic',
+                label: 'Información',
+                icon: 'store',
+              },
+              {
+                value: 'operation',
+                label: 'Operación',
+                icon: 'cog',
+              },
+              {
+                value: 'schedule',
+                label: 'Horarios',
+                icon: 'calendar',
+              },
+              {
+                value: 'delivery',
+                label: 'Delivery',
+                icon: 'moped',
+              },
+            ]}
+            style={styles.tabs}
+          />
+        </ScrollView>
+      </View>
+
+      {/* Content */}
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        extraScrollHeight={100}
       >
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Configuración General</Text>
-            <Text style={styles.headerSubtitle}>
-              Administra los ajustes principales de tu restaurante
-            </Text>
-          </View>
-        </View>
-
-        {/* Service Status Card */}
-        <Surface style={styles.statusCard} elevation={1}>
-          <View style={styles.statusHeader}>
-            <MaterialCommunityIcons
-              name="store-check"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.statusTitle}>Estado del Servicio</Text>
-          </View>
-
-          <View style={styles.statusContent}>
-            <View style={styles.statusRow}>
-              <View style={styles.statusInfo}>
-                <Text style={styles.statusLabel}>Recepción de Órdenes</Text>
-                <Text style={styles.statusDescription}>
-                  {formData.acceptingOrders
-                    ? 'Las órdenes están siendo aceptadas'
-                    : 'No se están aceptando órdenes nuevas'}
-                </Text>
-              </View>
-              <Switch
-                value={formData.acceptingOrders}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, acceptingOrders: value })
-                }
-                disabled={!isEditing}
-                color={theme.colors.primary}
-                thumbColor={
-                  formData.acceptingOrders ? theme.colors.primary : undefined
-                }
-                trackColor={{
-                  false: theme.colors.surfaceVariant,
-                  true: theme.colors.primaryContainer,
-                }}
-              />
-            </View>
-          </View>
-        </Surface>
-
-        {/* Delivery Times Card */}
-        <Surface style={styles.timesCard} elevation={1}>
-          <View style={styles.timesHeader}>
-            <MaterialCommunityIcons
-              name="clock-time-four"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.timesTitle}>Tiempos de Entrega</Text>
-          </View>
-
-          <View style={styles.timesContent}>
-            <View style={styles.timeInputContainer}>
-              <View style={styles.timeIconWrapper}>
-                <MaterialCommunityIcons
-                  name="walk"
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
-              </View>
-              <TextInput
-                label="Para recoger en tienda"
-                value={formData.estimatedPickupTime?.toString() || ''}
-                onChangeText={(text) =>
-                  setFormData({
-                    ...formData,
-                    estimatedPickupTime: parseInt(text) || 0,
-                  })
-                }
-                keyboardType="numeric"
-                mode="outlined"
-                disabled={!isEditing}
-                style={styles.timeInput}
-                right={<TextInput.Affix text="min" />}
-                outlineStyle={styles.inputOutline}
-              />
-            </View>
-
-            <View style={styles.timeInputContainer}>
-              <View style={styles.timeIconWrapper}>
-                <MaterialCommunityIcons
-                  name="moped"
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
-              </View>
-              <TextInput
-                label="Entrega a domicilio"
-                value={formData.estimatedDeliveryTime?.toString() || ''}
-                onChangeText={(text) =>
-                  setFormData({
-                    ...formData,
-                    estimatedDeliveryTime: parseInt(text) || 0,
-                  })
-                }
-                keyboardType="numeric"
-                mode="outlined"
-                disabled={!isEditing}
-                style={styles.timeInput}
-                right={<TextInput.Affix text="min" />}
-                outlineStyle={styles.inputOutline}
-              />
-            </View>
-
-            <View style={styles.infoChip}>
-              <Chip
-                icon="information"
-                mode="flat"
-                style={styles.chip}
-                textStyle={styles.chipText}
-              >
-                Los tiempos son estimados y pueden variar
-              </Chip>
-            </View>
-          </View>
-        </Surface>
-
-        {/* Schedule Card */}
-        <Surface style={styles.scheduleCard} elevation={1}>
-          <View style={styles.scheduleHeader}>
-            <MaterialCommunityIcons
-              name="calendar-clock"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.scheduleTitle}>Horario de Operación</Text>
-          </View>
-
-          <View style={styles.scheduleContent}>
-            <View style={styles.scheduleInputContainer}>
-              <View style={styles.scheduleIconWrapper}>
-                <MaterialCommunityIcons
-                  name="store-clock"
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
-              </View>
-              <View style={styles.scheduleInput}>
-                <AnimatedLabelSelector
-                  label="Hora de apertura"
-                  value={formatTimeForDisplay(formData.openingTime || null)}
-                  onPress={() => isEditing && setShowOpeningTimePicker(true)}
-                  onClear={() =>
-                    isEditing && setFormData({ ...formData, openingTime: null })
-                  }
-                  disabled={!isEditing}
-                />
-              </View>
-            </View>
-
-            <View style={styles.scheduleInputContainer}>
-              <View style={styles.scheduleIconWrapper}>
-                <MaterialCommunityIcons
-                  name="store-off"
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
-              </View>
-              <View style={styles.scheduleInput}>
-                <AnimatedLabelSelector
-                  label="Hora de cierre"
-                  value={formatTimeForDisplay(formData.closingTime || null)}
-                  onPress={() => isEditing && setShowClosingTimePicker(true)}
-                  onClear={() =>
-                    isEditing && setFormData({ ...formData, closingTime: null })
-                  }
-                  disabled={!isEditing}
-                />
-              </View>
-            </View>
-
-            <View style={styles.infoChip}>
-              <Chip
-                icon="information"
-                mode="flat"
-                style={styles.chip}
-                textStyle={styles.chipText}
-              >
-                Formato 24 horas (ej: 09:00:00, 22:30:00)
-              </Chip>
-            </View>
-          </View>
-        </Surface>
+        {activeTab === 'basic' && renderBasicInfo()}
+        {activeTab === 'operation' && renderOperationConfig()}
+        {activeTab === 'schedule' && renderSchedule()}
+        {activeTab === 'delivery' && renderDelivery()}
 
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
@@ -345,10 +568,7 @@ const RestaurantConfigScreen: React.FC = () => {
             <Button
               mode="contained"
               onPress={() => setIsEditing(true)}
-              style={[
-                styles.editButton,
-                { backgroundColor: theme.colors.tertiary },
-              ]}
+              style={[styles.editButton, { backgroundColor: theme.colors.tertiary }]}
               contentStyle={styles.editButtonContent}
               labelStyle={styles.editButtonLabel}
               icon="pencil"
@@ -402,7 +622,7 @@ const RestaurantConfigScreen: React.FC = () => {
             </View>
           </Surface>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <Portal>
         <Dialog
@@ -416,39 +636,16 @@ const RestaurantConfigScreen: React.FC = () => {
             </Paragraph>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowDiscardDialog(false)}>
-              Cancelar
-            </Button>
+            <Button onPress={() => setShowDiscardDialog(false)}>Cancelar</Button>
             <Button onPress={confirmDiscard}>Descartar</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-
-      {/* Time Picker Modals */}
-      <DateTimePickerModal
-        isVisible={showOpeningTimePicker}
-        mode="time"
-        onConfirm={handleOpeningTimeConfirm}
-        onCancel={() => setShowOpeningTimePicker(false)}
-        date={parseTimeString(formData.openingTime || null) || new Date()}
-        locale="es_ES"
-        is24Hour={true}
-      />
-
-      <DateTimePickerModal
-        isVisible={showClosingTimePicker}
-        mode="time"
-        onConfirm={handleClosingTimeConfirm}
-        onCancel={() => setShowClosingTimePicker(false)}
-        date={parseTimeString(formData.closingTime || null) || new Date()}
-        locale="es_ES"
-        is24Hour={true}
-      />
     </SafeAreaView>
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (theme: AppTheme, width: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -479,8 +676,6 @@ const createStyles = (theme: AppTheme) =>
       paddingTop: theme.spacing.m,
       paddingBottom: theme.spacing.m,
       paddingHorizontal: theme.spacing.m,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
     },
     headerContent: {
       alignItems: 'center',
@@ -497,28 +692,58 @@ const createStyles = (theme: AppTheme) =>
       opacity: 0.8,
       textAlign: 'center',
     },
-    // Status Card styles
-    statusCard: {
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.l,
+    // Tabs
+    tabsContainer: {
+      backgroundColor: theme.colors.background,
+      paddingVertical: theme.spacing.s,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    tabsContent: {
+      paddingHorizontal: theme.spacing.m,
+    },
+    tabs: {
+      minWidth: width - theme.spacing.m * 2,
+    },
+    tabContent: {
+      padding: theme.spacing.m,
+      gap: theme.spacing.m,
+    },
+    // Section styles
+    section: {
       borderRadius: 16,
       padding: theme.spacing.m,
       backgroundColor: theme.colors.surface,
     },
-    statusHeader: {
+    sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: theme.spacing.m,
     },
-    statusTitle: {
+    sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
       color: theme.colors.onSurface,
       marginLeft: theme.spacing.s,
     },
-    statusContent: {
+    sectionContent: {
       gap: theme.spacing.m,
     },
+    // Input styles
+    input: {
+      backgroundColor: theme.colors.surface,
+    },
+    inputOutline: {
+      borderRadius: 12,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: theme.spacing.s,
+    },
+    halfInput: {
+      flex: 1,
+    },
+    // Status styles
     statusRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -538,28 +763,7 @@ const createStyles = (theme: AppTheme) =>
       fontSize: 14,
       color: theme.colors.onSurfaceVariant,
     },
-    // Times Card styles
-    timesCard: {
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.m,
-      borderRadius: 16,
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surface,
-    },
-    timesHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: theme.spacing.m,
-    },
-    timesTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-      marginLeft: theme.spacing.s,
-    },
-    timesContent: {
-      gap: theme.spacing.m,
-    },
+    // Time input styles
     timeInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -577,9 +781,6 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.surface,
     },
-    inputOutline: {
-      borderRadius: 12,
-    },
     infoChip: {
       marginTop: theme.spacing.xs,
     },
@@ -589,44 +790,18 @@ const createStyles = (theme: AppTheme) =>
     chipText: {
       fontSize: 12,
     },
-    // Schedule Card styles
-    scheduleCard: {
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.m,
-      borderRadius: 16,
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surface,
-    },
-    scheduleHeader: {
-      flexDirection: 'row',
+    // Delivery placeholder
+    deliveryPlaceholder: {
       alignItems: 'center',
-      marginBottom: theme.spacing.m,
-    },
-    scheduleTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-      marginLeft: theme.spacing.s,
-    },
-    scheduleContent: {
+      justifyContent: 'center',
+      paddingVertical: theme.spacing.xl * 2,
       gap: theme.spacing.m,
     },
-    scheduleInputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.s,
-    },
-    scheduleIconWrapper: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.colors.surfaceVariant,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    scheduleInput: {
-      flex: 1,
-      backgroundColor: theme.colors.surface,
+    placeholderText: {
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      opacity: 0.7,
     },
     // Action styles
     actionContainer: {
