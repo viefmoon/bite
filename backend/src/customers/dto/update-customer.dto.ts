@@ -7,9 +7,6 @@ import {
   IsDateString,
   IsBoolean,
   IsArray,
-  IsObject,
-  IsNumber,
-  Min,
   MaxLength,
 } from 'class-validator';
 

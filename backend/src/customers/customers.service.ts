@@ -2,27 +2,20 @@ import {
   Injectable,
   Inject,
   NotFoundException,
-  // ConflictException no se usa
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CustomerRepository } from './infrastructure/persistence/customer.repository';
 import { AddressesService } from './addresses.service';
-// AddressRepository ya no se inyecta directamente
 import { Customer } from './domain/customer';
 import { Address } from './domain/address';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
-// IPaginationOptions no se usa
 import { FindAllCustomersDto } from './dto/find-all-customers.dto';
-// DeepPartial no se usa
-// ERROR_CODES no se usa
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
-// uuidv4 no se usa
 import { CUSTOMER_REPOSITORY } from '../common/tokens'; // Solo CUSTOMER_REPOSITORY
 import { BaseCrudService } from '../common/application/base-crud.service';
-// AddressesService ya se importó arriba
 
 @Injectable()
 export class CustomersService extends BaseCrudService<
@@ -298,7 +291,7 @@ export class CustomersService extends BaseCrudService<
     });
 
     // Actualizar campos adicionales directamente con el ORM repository
-    // @ts-ignore - Acceder al repositorio ORM interno para campos específicos
+    // @ts-expect-error - Acceder al repositorio ORM interno para campos específicos
     await this.repo.ormRepo.update(customerId, {
       bannedAt: new Date(),
       banReason,
@@ -321,7 +314,7 @@ export class CustomersService extends BaseCrudService<
     });
 
     // Actualizar campos adicionales directamente con el ORM repository
-    // @ts-ignore - Acceder al repositorio ORM interno para campos específicos
+    // @ts-expect-error - Acceder al repositorio ORM interno para campos específicos
     await this.repo.ormRepo.update(customerId, {
       bannedAt: null,
       banReason: null,
@@ -338,7 +331,7 @@ export class CustomersService extends BaseCrudService<
     try {
       const customer = await this.findOne(customerId);
       return customer.isBanned;
-    } catch (error) {
+    } catch {
       // Si el cliente no existe, considerarlo como no baneado
       return false;
     }

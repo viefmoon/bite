@@ -84,7 +84,7 @@ export const uploadFile = async (
         }
       }
 
-      return response.data;
+      return response.data!;
     } catch (error) {
       lastError = error;
 

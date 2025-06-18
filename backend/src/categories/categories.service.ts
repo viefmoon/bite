@@ -7,7 +7,10 @@ import { Category } from './domain/category';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
 import { BaseCrudService } from '../common/application/base-crud.service';
 import { Paginated } from '../common/types/paginated.type';
-import { CustomIdService, EntityPrefix } from '../common/services/custom-id.service';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../common/services/custom-id.service';
 
 @Injectable()
 export class CategoriesService extends BaseCrudService<
