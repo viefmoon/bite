@@ -31,7 +31,10 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 20 })
   phoneNumber: string;
 
-  @Index('uq_customer_whatsapp', { unique: true, where: 'whatsappPhoneNumber IS NOT NULL' })
+  @Index('uq_customer_whatsapp', {
+    unique: true,
+    where: 'whatsappPhoneNumber IS NOT NULL',
+  })
   @Column({ type: 'varchar', length: 20, nullable: true })
   whatsappPhoneNumber: string | null;
 

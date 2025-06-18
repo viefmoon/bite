@@ -31,13 +31,13 @@ export class RestaurantConfigRelationalRepository
     const newEntity = await this.restaurantConfigRepository.save(
       this.restaurantConfigRepository.create(persistenceModel),
     );
-    
+
     // Recargar con relaciones
     const entityWithRelations = await this.restaurantConfigRepository.findOne({
       where: { id: newEntity.id },
       relations: ['businessHours'],
     });
-    
+
     return this.restaurantConfigMapper.toDomain(entityWithRelations!);
   }
 
@@ -45,17 +45,13 @@ export class RestaurantConfigRelationalRepository
     id: string,
     data: Partial<RestaurantConfig>,
   ): Promise<RestaurantConfig | null> {
-    // Separar businessHours del resto de los datos
-    const { businessHours, ...updateData } = data;
-    
-    // Actualizar los campos directos
-    if (Object.keys(updateData).length > 0) {
-      await this.restaurantConfigRepository.update(id, updateData);
-    }
-    
+    // Actualizar directamente todos los datos
+    // businessHours no se puede actualizar a través de update() debido a la relación
+    await this.restaurantConfigRepository.update(id, data);
+
     // TODO: Manejar actualización de businessHours si es necesario
     // Por ahora, solo retornamos la entidad actualizada
-    
+
     const entity = await this.restaurantConfigRepository.findOne({
       where: { id },
       relations: ['businessHours'],

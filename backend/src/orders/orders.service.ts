@@ -60,7 +60,7 @@ export class OrdersService {
     }
 
     const order = await this.orderRepository.create({
-      userId: createOrderDto.userId,
+      userId: createOrderDto.userId || null,
       tableId: createOrderDto.tableId || null,
       scheduledAt: createOrderDto.scheduledAt || null,
       orderType: createOrderDto.orderType,
@@ -71,6 +71,8 @@ export class OrdersService {
       phoneNumber: createOrderDto.phoneNumber || null,
       customerName: createOrderDto.customerName || null,
       deliveryAddress: createOrderDto.deliveryAddress || null,
+      customerId: createOrderDto.customerId || null,
+      isFromWhatsApp: createOrderDto.isFromWhatsApp || false,
     });
 
     if (createOrderDto.items && createOrderDto.items.length > 0) {
@@ -396,7 +398,8 @@ export class OrdersService {
     const updatedData = {
       ...existingModifier,
       productModifierId:
-        updateOrderItemModifierDto.productModifierId ?? existingModifier.productModifierId,
+        updateOrderItemModifierDto.productModifierId ??
+        existingModifier.productModifierId,
       quantity:
         updateOrderItemModifierDto.quantity ?? existingModifier.quantity,
       price:

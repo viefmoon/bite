@@ -168,7 +168,7 @@ const CategoriesScreen: React.FC = () => {
     photoId: string | null | undefined,
   ) => {
     const { imageUri, ...dataToSubmit } = formData;
-    const finalData = {
+    const finalData: any = {
       ...dataToSubmit,
     };
 

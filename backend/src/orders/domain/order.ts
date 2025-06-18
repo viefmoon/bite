@@ -11,7 +11,7 @@ import { Adjustment } from '../../adjustments/domain/adjustment';
 export class Order {
   id: string;
 
-  userId: string;
+  userId: string | null;
 
   tableId: string | null;
 
@@ -29,7 +29,7 @@ export class Order {
 
   total: number;
 
-  user: User;
+  user: User | null;
 
   table: Table | null;
 
@@ -56,4 +56,6 @@ export class Order {
   customer?: Customer | null;
 
   deliveryAddress?: string | null;
+
+  isFromWhatsApp?: boolean;
 }

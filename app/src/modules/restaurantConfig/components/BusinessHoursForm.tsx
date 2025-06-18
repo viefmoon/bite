@@ -59,7 +59,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     const updatedHours = [...initializedHours];
     const hourIndex = updatedHours.findIndex(h => h.dayOfWeek === dayIndex);
     
-    if (hourIndex !== -1) {
+    if (hourIndex !== -1 && time !== null) {
       if (type === 'opening') {
         updatedHours[hourIndex].openingTime = time;
       } else {
@@ -97,7 +97,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     return `${hours}:${minutes}`;
   };
 
-  const formatTimeForDisplay = (timeString: string | null): string => {
+  const formatTimeForDisplay = (timeString: string | null | undefined): string => {
     if (!timeString) return '';
     return timeString;
   };
@@ -148,7 +148,6 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                       icon="content-copy"
                       size={20}
                       onPress={() => copyHoursToAllDays(index)}
-                      tooltip="Copiar a todos los días"
                     />
                   )}
                   <Switch
@@ -168,7 +167,6 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                       value={formatTimeForDisplay(dayHours.openingTime)}
                       onPress={() => isEditing && setShowTimePicker({ dayIndex: index, type: 'opening' })}
                       disabled={!isEditing}
-                      compact
                     />
                   </View>
                   <MaterialCommunityIcons
@@ -183,7 +181,6 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                       value={formatTimeForDisplay(dayHours.closingTime)}
                       onPress={() => isEditing && setShowTimePicker({ dayIndex: index, type: 'closing' })}
                       disabled={!isEditing}
-                      compact
                     />
                   </View>
                 </View>

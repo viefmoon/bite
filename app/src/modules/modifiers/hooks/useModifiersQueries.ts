@@ -102,7 +102,7 @@ export const useCreateModifierMutation = (): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: modifierKeys.lists() });
       // Usar groupId que sí existe en el tipo Modifier
       queryClient.invalidateQueries({
-        queryKey: modifierKeys.listsByGroup(newModifier.groupId),
+        queryKey: modifierKeys.listsByGroup(newModifier.modifierGroupId),
       });
       showSnackbar({
         message: 'Modificador creado con éxito',
@@ -175,9 +175,9 @@ export const useUpdateModifierMutation = (): UseMutationResult<
 
       // Invalidar la lista específica del grupo SOLO si la mutación fue exitosa (data existe)
       // y por lo tanto tenemos el groupId correcto.
-      if (data?.groupId) {
+      if (data?.modifierGroupId) {
         queryClient.invalidateQueries({
-          queryKey: modifierKeys.listsByGroup(data.groupId),
+          queryKey: modifierKeys.listsByGroup(data.modifierGroupId),
         });
       }
 

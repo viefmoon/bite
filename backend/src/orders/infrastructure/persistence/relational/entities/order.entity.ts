@@ -38,12 +38,12 @@ export class OrderEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'daily_order_counter_id' })
   dailyOrderCounter: DailyOrderCounterEntity;
 
-  @Column({ name: 'user_id', type: 'uuid' })
-  userId: string;
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string | null;
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'user_id' })
-  user: UserEntity;
+  user: UserEntity | null;
 
   @Column({ name: 'table_id', type: 'uuid', nullable: true })
   tableId: string | null;
@@ -87,12 +87,17 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({ name: 'customer_id', type: 'uuid', nullable: true })
   customerId: string | null;
 
-  @ManyToOne(() => CustomerEntity, (customer) => customer.orders, { nullable: true })
+  @ManyToOne(() => CustomerEntity, (customer) => customer.orders, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'customer_id' })
   customer: CustomerEntity | null;
 
   @Column({ name: 'delivery_address', type: 'text', nullable: true })
   deliveryAddress: string | null;
+
+  @Column({ name: 'is_from_whatsapp', type: 'boolean', default: false })
+  isFromWhatsApp: boolean;
 
   @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.order)
   orderItems: OrderItemEntity[];

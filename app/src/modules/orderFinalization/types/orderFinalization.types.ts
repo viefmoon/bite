@@ -29,6 +29,7 @@ export interface OrderForFinalization {
       name: string;
     };
   } | null;
+  isFromWhatsApp?: boolean;
 }
 
 export interface OrderItemForFinalization {

@@ -22,12 +22,16 @@ export class CreateOrderDto {
   @ApiProperty({
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
-    description: 'ID del usuario que realiza la orden',
-    required: true,
+    description: 'ID del usuario que realiza la orden (opcional para órdenes de WhatsApp)',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
+  @ValidateIf((o) => !o.isFromWhatsApp) // Solo validar si no es de WhatsApp
+  @IsNotEmpty({
+    message: 'El ID del usuario es requerido cuando la orden no es de WhatsApp',
+  })
   @IsUUID()
-  userId: string;
+  userId?: string;
 
   @ApiProperty({
     type: String,
@@ -167,4 +171,15 @@ export class CreateOrderDto {
   @IsOptional()
   @IsUUID()
   customerId?: string;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Indica si la orden fue creada a través de WhatsApp',
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  isFromWhatsApp?: boolean;
 }

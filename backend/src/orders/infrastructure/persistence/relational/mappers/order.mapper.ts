@@ -47,11 +47,12 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.customerName = entity.customerName;
     domain.customerId = entity.customerId;
     domain.deliveryAddress = entity.deliveryAddress;
+    domain.isFromWhatsApp = entity.isFromWhatsApp;
     domain.scheduledAt = entity.scheduledAt;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    domain.user = this.userMapper.toDomain(entity.user!)!;
+    domain.user = entity.user ? this.userMapper.toDomain(entity.user) : null;
     domain.table = entity.table
       ? this.tableMapper.toDomain(entity.table)
       : null;
@@ -81,7 +82,8 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.dailyOrderCounter = {
       id: domain.dailyOrderCounterId,
     } as DailyOrderCounterEntity;
-    entity.user = { id: domain.userId } as UserEntity;
+    entity.userId = domain.userId;
+    entity.user = domain.userId ? ({ id: domain.userId } as UserEntity) : null;
     entity.table = domain.tableId
       ? ({ id: domain.tableId } as TableEntity)
       : null;
@@ -94,6 +96,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.customerName = domain.customerName || null;
     entity.customerId = domain.customerId || null;
     entity.deliveryAddress = domain.deliveryAddress || null;
+    entity.isFromWhatsApp = domain.isFromWhatsApp || false;
     entity.scheduledAt = domain.scheduledAt || null;
 
     return entity;

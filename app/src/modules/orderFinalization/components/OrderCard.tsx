@@ -131,6 +131,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 >
                   {getStatusLabel()}
                 </Chip>
+                {order.isFromWhatsApp && (
+                  <Chip
+                    icon="whatsapp"
+                    style={[
+                      styles.whatsappChip,
+                      { backgroundColor: '#25D366' + '20' },
+                    ]}
+                    textStyle={[styles.chipText, { color: '#25D366' }]}
+                    compact={true}
+                    mode="flat"
+                  >
+                    WhatsApp
+                  </Chip>
+                )}
               </View>
             </View>
           </View>
@@ -271,6 +285,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   statusChip: {
+    height: 28,
+    marginVertical: 0,
+    minWidth: 65,
+    paddingHorizontal: 6,
+  },
+  whatsappChip: {
     height: 28,
     marginVertical: 0,
     minWidth: 65,

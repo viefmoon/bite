@@ -65,5 +65,6 @@ export const orderSchema = z.object({
   dailyOrderCounterId: z.string().uuid().nullable().optional(),
   adjustments: z.array(adjustmentSchema).optional(),
   subtotal: z.union([z.string(), z.number()]).optional(),
+  isFromWhatsApp: z.boolean().optional().default(false),
 });
 export type Order = z.infer<typeof orderSchema>;

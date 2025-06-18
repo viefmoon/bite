@@ -71,7 +71,7 @@ interface OrderItemDtoForBackend {
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
 export interface OrderDetailsForBackend {
-  userId: string;
+  userId?: string;
   orderType: OrderType;
   subtotal: number;
   total: number;
@@ -90,6 +90,8 @@ export interface OrderDetailsForBackend {
     value?: number;
     amount?: number;
   }[];
+  customerId?: string;
+  isFromWhatsApp?: boolean;
 }
 
 interface OrderCartDetailProps {
@@ -956,7 +958,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
 
     const orderDetails: OrderDetailsForBackend = {
-      userId: user?.id || '', // Asegurarse de tener un userId
+      userId: user?.id, // userId ahora es opcional
       orderType,
       subtotal,
       total,

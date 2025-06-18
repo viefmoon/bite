@@ -13,7 +13,6 @@ import {
   Surface,
   Chip,
   SegmentedButtons,
-  IconButton,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -341,7 +340,7 @@ const RestaurantConfigScreen: React.FC = () => {
           <View style={styles.timeInputContainer}>
             <View style={styles.timeIconWrapper}>
               <MaterialCommunityIcons
-                name="timer-play"
+                name="timer"
                 size={20}
                 color={theme.colors.onSurfaceVariant}
               />
@@ -361,14 +360,13 @@ const RestaurantConfigScreen: React.FC = () => {
               style={styles.timeInput}
               right={<TextInput.Affix text="min" />}
               outlineStyle={styles.inputOutline}
-              helperText="Minutos después de abrir antes de aceptar pedidos"
             />
           </View>
 
           <View style={styles.timeInputContainer}>
             <View style={styles.timeIconWrapper}>
               <MaterialCommunityIcons
-                name="timer-off"
+                name="timer-off-outline"
                 size={20}
                 color={theme.colors.onSurfaceVariant}
               />
@@ -388,7 +386,6 @@ const RestaurantConfigScreen: React.FC = () => {
               style={styles.timeInput}
               right={<TextInput.Affix text="min" />}
               outlineStyle={styles.inputOutline}
-              helperText="Minutos antes de cerrar para dejar de aceptar pedidos"
             />
           </View>
 

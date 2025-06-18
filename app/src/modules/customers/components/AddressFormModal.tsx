@@ -42,7 +42,6 @@ export default function AddressFormModal({
   onSubmit,
   editingItem,
   isSubmitting,
-  customerId,
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);

@@ -252,7 +252,6 @@ const SubcategoriesScreen: React.FC = () => {
         ListEmptyComponent={ListEmptyComponent}
         isLoading={isLoadingList}
         contentContainerStyle={styles.listContentContainer}
-        listStyle={styles.listStyle}
         renderItemActions={renderSubcategoryActions}
         showFab={true}
         onFabPress={handleOpenCreateModal}
