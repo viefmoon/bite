@@ -5,7 +5,10 @@ import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 import { RestaurantConfigEntity } from '../entities/restaurant-config.entity';
 
 @Injectable()
-export class BusinessHoursMapper extends BaseMapper<BusinessHoursEntity, BusinessHours> {
+export class BusinessHoursMapper extends BaseMapper<
+  BusinessHoursEntity,
+  BusinessHours
+> {
   override toDomain(entity: BusinessHoursEntity): BusinessHours | null {
     if (!entity) {
       return null;
@@ -20,7 +23,7 @@ export class BusinessHoursMapper extends BaseMapper<BusinessHoursEntity, Busines
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    
+
     return domain;
   }
 
@@ -34,8 +37,10 @@ export class BusinessHoursMapper extends BaseMapper<BusinessHoursEntity, Busines
     entity.openingTime = domain.openingTime;
     entity.closingTime = domain.closingTime;
     entity.isClosed = domain.isClosed;
-    entity.restaurantConfig = { id: domain.restaurantConfigId } as RestaurantConfigEntity;
-    
+    entity.restaurantConfig = {
+      id: domain.restaurantConfigId,
+    } as RestaurantConfigEntity;
+
     return entity;
   }
 }

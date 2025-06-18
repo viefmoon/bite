@@ -115,8 +115,8 @@ export class RestaurantConfigDto {
     description: 'Polígono de cobertura de delivery',
     example: [
       { lat: 19.4326, lng: -99.1332 },
-      { lat: 19.4350, lng: -99.1350 },
-      { lat: 19.4300, lng: -99.1380 },
+      { lat: 19.435, lng: -99.135 },
+      { lat: 19.43, lng: -99.138 },
     ],
     additionalProperties: true,
   })

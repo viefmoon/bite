@@ -65,7 +65,10 @@ export class RestaurantConfigEntity extends EntityRelationalHelper {
   deliveryCoverageArea: any | null;
 
   // Relaciones
-  @OneToMany(() => BusinessHoursEntity, (businessHours) => businessHours.restaurantConfig)
+  @OneToMany(
+    () => BusinessHoursEntity,
+    (businessHours) => businessHours.restaurantConfig,
+  )
   businessHours: BusinessHoursEntity[];
 
   @CreateDateColumn()

@@ -6,7 +6,10 @@ import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { Subcategory } from './domain/subcategory';
 import { FindAllSubcategoriesDto } from './dto/find-all-subcategories.dto';
 import { Paginated } from '../common/types/paginated.type';
-import { CustomIdService, EntityPrefix } from '../common/services/custom-id.service';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../common/services/custom-id.service';
 
 @Injectable()
 export class SubcategoriesService {
@@ -20,7 +23,10 @@ export class SubcategoriesService {
     createSubcategoryDto: CreateSubcategoryDto,
   ): Promise<Subcategory> {
     const subcategory = new Subcategory();
-    subcategory.id = await this.customIdService.generateId(EntityPrefix.SUBCATEGORY, 'subcategory');
+    subcategory.id = await this.customIdService.generateId(
+      EntityPrefix.SUBCATEGORY,
+      'subcategory',
+    );
     subcategory.name = createSubcategoryDto.name;
     subcategory.description = createSubcategoryDto.description || null;
     subcategory.isActive = createSubcategoryDto.isActive ?? true;

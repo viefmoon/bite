@@ -8,7 +8,9 @@ import { RestaurantConfigMapper } from './mappers/restaurant-config.mapper';
 import { BusinessHoursMapper } from './mappers/business-hours.mapper';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RestaurantConfigEntity, BusinessHoursEntity])],
+  imports: [
+    TypeOrmModule.forFeature([RestaurantConfigEntity, BusinessHoursEntity]),
+  ],
   providers: [
     {
       provide: RestaurantConfigRepository,
