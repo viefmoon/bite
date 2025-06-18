@@ -26,14 +26,13 @@ export class OrderItemModifierMapper extends BaseMapper<
     const domain = new OrderItemModifier();
     domain.id = entity.id;
     domain.orderItemId = entity.orderItemId;
-    domain.modifierId = entity.modifierId;
-    domain.modifierOptionId = entity.modifierOptionId;
+    domain.productModifierId = entity.productModifierId;
     domain.quantity = entity.quantity;
     domain.price = entity.price;
     domain.orderItem = orderItemDomain;
     // Incluir la información del modificador si está disponible
-    if (entity.modifier) {
-      domain.modifier = entity.modifier;
+    if (entity.productModifier) {
+      domain.productModifier = entity.productModifier;
     }
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
@@ -46,8 +45,7 @@ export class OrderItemModifierMapper extends BaseMapper<
     const entity = new OrderItemModifierEntity();
     if (domain.id) entity.id = domain.id;
     entity.orderItem = { id: domain.orderItemId } as OrderItemEntity;
-    entity.modifier = { id: domain.modifierId } as ProductModifierEntity;
-    entity.modifierOptionId = domain.modifierOptionId;
+    entity.productModifier = { id: domain.productModifierId } as ProductModifierEntity;
     entity.quantity = domain.quantity;
     entity.price = domain.price;
 

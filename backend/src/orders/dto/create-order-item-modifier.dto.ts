@@ -1,24 +1,14 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderItemModifierDto {
   @ApiProperty({
     description: 'ID del ProductModifier seleccionado (la opción específica)',
-    example: '123e4567-e89b-12d3-a456-426614174001',
+    example: 'MOD-1',
   })
   @IsNotEmpty()
-  @IsUUID()
-  modifierId: string;
-
-  @ApiProperty({
-    description: 'Campo opcional para información adicional',
-    example: null,
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsUUID()
-  modifierOptionId?: string | null;
+  @IsString()
+  productModifierId: string;
 
   @ApiProperty({
     description: 'Cantidad del modificador',

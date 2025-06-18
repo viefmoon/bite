@@ -74,7 +74,7 @@ export class ProductModifiersController {
     return this.productModifiersService.findOne(id);
   }
 
-  @Get('by-group/:groupId')
+  @Get('by-group/:modifierGroupId')
   @ApiOperation({ summary: 'Get all product modifiers by group id' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -82,12 +82,12 @@ export class ProductModifiersController {
     type: [ProductModifier],
   })
   findByGroupId(
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('modifierGroupId') modifierGroupId: string,
     @Query('isActive', new ParseBoolPipe({ optional: true }))
     isActive?: boolean,
     @Query('search') search?: string,
   ): Promise<ProductModifier[]> {
-    return this.productModifiersService.findByGroupId(groupId, {
+    return this.productModifiersService.findByGroupId(modifierGroupId, {
       isActive,
       search,
     });

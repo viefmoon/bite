@@ -5,19 +5,18 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
 } from 'class-validator';
 
 export class CreateProductModifierDto {
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'MODG-1',
     description: 'ID del grupo de modificadores al que pertenece',
   })
   @IsNotEmpty()
-  @IsUUID()
-  groupId: string;
+  @IsString()
+  modifierGroupId: string;
 
   @ApiProperty({
     type: String,

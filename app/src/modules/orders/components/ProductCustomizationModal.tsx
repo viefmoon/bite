@@ -23,10 +23,9 @@ import {
   FullMenuProduct as Product,
   ProductVariant,
   Modifier,
-  ModifierGroup,
+  FullMenuModifierGroup,
 } from '../types/orders.types';
 import { CartItemModifier, CartItem } from '../context/CartContext';
-import { getImageUrl } from '@/app/lib/imageUtils';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
@@ -182,6 +181,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
               if (modifier.isDefault && modifier.isActive) {
                 defaultModifiers.push({
                   id: modifier.id,
+                  modifierGroupId: group.id,
                   name: modifier.name,
                   price: Number(modifier.price) || 0,
                 });
@@ -244,7 +244,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     setSelectedVariantId(variantId);
   };
 
-  const handleModifierToggle = (modifier: Modifier, group: ModifierGroup) => {
+  const handleModifierToggle = (modifier: Modifier, group: FullMenuModifierGroup) => {
     const currentGroupModifiers = selectedModifiersByGroup[group.id] || [];
     const isSelected = currentGroupModifiers.some(
       (mod) => mod.id === modifier.id,
@@ -274,7 +274,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     } else {
       const newModifier: CartItemModifier = {
         id: modifier.id,
-        groupId: group.id,
+        modifierGroupId: group.id,
         name: modifier.name,
         price: Number(modifier.price) || 0,
       };
@@ -308,7 +308,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         const selectedCount = selectedInGroup.length;
 
         // Validar grupos requeridos y mínimo de selecciones
-        if (group.isRequired || group.minSelections > 0) {
+        if (group.isRequired || (group.minSelections && group.minSelections > 0)) {
           const minRequired = Math.max(
             group.minSelections || 0,
             group.isRequired ? 1 : 0,
@@ -333,7 +333,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         }
 
         // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
-        if (selectedCount > group.maxSelections) {
+        if (group.maxSelections && selectedCount > group.maxSelections) {
           showSnackbar({
             message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
             type: 'error',
@@ -412,11 +412,6 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     0,
   );
   const totalPrice = (basePrice + modifiersPrice) * quantity;
-
-  const imageUrl = product.photo ? getImageUrl(product.photo.path) : null;
-
-  const blurhash =
-    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   return (
     <Portal>
@@ -522,7 +517,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
           {product.modifierGroups &&
             Array.isArray(product.modifierGroups) &&
             product.modifierGroups.length > 0 &&
-            product.modifierGroups.map((group: ModifierGroup) => (
+            product.modifierGroups.map((group: FullMenuModifierGroup) => (
               <Card key={group.id} style={styles.sectionCard}>
                 <Card.Content>
                   <View style={styles.sectionHeader}>
@@ -645,7 +640,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                   ) : (
                     <RadioButton.Group
                       onValueChange={(value) => {
-                        const modifier = group.productModifiers.find(
+                        const modifier = group.productModifiers?.find(
                           (m: Modifier) => m.id === value,
                         );
                         if (modifier) {
@@ -763,7 +758,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
               <Controller
                 control={control}
                 name="preparationNotes"
-                render={({ field: { onChange, onBlur, value } }) => (
+                render={({ field: { onChange, value } }) => (
                   <SpeechRecognitionInput
                     key="preparation-notes-input"
                     label="Notas de Preparación"

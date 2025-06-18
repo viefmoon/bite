@@ -1,7 +1,7 @@
 export class ProductModifier {
   id: string;
 
-  groupId: string;
+  modifierGroupId: string;
 
   name: string;
 

@@ -16,7 +16,7 @@ export interface IProductModifierRepository {
   create(data: ProductModifier): Promise<ProductModifier>;
   findById(id: string): Promise<ProductModifier | null>;
   findByGroupId(
-    groupId: string,
+    modifierGroupId: string,
     filters?: { isActive?: boolean; search?: string },
   ): Promise<ProductModifier[]>;
   findManyWithPagination(options: {
@@ -75,7 +75,7 @@ export class ProductModifierRepository implements IProductModifierRepository {
   }
 
   async findByGroupId(
-    groupId: string,
+    modifierGroupId: string,
     filters?: { isActive?: boolean; search?: string },
   ): Promise<ProductModifier[]> {
     const queryBuilder =
@@ -83,7 +83,7 @@ export class ProductModifierRepository implements IProductModifierRepository {
         'product_modifier',
       );
 
-    queryBuilder.where('product_modifier.group_id = :groupId', { groupId });
+    queryBuilder.where('product_modifier.modifier_group_id = :modifierGroupId', { modifierGroupId });
 
     if (filters?.isActive !== undefined) {
       queryBuilder.andWhere('product_modifier.is_active = :isActive', {
@@ -124,8 +124,8 @@ export class ProductModifierRepository implements IProductModifierRepository {
       );
 
     if (filterOptions.groupId) {
-      queryBuilder.andWhere('product_modifier.group_id = :groupId', {
-        groupId: filterOptions.groupId,
+      queryBuilder.andWhere('product_modifier.modifier_group_id = :modifierGroupId', {
+        modifierGroupId: filterOptions.groupId,
       });
     }
 
@@ -214,8 +214,8 @@ export class ProductModifierRepository implements IProductModifierRepository {
       );
 
     if (filters.modifierGroupId) {
-      queryBuilder.where('product_modifier.group_id = :groupId', {
-        groupId: filters.modifierGroupId,
+      queryBuilder.where('product_modifier.modifier_group_id = :modifierGroupId', {
+        modifierGroupId: filters.modifierGroupId,
       });
     }
 

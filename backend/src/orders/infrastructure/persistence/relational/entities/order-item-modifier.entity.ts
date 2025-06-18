@@ -23,15 +23,8 @@ export class OrderItemModifierEntity extends EntityRelationalHelper {
   @RelationId((e: OrderItemModifierEntity) => e.orderItem)
   orderItemId: string;
 
-  @RelationId((e: OrderItemModifierEntity) => e.modifier)
-  modifierId: string;
-
-  // modifierOptionId no tiene una relación directa para usar @RelationId, se mantiene como columna si es necesario
-  // Si modifierOptionId DEBE reflejar una relación (ej. a una entidad ModifierOption), se necesitaría añadir esa relación @ManyToOne
-  // Por ahora, asumiendo que se mantiene como un ID directo o ya no se usa. Si se mantiene, @Column es correcto.
-  // Si ya no se usa, se puede eliminar. Basado en el texto inicial, parece que se mantiene.
-  @Column({ name: 'modifier_option_id', type: 'uuid', nullable: true })
-  modifierOptionId: string | null;
+  @RelationId((e: OrderItemModifierEntity) => e.productModifier)
+  productModifierId: string;
 
   @Column({ type: 'int' })
   quantity: number;
@@ -53,6 +46,6 @@ export class OrderItemModifierEntity extends EntityRelationalHelper {
   orderItem: OrderItemEntity;
 
   @ManyToOne(() => ProductModifierEntity)
-  @JoinColumn({ name: 'modifier_id' })
-  modifier: ProductModifierEntity;
+  @JoinColumn({ name: 'product_modifier_id' })
+  productModifier: ProductModifierEntity;
 }

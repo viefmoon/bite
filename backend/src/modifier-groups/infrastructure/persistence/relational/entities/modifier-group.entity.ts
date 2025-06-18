@@ -42,7 +42,7 @@ export class ModifierGroupEntity extends EntityRelationalHelper {
 
   @OneToMany(
     () => ProductModifierEntity,
-    (productModifier) => productModifier.group,
+    (productModifier) => productModifier.modifierGroup,
   )
   productModifiers: ProductModifierEntity[];
 

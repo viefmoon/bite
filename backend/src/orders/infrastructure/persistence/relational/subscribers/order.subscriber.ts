@@ -139,12 +139,11 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
           product: item.product ? { name: item.product.name } : undefined,
           modifiers: item.modifiers
             ?.map((mod: any) => ({
-              modifierId: mod.modifierId || mod.modifier?.id,
-              modifierOptionId: mod.modifierOptionId || null,
+              productModifierId: mod.productModifierId || mod.productModifier?.id,
               quantity: mod.quantity || 1,
               price: mod.price,
             }))
-            .sort((a: any, b: any) => a.modifierId.localeCompare(b.modifierId)),
+            .sort((a: any, b: any) => a.productModifierId.localeCompare(b.productModifierId)),
         }))
         // Ordenar items por productId para comparación consistente
         .sort((a: any, b: any) => {

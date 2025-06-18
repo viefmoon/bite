@@ -18,8 +18,8 @@ export class ProductModifierEntity extends EntityRelationalHelper {
   @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
-  @Column({ name: 'group_id', type: 'varchar', length: 20 })
-  groupId: string;
+  @Column({ name: 'modifier_group_id', type: 'varchar', length: 20 })
+  modifierGroupId: string;
 
   @Column()
   name: string;
@@ -40,12 +40,8 @@ export class ProductModifierEntity extends EntityRelationalHelper {
   isActive: boolean;
 
   @ManyToOne(() => ModifierGroupEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'group_id' })
-  group: ModifierGroupEntity;
-
-  // Aquí se definiría la relación con OrderItemModifier cuando se implemente
-  // @OneToMany(() => OrderItemModifierEntity, (orderItemModifier) => orderItemModifier.productModifier)
-  // orderItemModifiers: OrderItemModifierEntity[];
+  @JoinColumn({ name: 'modifier_group_id' })
+  modifierGroup: ModifierGroupEntity;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

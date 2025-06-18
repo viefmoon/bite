@@ -13,7 +13,7 @@ export class ProductModifierMapper extends BaseMapper<
     if (!entity) return null;
     const domain = new ProductModifier();
     domain.id = entity.id;
-    domain.groupId = entity.groupId;
+    domain.modifierGroupId = entity.modifierGroupId;
     domain.name = entity.name;
     domain.description = entity.description;
     domain.price = entity.price;
@@ -30,7 +30,7 @@ export class ProductModifierMapper extends BaseMapper<
     if (!domain) return null;
     const entity = new ProductModifierEntity();
     if (domain.id) entity.id = domain.id;
-    entity.groupId = domain.groupId;
+    entity.modifierGroupId = domain.modifierGroupId;
     entity.name = domain.name;
     entity.description = domain.description;
     entity.price = domain.price;
@@ -38,8 +38,8 @@ export class ProductModifierMapper extends BaseMapper<
     entity.isDefault = domain.isDefault;
     entity.isActive = domain.isActive;
 
-    if (domain.groupId) {
-      entity.group = { id: domain.groupId } as ModifierGroupEntity;
+    if (domain.modifierGroupId) {
+      entity.modifierGroup = { id: domain.modifierGroupId } as ModifierGroupEntity;
     }
     return entity;
   }

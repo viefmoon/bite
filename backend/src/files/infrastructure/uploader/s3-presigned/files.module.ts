@@ -52,7 +52,7 @@ const infrastructurePersistenceModule = RelationalFilePersistenceModule;
             callback(null, true);
           },
           storage: multerS3({
-            s3: s3,
+            s3: s3 as any,
             bucket: '',
             acl: 'public-read',
             contentType: multerS3.AUTO_CONTENT_TYPE,
