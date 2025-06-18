@@ -11,6 +11,7 @@ export class Customer {
   firstName: string | null;
   lastName: string | null;
   phoneNumber: string;
+  whatsappPhoneNumber: string | null; // Número de WhatsApp único
   email: string | null;
   birthDate: Date | null;
   fullChatHistory: ChatMessage[] | null; // Historial completo de conversaciones

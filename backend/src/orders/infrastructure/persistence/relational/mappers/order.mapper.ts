@@ -45,6 +45,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.notes = entity.notes || undefined;
     domain.phoneNumber = entity.phoneNumber;
     domain.customerName = entity.customerName;
+    domain.customerId = entity.customerId;
     domain.deliveryAddress = entity.deliveryAddress;
     domain.scheduledAt = entity.scheduledAt;
     domain.createdAt = entity.createdAt;
@@ -91,6 +92,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.notes = domain.notes || null;
     entity.phoneNumber = domain.phoneNumber || null;
     entity.customerName = domain.customerName || null;
+    entity.customerId = domain.customerId || null;
     entity.deliveryAddress = domain.deliveryAddress || null;
     entity.scheduledAt = domain.scheduledAt || null;
 

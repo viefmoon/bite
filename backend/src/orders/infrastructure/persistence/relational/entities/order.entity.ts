@@ -12,6 +12,7 @@ import {
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
+import { CustomerEntity } from '../../../../../customers/infrastructure/persistence/relational/entities/customer.entity';
 import { DailyOrderCounterEntity } from './daily-order-counter.entity';
 import { OrderStatus } from '../../../../domain/enums/order-status.enum';
 import { OrderType } from '../../../../domain/enums/order-type.enum';
@@ -82,6 +83,13 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @Column({ name: 'customer_name', type: 'varchar', nullable: true })
   customerName: string | null;
+
+  @Column({ name: 'customer_id', type: 'uuid', nullable: true })
+  customerId: string | null;
+
+  @ManyToOne(() => CustomerEntity, (customer) => customer.orders, { nullable: true })
+  @JoinColumn({ name: 'customer_id' })
+  customer: CustomerEntity | null;
 
   @Column({ name: 'delivery_address', type: 'text', nullable: true })
   deliveryAddress: string | null;

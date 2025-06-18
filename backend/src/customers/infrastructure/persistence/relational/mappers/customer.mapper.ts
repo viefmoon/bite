@@ -23,6 +23,7 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     domain.firstName = entity.firstName;
     domain.lastName = entity.lastName;
     domain.phoneNumber = entity.phoneNumber;
+    domain.whatsappPhoneNumber = entity.whatsappPhoneNumber;
     domain.email = entity.email;
     domain.birthDate = entity.birthDate;
     domain.fullChatHistory = entity.fullChatHistory;
@@ -53,6 +54,7 @@ export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
     entity.firstName = domain.firstName ?? null;
     entity.lastName = domain.lastName ?? null;
     entity.phoneNumber = domain.phoneNumber;
+    entity.whatsappPhoneNumber = domain.whatsappPhoneNumber ?? null;
     entity.email = domain.email ?? null;
     entity.birthDate = domain.birthDate ?? null;
     entity.fullChatHistory = domain.fullChatHistory ?? null;

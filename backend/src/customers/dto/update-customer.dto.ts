@@ -45,6 +45,15 @@ export class UpdateCustomerDto {
 
   @ApiPropertyOptional({
     type: String,
+    example: '+525587654321',
+    description: 'Número de WhatsApp del cliente (debe ser único)',
+  })
+  @IsOptional()
+  @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
+  whatsappPhoneNumber?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
     example: 'juan.perez@example.com',
     description: 'Correo electrónico del cliente (debe ser único)',
   })

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { AddressEntity } from './address.entity';
+import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity';
 
 @Entity({
   name: 'customer',
@@ -29,6 +30,10 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Index('uq_customer_phone', { unique: true })
   @Column({ type: 'varchar', length: 20 })
   phoneNumber: string;
+
+  @Index('uq_customer_whatsapp', { unique: true, where: 'whatsappPhoneNumber IS NOT NULL' })
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  whatsappPhoneNumber: string | null;
 
   @Index('uq_customer_email', { unique: true, where: 'email IS NOT NULL' })
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -66,6 +71,9 @@ export class CustomerEntity extends EntityRelationalHelper {
 
   @OneToMany(() => AddressEntity, (address) => address.customer)
   addresses: AddressEntity[];
+
+  @OneToMany(() => OrderEntity, (order) => order.customer)
+  orders: OrderEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

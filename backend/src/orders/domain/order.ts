@@ -1,5 +1,6 @@
 import { User } from '../../users/domain/user';
 import { Table } from '../../tables/domain/table';
+import { Customer } from '../../customers/domain/customer';
 import { DailyOrderCounter } from './daily-order-counter';
 import { OrderStatus } from './enums/order-status.enum';
 import { OrderType } from './enums/order-type.enum';
@@ -49,6 +50,10 @@ export class Order {
   phoneNumber?: string | null;
 
   customerName?: string | null;
+
+  customerId?: string | null;
+
+  customer?: Customer | null;
 
   deliveryAddress?: string | null;
 }

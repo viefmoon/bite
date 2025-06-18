@@ -136,17 +136,6 @@ export class UpdateAddressDto {
   longitude?: number | null;
 
   @ApiPropertyOptional({
-    type: String,
-    example:
-      'Calle Falsa 123, Colonia Centro, 12345 Ciudad Ejemplo, Estado Ejemplo, México',
-    description: 'Dirección completa generada por geocodificación',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  geocodedAddress?: string | null;
-
-  @ApiPropertyOptional({
     type: Boolean,
     example: false,
     description: 'Indica si es la dirección predeterminada del cliente',

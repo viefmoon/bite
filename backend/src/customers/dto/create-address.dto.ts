@@ -9,8 +9,6 @@ import {
   IsNumber,
   IsLatitude,
   IsLongitude,
-  Min,
-  Max,
 } from 'class-validator';
 
 export class CreateAddressDto {
@@ -136,17 +134,6 @@ export class CreateAddressDto {
   @IsNumber()
   @IsLongitude()
   longitude?: number;
-
-  @ApiPropertyOptional({
-    type: String,
-    example:
-      'Calle Falsa 123, Colonia Centro, 12345 Ciudad Ejemplo, Estado Ejemplo, México',
-    description: 'Dirección completa generada por geocodificación',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  geocodedAddress?: string;
 
   @ApiPropertyOptional({
     type: Boolean,

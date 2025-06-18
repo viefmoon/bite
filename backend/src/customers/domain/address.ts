@@ -27,8 +27,6 @@ export class Address {
 
   longitude?: number;
 
-  geocodedAddress?: string;
-
   isDefault: boolean;
 
   customer: Customer;
