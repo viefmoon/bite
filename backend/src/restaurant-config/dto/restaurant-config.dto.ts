@@ -118,6 +118,7 @@ export class RestaurantConfigDto {
       { lat: 19.4350, lng: -99.1350 },
       { lat: 19.4300, lng: -99.1380 },
     ],
+    additionalProperties: true,
   })
   deliveryCoverageArea: any | null;
 

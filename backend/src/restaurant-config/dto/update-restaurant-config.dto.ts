@@ -5,13 +5,100 @@ import {
   IsOptional,
   Min,
   IsString,
-  Matches,
+  MaxLength,
+  IsArray,
+  ValidateNested,
+  IsObject,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateBusinessHoursDto } from './create-business-hours.dto';
 
 export class UpdateRestaurantConfigDto {
+  // Información básica
+  @ApiPropertyOptional({
+    type: String,
+    example: 'La Leña',
+    description: 'Nombre del restaurante',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  restaurantName?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '+52 555 123 4567',
+    description: 'Teléfono principal',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phoneMain?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '+52 555 987 6543',
+    description: 'Teléfono secundario',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phoneSecondary?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Av. Principal 123, Col. Centro',
+    description: 'Dirección completa',
+  })
+  @IsOptional()
+  @IsString()
+  address?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Ciudad de México',
+    description: 'Ciudad',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  city?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: 'CDMX',
+    description: 'Estado',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  state?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '06000',
+    description: 'Código postal',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  postalCode?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: 'México',
+    description: 'País',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  country?: string | null;
+
+  // Configuración de operación
   @ApiPropertyOptional({
     type: Boolean,
     example: true,
+    description: 'Indica si se están aceptando pedidos',
   })
   @IsOptional()
   @IsBoolean()
@@ -19,8 +106,8 @@ export class UpdateRestaurantConfigDto {
 
   @ApiPropertyOptional({
     type: Number,
-    example: 30,
-    description: 'Estimated pickup time in minutes',
+    example: 20,
+    description: 'Tiempo estimado de recolección en minutos',
   })
   @IsOptional()
   @IsInt()
@@ -29,8 +116,8 @@ export class UpdateRestaurantConfigDto {
 
   @ApiPropertyOptional({
     type: Number,
-    example: 45,
-    description: 'Estimated delivery time in minutes',
+    example: 40,
+    description: 'Tiempo estimado de entrega en minutos',
   })
   @IsOptional()
   @IsInt()
@@ -38,28 +125,58 @@ export class UpdateRestaurantConfigDto {
   estimatedDeliveryTime?: number;
 
   @ApiPropertyOptional({
-    type: String,
-    example: '09:00:00',
-    description: 'Opening time in HH:mm:ss format',
-    nullable: true,
+    type: Number,
+    example: 30,
+    description: 'Minutos después de abrir antes de aceptar pedidos',
   })
   @IsOptional()
-  @IsString()
-  @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
-    message: 'Opening time must be in HH:mm:ss format',
+  @IsInt()
+  @Min(0)
+  openingGracePeriod?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 30,
+    description: 'Minutos antes de cerrar para dejar de aceptar pedidos',
   })
-  openingTime?: string | null;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  closingGracePeriod?: number;
 
   @ApiPropertyOptional({
     type: String,
-    example: '22:00:00',
-    description: 'Closing time in HH:mm:ss format',
-    nullable: true,
+    example: 'America/Mexico_City',
+    description: 'Zona horaria del restaurante',
   })
   @IsOptional()
   @IsString()
-  @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
-    message: 'Closing time must be in HH:mm:ss format',
+  @MaxLength(50)
+  timeZone?: string;
+
+  // Configuración de delivery
+  @ApiPropertyOptional({
+    type: 'object',
+    description: 'Polígono de cobertura de delivery',
+    example: [
+      { lat: 19.4326, lng: -99.1332 },
+      { lat: 19.4350, lng: -99.1350 },
+      { lat: 19.4300, lng: -99.1380 },
+    ],
+    additionalProperties: true,
   })
-  closingTime?: string | null;
+  @IsOptional()
+  @IsObject()
+  deliveryCoverageArea?: any | null;
+
+  // Horarios de operación
+  @ApiPropertyOptional({
+    type: () => [CreateBusinessHoursDto],
+    description: 'Horarios de operación por día',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBusinessHoursDto)
+  businessHours?: CreateBusinessHoursDto[];
 }

@@ -15,7 +15,6 @@ import {
   Chip,
   Surface,
 } from 'react-native-paper';
-import { Image } from 'expo-image';
 import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { useAppTheme } from '@/app/styles/theme';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput'; // Importar SpeechRecognitionInput

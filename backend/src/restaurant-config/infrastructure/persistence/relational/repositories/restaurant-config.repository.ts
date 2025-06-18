@@ -13,35 +13,54 @@ export class RestaurantConfigRelationalRepository
   constructor(
     @InjectRepository(RestaurantConfigEntity)
     private readonly restaurantConfigRepository: Repository<RestaurantConfigEntity>,
+    private readonly restaurantConfigMapper: RestaurantConfigMapper,
   ) {}
 
   async findFirst(): Promise<RestaurantConfig | null> {
     const entity = await this.restaurantConfigRepository.findOne({
       where: {},
       order: { createdAt: 'ASC' },
+      relations: ['businessHours'],
     });
 
-    return entity ? RestaurantConfigMapper.toDomain(entity) : null;
+    return entity ? this.restaurantConfigMapper.toDomain(entity) : null;
   }
 
   async create(data: RestaurantConfig): Promise<RestaurantConfig> {
-    const persistenceModel = RestaurantConfigMapper.toPersistence(data);
+    const persistenceModel = this.restaurantConfigMapper.toPersistence(data);
     const newEntity = await this.restaurantConfigRepository.save(
       this.restaurantConfigRepository.create(persistenceModel),
     );
-    return RestaurantConfigMapper.toDomain(newEntity);
+    
+    // Recargar con relaciones
+    const entityWithRelations = await this.restaurantConfigRepository.findOne({
+      where: { id: newEntity.id },
+      relations: ['businessHours'],
+    });
+    
+    return this.restaurantConfigMapper.toDomain(entityWithRelations!);
   }
 
   async update(
     id: string,
     data: Partial<RestaurantConfig>,
   ): Promise<RestaurantConfig | null> {
-    await this.restaurantConfigRepository.update(id, data);
-
+    // Separar businessHours del resto de los datos
+    const { businessHours, ...updateData } = data;
+    
+    // Actualizar los campos directos
+    if (Object.keys(updateData).length > 0) {
+      await this.restaurantConfigRepository.update(id, updateData);
+    }
+    
+    // TODO: Manejar actualización de businessHours si es necesario
+    // Por ahora, solo retornamos la entidad actualizada
+    
     const entity = await this.restaurantConfigRepository.findOne({
       where: { id },
+      relations: ['businessHours'],
     });
 
-    return entity ? RestaurantConfigMapper.toDomain(entity) : null;
+    return entity ? this.restaurantConfigMapper.toDomain(entity) : null;
   }
 }
