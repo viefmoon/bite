@@ -55,8 +55,7 @@ import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar es
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
-  modifierId: string; // ID del ProductModifier (la opción específica)
-  modifierOptionId?: string | null; // Campo opcional
+  productModifierId: string;
   quantity?: number;
   price?: number | null;
 }
@@ -72,10 +71,10 @@ interface OrderItemDtoForBackend {
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
 export interface OrderDetailsForBackend {
-  userId: string; // Añadido
+  userId: string;
   orderType: OrderType;
-  subtotal: number; // Añadido
-  total: number; // Añadido
+  subtotal: number;
+  total: number;
   items: OrderItemDtoForBackend[];
   tableId?: string;
   scheduledAt?: Date;
@@ -537,9 +536,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       orderData.orderItems.forEach((item: any) => {
         // Calcular el precio de los modificadores
         const modifiers = (item.modifiers || []).map((mod: any) => ({
-          id: mod.modifierId, // El modifierId en la BD es el ID del ProductModifier
-          groupId: mod.modifier?.groupId || '', // Obtener el groupId desde la relación
-          name: mod.modifier?.name || 'Modificador',
+          id: mod.productModifierId,
+          modifierGroupId: mod.productModifier?.modifierGroupId || '',
+          name: mod.productModifier?.name || 'Modificador',
           price: parseFloat(mod.price || '0'),
         }));
 
@@ -929,9 +928,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           modifiers:
             item.modifiers && item.modifiers.length > 0
               ? item.modifiers.map((mod) => ({
-                  modifierId: mod.id, // ID del ProductModifier (la opción específica)
-                  modifierOptionId: null, // Campo opcional, no se usa actualmente
-                  quantity: 1, // Por defecto 1
+                  productModifierId: mod.id,
+                  quantity: 1,
                   price: mod.price || null,
                 }))
               : undefined,
@@ -942,15 +940,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
     if (phoneNumber && phoneNumber.trim() !== '') {
-      // Mantener el formato original del teléfono, solo validar longitud
       formattedPhone = phoneNumber.trim();
-
-      // Si no empieza con +, agregar +52 por defecto (México)
       if (!formattedPhone.startsWith('+')) {
         formattedPhone = `+52${formattedPhone}`;
       }
-
-      // Validar longitud mínima y máxima (contando solo dígitos)
       const digitsOnly = formattedPhone.replace(/\D/g, '');
       if (digitsOnly.length < 10) {
         setPhoneError('El teléfono debe tener al menos 10 dígitos');
@@ -1147,7 +1140,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     originalItems.forEach((item: any) => {
       // Crear una clave única para agrupar items idénticos
       const modifierIds = (item.modifiers || [])
-        .map((m: any) => m.modifierId)
+        .map((m: any) => m.productModifierId)
         .sort()
         .join(',');
       const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;

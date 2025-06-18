@@ -18,16 +18,15 @@ export type OrderType = z.infer<typeof orderTypeSchema>;
 
 // Schema para los modificadores dentro de un ítem de orden
 export const orderItemModifierSchema = z.object({
-  modifierId: z.string().uuid(), // Asumiendo UUID
+  productModifierId: z.string(),
   modifierName: z.string(),
   price: z.number(),
-  // modifierGroupId: z.string().uuid().optional(), // Opcional
 });
 export type OrderItemModifier = z.infer<typeof orderItemModifierSchema>;
 
 // Schema para un ítem individual de la orden
 export const orderItemSchema = z.object({
-  id: z.string(), // Puede ser UUID o ID temporal
+  id: z.string(),
   productId: z.string().uuid(),
   productName: z.string(),
   quantity: z.number().int().positive(),
@@ -43,22 +42,21 @@ export type OrderItem = z.infer<typeof orderItemSchema>;
 // Schema para la orden completa
 export const orderSchema = z.object({
   id: z.string().uuid(),
-  orderNumber: z.string().optional(), // Hacer opcional si no siempre está presente
+  orderNumber: z.string().optional(),
   dailyNumber: z.number().int().positive(),
-  orderItems: z.array(z.any()).optional(), // Changed from 'items' to 'orderItems' to match API
-  total: z.union([z.string(), z.number()]).optional(), // The API returns 'total' not 'totalAmount'
-  orderStatus: orderStatusSchema, // Changed from 'status' to 'orderStatus' to match API
+  orderItems: z.array(z.any()).optional(),
+  total: z.union([z.string(), z.number()]).optional(),
+  orderStatus: orderStatusSchema,
   orderType: orderTypeSchema,
-  createdAt: z.union([z.string().datetime(), z.date()]), // Permitir string o Date
-  updatedAt: z.union([z.string().datetime(), z.date()]), // Permitir string o Date
-  userId: z.string().uuid().nullable().optional(), // Changed from 'customerId' to 'userId' to match API
+  createdAt: z.union([z.string().datetime(), z.date()]),
+  updatedAt: z.union([z.string().datetime(), z.date()]),
+  userId: z.string().uuid().nullable().optional(),
   tableId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   customerName: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
   deliveryAddress: z.string().nullable().optional(),
-  // Add fields that API returns but were missing
   user: z.any().optional(),
   table: z.any().optional(),
   dailyOrderCounter: z.any().optional(),
@@ -66,6 +64,6 @@ export const orderSchema = z.object({
   deletedAt: z.string().nullable().optional(),
   dailyOrderCounterId: z.string().uuid().nullable().optional(),
   adjustments: z.array(adjustmentSchema).optional(),
-  subtotal: z.union([z.string(), z.number()]).optional(), // Subtotal antes de ajustes
+  subtotal: z.union([z.string(), z.number()]).optional(),
 });
 export type Order = z.infer<typeof orderSchema>;

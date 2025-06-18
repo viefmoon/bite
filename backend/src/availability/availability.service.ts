@@ -97,7 +97,7 @@ export class AvailabilityService {
           id: modifier.id,
           name: modifier.name,
           isActive: modifier.isActive ?? true,
-          modifierGroupId: modifier.groupId,
+          modifierGroupId: modifier.modifierGroupId,
         })),
       });
     }

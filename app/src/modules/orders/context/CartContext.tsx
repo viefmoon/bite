@@ -16,8 +16,8 @@ const generateId = () => {
 };
 
 export interface CartItemModifier {
-  id: string; // ID de la opción específica (ProductModifier)
-  groupId: string;
+  id: string;
+  modifierGroupId: string;
   name: string;
   price: number;
 }
@@ -33,20 +33,20 @@ export interface CartItem {
   variantId?: string;
   variantName?: string;
   preparationNotes?: string;
-  notes?: string; // Add notes field for backward compatibility
+  notes?: string;
   preparationStatus?:
     | 'NEW'
     | 'PENDING'
     | 'IN_PROGRESS'
     | 'READY'
     | 'DELIVERED'
-    | 'CANCELLED'; // Estado de preparación
+    | 'CANCELLED';
 }
 
 interface CartContextType {
   // --- Items del carrito ---
   items: CartItem[];
-  setItems: (items: CartItem[]) => void; // Añadir esta función
+  setItems: (items: CartItem[]) => void;
   addItem: (
     product: Product,
     quantity?: number,
@@ -125,7 +125,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [items]);
 
   const total = useMemo(() => {
-    // Por ahora, el total es igual al subtotal. Se añadirán impuestos/descuentos después.
     return subtotal;
   }, [subtotal]);
 
@@ -158,19 +157,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setItems((currentItems) => {
       // Buscar si existe un item idéntico
       const existingItemIndex = currentItems.findIndex((item) => {
-        // Verificar que sea el mismo producto
         if (item.productId !== product.id) return false;
-
-        // Verificar que sea la misma variante (o ambas undefined)
         if (item.variantId !== variantId) return false;
-
-        // Verificar que tengan las mismas notas de preparación
         if (item.preparationNotes !== preparationNotes) return false;
-
-        // Verificar que tengan los mismos modificadores
         if (item.modifiers.length !== modifiers.length) return false;
-
-        // Comparar cada modificador (asumiendo que el orden no importa)
         const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
           a.id.localeCompare(b.id),
         );
@@ -308,8 +298,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setPhoneNumber('');
     setDeliveryAddress('');
     setOrderNotes('');
-    // Opcional: resetear visibilidad si se desea cerrar el carrito al limpiar
-    // setIsCartVisible(false);
   };
 
   const showCart = useCallback(() => {
@@ -321,9 +309,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const value: CartContextType = {
-    // --- Carrito ---
     items,
-    setItems, // Añadir esta función
+    setItems,
     addItem,
     removeItem,
     updateItemQuantity,
@@ -336,7 +323,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     isCartVisible,
     showCart,
     hideCart,
-    // --- Formulario ---
     orderType,
     setOrderType,
     selectedAreaId,

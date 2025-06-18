@@ -112,7 +112,7 @@ const ModifierFormModal: React.FC<Props> = ({
         sortOrder: formData.sortOrder ?? 0,
         isDefault: formData.isDefault ?? false,
         isActive: formData.isActive ?? true,
-        groupId: groupId,
+        modifierGroupId: groupId,
       };
 
       try {

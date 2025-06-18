@@ -94,8 +94,7 @@ export class OrdersService {
           for (const modifierDto of itemDto.modifiers) {
             await this.createOrderItemModifier({
               orderItemId: savedOrderItem.id,
-              modifierId: modifierDto.modifierId,
-              modifierOptionId: modifierDto.modifierOptionId,
+              productModifierId: modifierDto.productModifierId,
               quantity: modifierDto.quantity,
               price: modifierDto.price,
             });
@@ -223,8 +222,7 @@ export class OrdersService {
           for (const modifierDto of itemDto.modifiers) {
             await this.createOrderItemModifier({
               orderItemId: savedOrderItem.id,
-              modifierId: modifierDto.modifierId,
-              modifierOptionId: modifierDto.modifierOptionId,
+              productModifierId: modifierDto.productModifierId,
               quantity: modifierDto.quantity,
               price: modifierDto.price,
             });
@@ -350,22 +348,20 @@ export class OrdersService {
   // Firma refactorizada para aceptar un objeto
   async createOrderItemModifier(data: {
     orderItemId: string;
-    modifierId: string; // ID del ProductModifier (la opción específica)
-    modifierOptionId?: string | null; // Campo opcional
+    productModifierId: string; // ID del ProductModifier (la opción específica)
     quantity?: number;
     price?: number | null;
   }): Promise<OrderItemModifier> {
     await this.findOrderItemById(data.orderItemId); // Verificar que el orderItem existe
 
     // TODO: Aquí se podría obtener el precio del catálogo si data.price es null/undefined
-    // const productModifier = await this.productModifierRepository.findById(data.modifierId);
+    // const productModifier = await this.productModifierRepository.findById(data.productModifierId);
     // const finalPrice = data.price ?? productModifier?.price ?? 0;
 
     const orderItemModifier = new OrderItemModifier();
     orderItemModifier.id = uuidv4();
     orderItemModifier.orderItemId = data.orderItemId;
-    orderItemModifier.modifierId = data.modifierId;
-    orderItemModifier.modifierOptionId = data.modifierOptionId || null;
+    orderItemModifier.productModifierId = data.productModifierId;
     orderItemModifier.quantity = data.quantity ?? 1;
     orderItemModifier.price = data.price ?? 0;
 
@@ -399,11 +395,8 @@ export class OrdersService {
     // Crear objeto con datos actualizados
     const updatedData = {
       ...existingModifier,
-      modifierId:
-        updateOrderItemModifierDto.modifierId ?? existingModifier.modifierId,
-      modifierOptionId:
-        updateOrderItemModifierDto.modifierOptionId ??
-        existingModifier.modifierOptionId,
+      productModifierId:
+        updateOrderItemModifierDto.productModifierId ?? existingModifier.productModifierId,
       quantity:
         updateOrderItemModifierDto.quantity ?? existingModifier.quantity,
       price:
@@ -416,8 +409,7 @@ export class OrdersService {
     const updatedModifier = new OrderItemModifier();
     updatedModifier.id = updatedData.id;
     updatedModifier.orderItemId = updatedData.orderItemId;
-    updatedModifier.modifierId = updatedData.modifierId;
-    updatedModifier.modifierOptionId = updatedData.modifierOptionId;
+    updatedModifier.productModifierId = updatedData.productModifierId;
     updatedModifier.quantity = updatedData.quantity;
     updatedModifier.price = updatedData.price ?? 0; // Asegurar que sea number
     // Asignar relaciones y timestamps existentes si es necesario para el repositorio

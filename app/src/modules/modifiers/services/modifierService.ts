@@ -105,7 +105,7 @@ export const modifierService = {
    * Obtiene todos los modificadores asociados a un grupo específico, con filtros opcionales.
    */
   async findByGroupId(
-    groupId: string,
+    modifierGroupId: string,
     params: { isActive?: boolean; search?: string } = {},
   ): Promise<Modifier[]> {
     const queryParams = {
@@ -113,13 +113,13 @@ export const modifierService = {
       ...(params.search && { search: params.search }),
     };
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIERS}/by-group/${groupId}`,
+      `${API_PATHS.MODIFIERS}/by-group/${modifierGroupId}`,
       queryParams,
     );
 
     if (!response.ok || !response.data) {
       console.error(
-        `Error fetching modifiers for group ${groupId}:`,
+        `Error fetching modifiers for group ${modifierGroupId}:`,
         response.problem,
         response.data,
       );
@@ -129,11 +129,11 @@ export const modifierService = {
     const validationResult = modifiersListSchema.safeParse(response.data);
     if (!validationResult.success) {
       console.error(
-        `Invalid data received for modifiers of group ${groupId}:`,
+        `Invalid data received for modifiers of group ${modifierGroupId}:`,
         validationResult.error.flatten(),
       );
       throw new Error(
-        `Received invalid data format for modifiers of group ${groupId}.`,
+        `Received invalid data format for modifiers of group ${modifierGroupId}.`,
       );
     }
     return validationResult.data;
