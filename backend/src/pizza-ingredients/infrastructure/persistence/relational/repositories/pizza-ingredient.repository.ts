@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PizzaIngredientEntity } from '../entities/pizza-ingredient.entity';
 import { PizzaIngredientRepository } from '../../pizza-ingredient.repository';
 import { PizzaIngredient } from '../../../../domain/pizza-ingredient';

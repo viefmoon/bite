@@ -39,7 +39,9 @@ export class ProductModifierMapper extends BaseMapper<
     entity.isActive = domain.isActive;
 
     if (domain.modifierGroupId) {
-      entity.modifierGroup = { id: domain.modifierGroupId } as ModifierGroupEntity;
+      entity.modifierGroup = {
+        id: domain.modifierGroupId,
+      } as ModifierGroupEntity;
     }
     return entity;
   }

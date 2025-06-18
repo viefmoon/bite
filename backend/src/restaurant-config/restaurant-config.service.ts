@@ -24,7 +24,7 @@ export class RestaurantConfigService {
       defaultConfig.state = null;
       defaultConfig.postalCode = null;
       defaultConfig.country = null;
-      
+
       // Configuración de operación
       defaultConfig.acceptingOrders = true;
       defaultConfig.estimatedPickupTime = 20;
@@ -32,10 +32,10 @@ export class RestaurantConfigService {
       defaultConfig.openingGracePeriod = 30;
       defaultConfig.closingGracePeriod = 30;
       defaultConfig.timeZone = 'America/Mexico_City';
-      
+
       // Configuración de delivery
       defaultConfig.deliveryCoverageArea = null;
-      
+
       // Relaciones
       defaultConfig.businessHours = [];
 
@@ -53,13 +53,11 @@ export class RestaurantConfigService {
     updateRestaurantConfigDto: UpdateRestaurantConfigDto,
   ): Promise<RestaurantConfig> {
     const config = await this.findOrCreate();
-    
-    // Convertir DTO a dominio, excluyendo businessHours que se maneja aparte
-    const { businessHours, ...updateData } = updateRestaurantConfigDto;
 
+    // Convertir DTO a dominio
     const updated = await this.restaurantConfigRepository.update(
       config.id,
-      updateData as Partial<RestaurantConfig>,
+      updateRestaurantConfigDto as Partial<RestaurantConfig>,
     );
 
     if (!updated) {

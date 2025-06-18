@@ -11,7 +11,7 @@ export class RestaurantConfig {
   state: string | null;
   postalCode: string | null;
   country: string | null;
-  
+
   // Configuración de operación
   acceptingOrders: boolean;
   estimatedPickupTime: number; // Tiempo estimado de recolección en minutos
@@ -19,13 +19,13 @@ export class RestaurantConfig {
   openingGracePeriod: number; // Minutos después de abrir antes de aceptar pedidos
   closingGracePeriod: number; // Minutos antes de cerrar para dejar de aceptar pedidos
   timeZone: string; // Zona horaria del restaurante
-  
+
   // Configuración de delivery
   deliveryCoverageArea: any | null; // Polígono de cobertura
-  
+
   // Relaciones
   businessHours: BusinessHours[];
-  
+
   createdAt: Date;
   updatedAt: Date;
 }

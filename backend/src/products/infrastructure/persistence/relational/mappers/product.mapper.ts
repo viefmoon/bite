@@ -7,7 +7,6 @@ import { ProductVariantMapper } from '../../../../../product-variants/infrastruc
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
 import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
 import { PizzaIngredientMapper } from '../../../../../pizza-ingredients/infrastructure/persistence/relational/mappers/pizza-ingredient.mapper';
-import { PizzaIngredient } from '../../../../../pizza-ingredients/domain/pizza-ingredient';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import {

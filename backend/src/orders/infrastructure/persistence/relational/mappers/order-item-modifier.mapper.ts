@@ -45,7 +45,9 @@ export class OrderItemModifierMapper extends BaseMapper<
     const entity = new OrderItemModifierEntity();
     if (domain.id) entity.id = domain.id;
     entity.orderItem = { id: domain.orderItemId } as OrderItemEntity;
-    entity.productModifier = { id: domain.productModifierId } as ProductModifierEntity;
+    entity.productModifier = {
+      id: domain.productModifierId,
+    } as ProductModifierEntity;
     entity.quantity = domain.quantity;
     entity.price = domain.price;
 

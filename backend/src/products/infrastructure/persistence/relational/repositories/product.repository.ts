@@ -248,8 +248,8 @@ export class ProductRelationalRepository implements ProductRepository {
       throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
     }
 
-    // Obtener las entidades de pizza ingredients
-    const pizzaIngredients = await this.productRepository
+    // Actualizar las relaciones de pizza ingredients
+    await this.productRepository
       .createQueryBuilder()
       .relation(ProductEntity, 'pizzaIngredients')
       .of(product)

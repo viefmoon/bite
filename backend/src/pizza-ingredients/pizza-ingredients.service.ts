@@ -6,7 +6,10 @@ import { UpdatePizzaIngredientDto } from './dto/update-pizza-ingredient.dto';
 import { FindAllPizzaIngredientsDto } from './dto/find-all-pizza-ingredients.dto';
 import { PizzaIngredientRepository } from './infrastructure/persistence/pizza-ingredient.repository';
 import { PIZZA_INGREDIENT_REPOSITORY } from '../common/tokens';
-import { CustomIdService, EntityPrefix } from '../common/services/custom-id.service';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../common/services/custom-id.service';
 
 @Injectable()
 export class PizzaIngredientsService {
@@ -21,7 +24,10 @@ export class PizzaIngredientsService {
   ): Promise<PizzaIngredient> {
     const clonedPayload = {
       ...createPizzaIngredientDto,
-      id: await this.customIdService.generateId(EntityPrefix.PIZZA_INGREDIENT, 'pizza_ingredient'),
+      id: await this.customIdService.generateId(
+        EntityPrefix.PIZZA_INGREDIENT,
+        'pizza_ingredient',
+      ),
       ingredientValue: createPizzaIngredientDto.ingredientValue ?? 1,
       isActive: createPizzaIngredientDto.isActive ?? true,
       sortOrder: createPizzaIngredientDto.sortOrder ?? 0,
@@ -82,12 +88,10 @@ export class PizzaIngredientsService {
     await this.pizzaIngredientRepository.softDelete(pizzaIngredient.id);
   }
 
-  async assignToProducts(
-    pizzaIngredientId: string,
-    productIds: string[],
-  ): Promise<PizzaIngredient> {
+  async assignToProducts(pizzaIngredientId: string): Promise<PizzaIngredient> {
     // Este método se implementará cuando se necesite asignar ingredientes a productos
     // Por ahora, la asignación se maneja desde el lado del producto
+    // El parámetro productIds se agregará cuando se implemente la funcionalidad
     return this.findOne(pizzaIngredientId);
   }
 }

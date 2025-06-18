@@ -7,7 +7,10 @@ import { IProductModifierRepository } from './infrastructure/persistence/product
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { PRODUCT_MODIFIER_REPOSITORY } from '../common/tokens';
 import { Paginated } from '../common/types/paginated.type';
-import { CustomIdService, EntityPrefix } from '../common/services/custom-id.service';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../common/services/custom-id.service';
 
 @Injectable()
 export class ProductModifiersService {
@@ -21,7 +24,10 @@ export class ProductModifiersService {
     createProductModifierDto: CreateProductModifierDto,
   ): Promise<ProductModifier> {
     const productModifier = new ProductModifier();
-    productModifier.id = await this.customIdService.generateId(EntityPrefix.MODIFIER, 'product_modifier');
+    productModifier.id = await this.customIdService.generateId(
+      EntityPrefix.MODIFIER,
+      'product_modifier',
+    );
     productModifier.modifierGroupId = createProductModifierDto.modifierGroupId;
     productModifier.name = createProductModifierDto.name;
     productModifier.description =
@@ -72,7 +78,10 @@ export class ProductModifiersService {
     modifierGroupId: string,
     filters?: { isActive?: boolean; search?: string },
   ): Promise<ProductModifier[]> {
-    return this.productModifierRepository.findByGroupId(modifierGroupId, filters);
+    return this.productModifierRepository.findByGroupId(
+      modifierGroupId,
+      filters,
+    );
   }
 
   async update(

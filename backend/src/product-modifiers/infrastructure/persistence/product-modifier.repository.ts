@@ -83,7 +83,10 @@ export class ProductModifierRepository implements IProductModifierRepository {
         'product_modifier',
       );
 
-    queryBuilder.where('product_modifier.modifier_group_id = :modifierGroupId', { modifierGroupId });
+    queryBuilder.where(
+      'product_modifier.modifier_group_id = :modifierGroupId',
+      { modifierGroupId },
+    );
 
     if (filters?.isActive !== undefined) {
       queryBuilder.andWhere('product_modifier.is_active = :isActive', {
@@ -124,9 +127,12 @@ export class ProductModifierRepository implements IProductModifierRepository {
       );
 
     if (filterOptions.groupId) {
-      queryBuilder.andWhere('product_modifier.modifier_group_id = :modifierGroupId', {
-        modifierGroupId: filterOptions.groupId,
-      });
+      queryBuilder.andWhere(
+        'product_modifier.modifier_group_id = :modifierGroupId',
+        {
+          modifierGroupId: filterOptions.groupId,
+        },
+      );
     }
 
     if (filterOptions.name) {
@@ -214,9 +220,12 @@ export class ProductModifierRepository implements IProductModifierRepository {
       );
 
     if (filters.modifierGroupId) {
-      queryBuilder.where('product_modifier.modifier_group_id = :modifierGroupId', {
-        modifierGroupId: filters.modifierGroupId,
-      });
+      queryBuilder.where(
+        'product_modifier.modifier_group_id = :modifierGroupId',
+        {
+          modifierGroupId: filters.modifierGroupId,
+        },
+      );
     }
 
     queryBuilder.orderBy('product_modifier.sort_order', 'ASC');
