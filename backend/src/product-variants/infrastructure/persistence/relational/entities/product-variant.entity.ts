@@ -6,9 +6,8 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
-  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
@@ -18,10 +17,10 @@ import { OrderItemEntity } from '../../../../../orders/infrastructure/persistenc
   name: 'product_variant',
 })
 export class ProductVariantEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
-  @RelationId((variant: ProductVariantEntity) => variant.product)
+  @Column({ name: 'product_id', type: 'varchar', length: 20 })
   productId: string;
 
   @Column()

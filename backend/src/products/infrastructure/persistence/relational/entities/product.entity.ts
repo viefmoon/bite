@@ -8,7 +8,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
@@ -24,7 +24,7 @@ import { PizzaIngredientEntity } from '../../../../../pizza-ingredients/infrastr
   name: 'product',
 })
 export class ProductEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
   @Column()
@@ -45,7 +45,7 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ name: 'is_pizza', default: false })
   isPizza: boolean;
 
-  @Column({ name: 'subcategory_id' })
+  @Column({ name: 'subcategory_id', type: 'varchar', length: 20 })
   subcategoryId: string;
 
   @Column({ name: 'photo_id', nullable: true })
@@ -84,7 +84,7 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @Column({ name: 'preparation_screen_id', nullable: true })
+  @Column({ name: 'preparation_screen_id', nullable: true, type: 'varchar', length: 20 })
   preparationScreenId: string | null;
 
   @ManyToOne(

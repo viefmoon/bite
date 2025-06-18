@@ -5,7 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
@@ -18,7 +18,7 @@ import { ProductEntity } from '../../../../../products/infrastructure/persistenc
   name: 'subcategory',
 })
 export class SubcategoryEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
   @Column()
@@ -30,7 +30,7 @@ export class SubcategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ name: 'category_id' })
+  @Column({ name: 'category_id', type: 'varchar', length: 20 })
   categoryId: string;
 
   @Column({ name: 'photo_id', nullable: true })

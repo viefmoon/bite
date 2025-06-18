@@ -25,6 +25,7 @@ import {
   PIZZA_INGREDIENT_REPOSITORY,
 } from '../common/tokens';
 import { Paginated } from '../common/types/paginated.type';
+import { CustomIdService } from '../common/services/custom-id.service';
 
 @Injectable()
 export class ProductsService {
@@ -39,6 +40,7 @@ export class ProductsService {
     private readonly preparationScreenRepository: PreparationScreenRepository,
     @Inject(PIZZA_INGREDIENT_REPOSITORY)
     private readonly pizzaIngredientRepository: PizzaIngredientRepository,
+    private readonly customIdService: CustomIdService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -60,6 +62,7 @@ export class ProductsService {
     }
 
     const product = new Product();
+    product.id = await this.customIdService.generateId('PR');
     product.name = createProductDto.name;
     product.description = createProductDto.description ?? null;
     product.price = createProductDto.price ?? null;
@@ -142,6 +145,7 @@ export class ProductsService {
       for (const variantDto of createProductDto.variants) {
         // Usar repositorio en lugar de servicio
         const variantToCreate = new ProductVariant();
+        variantToCreate.id = await this.customIdService.generateId('PVA');
         variantToCreate.productId = createdProduct.id;
         variantToCreate.name = variantDto.name;
         variantToCreate.price = variantDto.price;
@@ -348,6 +352,7 @@ export class ProductsService {
           // Crear nueva variante
           // Usar repositorio en lugar de servicio
           const variantToCreate = new ProductVariant();
+          variantToCreate.id = await this.customIdService.generateId('PVA');
           variantToCreate.productId = id; // Asociar al producto actual
           variantToCreate.name = variantDto.name || '';
           variantToCreate.price = variantDto.price || 0;

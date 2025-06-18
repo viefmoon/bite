@@ -6,12 +6,14 @@ import { UpdatePizzaIngredientDto } from './dto/update-pizza-ingredient.dto';
 import { FindAllPizzaIngredientsDto } from './dto/find-all-pizza-ingredients.dto';
 import { PizzaIngredientRepository } from './infrastructure/persistence/pizza-ingredient.repository';
 import { PIZZA_INGREDIENT_REPOSITORY } from '../common/tokens';
+import { CustomIdService } from '../common/services/custom-id.service';
 
 @Injectable()
 export class PizzaIngredientsService {
   constructor(
     @Inject(PIZZA_INGREDIENT_REPOSITORY)
     private readonly pizzaIngredientRepository: PizzaIngredientRepository,
+    private readonly customIdService: CustomIdService,
   ) {}
 
   async create(
@@ -19,6 +21,7 @@ export class PizzaIngredientsService {
   ): Promise<PizzaIngredient> {
     const clonedPayload = {
       ...createPizzaIngredientDto,
+      id: await this.customIdService.generateId('PI'),
       ingredientValue: createPizzaIngredientDto.ingredientValue ?? 1,
       isActive: createPizzaIngredientDto.isActive ?? true,
       sortOrder: createPizzaIngredientDto.sortOrder ?? 0,

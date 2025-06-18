@@ -4,7 +4,7 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
@@ -14,7 +14,7 @@ import { ProductEntity } from '../../../../../products/infrastructure/persistenc
   name: 'pizza_ingredient',
 })
 export class PizzaIngredientEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
   @Column()

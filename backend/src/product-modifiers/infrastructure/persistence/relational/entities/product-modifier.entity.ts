@@ -5,7 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
@@ -15,10 +15,10 @@ import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructu
   name: 'product_modifier',
 })
 export class ProductModifierEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 20 })
   id: string;
 
-  @Column({ name: 'group_id', type: 'uuid' })
+  @Column({ name: 'group_id', type: 'varchar', length: 20 })
   groupId: string;
 
   @Column()

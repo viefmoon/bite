@@ -6,18 +6,21 @@ import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { Subcategory } from './domain/subcategory';
 import { FindAllSubcategoriesDto } from './dto/find-all-subcategories.dto';
 import { Paginated } from '../common/types/paginated.type';
+import { CustomIdService } from '../common/services/custom-id.service';
 
 @Injectable()
 export class SubcategoriesService {
   constructor(
     @Inject(SUBCATEGORY_REPOSITORY)
     private readonly subcategoryRepository: SubcategoryRepository,
+    private readonly customIdService: CustomIdService,
   ) {}
 
   async create(
     createSubcategoryDto: CreateSubcategoryDto,
   ): Promise<Subcategory> {
     const subcategory = new Subcategory();
+    subcategory.id = await this.customIdService.generateId('SUB');
     subcategory.name = createSubcategoryDto.name;
     subcategory.description = createSubcategoryDto.description || null;
     subcategory.isActive = createSubcategoryDto.isActive ?? true;

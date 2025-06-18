@@ -7,18 +7,21 @@ import { FindAllModifierGroupsDto } from './dto/find-all-modifier-groups.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { Paginated } from '../common/types/paginated.type';
 import { MODIFIER_GROUP_REPOSITORY } from '../common/tokens';
+import { CustomIdService } from '../common/services/custom-id.service';
 
 @Injectable()
 export class ModifierGroupsService {
   constructor(
     @Inject(MODIFIER_GROUP_REPOSITORY)
     private readonly modifierGroupRepository: ModifierGroupRepository,
+    private readonly customIdService: CustomIdService,
   ) {}
 
   async create(
     createModifierGroupDto: CreateModifierGroupDto,
   ): Promise<ModifierGroup> {
     const data = new ModifierGroup();
+    data.id = await this.customIdService.generateId('MODG');
     data.name = createModifierGroupDto.name;
     data.description = createModifierGroupDto.description ?? null;
     data.minSelections = createModifierGroupDto.minSelections ?? 0;
