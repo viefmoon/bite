@@ -221,10 +221,10 @@ export class ProductRelationalRepository implements ProductRepository {
     }
   }
 
-  async findOneWithPizzaIngredients(id: string): Promise<Product | null> {
+  async findOneWithPizzaCustomizations(id: string): Promise<Product | null> {
     const entity = await this.productRepository.findOne({
       where: { id },
-      relations: ['pizzaIngredients'],
+      relations: ['pizzaCustomizations'],
     });
 
     if (!entity) {
@@ -235,34 +235,34 @@ export class ProductRelationalRepository implements ProductRepository {
     return domainResult;
   }
 
-  async updatePizzaIngredients(
+  async updatePizzaCustomizations(
     productId: string,
-    pizzaIngredientIds: string[],
+    pizzaCustomizationIds: string[],
   ): Promise<void> {
     const product = await this.productRepository.findOne({
       where: { id: productId },
-      relations: ['pizzaIngredients'],
+      relations: ['pizzaCustomizations'],
     });
 
     if (!product) {
       throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
     }
 
-    // Actualizar las relaciones de pizza ingredients
+    // Actualizar las relaciones de pizza customizations
     await this.productRepository
       .createQueryBuilder()
-      .relation(ProductEntity, 'pizzaIngredients')
+      .relation(ProductEntity, 'pizzaCustomizations')
       .of(product)
       .addAndRemove(
-        pizzaIngredientIds,
-        product.pizzaIngredients.map((pi) => pi.id),
+        pizzaCustomizationIds,
+        product.pizzaCustomizations.map((pc) => pc.id),
       );
   }
 
   async findAllPizzas(): Promise<Product[]> {
     const entities = await this.productRepository.find({
       where: { isPizza: true, isActive: true },
-      relations: ['photo', 'subcategory', 'pizzaIngredients'],
+      relations: ['photo', 'subcategory', 'pizzaCustomizations', 'pizzaConfiguration'],
       order: {
         name: 'ASC',
       },

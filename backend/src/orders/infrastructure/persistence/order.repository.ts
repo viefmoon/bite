@@ -6,7 +6,7 @@ import { FindAllOrdersDto } from '../../dto/find-all-orders.dto';
 
 export abstract class OrderRepository {
   abstract create(data: {
-    userId: string;
+    userId: string | null;
     tableId: string | null;
     scheduledAt?: Date | null;
     orderStatus: string;
@@ -17,6 +17,8 @@ export abstract class OrderRepository {
     phoneNumber?: string | null;
     customerName?: string | null;
     deliveryAddress?: string | null;
+    customerId?: string | null;
+    isFromWhatsApp?: boolean;
   }): Promise<Order>;
 
   abstract findManyWithPagination({

@@ -8,6 +8,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,7 +19,8 @@ import { ProductVariantEntity } from '../../../../../product-variants/infrastruc
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
-import { PizzaIngredientEntity } from '../../../../../pizza-ingredients/infrastructure/persistence/relational/entities/pizza-ingredient.entity';
+import { PizzaCustomizationEntity } from '../../../../../pizza-customizations/infrastructure/persistence/relational/entities/pizza-customization.entity';
+import { PizzaConfigurationEntity } from '../../../../../pizza-configurations/infrastructure/persistence/relational/entities/pizza-configuration.entity';
 
 @Entity({
   name: 'product',
@@ -97,19 +99,22 @@ export class ProductEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'preparation_screen_id' })
   preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
 
-  @ManyToMany(() => PizzaIngredientEntity, (ingredient) => ingredient.products)
+  @ManyToMany(() => PizzaCustomizationEntity, (customization) => customization.products)
   @JoinTable({
-    name: 'product_pizza_ingredient',
+    name: 'product_pizza_customization',
     joinColumn: {
       name: 'product_id',
       referencedColumnName: 'id',
     },
     inverseJoinColumn: {
-      name: 'pizza_ingredient_id',
+      name: 'pizza_customization_id',
       referencedColumnName: 'id',
     },
   })
-  pizzaIngredients: PizzaIngredientEntity[];
+  pizzaCustomizations: PizzaCustomizationEntity[];
+
+  @OneToOne(() => PizzaConfigurationEntity, (config) => config.product)
+  pizzaConfiguration: PizzaConfigurationEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

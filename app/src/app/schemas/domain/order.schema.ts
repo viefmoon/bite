@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
+import { PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
@@ -24,6 +25,14 @@ export const orderItemModifierSchema = z.object({
 });
 export type OrderItemModifier = z.infer<typeof orderItemModifierSchema>;
 
+// Schema para las personalizaciones de pizza seleccionadas
+export const selectedPizzaCustomizationSchema = z.object({
+  pizzaCustomizationId: z.string(),
+  half: z.nativeEnum(PizzaHalf),
+  action: z.nativeEnum(CustomizationAction),
+});
+export type SelectedPizzaCustomization = z.infer<typeof selectedPizzaCustomizationSchema>;
+
 // Schema para un ítem individual de la orden
 export const orderItemSchema = z.object({
   id: z.string(),
@@ -36,6 +45,7 @@ export const orderItemSchema = z.object({
   variantId: z.string().uuid().nullable().optional(),
   variantName: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
 });
 export type OrderItem = z.infer<typeof orderItemSchema>;
 

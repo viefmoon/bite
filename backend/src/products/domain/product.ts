@@ -3,7 +3,8 @@ import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
 import { PreparationScreen } from '../../preparation-screens/domain/preparation-screen';
-import { PizzaIngredient } from '../../pizza-ingredients/domain/pizza-ingredient';
+import { PizzaCustomization } from '../../pizza-customizations/domain/pizza-customization';
+import { PizzaConfiguration } from '../../pizza-configurations/domain/pizza-configuration';
 export class Product {
   id: string;
 
@@ -37,7 +38,9 @@ export class Product {
 
   preparationScreen: PreparationScreen | null;
 
-  pizzaIngredients?: PizzaIngredient[];
+  pizzaCustomizations?: PizzaCustomization[];
+
+  pizzaConfiguration?: PizzaConfiguration;
 
   createdAt: Date;
 

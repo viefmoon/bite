@@ -16,13 +16,11 @@ import { ProductVariant } from '../product-variants/domain/product-variant';
 import { ModifierGroupRepository } from '../modifier-groups/infrastructure/persistence/modifier-group.repository'; // Importar repositorio
 import { ModifierGroup } from '../modifier-groups/domain/modifier-group';
 import { PreparationScreenRepository } from '../preparation-screens/infrastructure/persistence/preparation-screen.repository'; // Importar repositorio
-import { PizzaIngredientRepository } from '../pizza-ingredients/infrastructure/persistence/pizza-ingredient.repository';
 import {
   PRODUCT_REPOSITORY,
   PRODUCT_VARIANT_REPOSITORY,
   MODIFIER_GROUP_REPOSITORY,
   PREPARATION_SCREEN_REPOSITORY,
-  PIZZA_INGREDIENT_REPOSITORY,
 } from '../common/tokens';
 import { Paginated } from '../common/types/paginated.type';
 import {
@@ -41,8 +39,6 @@ export class ProductsService {
     private readonly modifierGroupRepository: ModifierGroupRepository,
     @Inject(PREPARATION_SCREEN_REPOSITORY) // Inyectar repositorio
     private readonly preparationScreenRepository: PreparationScreenRepository,
-    @Inject(PIZZA_INGREDIENT_REPOSITORY)
-    private readonly pizzaIngredientRepository: PizzaIngredientRepository,
     private readonly customIdService: CustomIdService,
   ) {}
 
@@ -393,95 +389,11 @@ export class ProductsService {
     await this.productRepository.softDelete(id);
   }
 
-  async getPizzaIngredients(productId: string): Promise<any> {
-    const product = await this.productRepository.findOne(productId);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
-    }
-
-    if (!product.isPizza) {
-      throw new BadRequestException('This product is not a pizza');
-    }
-
-    // Obtener el producto con sus pizza ingredients
-    const productWithIngredients =
-      await this.productRepository.findOneWithPizzaIngredients(productId);
-    return productWithIngredients?.pizzaIngredients || [];
-  }
-
-  async updatePizzaIngredients(
-    productId: string,
-    pizzaIngredientIds: string[],
-  ): Promise<Product> {
-    const product = await this.productRepository.findOne(productId);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
-    }
-
-    if (!product.isPizza) {
-      throw new BadRequestException('This product is not a pizza');
-    }
-
-    // Actualizar los pizza ingredients
-    await this.productRepository.updatePizzaIngredients(
-      productId,
-      pizzaIngredientIds,
-    );
-
-    // Devolver el producto actualizado
-    return this.productRepository.findOne(productId) as Promise<Product>;
-  }
 
   async findAllPizzas(): Promise<Product[]> {
     return this.productRepository.findAllPizzas();
   }
 
-  async bulkUpdatePizzaIngredients(
-    updates: Array<{ productId: string; ingredientIds: string[] }>,
-  ): Promise<void> {
-    // Validar que todos los productos existen y son pizzas
-    const productIds = updates.map((u) => u.productId);
-    const products = await Promise.all(
-      productIds.map((id) => this.productRepository.findOne(id)),
-    );
-
-    for (let i = 0; i < products.length; i++) {
-      const product = products[i];
-      if (!product) {
-        throw new NotFoundException(`Producto no encontrado: ${productIds[i]}`);
-      }
-      if (!product.isPizza) {
-        throw new BadRequestException(
-          `El producto ${product.name} no es una pizza`,
-        );
-      }
-    }
-
-    // Validar que todos los ingredientes existen
-    const allIngredientIds = Array.from(
-      new Set(updates.flatMap((u) => u.ingredientIds)),
-    );
-
-    for (const ingredientId of allIngredientIds) {
-      const ingredient =
-        await this.pizzaIngredientRepository.findById(ingredientId);
-      if (!ingredient) {
-        throw new NotFoundException(
-          `Ingrediente no encontrado: ${ingredientId}`,
-        );
-      }
-    }
-
-    // Actualizar cada producto
-    await Promise.all(
-      updates.map((update) =>
-        this.productRepository.updatePizzaIngredients(
-          update.productId,
-          update.ingredientIds,
-        ),
-      ),
-    );
-  }
 
   async findAllBySubcategoryId(subcategoryId: string): Promise<Product[]> {
     const result = await this.productRepository.findAll({

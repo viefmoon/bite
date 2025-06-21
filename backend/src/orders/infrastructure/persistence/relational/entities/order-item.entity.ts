@@ -16,7 +16,7 @@ import { ProductVariantEntity } from '../../../../../product-variants/infrastruc
 import { OrderItemModifierEntity } from './order-item-modifier.entity';
 import { PreparationStatus } from '../../../../domain/order-item';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
-import { SelectedPizzaIngredientEntity } from '../../../../../selected-pizza-ingredients/infrastructure/persistence/relational/entities/selected-pizza-ingredient.entity';
+import { SelectedPizzaCustomizationEntity } from '../../../../../selected-pizza-customizations/infrastructure/persistence/relational/entities/selected-pizza-customization.entity';
 
 @Entity({
   name: 'order_item',
@@ -88,10 +88,10 @@ export class OrderItemEntity extends EntityRelationalHelper {
   adjustments: AdjustmentEntity[];
 
   @OneToMany(
-    () => SelectedPizzaIngredientEntity,
-    (selectedIngredient) => selectedIngredient.orderItem,
+    () => SelectedPizzaCustomizationEntity,
+    (selectedCustomization) => selectedCustomization.orderItem,
   )
-  selectedPizzaIngredients: SelectedPizzaIngredientEntity[];
+  selectedPizzaCustomizations: SelectedPizzaCustomizationEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

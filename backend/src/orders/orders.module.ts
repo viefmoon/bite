@@ -13,6 +13,7 @@ import { ProductModifiersModule } from '../product-modifiers/product-modifiers.m
 import { RelationalOrderPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { CommonModule } from '../common/common.module';
 import { CustomersModule } from '../customers/customers.module';
+import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.service';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { CustomersModule } from '../customers/customers.module';
     CustomersModule,
   ],
   controllers: [OrdersController, TicketImpressionsController],
-  providers: [OrdersService, OrderSubscriber, OrderChangeLogService],
+  providers: [OrdersService, OrderSubscriber, OrderChangeLogService, PizzaPriceCalculatorService],
   exports: [
     OrdersService,
     OrderChangeLogService,

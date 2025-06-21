@@ -21,9 +21,6 @@ import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
-import { ManagePizzaIngredientsDto } from './dto/manage-pizza-ingredients.dto';
-import { BulkUpdatePizzaIngredientsDto } from './dto/bulk-update-pizza-ingredients.dto';
-// AssignModifierGroupsDto ya no se usa directamente en endpoints separados
 
 @ApiTags('Productos')
 @Controller({
@@ -72,17 +69,6 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  @Put('pizzas/ingredients/bulk')
-  @ApiOperation({
-    summary: 'Actualizar ingredientes de múltiples pizzas en masa',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  bulkUpdatePizzaIngredients(@Body() data: BulkUpdatePizzaIngredientsDto) {
-    return this.productsService.bulkUpdatePizzaIngredients(data.updates);
-  }
 
   @Patch(':id')
   @ApiOperation({
@@ -108,33 +94,6 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  @Get(':id/pizza-ingredients')
-  @ApiOperation({
-    summary: 'Obtener los pizza ingredients de un producto',
-  })
-  @HttpCode(HttpStatus.OK)
-  getPizzaIngredients(@Param('id') id: string) {
-    return this.productsService.getPizzaIngredients(id);
-  }
-
-  @Put(':id/pizza-ingredients')
-  @ApiOperation({
-    summary: 'Actualizar los pizza ingredients de un producto',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  updatePizzaIngredients(
-    @Param('id') id: string,
-    @Body() managePizzaIngredientsDto: ManagePizzaIngredientsDto,
-  ) {
-    return this.productsService.updatePizzaIngredients(
-      id,
-      managePizzaIngredientsDto.pizzaIngredientIds,
-    );
-  }
-  // Los endpoints específicos para modifier-groups se eliminan.
-  // La asignación/actualización se maneja en POST /products y PATCH /products/:id.
-  // La obtención se maneja en GET /products/:id (cargando la relación).
+  // Endpoints de pizza ingredients fueron removidos.
+  // Usar el módulo pizza-customizations en su lugar.
 }

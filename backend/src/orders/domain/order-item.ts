@@ -3,6 +3,7 @@ import { Product } from '../../products/domain/product';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { OrderItemModifier } from './order-item-modifier';
 import { Adjustment } from '../../adjustments/domain/adjustment';
+import { SelectedPizzaCustomization } from '../../selected-pizza-customizations/domain/selected-pizza-customization';
 
 export enum PreparationStatus {
   PENDING = 'PENDING',
@@ -27,6 +28,7 @@ export class OrderItem {
   productVariant?: ProductVariant | null;
   modifiers?: OrderItemModifier[];
   adjustments?: Adjustment[];
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;

@@ -6,7 +6,8 @@ import { FileMapper } from '../../../../../files/infrastructure/persistence/rela
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
 import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
-import { PizzaIngredientMapper } from '../../../../../pizza-ingredients/infrastructure/persistence/relational/mappers/pizza-ingredient.mapper';
+import { PizzaCustomizationMapper } from '../../../../../pizza-customizations/infrastructure/persistence/relational/mappers/pizza-customization.mapper';
+import { PizzaConfigurationMapper } from '../../../../../pizza-configurations/infrastructure/persistence/relational/mappers/pizza-configuration.mapper';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import {
@@ -16,6 +17,7 @@ import {
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
+import { PizzaCustomization } from '../../../../../pizza-customizations/domain/pizza-customization';
 
 @Injectable()
 export class ProductMapper extends BaseMapper<ProductEntity, Product> {
@@ -29,6 +31,10 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     private readonly modifierGroupMapper: ModifierGroupMapper,
     @Inject(forwardRef(() => PreparationScreenMapper))
     private readonly preparationScreenMapper: PreparationScreenMapper,
+    @Inject(forwardRef(() => PizzaCustomizationMapper))
+    private readonly pizzaCustomizationMapper: PizzaCustomizationMapper,
+    @Inject(forwardRef(() => PizzaConfigurationMapper))
+    private readonly pizzaConfigurationMapper: PizzaConfigurationMapper,
   ) {
     super();
   }
@@ -65,10 +71,17 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
       ? this.preparationScreenMapper.toDomain(entity.preparationScreen)
       : null;
 
-    if (entity.pizzaIngredients) {
-      domain.pizzaIngredients = entity.pizzaIngredients.map((ingredient) =>
-        PizzaIngredientMapper.toDomain(ingredient),
-      );
+    if (entity.pizzaCustomizations) {
+      domain.pizzaCustomizations = entity.pizzaCustomizations
+        .map((customization) => this.pizzaCustomizationMapper.toDomain(customization))
+        .filter((item): item is PizzaCustomization => item !== null);
+    }
+
+    if (entity.pizzaConfiguration) {
+      const configuration = this.pizzaConfigurationMapper.toDomain(entity.pizzaConfiguration);
+      if (configuration) {
+        domain.pizzaConfiguration = configuration;
+      }
     }
 
     return domain;

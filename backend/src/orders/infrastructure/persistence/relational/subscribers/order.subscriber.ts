@@ -34,7 +34,7 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
 
     // Obtener el usuario del contexto o usar el userId de la orden
     const currentUser = this.userContextService.getCurrentUser();
-    const changedBy = currentUser?.userId || event.entity.userId;
+    const changedBy = currentUser?.userId || event.entity.userId || 'system';
 
     await this.persistHistory(
       'INSERT',
@@ -62,7 +62,7 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
     // Obtener el usuario del contexto o usar el userId de la orden
     const currentUser = this.userContextService.getCurrentUser();
     const changedBy =
-      currentUser?.userId || (event.entity as OrderEntity).userId;
+      currentUser?.userId || (event.entity as OrderEntity).userId || 'system';
 
     // Limpiar el diff de campos no relevantes
     const cleanedDiff = this.cleanDiff(diff);
@@ -86,7 +86,7 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
 
     // Obtener el usuario del contexto o usar el userId de la orden
     const currentUser = this.userContextService.getCurrentUser();
-    const changedBy = currentUser?.userId || event.databaseEntity.userId;
+    const changedBy = currentUser?.userId || event.databaseEntity.userId || 'system';
 
     await this.persistHistory(
       'DELETE',

@@ -11,6 +11,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateOrderItemModifierDto } from './create-order-item-modifier.dto';
+import { CreateSelectedPizzaCustomizationDto } from '../../selected-pizza-customizations/dto/create-selected-pizza-customization.dto';
 
 /**
  * DTO for order items when creating a new order.
@@ -78,4 +79,15 @@ export class OrderItemInputDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemModifierDto)
   modifiers?: CreateOrderItemModifierDto[];
+
+  @ApiProperty({
+    type: [CreateSelectedPizzaCustomizationDto],
+    description: 'Personalizaciones de pizza (opcional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSelectedPizzaCustomizationDto)
+  selectedPizzaCustomizations?: CreateSelectedPizzaCustomizationDto[];
 }

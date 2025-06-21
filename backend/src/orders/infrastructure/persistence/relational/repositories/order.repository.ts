@@ -178,6 +178,7 @@ export class OrdersRelationalRepository implements OrderRepository {
   }
 
   async findByUserId(userId: Order['userId']): Promise<Order[]> {
+    if (!userId) return [];
     const entities = await this.ordersRepository.find({
       where: { userId },
       relations: [
