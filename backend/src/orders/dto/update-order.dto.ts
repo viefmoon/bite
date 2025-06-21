@@ -18,6 +18,7 @@ import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';
 import { OrderItemInputDto } from './order-item-input.dto';
+import { DeliveryInfoDto } from './delivery-info.dto';
 
 export class UpdateOrderDto {
   @ApiProperty({
@@ -114,58 +115,12 @@ export class UpdateOrderDto {
   items?: OrderItemInputDto[];
 
   @ApiProperty({
-    type: String,
-    example: '+523331234567',
-    description:
-      'Número de teléfono para la entrega (obligatorio si orderType es DELIVERY)',
+    type: DeliveryInfoDto,
+    description: 'Información de entrega',
     required: false,
-    nullable: true,
   })
   @IsOptional()
-  @ValidateIf((o) => o.orderType === OrderType.DELIVERY)
-  @IsNotEmpty({
-    message: 'El número de teléfono es obligatorio para entregas a domicilio',
-  })
-  @IsString({ message: 'El número de teléfono debe ser una cadena de texto' })
-  @MinLength(10, {
-    message: 'El número de teléfono debe tener al menos 10 dígitos',
-  })
-  @MaxLength(15, {
-    message: 'El número de teléfono no puede tener más de 15 dígitos',
-  })
-  @Matches(/^\+?[0-9]+$/, {
-    message:
-      'El número de teléfono solo debe contener dígitos y puede empezar con +',
-  })
-  phoneNumber?: string | null;
-
-  @ApiProperty({
-    type: String,
-    example: 'John Doe',
-    description: 'Customer name (required if orderType is TAKE_AWAY)',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @ValidateIf((o) => o.orderType === OrderType.TAKE_AWAY)
-  @IsNotEmpty({
-    message: 'Customer name is required for take-away orders',
-  })
-  @IsString()
-  customerName?: string | null;
-
-  @ApiProperty({
-    type: String,
-    example: '456 Oak Ave, Anytown, USA 67890',
-    description: 'Delivery address (required if orderType is DELIVERY)',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @ValidateIf((o) => o.orderType === OrderType.DELIVERY)
-  @IsNotEmpty({
-    message: 'Delivery address is required for delivery orders',
-  })
-  @IsString()
-  deliveryAddress?: string | null;
+  @ValidateNested()
+  @Type(() => DeliveryInfoDto)
+  deliveryInfo?: DeliveryInfoDto;
 }

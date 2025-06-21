@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from 'react';
 import { Product, OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderType y Enum
+import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
 const generateId = () => {
   return (
@@ -83,12 +84,8 @@ interface CartContextType {
   setSelectedTableId: (id: string | null) => void;
   scheduledTime: Date | null;
   setScheduledTime: (time: Date | null) => void;
-  customerName: string;
-  setCustomerName: (name: string) => void;
-  phoneNumber: string;
-  setPhoneNumber: (phone: string) => void;
-  deliveryAddress: string;
-  setDeliveryAddress: (address: string) => void;
+  deliveryInfo: DeliveryInfo;
+  setDeliveryInfo: (info: DeliveryInfo) => void;
   orderNotes: string;
   setOrderNotes: (notes: string) => void;
 }
@@ -115,9 +112,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [scheduledTime, setScheduledTime] = useState<Date | null>(null);
-  const [customerName, setCustomerName] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({});
   const [orderNotes, setOrderNotes] = useState<string>('');
 
   const subtotal = useMemo(() => {
@@ -294,9 +289,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setSelectedAreaId(null);
     setSelectedTableId(null);
     setScheduledTime(null);
-    setCustomerName('');
-    setPhoneNumber('');
-    setDeliveryAddress('');
+    setDeliveryInfo({});
     setOrderNotes('');
   };
 
@@ -331,12 +324,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setSelectedTableId,
     scheduledTime,
     setScheduledTime,
-    customerName,
-    setCustomerName,
-    phoneNumber,
-    setPhoneNumber,
-    deliveryAddress,
-    setDeliveryAddress,
+    deliveryInfo,
+    setDeliveryInfo,
     orderNotes,
     setOrderNotes,
   };

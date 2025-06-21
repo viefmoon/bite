@@ -6,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -20,6 +21,7 @@ import { OrderItemEntity } from './order-item.entity';
 import { PaymentEntity } from '../../../../../payments/infrastructure/persistence/relational/entities/payment.entity';
 import { TicketImpressionEntity } from './ticket-impression.entity';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
+import { DeliveryInfoEntity } from './delivery-info.entity';
 
 @Entity({
   name: 'orders',
@@ -78,12 +80,6 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
-  phoneNumber: string | null;
-
-  @Column({ name: 'customer_name', type: 'varchar', nullable: true })
-  customerName: string | null;
-
   @Column({ name: 'customer_id', type: 'uuid', nullable: true })
   customerId: string | null;
 
@@ -92,9 +88,6 @@ export class OrderEntity extends EntityRelationalHelper {
   })
   @JoinColumn({ name: 'customer_id' })
   customer: CustomerEntity | null;
-
-  @Column({ name: 'delivery_address', type: 'text', nullable: true })
-  deliveryAddress: string | null;
 
   @Column({ name: 'is_from_whatsapp', type: 'boolean', default: false })
   isFromWhatsApp: boolean;
@@ -110,6 +103,12 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @OneToMany(() => AdjustmentEntity, (adjustment) => adjustment.order)
   adjustments: AdjustmentEntity[];
+
+  @OneToOne(() => DeliveryInfoEntity, (deliveryInfo) => deliveryInfo.order, {
+    cascade: true,
+    nullable: false,
+  })
+  deliveryInfo: DeliveryInfoEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

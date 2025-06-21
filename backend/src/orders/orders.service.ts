@@ -31,6 +31,7 @@ import {
 } from '../common/tokens';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import { CustomersService } from '../customers/customers.service';
+import { DeliveryInfo } from './domain/delivery-info';
 
 @Injectable()
 export class OrdersService {
@@ -59,6 +60,15 @@ export class OrdersService {
       }
     }
 
+    // Crear la información de entrega (siempre requerida)
+    const deliveryInfo: DeliveryInfo = {
+      id: uuidv4(),
+      orderId: '', // Se asignará después de crear la orden
+      ...createOrderDto.deliveryInfo,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     const order = await this.orderRepository.create({
       userId: createOrderDto.userId || null,
       tableId: createOrderDto.tableId || null,
@@ -68,11 +78,9 @@ export class OrdersService {
       subtotal: createOrderDto.subtotal,
       total: createOrderDto.total,
       notes: createOrderDto.notes,
-      phoneNumber: createOrderDto.phoneNumber || null,
-      customerName: createOrderDto.customerName || null,
-      deliveryAddress: createOrderDto.deliveryAddress || null,
       customerId: createOrderDto.customerId || null,
       isFromWhatsApp: createOrderDto.isFromWhatsApp || false,
+      deliveryInfo: deliveryInfo,
     });
 
     if (createOrderDto.items && createOrderDto.items.length > 0) {
@@ -169,12 +177,17 @@ export class OrdersService {
       updatePayload.total = updateOrderDto.total;
     if (updateOrderDto.notes !== undefined)
       updatePayload.notes = updateOrderDto.notes;
-    if (updateOrderDto.phoneNumber !== undefined)
-      updatePayload.phoneNumber = updateOrderDto.phoneNumber;
-    if (updateOrderDto.customerName !== undefined)
-      updatePayload.customerName = updateOrderDto.customerName;
-    if (updateOrderDto.deliveryAddress !== undefined)
-      updatePayload.deliveryAddress = updateOrderDto.deliveryAddress;
+
+    // Manejar actualización de deliveryInfo (siempre crear un nuevo objeto)
+    if (updateOrderDto.deliveryInfo !== undefined) {
+      updatePayload.deliveryInfo = {
+        id: uuidv4(),
+        orderId: id,
+        ...updateOrderDto.deliveryInfo,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
 
     // Solo actualizar si hay cambios en los campos básicos
     if (Object.keys(updatePayload).length > 0) {

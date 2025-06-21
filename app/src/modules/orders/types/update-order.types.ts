@@ -1,5 +1,6 @@
 import type { OrderType } from './orders.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
+import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
 // Interfaz para modificadores de items
 export interface OrderItemModifierDto {
@@ -35,9 +36,7 @@ export interface UpdateOrderPayload {
   items?: OrderItemDtoForBackend[];
   tableId?: string | null;
   scheduledAt?: Date | null;
-  customerName?: string | null;
-  phoneNumber?: string | null;
-  deliveryAddress?: string | null;
+  deliveryInfo?: DeliveryInfo;
   notes?: string | null;
   status?: Order['orderStatus'];
   total?: number;

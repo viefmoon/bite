@@ -6,6 +6,7 @@ import { OrderItemModifierEntity } from './entities/order-item-modifier.entity';
 import { OrderItemEntity } from './entities/order-item.entity';
 import { TicketImpressionEntity } from './entities/ticket-impression.entity';
 import { OrderHistoryEntity } from './entities/order-history.entity';
+import { DeliveryInfoEntity } from './entities/delivery-info.entity';
 import { OrdersRelationalRepository } from './repositories/order.repository';
 import { DailyOrderCounterRelationalRepository } from './repositories/daily-order-counter.repository';
 import { OrderItemModifierRelationalRepository } from './repositories/order-item-modifier.repository';
@@ -17,6 +18,7 @@ import { DailyOrderCounterMapper } from './mappers/daily-order-counter.mapper';
 import { OrderItemMapper } from './mappers/order-item.mapper';
 import { OrderItemModifierMapper } from './mappers/order-item-modifier.mapper';
 import { TicketImpressionMapper } from './mappers/ticket-impression.mapper';
+import { DeliveryInfoMapper } from './mappers/delivery-info.mapper';
 import {
   ORDER_REPOSITORY,
   DAILY_ORDER_COUNTER_REPOSITORY,
@@ -42,6 +44,7 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
       OrderItemEntity,
       TicketImpressionEntity,
       OrderHistoryEntity,
+      DeliveryInfoEntity,
     ]),
     RelationalUserPersistenceModule,
     RelationalTablePersistenceModule,
@@ -81,6 +84,7 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
     OrderItemMapper,
     OrderItemModifierMapper,
     TicketImpressionMapper,
+    DeliveryInfoMapper,
   ],
   exports: [
     ORDER_REPOSITORY,
@@ -94,6 +98,7 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
     OrderItemMapper,
     OrderItemModifierMapper,
     TicketImpressionMapper,
+    DeliveryInfoMapper,
   ],
 })
 export class RelationalOrderPersistenceModule {}

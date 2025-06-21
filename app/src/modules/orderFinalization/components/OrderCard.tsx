@@ -174,7 +174,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
         <View style={styles.details}>
           <View style={styles.detailsContent}>
-            {order.customerName && (
+            {order.deliveryInfo?.recipientName && (
               <Text
                 style={[
                   styles.customerName,
@@ -182,8 +182,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 ]}
                 numberOfLines={1}
               >
-                {order.customerName}{' '}
-                {order.phoneNumber && `• ${order.phoneNumber}`}
+                {order.deliveryInfo.recipientName}{' '}
+                {order.deliveryInfo.recipientPhone && `• ${order.deliveryInfo.recipientPhone}`}
               </Text>
             )}
 
@@ -200,7 +200,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               </Text>
             )}
 
-            {order.orderType === 'DELIVERY' && order.deliveryAddress && (
+            {order.orderType === 'DELIVERY' && order.deliveryInfo?.fullAddress && (
               <Text
                 style={[
                   styles.address,
@@ -209,7 +209,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {order.deliveryAddress}
+                {order.deliveryInfo.fullAddress}
               </Text>
             )}
 

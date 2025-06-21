@@ -65,6 +65,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
     });
 
@@ -143,6 +144,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
       order: {
         createdAt: 'DESC',
@@ -191,6 +193,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
       order: {
         createdAt: 'DESC',
@@ -219,6 +222,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
       order: {
         createdAt: 'DESC',
@@ -245,6 +249,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
       order: {
         dailyNumber: 'ASC',
@@ -304,6 +309,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
     });
 
@@ -351,6 +357,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
     });
 
@@ -386,6 +393,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems.modifiers.modifier',
         'payments',
         'adjustments',
+        'deliveryInfo',
       ],
       order: {
         createdAt: 'ASC',

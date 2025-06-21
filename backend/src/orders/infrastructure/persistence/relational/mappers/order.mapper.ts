@@ -7,6 +7,7 @@ import { DailyOrderCounterMapper } from './daily-order-counter.mapper';
 import { OrderItemMapper } from './order-item.mapper';
 import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper';
 import { AdjustmentMapper } from '../../../../../adjustments/infrastructure/persistence/relational/mappers/adjustment.mapper';
+import { DeliveryInfoMapper } from './delivery-info.mapper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
 import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
@@ -26,6 +27,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     private readonly paymentMapper: PaymentMapper,
     @Inject(forwardRef(() => AdjustmentMapper))
     private readonly adjustmentMapper: AdjustmentMapper,
+    private readonly deliveryInfoMapper: DeliveryInfoMapper,
   ) {
     super();
   }
@@ -43,10 +45,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.subtotal = entity.subtotal;
     domain.total = entity.total;
     domain.notes = entity.notes || undefined;
-    domain.phoneNumber = entity.phoneNumber;
-    domain.customerName = entity.customerName;
     domain.customerId = entity.customerId;
-    domain.deliveryAddress = entity.deliveryAddress;
     domain.isFromWhatsApp = entity.isFromWhatsApp;
     domain.scheduledAt = entity.scheduledAt;
     domain.createdAt = entity.createdAt;
@@ -71,6 +70,8 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       this.adjustmentMapper.toDomain(adjustment),
     );
 
+    domain.deliveryInfo = this.deliveryInfoMapper.toDomain(entity.deliveryInfo!)!;
+
     return domain;
   }
 
@@ -92,10 +93,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.subtotal = domain.subtotal;
     entity.total = domain.total;
     entity.notes = domain.notes || null;
-    entity.phoneNumber = domain.phoneNumber || null;
-    entity.customerName = domain.customerName || null;
     entity.customerId = domain.customerId || null;
-    entity.deliveryAddress = domain.deliveryAddress || null;
     entity.isFromWhatsApp = domain.isFromWhatsApp || false;
     entity.scheduledAt = domain.scheduledAt || null;
 

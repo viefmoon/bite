@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
 import { PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import { DeliveryInfoSchema } from './delivery-info.schema';
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
@@ -64,9 +65,7 @@ export const orderSchema = z.object({
   tableId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  customerName: z.string().nullable().optional(),
-  phoneNumber: z.string().nullable().optional(),
-  deliveryAddress: z.string().nullable().optional(),
+  deliveryInfo: DeliveryInfoSchema,
   user: z.any().optional(),
   table: z.any().optional(),
   dailyOrderCounter: z.any().optional(),

@@ -177,30 +177,30 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                   </View>
                 )}
 
-                {order.customerName && (
+                {order.deliveryInfo?.recipientName && (
                   <View style={styles.infoItem}>
                     <Text variant="bodyMedium" style={styles.label}>
                       Cliente:
                     </Text>
-                    <Text variant="bodyLarge">{order.customerName}</Text>
+                    <Text variant="bodyLarge">{order.deliveryInfo.recipientName}</Text>
                   </View>
                 )}
 
-                {order.phoneNumber && (
+                {order.deliveryInfo?.recipientPhone && (
                   <View style={styles.infoItem}>
                     <Text variant="bodyMedium" style={styles.label}>
                       Teléfono:
                     </Text>
-                    <Text variant="bodyLarge">{order.phoneNumber}</Text>
+                    <Text variant="bodyLarge">{order.deliveryInfo.recipientPhone}</Text>
                   </View>
                 )}
 
-                {order.deliveryAddress && (
+                {order.deliveryInfo?.fullAddress && (
                   <View style={styles.infoItem}>
                     <Text variant="bodyMedium" style={styles.label}>
                       Dirección:
                     </Text>
-                    <Text variant="bodyLarge">{order.deliveryAddress}</Text>
+                    <Text variant="bodyLarge">{order.deliveryInfo.fullAddress}</Text>
                   </View>
                 )}
 

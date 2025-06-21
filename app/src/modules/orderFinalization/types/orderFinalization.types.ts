@@ -1,9 +1,9 @@
+import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
+
 export interface OrderForFinalization {
   id: string;
   dailyNumber: number;
-  customerName?: string;
-  phoneNumber?: string;
-  deliveryAddress?: string;
+  deliveryInfo: DeliveryInfo;
   orderType: 'TAKEOUT' | 'DELIVERY' | 'DINE_IN';
   orderStatus:
     | 'PENDING'

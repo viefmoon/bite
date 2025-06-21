@@ -28,6 +28,7 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
+import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 import OrderHeader from './OrderHeader';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
@@ -78,9 +79,7 @@ export interface OrderDetailsForBackend {
   items: OrderItemDtoForBackend[];
   tableId?: string;
   scheduledAt?: Date;
-  customerName?: string;
-  phoneNumber?: string;
-  deliveryAddress?: string;
+  deliveryInfo: DeliveryInfo;
   notes?: string;
   adjustments?: {
     orderId?: string;
@@ -198,9 +197,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     null,
   );
   const [editScheduledTime, setEditScheduledTime] = useState<Date | null>(null);
-  const [editCustomerName, setEditCustomerName] = useState<string>('');
-  const [editPhoneNumber, setEditPhoneNumber] = useState<string>('');
-  const [editDeliveryAddress, setEditDeliveryAddress] = useState<string>('');
+  const [editDeliveryInfo, setEditDeliveryInfo] = useState<DeliveryInfo>({});
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
   const [editAdjustments, setEditAdjustments] = useState<OrderAdjustment[]>([]);
 
@@ -219,12 +216,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setCartSelectedTableId = cartContext?.setSelectedTableId || (() => {});
   const cartScheduledTime = cartContext?.scheduledTime || null;
   const setCartScheduledTime = cartContext?.setScheduledTime || (() => {});
-  const cartCustomerName = cartContext?.customerName || '';
-  const setCartCustomerName = cartContext?.setCustomerName || (() => {});
-  const cartPhoneNumber = cartContext?.phoneNumber || '';
-  const setCartPhoneNumber = cartContext?.setPhoneNumber || (() => {});
-  const cartDeliveryAddress = cartContext?.deliveryAddress || '';
-  const setCartDeliveryAddress = cartContext?.setDeliveryAddress || (() => {});
+  const cartDeliveryInfo = cartContext?.deliveryInfo || {};
+  const setCartDeliveryInfo = cartContext?.setDeliveryInfo || (() => {});
   const cartOrderNotes = cartContext?.orderNotes || '';
   const setCartOrderNotes = cartContext?.setOrderNotes || (() => {});
 
@@ -236,11 +229,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     ? editSelectedTableId
     : cartSelectedTableId;
   const scheduledTime = isEditMode ? editScheduledTime : cartScheduledTime;
-  const customerName = isEditMode ? editCustomerName : cartCustomerName;
-  const phoneNumber = isEditMode ? editPhoneNumber : cartPhoneNumber;
-  const deliveryAddress = isEditMode
-    ? editDeliveryAddress
-    : cartDeliveryAddress;
+  const deliveryInfo = isEditMode ? editDeliveryInfo : cartDeliveryInfo;
   const orderNotes = isEditMode ? editOrderNotes : cartOrderNotes;
   const adjustments = isEditMode ? editAdjustments : [];
 
@@ -254,13 +243,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setScheduledTime = isEditMode
     ? setEditScheduledTime
     : setCartScheduledTime;
-  const setCustomerName = isEditMode
-    ? setEditCustomerName
-    : setCartCustomerName;
-  const setPhoneNumber = isEditMode ? setEditPhoneNumber : setCartPhoneNumber;
-  const setDeliveryAddress = isEditMode
-    ? setEditDeliveryAddress
-    : setCartDeliveryAddress;
+  const setDeliveryInfo = isEditMode
+    ? setEditDeliveryInfo
+    : setCartDeliveryInfo;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
 
   const removeItem = (itemId: string) => {
@@ -461,9 +446,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     items: CartItem[];
     orderType: OrderType;
     tableId: string | null;
-    customerName: string;
-    phoneNumber: string;
-    deliveryAddress: string;
+    deliveryInfo: DeliveryInfo;
     notes: string;
     scheduledAt: Date | null;
     adjustments: OrderAdjustment[];
@@ -491,21 +474,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setEditScheduledTime(
       orderData.scheduledAt ? new Date(orderData.scheduledAt) : null,
     );
-    setEditCustomerName(orderData.customerName ?? '');
-
-    // Procesar el teléfono - si viene con +52, quitarlo para mostrarlo sin prefijo
-    let phoneForDisplay = orderData.phoneNumber ?? '';
-    if (phoneForDisplay.startsWith('+52')) {
-      phoneForDisplay = phoneForDisplay.substring(3);
-    } else if (
-      phoneForDisplay.startsWith('52') &&
-      phoneForDisplay.length === 12
-    ) {
-      phoneForDisplay = phoneForDisplay.substring(2);
-    }
-    setEditPhoneNumber(phoneForDisplay);
-
-    setEditDeliveryAddress(orderData.deliveryAddress ?? '');
+    // Cargar deliveryInfo
+    setEditDeliveryInfo(orderData.deliveryInfo || {});
     setEditOrderNotes(orderData.notes ?? '');
 
     // Cargar ajustes si existen
@@ -608,9 +578,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       items: originalItems,
       orderType: orderData.orderType,
       tableId: orderData.tableId ?? null,
-      customerName: orderData.customerName ?? '',
-      phoneNumber: phoneForDisplay,
-      deliveryAddress: orderData.deliveryAddress ?? '',
+      deliveryInfo: orderData.deliveryInfo || {},
       notes: orderData.notes ?? '',
       scheduledAt: orderData.scheduledAt
         ? new Date(orderData.scheduledAt)
@@ -756,9 +724,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       // Cambios en mesa
       editSelectedTableId !== originalOrderState.tableId ||
       // Cambios en datos del cliente
-      editCustomerName !== originalOrderState.customerName ||
-      editPhoneNumber !== originalOrderState.phoneNumber ||
-      editDeliveryAddress !== originalOrderState.deliveryAddress ||
+      JSON.stringify(editDeliveryInfo) !== JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
       // Cambios en hora programada
       (editScheduledTime?.getTime() || null) !==
@@ -775,9 +741,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     editItems,
     editOrderType,
     editSelectedTableId,
-    editCustomerName,
-    editPhoneNumber,
-    editDeliveryAddress,
+    editDeliveryInfo,
     editOrderNotes,
     editScheduledTime,
     editAdjustments,
@@ -791,9 +755,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setEditSelectedAreaId(null);
       setEditSelectedTableId(null);
       setEditScheduledTime(null);
-      setEditCustomerName('');
-      setEditPhoneNumber('');
-      setEditDeliveryAddress('');
+      setEditDeliveryInfo({});
       setEditOrderNotes('');
       setEditItems([]);
       setShowExitConfirmation(false);
@@ -883,7 +845,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
       // Usar Enum
-      if (!customerName || customerName.trim() === '') {
+      if (!deliveryInfo.recipientName || deliveryInfo.recipientName.trim() === '') {
         setCustomerNameError('El nombre del cliente es obligatorio');
         isValid = false;
       }
@@ -891,11 +853,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     } else if (orderType === OrderTypeEnum.DELIVERY) {
       // Usar Enum
       // Customer name not required for delivery as per new spec
-      if (!deliveryAddress || deliveryAddress.trim() === '') {
+      if (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '') {
         setAddressError('La dirección es obligatoria para Domicilio');
         isValid = false;
       }
-      if (!phoneNumber || phoneNumber.trim() === '') {
+      if (!deliveryInfo.recipientPhone || deliveryInfo.recipientPhone.trim() === '') {
         setPhoneError('El teléfono es obligatorio para Domicilio');
         isValid = false;
       }
@@ -941,8 +903,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
-    if (phoneNumber && phoneNumber.trim() !== '') {
-      formattedPhone = phoneNumber.trim();
+    if (deliveryInfo.recipientPhone && deliveryInfo.recipientPhone.trim() !== '') {
+      formattedPhone = deliveryInfo.recipientPhone.trim();
       if (!formattedPhone.startsWith('+')) {
         formattedPhone = `+52${formattedPhone}`;
       }
@@ -968,19 +930,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           ? (selectedTableId ?? undefined)
           : undefined, // Usar Enum
       scheduledAt: scheduledTime ?? undefined,
-      customerName:
-        orderType === OrderTypeEnum.TAKE_AWAY ||
-        orderType === OrderTypeEnum.DELIVERY
-          ? customerName
-          : undefined, // Include for both TAKE_AWAY and DELIVERY
-      phoneNumber:
-        (orderType === OrderTypeEnum.TAKE_AWAY ||
-          orderType === OrderTypeEnum.DELIVERY) &&
-        formattedPhone
+      deliveryInfo: {
+        recipientName: orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY
+          ? deliveryInfo.recipientName
+          : undefined,
+        recipientPhone: (orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY) && formattedPhone
           ? formattedPhone
-          : undefined, // Usar teléfono formateado
-      deliveryAddress:
-        orderType === OrderTypeEnum.DELIVERY ? deliveryAddress : undefined, // Usar Enum
+          : undefined,
+        fullAddress: orderType === OrderTypeEnum.DELIVERY
+          ? deliveryInfo.fullAddress
+          : undefined,
+        ...deliveryInfo
+      },
       notes: orderNotes || undefined,
       adjustments: isEditMode
         ? editAdjustments
@@ -1022,11 +983,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           items: [...editItems],
           orderType: editOrderType,
           tableId: editSelectedTableId,
-          customerName: editCustomerName,
-          phoneNumber: editPhoneNumber,
-          deliveryAddress: editDeliveryAddress,
+          deliveryInfo: editDeliveryInfo,
           notes: editOrderNotes,
           scheduledAt: editScheduledTime,
+          adjustments: editAdjustments,
         });
         setHasUnsavedChanges(false);
 
@@ -1106,18 +1066,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     if (originalScheduledTime !== currentScheduledTime) return true;
 
     // Comparar datos del cliente
-    if (editCustomerName !== (orderData.customerName || '')) return true;
-
-    // Comparar teléfono considerando el formato
-    let originalPhone = orderData.phoneNumber || '';
-    if (originalPhone.startsWith('+52')) {
-      originalPhone = originalPhone.substring(3);
-    } else if (originalPhone.startsWith('52') && originalPhone.length === 12) {
-      originalPhone = originalPhone.substring(2);
-    }
-    if (editPhoneNumber !== originalPhone) return true;
-
-    if (editDeliveryAddress !== (orderData.deliveryAddress || '')) return true;
+    if (JSON.stringify(editDeliveryInfo) !== JSON.stringify(orderData.deliveryInfo || {})) return true;
     if (editOrderNotes !== (orderData.notes || '')) return true;
 
     // Comparar items
@@ -1489,9 +1438,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <SpeechRecognitionInput
                 key={`customer-name-input-${orderType}`}
                 label="Nombre del Cliente *"
-                value={customerName}
+                value={deliveryInfo.recipientName || ''}
                 onChangeText={(text) => {
-                  setCustomerName(text);
+                  setDeliveryInfo({ ...deliveryInfo, recipientName: text });
                   if (customerNameError) setCustomerNameError(null);
                 }}
                 error={!!customerNameError}
@@ -1516,9 +1465,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 <SpeechRecognitionInput
                   key={`phone-input-takeaway-${orderType}`}
                   label="Teléfono (Opcional)"
-                  value={phoneNumber}
+                  value={deliveryInfo.recipientPhone || ''}
                   onChangeText={(text) => {
-                    setPhoneNumber(text);
+                    setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
                     if (phoneError) setPhoneError(null);
                   }}
                   keyboardType="phone-pad"
@@ -1526,9 +1475,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   speechLang="es-MX"
                   autoCorrect={false}
                 />
-                {phoneNumber.length > 0 && !phoneError && (
+                {(deliveryInfo.recipientPhone || '').length > 0 && !phoneError && (
                   <Text style={styles.digitCounterAbsolute}>
-                    {phoneNumber.replace(/\D/g, '').length} dígitos
+                    {(deliveryInfo.recipientPhone || '').replace(/\D/g, '').length} dígitos
                   </Text>
                 )}
               </View>
@@ -1574,9 +1523,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <SpeechRecognitionInput
                 key={`customer-name-input-delivery-${orderType}`}
                 label="Nombre del Cliente (Opcional)"
-                value={customerName}
+                value={deliveryInfo.recipientName || ''}
                 onChangeText={(text) => {
-                  setCustomerName(text);
+                  setDeliveryInfo({ ...deliveryInfo, recipientName: text });
                   if (customerNameError) setCustomerNameError(null);
                 }}
                 speechLang="es-MX"
@@ -1590,9 +1539,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <SpeechRecognitionInput
                 key="address-input-delivery"
                 label="Dirección de Entrega *"
-                value={deliveryAddress}
+                value={deliveryInfo.fullAddress || ''}
                 onChangeText={(text) => {
-                  setDeliveryAddress(text);
+                  setDeliveryInfo({ ...deliveryInfo, fullAddress: text });
                   if (addressError) setAddressError(null);
                 }}
                 error={!!addressError}
@@ -1616,10 +1565,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <SpeechRecognitionInput
                 key={`phone-input-delivery-${orderType}`} // Key única y específica
                 label="Teléfono *"
-                value={phoneNumber}
+                value={deliveryInfo.recipientPhone || ''}
                 onChangeText={(text) => {
                   // Asegurar que la función esté bien definida aquí
-                  setPhoneNumber(text);
+                  setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
                   if (phoneError) {
                     setPhoneError(null);
                   }
@@ -1639,9 +1588,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     {phoneError}
                   </HelperText>
                 ) : (
-                  phoneNumber.length > 0 && (
+                  (deliveryInfo.recipientPhone || '').length > 0 && (
                     <Text style={styles.digitCounter}>
-                      {phoneNumber.replace(/\D/g, '').length} dígitos
+                      {(deliveryInfo.recipientPhone || '').replace(/\D/g, '').length} dígitos
                     </Text>
                   )
                 )}
@@ -2376,11 +2325,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 (orderType === OrderTypeEnum.DINE_IN &&
                   (!selectedAreaId || !selectedTableId)) || // Usar Enum
                 (orderType === OrderTypeEnum.TAKE_AWAY &&
-                  (!customerName || customerName.trim() === '')) || // Usar Enum
+                  (!deliveryInfo.recipientName || deliveryInfo.recipientName.trim() === '')) || // Usar Enum
                 (orderType === OrderTypeEnum.DELIVERY &&
-                  (!deliveryAddress || deliveryAddress.trim() === '')) || // Usar Enum
+                  (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '')) || // Usar Enum
                 (orderType === OrderTypeEnum.DELIVERY &&
-                  (!phoneNumber || phoneNumber.trim() === '')) // Usar Enum
+                  (!deliveryInfo.recipientPhone || deliveryInfo.recipientPhone.trim() === '')) // Usar Enum
               }
               style={[
                 styles.confirmButton,

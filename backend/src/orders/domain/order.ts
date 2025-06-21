@@ -7,6 +7,7 @@ import { OrderType } from './enums/order-type.enum';
 import { Payment } from '../../payments/domain/payment';
 import { OrderItem } from './order-item'; // Importar OrderItem
 import { Adjustment } from '../../adjustments/domain/adjustment';
+import { DeliveryInfo } from './delivery-info';
 
 export class Order {
   id: string;
@@ -47,15 +48,11 @@ export class Order {
 
   notes?: string;
 
-  phoneNumber?: string | null;
-
-  customerName?: string | null;
-
   customerId?: string | null;
 
   customer?: Customer | null;
 
-  deliveryAddress?: string | null;
-
   isFromWhatsApp?: boolean;
+
+  deliveryInfo: DeliveryInfo;
 }

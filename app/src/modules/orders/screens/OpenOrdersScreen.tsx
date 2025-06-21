@@ -205,18 +205,18 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
         orderTitle += ` • ${order.table.area?.name || 'Sin área'} • Mesa ${order.table.name || order.table.number || 'N/A'}`;
       } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
-        if (order.customerName) {
-          orderTitle += ` • ${order.customerName}`;
+        if (order.deliveryInfo?.recipientName) {
+          orderTitle += ` • ${order.deliveryInfo.recipientName}`;
         }
-        if (order.phoneNumber) {
-          orderTitle += ` • ${order.phoneNumber}`;
+        if (order.deliveryInfo?.recipientPhone) {
+          orderTitle += ` • ${order.deliveryInfo.recipientPhone}`;
         }
       } else if (order.orderType === OrderTypeEnum.DELIVERY) {
-        if (order.deliveryAddress) {
-          orderTitle += ` • ${order.deliveryAddress}`;
+        if (order.deliveryInfo?.fullAddress) {
+          orderTitle += ` • ${order.deliveryInfo.fullAddress}`;
         }
-        if (order.phoneNumber) {
-          orderTitle += ` • ${order.phoneNumber}`;
+        if (order.deliveryInfo?.recipientPhone) {
+          orderTitle += ` • ${order.deliveryInfo.recipientPhone}`;
         }
       }
 
@@ -608,44 +608,13 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               }, 100);
             }}
             onConfirmOrder={async (details: OrderDetailsForBackend) => {
-              // Formatear el número de teléfono si existe
-              let formattedPhone: string | null = null;
-              if (details.phoneNumber && details.phoneNumber.trim() !== '') {
-                // Si ya tiene formato internacional, usarlo tal cual
-                if (details.phoneNumber.startsWith('+')) {
-                  formattedPhone = details.phoneNumber;
-                } else {
-                  // Eliminar espacios, guiones y caracteres no numéricos
-                  let cleanPhone = details.phoneNumber.replace(/\D/g, '');
-
-                  // Si tiene 11 dígitos y empieza con 52 (código de México), eliminar el prefijo
-                  if (cleanPhone.length === 11 && cleanPhone.startsWith('52')) {
-                    cleanPhone = cleanPhone.substring(1);
-                  }
-                  // Si tiene 12 dígitos y empieza con 521 (código de México + 1), eliminar el prefijo
-                  else if (
-                    cleanPhone.length === 12 &&
-                    cleanPhone.startsWith('521')
-                  ) {
-                    cleanPhone = cleanPhone.substring(2);
-                  }
-
-                  // Si después del formateo tiene 10 dígitos, agregar +52
-                  if (cleanPhone.length === 10) {
-                    formattedPhone = `+52${cleanPhone}`;
-                  }
-                }
-              }
-
               // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
               const payload = {
                 orderType: details.orderType,
                 items: details.items, // Enviar items para actualizar
                 tableId: details.tableId || null,
                 scheduledAt: details.scheduledAt || null,
-                customerName: details.customerName || null,
-                phoneNumber: formattedPhone,
-                deliveryAddress: details.deliveryAddress || null,
+                deliveryInfo: details.deliveryInfo,
                 notes: details.notes || null,
                 total: details.total,
                 subtotal: details.subtotal,

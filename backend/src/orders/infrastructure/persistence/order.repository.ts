@@ -3,6 +3,7 @@ import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { Order } from '../../domain/order';
 import { FindAllOrdersDto } from '../../dto/find-all-orders.dto';
+import { DeliveryInfo } from '../../domain/delivery-info';
 
 export abstract class OrderRepository {
   abstract create(data: {
@@ -14,11 +15,9 @@ export abstract class OrderRepository {
     subtotal: number;
     total: number;
     notes?: string;
-    phoneNumber?: string | null;
-    customerName?: string | null;
-    deliveryAddress?: string | null;
     customerId?: string | null;
     isFromWhatsApp?: boolean;
+    deliveryInfo: DeliveryInfo;
   }): Promise<Order>;
 
   abstract findManyWithPagination({
