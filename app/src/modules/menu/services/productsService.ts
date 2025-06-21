@@ -145,18 +145,20 @@ async function findAllPizzas(): Promise<Product[]> {
   return response.data;
 }
 
-async function getPizzaIngredients(productId: string): Promise<any[]> {
-  const response = await apiClient.get<any[]>(`${API_PATHS.PRODUCTS}/${productId}/pizza-ingredients`);
+
+async function getPizzaCustomizations(productId: string): Promise<any[]> {
+  const response = await apiClient.get<any[]>(`${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`);
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
   return response.data;
 }
 
-async function updatePizzaIngredients(productId: string, pizzaIngredientIds: string[]): Promise<Product> {
+
+async function updatePizzaCustomizations(productId: string, pizzaCustomizationIds: string[]): Promise<Product> {
   const response = await apiClient.put<Product>(
-    `${API_PATHS.PRODUCTS}/${productId}/pizza-ingredients`,
-    { pizzaIngredientIds }
+    `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
+    { pizzaCustomizationIds }
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -164,11 +166,12 @@ async function updatePizzaIngredients(productId: string, pizzaIngredientIds: str
   return response.data;
 }
 
-async function bulkUpdatePizzaIngredients(
-  updates: Array<{ productId: string; ingredientIds: string[] }>
+
+async function bulkUpdatePizzaCustomizations(
+  updates: Array<{ productId: string; customizationIds: string[] }>
 ): Promise<void> {
   const response = await apiClient.put(
-    `${API_PATHS.PRODUCTS}/pizzas/ingredients/bulk`,
+    `${API_PATHS.PRODUCTS}/pizzas/customizations/bulk`,
     { updates }
   );
   if (!response.ok) {
@@ -186,7 +189,8 @@ export const productsService = {
   getModifierGroups,
   removeModifierGroups,
   findAllPizzas,
-  getPizzaIngredients,
-  updatePizzaIngredients,
-  bulkUpdatePizzaIngredients,
+  // Pizza customizations methods
+  getPizzaCustomizations,
+  updatePizzaCustomizations,
+  bulkUpdatePizzaCustomizations,
 };

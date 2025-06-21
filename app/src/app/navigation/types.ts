@@ -9,8 +9,8 @@ import type { ReceiptsStackParamList } from '../../modules/receipts/navigation/t
 import type { AvailabilityStackParamList } from '../../modules/availability/navigation/types';
 import type { OrderFinalizationStackParamList } from '../../modules/orderFinalization/navigation/types';
 import type { RestaurantConfigStackParamList } from '../../modules/restaurantConfig/navigation/types';
-import type { PizzaIngredientsStackParamList } from '../../modules/pizzaIngredients/navigation/types';
 import type { CustomersStackParamList } from '../../modules/customers/navigation/CustomersStackNavigator';
+import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCustomizations/navigation/types';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -58,7 +58,7 @@ export type AppDrawerParamList = {
   AvailabilityStack: NavigatorScreenParams<AvailabilityStackParamList>; // Stack de disponibilidad
   OrderFinalizationStack: NavigatorScreenParams<OrderFinalizationStackParamList>; // Stack de finalización de órdenes
   RestaurantConfigStack: NavigatorScreenParams<RestaurantConfigStackParamList>; // Stack de configuración del restaurante
-  PizzaIngredientsStack: NavigatorScreenParams<PizzaIngredientsStackParamList>; // Stack de ingredientes de pizza
+  PizzaCustomizationsStack: NavigatorScreenParams<PizzaCustomizationsStackParamList>; // Stack de personalización de pizzas
   CustomersStack: NavigatorScreenParams<CustomersStackParamList>; // Stack de clientes
 };
 
@@ -79,7 +79,7 @@ declare global {
         AvailabilityStackParamList,
         OrderFinalizationStackParamList,
         RestaurantConfigStackParamList,
-        PizzaIngredientsStackParamList,
+        PizzaCustomizationsStackParamList,
         CustomersStackParamList {}
   }
 }

@@ -219,6 +219,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
@@ -274,6 +275,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
@@ -363,7 +365,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                         routes: [{ name: 'ModifierGroupsScreen' }],
                       },
                     },
-                    { name: 'PizzaIngredientsStack' },
+                    { name: 'PizzaCustomizationsStack' },
                     { name: 'PreparationScreensStack' },
                     { name: 'AreasTablesStack' },
                     { name: 'PrintersStack' },
@@ -375,8 +377,8 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             })}
 
             {renderDrawerItem(
-              'PizzaIngredientsStack',
-              'Ingredientes Pizza',
+              'PizzaCustomizationsStack',
+              'Personalización Pizzas',
               'pizza',
               () => {
                 props.navigation.dispatch(
@@ -390,9 +392,9 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
                       {
-                        name: 'PizzaIngredientsStack',
+                        name: 'PizzaCustomizationsStack',
                         state: {
-                          routes: [{ name: 'PizzaIngredientsList' }],
+                          routes: [{ name: 'PizzaCustomizationsList' }],
                         },
                       },
                       { name: 'PreparationScreensStack' },
@@ -421,7 +423,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
-                      { name: 'PizzaIngredientsStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       {
                         name: 'PreparationScreensStack',
                         state: {
@@ -453,6 +455,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       { name: 'PreparationScreensStack' },
                       {
                         name: 'AreasTablesStack',
@@ -510,6 +513,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },
@@ -541,6 +545,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'MenuStack' },
                       { name: 'AvailabilityStack' },
                       { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
                       { name: 'PreparationScreensStack' },
                       { name: 'AreasTablesStack' },
                       { name: 'PrintersStack' },

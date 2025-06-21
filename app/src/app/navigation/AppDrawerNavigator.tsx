@@ -1,6 +1,9 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, StatusBar, Text } from 'react-native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { StyleSheet, TouchableOpacity, StatusBar, Text, View } from 'react-native';
+import {
+  createDrawerNavigator,
+  type DrawerNavigationOptions,
+} from '@react-navigation/drawer';
 import { MenuStackNavigator } from '../../modules/menu/navigation/MenuStackNavigator';
 import ModifiersStackNavigator from '../../modules/modifiers/navigation/ModifiersStackNavigator';
 import PreparationScreensStackNavigator from '../../modules/preparationScreens/navigation/PreparationScreensStackNavigator';
@@ -11,8 +14,8 @@ import { ReceiptsStackNavigator } from '../../modules/receipts/navigation/Receip
 import { AvailabilityStackNavigator } from '../../modules/availability/navigation/AvailabilityStackNavigator';
 import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator';
 import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
-import { PizzaIngredientsStackNavigator } from '../../modules/pizzaIngredients/navigation/PizzaIngredientsStackNavigator';
 import { CustomersStackNavigator } from '../../modules/customers/navigation/CustomersStackNavigator';
+import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizations/navigation/PizzaCustomizationsStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -124,11 +127,11 @@ export function AppDrawerNavigator() {
               case 'RestaurantConfigStack':
                 title = 'Configuración';
                 break;
-              case 'PizzaIngredientsStack':
-                title = 'Ingredientes Pizza';
-                break;
               case 'CustomersStack':
                 title = 'Clientes';
+                break;
+              case 'PizzaCustomizationsStack':
+                title = 'Personalización Pizzas';
                 break;
 
               default:
@@ -212,10 +215,10 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="PizzaIngredientsStack"
-          component={PizzaIngredientsStackNavigator}
+          name="PizzaCustomizationsStack"
+          component={PizzaCustomizationsStackNavigator}
           options={{
-            title: 'Ingredientes Pizza',
+            title: 'Personalización Pizzas',
             drawerIcon: ({ color, size }) => (
               <Icon source="pizza" color={color} size={size} />
             ),
