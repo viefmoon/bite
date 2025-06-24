@@ -75,6 +75,10 @@ export class ProductRelationalRepository implements ProductRepository {
         'modifierGroups.productModifiers',
         'preparationScreen',
       ],
+      order: {
+        sortOrder: 'ASC',
+        name: 'ASC',
+      },
     });
 
     const products = entities
@@ -262,8 +266,14 @@ export class ProductRelationalRepository implements ProductRepository {
   async findAllPizzas(): Promise<Product[]> {
     const entities = await this.productRepository.find({
       where: { isPizza: true, isActive: true },
-      relations: ['photo', 'subcategory', 'pizzaCustomizations', 'pizzaConfiguration'],
+      relations: [
+        'photo',
+        'subcategory',
+        'pizzaCustomizations',
+        'pizzaConfiguration',
+      ],
       order: {
+        sortOrder: 'ASC',
         name: 'ASC',
       },
     });

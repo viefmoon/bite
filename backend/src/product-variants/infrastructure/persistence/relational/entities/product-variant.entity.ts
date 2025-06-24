@@ -32,6 +32,9 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: 0 })
+  sortOrder: number;
+
   @ManyToOne(() => ProductEntity, (product) => product.variants, {
     nullable: false,
   })

@@ -5,6 +5,9 @@ import { RelationalPizzaConfigurationPersistenceModule } from './infrastructure/
 @Module({
   imports: [RelationalPizzaConfigurationPersistenceModule],
   providers: [PizzaConfigurationsService],
-  exports: [PizzaConfigurationsService, RelationalPizzaConfigurationPersistenceModule],
+  exports: [
+    PizzaConfigurationsService,
+    RelationalPizzaConfigurationPersistenceModule,
+  ],
 })
 export class PizzaConfigurationsModule {}

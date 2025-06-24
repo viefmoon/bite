@@ -54,16 +54,17 @@ export class PizzaCustomizationRelationalRepository
       where.type = type;
     }
 
-    const [entities, total] = await this.pizzaCustomizationRepository.findAndCount({
-      where,
-      relations: ['products'],
-      order: {
-        sortOrder: 'ASC',
-        name: 'ASC',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [entities, total] =
+      await this.pizzaCustomizationRepository.findAndCount({
+        where,
+        relations: ['products'],
+        order: {
+          sortOrder: 'ASC',
+          name: 'ASC',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
 
     const items = entities
       .map((entity) => this.pizzaCustomizationMapper.toDomain(entity))
@@ -116,7 +117,9 @@ export class PizzaCustomizationRelationalRepository
     const result = await this.pizzaCustomizationRepository.softDelete(id);
 
     if (result.affected === 0) {
-      throw new NotFoundException(`Pizza customization with ID ${id} not found`);
+      throw new NotFoundException(
+        `Pizza customization with ID ${id} not found`,
+      );
     }
   }
 }

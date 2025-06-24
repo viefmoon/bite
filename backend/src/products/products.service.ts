@@ -389,11 +389,9 @@ export class ProductsService {
     await this.productRepository.softDelete(id);
   }
 
-
   async findAllPizzas(): Promise<Product[]> {
     return this.productRepository.findAllPizzas();
   }
-
 
   async findAllBySubcategoryId(subcategoryId: string): Promise<Product[]> {
     const result = await this.productRepository.findAll({

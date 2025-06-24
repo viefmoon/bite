@@ -25,7 +25,7 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
   async findById(id: string): Promise<OrderItem | null> {
     const orderItemEntity = await this.orderItemRepository.findOne({
       where: { id },
-      relations: ['order', 'modifiers'],
+      relations: ['order', 'productModifiers'],
     });
 
     if (!orderItemEntity) {
@@ -38,7 +38,7 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
   async findByOrderId(orderId: string): Promise<OrderItem[]> {
     const orderItemEntities = await this.orderItemRepository.find({
       where: { orderId },
-      relations: ['order', 'modifiers'],
+      relations: ['order', 'productModifiers'],
     });
 
     // Usar instancia y filtrar nulos
@@ -72,7 +72,7 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
     // Recargar para asegurar que las relaciones estén presentes en la respuesta
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: savedEntity.id },
-      relations: ['order', 'modifiers', 'product', 'productVariant'], // Cargar relaciones necesarias
+      relations: ['order', 'productModifiers', 'product', 'productVariant'], // Cargar relaciones necesarias
     });
 
     if (!reloadedEntity) {
@@ -119,7 +119,7 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
     // Recargar para obtener el estado final con relaciones
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: updatedEntity.id },
-      relations: ['order', 'modifiers', 'product', 'productVariant'], // Cargar relaciones necesarias
+      relations: ['order', 'productModifiers', 'product', 'productVariant'], // Cargar relaciones necesarias
     });
 
     if (!reloadedEntity) {

@@ -23,7 +23,8 @@ export class CreateOrderDto {
   @ApiProperty({
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
-    description: 'ID del usuario que realiza la orden (opcional para órdenes de WhatsApp)',
+    description:
+      'ID del usuario que realiza la orden (opcional para órdenes de WhatsApp)',
     required: false,
   })
   @IsOptional()
@@ -109,7 +110,8 @@ export class CreateOrderDto {
 
   @ApiProperty({
     type: DeliveryInfoDto,
-    description: 'Información de entrega (requerida para todas las órdenes, pero todos los campos son opcionales)',
+    description:
+      'Información de entrega (requerida para todas las órdenes, pero todos los campos son opcionales)',
     required: true,
   })
   @IsNotEmpty({ message: 'La información de entrega es requerida' })

@@ -19,8 +19,10 @@ export class PizzaCustomizationsService {
     pizzaCustomization.id = createPizzaCustomizationDto.id;
     pizzaCustomization.name = createPizzaCustomizationDto.name;
     pizzaCustomization.type = createPizzaCustomizationDto.type;
-    pizzaCustomization.ingredients = createPizzaCustomizationDto.ingredients || null;
-    pizzaCustomization.toppingValue = createPizzaCustomizationDto.toppingValue ?? 1;
+    pizzaCustomization.ingredients =
+      createPizzaCustomizationDto.ingredients || null;
+    pizzaCustomization.toppingValue =
+      createPizzaCustomizationDto.toppingValue ?? 1;
     pizzaCustomization.sortOrder = createPizzaCustomizationDto.sortOrder ?? 0;
     pizzaCustomization.isActive = true;
 
@@ -40,9 +42,12 @@ export class PizzaCustomizationsService {
   }
 
   async findOne(id: string): Promise<PizzaCustomization> {
-    const pizzaCustomization = await this.pizzaCustomizationRepository.findById(id);
+    const pizzaCustomization =
+      await this.pizzaCustomizationRepository.findById(id);
     if (!pizzaCustomization) {
-      throw new NotFoundException(`Pizza customization with ID ${id} not found`);
+      throw new NotFoundException(
+        `Pizza customization with ID ${id} not found`,
+      );
     }
     return pizzaCustomization;
   }
@@ -56,7 +61,9 @@ export class PizzaCustomizationsService {
       updatePizzaCustomizationDto,
     );
     if (!updated) {
-      throw new NotFoundException(`Pizza customization with ID ${id} not found`);
+      throw new NotFoundException(
+        `Pizza customization with ID ${id} not found`,
+      );
     }
     return updated;
   }

@@ -20,6 +20,8 @@ export class Product {
 
   isPizza: boolean;
 
+  sortOrder: number;
+
   subcategoryId: string;
 
   preparationScreenId: string | null;

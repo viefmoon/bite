@@ -57,6 +57,10 @@ export class ProductVariantRelationalRepository
       skip: (options.page - 1) * options.limit,
       take: options.limit,
       relations: ['product'],
+      order: {
+        sortOrder: 'ASC',
+        name: 'ASC',
+      },
     });
 
     const productVariants = entities

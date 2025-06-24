@@ -86,7 +86,8 @@ export class OrderSubscriber implements EntitySubscriberInterface<OrderEntity> {
 
     // Obtener el usuario del contexto o usar el userId de la orden
     const currentUser = this.userContextService.getCurrentUser();
-    const changedBy = currentUser?.userId || event.databaseEntity.userId || 'system';
+    const changedBy =
+      currentUser?.userId || event.databaseEntity.userId || 'system';
 
     await this.persistHistory(
       'DELETE',

@@ -25,8 +25,10 @@ export class PizzaConfigurationsService {
 
     const pizzaConfiguration = new PizzaConfiguration();
     pizzaConfiguration.productId = createPizzaConfigurationDto.productId;
-    pizzaConfiguration.includedToppings = createPizzaConfigurationDto.includedToppings;
-    pizzaConfiguration.extraToppingCost = createPizzaConfigurationDto.extraToppingCost;
+    pizzaConfiguration.includedToppings =
+      createPizzaConfigurationDto.includedToppings;
+    pizzaConfiguration.extraToppingCost =
+      createPizzaConfigurationDto.extraToppingCost;
 
     return this.pizzaConfigurationRepository.create(pizzaConfiguration);
   }

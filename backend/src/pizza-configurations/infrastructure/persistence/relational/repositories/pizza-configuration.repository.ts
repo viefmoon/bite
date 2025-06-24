@@ -66,7 +66,9 @@ export class PizzaConfigurationRelationalRepository
   }
 
   async deleteByProductId(productId: string): Promise<void> {
-    const result = await this.pizzaConfigurationRepository.delete({ productId });
+    const result = await this.pizzaConfigurationRepository.delete({
+      productId,
+    });
 
     if (result.affected === 0) {
       throw new NotFoundException(

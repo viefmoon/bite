@@ -47,6 +47,9 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ name: 'is_pizza', default: false })
   isPizza: boolean;
 
+  @Column({ default: 0 })
+  sortOrder: number;
+
   @Column({ name: 'subcategory_id', type: 'varchar', length: 20 })
   subcategoryId: string;
 
@@ -99,7 +102,10 @@ export class ProductEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'preparation_screen_id' })
   preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
 
-  @ManyToMany(() => PizzaCustomizationEntity, (customization) => customization.products)
+  @ManyToMany(
+    () => PizzaCustomizationEntity,
+    (customization) => customization.products,
+  )
   @JoinTable({
     name: 'product_pizza_customization',
     joinColumn: {

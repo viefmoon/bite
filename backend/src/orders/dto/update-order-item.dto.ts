@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -34,4 +35,9 @@ export class UpdateOrderItemDto {
   @IsOptional()
   @IsString()
   preparationNotes?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  productModifierIds?: string[];
 }

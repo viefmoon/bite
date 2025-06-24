@@ -12,7 +12,8 @@ export class DeliveryInfoDto {
   @ApiProperty({
     type: String,
     example: 'Av. Revolución 123, Col. Centro, entre calles X y Y',
-    description: 'Dirección completa en una línea (útil para pedidos telefónicos)',
+    description:
+      'Dirección completa en una línea (útil para pedidos telefónicos)',
     required: false,
   })
   @IsOptional()

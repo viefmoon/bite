@@ -69,7 +69,6 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-
   @Patch(':id')
   @ApiOperation({
     summary: 'Actualizar un producto',

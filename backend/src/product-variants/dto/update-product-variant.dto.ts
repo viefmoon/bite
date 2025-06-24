@@ -49,4 +49,14 @@ export class UpdateProductVariantDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Orden de visualización de la variante',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }

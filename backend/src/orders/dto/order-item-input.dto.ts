@@ -10,12 +10,12 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateOrderItemModifierDto } from './create-order-item-modifier.dto';
 import { CreateSelectedPizzaCustomizationDto } from '../../selected-pizza-customizations/dto/create-selected-pizza-customization.dto';
 
 /**
  * DTO for order items when creating a new order.
  * Does not include orderId since the order doesn't exist yet.
+ * Now uses productModifierIds instead of full modifier objects.
  */
 export class OrderItemInputDto {
   @ApiProperty({
@@ -70,15 +70,15 @@ export class OrderItemInputDto {
   preparationNotes?: string;
 
   @ApiProperty({
-    type: [CreateOrderItemModifierDto],
-    description: 'Modificadores del producto (opcional)',
+    type: [String],
+    description: 'IDs de los modificadores del producto (opcional)',
     required: false,
+    example: ['123e4567-e89b-12d3-a456-426614174000'],
   })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateOrderItemModifierDto)
-  modifiers?: CreateOrderItemModifierDto[];
+  @IsUUID('4', { each: true })
+  productModifierIds?: string[];
 
   @ApiProperty({
     type: [CreateSelectedPizzaCustomizationDto],

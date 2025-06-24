@@ -11,6 +11,8 @@ export class ProductVariant {
 
   isActive: boolean;
 
+  sortOrder: number;
+
   product?: Product;
 
   createdAt: Date;

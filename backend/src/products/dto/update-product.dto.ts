@@ -55,6 +55,16 @@ export class UpdateProductVariantDto {
   @IsOptional()
   @IsUUID()
   id?: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Orden de visualización de la variante',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }
 
 export class UpdateProductDto {
@@ -194,4 +204,14 @@ export class UpdateProductDto {
   @IsArray()
   @IsUUID('all', { each: true })
   modifierGroupIds?: string[];
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Orden de visualización del producto',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }

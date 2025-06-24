@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OrderItem } from '../domain/order-item';
 import { Product } from '../../products/domain/product';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
-import { OrderItemModifier } from '../domain/order-item-modifier';
+import { ProductModifier } from '../../product-modifiers/domain/product-modifier';
 import { SelectedPizzaCustomization } from '../../selected-pizza-customizations/domain/selected-pizza-customization';
 import { PizzaConfiguration } from '../../pizza-configurations/domain/pizza-configuration';
 import { PizzaCustomization } from '../../pizza-customizations/domain/pizza-customization';
@@ -14,10 +14,15 @@ export class PizzaPriceCalculatorService {
   calculateOrderItemPrice(params: {
     product: Product;
     productVariant?: ProductVariant | null;
-    modifiers: OrderItemModifier[];
+    productModifiers: ProductModifier[];
     selectedPizzaCustomizations?: SelectedPizzaCustomization[];
   }): { basePrice: number; finalPrice: number } {
-    const { product, productVariant, modifiers, selectedPizzaCustomizations } = params;
+    const {
+      product,
+      productVariant,
+      productModifiers,
+      selectedPizzaCustomizations,
+    } = params;
 
     // 1. Calcular precio base
     let basePrice = 0;
@@ -34,7 +39,7 @@ export class PizzaPriceCalculatorService {
     }
 
     // 2. Sumar modificadores (aplica a todos los productos)
-    const modifiersPrice = modifiers.reduce(
+    const modifiersPrice = productModifiers.reduce(
       (sum, modifier) => sum + (Number(modifier.price) || 0),
       0,
     );
@@ -42,7 +47,11 @@ export class PizzaPriceCalculatorService {
     let finalPrice = basePrice + modifiersPrice;
 
     // 3. Si es pizza, calcular ingredientes adicionales
-    if (product.isPizza && product.pizzaConfiguration && selectedPizzaCustomizations) {
+    if (
+      product.isPizza &&
+      product.pizzaConfiguration &&
+      selectedPizzaCustomizations
+    ) {
       const pizzaExtraCost = this.calculatePizzaExtraCost(
         product.pizzaConfiguration,
         selectedPizzaCustomizations,

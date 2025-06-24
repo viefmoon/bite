@@ -8,7 +8,9 @@ export class PizzaCustomizationMapper extends BaseMapper<
   PizzaCustomizationEntity,
   PizzaCustomization
 > {
-  override toDomain(entity: PizzaCustomizationEntity): PizzaCustomization | null {
+  override toDomain(
+    entity: PizzaCustomizationEntity,
+  ): PizzaCustomization | null {
     if (!entity) return null;
     const domain = new PizzaCustomization();
     domain.id = entity.id;
@@ -29,7 +31,9 @@ export class PizzaCustomizationMapper extends BaseMapper<
     return domain;
   }
 
-  override toEntity(domain: PizzaCustomization): PizzaCustomizationEntity | null {
+  override toEntity(
+    domain: PizzaCustomization,
+  ): PizzaCustomizationEntity | null {
     if (!domain) return null;
     const entity = new PizzaCustomizationEntity();
     if (domain.id) entity.id = domain.id;

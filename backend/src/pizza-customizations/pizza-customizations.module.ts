@@ -7,6 +7,9 @@ import { RelationalPizzaCustomizationPersistenceModule } from './infrastructure/
   imports: [RelationalPizzaCustomizationPersistenceModule],
   controllers: [PizzaCustomizationsController],
   providers: [PizzaCustomizationsService],
-  exports: [PizzaCustomizationsService, RelationalPizzaCustomizationPersistenceModule],
+  exports: [
+    PizzaCustomizationsService,
+    RelationalPizzaCustomizationPersistenceModule,
+  ],
 })
 export class PizzaCustomizationsModule {}

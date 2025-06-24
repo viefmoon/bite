@@ -43,6 +43,17 @@ export class CreateProductVariantDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    default: 0,
+    description: 'Orden de visualización de la variante',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }
 
 export class CreateProductDto {
@@ -172,4 +183,15 @@ export class CreateProductDto {
   @IsArray()
   @IsUUID('all', { each: true })
   modifierGroupIds?: string[];
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    default: 0,
+    description: 'Orden de visualización del producto',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }

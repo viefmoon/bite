@@ -4,6 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -13,10 +15,10 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { OrderEntity } from './order.entity';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
-import { OrderItemModifierEntity } from './order-item-modifier.entity';
 import { PreparationStatus } from '../../../../domain/order-item';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
 import { SelectedPizzaCustomizationEntity } from '../../../../../selected-pizza-customizations/infrastructure/persistence/relational/entities/selected-pizza-customization.entity';
+import { ProductModifierEntity } from '../../../../../product-modifiers/infrastructure/persistence/relational/entities/product-modifier.entity';
 
 @Entity({
   name: 'order_item',
@@ -78,11 +80,19 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'product_variant_id' })
   productVariant: ProductVariantEntity | null;
 
-  @OneToMany(
-    () => OrderItemModifierEntity,
-    (orderItemModifier) => orderItemModifier.orderItem,
-  )
-  modifiers: OrderItemModifierEntity[];
+  @ManyToMany(() => ProductModifierEntity)
+  @JoinTable({
+    name: 'order_item_product_modifiers',
+    joinColumn: {
+      name: 'order_item_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'product_modifier_id',
+      referencedColumnName: 'id',
+    },
+  })
+  productModifiers: ProductModifierEntity[];
 
   @OneToMany(() => AdjustmentEntity, (adjustment) => adjustment.orderItem)
   adjustments: AdjustmentEntity[];

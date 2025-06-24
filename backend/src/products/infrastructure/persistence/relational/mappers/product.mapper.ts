@@ -49,6 +49,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     domain.hasVariants = entity.hasVariants;
     domain.isActive = entity.isActive;
     domain.isPizza = entity.isPizza;
+    domain.sortOrder = entity.sortOrder;
     domain.subcategoryId = entity.subcategoryId;
     domain.photoId = entity.photoId;
     domain.estimatedPrepTime = entity.estimatedPrepTime;
@@ -73,12 +74,16 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
 
     if (entity.pizzaCustomizations) {
       domain.pizzaCustomizations = entity.pizzaCustomizations
-        .map((customization) => this.pizzaCustomizationMapper.toDomain(customization))
+        .map((customization) =>
+          this.pizzaCustomizationMapper.toDomain(customization),
+        )
         .filter((item): item is PizzaCustomization => item !== null);
     }
 
     if (entity.pizzaConfiguration) {
-      const configuration = this.pizzaConfigurationMapper.toDomain(entity.pizzaConfiguration);
+      const configuration = this.pizzaConfigurationMapper.toDomain(
+        entity.pizzaConfiguration,
+      );
       if (configuration) {
         domain.pizzaConfiguration = configuration;
       }
@@ -97,6 +102,7 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
     entity.isPizza = domain.isPizza;
+    entity.sortOrder = domain.sortOrder;
     entity.subcategoryId = domain.subcategoryId;
     entity.subcategory = { id: domain.subcategoryId } as SubcategoryEntity;
     entity.photoId = domain.photoId || null;

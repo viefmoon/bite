@@ -26,6 +26,7 @@ export class ProductVariantMapper extends BaseMapper<
     domain.name = entity.name;
     domain.price = entity.price;
     domain.isActive = entity.isActive;
+    domain.sortOrder = entity.sortOrder;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -47,6 +48,7 @@ export class ProductVariantMapper extends BaseMapper<
     entity.name = domain.name;
     entity.price = domain.price;
     entity.isActive = domain.isActive;
+    entity.sortOrder = domain.sortOrder;
 
     return entity;
   }

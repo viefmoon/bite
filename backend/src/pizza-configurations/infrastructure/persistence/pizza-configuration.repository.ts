@@ -5,7 +5,9 @@ export abstract class PizzaConfigurationRepository {
     pizzaConfiguration: PizzaConfiguration,
   ): Promise<PizzaConfiguration>;
 
-  abstract findByProductId(productId: string): Promise<PizzaConfiguration | null>;
+  abstract findByProductId(
+    productId: string,
+  ): Promise<PizzaConfiguration | null>;
 
   abstract updateByProductId(
     productId: string,

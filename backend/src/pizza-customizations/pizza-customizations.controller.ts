@@ -87,7 +87,10 @@ export class PizzaCustomizationsController {
     @Param('id') id: string,
     @Body() updatePizzaCustomizationDto: UpdatePizzaCustomizationDto,
   ): Promise<PizzaCustomization> {
-    return this.pizzaCustomizationsService.update(id, updatePizzaCustomizationDto);
+    return this.pizzaCustomizationsService.update(
+      id,
+      updatePizzaCustomizationDto,
+    );
   }
 
   @Delete(':id')

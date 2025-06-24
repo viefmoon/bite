@@ -5,9 +5,9 @@ import { OrderEntity } from '../entities/order.entity';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { OrderMapper } from './order.mapper';
-import { OrderItemModifierMapper } from './order-item-modifier.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
+import { ProductModifierMapper } from '../../../../../product-modifiers/infrastructure/persistence/relational/mappers/product-modifier.mapper';
 import {
   BaseMapper,
   mapArray,
@@ -18,9 +18,9 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
   constructor(
     @Inject(forwardRef(() => OrderMapper))
     private readonly orderMapper: OrderMapper,
-    private readonly orderItemModifierMapper: OrderItemModifierMapper,
     private readonly productMapper: ProductMapper,
     private readonly productVariantMapper: ProductVariantMapper,
+    private readonly productModifierMapper: ProductModifierMapper,
   ) {
     super();
   }
@@ -42,8 +42,8 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     domain.preparationStatus = entity.preparationStatus;
     domain.statusChangedAt = entity.statusChangedAt;
     domain.preparationNotes = entity.preparationNotes;
-    domain.modifiers = mapArray(entity.modifiers, (mod) =>
-      this.orderItemModifierMapper.toDomain(mod),
+    domain.productModifiers = mapArray(entity.productModifiers, (mod) =>
+      this.productModifierMapper.toDomain(mod),
     );
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
