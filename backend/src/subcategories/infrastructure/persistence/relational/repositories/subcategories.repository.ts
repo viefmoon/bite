@@ -67,6 +67,8 @@ export class SubcategoriesRelationalRepository
       .createQueryBuilder('subcategory')
       .leftJoinAndSelect('subcategory.photo', 'photo')
       .leftJoinAndSelect('subcategory.category', 'category')
+      .orderBy('subcategory.sortOrder', 'ASC')
+      .addOrderBy('subcategory.name', 'ASC')
       .skip(skip)
       .take(limit);
 

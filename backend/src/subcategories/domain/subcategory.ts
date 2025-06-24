@@ -8,6 +8,7 @@ export class Subcategory {
   name: string;
   description: string | null;
   isActive: boolean;
+  sortOrder: number;
 
   photoId: string | null;
 

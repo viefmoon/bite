@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class UpdateSubcategoryDto {
   @ApiProperty({
@@ -48,4 +54,13 @@ export class UpdateSubcategoryDto {
   @IsUUID()
   @IsOptional()
   photoId?: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
 }

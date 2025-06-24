@@ -33,6 +33,7 @@ export class SubcategoryMapper extends BaseMapper<
     domain.name = entity.name;
     domain.description = entity.description;
     domain.isActive = entity.isActive;
+    domain.sortOrder = entity.sortOrder;
     domain.categoryId = entity.categoryId;
     domain.photoId = entity.photoId;
     domain.category = entity.category
@@ -55,6 +56,7 @@ export class SubcategoryMapper extends BaseMapper<
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
+    entity.sortOrder = domain.sortOrder;
     entity.category = { id: domain.categoryId } as CategoryEntity;
     entity.photoId = domain.photoId || null;
     entity.photo = domain.photoId

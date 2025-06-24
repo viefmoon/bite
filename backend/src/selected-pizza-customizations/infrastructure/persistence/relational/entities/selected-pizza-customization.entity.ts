@@ -43,7 +43,10 @@ export class SelectedPizzaCustomizationEntity extends EntityRelationalHelper {
   })
   action: CustomizationAction;
 
-  @ManyToOne(() => OrderItemEntity, (orderItem) => orderItem.selectedPizzaCustomizations)
+  @ManyToOne(
+    () => OrderItemEntity,
+    (orderItem) => orderItem.selectedPizzaCustomizations,
+  )
   @JoinColumn({ name: 'order_item_id' })
   orderItem: OrderItemEntity;
 

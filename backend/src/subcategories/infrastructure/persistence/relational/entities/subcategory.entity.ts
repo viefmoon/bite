@@ -30,6 +30,9 @@ export class SubcategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: 0 })
+  sortOrder: number;
+
   @Column({ name: 'category_id', type: 'varchar', length: 20 })
   categoryId: string;
 
