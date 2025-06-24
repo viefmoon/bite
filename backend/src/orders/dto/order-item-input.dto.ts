@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -21,21 +20,21 @@ import { ProductModifierDto } from './product-modifier.dto';
 export class OrderItemInputDto {
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'PROD-1',
     description: 'ID del producto',
   })
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   productId: string;
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'PRODVAR-1',
     description: 'ID de la variante del producto (opcional)',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   productVariantId?: string;
 
   @ApiProperty({

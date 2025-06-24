@@ -6,15 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.viefmoon.bite"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +20,10 @@
       "package": "com.viefmoon.bite",
       "versionCode": 1,
       "jsEngine": "hermes",
-      "permissions": []
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +33,10 @@
         "projectId": "ee42376f-81b2-4fdc-b7c2-0572f4f097a8"
       }
     },
-    "owner": "viefmoon"
+    "owner": "viefmoon",
+    "plugins": [
+      "expo-audio",
+      "expo-notifications"
+    ]
   }
 }

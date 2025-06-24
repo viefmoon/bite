@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsPositive, IsUUID, Min } from 'class-validator';
+import { IsNumber, IsPositive, IsString, Min } from 'class-validator';
 
 export class CreatePizzaConfigurationDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  @IsUUID()
+  @ApiProperty({ example: 'PROD-1' })
+  @IsString()
   productId: string;
 
   @ApiProperty({

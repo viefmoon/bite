@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -15,15 +14,15 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderItemDto {
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   orderId: string;
 
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   productId: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   productVariantId?: string;
 
   @IsNotEmpty()

@@ -7,7 +7,7 @@ import { z } from 'zod';
  * Fuente de verdad centralizada.
  */
 export const modifierGroupSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   minSelections: z.number().int().min(0).optional(),

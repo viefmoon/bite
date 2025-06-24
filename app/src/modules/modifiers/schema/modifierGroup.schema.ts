@@ -92,9 +92,9 @@ export type UpdateModifierGroupInput = z.infer<
 // Schema para la respuesta de la API (extiende el schema de dominio)
 export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
   // Añadir campos que vienen de la API pero no están en el schema de dominio base
-  id: z.string().uuid(), // Asegurar que ID esté aquí
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  id: z.string(), // ID puede ser custom format como "MODG-7"
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   // Definir schemas placeholder o importar los reales si existen
   productModifiers: z.array(z.any()).optional(), // Usar z.any() o un schema específico si existe

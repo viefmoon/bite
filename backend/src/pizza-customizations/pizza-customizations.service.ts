@@ -5,18 +5,33 @@ import { CreatePizzaCustomizationDto } from './dto/create-pizza-customization.dt
 import { UpdatePizzaCustomizationDto } from './dto/update-pizza-customization.dto';
 import { FindAllPizzaCustomizationsDto } from './dto/find-all-pizza-customizations.dto';
 import { Paginated } from '../common/types/paginated.type';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../common/services/custom-id.service';
 
 @Injectable()
 export class PizzaCustomizationsService {
   constructor(
     private readonly pizzaCustomizationRepository: PizzaCustomizationRepository,
+    private readonly customIdService: CustomIdService,
   ) {}
 
   async create(
     createPizzaCustomizationDto: CreatePizzaCustomizationDto,
   ): Promise<PizzaCustomization> {
     const pizzaCustomization = new PizzaCustomization();
-    pizzaCustomization.id = createPizzaCustomizationDto.id;
+    
+    // Generar ID si no se proporciona
+    if (createPizzaCustomizationDto.id) {
+      pizzaCustomization.id = createPizzaCustomizationDto.id;
+    } else {
+      pizzaCustomization.id = await this.customIdService.generateId(
+        EntityPrefix.PIZZA_CUSTOMIZATION,
+        'pizza_customization',
+      );
+    }
+    
     pizzaCustomization.name = createPizzaCustomizationDto.name;
     pizzaCustomization.type = createPizzaCustomizationDto.type;
     pizzaCustomization.ingredients =

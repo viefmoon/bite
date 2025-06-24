@@ -4,7 +4,6 @@ import {
   IsBoolean,
   IsNumber,
   IsString,
-  IsUUID,
   MaxLength,
   Min,
   Max,
@@ -17,7 +16,7 @@ export class CreateAdjustmentDto {
     required: false,
   })
   @ValidateIf((o) => !o.orderItemId)
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   orderId?: string;
 
@@ -26,7 +25,7 @@ export class CreateAdjustmentDto {
     required: false,
   })
   @ValidateIf((o) => !o.orderId)
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   orderItemId?: string;
 

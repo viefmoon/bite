@@ -37,12 +37,12 @@ export class CreateOrderDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'TABLE-1',
     description: 'ID de la mesa (opcional para órdenes que no son en el local)',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   tableId?: string;
 
   @ApiProperty({
@@ -121,12 +121,12 @@ export class CreateOrderDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'CUST-1',
     description: 'ID del cliente (opcional)',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   customerId?: string;
 
   @ApiProperty({

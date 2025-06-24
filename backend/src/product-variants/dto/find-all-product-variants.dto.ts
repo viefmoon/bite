@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsUUID } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class FindAllProductVariantsDto {
@@ -25,12 +25,12 @@ export class FindAllProductVariantsDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'PROD-1',
     description: 'Filtrar por ID de producto',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   productId?: string;
 
   @ApiProperty({

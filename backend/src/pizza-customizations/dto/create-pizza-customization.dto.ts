@@ -10,10 +10,10 @@ import {
 import { CustomizationType } from '../domain/enums/customization-type.enum';
 
 export class CreatePizzaCustomizationDto {
-  @ApiProperty({ example: 'PEPPERONI' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'PI-1', required: false })
+  @IsOptional()
   @IsString()
-  id: string;
+  id?: string;
 
   @ApiProperty({ example: 'Pepperoni' })
   @IsNotEmpty()

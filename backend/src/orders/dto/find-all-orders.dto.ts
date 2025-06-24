@@ -3,7 +3,7 @@ import {
   IsDateString,
   IsEnum,
   IsOptional,
-  IsUUID,
+  IsString,
   IsArray,
 } from 'class-validator';
 import { OrderStatus } from '../domain/enums/order-status.enum';
@@ -12,29 +12,29 @@ import { OrderType } from '../domain/enums/order-type.enum';
 export class FindAllOrdersDto {
   @ApiProperty({
     description: 'Filter orders by user ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'USER-1',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   userId?: string;
 
   @ApiProperty({
     description: 'Filter orders by table ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'TABLE-1',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   tableId?: string;
 
   @ApiProperty({
     description: 'Filter orders by daily order counter ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'COUNTER-1',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   dailyOrderCounterId?: string;
 
   @ApiProperty({

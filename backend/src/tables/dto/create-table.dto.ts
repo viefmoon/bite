@@ -4,7 +4,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   IsNumber,
   IsInt,
 } from 'class-validator';
@@ -20,11 +19,11 @@ export class CreateTableDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'AREA-1',
     description: 'ID del área a la que pertenece la mesa (obligatorio)',
   })
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   areaId: string;
 
   @ApiProperty({

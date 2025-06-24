@@ -8,7 +8,7 @@ export enum EntityPrefix {
   PRODUCT_VARIANT = 'PVA',
   MODIFIER_GROUP = 'MODG',
   MODIFIER = 'MOD',
-  PIZZA_INGREDIENT = 'PI',
+  PIZZA_CUSTOMIZATION = 'PI',
 }
 
 @Injectable()

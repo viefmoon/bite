@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 
 export class UpdateSubcategoryDto {
@@ -38,10 +37,10 @@ export class UpdateSubcategoryDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'CAT-1',
     required: false,
   })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   categoryId?: string;
 
@@ -51,7 +50,7 @@ export class UpdateSubcategoryDto {
     nullable: true,
     required: false,
   })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   photoId?: string;
 

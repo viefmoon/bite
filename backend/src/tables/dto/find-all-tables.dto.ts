@@ -3,7 +3,6 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
-  IsUUID,
   IsNumber,
   IsInt,
 } from 'class-validator';
@@ -23,7 +22,7 @@ export class FindAllTablesDto {
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   areaId?: string;
 
   @ApiProperty({

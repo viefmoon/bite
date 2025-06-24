@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsUUID } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class FindAllSubcategoriesDto {
@@ -25,10 +25,10 @@ export class FindAllSubcategoriesDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'CAT-1',
     required: false,
   })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   categoryId?: string;
 

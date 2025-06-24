@@ -11,17 +11,14 @@
     "app:start": "npm run start --workspace=app",
     "install:all": "npm install",
     "lint": "npm run lint --workspaces --if-present",
-    "format": "npm run format --workspaces --if-present"
+    "format": "npm run format --workspaces --if-present",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "@nestjs/cli": "^10.0.0"
   },
-  "overrides": {
-    "react": "19.1.0",
-    "@types/react": "19.1.8",
-    "react-dom": "19.1.0",
-    "@types/react-dom": "19.1.8"
-  }
+  "version": "1.0.0"
 }

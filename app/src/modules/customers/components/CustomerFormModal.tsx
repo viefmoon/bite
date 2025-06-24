@@ -19,7 +19,7 @@ import {
   CustomerFormInputs,
   customerFormSchema,
 } from '../schema/customer.schema';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { DatePickerModal } from 'react-native-paper-dates';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
@@ -46,7 +46,7 @@ export default function CustomerFormModal({
   const theme = useAppTheme();
   const styles = getStyles(theme);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | null>(null);
+  const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
@@ -391,7 +391,7 @@ export default function CustomerFormModal({
                             : ''
                         }
                         onPress={() => {
-                          setTempDate(value ? new Date(value) : new Date());
+                          setTempDate(value ? new Date(value) : undefined);
                           setShowDatePicker(true);
                         }}
                         error={!!errors.birthDate}
@@ -401,19 +401,24 @@ export default function CustomerFormModal({
                           {errors.birthDate.message}
                         </HelperText>
                       )}
-                      <DateTimePickerModal
-                        isVisible={showDatePicker}
-                        mode="date"
-                        onConfirm={(date) => {
-                          onChange(date.toISOString().split('T')[0]);
+                      <DatePickerModal
+                        visible={showDatePicker}
+                        mode="single"
+                        onDismiss={() => setShowDatePicker(false)}
+                        date={tempDate}
+                        onConfirm={(params) => {
+                          if (params.date) {
+                            onChange(params.date.toISOString().split('T')[0]);
+                            setTempDate(params.date);
+                          }
                           setShowDatePicker(false);
                         }}
-                        onCancel={() => setShowDatePicker(false)}
-                        date={tempDate || new Date()}
-                        maximumDate={new Date()}
-                        locale="es_ES"
-                        confirmTextIOS="Confirmar"
-                        cancelTextIOS="Cancelar"
+                        validRange={{
+                          endDate: new Date(),
+                        }}
+                        locale="es"
+                        saveLabel="Confirmar"
+                        label="Seleccionar fecha"
                       />
                     </View>
                   )}

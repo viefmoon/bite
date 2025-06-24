@@ -5,7 +5,6 @@ import {
   IsOptional,
   IsPositive,
   IsString,
-  IsUUID,
   Min,
   ValidateIf,
   ValidateNested,
@@ -53,7 +52,7 @@ export class UpdateProductVariantDto {
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   id?: string;
 
   @ApiProperty({
@@ -135,12 +134,12 @@ export class UpdateProductDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'SUBCAT-1',
     description: 'ID de la subcategoría a la que pertenece el producto',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   subcategoryId?: string;
 
   @ApiProperty({
@@ -151,7 +150,7 @@ export class UpdateProductDto {
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   photoId?: string | null;
 
   @ApiProperty({
@@ -167,13 +166,13 @@ export class UpdateProductDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'PREPSCR-1',
     description: 'ID de la pantalla de preparación',
     nullable: true,
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   preparationScreenId?: string | null;
 
   @ApiProperty({
@@ -193,8 +192,8 @@ export class UpdateProductDto {
   @ApiProperty({
     type: [String],
     example: [
-      '123e4567-e89b-12d3-a456-426614174001',
-      '123e4567-e89b-12d3-a456-426614174002',
+      'MODGRP-1',
+      'MODGRP-2',
     ],
     description:
       'Lista completa de IDs de los grupos de modificadores a asociar. Las asociaciones existentes no incluidas aquí serán eliminadas.',
@@ -202,7 +201,7 @@ export class UpdateProductDto {
   })
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
+  @IsString({ each: true })
   modifierGroupIds?: string[];
 
   @ApiProperty({

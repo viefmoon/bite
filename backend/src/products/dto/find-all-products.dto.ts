@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -31,12 +30,12 @@ export class FindAllProductsDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'SUBCAT-1',
     description: 'Filtrar por ID de subcategoría',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   subcategoryId?: string;
 
   @ApiProperty({

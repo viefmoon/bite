@@ -3,7 +3,6 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
-  IsUUID,
   IsNumber,
   IsInt,
 } from 'class-validator';
@@ -20,11 +19,11 @@ export class UpdateTableDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'AREA-1',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   areaId?: string;
 
   @ApiProperty({

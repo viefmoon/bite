@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { PaginationParams } from '../../utils/types/pagination-params';
 
 export class FindAllAdjustmentsDto extends PaginationParams {
@@ -7,20 +7,20 @@ export class FindAllAdjustmentsDto extends PaginationParams {
     description: 'Filter by order ID',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   orderId?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by order item ID',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   orderItemId?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by user who applied the adjustment',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   appliedById?: string;
 }

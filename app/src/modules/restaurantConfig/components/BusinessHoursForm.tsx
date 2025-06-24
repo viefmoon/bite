@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Switch, Chip, Surface, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { TimePicker } from 'react-native-paper-dates';
+import { Portal, Modal, Button } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import {
@@ -38,6 +39,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     dayIndex: number;
     type: 'opening' | 'closing';
   } | null>(null);
+  const [timePickerHours, setTimePickerHours] = React.useState(9);
+  const [timePickerMinutes, setTimePickerMinutes] = React.useState(0);
 
   // Initialize business hours if empty
   const initializedHours = React.useMemo(() => {
@@ -105,15 +108,26 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     return timeString;
   };
 
-  const handleTimeConfirm = (date: Date) => {
+  const handleTimeConfirm = () => {
     if (showTimePicker) {
+      const timeString = `${timePickerHours.toString().padStart(2, '0')}:${timePickerMinutes.toString().padStart(2, '0')}`;
       handleTimeChange(
         showTimePicker.dayIndex,
         showTimePicker.type,
-        formatTimeToString(date),
+        timeString,
       );
-      setShowTimePicker(null);
     }
+    setShowTimePicker(null);
+  };
+
+  const openTimePicker = (dayIndex: number, type: 'opening' | 'closing') => {
+    const currentTime = initializedHours.find((h) => h.dayOfWeek === dayIndex)?.[type === 'opening' ? 'openingTime' : 'closingTime'];
+    if (currentTime) {
+      const [hours, minutes] = currentTime.split(':').map(Number);
+      setTimePickerHours(hours);
+      setTimePickerMinutes(minutes);
+    }
+    setShowTimePicker({ dayIndex, type });
   };
 
   const copyHoursToAllDays = (dayIndex: number) => {
@@ -173,7 +187,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                       value={formatTimeForDisplay(dayHours.openingTime)}
                       onPress={() =>
                         isEditing &&
-                        setShowTimePicker({ dayIndex: index, type: 'opening' })
+                        openTimePicker(index, 'opening')
                       }
                       disabled={!isEditing}
                     />
@@ -190,7 +204,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                       value={formatTimeForDisplay(dayHours.closingTime)}
                       onPress={() =>
                         isEditing &&
-                        setShowTimePicker({ dayIndex: index, type: 'closing' })
+                        openTimePicker(index, 'closing')
                       }
                       disabled={!isEditing}
                     />
@@ -213,27 +227,37 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         })}
       </View>
 
-      <DateTimePickerModal
-        isVisible={showTimePicker !== null}
-        mode="time"
-        onConfirm={handleTimeConfirm}
-        onCancel={() => setShowTimePicker(null)}
-        date={
-          showTimePicker
-            ? parseTimeString(
-                initializedHours.find(
-                  (h) => h.dayOfWeek === showTimePicker.dayIndex,
-                )?.[
-                  showTimePicker.type === 'opening'
-                    ? 'openingTime'
-                    : 'closingTime'
-                ] || null,
-              ) || new Date()
-            : new Date()
-        }
-        locale="es_ES"
-        is24Hour={true}
-      />
+      <Portal>
+        <Modal
+          visible={showTimePicker !== null}
+          onDismiss={() => setShowTimePicker(null)}
+          contentContainerStyle={styles.timePickerModal}
+        >
+          {showTimePicker && (
+            <>
+              <Text variant="titleMedium" style={styles.timePickerTitle}>
+                {showTimePicker.type === 'opening' ? 'Hora de apertura' : 'Hora de cierre'} - {DAYS_OF_WEEK[showTimePicker.dayIndex]}
+              </Text>
+              <TimePicker
+                hours={timePickerHours}
+                minutes={timePickerMinutes}
+                onHoursChange={setTimePickerHours}
+                onMinutesChange={setTimePickerMinutes}
+                locale="es"
+                use24HourClock
+              />
+              <View style={styles.timePickerButtons}>
+                <Button mode="text" onPress={() => setShowTimePicker(null)}>
+                  Cancelar
+                </Button>
+                <Button mode="contained" onPress={handleTimeConfirm}>
+                  Confirmar
+                </Button>
+              </View>
+            </>
+          )}
+        </Modal>
+      </Portal>
     </>
   );
 };
@@ -284,6 +308,22 @@ const createStyles = (theme: AppTheme) =>
     closedChipText: {
       fontSize: 12,
       color: theme.colors.onErrorContainer,
+    },
+    timePickerModal: {
+      backgroundColor: theme.colors.surface,
+      padding: 20,
+      margin: 20,
+      borderRadius: 12,
+    },
+    timePickerTitle: {
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    timePickerButtons: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginTop: 20,
+      gap: 10,
     },
   });
 

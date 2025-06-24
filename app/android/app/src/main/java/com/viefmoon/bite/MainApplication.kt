@@ -1,8 +1,7 @@
-package com.viefmoon.pizza
+package com.viefmoon.bite
 
 import android.app.Application
 import android.content.res.Configuration
-import com.viefmoon.pizza.BuildConfig
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -25,7 +24,7 @@ class MainApplication : Application(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(new MyReactNativePackage());
+            // packages.add(MyReactNativePackage())
             return packages
           }
 

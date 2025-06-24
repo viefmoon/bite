@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsPositive,
   IsString,
-  IsUUID,
   Min,
   ValidateIf,
   ValidateNested,
@@ -122,10 +121,10 @@ export class CreateProductDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'SUBCAT-1',
     description: 'ID de la subcategoría a la que pertenece el producto',
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   subcategoryId: string;
 
@@ -136,7 +135,7 @@ export class CreateProductDto {
     nullable: true,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   photoId?: string;
 
   @ApiProperty({
@@ -150,12 +149,12 @@ export class CreateProductDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'PREPSCR-1',
     description: 'ID de la pantalla de preparación',
     nullable: true,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   preparationScreenId?: string;
 
   @ApiProperty({
@@ -173,15 +172,15 @@ export class CreateProductDto {
   @ApiProperty({
     type: [String],
     example: [
-      '123e4567-e89b-12d3-a456-426614174001',
-      '123e4567-e89b-12d3-a456-426614174002',
+      'MODGRP-1',
+      'MODGRP-2',
     ],
     description: 'IDs de los grupos de modificadores a asociar con el producto',
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
+  @IsString({ each: true })
   modifierGroupIds?: string[];
 
   @ApiProperty({

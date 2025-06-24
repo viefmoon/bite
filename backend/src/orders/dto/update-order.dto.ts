@@ -33,12 +33,12 @@ export class UpdateOrderDto {
 
   @ApiProperty({
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'TABLE-1',
     description: 'ID de la mesa',
     required: false,
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   tableId?: string;
 
   @ApiProperty({

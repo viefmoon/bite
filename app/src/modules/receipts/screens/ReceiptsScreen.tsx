@@ -28,7 +28,7 @@ import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
 import { ConfirmRecoverModal } from '../components/ConfirmRecoverModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { DatePickerModal } from 'react-native-paper-dates';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
@@ -41,8 +41,7 @@ export const ReceiptsScreen: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   // Estado para el modal de detalle
@@ -326,21 +325,15 @@ export const ReceiptsScreen: React.FC = () => {
               <Divider />
               <Menu.Item
                 title={
-                  startDate ? format(startDate, 'd/M/yyyy') : 'Fecha inicio'
+                  startDate && endDate
+                    ? `${format(startDate, 'd/M/yyyy')} - ${format(endDate, 'd/M/yyyy')}`
+                    : 'Seleccionar rango de fechas'
                 }
                 onPress={() => {
-                  setShowStartDatePicker(true);
+                  setShowDateRangePicker(true);
                   setShowFilterMenu(false);
                 }}
-                leadingIcon="calendar-start"
-              />
-              <Menu.Item
-                title={endDate ? format(endDate, 'd/M/yyyy') : 'Fecha fin'}
-                onPress={() => {
-                  setShowEndDatePicker(true);
-                  setShowFilterMenu(false);
-                }}
-                leadingIcon="calendar-end"
+                leadingIcon="calendar-range"
               />
               {hasActiveFilters && (
                 <>
@@ -438,30 +431,26 @@ export const ReceiptsScreen: React.FC = () => {
         isLoading={recoverOrderMutation.isPending}
       />
 
-      {/* Date pickers */}
-      <DateTimePickerModal
-        isVisible={showStartDatePicker}
-        mode="date"
-        onConfirm={(date) => {
-          setStartDate(date);
-          setShowStartDatePicker(false);
+      {/* Date range picker */}
+      <DatePickerModal
+        visible={showDateRangePicker}
+        mode="range"
+        onDismiss={() => setShowDateRangePicker(false)}
+        startDate={startDate}
+        endDate={endDate}
+        onConfirm={(params) => {
+          setStartDate(params.startDate);
+          setEndDate(params.endDate);
+          setShowDateRangePicker(false);
         }}
-        onCancel={() => setShowStartDatePicker(false)}
-        date={startDate || new Date()}
-        maximumDate={endDate || new Date()}
-      />
-
-      <DateTimePickerModal
-        isVisible={showEndDatePicker}
-        mode="date"
-        onConfirm={(date) => {
-          setEndDate(date);
-          setShowEndDatePicker(false);
+        validRange={{
+          endDate: new Date(),
         }}
-        onCancel={() => setShowEndDatePicker(false)}
-        date={endDate || new Date()}
-        minimumDate={startDate || undefined}
-        maximumDate={new Date()}
+        locale="es"
+        saveLabel="Confirmar"
+        startLabel="Desde"
+        endLabel="Hasta"
+        label="Seleccionar rango de fechas"
       />
     </View>
   );

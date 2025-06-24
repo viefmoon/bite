@@ -1,9 +1,7 @@
-package com.viefmoon.pizza
+package com.viefmoon.bite
 
 import android.os.Build
 import android.os.Bundle
-import com.viefmoon.pizza.R
-import com.viefmoon.pizza.BuildConfig
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

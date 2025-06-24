@@ -11,6 +11,10 @@ import {
 import { AppNavigator } from './src/app/navigation/AppNavigator';
 import GlobalSnackbar from './src/app/components/common/GlobalSnackbar';
 import { useInitializeAuth } from './src/app/hooks/useInitializeAuth';
+import { es, registerTranslation } from 'react-native-paper-dates';
+
+// Registrar la traducción al español para react-native-paper-dates
+registerTranslation('es', es);
 
 const queryClient = new QueryClient({
   defaultOptions: {

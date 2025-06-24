@@ -9,6 +9,7 @@ import { ProductModifierEntity } from '../../../../product-modifiers/infrastruct
 import { PizzaCustomizationEntity } from '../../../../pizza-customizations/infrastructure/persistence/relational/entities/pizza-customization.entity';
 import { PizzaConfigurationEntity } from '../../../../pizza-configurations/infrastructure/persistence/relational/entities/pizza-configuration.entity';
 import { ProductSeedService } from './product-seed.service';
+import { CustomIdService } from '../../../../common/services/custom-id.service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { ProductSeedService } from './product-seed.service';
       PizzaConfigurationEntity,
     ]),
   ],
-  providers: [ProductSeedService],
+  providers: [ProductSeedService, CustomIdService],
   exports: [ProductSeedService],
 })
 export class ProductSeedModule {}

@@ -4,7 +4,6 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
 } from 'class-validator';
 
@@ -45,8 +44,8 @@ export class UpdatePreparationScreenDto {
   @ApiProperty({
     type: [String],
     example: [
-      '123e4567-e89b-12d3-a456-426614174001',
-      '123e4567-e89b-12d3-a456-426614174002',
+      'PROD-1',
+      'PROD-2',
     ],
     description:
       'IDs de los productos asociados a esta pantalla. Reemplaza la lista existente.',
@@ -54,6 +53,6 @@ export class UpdatePreparationScreenDto {
   })
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsString({ each: true })
   productIds?: string[];
 }

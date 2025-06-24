@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -15,11 +14,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateOrderItemDto {
   @IsOptional()
-  @IsUUID()
+  @IsString()
   productId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   productVariantId?: string;
 
   @IsOptional()

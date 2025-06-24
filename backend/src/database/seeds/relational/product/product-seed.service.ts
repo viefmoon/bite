@@ -10,6 +10,10 @@ import { ProductModifierEntity } from '../../../../product-modifiers/infrastruct
 import { PizzaCustomizationEntity } from '../../../../pizza-customizations/infrastructure/persistence/relational/entities/pizza-customization.entity';
 import { PizzaConfigurationEntity } from '../../../../pizza-configurations/infrastructure/persistence/relational/entities/pizza-configuration.entity';
 import { CustomizationType } from '../../../../pizza-customizations/domain/enums/customization-type.enum';
+import {
+  CustomIdService,
+  EntityPrefix,
+} from '../../../../common/services/custom-id.service';
 
 @Injectable()
 export class ProductSeedService {
@@ -30,14 +34,21 @@ export class ProductSeedService {
     private pizzaCustomizationRepository: Repository<PizzaCustomizationEntity>,
     @InjectRepository(PizzaConfigurationEntity)
     private pizzaConfigurationRepository: Repository<PizzaConfigurationEntity>,
+    private customIdService: CustomIdService,
   ) {}
 
   async run() {
     const countCategories = await this.categoryRepository.count();
+    const countProducts = await this.productRepository.count();
 
     if (!countCategories) {
-      // Aquí iremos agregando el código paso a paso
+      // Primero crear categorías y subcategorías
       await this.seedCategories();
+    }
+
+    if (!countProducts) {
+      // Crear productos si no existen
+      await this.seedProducts();
     }
   }
 
@@ -45,31 +56,31 @@ export class ProductSeedService {
     // Datos de categorías y subcategorías
     const categoriesData = [
       {
-        id: 'COM',
+        id: 'CAT-1',
         name: 'Comida',
         description: 'Platos principales y entradas',
         sortOrder: 1,
         subcategories: [
           {
-            id: 'COM-S1',
+            id: 'SUB-1',
             name: 'Entradas',
             description: 'Alitas, papas y más',
             sortOrder: 1,
           },
           {
-            id: 'COM-S2',
+            id: 'SUB-2',
             name: 'Pizzas',
             description: 'Pizzas artesanales',
             sortOrder: 2,
           },
           {
-            id: 'COM-S3',
+            id: 'SUB-3',
             name: 'Hamburguesas',
             description: 'Hamburguesas gourmet',
             sortOrder: 3,
           },
           {
-            id: 'COM-S4',
+            id: 'SUB-4',
             name: 'Ensaladas',
             description: 'Ensaladas frescas',
             sortOrder: 4,
@@ -77,43 +88,43 @@ export class ProductSeedService {
         ],
       },
       {
-        id: 'BEB',
+        id: 'CAT-2',
         name: 'Bebida',
         description: 'Bebidas y coctelería',
         sortOrder: 2,
         subcategories: [
           {
-            id: 'BEB-S1',
+            id: 'SUB-5',
             name: 'Frappes y Postres',
             description: 'Bebidas frías y postres',
             sortOrder: 1,
           },
           {
-            id: 'BEB-S2',
+            id: 'SUB-6',
             name: 'Jarras',
             description: 'Bebidas para compartir',
             sortOrder: 2,
           },
           {
-            id: 'BEB-S3',
+            id: 'SUB-7',
             name: 'Cocteleria',
             description: 'Cocteles y bebidas con alcohol',
             sortOrder: 3,
           },
           {
-            id: 'BEB-S4',
+            id: 'SUB-8',
             name: 'Bebidas',
             description: 'Aguas frescas y bebidas naturales',
             sortOrder: 4,
           },
           {
-            id: 'BEB-S5',
+            id: 'SUB-9',
             name: 'Cafe Caliente',
             description: 'Café y bebidas calientes',
             sortOrder: 5,
           },
           {
-            id: 'BEB-S6',
+            id: 'SUB-10',
             name: 'Refrescos',
             description: 'Refrescos embotellados',
             sortOrder: 6,
@@ -145,9 +156,6 @@ export class ProductSeedService {
         );
       }
     }
-
-    // Después de crear categorías, crear productos
-    await this.seedProducts();
   }
 
   private async seedProducts() {
@@ -163,48 +171,126 @@ export class ProductSeedService {
     const pizzaCustomizations = [
       // Sabores de pizza (FLAVOR)
       {
-        id: 'PZ-I-1',
         name: 'Adelita',
         type: CustomizationType.FLAVOR,
-        ingredients: 'Salsa de tomate, queso, jamón, champiñones',
+        ingredients: 'Jamon, Piña, Arandano',
         toppingValue: 4,
         sortOrder: 1,
       },
       {
-        id: 'PZ-I-2',
         name: 'Carnes Frias',
         type: CustomizationType.FLAVOR,
-        ingredients: 'Salsa de tomate, queso, jamón, salami, pepperoni',
+        ingredients: 'Jamon, Salami, Peperoni',
         toppingValue: 4,
         sortOrder: 2,
       },
       {
-        id: 'PZ-I-3',
         name: 'Carranza',
         type: CustomizationType.FLAVOR,
-        ingredients: 'Salsa de tomate, queso, pollo, cebolla, chile morrón',
+        ingredients: 'Cebolla, Chile Morron, Pollo BBQ',
         toppingValue: 4,
         sortOrder: 3,
       },
       {
-        id: 'PZ-I-4',
         name: 'Especial',
         type: CustomizationType.FLAVOR,
-        ingredients: 'Salsa de tomate, queso, jamón, champiñones, chile morrón',
+        ingredients: 'Jamon, Champiñon, Chile Morron',
         toppingValue: 4,
         sortOrder: 4,
       },
       {
-        id: 'PZ-I-5',
         name: 'Hawaiana',
         type: CustomizationType.FLAVOR,
-        ingredients: 'Salsa de tomate, queso, jamón, piña',
+        ingredients: 'Jamon, Piña',
         toppingValue: 3,
         sortOrder: 5,
       },
+      {
+        name: 'Kahlo',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Calabaza, Elote, Champiñon, Jitomate',
+        toppingValue: 4,
+        sortOrder: 6,
+      },
+      {
+        name: 'La Leña',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Tocino, Pierna, Chorizo, Molida',
+        toppingValue: 6,
+        sortOrder: 7,
+      },
+      {
+        name: 'La Maria',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Pollo BBQ, Piña, Chile Jalapeño',
+        toppingValue: 6,
+        sortOrder: 8,
+      },
+      {
+        name: 'Lupita',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Molida, Tocino, Cebolla, Chile Morron',
+        toppingValue: 4,
+        sortOrder: 9,
+      },
+      {
+        name: 'Malinche',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Queso de cabra, Champiñon, Jamon, Chile Seco, Albahaca',
+        toppingValue: 6,
+        sortOrder: 10,
+      },
+      {
+        name: 'Margarita',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Jitomate, Albahaca',
+        toppingValue: 4,
+        sortOrder: 11,
+      },
+      {
+        name: 'Mexicana',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Chorizo, Cebolla, Chile Jalapeño, Jitomate',
+        toppingValue: 4,
+        sortOrder: 12,
+      },
+      {
+        name: 'Pepperoni',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Pepperoni',
+        toppingValue: 4,
+        sortOrder: 13,
+      },
+      {
+        name: 'Rivera',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Elote, Champiñon, Chile Morron',
+        toppingValue: 4,
+        sortOrder: 14,
+      },
+      {
+        name: 'Villa',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Chorizo, Tocino, Piña, Chile Jalapeño',
+        toppingValue: 4,
+        sortOrder: 15,
+      },
+      {
+        name: 'Zapata',
+        type: CustomizationType.FLAVOR,
+        ingredients: 'Salami, Jamon, Champiñon',
+        toppingValue: 4,
+        sortOrder: 16,
+      },
+      {
+        name: '3 Quesos',
+        type: CustomizationType.FLAVOR,
+        ingredients: '3 Quesos',
+        toppingValue: 2,
+        sortOrder: 17,
+      },
       // Ingredientes individuales (INGREDIENT)
       {
-        id: 'PZ-I-18',
         name: 'Albahaca',
         type: CustomizationType.INGREDIENT,
         ingredients: null,
@@ -212,7 +298,6 @@ export class ProductSeedService {
         sortOrder: 18,
       },
       {
-        id: 'PZ-I-19',
         name: 'Arándano',
         type: CustomizationType.INGREDIENT,
         ingredients: null,
@@ -220,7 +305,6 @@ export class ProductSeedService {
         sortOrder: 19,
       },
       {
-        id: 'PZ-I-20',
         name: 'Calabaza',
         type: CustomizationType.INGREDIENT,
         ingredients: null,
@@ -228,7 +312,6 @@ export class ProductSeedService {
         sortOrder: 20,
       },
       {
-        id: 'PZ-I-21',
         name: 'Cebolla',
         type: CustomizationType.INGREDIENT,
         ingredients: null,
@@ -236,18 +319,163 @@ export class ProductSeedService {
         sortOrder: 21,
       },
       {
-        id: 'PZ-I-22',
         name: 'Champiñón',
         type: CustomizationType.INGREDIENT,
         ingredients: null,
         toppingValue: 1,
         sortOrder: 22,
       },
+      {
+        name: 'Chile Jalapeño',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 23,
+      },
+      {
+        name: 'Chile Morrón',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 24,
+      },
+      {
+        name: 'Chile Seco',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 25,
+      },
+      {
+        name: 'Chorizo',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 26,
+      },
+      {
+        name: 'Elote',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 27,
+      },
+      {
+        name: 'Jamón',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 28,
+      },
+      {
+        name: 'Jitomate',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 29,
+      },
+      {
+        name: 'Molida',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 30,
+      },
+      {
+        name: 'Pierna',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 2,
+        sortOrder: 31,
+      },
+      {
+        name: 'Piña',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 32,
+      },
+      {
+        name: 'Pollo BBQ',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 2,
+        sortOrder: 33,
+      },
+      {
+        name: 'Queso Extra',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 34,
+      },
+      {
+        name: 'Queso de cabra',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 2,
+        sortOrder: 35,
+      },
+      {
+        name: 'Salami',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 36,
+      },
+      {
+        name: 'Salchicha',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 37,
+      },
+      {
+        name: 'Salsa BBQ',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 0,
+        sortOrder: 38,
+      },
+      {
+        name: 'Tocino',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 39,
+      },
+      {
+        name: 'Pepperoni Extra',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 40,
+      },
+      {
+        name: 'Pepperoni',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 41,
+      },
+      {
+        name: 'Pollo',
+        type: CustomizationType.INGREDIENT,
+        ingredients: null,
+        toppingValue: 1,
+        sortOrder: 42,
+      },
     ];
 
     for (const customization of pizzaCustomizations) {
+      const id = await this.customIdService.generateId(
+        EntityPrefix.PIZZA_CUSTOMIZATION,
+        'pizza_customization',
+      );
+      
       await this.pizzaCustomizationRepository.save(
         this.pizzaCustomizationRepository.create({
+          id,
           ...customization,
           isActive: true,
         }),
@@ -260,86 +488,253 @@ export class ProductSeedService {
     const simpleBeverages = [
       // Aguas frescas
       {
-        id: 'AH',
         name: 'Agua fresca de horchata',
         description: 'Refrescante agua de horchata natural',
         price: 35,
-        subcategoryId: 'BEB-S4',
+        subcategoryId: 'SUB-8',
         sortOrder: 1,
       },
       {
-        id: 'LIM',
         name: 'Limonada',
         description: 'Limonada natural recién preparada',
         price: 35,
-        subcategoryId: 'BEB-S4',
+        subcategoryId: 'SUB-8',
         sortOrder: 2,
       },
       {
-        id: 'LIMM',
         name: 'Limonada Mineral',
         description: 'Limonada con agua mineral',
         price: 35,
-        subcategoryId: 'BEB-S4',
+        subcategoryId: 'SUB-8',
         sortOrder: 3,
       },
       {
-        id: 'SANP',
         name: 'Sangria Preparada',
         description: 'Sangría sin alcohol con frutas naturales',
         price: 35,
-        subcategoryId: 'BEB-S4',
+        subcategoryId: 'SUB-8',
         sortOrder: 4,
       },
       // Refrescos
       {
-        id: 'CC',
         name: 'Coca Cola',
         description: 'Refresco Coca Cola 355ml',
         price: 30,
-        subcategoryId: 'BEB-S6',
+        subcategoryId: 'SUB-10',
         sortOrder: 1,
       },
       {
-        id: 'SAN',
         name: 'Sangria',
         description: 'Refresco Sangría Señorial',
         price: 30,
-        subcategoryId: 'BEB-S6',
+        subcategoryId: 'SUB-10',
         sortOrder: 2,
       },
       {
-        id: 'SQU',
         name: 'Squirt',
         description: 'Refresco Squirt toronja',
         price: 30,
-        subcategoryId: 'BEB-S6',
+        subcategoryId: 'SUB-10',
         sortOrder: 3,
+      },
+      // Refrescos adicionales
+      {
+        name: 'Mirinda',
+        description: 'Refresco Mirinda naranja',
+        price: 30,
+        subcategoryId: 'SUB-10',
+        sortOrder: 4,
+      },
+      {
+        name: 'Manzanita',
+        description: 'Refresco Manzanita Sol',
+        price: 30,
+        subcategoryId: 'SUB-10',
+        sortOrder: 5,
+      },
+      {
+        name: '7up',
+        description: 'Refresco 7up lima-limón',
+        price: 30,
+        subcategoryId: 'SUB-10',
+        sortOrder: 6,
+      },
+      {
+        name: 'Agua Mineral',
+        description: 'Agua mineral Peñafiel',
+        price: 30,
+        subcategoryId: 'SUB-10',
+        sortOrder: 7,
       },
       // Café caliente
       {
-        id: 'CA',
         name: 'Cafe Americano',
         description: 'Café americano recién preparado',
         price: 45,
-        subcategoryId: 'BEB-S5',
+        subcategoryId: 'SUB-9',
         sortOrder: 1,
       },
       {
-        id: 'CP',
         name: 'Capuchino',
         description: 'Capuchino con espuma de leche',
         price: 45,
-        subcategoryId: 'BEB-S5',
+        subcategoryId: 'SUB-9',
         sortOrder: 2,
       },
       {
-        id: 'CH',
         name: 'Chocolate',
         description: 'Chocolate caliente cremoso',
         price: 50,
-        subcategoryId: 'BEB-S5',
+        subcategoryId: 'SUB-9',
         sortOrder: 3,
+      },
+      {
+        name: 'Latte Capuchino',
+        description: 'Latte con toque de capuchino',
+        price: 50,
+        subcategoryId: 'SUB-9',
+        sortOrder: 4,
+      },
+      {
+        name: 'Latte Vainilla',
+        description: 'Latte con jarabe de vainilla',
+        price: 50,
+        subcategoryId: 'SUB-9',
+        sortOrder: 5,
+      },
+      {
+        name: 'Mocaccino',
+        description: 'Café con chocolate y crema',
+        price: 50,
+        subcategoryId: 'SUB-9',
+        sortOrder: 6,
+      },
+      // Coctelería
+      {
+        name: 'Carajillo',
+        description: 'Café con licor 43',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 1,
+      },
+      {
+        name: 'Clericot',
+        description: 'Vino tinto con frutas',
+        price: 80,
+        subcategoryId: 'SUB-7',
+        sortOrder: 2,
+      },
+      {
+        name: 'Conga',
+        description: 'Coctel refrescante con vodka',
+        price: 75,
+        subcategoryId: 'SUB-7',
+        sortOrder: 3,
+      },
+      {
+        name: 'Copa Vino',
+        description: 'Copa de vino tinto o blanco',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 4,
+      },
+      {
+        name: 'Destornillador',
+        description: 'Vodka con jugo de naranja',
+        price: 75,
+        subcategoryId: 'SUB-7',
+        sortOrder: 5,
+      },
+      {
+        name: 'Gin Maracuya',
+        description: 'Gin con maracuyá',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 6,
+      },
+      {
+        name: 'Gin Pepino',
+        description: 'Gin con pepino y tónica',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 7,
+      },
+      {
+        name: 'Margarita',
+        description: 'Tequila, triple sec y limón',
+        price: 85,
+        subcategoryId: 'SUB-7',
+        sortOrder: 8,
+      },
+      {
+        name: 'Mojito',
+        description: 'Ron, hierbabuena, limón y soda',
+        price: 100,
+        subcategoryId: 'SUB-7',
+        sortOrder: 9,
+      },
+      {
+        name: 'Paloma',
+        description: 'Tequila con refresco de toronja',
+        price: 80,
+        subcategoryId: 'SUB-7',
+        sortOrder: 10,
+      },
+      {
+        name: 'Palo Santo',
+        description: 'Mezcal con jugos cítricos',
+        price: 80,
+        subcategoryId: 'SUB-7',
+        sortOrder: 11,
+      },
+      {
+        name: 'Pina Colada',
+        description: 'Ron, crema de coco y piña',
+        price: 75,
+        subcategoryId: 'SUB-7',
+        sortOrder: 12,
+      },
+      {
+        name: 'Pinada',
+        description: 'Bebida tropical con piña',
+        price: 70,
+        subcategoryId: 'SUB-7',
+        sortOrder: 13,
+      },
+      {
+        name: 'Ruso Blanco',
+        description: 'Vodka, licor de café y crema',
+        price: 85,
+        subcategoryId: 'SUB-7',
+        sortOrder: 14,
+      },
+      {
+        name: 'Sangria con Vino',
+        description: 'Vino tinto con frutas y refresco',
+        price: 80,
+        subcategoryId: 'SUB-7',
+        sortOrder: 15,
+      },
+      {
+        name: 'Tequila',
+        description: 'Caballito de tequila',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 16,
+      },
+      {
+        name: 'Tinto de Verano',
+        description: 'Vino tinto con refresco de limón',
+        price: 90,
+        subcategoryId: 'SUB-7',
+        sortOrder: 17,
+      },
+      {
+        name: 'Vampiro',
+        description: 'Tequila, sangrita y refresco',
+        price: 80,
+        subcategoryId: 'SUB-7',
+        sortOrder: 18,
       },
     ];
 
@@ -349,9 +744,14 @@ export class ProductSeedService {
       });
 
       if (subcategory) {
+        const id = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT,
+          'product',
+        );
+        
         await this.productRepository.save(
           this.productRepository.create({
-            id: beverage.id,
+            id,
             name: beverage.name,
             description: beverage.description,
             price: beverage.price,
@@ -373,12 +773,17 @@ export class ProductSeedService {
   private async seedBeveragesWithVariants() {
     // Micheladas
     const micheladaSubcategory = await this.subcategoryRepository.findOne({
-      where: { id: 'BEB-S4' },
+      where: { id: 'SUB-8' },
     });
     if (micheladaSubcategory) {
+      const micheladaId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
       const michelada = await this.productRepository.save(
         this.productRepository.create({
-          id: 'MC',
+          id: micheladaId,
           name: 'Michelada',
           description: 'Michelada preparada con nuestra receta especial',
           hasVariants: true,
@@ -392,13 +797,19 @@ export class ProductSeedService {
 
       // Crear variantes de michelada
       const micheladaVariants = [
-        { id: 'MCV1', name: 'Michelada clara', price: 80, sortOrder: 1 },
-        { id: 'MCV2', name: 'Michelada oscura', price: 80, sortOrder: 2 },
+        { name: 'Michelada clara', price: 80, sortOrder: 1 },
+        { name: 'Michelada oscura', price: 80, sortOrder: 2 },
       ];
 
       for (const variant of micheladaVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
         await this.variantRepository.save(
           this.variantRepository.create({
+            id: variantId,
             ...variant,
             product: michelada,
             isActive: true,
@@ -409,12 +820,17 @@ export class ProductSeedService {
 
     // Frappes
     const frappeSubcategory = await this.subcategoryRepository.findOne({
-      where: { id: 'BEB-S1' },
+      where: { id: 'SUB-5' },
     });
     if (frappeSubcategory) {
+      const frappeId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
       const frappe = await this.productRepository.save(
         this.productRepository.create({
-          id: 'F',
+          id: frappeId,
           name: 'Frappe',
           description: 'Frappes preparados con ingredientes premium',
           hasVariants: true,
@@ -428,16 +844,27 @@ export class ProductSeedService {
 
       // Crear variantes de frappe
       const frappeVariants = [
-        { id: 'FV1', name: 'Frappe Capuchino', price: 70, sortOrder: 1 },
-        { id: 'FV2', name: 'Frappe Coco', price: 70, sortOrder: 2 },
-        { id: 'FV3', name: 'Frappe Caramelo', price: 70, sortOrder: 3 },
-        { id: 'FV4', name: 'Frappe Cajeta', price: 70, sortOrder: 4 },
-        { id: 'FV5', name: 'Frappe Mocaccino', price: 70, sortOrder: 5 },
+        { name: 'Frappe Capuchino', price: 70, sortOrder: 1 },
+        { name: 'Frappe Coco', price: 70, sortOrder: 2 },
+        { name: 'Frappe Caramelo', price: 70, sortOrder: 3 },
+        { name: 'Frappe Cajeta', price: 70, sortOrder: 4 },
+        { name: 'Frappe Mocaccino', price: 70, sortOrder: 5 },
+        { name: 'Frappe Galleta', price: 70, sortOrder: 6 },
+        { name: 'Frappe Bombon', price: 70, sortOrder: 7 },
+        { name: 'Frappe Rompope', price: 85, sortOrder: 8 },
+        { name: 'Frappe Mazapan', price: 85, sortOrder: 9 },
+        { name: 'Frappe Magnum', price: 85, sortOrder: 10 },
       ];
 
       for (const variant of frappeVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
         await this.variantRepository.save(
           this.variantRepository.create({
+            id: variantId,
             ...variant,
             product: frappe,
             isActive: true,
@@ -450,6 +877,15 @@ export class ProductSeedService {
   private async seedFoodProducts() {
     // Hamburguesas con modificadores
     await this.seedHamburgers();
+    
+    // Alitas con variantes y modificadores
+    await this.seedAlitas();
+    
+    // Papas con variantes y modificadores
+    await this.seedPapas();
+    
+    // Ensaladas con variantes y modificadores
+    await this.seedEnsaladas();
 
     // Otros productos de comida
     await this.seedOtherFoodProducts();
@@ -457,14 +893,19 @@ export class ProductSeedService {
 
   private async seedHamburgers() {
     const hamburguesaSubcategory = await this.subcategoryRepository.findOne({
-      where: { id: 'COM-S3' },
+      where: { id: 'SUB-3' },
     });
 
     if (hamburguesaSubcategory) {
       // Crear producto de hamburguesa
+      const hamburguesaId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
       const hamburguesa = await this.productRepository.save(
         this.productRepository.create({
-          id: 'H',
+          id: hamburguesaId,
           name: 'Hamburguesa',
           description: 'Hamburguesas artesanales con carne de res premium',
           hasVariants: true,
@@ -478,18 +919,24 @@ export class ProductSeedService {
 
       // Crear variantes de hamburguesa
       const hamburguesaVariants = [
-        { id: 'HV1', name: 'Hamburguesa Tradicional', price: 85, sortOrder: 1 },
-        { id: 'HV2', name: 'Hamburguesa Especial', price: 95, sortOrder: 2 },
-        { id: 'HV3', name: 'Hamburguesa Hawaiana', price: 95, sortOrder: 3 },
-        { id: 'HV4', name: 'Hamburguesa Pollo', price: 100, sortOrder: 4 },
-        { id: 'HV5', name: 'Hamburguesa BBQ', price: 100, sortOrder: 5 },
-        { id: 'HV6', name: 'Hamburguesa Leñazo', price: 110, sortOrder: 6 },
-        { id: 'HV7', name: 'Hamburguesa Cubana', price: 100, sortOrder: 7 },
+        { name: 'Hamburguesa Tradicional', price: 85, sortOrder: 1 },
+        { name: 'Hamburguesa Especial', price: 95, sortOrder: 2 },
+        { name: 'Hamburguesa Hawaiana', price: 95, sortOrder: 3 },
+        { name: 'Hamburguesa Pollo', price: 100, sortOrder: 4 },
+        { name: 'Hamburguesa BBQ', price: 100, sortOrder: 5 },
+        { name: 'Hamburguesa Leñazo', price: 110, sortOrder: 6 },
+        { name: 'Hamburguesa Cubana', price: 100, sortOrder: 7 },
       ];
 
       for (const variant of hamburguesaVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
         await this.variantRepository.save(
           this.variantRepository.create({
+            id: variantId,
             ...variant,
             product: hamburguesa,
             isActive: true,
@@ -504,9 +951,14 @@ export class ProductSeedService {
 
   private async createHamburgerModifiers(hamburguesa: ProductEntity) {
     // Grupo 1: Hamburguesa con papas
+    const papasGroupId = await this.customIdService.generateId(
+      EntityPrefix.MODIFIER_GROUP,
+      'modifier_group',
+    );
+    
     const papasGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
-        id: 'HM1',
+        id: papasGroupId,
         name: 'Hamburguesa con papas',
         isRequired: false,
         allowMultipleSelections: false,
@@ -517,23 +969,20 @@ export class ProductSeedService {
     );
 
     const papasModifiers = [
-      { id: 'HM1-1', name: 'Con papas francesa', price: 10, sortOrder: 1 },
-      { id: 'HM1-2', name: 'Con papas gajo', price: 15, sortOrder: 2 },
-      { id: 'HM1-3', name: 'Con papas mixtas', price: 15, sortOrder: 3 },
+      { name: 'Con papas francesa', price: 10, sortOrder: 1 },
+      { name: 'Con papas gajo', price: 15, sortOrder: 2 },
+      { name: 'Con papas mixtas', price: 15, sortOrder: 3 },
       {
-        id: 'HM1-4',
         name: 'Con papas francesa gratinadas',
         price: 15,
         sortOrder: 4,
       },
       {
-        id: 'HM1-5',
         name: 'Con papas gajo gratinadas',
         price: 20,
         sortOrder: 5,
       },
       {
-        id: 'HM1-6',
         name: 'Con papas mixtas gratinadas',
         price: 20,
         sortOrder: 6,
@@ -541,8 +990,14 @@ export class ProductSeedService {
     ];
 
     for (const modifier of papasModifiers) {
+      const modifierId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER,
+        'product_modifier',
+      );
+      
       await this.modifierRepository.save(
         this.modifierRepository.create({
+          id: modifierId,
           ...modifier,
           modifierGroup: papasGroup,
           isActive: true,
@@ -552,9 +1007,14 @@ export class ProductSeedService {
     }
 
     // Grupo 2: Hamburguesa extras
+    const extrasGroupId = await this.customIdService.generateId(
+      EntityPrefix.MODIFIER_GROUP,
+      'modifier_group',
+    );
+    
     const extrasGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
-        id: 'HM2',
+        id: extrasGroupId,
         name: 'Hamburguesa extras',
         isRequired: false,
         allowMultipleSelections: true,
@@ -565,12 +1025,11 @@ export class ProductSeedService {
     );
 
     const extrasModifiers = [
-      { id: 'HM2-1', name: 'Partida', price: 0, sortOrder: 1 },
-      { id: 'HM2-2', name: 'Doble carne', price: 15, sortOrder: 2 },
-      { id: 'HM2-3', name: 'Doble pollo', price: 20, sortOrder: 3 },
-      { id: 'HM2-4', name: 'Piña', price: 5, sortOrder: 4 },
+      { name: 'Partida', price: 0, sortOrder: 1 },
+      { name: 'Doble carne', price: 15, sortOrder: 2 },
+      { name: 'Doble pollo', price: 20, sortOrder: 3 },
+      { name: 'Piña', price: 5, sortOrder: 4 },
       {
-        id: 'HM2-5',
         name: 'Pollo en lugar de carne de res',
         price: 15,
         sortOrder: 5,
@@ -578,8 +1037,14 @@ export class ProductSeedService {
     ];
 
     for (const modifier of extrasModifiers) {
+      const modifierId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER,
+        'product_modifier',
+      );
+      
       await this.modifierRepository.save(
         this.modifierRepository.create({
+          id: modifierId,
           ...modifier,
           modifierGroup: extrasGroup,
           isActive: true,
@@ -588,9 +1053,469 @@ export class ProductSeedService {
       );
     }
 
+    // Grupo 3: Quitar ingredientes
+    const quitarGroupId = await this.customIdService.generateId(
+      EntityPrefix.MODIFIER_GROUP,
+      'modifier_group',
+    );
+    
+    const quitarGroup = await this.modifierGroupRepository.save(
+      this.modifierGroupRepository.create({
+        id: quitarGroupId,
+        name: 'Quitar ingredientes Hamburguesa',
+        isRequired: false,
+        allowMultipleSelections: true,
+        maxSelections: 14,
+        isActive: true,
+        sortOrder: 3,
+      }),
+    );
+
+    const quitarModifiers = [
+      { name: 'Sin aderezo', price: 0, sortOrder: 1 },
+      { name: 'Sin aderezos', price: 0, sortOrder: 2 },
+      { name: 'Sin catsup', price: 0, sortOrder: 3 },
+      { name: 'Sin cebolla', price: 0, sortOrder: 4 },
+      { name: 'Sin chile jalapeño', price: 0, sortOrder: 5 },
+      { name: 'Sin crema', price: 0, sortOrder: 6 },
+      { name: 'Sin jitomate', price: 0, sortOrder: 7 },
+      { name: 'Sin lechuga', price: 0, sortOrder: 8 },
+      { name: 'Sin mostaza', price: 0, sortOrder: 9 },
+      { name: 'Sin pierna', price: 0, sortOrder: 10 },
+      { name: 'Sin queso amarillo', price: 0, sortOrder: 11 },
+      { name: 'Sin queso blanco', price: 0, sortOrder: 12 },
+      { name: 'Sin tocino', price: 0, sortOrder: 13 },
+      { name: 'Sin verduras', price: 0, sortOrder: 14 },
+    ];
+
+    for (const modifier of quitarModifiers) {
+      const modifierId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER,
+        'product_modifier',
+      );
+      
+      await this.modifierRepository.save(
+        this.modifierRepository.create({
+          id: modifierId,
+          ...modifier,
+          modifierGroup: quitarGroup,
+          isActive: true,
+          isDefault: false,
+        }),
+      );
+    }
+
     // Asociar grupos de modificadores con el producto
-    hamburguesa.modifierGroups = [papasGroup, extrasGroup];
+    hamburguesa.modifierGroups = [papasGroup, extrasGroup, quitarGroup];
     await this.productRepository.save(hamburguesa);
+  }
+
+  private async seedAlitas() {
+    const entradasSubcategory = await this.subcategoryRepository.findOne({
+      where: { id: 'SUB-1' },
+    });
+
+    if (entradasSubcategory) {
+      // Crear producto de alitas
+      const alitasId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
+      const alitas = await this.productRepository.save(
+        this.productRepository.create({
+          id: alitasId,
+          name: 'Alitas',
+          description: 'Alitas de pollo preparadas al momento',
+          hasVariants: true,
+          isActive: true,
+          isPizza: false,
+          sortOrder: 1,
+          subcategory: entradasSubcategory,
+          estimatedPrepTime: 15,
+        }),
+      );
+
+      // Crear variantes de alitas
+      const alitasVariants = [
+        { name: 'Orden de Alitas BBQ', price: 135, sortOrder: 1 },
+        { name: 'Orden de Alitas Picosas', price: 135, sortOrder: 2 },
+        { name: 'Orden de Alitas Fritas', price: 135, sortOrder: 3 },
+        { name: 'Orden de Alitas Mango Habanero', price: 140, sortOrder: 4 },
+        { name: 'Orden de Alitas Mixtas', price: 135, sortOrder: 5 },
+        { name: 'Media Orden de Alitas BBQ', price: 70, sortOrder: 6 },
+        { name: 'Media Orden de Alitas Picosas', price: 70, sortOrder: 7 },
+        { name: 'Media Orden de Alitas Fritas', price: 70, sortOrder: 8 },
+        { name: 'Media Orden de Alitas Mango Habanero', price: 75, sortOrder: 9 },
+      ];
+
+      for (const variant of alitasVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
+        await this.variantRepository.save(
+          this.variantRepository.create({
+            id: variantId,
+            ...variant,
+            product: alitas,
+            isActive: true,
+          }),
+        );
+      }
+
+      // Crear grupo de modificadores para alitas
+      const alitasModifierGroupId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER_GROUP,
+        'modifier_group',
+      );
+      
+      const alitasModifierGroup = await this.modifierGroupRepository.save(
+        this.modifierGroupRepository.create({
+          id: alitasModifierGroupId,
+          name: 'Modificadores Alitas',
+          isRequired: false,
+          allowMultipleSelections: true,
+          maxSelections: 4,
+          isActive: true,
+          sortOrder: 1,
+        }),
+      );
+
+      const alitasModifiers = [
+        { name: 'Extra salsa', price: 10, sortOrder: 1 },
+        { name: 'Con aderezo ranch', price: 10, sortOrder: 2 },
+        { name: 'Extra chile de aceite', price: 10, sortOrder: 3 },
+        { name: 'Extra doradas', price: 0, sortOrder: 4 },
+      ];
+
+      for (const modifier of alitasModifiers) {
+        const modifierId = await this.customIdService.generateId(
+          EntityPrefix.MODIFIER,
+          'product_modifier',
+        );
+        
+        await this.modifierRepository.save(
+          this.modifierRepository.create({
+            id: modifierId,
+            ...modifier,
+            modifierGroup: alitasModifierGroup,
+            isActive: true,
+            isDefault: false,
+          }),
+        );
+      }
+
+      // Asociar grupo de modificadores con el producto
+      alitas.modifierGroups = [alitasModifierGroup];
+      await this.productRepository.save(alitas);
+    }
+  }
+
+  private async seedPapas() {
+    const entradasSubcategory = await this.subcategoryRepository.findOne({
+      where: { id: 'SUB-1' },
+    });
+
+    if (entradasSubcategory) {
+      // Crear producto de papas
+      const papasId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
+      const papas = await this.productRepository.save(
+        this.productRepository.create({
+          id: papasId,
+          name: 'Orden de Papas',
+          description: 'Papas preparadas con nuestra receta especial',
+          hasVariants: true,
+          isActive: true,
+          isPizza: false,
+          sortOrder: 2,
+          subcategory: entradasSubcategory,
+          estimatedPrepTime: 10,
+        }),
+      );
+
+      // Crear variantes de papas
+      const papasVariants = [
+        { name: 'Orden de Papas a la Francesa', price: 90, sortOrder: 1 },
+        { name: 'Orden de Papas Gajo', price: 105, sortOrder: 2 },
+        { name: 'Orden de Papas Mixtas francesa y gajo', price: 105, sortOrder: 3 },
+        { name: 'Media Orden de Papas a la Francesa', price: 50, sortOrder: 4 },
+        { name: 'Media Orden de Papas Gajo', price: 65, sortOrder: 5 },
+      ];
+
+      for (const variant of papasVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
+        await this.variantRepository.save(
+          this.variantRepository.create({
+            id: variantId,
+            ...variant,
+            product: papas,
+            isActive: true,
+          }),
+        );
+      }
+
+      // Crear grupos de modificadores para papas
+      const papasQuesoGroupId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER_GROUP,
+        'modifier_group',
+      );
+      
+      const papasQuesoGroup = await this.modifierGroupRepository.save(
+        this.modifierGroupRepository.create({
+          id: papasQuesoGroupId,
+          name: 'Papas queso',
+          isRequired: true,
+          allowMultipleSelections: true,
+          maxSelections: 3,
+          isActive: true,
+          sortOrder: 1,
+        }),
+      );
+
+      const papasQuesoModifiers = [
+        { name: 'Sin queso', price: 0, sortOrder: 1 },
+        { name: 'Con queso', price: 0, sortOrder: 2 },
+        { name: 'Extra queso', price: 10, sortOrder: 3 },
+      ];
+
+      for (const modifier of papasQuesoModifiers) {
+        const modifierId = await this.customIdService.generateId(
+          EntityPrefix.MODIFIER,
+          'product_modifier',
+        );
+        
+        await this.modifierRepository.save(
+          this.modifierRepository.create({
+            id: modifierId,
+            ...modifier,
+            modifierGroup: papasQuesoGroup,
+            isActive: true,
+            isDefault: modifier.name === 'Con queso', // Con queso es default
+          }),
+        );
+      }
+
+      const papasObservacionesGroupId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER_GROUP,
+        'modifier_group',
+      );
+      
+      const papasObservacionesGroup = await this.modifierGroupRepository.save(
+        this.modifierGroupRepository.create({
+          id: papasObservacionesGroupId,
+          name: 'Papas observaciones',
+          isRequired: false,
+          allowMultipleSelections: true,
+          maxSelections: 1,
+          isActive: true,
+          sortOrder: 2,
+        }),
+      );
+
+      const papasObservacionesModifiers = [
+        { name: 'Extra aderezo', price: 0, sortOrder: 1 },
+      ];
+
+      for (const modifier of papasObservacionesModifiers) {
+        const modifierId = await this.customIdService.generateId(
+          EntityPrefix.MODIFIER,
+          'product_modifier',
+        );
+        
+        await this.modifierRepository.save(
+          this.modifierRepository.create({
+            id: modifierId,
+            ...modifier,
+            modifierGroup: papasObservacionesGroup,
+            isActive: true,
+            isDefault: false,
+          }),
+        );
+      }
+
+      // Asociar grupos de modificadores con el producto
+      papas.modifierGroups = [papasQuesoGroup, papasObservacionesGroup];
+      await this.productRepository.save(papas);
+    }
+  }
+
+  private async seedEnsaladas() {
+    const ensaladasSubcategory = await this.subcategoryRepository.findOne({
+      where: { id: 'SUB-4' },
+    });
+
+    if (ensaladasSubcategory) {
+      // Crear producto de ensaladas
+      const ensaladaId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
+      const ensalada = await this.productRepository.save(
+        this.productRepository.create({
+          id: ensaladaId,
+          name: 'Ensalada',
+          description: 'Ensaladas frescas preparadas al momento',
+          hasVariants: true,
+          isActive: true,
+          isPizza: false,
+          sortOrder: 1,
+          subcategory: ensaladasSubcategory,
+          estimatedPrepTime: 8,
+        }),
+      );
+
+      // Crear variantes de ensaladas
+      const ensaladaVariants = [
+        { 
+          name: 'Ensalada de Pollo Chica', 
+          price: 90, 
+          sortOrder: 1,
+        },
+        { 
+          name: 'Ensalada de Pollo Grande', 
+          price: 120, 
+          sortOrder: 2,
+        },
+        { 
+          name: 'Ensalada de Jamon Chica', 
+          price: 80, 
+          sortOrder: 3,
+        },
+        { 
+          name: 'Ensalada de Jamon Grande', 
+          price: 100, 
+          sortOrder: 4,
+        },
+        { 
+          name: 'Ensalada Vegetal Chica', 
+          price: 70, 
+          sortOrder: 5,
+        },
+        { 
+          name: 'Ensalada Vegetal Grande', 
+          price: 90, 
+          sortOrder: 6,
+        },
+      ];
+
+      for (const variant of ensaladaVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
+        await this.variantRepository.save(
+          this.variantRepository.create({
+            id: variantId,
+            ...variant,
+            product: ensalada,
+            isActive: true,
+          }),
+        );
+      }
+
+      // Crear grupos de modificadores para ensaladas
+      const extrasEnsaladasGroupId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER_GROUP,
+        'modifier_group',
+      );
+      
+      const extrasEnsaladasGroup = await this.modifierGroupRepository.save(
+        this.modifierGroupRepository.create({
+          id: extrasEnsaladasGroupId,
+          name: 'Extras Ensaladas',
+          isRequired: false,
+          allowMultipleSelections: true,
+          maxSelections: 2,
+          isActive: true,
+          sortOrder: 1,
+        }),
+      );
+
+      const extrasEnsaladasModifiers = [
+        { name: 'Con vinagreta', price: 0, sortOrder: 1 },
+        { name: 'Extra pollo', price: 15, sortOrder: 2 },
+      ];
+
+      for (const modifier of extrasEnsaladasModifiers) {
+        const modifierId = await this.customIdService.generateId(
+          EntityPrefix.MODIFIER,
+          'product_modifier',
+        );
+        
+        await this.modifierRepository.save(
+          this.modifierRepository.create({
+            id: modifierId,
+            ...modifier,
+            modifierGroup: extrasEnsaladasGroup,
+            isActive: true,
+            isDefault: false,
+          }),
+        );
+      }
+
+      const quitarEnsaladaGroupId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER_GROUP,
+        'modifier_group',
+      );
+      
+      const quitarEnsaladaGroup = await this.modifierGroupRepository.save(
+        this.modifierGroupRepository.create({
+          id: quitarEnsaladaGroupId,
+          name: 'Quitar ingredientes Ensalada',
+          isRequired: false,
+          allowMultipleSelections: true,
+          maxSelections: 10,
+          isActive: true,
+          sortOrder: 2,
+        }),
+      );
+
+      const quitarEnsaladaModifiers = [
+        { name: 'Sin aderezo', price: 0, sortOrder: 1 },
+        { name: 'Sin betabel crujiente', price: 0, sortOrder: 2 },
+        { name: 'Sin chile morrón', price: 0, sortOrder: 3 },
+        { name: 'Sin elote', price: 0, sortOrder: 4 },
+        { name: 'Sin jamón', price: 0, sortOrder: 5 },
+        { name: 'Sin jitomate', price: 0, sortOrder: 6 },
+        { name: 'Sin lechuga', price: 0, sortOrder: 7 },
+        { name: 'Sin pollo', price: 0, sortOrder: 8 },
+        { name: 'Sin queso parmesano', price: 0, sortOrder: 9 },
+        { name: 'Sin zanahoria', price: 0, sortOrder: 10 },
+      ];
+
+      for (const modifier of quitarEnsaladaModifiers) {
+        const modifierId = await this.customIdService.generateId(
+          EntityPrefix.MODIFIER,
+          'product_modifier',
+        );
+        
+        await this.modifierRepository.save(
+          this.modifierRepository.create({
+            id: modifierId,
+            ...modifier,
+            modifierGroup: quitarEnsaladaGroup,
+            isActive: true,
+            isDefault: false,
+          }),
+        );
+      }
+
+      // Asociar grupos de modificadores con el producto
+      ensalada.modifierGroups = [extrasEnsaladasGroup, quitarEnsaladaGroup];
+      await this.productRepository.save(ensalada);
+    }
   }
 
   private async seedOtherFoodProducts() {
@@ -599,12 +1524,17 @@ export class ProductSeedService {
 
     // Dedos de queso
     const hamburguesaSubcategory = await this.subcategoryRepository.findOne({
-      where: { id: 'COM-S3' },
+      where: { id: 'SUB-3' },
     });
     if (hamburguesaSubcategory) {
+      const dedosId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
       await this.productRepository.save(
         this.productRepository.create({
-          id: 'DQ',
+          id: dedosId,
           name: 'Dedos de queso',
           description: 'Dedos de queso mozzarella empanizados',
           price: 90,
@@ -621,14 +1551,19 @@ export class ProductSeedService {
 
   private async seedPizzas() {
     const pizzaSubcategory = await this.subcategoryRepository.findOne({
-      where: { id: 'COM-S2' },
+      where: { id: 'SUB-2' },
     });
 
     if (pizzaSubcategory) {
       // Crear producto de pizza
+      const pizzaId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
       const pizza = await this.productRepository.save(
         this.productRepository.create({
-          id: 'PZ',
+          id: pizzaId,
           name: 'Pizza',
           description: 'Pizzas artesanales horneadas en horno de leña',
           hasVariants: true,
@@ -642,23 +1577,20 @@ export class ProductSeedService {
 
       // Crear variantes de pizza
       const pizzaVariants = [
-        { id: 'PZ-V-1', name: 'Pizza Grande', price: 240, sortOrder: 1 },
-        { id: 'PZ-V-2', name: 'Pizza Mediana', price: 190, sortOrder: 2 },
-        { id: 'PZ-V-3', name: 'Pizza Chica', price: 140, sortOrder: 3 },
+        { name: 'Pizza Grande', price: 240, sortOrder: 1 },
+        { name: 'Pizza Mediana', price: 190, sortOrder: 2 },
+        { name: 'Pizza Chica', price: 140, sortOrder: 3 },
         {
-          id: 'PZ-V-4',
           name: 'Pizza Grande Con Orilla Rellena de Queso',
           price: 270,
           sortOrder: 4,
         },
         {
-          id: 'PZ-V-5',
           name: 'Pizza Mediana Con Orilla Rellena de Queso',
           price: 220,
           sortOrder: 5,
         },
         {
-          id: 'PZ-V-6',
           name: 'Pizza Chica Con Orilla Rellena de Queso',
           price: 160,
           sortOrder: 6,
@@ -666,8 +1598,14 @@ export class ProductSeedService {
       ];
 
       for (const variant of pizzaVariants) {
+        const variantId = await this.customIdService.generateId(
+          EntityPrefix.PRODUCT_VARIANT,
+          'product_variant',
+        );
+        
         await this.variantRepository.save(
           this.variantRepository.create({
+            id: variantId,
             ...variant,
             product: pizza,
             isActive: true,
@@ -692,14 +1630,40 @@ export class ProductSeedService {
 
       // Crear grupo de modificadores para pizza
       await this.createPizzaModifiers(pizza);
+      
+      // Chile chillón
+      const chileId = await this.customIdService.generateId(
+        EntityPrefix.PRODUCT,
+        'product',
+      );
+      
+      await this.productRepository.save(
+        this.productRepository.create({
+          id: chileId,
+          name: 'Chile chillon',
+          description: 'Chile jalapeño relleno de queso',
+          price: 35,
+          hasVariants: false,
+          isActive: true,
+          isPizza: false,
+          sortOrder: 2,
+          subcategory: pizzaSubcategory,
+          estimatedPrepTime: 10,
+        }),
+      );
     }
   }
 
   private async createPizzaModifiers(pizza: ProductEntity) {
     // Grupo de observaciones para pizza
+    const observacionesGroupId = await this.customIdService.generateId(
+      EntityPrefix.MODIFIER_GROUP,
+      'modifier_group',
+    );
+    
     const observacionesGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
-        id: 'PZ-M1',
+        id: observacionesGroupId,
         name: 'Observaciones de Pizza',
         isRequired: false,
         allowMultipleSelections: true,
@@ -710,17 +1674,23 @@ export class ProductSeedService {
     );
 
     const observacionesModifiers = [
-      { id: 'PZ-M1-1', name: 'Con catsup', price: 0, sortOrder: 1 },
-      { id: 'PZ-M1-2', name: 'Extra aderezo', price: 0, sortOrder: 2 },
-      { id: 'PZ-M1-3', name: 'Extra chile de aceite', price: 0, sortOrder: 3 },
-      { id: 'PZ-M1-4', name: 'Extra dorada', price: 0, sortOrder: 4 },
-      { id: 'PZ-M1-5', name: 'Menos dorada', price: 0, sortOrder: 5 },
-      { id: 'PZ-M1-6', name: 'Sin salsa', price: 0, sortOrder: 6 },
+      { name: 'Con catsup', price: 0, sortOrder: 1 },
+      { name: 'Extra aderezo', price: 0, sortOrder: 2 },
+      { name: 'Extra chile de aceite', price: 0, sortOrder: 3 },
+      { name: 'Extra dorada', price: 0, sortOrder: 4 },
+      { name: 'Menos dorada', price: 0, sortOrder: 5 },
+      { name: 'Sin salsa', price: 0, sortOrder: 6 },
     ];
 
     for (const modifier of observacionesModifiers) {
+      const modifierId = await this.customIdService.generateId(
+        EntityPrefix.MODIFIER,
+        'product_modifier',
+      );
+      
       await this.modifierRepository.save(
         this.modifierRepository.create({
+          id: modifierId,
           ...modifier,
           modifierGroup: observacionesGroup,
           isActive: true,
