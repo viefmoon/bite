@@ -465,6 +465,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     error: errorTables,
   } = useGetTablesByArea(selectedAreaId);
 
+  // Función helper para buscar información de un modifier por su ID
+  const findModifierById = useCallback((modifierId: string): CartItemModifier | null => {
+    if (!menu) return null;
+    
+    for (const category of menu) {
+      for (const subcategory of category.subcategories || []) {
+        for (const product of subcategory.products || []) {
+          for (const modifierGroup of product.modifierGroups || []) {
+            const modifier = modifierGroup.productModifiers?.find((mod) => mod.id === modifierId);
+            if (modifier) {
+              return {
+                id: modifier.id,
+                modifierGroupId: modifierGroup.id,
+                name: modifier.name,
+                price: modifier.price,
+              };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }, [menu]);
+
   // Cargar datos de la orden cuando esté en modo edición
   useEffect(() => {
     if (!isEditMode || !orderData || !visible) return;
@@ -507,13 +531,32 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Mapear y agrupar los items de la orden
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
       orderData.orderItems.forEach((item: any) => {
-        // Calcular el precio de los modificadores
-        const modifiers = (item.modifiers || []).map((mod: any) => ({
-          id: mod.productModifierId,
-          modifierGroupId: mod.productModifier?.modifierGroupId || '',
-          name: mod.productModifier?.name || 'Modificador',
-          price: parseFloat(mod.price || '0'),
-        }));
+        // Mapear los modificadores desde el nuevo formato (productModifiers)
+        const modifiers: CartItemModifier[] = [];
+        
+        // Si vienen en el formato antiguo (item.modifiers con objetos)
+        if (item.modifiers && Array.isArray(item.modifiers)) {
+          item.modifiers.forEach((mod: any) => {
+            modifiers.push({
+              id: mod.productModifierId,
+              modifierGroupId: mod.productModifier?.modifierGroupId || '',
+              name: mod.productModifier?.name || 'Modificador',
+              price: parseFloat(mod.price || '0'),
+            });
+          });
+        }
+        // Si vienen en el nuevo formato (item.productModifiers como array de entidades)
+        else if (item.productModifiers && Array.isArray(item.productModifiers)) {
+          item.productModifiers.forEach((mod: any) => {
+            const modifierInfo = findModifierById(mod.id) || {
+              id: mod.id,
+              modifierGroupId: mod.modifierGroupId || '',
+              name: mod.name || 'Modificador',
+              price: mod.price || 0,
+            };
+            modifiers.push(modifierInfo);
+          });
+        }
 
         const modifiersPrice = modifiers.reduce(
           (sum: number, mod: any) => sum + (mod.price || 0),
@@ -569,7 +612,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       orderData.adjustments?.map((adj) => ({
         id: adj.id,
         name: adj.name,
-        description: adj.description,
+        // description: adj.description, // No existe en el tipo Adjustment
         isPercentage: adj.isPercentage,
         value: adj.value,
         amount: adj.amount,
@@ -896,14 +939,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           basePrice: Number(item.unitPrice), // Precio unitario
           finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
           preparationNotes: item.preparationNotes || null,
-          // Mapear modificadores al formato del backend
-          modifiers:
+          // Mapear modificadores al formato del backend (ahora solo IDs)
+          productModifierIds:
             item.modifiers && item.modifiers.length > 0
-              ? item.modifiers.map((mod) => ({
-                  productModifierId: mod.id,
-                  quantity: 1,
-                  price: mod.price || null,
-                }))
+              ? item.modifiers.map((mod) => mod.id)
               : undefined,
         });
       }
@@ -968,7 +1007,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               return {
                 orderId: orderId || undefined,
                 name: adj.name,
-                description: adj.description,
+                // description: adj.description, // No existe en el tipo Adjustment
                 isPercentage: adj.isPercentage,
                 value: adj.value,
                 amount: adj.amount,
@@ -1107,10 +1146,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     originalItems.forEach((item: any) => {
       // Crear una clave única para agrupar items idénticos
-      const modifierIds = (item.modifiers || [])
-        .map((m: any) => m.productModifierId)
-        .sort()
-        .join(',');
+      let modifierIds = '';
+      if (item.modifiers && Array.isArray(item.modifiers)) {
+        // Formato antiguo
+        modifierIds = item.modifiers
+          .map((m: any) => m.productModifierId)
+          .sort()
+          .join(',');
+      } else if (item.productModifiers && Array.isArray(item.productModifiers)) {
+        // Formato nuevo
+        modifierIds = item.productModifiers
+          .map((m: any) => m.id)
+          .sort()
+          .join(',');
+      }
       const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
 
       const currentQuantity = originalGroupedMap.get(groupKey) || 0;
