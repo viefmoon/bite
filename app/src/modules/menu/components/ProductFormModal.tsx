@@ -63,7 +63,7 @@ function ProductFormModal({
   isSubmitting,
   productId,
   subcategoryId,
-}: ProductFormModalProps): JSX.Element {
+}: ProductFormModalProps): React.ReactElement {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
@@ -95,6 +95,7 @@ function ProductFormModal({
       photoId: null,
       estimatedPrepTime: 10,
       preparationScreenId: null,
+      sortOrder: 0,
       variants: [],
       variantsToDelete: [],
       imageUri: null,
@@ -147,6 +148,7 @@ function ProductFormModal({
           photoId: initialData.photo?.id ?? null,
           estimatedPrepTime: initialData.estimatedPrepTime,
           preparationScreenId: initialData.preparationScreenId,
+          sortOrder: initialData.sortOrder ?? 0,
           variants: initialData.variants || [],
           variantsToDelete: [],
           imageUri: getImageUrl(initialData.photo?.path) ?? null,
@@ -160,6 +162,10 @@ function ProductFormModal({
     }
   }, [visible, isEditing, initialData, reset, defaultValues, subcategoryId]);
 
+  const hasVariants = watch('hasVariants');
+  const currentImageUri = watch('imageUri');
+  const priceValue = watch('price');
+
   // Sincronizar el valor del precio con el estado del input
   useEffect(() => {
     setPriceInputValue(
@@ -168,10 +174,6 @@ function ProductFormModal({
         : '',
     );
   }, [priceValue]);
-
-  const hasVariants = watch('hasVariants');
-  const currentImageUri = watch('imageUri');
-  const priceValue = watch('price');
 
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
@@ -599,6 +601,32 @@ function ProductFormModal({
               {errors.estimatedPrepTime && (
                 <HelperText type="error" visible={!!errors.estimatedPrepTime}>
                   {errors.estimatedPrepTime.message}
+                </HelperText>
+              )}
+
+              <Controller
+                control={control}
+                name="sortOrder"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    label="Orden de visualización"
+                    value={
+                      value !== null && value !== undefined ? String(value) : ''
+                    }
+                    onChangeText={(text) =>
+                      onChange(text ? parseInt(text, 10) : 0)
+                    }
+                    onBlur={onBlur}
+                    error={!!errors.sortOrder}
+                    style={styles.input}
+                    keyboardType="numeric"
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+              {errors.sortOrder && (
+                <HelperText type="error" visible={!!errors.sortOrder}>
+                  {errors.sortOrder.message}
                 </HelperText>
               )}
 

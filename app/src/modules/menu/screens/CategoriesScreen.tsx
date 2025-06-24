@@ -201,11 +201,8 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-    const baseCategories = categoriesResponse?.data ?? [];
-    const sortedCategories = baseCategories.sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-    return sortedCategories;
+    // Los datos ya vienen ordenados por sortOrder desde el backend
+    return categoriesResponse?.data ?? [];
   }, [categoriesResponse?.data]);
 
   const styles = useMemo(
@@ -222,6 +219,7 @@ const CategoriesScreen: React.FC = () => {
         name: editingCategory.name,
         description: editingCategory.description ?? null,
         isActive: editingCategory.isActive,
+        sortOrder: editingCategory.sortOrder ?? 0,
         imageUri: getImageUrl(editingCategory.photo?.path) ?? null,
       };
     }
@@ -229,6 +227,7 @@ const CategoriesScreen: React.FC = () => {
       name: '',
       description: null,
       isActive: true,
+      sortOrder: 0,
       imageUri: null,
     };
   }, [editingCategory]);
@@ -264,6 +263,12 @@ const CategoriesScreen: React.FC = () => {
       label: 'Descripción',
       type: 'textarea',
       numberOfLines: 3,
+    },
+    {
+      name: 'sortOrder',
+      label: 'Orden de visualización',
+      type: 'number',
+      placeholder: '0',
     },
     {
       name: 'isActive',

@@ -24,6 +24,7 @@ const variantFormSchema = z.object({
     })
     .positive('El precio debe ser mayor a 0'),
   isActive: z.boolean(),
+  sortOrder: z.number().optional().default(0),
 });
 
 type VariantFormData = z.infer<typeof variantFormSchema>;
@@ -40,7 +41,7 @@ function VariantFormModal({
   onDismiss,
   onSubmit,
   initialData,
-}: VariantFormModalProps): JSX.Element {
+}: VariantFormModalProps): React.ReactElement {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const isEditing = !!initialData?.name;
@@ -58,6 +59,7 @@ function VariantFormModal({
       name: initialData?.name ?? '',
       price: initialData?.price ?? 0,
       isActive: initialData?.isActive ?? true,
+      sortOrder: initialData?.sortOrder ?? 0,
       id: initialData?.id,
     },
   });
@@ -70,6 +72,7 @@ function VariantFormModal({
         name: initialData?.name ?? '',
         price: initialData?.price ?? 0,
         isActive: initialData?.isActive ?? true,
+        sortOrder: initialData?.sortOrder ?? 0,
         id: initialData?.id,
       });
     }
@@ -165,6 +168,33 @@ function VariantFormModal({
               {errors.price && (
                 <HelperText type="error" visible={!!errors.price}>
                   {errors.price.message}
+                </HelperText>
+              )}
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <Controller
+                control={control}
+                name="sortOrder"
+                render={({ field }) => (
+                  <TextInput
+                    mode="outlined"
+                    label="Orden de visualización"
+                    value={String(field.value || 0)}
+                    onChangeText={(text) => {
+                      const value = parseInt(text, 10);
+                      field.onChange(isNaN(value) ? 0 : value);
+                    }}
+                    onBlur={field.onBlur}
+                    error={!!errors.sortOrder}
+                    style={styles.input}
+                    keyboardType="numeric"
+                  />
+                )}
+              />
+              {errors.sortOrder && (
+                <HelperText type="error" visible={!!errors.sortOrder}>
+                  {errors.sortOrder.message}
                 </HelperText>
               )}
             </View>

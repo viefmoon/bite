@@ -15,6 +15,7 @@ export const modifierGroupSchema = z.object({
   isRequired: z.boolean().optional(),
   allowMultipleSelections: z.boolean().optional(),
   isActive: z.boolean().optional(), // Mantener opcional si la API puede no devolverlo siempre
+  sortOrder: z.number(),
   // Opcional: Incluir schema de modificadores si es parte del dominio central
   // modifiers: z.array(modifierSchema).optional(),
 });

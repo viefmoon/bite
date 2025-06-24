@@ -23,6 +23,7 @@ export const productSchema = z.object({
   isActive: z.boolean(),
   isPizza: z.boolean().default(false),
   subcategoryId: z.string().uuid('La subcategoría es requerida'),
+  sortOrder: z.number(),
   photo: photoSchema.optional().nullable(), // Usar schema centralizado
   estimatedPrepTime: z
     .number()

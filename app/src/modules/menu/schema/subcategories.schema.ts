@@ -10,6 +10,7 @@ export const createSubCategoryDtoSchema = z.object({
   categoryId: z.string().uuid('Debe seleccionar una categoría válida'),
   photoId: z.string().uuid().optional().nullable(),
   imageUri: z.string().nullable().optional(),
+  sortOrder: z.number().optional().default(0),
 });
 export type CreateSubCategoryDto = z.infer<typeof createSubCategoryDtoSchema>;
 
@@ -18,6 +19,7 @@ export const updateSubCategoryDtoSchema = createSubCategoryDtoSchema
   .extend({
     photoId: z.string().uuid().nullable().optional(),
     imageUri: z.string().nullable().optional(),
+    sortOrder: z.number().optional(),
   });
 export type UpdateSubCategoryDto = z.infer<typeof updateSubCategoryDtoSchema>;
 

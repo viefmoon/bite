@@ -36,7 +36,7 @@ import {
   FieldError, // Importar FieldError
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ZodSchema } from 'zod';
+import { z } from 'zod';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import CustomImagePicker, { FileObject } from '../common/CustomImagePicker';
 import {
@@ -85,7 +85,7 @@ interface GenericFormModalProps<
     data: TFormData,
     photoId: string | null | undefined,
   ) => Promise<void>;
-  formSchema: ZodSchema<TFormData>;
+  formSchema: z.ZodType<TFormData>;
   formFields: FormFieldConfig<TFormData>[];
   imagePickerConfig?: ImagePickerConfig<TFormData>;
   initialValues?: DeepPartial<TFormData>;

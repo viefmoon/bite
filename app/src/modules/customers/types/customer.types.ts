@@ -29,7 +29,8 @@ export interface Customer {
   id: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string | null;
+  whatsappPhoneNumber: string;
+  stripeCustomerId?: string | null;
   email?: string | null;
   birthDate?: Date | null;
   fullChatHistory?: ChatMessage[] | null;
@@ -52,7 +53,7 @@ export interface Customer {
 export interface CreateCustomerDto {
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
+  whatsappPhoneNumber: string;
   email?: string;
   birthDate?: string;
   isActive?: boolean;
@@ -65,7 +66,7 @@ export interface CreateCustomerDto {
 export interface UpdateCustomerDto {
   firstName?: string;
   lastName?: string;
-  phoneNumber?: string | null;
+  whatsappPhoneNumber?: string;
   email?: string | null;
   birthDate?: string | null;
   isActive?: boolean;
@@ -115,7 +116,7 @@ export interface FindAllCustomersQuery {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phoneNumber?: string;
+  whatsappPhoneNumber?: string;
   isActive?: boolean;
   isBanned?: boolean;
   lastInteractionAfter?: Date;

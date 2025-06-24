@@ -21,11 +21,10 @@ export const addressSchema = z.object({
 export const createCustomerSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  phoneNumber: z
+  whatsappPhoneNumber: z
     .string()
-    .regex(/^\d{0,10}$/, 'El teléfono debe contener máximo 10 dígitos')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'El número de WhatsApp es requerido')
+    .regex(/^\+?\d{10,15}$/, 'El número de WhatsApp debe tener entre 10 y 15 dígitos'),
   email: z
     .string()
     .email('El correo electrónico no es válido')
@@ -48,11 +47,10 @@ export const updateCustomerSchema = createCustomerSchema.partial();
 export const customerFormSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  phoneNumber: z
+  whatsappPhoneNumber: z
     .string()
-    .regex(/^\d{0,10}$/, 'El teléfono debe contener máximo 10 dígitos')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'El número de WhatsApp es requerido')
+    .regex(/^\+?\d{10,15}$/, 'El número de WhatsApp debe tener entre 10 y 15 dígitos'),
   email: z
     .string()
     .email('El correo electrónico no es válido')

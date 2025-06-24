@@ -26,7 +26,7 @@ import { useListState } from '@/app/hooks/useListState';
 
 type ProductsScreenRouteProp = RouteProp<MenuStackParamList, 'Products'>;
 
-function ProductsScreen(): JSX.Element {
+function ProductsScreen(): React.ReactElement {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme as AppTheme), [theme]);
   const navigation = useNavigation();

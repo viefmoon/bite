@@ -13,6 +13,7 @@ export const productVariantSchema = z.object({
     required_error: 'El precio es requerido',
   }), // No necesita ser positivo aquí, puede ser 0
   isActive: z.boolean(),
+  sortOrder: z.number(),
 });
 
 // Tipo TypeScript inferido y exportado centralmente
@@ -26,5 +27,6 @@ export const productVariantInputSchema = z.object({
     required_error: 'El precio es requerido',
   }),
   isActive: z.boolean(),
+  sortOrder: z.number(),
 });
 export type ProductVariantInput = z.infer<typeof productVariantInputSchema>;

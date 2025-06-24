@@ -12,6 +12,7 @@ export const subCategorySchema = z.object({
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
   categoryId: z.string().uuid('El ID de categoría no es válido'),
+  sortOrder: z.number(),
   photo: photoSchema.nullable().optional(), // Usar photoSchema centralizado
   // Opcional: Incluir productos si es relevante en el dominio general
   // products: z.array(productSchema).optional(),

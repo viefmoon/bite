@@ -26,6 +26,7 @@ const productVariantFormSchema = z.object({
     })
     .positive('El precio debe ser mayor a 0'),
   isActive: z.boolean(),
+  sortOrder: z.number().optional().default(0),
 });
 
 // Schema base local para el formulario (necesario para superRefine y campos extra como imageUri)
@@ -58,6 +59,7 @@ const productBaseSchema = z.object({
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
   preparationScreenId: z.string().uuid().optional().nullable(),
+  sortOrder: z.number().optional().default(0),
   variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
   variantsToDelete: z.array(z.string().uuid()).optional(), // Para manejar eliminación en edición
   modifierGroupIds: z.array(z.string().uuid()).optional(), // IDs para asignar/actualizar

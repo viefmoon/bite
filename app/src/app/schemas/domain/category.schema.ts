@@ -18,6 +18,7 @@ export const categorySchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
+  sortOrder: z.number(),
   photo: categoryPhotoSchema.nullable().optional(),
 });
 

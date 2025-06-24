@@ -179,6 +179,12 @@ const SubcategoriesScreen: React.FC = () => {
       numberOfLines: 3,
     },
     {
+      name: 'sortOrder',
+      label: 'Orden de visualización',
+      type: 'number',
+      placeholder: '0',
+    },
+    {
       name: 'isActive',
       label: 'Activo',
       type: 'switch',
@@ -300,6 +306,7 @@ const SubcategoriesScreen: React.FC = () => {
                   description: editingItem.description ?? '',
                   isActive: editingItem.isActive,
                   categoryId: editingItem.categoryId,
+                  sortOrder: editingItem.sortOrder ?? 0,
                   imageUri: editingItem.photo?.path
                     ? getImageUrl(editingItem.photo.path)
                     : null,
@@ -309,6 +316,7 @@ const SubcategoriesScreen: React.FC = () => {
                   description: '',
                   isActive: true,
                   categoryId: categoryId,
+                  sortOrder: 0,
                   imageUri: null,
                 }
           }

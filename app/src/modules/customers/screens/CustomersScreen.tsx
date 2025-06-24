@@ -23,7 +23,7 @@ import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
 import { formatCurrency } from '@/app/lib/formatters';
 
-function CustomersScreen(): JSX.Element {
+function CustomersScreen(): React.ReactElement {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme as AppTheme), [theme]);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
@@ -305,8 +305,13 @@ function CustomersScreen(): JSX.Element {
               render: (value) => (value ? '⛔ Baneado' : '✅ No baneado'),
             },
             {
-              field: 'phoneNumber' as keyof Customer,
-              label: 'Teléfono',
+              field: 'whatsappPhoneNumber' as keyof Customer,
+              label: 'WhatsApp',
+              render: (value) => (value as string) || 'No registrado',
+            },
+            {
+              field: 'stripeCustomerId' as keyof Customer,
+              label: 'Stripe Customer ID',
               render: (value) => (value as string) || 'No registrado',
             },
             {
