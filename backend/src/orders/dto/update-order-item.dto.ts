@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PreparationStatus } from '../domain/order-item';
-import { SelectedModifierDto } from './selected-modifier.dto';
+import { ProductModifierDto } from './product-modifier.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateOrderItemDto {
@@ -41,13 +41,13 @@ export class UpdateOrderItemDto {
   preparationNotes?: string;
 
   @ApiProperty({
-    type: [SelectedModifierDto],
-    description: 'Lista de modificadores seleccionados',
+    type: [ProductModifierDto],
+    description: 'Lista de modificadores del producto',
     required: false,
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SelectedModifierDto)
-  selectedModifiers?: SelectedModifierDto[];
+  @Type(() => ProductModifierDto)
+  productModifiers?: ProductModifierDto[];
 }
