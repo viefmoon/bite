@@ -7,13 +7,12 @@ import {
   TextStyle,
 } from 'react-native';
 import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   Button,
   Chip,
-  ActivityIndicator,
-} from 'react-native-paper';
+  ActivityIndicator,} from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { getImageUrl } from '../../lib/imageUtils';

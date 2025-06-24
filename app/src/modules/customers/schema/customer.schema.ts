@@ -21,15 +21,18 @@ export const addressSchema = z.object({
 export const createCustomerSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  phoneNumber: z.string()
+  phoneNumber: z
+    .string()
     .regex(/^\d{0,10}$/, 'El teléfono debe contener máximo 10 dígitos')
     .optional()
     .or(z.literal('')),
-  email: z.string()
+  email: z
+    .string()
     .email('El correo electrónico no es válido')
     .optional()
     .or(z.literal('')),
-  birthDate: z.string()
+  birthDate: z
+    .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
     .optional()
     .or(z.literal('')),
@@ -45,15 +48,18 @@ export const updateCustomerSchema = createCustomerSchema.partial();
 export const customerFormSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  phoneNumber: z.string()
+  phoneNumber: z
+    .string()
     .regex(/^\d{0,10}$/, 'El teléfono debe contener máximo 10 dígitos')
     .optional()
     .or(z.literal('')),
-  email: z.string()
+  email: z
+    .string()
     .email('El correo electrónico no es válido')
     .optional()
     .or(z.literal('')),
-  birthDate: z.string()
+  birthDate: z
+    .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
     .optional()
     .or(z.literal('')),

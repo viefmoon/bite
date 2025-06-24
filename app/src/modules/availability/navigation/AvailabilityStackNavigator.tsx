@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator<AvailabilityStackParamList>();
 
 export const AvailabilityStackNavigator = () => {
   const theme = useAppTheme();
-  
+
   return (
     <Stack.Navigator screenOptions={getStackHeaderOptions(theme)}>
       <Stack.Screen

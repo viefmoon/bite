@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   TextInput,
   Button,
   Switch,
@@ -15,12 +11,8 @@ import {
   Surface,
   Chip,
   Avatar,
-  IconButton,
-} from 'react-native-paper';
-import {
-  useForm,
-  Controller,
-} from 'react-hook-form';
+  IconButton,} from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { Address, CreateAddressDto } from '../types/customer.types';
@@ -57,6 +49,7 @@ export default function AddressFormModal({
   } = useForm<AddressFormInputs>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
+      name: '',
       street: '',
       number: '',
       complement: '',
@@ -64,7 +57,7 @@ export default function AddressFormModal({
       city: '',
       state: '',
       zipCode: '',
-      reference: '',
+      deliveryInstructions: '',
       isDefault: false,
     },
   });
@@ -76,6 +69,7 @@ export default function AddressFormModal({
   useEffect(() => {
     if (editingItem) {
       reset({
+        name: editingItem.name,
         street: editingItem.street,
         number: editingItem.number,
         complement: editingItem.complement || '',
@@ -83,7 +77,7 @@ export default function AddressFormModal({
         city: editingItem.city,
         state: editingItem.state,
         zipCode: editingItem.zipCode,
-        reference: editingItem.reference || '',
+        deliveryInstructions: editingItem.deliveryInstructions || '',
         latitude: editingItem.latitude,
         longitude: editingItem.longitude,
         geocodedAddress: editingItem.geocodedAddress || '',
@@ -91,6 +85,7 @@ export default function AddressFormModal({
       });
     } else {
       reset({
+        name: '',
         street: '',
         number: '',
         complement: '',
@@ -98,7 +93,7 @@ export default function AddressFormModal({
         city: '',
         state: '',
         zipCode: '',
-        reference: '',
+        deliveryInstructions: '',
         isDefault: false,
       });
     }
@@ -128,7 +123,7 @@ export default function AddressFormModal({
     const neighborhoodValue = watch('neighborhood');
     const cityValue = watch('city');
     const stateValue = watch('state');
-    
+
     if (streetValue && numberValue) {
       parts.push(`${streetValue} ${numberValue}`);
     }
@@ -136,7 +131,7 @@ export default function AddressFormModal({
     if (cityValue && stateValue) {
       parts.push(`${cityValue}, ${stateValue}`);
     }
-    
+
     return parts.join(', ');
   };
 
@@ -149,16 +144,30 @@ export default function AddressFormModal({
           contentContainerStyle={styles.modalContainer}
         >
           <Surface style={styles.modalContent} elevation={5}>
-            <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
+            <View
+              style={[
+                styles.headerContainer,
+                { backgroundColor: theme.colors.primary },
+              ]}
+            >
               <View style={styles.headerLeft}>
-                <Avatar.Icon 
-                  size={32} 
+                <Avatar.Icon
+                  size={32}
                   icon={editingItem ? 'map-marker-radius' : 'map-marker-plus'}
-                  style={[styles.headerIcon, { backgroundColor: theme.colors.onPrimary + '20' }]}
+                  style={[
+                    styles.headerIcon,
+                    { backgroundColor: theme.colors.onPrimary + '20' },
+                  ]}
                   color={theme.colors.onPrimary}
                 />
                 <View style={styles.headerTextContainer}>
-                  <Text style={[styles.modalTitle, { color: theme.colors.onPrimary }]} variant="titleMedium">
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: theme.colors.onPrimary },
+                    ]}
+                    variant="titleMedium"
+                  >
                     {editingItem ? 'Editar Dirección' : 'Nueva Dirección'}
                   </Text>
                 </View>
@@ -172,7 +181,7 @@ export default function AddressFormModal({
               />
             </View>
 
-            <ScrollView 
+            <ScrollView
               style={styles.formContainer}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -182,8 +191,8 @@ export default function AddressFormModal({
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Información de la Dirección
                   </Text>
-                  <Chip 
-                    mode="flat" 
+                  <Chip
+                    mode="flat"
                     compact
                     style={styles.requiredChip}
                     textStyle={styles.requiredChipText}
@@ -191,7 +200,32 @@ export default function AddressFormModal({
                     Requerido
                   </Chip>
                 </View>
-                
+
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Nombre de la dirección"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.name}
+                        mode="outlined"
+                        placeholder="Ej: Casa, Oficina, Casa de mamá"
+                        left={<TextInput.Icon icon="tag" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.name && (
+                        <HelperText type="error" visible={!!errors.name}>
+                          {errors.name.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
+
                 <Controller
                   control={control}
                   name="street"
@@ -217,55 +251,55 @@ export default function AddressFormModal({
                   )}
                 />
 
-              <View style={styles.row}>
-                <View style={styles.halfInput}>
-                  <Controller
-                    control={control}
-                    name="number"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View style={styles.inputContainer}>
-                        <TextInput
-                          label="Número"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          error={!!errors.number}
-                          mode="outlined"
-                          placeholder="123"
-                          left={<TextInput.Icon icon="numeric" />}
-                          outlineStyle={styles.inputOutline}
-                        />
-                        {errors.number && (
-                          <HelperText type="error" visible={!!errors.number}>
-                            {errors.number.message}
-                          </HelperText>
-                        )}
-                      </View>
-                    )}
-                  />
-                </View>
+                <View style={styles.row}>
+                  <View style={styles.halfInput}>
+                    <Controller
+                      control={control}
+                      name="number"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                          <TextInput
+                            label="Número"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            error={!!errors.number}
+                            mode="outlined"
+                            placeholder="123"
+                            left={<TextInput.Icon icon="numeric" />}
+                            outlineStyle={styles.inputOutline}
+                          />
+                          {errors.number && (
+                            <HelperText type="error" visible={!!errors.number}>
+                              {errors.number.message}
+                            </HelperText>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
 
-                <View style={styles.halfInput}>
-                  <Controller
-                    control={control}
-                    name="complement"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View style={styles.inputContainer}>
-                        <TextInput
-                          label="Interior"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          mode="outlined"
-                          placeholder="Depto 4B"
-                          left={<TextInput.Icon icon="home-variant" />}
-                          outlineStyle={styles.inputOutline}
-                        />
-                      </View>
-                    )}
-                  />
+                  <View style={styles.halfInput}>
+                    <Controller
+                      control={control}
+                      name="complement"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                          <TextInput
+                            label="Interior"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            mode="outlined"
+                            placeholder="Depto 4B"
+                            left={<TextInput.Icon icon="home-variant" />}
+                            outlineStyle={styles.inputOutline}
+                          />
+                        </View>
+                      )}
+                    />
+                  </View>
                 </View>
-              </View>
 
                 <Controller
                   control={control}
@@ -284,7 +318,10 @@ export default function AddressFormModal({
                         outlineStyle={styles.inputOutline}
                       />
                       {errors.neighborhood && (
-                        <HelperText type="error" visible={!!errors.neighborhood}>
+                        <HelperText
+                          type="error"
+                          visible={!!errors.neighborhood}
+                        >
                           {errors.neighborhood.message}
                         </HelperText>
                       )}
@@ -317,64 +354,63 @@ export default function AddressFormModal({
                   )}
                 />
 
-              <View style={styles.row}>
-                <View style={styles.halfInput}>
-                  <Controller
-                    control={control}
-                    name="state"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View style={styles.inputContainer}>
-                        <TextInput
-                          label="Estado"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          error={!!errors.state}
-                          mode="outlined"
-                          placeholder="Ej: CDMX"
-                          left={<TextInput.Icon icon="map-marker" />}
-                          outlineStyle={styles.inputOutline}
-                        />
-                        {errors.state && (
-                          <HelperText type="error" visible={!!errors.state}>
-                            {errors.state.message}
-                          </HelperText>
-                        )}
-                      </View>
-                    )}
-                  />
-                </View>
+                <View style={styles.row}>
+                  <View style={styles.halfInput}>
+                    <Controller
+                      control={control}
+                      name="state"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                          <TextInput
+                            label="Estado"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            error={!!errors.state}
+                            mode="outlined"
+                            placeholder="Ej: CDMX"
+                            left={<TextInput.Icon icon="map-marker" />}
+                            outlineStyle={styles.inputOutline}
+                          />
+                          {errors.state && (
+                            <HelperText type="error" visible={!!errors.state}>
+                              {errors.state.message}
+                            </HelperText>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
 
-                <View style={styles.halfInput}>
-                  <Controller
-                    control={control}
-                    name="zipCode"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View style={styles.inputContainer}>
-                        <TextInput
-                          label="C.P."
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          error={!!errors.zipCode}
-                          mode="outlined"
-                          placeholder="06700"
-                          keyboardType="numeric"
-                          maxLength={5}
-                          left={<TextInput.Icon icon="mailbox" />}
-                          outlineStyle={styles.inputOutline}
-                        />
-                        {errors.zipCode && (
-                          <HelperText type="error" visible={!!errors.zipCode}>
-                            {errors.zipCode.message}
-                          </HelperText>
-                        )}
-                      </View>
-                    )}
-                  />
+                  <View style={styles.halfInput}>
+                    <Controller
+                      control={control}
+                      name="zipCode"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                          <TextInput
+                            label="C.P."
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            error={!!errors.zipCode}
+                            mode="outlined"
+                            placeholder="06700"
+                            keyboardType="numeric"
+                            maxLength={5}
+                            left={<TextInput.Icon icon="mailbox" />}
+                            outlineStyle={styles.inputOutline}
+                          />
+                          {errors.zipCode && (
+                            <HelperText type="error" visible={!!errors.zipCode}>
+                              {errors.zipCode.message}
+                            </HelperText>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
                 </View>
-              </View>
-
               </View>
 
               <View style={styles.sectionContainer}>
@@ -382,8 +418,8 @@ export default function AddressFormModal({
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Información Adicional
                   </Text>
-                  <Chip 
-                    mode="flat" 
+                  <Chip
+                    mode="flat"
                     compact
                     style={styles.optionalChip}
                     textStyle={styles.optionalChipText}
@@ -394,11 +430,11 @@ export default function AddressFormModal({
 
                 <Controller
                   control={control}
-                  name="reference"
+                  name="deliveryInstructions"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputContainer}>
                       <TextInput
-                        label="Referencias"
+                        label="Instrucciones de entrega"
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -424,11 +460,17 @@ export default function AddressFormModal({
                           iconColor={theme.colors.primary}
                         />
                         <View style={styles.locationInfo}>
-                          <Text variant="bodyMedium" style={styles.coordinatesText}>
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.coordinatesText}
+                          >
                             {latitude.toFixed(6)}, {longitude.toFixed(6)}
                           </Text>
                           {geocodedAddress && (
-                            <Text variant="bodySmall" style={styles.geocodedText}>
+                            <Text
+                              variant="bodySmall"
+                              style={styles.geocodedText}
+                            >
                               {geocodedAddress}
                             </Text>
                           )}
@@ -449,7 +491,9 @@ export default function AddressFormModal({
                     icon="map-marker-plus"
                     style={styles.locationButton}
                   >
-                    {latitude && longitude ? 'Cambiar ubicación' : 'Seleccionar ubicación'}
+                    {latitude && longitude
+                      ? 'Cambiar ubicación'
+                      : 'Seleccionar ubicación'}
                   </Button>
                 </View>
 
@@ -508,9 +552,7 @@ export default function AddressFormModal({
         onDismiss={() => setShowLocationPicker(false)}
         onConfirm={handleLocationConfirm}
         initialLocation={
-          latitude && longitude
-            ? { latitude, longitude }
-            : undefined
+          latitude && longitude ? { latitude, longitude } : undefined
         }
         address={buildDisplayAddress()}
       />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
-import { Modal, Portal, Text, Title } from 'react-native-paper';
+import { Portal, Modal, Text, Title } from 'react-native-paper';
 import type { Product } from '@/app/schemas/domain/product.schema';
 import { useAppTheme } from '@/app/styles/theme';
 

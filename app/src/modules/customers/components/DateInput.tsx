@@ -44,19 +44,32 @@ export default function DateInput({
   const currentDay = currentDate.getDate();
 
   // Generar años (100 años hacia atrás desde el año actual)
-  const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
-  
+  const years = Array.from(
+    { length: 100 },
+    (_, i) => new Date().getFullYear() - i,
+  );
+
   // Meses
   const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   // Días del mes
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
-  
+
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
@@ -134,15 +147,18 @@ export default function DateInput({
                 onPress={() => setShowPicker(false)}
               />
             </View>
-            
+
             <Divider />
 
             <View style={styles.pickersContainer}>
               {/* Día */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Día</Text>
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                  {days.map(day => (
+                <ScrollView
+                  style={styles.scrollView}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {days.map((day) => (
                     <TouchableOpacity
                       key={day}
                       onPress={() => setSelectedDay(day)}
@@ -167,7 +183,10 @@ export default function DateInput({
               {/* Mes */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Mes</Text>
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  style={styles.scrollView}
+                  showsVerticalScrollIndicator={false}
+                >
                   {months.map((month, index) => (
                     <TouchableOpacity
                       key={index}
@@ -180,7 +199,8 @@ export default function DateInput({
                       <Text
                         style={[
                           styles.pickerItemText,
-                          selectedMonth === index && styles.pickerItemTextSelected,
+                          selectedMonth === index &&
+                            styles.pickerItemTextSelected,
                         ]}
                       >
                         {month}
@@ -193,8 +213,11 @@ export default function DateInput({
               {/* Año */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Año</Text>
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                  {years.map(year => (
+                <ScrollView
+                  style={styles.scrollView}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {years.map((year) => (
                     <TouchableOpacity
                       key={year}
                       onPress={() => handleYearChange(year)}
@@ -206,7 +229,8 @@ export default function DateInput({
                       <Text
                         style={[
                           styles.pickerItemText,
-                          selectedYear === year && styles.pickerItemTextSelected,
+                          selectedYear === year &&
+                            styles.pickerItemTextSelected,
                         ]}
                       >
                         {year}

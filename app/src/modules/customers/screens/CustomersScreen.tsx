@@ -35,7 +35,9 @@ function CustomersScreen(): JSX.Element {
     'all' | 'active' | 'inactive' | 'banned'
   >('all');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
@@ -51,7 +53,12 @@ function CustomersScreen(): JSX.Element {
   };
 
   const handleFilterChange = (value: string | number) => {
-    if (value === 'all' || value === 'active' || value === 'inactive' || value === 'banned') {
+    if (
+      value === 'all' ||
+      value === 'active' ||
+      value === 'inactive' ||
+      value === 'banned'
+    ) {
       setStatusFilter(value);
     } else {
       setStatusFilter('all');
@@ -62,7 +69,10 @@ function CustomersScreen(): JSX.Element {
     () => ({
       firstName: debouncedSearchQuery || undefined,
       lastName: debouncedSearchQuery || undefined,
-      isActive: statusFilter === 'all' || statusFilter === 'banned' ? undefined : statusFilter === 'active',
+      isActive:
+        statusFilter === 'all' || statusFilter === 'banned'
+          ? undefined
+          : statusFilter === 'active',
       isBanned: statusFilter === 'banned' ? true : undefined,
     }),
     [debouncedSearchQuery, statusFilter],
@@ -112,17 +122,14 @@ function CustomersScreen(): JSX.Element {
     setDetailModalVisible(true);
   }, []);
 
-  const handleDelete = useCallback(
-    (id: string) => {
-      setCustomerToDelete(id);
-      setShowDeleteConfirmation(true);
-    },
-    [],
-  );
+  const handleDelete = useCallback((id: string) => {
+    setCustomerToDelete(id);
+    setShowDeleteConfirmation(true);
+  }, []);
 
   const handleConfirmDelete = useCallback(async () => {
     if (!customerToDelete) return;
-    
+
     try {
       await deleteCustomer(customerToDelete);
       showSnackbar({
@@ -140,14 +147,14 @@ function CustomersScreen(): JSX.Element {
     }
   }, [deleteCustomer, showSnackbar, customerToDelete]);
 
-
-  const filterOptions: FilterOption<'all' | 'active' | 'inactive' | 'banned'>[] = [
+  const filterOptions: FilterOption<
+    'all' | 'active' | 'inactive' | 'banned'
+  >[] = [
     { label: 'Todos', value: 'all' },
     { label: 'Activos', value: 'active' },
     { label: 'Inactivos', value: 'inactive' },
     { label: 'Baneados', value: 'banned' },
   ];
-
 
   const { ListEmptyComponent } = useListState({
     isLoading,
@@ -155,27 +162,37 @@ function CustomersScreen(): JSX.Element {
     data: customers,
     emptyConfig: {
       title: 'No hay clientes',
-      message: statusFilter !== 'all'
-        ? `No hay clientes ${
-            statusFilter === 'active' ? 'activos' : 
-            statusFilter === 'inactive' ? 'inactivos' : 
-            'baneados'
-          }.`
-        : 'No hay clientes registrados. Presiona el botón + para crear el primero.',
+      message:
+        statusFilter !== 'all'
+          ? `No hay clientes ${
+              statusFilter === 'active'
+                ? 'activos'
+                : statusFilter === 'inactive'
+                  ? 'inactivos'
+                  : 'baneados'
+            }.`
+          : 'No hay clientes registrados. Presiona el botón + para crear el primero.',
       icon: 'account-group-outline',
     },
   });
 
   // Mapear los clientes para combinar firstName y lastName
   const mappedCustomers = useMemo(() => {
-    return customers?.map(customer => ({
-      ...customer,
-      fullName: `${customer.firstName} ${customer.lastName}`.trim(),
-      displayStatus: customer.isBanned ? 'banned' : (customer.isActive ? 'active' : 'inactive'),
-      whatsappInfo: customer.whatsappMessageCount > 0 
-        ? `💬 ${customer.whatsappMessageCount}` 
-        : null
-    })) || [];
+    return (
+      customers?.map((customer) => ({
+        ...customer,
+        fullName: `${customer.firstName} ${customer.lastName}`.trim(),
+        displayStatus: customer.isBanned
+          ? 'banned'
+          : customer.isActive
+            ? 'active'
+            : 'inactive',
+        whatsappInfo:
+          customer.whatsappMessageCount > 0
+            ? `💬 ${customer.whatsappMessageCount}`
+            : null,
+      })) || []
+    );
   }, [customers]);
 
   const handleSubmit = useCallback(
@@ -261,10 +278,15 @@ function CustomersScreen(): JSX.Element {
         <GenericDetailModal
           visible={detailModalVisible}
           onDismiss={() => setDetailModalVisible(false)}
-          item={selectedCustomer ? {
-            ...selectedCustomer,
-            fullName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim()
-          } : null}
+          item={
+            selectedCustomer
+              ? {
+                  ...selectedCustomer,
+                  fullName:
+                    `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim(),
+                }
+              : null
+          }
           titleField="fullName"
           descriptionField="email"
           statusConfig={{
@@ -280,7 +302,7 @@ function CustomersScreen(): JSX.Element {
             {
               field: 'isBanned' as keyof Customer,
               label: 'Estado de baneo',
-              render: (value) => value ? '⛔ Baneado' : '✅ No baneado',
+              render: (value) => (value ? '⛔ Baneado' : '✅ No baneado'),
             },
             {
               field: 'phoneNumber' as keyof Customer,
@@ -295,8 +317,10 @@ function CustomersScreen(): JSX.Element {
             {
               field: 'birthDate' as keyof Customer,
               label: 'Fecha de nacimiento',
-              render: (value) => 
-                value ? new Date(value as string).toLocaleDateString() : 'No registrada',
+              render: (value) =>
+                value
+                  ? new Date(value as string).toLocaleDateString()
+                  : 'No registrada',
             },
             {
               field: 'totalOrders' as keyof Customer,
@@ -306,13 +330,15 @@ function CustomersScreen(): JSX.Element {
             {
               field: 'totalSpent' as keyof Customer,
               label: 'Total gastado',
-              render: (value) => formatCurrency(value as number || 0),
+              render: (value) => formatCurrency((value as number) || 0),
             },
             {
               field: 'lastInteraction' as keyof Customer,
               label: 'Última interacción',
-              render: (value) => 
-                value ? new Date(value as string).toLocaleString() : 'Sin interacciones',
+              render: (value) =>
+                value
+                  ? new Date(value as string).toLocaleString()
+                  : 'Sin interacciones',
             },
             {
               field: 'whatsappMessageCount' as keyof Customer,
@@ -322,8 +348,10 @@ function CustomersScreen(): JSX.Element {
             {
               field: 'lastWhatsappMessageTime' as keyof Customer,
               label: 'Último mensaje WhatsApp',
-              render: (value) => 
-                value ? new Date(value as string).toLocaleString() : 'Sin mensajes',
+              render: (value) =>
+                value
+                  ? new Date(value as string).toLocaleString()
+                  : 'Sin mensajes',
             },
           ]}
         />

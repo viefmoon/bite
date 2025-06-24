@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  Modal,
-  Alert,
-} from 'react-native';
+import { View, StyleSheet, Modal, Alert } from 'react-native';
 import {
   Surface,
   Text,
@@ -42,10 +37,10 @@ export default function LocationPicker({
   const styles = getStyles(theme);
 
   const [latitude, setLatitude] = useState(
-    initialLocation?.latitude?.toString() || ''
+    initialLocation?.latitude?.toString() || '',
   );
   const [longitude, setLongitude] = useState(
-    initialLocation?.longitude?.toString() || ''
+    initialLocation?.longitude?.toString() || '',
   );
   const [geocodedAddress, setGeocodedAddress] = useState(address || '');
   const [latitudeError, setLatitudeError] = useState('');
@@ -92,7 +87,7 @@ export default function LocationPicker({
     Alert.alert(
       'Función no disponible',
       'La función de mapas está temporalmente deshabilitada. Por favor, ingrese las coordenadas manualmente.',
-      [{ text: 'OK' }]
+      [{ text: 'OK' }],
     );
   };
 
@@ -109,16 +104,13 @@ export default function LocationPicker({
             <Text variant="titleLarge" style={styles.title}>
               Ubicación
             </Text>
-            <IconButton
-              icon="close"
-              size={24}
-              onPress={onDismiss}
-            />
+            <IconButton icon="close" size={24} onPress={onDismiss} />
           </View>
 
           <View style={styles.content}>
             <Text variant="bodyMedium" style={styles.helperText}>
-              Ingrese las coordenadas de la ubicación o use el botón para obtener su ubicación actual.
+              Ingrese las coordenadas de la ubicación o use el botón para
+              obtener su ubicación actual.
             </Text>
 
             <View style={styles.coordinatesRow}>
@@ -184,7 +176,8 @@ export default function LocationPicker({
                 </Text>
                 <View style={styles.chipsContainer}>
                   <Chip icon="map-marker" compact mode="flat">
-                    {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
+                    {parseFloat(latitude).toFixed(6)},{' '}
+                    {parseFloat(longitude).toFixed(6)}
                   </Chip>
                 </View>
               </View>
@@ -192,11 +185,7 @@ export default function LocationPicker({
           </View>
 
           <View style={styles.actions}>
-            <Button
-              mode="text"
-              onPress={onDismiss}
-              style={styles.button}
-            >
+            <Button mode="text" onPress={onDismiss} style={styles.button}>
               Cancelar
             </Button>
             <Button

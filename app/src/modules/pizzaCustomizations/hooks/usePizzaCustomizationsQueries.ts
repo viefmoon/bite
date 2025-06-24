@@ -9,10 +9,13 @@ export const PIZZA_CUSTOMIZATIONS_QUERY_KEYS = {
   list: (params?: FindAllPizzaCustomizationsQuery) =>
     [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(), params] as const,
   details: () => [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.details(), id] as const,
+  detail: (id: string) =>
+    [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.details(), id] as const,
 };
 
-export function usePizzaCustomizationsList(params?: FindAllPizzaCustomizationsQuery) {
+export function usePizzaCustomizationsList(
+  params?: FindAllPizzaCustomizationsQuery,
+) {
   return useQuery({
     queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.list(params),
     queryFn: () => pizzaCustomizationsService.findAll(params),
@@ -44,7 +47,10 @@ export function useCreatePizzaCustomization() {
     },
     onError: (error) => {
       showSnackbar({
-        message: error instanceof Error ? error.message : 'Error al crear personalización',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al crear personalización',
         type: 'error',
       });
     },
@@ -56,8 +62,13 @@ export function useUpdatePizzaCustomization() {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof pizzaCustomizationsService.update>[1] }) =>
-      pizzaCustomizationsService.update(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof pizzaCustomizationsService.update>[1];
+    }) => pizzaCustomizationsService.update(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(),
@@ -72,7 +83,10 @@ export function useUpdatePizzaCustomization() {
     },
     onError: (error) => {
       showSnackbar({
-        message: error instanceof Error ? error.message : 'Error al actualizar personalización',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al actualizar personalización',
         type: 'error',
       });
     },
@@ -96,7 +110,10 @@ export function useDeletePizzaCustomization() {
     },
     onError: (error) => {
       showSnackbar({
-        message: error instanceof Error ? error.message : 'Error al eliminar personalización',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al eliminar personalización',
         type: 'error',
       });
     },
@@ -116,7 +133,8 @@ export function useUpdatePizzaCustomizationsSortOrder() {
     },
     onError: (error) => {
       showSnackbar({
-        message: error instanceof Error ? error.message : 'Error al actualizar orden',
+        message:
+          error instanceof Error ? error.message : 'Error al actualizar orden',
         type: 'error',
       });
     },

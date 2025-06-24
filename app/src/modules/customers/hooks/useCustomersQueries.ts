@@ -11,11 +11,14 @@ import {
 export const customerKeys = {
   all: ['customers'] as const,
   lists: () => [...customerKeys.all, 'list'] as const,
-  list: (filters?: FindAllCustomersQuery) => [...customerKeys.lists(), filters] as const,
+  list: (filters?: FindAllCustomersQuery) =>
+    [...customerKeys.lists(), filters] as const,
   details: () => [...customerKeys.all, 'detail'] as const,
   detail: (id: string) => [...customerKeys.details(), id] as const,
-  activeRecent: (daysAgo: number) => [...customerKeys.all, 'active-recent', daysAgo] as const,
-  addresses: (customerId: string) => [...customerKeys.all, 'addresses', customerId] as const,
+  activeRecent: (daysAgo: number) =>
+    [...customerKeys.all, 'active-recent', daysAgo] as const,
+  addresses: (customerId: string) =>
+    [...customerKeys.all, 'addresses', customerId] as const,
 };
 
 // Hook para obtener todos los clientes
@@ -108,7 +111,8 @@ export function useUpdateRelevantChatHistory() {
     }: {
       customerId: string;
       relevantHistory: ChatMessage[];
-    }) => customersService.updateRelevantChatHistory(customerId, relevantHistory),
+    }) =>
+      customersService.updateRelevantChatHistory(customerId, relevantHistory),
     onSuccess: (updatedCustomer) => {
       queryClient.setQueryData(
         customerKeys.detail(updatedCustomer.id),
@@ -149,7 +153,10 @@ export function useActiveCustomersWithRecentInteraction(daysAgo = 30) {
 }
 
 // Hook para obtener direcciones de un cliente
-export function useGetAddressesByCustomer(customerId: string, options?: { enabled?: boolean }) {
+export function useGetAddressesByCustomer(
+  customerId: string,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: customerKeys.addresses(customerId),
     queryFn: async () => {

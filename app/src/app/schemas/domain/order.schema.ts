@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
-import { PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import {
+  PizzaHalf,
+  CustomizationAction,
+} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 import { DeliveryInfoSchema } from './delivery-info.schema';
 
 // Enum para los estados de la orden
@@ -32,7 +35,9 @@ export const selectedPizzaCustomizationSchema = z.object({
   half: z.nativeEnum(PizzaHalf),
   action: z.nativeEnum(CustomizationAction),
 });
-export type SelectedPizzaCustomization = z.infer<typeof selectedPizzaCustomizationSchema>;
+export type SelectedPizzaCustomization = z.infer<
+  typeof selectedPizzaCustomizationSchema
+>;
 
 // Schema para un ítem individual de la orden
 export const orderItemSchema = z.object({
@@ -46,7 +51,9 @@ export const orderItemSchema = z.object({
   variantId: z.string().uuid().nullable().optional(),
   variantName: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
-  selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
+  selectedPizzaCustomizations: z
+    .array(selectedPizzaCustomizationSchema)
+    .optional(),
 });
 export type OrderItem = z.infer<typeof orderItemSchema>;
 
@@ -75,6 +82,9 @@ export const orderSchema = z.object({
   adjustments: z.array(adjustmentSchema).optional(),
   subtotal: z.union([z.string(), z.number()]).optional(),
   isFromWhatsApp: z.boolean().optional().default(false),
-  estimatedDeliveryTime: z.union([z.string().datetime(), z.date()]).nullable().optional(),
+  estimatedDeliveryTime: z
+    .union([z.string().datetime(), z.date()])
+    .nullable()
+    .optional(),
 });
 export type Order = z.infer<typeof orderSchema>;

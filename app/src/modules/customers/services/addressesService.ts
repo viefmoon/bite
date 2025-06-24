@@ -36,7 +36,9 @@ async function update(
 }
 
 async function remove(addressId: string): Promise<void> {
-  const response = await apiClient.delete(`${API_PATHS.ADDRESSES}/${addressId}`);
+  const response = await apiClient.delete(
+    `${API_PATHS.ADDRESSES}/${addressId}`,
+  );
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }

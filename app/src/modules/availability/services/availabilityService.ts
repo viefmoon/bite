@@ -9,7 +9,9 @@ import {
 export const availabilityService = {
   // Obtener la disponibilidad del menú completo
   async getMenuAvailability(): Promise<CategoryAvailability[]> {
-    const response = await apiClient.get<CategoryAvailability[]>(API_PATHS.AVAILABILITY_MENU);
+    const response = await apiClient.get<CategoryAvailability[]>(
+      API_PATHS.AVAILABILITY_MENU,
+    );
     return response.data || [];
   },
 

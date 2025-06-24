@@ -98,12 +98,9 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
   const dnsStartTime = Date.now();
   try {
     console.log('[NetworkDiagnostics] Probando DNS con servicio externo...');
-    await axios.get(
-      'https://dns.google/resolve?name=google.com',
-      {
-        timeout: 5000,
-      },
-    );
+    await axios.get('https://dns.google/resolve?name=google.com', {
+      timeout: 5000,
+    });
     const responseTime = Date.now() - dnsStartTime;
 
     result.dnsTest = {

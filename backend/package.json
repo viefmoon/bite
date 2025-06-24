@@ -99,6 +99,7 @@
     "@types/node": "22.13.4",
     "@types/passport-anonymous": "1.0.5",
     "@types/passport-jwt": "4.0.1",
+    "@types/react": "^18.2.79",
     "@types/react-native-maps": "^0.24.1",
     "@types/supertest": "6.0.2",
     "@typescript-eslint/eslint-plugin": "8.24.0",

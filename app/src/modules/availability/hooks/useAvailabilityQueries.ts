@@ -27,7 +27,10 @@ export const useUpdateAvailability = () => {
       showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
     onError: () => {
-      showSnackbar({ message: 'Error al actualizar disponibilidad', type: 'error' });
+      showSnackbar({
+        message: 'Error al actualizar disponibilidad',
+        type: 'error',
+      });
     },
   });
 };
@@ -43,7 +46,10 @@ export const useBulkUpdateAvailability = () => {
       showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
     onError: () => {
-      showSnackbar({ message: 'Error al actualizar disponibilidad', type: 'error' });
+      showSnackbar({
+        message: 'Error al actualizar disponibilidad',
+        type: 'error',
+      });
     },
   });
 };

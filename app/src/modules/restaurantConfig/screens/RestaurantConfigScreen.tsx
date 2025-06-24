@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
+import { Portal } from 'react-native-paper';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
@@ -7,7 +13,7 @@ import {
   TextInput,
   Button,
   ActivityIndicator,
-  Portal,
+  
   Dialog,
   Paragraph,
   Surface,
@@ -17,7 +23,10 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries';
-import { UpdateRestaurantConfigDto, CreateBusinessHoursDto } from '../types/restaurantConfig.types';
+import {
+  UpdateRestaurantConfigDto,
+  CreateBusinessHoursDto,
+} from '../types/restaurantConfig.types';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -26,7 +35,10 @@ type TabType = 'basic' | 'operation' | 'schedule' | 'delivery';
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
   const { width } = useWindowDimensions();
-  const styles = React.useMemo(() => createStyles(theme, width), [theme, width]);
+  const styles = React.useMemo(
+    () => createStyles(theme, width),
+    [theme, width],
+  );
 
   const { useGetConfig, useUpdateConfig } = useRestaurantConfigQueries();
   const { data: config, isLoading, error } = useGetConfig();
@@ -53,6 +65,7 @@ const RestaurantConfigScreen: React.FC = () => {
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
+        estimatedDineInTime: config.estimatedDineInTime,
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
         timeZone: config.timeZone,
@@ -83,24 +96,28 @@ const RestaurantConfigScreen: React.FC = () => {
 
   const hasChanges = () => {
     if (!config) return false;
-    return JSON.stringify(formData) !== JSON.stringify({
-      restaurantName: config.restaurantName,
-      phoneMain: config.phoneMain,
-      phoneSecondary: config.phoneSecondary,
-      address: config.address,
-      city: config.city,
-      state: config.state,
-      postalCode: config.postalCode,
-      country: config.country,
-      acceptingOrders: config.acceptingOrders,
-      estimatedPickupTime: config.estimatedPickupTime,
-      estimatedDeliveryTime: config.estimatedDeliveryTime,
-      openingGracePeriod: config.openingGracePeriod,
-      closingGracePeriod: config.closingGracePeriod,
-      timeZone: config.timeZone,
-      deliveryCoverageArea: config.deliveryCoverageArea,
-      businessHours: config.businessHours,
-    });
+    return (
+      JSON.stringify(formData) !==
+      JSON.stringify({
+        restaurantName: config.restaurantName,
+        phoneMain: config.phoneMain,
+        phoneSecondary: config.phoneSecondary,
+        address: config.address,
+        city: config.city,
+        state: config.state,
+        postalCode: config.postalCode,
+        country: config.country,
+        acceptingOrders: config.acceptingOrders,
+        estimatedPickupTime: config.estimatedPickupTime,
+        estimatedDeliveryTime: config.estimatedDeliveryTime,
+        estimatedDineInTime: config.estimatedDineInTime,
+        openingGracePeriod: config.openingGracePeriod,
+        closingGracePeriod: config.closingGracePeriod,
+        timeZone: config.timeZone,
+        deliveryCoverageArea: config.deliveryCoverageArea,
+        businessHours: config.businessHours,
+      })
+    );
   };
 
   const resetForm = () => {
@@ -117,6 +134,7 @@ const RestaurantConfigScreen: React.FC = () => {
         acceptingOrders: config.acceptingOrders,
         estimatedPickupTime: config.estimatedPickupTime,
         estimatedDeliveryTime: config.estimatedDeliveryTime,
+        estimatedDineInTime: config.estimatedDineInTime,
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
         timeZone: config.timeZone,
@@ -148,7 +166,9 @@ const RestaurantConfigScreen: React.FC = () => {
           <TextInput
             label="Nombre del restaurante"
             value={formData.restaurantName || ''}
-            onChangeText={(text) => setFormData({ ...formData, restaurantName: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, restaurantName: text })
+            }
             mode="outlined"
             disabled={!isEditing}
             style={styles.input}
@@ -159,7 +179,9 @@ const RestaurantConfigScreen: React.FC = () => {
             <TextInput
               label="Teléfono principal"
               value={formData.phoneMain || ''}
-              onChangeText={(text) => setFormData({ ...formData, phoneMain: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, phoneMain: text })
+              }
               mode="outlined"
               disabled={!isEditing}
               style={[styles.input, styles.halfInput]}
@@ -170,7 +192,9 @@ const RestaurantConfigScreen: React.FC = () => {
             <TextInput
               label="Teléfono secundario"
               value={formData.phoneSecondary || ''}
-              onChangeText={(text) => setFormData({ ...formData, phoneSecondary: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, phoneSecondary: text })
+              }
               mode="outlined"
               disabled={!isEditing}
               style={[styles.input, styles.halfInput]}
@@ -218,7 +242,9 @@ const RestaurantConfigScreen: React.FC = () => {
             <TextInput
               label="Código postal"
               value={formData.postalCode || ''}
-              onChangeText={(text) => setFormData({ ...formData, postalCode: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, postalCode: text })
+              }
               mode="outlined"
               disabled={!isEditing}
               style={[styles.input, styles.halfInput]}
@@ -228,7 +254,9 @@ const RestaurantConfigScreen: React.FC = () => {
             <TextInput
               label="País"
               value={formData.country || ''}
-              onChangeText={(text) => setFormData({ ...formData, country: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, country: text })
+              }
               mode="outlined"
               disabled={!isEditing}
               style={[styles.input, styles.halfInput]}
@@ -265,7 +293,9 @@ const RestaurantConfigScreen: React.FC = () => {
             </View>
             <Switch
               value={formData.acceptingOrders}
-              onValueChange={(value) => setFormData({ ...formData, acceptingOrders: value })}
+              onValueChange={(value) =>
+                setFormData({ ...formData, acceptingOrders: value })
+              }
               disabled={!isEditing}
               color={theme.colors.primary}
             />
@@ -326,6 +356,32 @@ const RestaurantConfigScreen: React.FC = () => {
                 setFormData({
                   ...formData,
                   estimatedDeliveryTime: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="silverware-fork-knife"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Para comer en el local"
+              value={formData.estimatedDineInTime?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  estimatedDineInTime: parseInt(text) || 0,
                 })
               }
               keyboardType="numeric"
@@ -417,7 +473,9 @@ const RestaurantConfigScreen: React.FC = () => {
           <TextInput
             label="Zona horaria"
             value={formData.timeZone || ''}
-            onChangeText={(text) => setFormData({ ...formData, timeZone: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, timeZone: text })
+            }
             mode="outlined"
             disabled={!isEditing}
             style={styles.input}
@@ -475,7 +533,8 @@ const RestaurantConfigScreen: React.FC = () => {
               style={{ opacity: 0.5 }}
             />
             <Text style={styles.placeholderText}>
-              La configuración del área de cobertura estará disponible próximamente
+              La configuración del área de cobertura estará disponible
+              próximamente
             </Text>
           </View>
         </View>
@@ -565,7 +624,10 @@ const RestaurantConfigScreen: React.FC = () => {
             <Button
               mode="contained"
               onPress={() => setIsEditing(true)}
-              style={[styles.editButton, { backgroundColor: theme.colors.tertiary }]}
+              style={[
+                styles.editButton,
+                { backgroundColor: theme.colors.tertiary },
+              ]}
               contentStyle={styles.editButtonContent}
               labelStyle={styles.editButtonLabel}
               icon="pencil"
@@ -633,7 +695,9 @@ const RestaurantConfigScreen: React.FC = () => {
             </Paragraph>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowDiscardDialog(false)}>Cancelar</Button>
+            <Button onPress={() => setShowDiscardDialog(false)}>
+              Cancelar
+            </Button>
             <Button onPress={confirmDiscard}>Descartar</Button>
           </Dialog.Actions>
         </Dialog>

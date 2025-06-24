@@ -1,15 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Modal,
-  Portal,
+import { Portal, Modal,
   Card,
   TextInput,
   Button,
   Switch,
   Text,
-  HelperText,
-} from 'react-native-paper';
+  HelperText, } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductVariant } from '../schema/products.schema';
@@ -47,11 +44,13 @@ function VariantFormModal({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const isEditing = !!initialData?.name;
+  const [priceInputValue, setPriceInputValue] = useState<string>('');
 
   const {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<VariantFormData>({
     resolver: zodResolver(variantFormSchema),
@@ -63,6 +62,8 @@ function VariantFormModal({
     },
   });
 
+  const priceValue = watch('price');
+
   useEffect(() => {
     if (visible) {
       reset({
@@ -71,9 +72,15 @@ function VariantFormModal({
         isActive: initialData?.isActive ?? true,
         id: initialData?.id,
       });
-    } else {
     }
   }, [visible, initialData, reset]);
+
+  // Sincronizar el valor del precio con el estado del input
+  useEffect(() => {
+    setPriceInputValue(
+      priceValue !== undefined && priceValue !== null ? String(priceValue) : '',
+    );
+  }, [priceValue]);
 
   const handleFormSubmit = (data: VariantFormData) => {
     const finalData: ProductVariant = {
@@ -122,56 +129,38 @@ function VariantFormModal({
               <Controller
                 control={control}
                 name="price"
-                render={({ field }) => {
-                  // Usar estado local para el texto del input
-                  const [inputValue, setInputValue] = React.useState<string>(
-                    field.value !== undefined && field.value !== null
-                      ? String(field.value)
-                      : '',
-                  );
+                render={({ field }) => (
+                  <TextInput
+                    label="Precio *"
+                    value={priceInputValue}
+                    onChangeText={(text) => {
+                      // Reemplazar comas por puntos
+                      const formattedText = text.replace(/,/g, '.');
 
-                  // Actualizar el estado local cuando cambia el valor del formulario
-                  React.useEffect(() => {
-                    setInputValue(
-                      field.value !== undefined && field.value !== null
-                        ? String(field.value)
-                        : '',
-                    );
-                  }, [field.value]);
+                      // Validar que solo tenga números y como máximo un punto decimal
+                      if (/^(\d*\.?\d*)$/.test(formattedText)) {
+                        // Actualizar el estado local directamente sin conversión
+                        setPriceInputValue(formattedText);
 
-                  return (
-                    <TextInput
-                      label="Precio *"
-                      value={inputValue}
-                      onChangeText={(text) => {
-                        // Reemplazar comas por puntos
-                        const formattedText = text.replace(/,/g, '.');
-
-                        // Validar que solo tenga números y como máximo un punto decimal
-                        if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                          // Actualizar el estado local directamente sin conversión
-                          setInputValue(formattedText);
-
-                          // Actualizar el valor del formulario solo si es un número válido o vacío
-                          if (formattedText === '') {
-                            field.onChange(undefined); // Usar undefined si está vacío
-                          } else if (formattedText !== '.') {
-                            // Solo actualizar el valor numérico si no es solo un punto
-                            const numericValue = parseFloat(formattedText);
-                            if (!isNaN(numericValue)) {
-                              field.onChange(numericValue);
-                            }
+                        // Actualizar el valor del formulario solo si es un número válido o vacío
+                        if (formattedText === '') {
+                          field.onChange(undefined); // Usar undefined si está vacío
+                        } else if (formattedText !== '.') {
+                          // Solo actualizar el valor numérico si no es solo un punto
+                          const numericValue = parseFloat(formattedText);
+                          if (!isNaN(numericValue)) {
+                            field.onChange(numericValue);
                           }
-                          // Si es solo ".", no actualizamos el valor numérico todavía
                         }
-                      }}
-                      onBlur={field.onBlur}
-                      error={!!errors.price}
-                      style={styles.input}
-                      keyboardType="decimal-pad"
-                    />
-                  );
-                }}
+                        // Si es solo ".", no actualizamos el valor numérico todavía
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                    error={!!errors.price}
+                    style={styles.input}
+                    keyboardType="decimal-pad"
+                  />
+                )}
               />
               {errors.price && (
                 <HelperText type="error" visible={!!errors.price}>

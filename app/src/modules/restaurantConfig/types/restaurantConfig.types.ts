@@ -20,7 +20,7 @@ export interface RestaurantConfig {
   state: string | null;
   postalCode: string | null;
   country: string | null;
-  
+
   // Configuración de operación
   acceptingOrders: boolean;
   estimatedPickupTime: number;
@@ -29,13 +29,13 @@ export interface RestaurantConfig {
   openingGracePeriod: number;
   closingGracePeriod: number;
   timeZone: string;
-  
+
   // Configuración de delivery
   deliveryCoverageArea: any | null;
-  
+
   // Relaciones
   businessHours: BusinessHours[];
-  
+
   createdAt: string;
   updatedAt: string;
 }
@@ -50,7 +50,7 @@ export interface UpdateRestaurantConfigDto {
   state?: string | null;
   postalCode?: string | null;
   country?: string | null;
-  
+
   // Configuración de operación
   acceptingOrders?: boolean;
   estimatedPickupTime?: number;
@@ -59,10 +59,10 @@ export interface UpdateRestaurantConfigDto {
   openingGracePeriod?: number;
   closingGracePeriod?: number;
   timeZone?: string;
-  
+
   // Configuración de delivery
   deliveryCoverageArea?: any | null;
-  
+
   // Horarios
   businessHours?: CreateBusinessHoursDto[];
 }

@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native'; // FlatList eliminado
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list'; // Importar FlashList y tipo
 import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   Button,
   ActivityIndicator,
   List,

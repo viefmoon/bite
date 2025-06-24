@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import {
-  Text,
+Text,
   Divider,
   List,
   Portal,
-  Modal,
+Modal,
   Appbar,
   Chip,
-  Surface,
-} from 'react-native-paper';
+  Surface,} from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { Order } from '@/app/schemas/domain/order.schema';
 import { format } from 'date-fns';
@@ -182,7 +181,9 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                     <Text variant="bodyMedium" style={styles.label}>
                       Cliente:
                     </Text>
-                    <Text variant="bodyLarge">{order.deliveryInfo.recipientName}</Text>
+                    <Text variant="bodyLarge">
+                      {order.deliveryInfo.recipientName}
+                    </Text>
                   </View>
                 )}
 
@@ -191,7 +192,9 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                     <Text variant="bodyMedium" style={styles.label}>
                       Teléfono:
                     </Text>
-                    <Text variant="bodyLarge">{order.deliveryInfo.recipientPhone}</Text>
+                    <Text variant="bodyLarge">
+                      {order.deliveryInfo.recipientPhone}
+                    </Text>
                   </View>
                 )}
 
@@ -200,7 +203,9 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                     <Text variant="bodyMedium" style={styles.label}>
                       Dirección:
                     </Text>
-                    <Text variant="bodyLarge">{order.deliveryInfo.fullAddress}</Text>
+                    <Text variant="bodyLarge">
+                      {order.deliveryInfo.fullAddress}
+                    </Text>
                   </View>
                 )}
 

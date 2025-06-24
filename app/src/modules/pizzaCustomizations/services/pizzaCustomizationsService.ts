@@ -9,7 +9,7 @@ import type {
 } from '../schema/pizzaCustomization.schema';
 
 async function findAll(
-  params?: FindAllPizzaCustomizationsQuery
+  params?: FindAllPizzaCustomizationsQuery,
 ): Promise<PaginatedResponse<PizzaCustomization>> {
   const response = await apiClient.get<{
     items: PizzaCustomization[];
@@ -35,7 +35,7 @@ async function findAll(
 
 async function findOne(id: string): Promise<PizzaCustomization> {
   const response = await apiClient.get<PizzaCustomization>(
-    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`
+    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
   );
 
   if (!response.ok || !response.data) {
@@ -45,10 +45,12 @@ async function findOne(id: string): Promise<PizzaCustomization> {
   return response.data;
 }
 
-async function create(data: PizzaCustomizationFormInputs): Promise<PizzaCustomization> {
+async function create(
+  data: PizzaCustomizationFormInputs,
+): Promise<PizzaCustomization> {
   const response = await apiClient.post<PizzaCustomization>(
     API_PATHS.PIZZA_CUSTOMIZATIONS,
-    data
+    data,
   );
 
   if (!response.ok || !response.data) {
@@ -60,11 +62,11 @@ async function create(data: PizzaCustomizationFormInputs): Promise<PizzaCustomiz
 
 async function update(
   id: string,
-  data: Partial<PizzaCustomizationFormInputs>
+  data: Partial<PizzaCustomizationFormInputs>,
 ): Promise<PizzaCustomization> {
   const response = await apiClient.patch<PizzaCustomization>(
     `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
-    data
+    data,
   );
 
   if (!response.ok || !response.data) {
@@ -75,17 +77,21 @@ async function update(
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(`${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`);
+  const response = await apiClient.delete(
+    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
+  );
 
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
 }
 
-async function updateSortOrder(updates: { id: string; sortOrder: number }[]): Promise<void> {
+async function updateSortOrder(
+  updates: { id: string; sortOrder: number }[],
+): Promise<void> {
   const response = await apiClient.patch(
     `${API_PATHS.PIZZA_CUSTOMIZATIONS}/sort-order`,
-    { updates }
+    { updates },
   );
 
   if (!response.ok) {

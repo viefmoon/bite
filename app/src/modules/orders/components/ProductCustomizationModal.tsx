@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   Button,
   RadioButton,
   Checkbox,
@@ -13,8 +13,7 @@ import {
   IconButton,
   Card,
   Chip,
-  Surface,
-} from 'react-native-paper';
+  Surface,} from 'react-native-paper';
 import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { useAppTheme } from '@/app/styles/theme';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput'; // Importar SpeechRecognitionInput
@@ -243,7 +242,10 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     setSelectedVariantId(variantId);
   };
 
-  const handleModifierToggle = (modifier: Modifier, group: FullMenuModifierGroup) => {
+  const handleModifierToggle = (
+    modifier: Modifier,
+    group: FullMenuModifierGroup,
+  ) => {
     const currentGroupModifiers = selectedModifiersByGroup[group.id] || [];
     const isSelected = currentGroupModifiers.some(
       (mod) => mod.id === modifier.id,
@@ -307,7 +309,10 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         const selectedCount = selectedInGroup.length;
 
         // Validar grupos requeridos y mínimo de selecciones
-        if (group.isRequired || (group.minSelections && group.minSelections > 0)) {
+        if (
+          group.isRequired ||
+          (group.minSelections && group.minSelections > 0)
+        ) {
           const minRequired = Math.max(
             group.minSelections || 0,
             group.isRequired ? 1 : 0,

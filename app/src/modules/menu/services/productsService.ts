@@ -145,20 +145,9 @@ async function findAllPizzas(): Promise<Product[]> {
   return response.data;
 }
 
-
 async function getPizzaCustomizations(productId: string): Promise<any[]> {
-  const response = await apiClient.get<any[]>(`${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`);
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-  return response.data;
-}
-
-
-async function updatePizzaCustomizations(productId: string, pizzaCustomizationIds: string[]): Promise<Product> {
-  const response = await apiClient.put<Product>(
+  const response = await apiClient.get<any[]>(
     `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
-    { pizzaCustomizationIds }
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -166,13 +155,26 @@ async function updatePizzaCustomizations(productId: string, pizzaCustomizationId
   return response.data;
 }
 
+async function updatePizzaCustomizations(
+  productId: string,
+  pizzaCustomizationIds: string[],
+): Promise<Product> {
+  const response = await apiClient.put<Product>(
+    `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
+    { pizzaCustomizationIds },
+  );
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(response.data, response.status);
+  }
+  return response.data;
+}
 
 async function bulkUpdatePizzaCustomizations(
-  updates: Array<{ productId: string; customizationIds: string[] }>
+  updates: Array<{ productId: string; customizationIds: string[] }>,
 ): Promise<void> {
   const response = await apiClient.put(
     `${API_PATHS.PRODUCTS}/pizzas/customizations/bulk`,
-    { updates }
+    { updates },
   );
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);

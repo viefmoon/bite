@@ -183,7 +183,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 numberOfLines={1}
               >
                 {order.deliveryInfo.recipientName}{' '}
-                {order.deliveryInfo.recipientPhone && `• ${order.deliveryInfo.recipientPhone}`}
+                {order.deliveryInfo.recipientPhone &&
+                  `• ${order.deliveryInfo.recipientPhone}`}
               </Text>
             )}
 
@@ -200,18 +201,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               </Text>
             )}
 
-            {order.orderType === 'DELIVERY' && order.deliveryInfo?.fullAddress && (
-              <Text
-                style={[
-                  styles.address,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {order.deliveryInfo.fullAddress}
-              </Text>
-            )}
+            {order.orderType === 'DELIVERY' &&
+              order.deliveryInfo?.fullAddress && (
+                <Text
+                  style={[
+                    styles.address,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {order.deliveryInfo.fullAddress}
+                </Text>
+              )}
 
             <View style={styles.itemsInfo}>
               <Text

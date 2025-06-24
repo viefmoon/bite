@@ -2,11 +2,11 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Text,
+Text,
   Button,
   Surface,
   Portal,
-  ActivityIndicator,
+ActivityIndicator,
   IconButton,
   FAB, // <-- Importar FAB
 } from 'react-native-paper';

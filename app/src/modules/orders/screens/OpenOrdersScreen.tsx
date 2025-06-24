@@ -2,14 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Text,
+Text,
   ActivityIndicator,
   Appbar,
   IconButton,
   Portal,
-  Card,
-  Chip,
-} from 'react-native-paper';
+Card,
+  Chip,} from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
@@ -20,9 +19,7 @@ import {
   useUpdateOrderMutation,
   useCancelOrderMutation,
 } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
-import {
-  useCreateBulkAdjustmentsMutation,
-} from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
+import { useCreateBulkAdjustmentsMutation } from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
 import {
   Order,
   OrderStatusEnum,
@@ -239,6 +236,14 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   <Text style={styles.orderTime}>
                     {format(new Date(order.createdAt), 'p', { locale: es })}
                   </Text>
+                  {order.estimatedDeliveryTime && (
+                    <Text style={styles.estimatedTime}>
+                      ⏱️{' '}
+                      {format(new Date(order.estimatedDeliveryTime), 'p', {
+                        locale: es,
+                      })}
+                    </Text>
+                  )}
                   {(() => {
                     const paymentStatus = getPaymentStatus(order);
                     if (paymentStatus === 'paid') {
@@ -800,6 +805,11 @@ const createStyles = (
       ...theme.fonts.titleMedium,
       color: theme.colors.primary,
       fontWeight: '600',
+    },
+    estimatedTime: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: theme.spacing.xs,
     },
     timeAndPaymentRow: {
       flexDirection: 'row',

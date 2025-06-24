@@ -103,8 +103,7 @@ export const receiptService = {
     // Filtrar para asegurar que solo se muestren COMPLETED y CANCELLED
     let filteredData = data.filter(
       (order) =>
-        order.orderStatus === 'COMPLETED' ||
-        order.orderStatus === 'CANCELLED',
+        order.orderStatus === 'COMPLETED' || order.orderStatus === 'CANCELLED',
     );
 
     // Si hay búsqueda, filtrar adicionalmente del lado del cliente
@@ -168,16 +167,16 @@ export const receiptService = {
 export const receiptQueryOptions = {
   receiptsInfinite: (filters?: Omit<GetReceiptsParams, 'page'>) =>
     infiniteQueryOptions({
-    queryKey: ['receipts', 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) =>
-      receiptService.getReceipts({
-        ...filters,
-        page: pageParam,
-      }),
-    getNextPageParam: (lastPage) =>
-      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
-  }),
+      queryKey: ['receipts', 'infinite', filters],
+      queryFn: ({ pageParam = 1 }) =>
+        receiptService.getReceipts({
+          ...filters,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) =>
+        lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+      initialPageParam: 1,
+    }),
 
   receipts: (
     params: GetReceiptsParams,

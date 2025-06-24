@@ -9,9 +9,7 @@ import {
   ChatMessage,
 } from '../types/customer.types';
 
-async function findAll(
-  params?: FindAllCustomersQuery,
-): Promise<Customer[]> {
+async function findAll(params?: FindAllCustomersQuery): Promise<Customer[]> {
   const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, params);
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -20,7 +18,9 @@ async function findAll(
 }
 
 async function findOne(id: string): Promise<Customer> {
-  const response = await apiClient.get<Customer>(`${API_PATHS.CUSTOMERS}/${id}`);
+  const response = await apiClient.get<Customer>(
+    `${API_PATHS.CUSTOMERS}/${id}`,
+  );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -35,10 +35,7 @@ async function create(data: CreateCustomerDto): Promise<Customer> {
   return response.data;
 }
 
-async function update(
-  id: string,
-  data: UpdateCustomerDto,
-): Promise<Customer> {
+async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
     `${API_PATHS.CUSTOMERS}/${id}`,
     data,

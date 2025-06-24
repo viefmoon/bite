@@ -18,8 +18,8 @@ export function CustomersStackNavigator() {
         headerShown: false,
       }}
     >
-      <Stack.Screen 
-        name="Customers" 
+      <Stack.Screen
+        name="Customers"
         component={CustomersScreen}
         options={{
           title: 'Clientes',

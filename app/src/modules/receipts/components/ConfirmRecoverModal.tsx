@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Portal, Modal, Button } from 'react-native-paper';
+import { Portal, Text, Modal, Button } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface ConfirmRecoverModalProps {

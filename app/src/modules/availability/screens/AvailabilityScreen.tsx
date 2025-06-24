@@ -1,10 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  RefreshControl,
-  FlatList,
-} from 'react-native';
+import { View, StyleSheet, RefreshControl, FlatList } from 'react-native';
 import {
   Searchbar,
   SegmentedButtons,

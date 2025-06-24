@@ -7,15 +7,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   Checkbox,
   Button,
   Searchbar,
   Divider,
-  IconButton,
-} from 'react-native-paper';
+  IconButton,} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 

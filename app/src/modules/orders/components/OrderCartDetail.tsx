@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Portal } from 'react-native-paper';
 import {
   View,
   ScrollView,
@@ -23,7 +24,7 @@ import {
   Menu,
   IconButton,
   Modal,
-  Portal,
+  
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
@@ -724,7 +725,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       // Cambios en mesa
       editSelectedTableId !== originalOrderState.tableId ||
       // Cambios en datos del cliente
-      JSON.stringify(editDeliveryInfo) !== JSON.stringify(originalOrderState.deliveryInfo) ||
+      JSON.stringify(editDeliveryInfo) !==
+        JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
       // Cambios en hora programada
       (editScheduledTime?.getTime() || null) !==
@@ -845,7 +847,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
       // Usar Enum
-      if (!deliveryInfo.recipientName || deliveryInfo.recipientName.trim() === '') {
+      if (
+        !deliveryInfo.recipientName ||
+        deliveryInfo.recipientName.trim() === ''
+      ) {
         setCustomerNameError('El nombre del cliente es obligatorio');
         isValid = false;
       }
@@ -857,7 +862,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         setAddressError('La dirección es obligatoria para Domicilio');
         isValid = false;
       }
-      if (!deliveryInfo.recipientPhone || deliveryInfo.recipientPhone.trim() === '') {
+      if (
+        !deliveryInfo.recipientPhone ||
+        deliveryInfo.recipientPhone.trim() === ''
+      ) {
         setPhoneError('El teléfono es obligatorio para Domicilio');
         isValid = false;
       }
@@ -903,7 +911,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
-    if (deliveryInfo.recipientPhone && deliveryInfo.recipientPhone.trim() !== '') {
+    if (
+      deliveryInfo.recipientPhone &&
+      deliveryInfo.recipientPhone.trim() !== ''
+    ) {
       formattedPhone = deliveryInfo.recipientPhone.trim();
       if (!formattedPhone.startsWith('+')) {
         formattedPhone = `+52${formattedPhone}`;
@@ -931,16 +942,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           : undefined, // Usar Enum
       scheduledAt: scheduledTime ?? undefined,
       deliveryInfo: {
-        recipientName: orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY
-          ? deliveryInfo.recipientName
-          : undefined,
-        recipientPhone: (orderType === OrderTypeEnum.TAKE_AWAY || orderType === OrderTypeEnum.DELIVERY) && formattedPhone
-          ? formattedPhone
-          : undefined,
-        fullAddress: orderType === OrderTypeEnum.DELIVERY
-          ? deliveryInfo.fullAddress
-          : undefined,
-        ...deliveryInfo
+        recipientName:
+          orderType === OrderTypeEnum.TAKE_AWAY ||
+          orderType === OrderTypeEnum.DELIVERY
+            ? deliveryInfo.recipientName
+            : undefined,
+        recipientPhone:
+          (orderType === OrderTypeEnum.TAKE_AWAY ||
+            orderType === OrderTypeEnum.DELIVERY) &&
+          formattedPhone
+            ? formattedPhone
+            : undefined,
+        fullAddress:
+          orderType === OrderTypeEnum.DELIVERY
+            ? deliveryInfo.fullAddress
+            : undefined,
+        ...deliveryInfo,
       },
       notes: orderNotes || undefined,
       adjustments: isEditMode
@@ -1475,11 +1492,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   speechLang="es-MX"
                   autoCorrect={false}
                 />
-                {(deliveryInfo.recipientPhone || '').length > 0 && !phoneError && (
-                  <Text style={styles.digitCounterAbsolute}>
-                    {(deliveryInfo.recipientPhone || '').replace(/\D/g, '').length} dígitos
-                  </Text>
-                )}
+                {(deliveryInfo.recipientPhone || '').length > 0 &&
+                  !phoneError && (
+                    <Text style={styles.digitCounterAbsolute}>
+                      {
+                        (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
+                          .length
+                      }{' '}
+                      dígitos
+                    </Text>
+                  )}
               </View>
               {phoneError && (
                 <HelperText
@@ -1590,7 +1612,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 ) : (
                   (deliveryInfo.recipientPhone || '').length > 0 && (
                     <Text style={styles.digitCounter}>
-                      {(deliveryInfo.recipientPhone || '').replace(/\D/g, '').length} dígitos
+                      {
+                        (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
+                          .length
+                      }{' '}
+                      dígitos
                     </Text>
                   )
                 )}
@@ -2325,11 +2351,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 (orderType === OrderTypeEnum.DINE_IN &&
                   (!selectedAreaId || !selectedTableId)) || // Usar Enum
                 (orderType === OrderTypeEnum.TAKE_AWAY &&
-                  (!deliveryInfo.recipientName || deliveryInfo.recipientName.trim() === '')) || // Usar Enum
+                  (!deliveryInfo.recipientName ||
+                    deliveryInfo.recipientName.trim() === '')) || // Usar Enum
                 (orderType === OrderTypeEnum.DELIVERY &&
-                  (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '')) || // Usar Enum
+                  (!deliveryInfo.fullAddress ||
+                    deliveryInfo.fullAddress.trim() === '')) || // Usar Enum
                 (orderType === OrderTypeEnum.DELIVERY &&
-                  (!deliveryInfo.recipientPhone || deliveryInfo.recipientPhone.trim() === '')) // Usar Enum
+                  (!deliveryInfo.recipientPhone ||
+                    deliveryInfo.recipientPhone.trim() === '')) // Usar Enum
               }
               style={[
                 styles.confirmButton,

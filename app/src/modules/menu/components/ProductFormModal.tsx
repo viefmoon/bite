@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  Modal,
+Modal,
   Portal,
-  Button,
+Button,
   TextInput,
   Text,
   ActivityIndicator,
@@ -13,8 +13,7 @@ import {
   IconButton,
   Card,
   Checkbox,
-  TouchableRipple,
-} from 'react-native-paper';
+  TouchableRipple,} from 'react-native-paper';
 import {
   useForm,
   Controller,
@@ -82,6 +81,7 @@ function ProductFormModal({
   const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>(
     {},
   );
+  const [priceInputValue, setPriceInputValue] = useState<string>('');
 
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
@@ -160,8 +160,18 @@ function ProductFormModal({
     }
   }, [visible, isEditing, initialData, reset, defaultValues, subcategoryId]);
 
+  // Sincronizar el valor del precio con el estado del input
+  useEffect(() => {
+    setPriceInputValue(
+      priceValue !== null && priceValue !== undefined
+        ? priceValue.toString()
+        : '',
+    );
+  }, [priceValue]);
+
   const hasVariants = watch('hasVariants');
   const currentImageUri = watch('imageUri');
+  const priceValue = watch('price');
 
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
@@ -433,48 +443,31 @@ function ProductFormModal({
                   <Controller
                     control={control}
                     name="price"
-                    render={({ field }) => {
-                      const [inputValue, setInputValue] =
-                        React.useState<string>(
-                          field.value !== null && field.value !== undefined
-                            ? field.value.toString()
-                            : '',
-                        );
+                    render={({ field }) => (
+                      <TextInput
+                        mode="outlined"
+                        label="Precio *"
+                        keyboardType="decimal-pad"
+                        value={priceInputValue}
+                        onChangeText={(text) => {
+                          const formattedText = text.replace(/,/g, '.');
 
-                      React.useEffect(() => {
-                        setInputValue(
-                          field.value !== null && field.value !== undefined
-                            ? field.value.toString()
-                            : '',
-                        );
-                      }, [field.value]);
+                          if (/^(\d*\.?\d*)$/.test(formattedText)) {
+                            setPriceInputValue(formattedText); // Actualizar estado local
 
-                      return (
-                        <TextInput
-                          mode="outlined"
-                          label="Precio *"
-                          keyboardType="decimal-pad"
-                          value={inputValue}
-                          onChangeText={(text) => {
-                            const formattedText = text.replace(/,/g, '.');
-
-                            if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                              setInputValue(formattedText); // Actualizar estado local
-
-                              // Actualizar valor del formulario (number | null)
-                              if (formattedText === '') {
-                                field.onChange(null);
-                              } else if (formattedText !== '.') {
-                                field.onChange(parseFloat(formattedText));
-                              }
+                            // Actualizar valor del formulario (number | null)
+                            if (formattedText === '') {
+                              field.onChange(null);
+                            } else if (formattedText !== '.') {
+                              field.onChange(parseFloat(formattedText));
                             }
-                          }}
-                          error={!!errors.price}
-                          disabled={isSubmitting || hasVariants}
-                          style={styles.input}
-                        />
-                      );
-                    }}
+                          }
+                        }}
+                        error={!!errors.price}
+                        disabled={isSubmitting || hasVariants}
+                        style={styles.input}
+                      />
+                    )}
                   />
                   {errors.price && (
                     <HelperText type="error" visible={!!errors.price}>

@@ -1,9 +1,6 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, StatusBar, Text, View } from 'react-native';
-import {
-  createDrawerNavigator,
-  type DrawerNavigationOptions,
-} from '@react-navigation/drawer';
+import { StyleSheet, TouchableOpacity, StatusBar, Text } from 'react-native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MenuStackNavigator } from '../../modules/menu/navigation/MenuStackNavigator';
 import ModifiersStackNavigator from '../../modules/modifiers/navigation/ModifiersStackNavigator';
 import PreparationScreensStackNavigator from '../../modules/preparationScreens/navigation/PreparationScreensStackNavigator';

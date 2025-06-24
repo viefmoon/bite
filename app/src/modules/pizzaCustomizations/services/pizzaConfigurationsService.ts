@@ -7,9 +7,11 @@ import type {
   UpdatePizzaConfigurationInputs,
 } from '../schema/pizzaConfiguration.schema';
 
-async function findByProductId(productId: string): Promise<PizzaConfiguration | null> {
+async function findByProductId(
+  productId: string,
+): Promise<PizzaConfiguration | null> {
   const response = await apiClient.get<PizzaConfiguration>(
-    `${API_PATHS.PIZZA_CONFIGURATIONS}/product/${productId}`
+    `${API_PATHS.PIZZA_CONFIGURATIONS}/product/${productId}`,
   );
 
   if (response.status === 404) {
@@ -23,10 +25,12 @@ async function findByProductId(productId: string): Promise<PizzaConfiguration | 
   return response.data;
 }
 
-async function create(data: PizzaConfigurationFormInputs): Promise<PizzaConfiguration> {
+async function create(
+  data: PizzaConfigurationFormInputs,
+): Promise<PizzaConfiguration> {
   const response = await apiClient.post<PizzaConfiguration>(
     API_PATHS.PIZZA_CONFIGURATIONS,
-    data
+    data,
   );
 
   if (!response.ok || !response.data) {
@@ -38,11 +42,11 @@ async function create(data: PizzaConfigurationFormInputs): Promise<PizzaConfigur
 
 async function update(
   id: string,
-  data: UpdatePizzaConfigurationInputs
+  data: UpdatePizzaConfigurationInputs,
 ): Promise<PizzaConfiguration> {
   const response = await apiClient.patch<PizzaConfiguration>(
     `${API_PATHS.PIZZA_CONFIGURATIONS}/${id}`,
-    data
+    data,
   );
 
   if (!response.ok || !response.data) {
@@ -53,7 +57,9 @@ async function update(
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(`${API_PATHS.PIZZA_CONFIGURATIONS}/${id}`);
+  const response = await apiClient.delete(
+    `${API_PATHS.PIZZA_CONFIGURATIONS}/${id}`,
+  );
 
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);

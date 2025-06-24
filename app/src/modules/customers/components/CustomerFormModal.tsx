@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import {
-  Modal,
-  Portal,
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Portal, Modal,
   Text,
   TextInput,
   Button,
@@ -16,12 +10,8 @@ import {
   IconButton,
   Chip,
   Avatar,
-  Icon,
-} from 'react-native-paper';
-import {
-  useForm,
-  Controller,
-} from 'react-hook-form';
+  Icon, } from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { Customer, Address } from '../types/customer.types';
@@ -62,12 +52,12 @@ export default function CustomerFormModal({
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
   const [countryCode, setCountryCode] = useState('+52');
   const { showSnackbar } = useSnackbarStore();
-  
+
   // Query para obtener direcciones del cliente
-  const { data: addresses = [], refetch: refetchAddresses } = useGetAddressesByCustomer(
-    editingItem?.id || '',
-    { enabled: !!editingItem?.id },
-  );
+  const { data: addresses = [], refetch: refetchAddresses } =
+    useGetAddressesByCustomer(editingItem?.id || '', {
+      enabled: !!editingItem?.id,
+    });
 
   const {
     control,
@@ -89,13 +79,12 @@ export default function CustomerFormModal({
     },
   });
 
-
   useEffect(() => {
     if (editingItem) {
       // Extraer código de país del número si existe
       let phoneWithoutCode = editingItem.phoneNumber || '';
       let extractedCode = '+52'; // Por defecto México
-      
+
       if (phoneWithoutCode.startsWith('+')) {
         // Buscar el código de país (asumiendo que es de 2-4 dígitos después del +)
         const match = phoneWithoutCode.match(/^(\+\d{1,3})/);
@@ -104,16 +93,16 @@ export default function CustomerFormModal({
           phoneWithoutCode = phoneWithoutCode.substring(extractedCode.length);
         }
       }
-      
+
       setCountryCode(extractedCode);
-      
+
       reset({
         firstName: editingItem.firstName,
         lastName: editingItem.lastName,
         phoneNumber: phoneWithoutCode,
         email: editingItem.email || '',
-        birthDate: editingItem.birthDate 
-          ? new Date(editingItem.birthDate).toISOString().split('T')[0] 
+        birthDate: editingItem.birthDate
+          ? new Date(editingItem.birthDate).toISOString().split('T')[0]
           : '',
         isActive: editingItem.isActive,
         isBanned: editingItem.isBanned || false,
@@ -139,7 +128,7 @@ export default function CustomerFormModal({
   const formatPhoneNumber = (text: string) => {
     // Eliminar todos los caracteres no numéricos
     const cleaned = text.replace(/\D/g, '');
-    
+
     // Formatear según la longitud
     if (cleaned.length <= 2) {
       return cleaned;
@@ -176,9 +165,11 @@ export default function CustomerFormModal({
     // Formatear el número de teléfono con el código de país si existe
     const formattedData = {
       ...data,
-      phoneNumber: data.phoneNumber ? `${countryCode}${data.phoneNumber}` : undefined,
+      phoneNumber: data.phoneNumber
+        ? `${countryCode}${data.phoneNumber}`
+        : undefined,
     };
-    
+
     await onSubmit(formattedData);
   };
 
@@ -190,493 +181,568 @@ export default function CustomerFormModal({
           onDismiss={onDismiss}
           contentContainerStyle={styles.modalContainer}
         >
-        <Surface style={styles.modalContent} elevation={5}>
-                  <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
-                    <View style={styles.headerLeft}>
-                      <Avatar.Icon 
-                        size={32} 
-                        icon={editingItem ? 'account-edit' : 'account-plus'}
-                        style={[styles.headerIcon, { backgroundColor: theme.colors.onPrimary + '20' }]}
-                        color={theme.colors.onPrimary}
-                      />
-                      <View style={styles.headerTextContainer}>
-                        <Text style={[styles.modalTitle, { color: theme.colors.onPrimary }]} variant="titleMedium">
-                          {editingItem ? 'Editar Cliente' : 'Nuevo Cliente'}
-                        </Text>
-                      </View>
-                    </View>
-                    <IconButton
-                      icon="close"
-                      size={24}
-                      onPress={onDismiss}
-                      disabled={isSubmitting}
-                      iconColor={theme.colors.onPrimary}
-                    />
-                  </View>
-
-                  <ScrollView 
-                    style={styles.formContainer}
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
+          <Surface style={styles.modalContent} elevation={5}>
+            <View
+              style={[
+                styles.headerContainer,
+                { backgroundColor: theme.colors.primary },
+              ]}
+            >
+              <View style={styles.headerLeft}>
+                <Avatar.Icon
+                  size={32}
+                  icon={editingItem ? 'account-edit' : 'account-plus'}
+                  style={[
+                    styles.headerIcon,
+                    { backgroundColor: theme.colors.onPrimary + '20' },
+                  ]}
+                  color={theme.colors.onPrimary}
+                />
+                <View style={styles.headerTextContainer}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: theme.colors.onPrimary },
+                    ]}
+                    variant="titleMedium"
                   >
-                    <View style={styles.sectionContainer}>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle} variant="titleMedium">
-                          Información Personal
-                        </Text>
-                        <Chip 
-                          mode="flat" 
-                          compact
-                          style={styles.requiredChip}
-                          textStyle={styles.requiredChipText}
-                        >
-                          Requerido
-                        </Chip>
-                      </View>
-                      
-                      <Controller
-                        control={control}
-                        name="firstName"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <View style={styles.inputContainer}>
-                            <TextInput
-                              label="Nombre"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              error={!!errors.firstName}
-                              mode="outlined"
-                              placeholder="Ej: Juan"
-                              left={<TextInput.Icon icon="account" />}
-                              outlineStyle={styles.inputOutline}
-                            />
-                            {errors.firstName && (
-                              <HelperText type="error" visible={!!errors.firstName}>
-                                {errors.firstName.message}
-                              </HelperText>
-                            )}
-                          </View>
-                        )}
+                    {editingItem ? 'Editar Cliente' : 'Nuevo Cliente'}
+                  </Text>
+                </View>
+              </View>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={onDismiss}
+                disabled={isSubmitting}
+                iconColor={theme.colors.onPrimary}
+              />
+            </View>
+
+            <ScrollView
+              style={styles.formContainer}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle} variant="titleMedium">
+                    Información Personal
+                  </Text>
+                  <Chip
+                    mode="flat"
+                    compact
+                    style={styles.requiredChip}
+                    textStyle={styles.requiredChipText}
+                  >
+                    Requerido
+                  </Chip>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="firstName"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Nombre"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.firstName}
+                        mode="outlined"
+                        placeholder="Ej: Juan"
+                        left={<TextInput.Icon icon="account" />}
+                        outlineStyle={styles.inputOutline}
                       />
-
-                      <Controller
-                        control={control}
-                        name="lastName"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <View style={styles.inputContainer}>
-                            <TextInput
-                              label="Apellido"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              error={!!errors.lastName}
-                              mode="outlined"
-                              placeholder="Ej: Pérez"
-                              left={<TextInput.Icon icon="account" />}
-                              outlineStyle={styles.inputOutline}
-                            />
-                            {errors.lastName && (
-                              <HelperText type="error" visible={!!errors.lastName}>
-                                {errors.lastName.message}
-                              </HelperText>
-                            )}
-                          </View>
-                        )}
-                      />
-                    </View>
-
-                    <View style={styles.sectionContainer}>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle} variant="titleMedium">
-                          Información de Contacto
-                        </Text>
-                        <Chip 
-                          mode="flat" 
-                          compact
-                          style={styles.optionalChip}
-                          textStyle={styles.optionalChipText}
-                        >
-                          Opcional
-                        </Chip>
-                      </View>
-
-                      <Controller
-                        control={control}
-                        name="phoneNumber"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <View style={styles.inputContainer}>
-                            <View style={styles.phoneContainer}>
-                              <TextInput
-                                label="Código"
-                                value={countryCode}
-                                onChangeText={setCountryCode}
-                                mode="outlined"
-                                style={styles.countryCodeInput}
-                                placeholder="+52"
-                                keyboardType="phone-pad"
-                                maxLength={4}
-                                outlineStyle={styles.inputOutline}
-                              />
-                              <TextInput
-                                label="Teléfono"
-                                value={formatPhoneNumber(value || '')}
-                                onChangeText={(text) => {
-                                  const cleaned = text.replace(/\D/g, '');
-                                  onChange(cleaned);
-                                }}
-                                onBlur={onBlur}
-                                error={!!errors.phoneNumber}
-                                mode="outlined"
-                                placeholder="55 1234 5678"
-                                keyboardType="phone-pad"
-                                maxLength={13}
-                                style={styles.phoneNumberInput}
-                                left={<TextInput.Icon icon="phone" />}
-                                outlineStyle={styles.inputOutline}
-                              />
-                            </View>
-                            {errors.phoneNumber && (
-                              <HelperText type="error" visible={!!errors.phoneNumber}>
-                                {errors.phoneNumber.message}
-                              </HelperText>
-                            )}
-                          </View>
-                        )}
-                      />
-
-                      <Controller
-                        control={control}
-                        name="email"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <View style={styles.inputContainer}>
-                            <TextInput
-                              label="Correo electrónico"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              error={!!errors.email}
-                              mode="outlined"
-                              placeholder="juan@example.com"
-                              keyboardType="email-address"
-                              autoCapitalize="none"
-                              left={<TextInput.Icon icon="email" />}
-                              outlineStyle={styles.inputOutline}
-                            />
-                            {errors.email && (
-                              <HelperText type="error" visible={!!errors.email}>
-                                {errors.email.message}
-                              </HelperText>
-                            )}
-                          </View>
-                        )}
-                      />
-
-                      <Controller
-                        control={control}
-                        name="birthDate"
-                        render={({ field: { onChange, value } }) => (
-                          <View style={styles.inputContainer}>
-                            <AnimatedLabelSelector
-                              label="Fecha de nacimiento"
-                              value={value ? format(new Date(value), "d 'de' MMMM 'de' yyyy", { locale: es }) : ''}
-                              onPress={() => {
-                                setTempDate(value ? new Date(value) : new Date());
-                                setShowDatePicker(true);
-                              }}
-                              error={!!errors.birthDate}
-                            />
-                            {errors.birthDate && (
-                              <HelperText type="error" visible={!!errors.birthDate}>
-                                {errors.birthDate.message}
-                              </HelperText>
-                            )}
-                            <DateTimePickerModal
-                              isVisible={showDatePicker}
-                              mode="date"
-                              onConfirm={(date) => {
-                                onChange(date.toISOString().split('T')[0]);
-                                setShowDatePicker(false);
-                              }}
-                              onCancel={() => setShowDatePicker(false)}
-                              date={tempDate || new Date()}
-                              maximumDate={new Date()}
-                              locale="es_ES"
-                              confirmTextIOS="Confirmar"
-                              cancelTextIOS="Cancelar"
-                            />
-                          </View>
-                        )}
-                      />
-                    </View>
-
-                    <View style={styles.sectionContainer}>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle} variant="titleMedium">
-                          Estado
-                        </Text>
-                      </View>
-                      
-                      <Controller
-                        control={control}
-                        name="isActive"
-                        render={({ field: { onChange, value } }) => (
-                          <Surface style={styles.switchContainer} elevation={1}>
-                            <View style={styles.switchContent}>
-                              <View style={styles.switchTextContainer}>
-                                <Text style={styles.switchLabel} variant="bodyLarge">
-                                  Cliente activo
-                                </Text>
-                              </View>
-                              <Switch
-                                value={value}
-                                onValueChange={onChange}
-                                color={theme.colors.primary}
-                              />
-                            </View>
-                          </Surface>
-                        )}
-                      />
-
-                      <Controller
-                        control={control}
-                        name="isBanned"
-                        render={({ field: { onChange, value } }) => (
-                          <Surface style={[styles.switchContainer, styles.bannedContainer]} elevation={1}>
-                            <View style={styles.switchContent}>
-                              <View style={styles.switchTextContainer}>
-                                <Text style={styles.switchLabel} variant="bodyLarge">
-                                  Cliente baneado
-                                </Text>
-                                <Text style={styles.switchDescription} variant="bodySmall">
-                                  Los clientes baneados no pueden realizar pedidos
-                                </Text>
-                              </View>
-                              <Switch
-                                value={value}
-                                onValueChange={onChange}
-                                color={theme.colors.error}
-                              />
-                            </View>
-                          </Surface>
-                        )}
-                      />
-
-                      {isBanned && (
-                        <>
-                          <Controller
-                            control={control}
-                            name="banReason"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                              <View style={[styles.inputContainer, styles.banReasonContainer]}>
-                                <TextInput
-                                  label="Razón del baneo"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  mode="outlined"
-                                  placeholder="Ej: Comportamiento inapropiado"
-                                  multiline
-                                  numberOfLines={2}
-                                  left={<TextInput.Icon icon="alert-circle" />}
-                                  outlineStyle={styles.inputOutline}
-                                  outlineColor={theme.colors.error}
-                                  activeOutlineColor={theme.colors.error}
-                                />
-                              </View>
-                            )}
-                          />
-
-                          {editingItem?.bannedAt && (
-                            <Surface style={styles.infoCard} elevation={1}>
-                              <View style={styles.infoCardContent}>
-                                <IconButton
-                                  icon="calendar-clock"
-                                  size={20}
-                                  iconColor={theme.colors.error}
-                                />
-                                <View style={styles.infoText}>
-                                  <Text variant="labelMedium" style={styles.infoLabel}>
-                                    Fecha de baneo
-                                  </Text>
-                                  <Text variant="bodyMedium" style={styles.infoValue}>
-                                    {new Date(editingItem.bannedAt).toLocaleString()}
-                                  </Text>
-                                </View>
-                              </View>
-                            </Surface>
-                          )}
-                        </>
+                      {errors.firstName && (
+                        <HelperText type="error" visible={!!errors.firstName}>
+                          {errors.firstName.message}
+                        </HelperText>
                       )}
                     </View>
+                  )}
+                />
 
-                    {/* Sección de WhatsApp - Solo en modo edición */}
-                    {editingItem && (
-                      <View style={styles.sectionContainer}>
-                        <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle} variant="titleMedium">
-                            Información de WhatsApp
+                <Controller
+                  control={control}
+                  name="lastName"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Apellido"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.lastName}
+                        mode="outlined"
+                        placeholder="Ej: Pérez"
+                        left={<TextInput.Icon icon="account" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.lastName && (
+                        <HelperText type="error" visible={!!errors.lastName}>
+                          {errors.lastName.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
+
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle} variant="titleMedium">
+                    Información de Contacto
+                  </Text>
+                  <Chip
+                    mode="flat"
+                    compact
+                    style={styles.optionalChip}
+                    textStyle={styles.optionalChipText}
+                  >
+                    Opcional
+                  </Chip>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="phoneNumber"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <View style={styles.phoneContainer}>
+                        <TextInput
+                          label="Código"
+                          value={countryCode}
+                          onChangeText={setCountryCode}
+                          mode="outlined"
+                          style={styles.countryCodeInput}
+                          placeholder="+52"
+                          keyboardType="phone-pad"
+                          maxLength={4}
+                          outlineStyle={styles.inputOutline}
+                        />
+                        <TextInput
+                          label="Teléfono"
+                          value={formatPhoneNumber(value || '')}
+                          onChangeText={(text) => {
+                            const cleaned = text.replace(/\D/g, '');
+                            onChange(cleaned);
+                          }}
+                          onBlur={onBlur}
+                          error={!!errors.phoneNumber}
+                          mode="outlined"
+                          placeholder="55 1234 5678"
+                          keyboardType="phone-pad"
+                          maxLength={13}
+                          style={styles.phoneNumberInput}
+                          left={<TextInput.Icon icon="phone" />}
+                          outlineStyle={styles.inputOutline}
+                        />
+                      </View>
+                      {errors.phoneNumber && (
+                        <HelperText type="error" visible={!!errors.phoneNumber}>
+                          {errors.phoneNumber.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="Correo electrónico"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.email}
+                        mode="outlined"
+                        placeholder="juan@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        left={<TextInput.Icon icon="email" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.email && (
+                        <HelperText type="error" visible={!!errors.email}>
+                          {errors.email.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="birthDate"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <AnimatedLabelSelector
+                        label="Fecha de nacimiento"
+                        value={
+                          value
+                            ? format(new Date(value), "d 'de' MMMM 'de' yyyy", {
+                                locale: es,
+                              })
+                            : ''
+                        }
+                        onPress={() => {
+                          setTempDate(value ? new Date(value) : new Date());
+                          setShowDatePicker(true);
+                        }}
+                        error={!!errors.birthDate}
+                      />
+                      {errors.birthDate && (
+                        <HelperText type="error" visible={!!errors.birthDate}>
+                          {errors.birthDate.message}
+                        </HelperText>
+                      )}
+                      <DateTimePickerModal
+                        isVisible={showDatePicker}
+                        mode="date"
+                        onConfirm={(date) => {
+                          onChange(date.toISOString().split('T')[0]);
+                          setShowDatePicker(false);
+                        }}
+                        onCancel={() => setShowDatePicker(false)}
+                        date={tempDate || new Date()}
+                        maximumDate={new Date()}
+                        locale="es_ES"
+                        confirmTextIOS="Confirmar"
+                        cancelTextIOS="Cancelar"
+                      />
+                    </View>
+                  )}
+                />
+              </View>
+
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle} variant="titleMedium">
+                    Estado
+                  </Text>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field: { onChange, value } }) => (
+                    <Surface style={styles.switchContainer} elevation={1}>
+                      <View style={styles.switchContent}>
+                        <View style={styles.switchTextContainer}>
+                          <Text style={styles.switchLabel} variant="bodyLarge">
+                            Cliente activo
                           </Text>
                         </View>
-                        
-                        <Surface style={styles.whatsappCard} elevation={1}>
-                          <View style={styles.whatsappRow}>
-                            <View style={styles.whatsappStat}>
-                              <Icon 
-                                source="message-text" 
-                                size={20} 
-                                color={theme.colors.primary}
+                        <Switch
+                          value={value}
+                          onValueChange={onChange}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    </Surface>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="isBanned"
+                  render={({ field: { onChange, value } }) => (
+                    <Surface
+                      style={[styles.switchContainer, styles.bannedContainer]}
+                      elevation={1}
+                    >
+                      <View style={styles.switchContent}>
+                        <View style={styles.switchTextContainer}>
+                          <Text style={styles.switchLabel} variant="bodyLarge">
+                            Cliente baneado
+                          </Text>
+                          <Text
+                            style={styles.switchDescription}
+                            variant="bodySmall"
+                          >
+                            Los clientes baneados no pueden realizar pedidos
+                          </Text>
+                        </View>
+                        <Switch
+                          value={value}
+                          onValueChange={onChange}
+                          color={theme.colors.error}
+                        />
+                      </View>
+                    </Surface>
+                  )}
+                />
+
+                {isBanned && (
+                  <>
+                    <Controller
+                      control={control}
+                      name="banReason"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View
+                          style={[
+                            styles.inputContainer,
+                            styles.banReasonContainer,
+                          ]}
+                        >
+                          <TextInput
+                            label="Razón del baneo"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            mode="outlined"
+                            placeholder="Ej: Comportamiento inapropiado"
+                            multiline
+                            numberOfLines={2}
+                            left={<TextInput.Icon icon="alert-circle" />}
+                            outlineStyle={styles.inputOutline}
+                            outlineColor={theme.colors.error}
+                            activeOutlineColor={theme.colors.error}
+                          />
+                        </View>
+                      )}
+                    />
+
+                    {editingItem?.bannedAt && (
+                      <Surface style={styles.infoCard} elevation={1}>
+                        <View style={styles.infoCardContent}>
+                          <IconButton
+                            icon="calendar-clock"
+                            size={20}
+                            iconColor={theme.colors.error}
+                          />
+                          <View style={styles.infoText}>
+                            <Text
+                              variant="labelMedium"
+                              style={styles.infoLabel}
+                            >
+                              Fecha de baneo
+                            </Text>
+                            <Text variant="bodyMedium" style={styles.infoValue}>
+                              {new Date(editingItem.bannedAt).toLocaleString()}
+                            </Text>
+                          </View>
+                        </View>
+                      </Surface>
+                    )}
+                  </>
+                )}
+              </View>
+
+              {/* Sección de WhatsApp - Solo en modo edición */}
+              {editingItem && (
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle} variant="titleMedium">
+                      Información de WhatsApp
+                    </Text>
+                  </View>
+
+                  <Surface style={styles.whatsappCard} elevation={1}>
+                    <View style={styles.whatsappRow}>
+                      <View style={styles.whatsappStat}>
+                        <Icon
+                          source="message-text"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                        <View style={styles.whatsappStatContent}>
+                          <Text
+                            variant="bodySmall"
+                            style={styles.whatsappLabel}
+                          >
+                            Mensajes totales
+                          </Text>
+                          <Text
+                            variant="titleMedium"
+                            style={styles.whatsappValue}
+                          >
+                            {editingItem.whatsappMessageCount || 0}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.whatsappDivider} />
+
+                      <View style={styles.whatsappStat}>
+                        <Icon
+                          source="clock-outline"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                        <View style={styles.whatsappStatContent}>
+                          <Text
+                            variant="bodySmall"
+                            style={styles.whatsappLabel}
+                          >
+                            Último mensaje
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.whatsappValue}
+                          >
+                            {editingItem.lastWhatsappMessageTime
+                              ? new Date(
+                                  editingItem.lastWhatsappMessageTime,
+                                ).toLocaleDateString()
+                              : 'Sin mensajes'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </Surface>
+                </View>
+              )}
+
+              {/* Sección de Direcciones - Solo en modo edición */}
+              {editingItem && (
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle} variant="titleMedium">
+                      Direcciones
+                    </Text>
+                    <Button
+                      mode="text"
+                      onPress={() => {
+                        setEditingAddress(null);
+                        setShowAddressModal(true);
+                      }}
+                      icon="plus"
+                      compact
+                    >
+                      Agregar
+                    </Button>
+                  </View>
+
+                  {addresses.length === 0 ? (
+                    <Surface style={styles.emptyAddressContainer} elevation={0}>
+                      <Text
+                        style={styles.emptyAddressText}
+                        variant="bodyMedium"
+                      >
+                        No hay direcciones registradas
+                      </Text>
+                    </Surface>
+                  ) : (
+                    <View style={styles.addressList}>
+                      {addresses.map((address: Address) => (
+                        <Surface
+                          key={address.id}
+                          style={styles.addressCard}
+                          elevation={1}
+                        >
+                          <View style={styles.addressContent}>
+                            <View style={styles.addressHeader}>
+                              <IconButton
+                                icon="map-marker"
+                                size={20}
+                                iconColor={theme.colors.primary}
                               />
-                              <View style={styles.whatsappStatContent}>
-                                <Text variant="bodySmall" style={styles.whatsappLabel}>
-                                  Mensajes totales
+                              <View style={styles.addressInfo}>
+                                <Text
+                                  style={styles.addressName}
+                                  variant="titleSmall"
+                                >
+                                  {address.name}
                                 </Text>
-                                <Text variant="titleMedium" style={styles.whatsappValue}>
-                                  {editingItem.whatsappMessageCount || 0}
+                                <Text
+                                  style={styles.addressStreet}
+                                  variant="bodyMedium"
+                                >
+                                  {address.street} {address.number}
+                                  {address.complement &&
+                                    `, ${address.complement}`}
                                 </Text>
+                                <Text
+                                  style={styles.addressDetails}
+                                  variant="bodySmall"
+                                >
+                                  {address.neighborhood}, {address.city},{' '}
+                                  {address.state}
+                                </Text>
+                                {address.isDefault && (
+                                  <Chip
+                                    mode="flat"
+                                    compact
+                                    style={styles.defaultChip}
+                                    textStyle={styles.defaultChipText}
+                                  >
+                                    Predeterminada
+                                  </Chip>
+                                )}
                               </View>
                             </View>
-                            
-                            <View style={styles.whatsappDivider} />
-                            
-                            <View style={styles.whatsappStat}>
-                              <Icon 
-                                source="clock-outline" 
-                                size={20} 
-                                color={theme.colors.primary}
+                            <View style={styles.addressActions}>
+                              <IconButton
+                                icon="pencil"
+                                size={20}
+                                onPress={() => {
+                                  setEditingAddress(address);
+                                  setShowAddressModal(true);
+                                }}
                               />
-                              <View style={styles.whatsappStatContent}>
-                                <Text variant="bodySmall" style={styles.whatsappLabel}>
-                                  Último mensaje
-                                </Text>
-                                <Text variant="bodyMedium" style={styles.whatsappValue}>
-                                  {editingItem.lastWhatsappMessageTime 
-                                    ? new Date(editingItem.lastWhatsappMessageTime).toLocaleDateString()
-                                    : 'Sin mensajes'}
-                                </Text>
-                              </View>
+                              <IconButton
+                                icon="delete"
+                                size={20}
+                                iconColor={theme.colors.error}
+                                onPress={async () => {
+                                  try {
+                                    await addressesService.remove(address.id);
+                                    await refetchAddresses();
+                                    showSnackbar({
+                                      message: 'Dirección eliminada',
+                                      type: 'success',
+                                    });
+                                  } catch (error) {
+                                    showSnackbar({
+                                      message: 'Error al eliminar la dirección',
+                                      type: 'error',
+                                    });
+                                  }
+                                }}
+                              />
                             </View>
                           </View>
                         </Surface>
-                      </View>
-                    )}
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
 
-                    {/* Sección de Direcciones - Solo en modo edición */}
-                    {editingItem && (
-                      <View style={styles.sectionContainer}>
-                        <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle} variant="titleMedium">
-                            Direcciones
-                          </Text>
-                          <Button
-                            mode="text"
-                            onPress={() => {
-                              setEditingAddress(null);
-                              setShowAddressModal(true);
-                            }}
-                            icon="plus"
-                            compact
-                          >
-                            Agregar
-                          </Button>
-                        </View>
-                        
-                        {addresses.length === 0 ? (
-                          <Surface style={styles.emptyAddressContainer} elevation={0}>
-                            <Text style={styles.emptyAddressText} variant="bodyMedium">
-                              No hay direcciones registradas
-                            </Text>
-                          </Surface>
-                        ) : (
-                          <View style={styles.addressList}>
-                            {addresses.map((address: Address) => (
-                              <Surface key={address.id} style={styles.addressCard} elevation={1}>
-                                <View style={styles.addressContent}>
-                                  <View style={styles.addressHeader}>
-                                    <IconButton
-                                      icon="map-marker"
-                                      size={20}
-                                      iconColor={theme.colors.primary}
-                                    />
-                                    <View style={styles.addressInfo}>
-                                      <Text style={styles.addressStreet} variant="bodyMedium">
-                                        {address.street} {address.number}
-                                        {address.complement && `, ${address.complement}`}
-                                      </Text>
-                                      <Text style={styles.addressDetails} variant="bodySmall">
-                                        {address.neighborhood}, {address.city}, {address.state}
-                                      </Text>
-                                      {address.isDefault && (
-                                        <Chip
-                                          mode="flat"
-                                          compact
-                                          style={styles.defaultChip}
-                                          textStyle={styles.defaultChipText}
-                                        >
-                                          Predeterminada
-                                        </Chip>
-                                      )}
-                                    </View>
-                                  </View>
-                                  <View style={styles.addressActions}>
-                                    <IconButton
-                                      icon="pencil"
-                                      size={20}
-                                      onPress={() => {
-                                        setEditingAddress(address);
-                                        setShowAddressModal(true);
-                                      }}
-                                    />
-                                    <IconButton
-                                      icon="delete"
-                                      size={20}
-                                      iconColor={theme.colors.error}
-                                      onPress={async () => {
-                                        try {
-                                          await addressesService.remove(address.id);
-                                          await refetchAddresses();
-                                          showSnackbar({ message: 'Dirección eliminada', type: 'success' });
-                                        } catch (error) {
-                                          showSnackbar({ message: 'Error al eliminar la dirección', type: 'error' });
-                                        }
-                                      }}
-                                    />
-                                  </View>
-                                </View>
-                              </Surface>
-                            ))}
-                          </View>
-                        )}
-                      </View>
-                    )}
+              {/* Espacio adicional para el teclado */}
+              <View style={{ height: 20 }} />
+            </ScrollView>
 
-                    {/* Espacio adicional para el teclado */}
-                    <View style={{ height: 20 }} />
-                  </ScrollView>
-
-                  <Surface style={styles.buttonContainer} elevation={2}>
-                    <Button
-                      onPress={onDismiss}
-                      disabled={isSubmitting}
-                      style={[styles.button, styles.cancelButton]}
-                      textColor={theme.colors.onSecondaryContainer}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      mode="contained"
-                      onPress={handleSubmit(handleFormSubmit)}
-                      disabled={isSubmitting}
-                      loading={isSubmitting}
-                      style={[styles.button, styles.confirmButton]}
-                      buttonColor={theme.colors.primary}
-                    >
-                      {editingItem ? 'Guardar' : 'Crear'}
-                    </Button>
-                  </Surface>
+            <Surface style={styles.buttonContainer} elevation={2}>
+              <Button
+                onPress={onDismiss}
+                disabled={isSubmitting}
+                style={[styles.button, styles.cancelButton]}
+                textColor={theme.colors.onSecondaryContainer}
+              >
+                Cancelar
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSubmit(handleFormSubmit)}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                style={[styles.button, styles.confirmButton]}
+                buttonColor={theme.colors.primary}
+              >
+                {editingItem ? 'Guardar' : 'Crear'}
+              </Button>
+            </Surface>
           </Surface>
         </Modal>
       </Portal>
-      
+
       {/* Modal de Dirección */}
       {editingItem && (
         <AddressFormModal

@@ -1,17 +1,14 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Text,
-  Switch,
-  Chip,
-  Surface,
-  IconButton,
-} from 'react-native-paper';
+import { Text, Switch, Chip, Surface, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
-import { BusinessHours, CreateBusinessHoursDto } from '../types/restaurantConfig.types';
+import {
+  BusinessHours,
+  CreateBusinessHoursDto,
+} from '../types/restaurantConfig.types';
 
 interface BusinessHoursFormProps {
   businessHours: BusinessHours[] | CreateBusinessHoursDto[];
@@ -36,7 +33,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  
+
   const [showTimePicker, setShowTimePicker] = React.useState<{
     dayIndex: number;
     type: 'opening' | 'closing';
@@ -55,10 +52,14 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     return businessHours;
   }, [businessHours]);
 
-  const handleTimeChange = (dayIndex: number, type: 'opening' | 'closing', time: string | null) => {
+  const handleTimeChange = (
+    dayIndex: number,
+    type: 'opening' | 'closing',
+    time: string | null,
+  ) => {
     const updatedHours = [...initializedHours];
-    const hourIndex = updatedHours.findIndex(h => h.dayOfWeek === dayIndex);
-    
+    const hourIndex = updatedHours.findIndex((h) => h.dayOfWeek === dayIndex);
+
     if (hourIndex !== -1 && time !== null) {
       if (type === 'opening') {
         updatedHours[hourIndex].openingTime = time;
@@ -71,8 +72,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
 
   const handleClosedChange = (dayIndex: number, isClosed: boolean) => {
     const updatedHours = [...initializedHours];
-    const hourIndex = updatedHours.findIndex(h => h.dayOfWeek === dayIndex);
-    
+    const hourIndex = updatedHours.findIndex((h) => h.dayOfWeek === dayIndex);
+
     if (hourIndex !== -1) {
       updatedHours[hourIndex].isClosed = isClosed;
       if (isClosed) {
@@ -97,7 +98,9 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     return `${hours}:${minutes}`;
   };
 
-  const formatTimeForDisplay = (timeString: string | null | undefined): string => {
+  const formatTimeForDisplay = (
+    timeString: string | null | undefined,
+  ): string => {
     if (!timeString) return '';
     return timeString;
   };
@@ -107,17 +110,17 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
       handleTimeChange(
         showTimePicker.dayIndex,
         showTimePicker.type,
-        formatTimeToString(date)
+        formatTimeToString(date),
       );
       setShowTimePicker(null);
     }
   };
 
   const copyHoursToAllDays = (dayIndex: number) => {
-    const sourceHour = initializedHours.find(h => h.dayOfWeek === dayIndex);
+    const sourceHour = initializedHours.find((h) => h.dayOfWeek === dayIndex);
     if (!sourceHour) return;
 
-    const updatedHours = initializedHours.map(hour => ({
+    const updatedHours = initializedHours.map((hour) => ({
       ...hour,
       openingTime: sourceHour.openingTime,
       closingTime: sourceHour.closingTime,
@@ -131,7 +134,9 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     <>
       <View style={styles.container}>
         {DAYS_OF_WEEK.map((day, index) => {
-          const dayHours = initializedHours.find(h => h.dayOfWeek === index) || {
+          const dayHours = initializedHours.find(
+            (h) => h.dayOfWeek === index,
+          ) || {
             dayOfWeek: index,
             openingTime: null,
             closingTime: null,
@@ -143,13 +148,14 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
               <View style={styles.dayHeader}>
                 <Text style={styles.dayName}>{day}</Text>
                 <View style={styles.dayActions}>
-                  {isEditing && index === 1 && ( // Solo mostrar en Lunes
-                    <IconButton
-                      icon="content-copy"
-                      size={20}
-                      onPress={() => copyHoursToAllDays(index)}
-                    />
-                  )}
+                  {isEditing &&
+                    index === 1 && ( // Solo mostrar en Lunes
+                      <IconButton
+                        icon="content-copy"
+                        size={20}
+                        onPress={() => copyHoursToAllDays(index)}
+                      />
+                    )}
                   <Switch
                     value={!dayHours.isClosed}
                     onValueChange={(value) => handleClosedChange(index, !value)}
@@ -165,7 +171,10 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                     <AnimatedLabelSelector
                       label="Apertura"
                       value={formatTimeForDisplay(dayHours.openingTime)}
-                      onPress={() => isEditing && setShowTimePicker({ dayIndex: index, type: 'opening' })}
+                      onPress={() =>
+                        isEditing &&
+                        setShowTimePicker({ dayIndex: index, type: 'opening' })
+                      }
                       disabled={!isEditing}
                     />
                   </View>
@@ -179,7 +188,10 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                     <AnimatedLabelSelector
                       label="Cierre"
                       value={formatTimeForDisplay(dayHours.closingTime)}
-                      onPress={() => isEditing && setShowTimePicker({ dayIndex: index, type: 'closing' })}
+                      onPress={() =>
+                        isEditing &&
+                        setShowTimePicker({ dayIndex: index, type: 'closing' })
+                      }
                       disabled={!isEditing}
                     />
                   </View>
@@ -209,9 +221,13 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         date={
           showTimePicker
             ? parseTimeString(
-                initializedHours.find(h => h.dayOfWeek === showTimePicker.dayIndex)?.[
-                  showTimePicker.type === 'opening' ? 'openingTime' : 'closingTime'
-                ] || null
+                initializedHours.find(
+                  (h) => h.dayOfWeek === showTimePicker.dayIndex,
+                )?.[
+                  showTimePicker.type === 'opening'
+                    ? 'openingTime'
+                    : 'closingTime'
+                ] || null,
               ) || new Date()
             : new Date()
         }

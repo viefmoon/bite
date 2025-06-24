@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  Modal,
+Modal,
   Portal,
-  Text,
+Text,
   Button,
   Switch,
   HelperText,
   ActivityIndicator,
-  RadioButton,
-} from 'react-native-paper';
+  RadioButton,} from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 

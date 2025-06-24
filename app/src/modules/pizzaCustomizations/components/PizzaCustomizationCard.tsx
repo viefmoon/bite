@@ -2,14 +2,20 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Text, Chip, IconButton } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { CustomizationType, type PizzaCustomization } from '../types/pizzaCustomization.types';
+import {
+  CustomizationType,
+  type PizzaCustomization,
+} from '../types/pizzaCustomization.types';
 
 interface PizzaCustomizationCardProps {
   customization: PizzaCustomization;
   onPress: () => void;
 }
 
-export function PizzaCustomizationCard({ customization, onPress }: PizzaCustomizationCardProps) {
+export function PizzaCustomizationCard({
+  customization,
+  onPress,
+}: PizzaCustomizationCardProps) {
   const theme = useAppTheme();
 
   const styles = StyleSheet.create({
@@ -71,7 +77,7 @@ export function PizzaCustomizationCard({ customization, onPress }: PizzaCustomiz
         <View style={styles.content}>
           <View style={styles.info}>
             <Text style={styles.name}>{customization.name}</Text>
-            
+
             <View style={styles.details}>
               <Chip
                 icon={getTypeIcon(customization.type)}
@@ -80,7 +86,7 @@ export function PizzaCustomizationCard({ customization, onPress }: PizzaCustomiz
               >
                 {getTypeLabel(customization.type)}
               </Chip>
-              
+
               {!customization.isActive && (
                 <Chip
                   icon="eye-off"
@@ -101,8 +107,12 @@ export function PizzaCustomizationCard({ customization, onPress }: PizzaCustomiz
           </View>
 
           <View style={styles.rightSection}>
-            <Text style={styles.toppingValue}>{customization.toppingValue}</Text>
-            <Text style={styles.toppingLabel}>topping{customization.toppingValue !== 1 ? 's' : ''}</Text>
+            <Text style={styles.toppingValue}>
+              {customization.toppingValue}
+            </Text>
+            <Text style={styles.toppingLabel}>
+              topping{customization.toppingValue !== 1 ? 's' : ''}
+            </Text>
           </View>
         </View>
       </Card.Content>

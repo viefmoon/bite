@@ -31,9 +31,11 @@ type NavigationProp = NativeStackNavigationProp<
 export function PizzaCustomizationsListScreen() {
   const theme = useAppTheme();
   const navigation = useNavigation<NavigationProp>();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>('all');
+  const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>(
+    'all',
+  );
   const [menuVisible, setMenuVisible] = useState(false);
 
   const { data, isLoading, isError, refetch } = usePizzaCustomizationsList({
@@ -94,21 +96,26 @@ export function PizzaCustomizationsListScreen() {
   const renderItem = ({ item }: { item: any }) => (
     <PizzaCustomizationCard
       customization={item}
-      onPress={() => navigation.navigate('PizzaCustomizationDetail', { id: item.id })}
+      onPress={() =>
+        navigation.navigate('PizzaCustomizationDetail', { id: item.id })
+      }
     />
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        No hay personalizaciones disponibles
-      </Text>
+      <Text style={styles.emptyText}>No hay personalizaciones disponibles</Text>
     </View>
   );
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
         <ActivityIndicator size="large" />
       </View>
     );
@@ -123,10 +130,12 @@ export function PizzaCustomizationsListScreen() {
           value={searchQuery}
           style={styles.searchbar}
         />
-        
+
         <SegmentedButtons
           value={selectedType}
-          onValueChange={(value) => setSelectedType(value as CustomizationType | 'all')}
+          onValueChange={(value) =>
+            setSelectedType(value as CustomizationType | 'all')
+          }
           buttons={[
             { value: 'all', label: 'Todas' },
             { value: CustomizationType.FLAVOR, label: 'Sabores' },
