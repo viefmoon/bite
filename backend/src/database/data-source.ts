@@ -1,8 +1,11 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { config } from 'dotenv';
+
+config();
 
 export const AppDataSource = new DataSource({
-  type: process.env.DATABASE_TYPE,
+  type: process.env.DATABASE_TYPE as any,
   url: process.env.DATABASE_URL,
   host: process.env.DATABASE_HOST,
   port: process.env.DATABASE_PORT
@@ -15,13 +18,9 @@ export const AppDataSource = new DataSource({
   dropSchema: false,
   keepConnectionAlive: true,
   logging: process.env.NODE_ENV !== 'production',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-  cli: {
-    entitiesDir: 'src',
-
-    subscribersDir: 'subscriber',
-  },
+  entities: ['src/**/*.entity{.ts,.js}'],
+  migrations: ['src/database/migrations/**/*{.ts,.js}'],
+  migrationsTableName: 'migrations',
   extra: {
     // based on https://node-postgres.com/api/pool
     // max connection pool size
