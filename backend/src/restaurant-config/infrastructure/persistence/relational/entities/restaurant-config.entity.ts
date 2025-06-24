@@ -51,6 +51,9 @@ export class RestaurantConfigEntity extends EntityRelationalHelper {
   @Column({ type: 'int', default: 40 })
   estimatedDeliveryTime: number;
 
+  @Column({ type: 'int', default: 25 })
+  estimatedDineInTime: number;
+
   @Column({ type: 'int', default: 30 })
   openingGracePeriod: number;
 

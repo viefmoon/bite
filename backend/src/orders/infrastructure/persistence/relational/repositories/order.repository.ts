@@ -25,10 +25,20 @@ export class OrdersRelationalRepository implements OrderRepository {
   ) {}
 
   async create(
-    data: Omit<
-      Order,
-      'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'dailyNumber'
-    >,
+    data: {
+      userId: string | null;
+      tableId: string | null;
+      scheduledAt?: Date | null;
+      orderStatus: string;
+      orderType: string;
+      subtotal: number;
+      total: number;
+      notes?: string;
+      customerId?: string | null;
+      isFromWhatsApp?: boolean;
+      deliveryInfo: any;
+      estimatedDeliveryTime?: Date | null;
+    },
   ): Promise<Order> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

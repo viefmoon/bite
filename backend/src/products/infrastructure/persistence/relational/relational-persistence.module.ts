@@ -10,6 +10,8 @@ import { RelationalFilePersistenceModule } from '../../../../files/infrastructur
 import { RelationalProductVariantPersistenceModule } from '../../../../product-variants/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalModifierGroupPersistenceModule } from '../../../../modifier-groups/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalPreparationScreenPersistenceModule } from '../../../../preparation-screens/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalPizzaCustomizationPersistenceModule } from '../../../../pizza-customizations/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalPizzaConfigurationPersistenceModule } from '../../../../pizza-configurations/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { RelationalPreparationScreenPersistenceModule } from '../../../../prepar
     forwardRef(() => RelationalProductVariantPersistenceModule),
     forwardRef(() => RelationalModifierGroupPersistenceModule),
     forwardRef(() => RelationalPreparationScreenPersistenceModule),
+    forwardRef(() => RelationalPizzaCustomizationPersistenceModule),
+    forwardRef(() => RelationalPizzaConfigurationPersistenceModule),
   ],
   providers: [
     {

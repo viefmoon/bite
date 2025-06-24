@@ -6,6 +6,7 @@ export interface ChatMessage {
 
 export interface Address {
   id: string;
+  name: string;
   street: string;
   number: string;
   complement?: string;
@@ -13,7 +14,7 @@ export interface Address {
   city: string;
   state: string;
   zipCode: string;
-  reference?: string;
+  deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
   geocodedAddress?: string;
@@ -79,6 +80,7 @@ export interface UpdateCustomerDto {
 }
 
 export interface CreateAddressDto {
+  name: string;
   street: string;
   number: string;
   complement?: string;
@@ -86,7 +88,7 @@ export interface CreateAddressDto {
   city: string;
   state: string;
   zipCode: string;
-  reference?: string;
+  deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
   geocodedAddress?: string;
@@ -94,6 +96,7 @@ export interface CreateAddressDto {
 }
 
 export interface UpdateAddressDto {
+  name?: string;
   street?: string;
   number?: string;
   complement?: string;
@@ -101,7 +104,7 @@ export interface UpdateAddressDto {
   city?: string;
   state?: string;
   zipCode?: string;
-  reference?: string;
+  deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
   geocodedAddress?: string;

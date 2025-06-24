@@ -16,6 +16,7 @@ export class RestaurantConfig {
   acceptingOrders: boolean;
   estimatedPickupTime: number; // Tiempo estimado de recolección en minutos
   estimatedDeliveryTime: number; // Tiempo estimado de entrega en minutos
+  estimatedDineInTime: number; // Tiempo estimado para servir en mesa en minutos
   openingGracePeriod: number; // Minutos después de abrir antes de aceptar pedidos
   closingGracePeriod: number; // Minutos antes de cerrar para dejar de aceptar pedidos
   timeZone: string; // Zona horaria del restaurante

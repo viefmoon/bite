@@ -29,6 +29,7 @@ export class RestaurantConfigService {
       defaultConfig.acceptingOrders = true;
       defaultConfig.estimatedPickupTime = 20;
       defaultConfig.estimatedDeliveryTime = 40;
+      defaultConfig.estimatedDineInTime = 25;
       defaultConfig.openingGracePeriod = 30;
       defaultConfig.closingGracePeriod = 30;
       defaultConfig.timeZone = 'America/Mexico_City';

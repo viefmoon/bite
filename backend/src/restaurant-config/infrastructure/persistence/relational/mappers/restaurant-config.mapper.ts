@@ -26,6 +26,7 @@ export class RestaurantConfigMapper {
     domainEntity.acceptingOrders = raw.acceptingOrders;
     domainEntity.estimatedPickupTime = raw.estimatedPickupTime;
     domainEntity.estimatedDeliveryTime = raw.estimatedDeliveryTime;
+    domainEntity.estimatedDineInTime = raw.estimatedDineInTime;
     domainEntity.openingGracePeriod = raw.openingGracePeriod;
     domainEntity.closingGracePeriod = raw.closingGracePeriod;
     domainEntity.timeZone = raw.timeZone;
@@ -65,6 +66,7 @@ export class RestaurantConfigMapper {
     persistenceEntity.estimatedPickupTime = domainEntity.estimatedPickupTime;
     persistenceEntity.estimatedDeliveryTime =
       domainEntity.estimatedDeliveryTime;
+    persistenceEntity.estimatedDineInTime = domainEntity.estimatedDineInTime;
     persistenceEntity.openingGracePeriod = domainEntity.openingGracePeriod;
     persistenceEntity.closingGracePeriod = domainEntity.closingGracePeriod;
     persistenceEntity.timeZone = domainEntity.timeZone;

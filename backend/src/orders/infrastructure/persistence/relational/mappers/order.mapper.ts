@@ -71,6 +71,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     );
 
     domain.deliveryInfo = this.deliveryInfoMapper.toDomain(entity.deliveryInfo!)!;
+    domain.estimatedDeliveryTime = entity.estimatedDeliveryTime;
 
     return domain;
   }
@@ -96,6 +97,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.customerId = domain.customerId || null;
     entity.isFromWhatsApp = domain.isFromWhatsApp || false;
     entity.scheduledAt = domain.scheduledAt || null;
+    entity.estimatedDeliveryTime = domain.estimatedDeliveryTime || null;
 
     return entity;
   }

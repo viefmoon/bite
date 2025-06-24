@@ -14,6 +14,6 @@ import { PizzaConfigurationMapper } from './mappers/pizza-configuration.mapper';
     },
     PizzaConfigurationMapper,
   ],
-  exports: [PizzaConfigurationRepository],
+  exports: [PizzaConfigurationRepository, PizzaConfigurationMapper],
 })
 export class RelationalPizzaConfigurationPersistenceModule {}

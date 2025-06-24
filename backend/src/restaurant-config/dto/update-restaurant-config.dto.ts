@@ -126,6 +126,16 @@ export class UpdateRestaurantConfigDto {
 
   @ApiPropertyOptional({
     type: Number,
+    example: 25,
+    description: 'Tiempo estimado para servir en mesa en minutos',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  estimatedDineInTime?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
     example: 30,
     description: 'Minutos después de abrir antes de aceptar pedidos',
   })

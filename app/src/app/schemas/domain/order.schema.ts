@@ -75,5 +75,6 @@ export const orderSchema = z.object({
   adjustments: z.array(adjustmentSchema).optional(),
   subtotal: z.union([z.string(), z.number()]).optional(),
   isFromWhatsApp: z.boolean().optional().default(false),
+  estimatedDeliveryTime: z.union([z.string().datetime(), z.date()]).nullable().optional(),
 });
 export type Order = z.infer<typeof orderSchema>;
