@@ -10,8 +10,8 @@ export class Customer {
   id: string;
   firstName: string | null;
   lastName: string | null;
-  phoneNumber: string;
-  whatsappPhoneNumber: string | null; // Número de WhatsApp único
+  whatsappPhoneNumber: string; // Número de WhatsApp único (ahora es el principal)
+  stripeCustomerId: string | null; // ID del cliente en Stripe
   email: string | null;
   birthDate: Date | null;
   fullChatHistory: ChatMessage[] | null; // Historial completo de conversaciones

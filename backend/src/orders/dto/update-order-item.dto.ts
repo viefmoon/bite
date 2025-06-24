@@ -6,8 +6,12 @@ import {
   IsString,
   IsUUID,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PreparationStatus } from '../domain/order-item';
+import { SelectedModifierDto } from './selected-modifier.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateOrderItemDto {
   @IsOptional()
@@ -36,8 +40,14 @@ export class UpdateOrderItemDto {
   @IsString()
   preparationNotes?: string;
 
+  @ApiProperty({
+    type: [SelectedModifierDto],
+    description: 'Lista de modificadores seleccionados',
+    required: false,
+  })
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
-  productModifierIds?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => SelectedModifierDto)
+  selectedModifiers?: SelectedModifierDto[];
 }

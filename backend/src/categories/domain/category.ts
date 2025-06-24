@@ -6,6 +6,7 @@ export class Category {
   name: string;
   description?: string;
   isActive: boolean;
+  sortOrder: number;
   photoId: string | null;
   photo: FileType | null;
   subcategories: Subcategory[];

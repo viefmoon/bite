@@ -40,6 +40,9 @@ export class ModifierGroupEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: 0 })
+  sortOrder: number;
+
   @OneToMany(
     () => ProductModifierEntity,
     (productModifier) => productModifier.modifierGroup,

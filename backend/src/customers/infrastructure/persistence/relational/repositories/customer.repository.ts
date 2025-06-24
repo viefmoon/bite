@@ -53,8 +53,8 @@ export class CustomerRelationalRepository
     if (filter?.email) {
       where.email = filter.email;
     }
-    if (filter?.phoneNumber) {
-      where.phoneNumber = filter.phoneNumber;
+    if (filter?.whatsappPhoneNumber) {
+      where.whatsappPhoneNumber = filter.whatsappPhoneNumber;
     }
     if (filter?.isActive !== undefined) {
       where.isActive = filter.isActive;
@@ -85,12 +85,12 @@ export class CustomerRelationalRepository
   }
 
   async findByPhone(
-    phone: Customer['phoneNumber'],
+    phone: Customer['whatsappPhoneNumber'],
   ): Promise<NullableType<Customer>> {
     if (!phone) return null;
     const entity = await this.ormRepo.findOne({
       // Usar this.ormRepo
-      where: { phoneNumber: phone },
+      where: { whatsappPhoneNumber: phone },
       relations: ['addresses'],
     });
     return entity ? this.mapper.toDomain(entity) : null; // Usar this.mapper

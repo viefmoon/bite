@@ -11,13 +11,10 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderStatus } from './domain/enums/order-status.enum';
-import { OrderItemModifierRepository } from './infrastructure/persistence/order-item-modifier.repository';
-import { OrderItemModifier } from './domain/order-item-modifier';
 import { OrderItemRepository } from './infrastructure/persistence/order-item.repository';
 import { OrderItem } from './domain/order-item';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
-import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto';
 import { PreparationStatus } from './domain/order-item';
 import { v4 as uuidv4 } from 'uuid';
 import { TicketImpressionRepository } from './infrastructure/persistence/ticket-impression.repository';
@@ -26,7 +23,6 @@ import { TicketImpression } from './domain/ticket-impression';
 import {
   ORDER_REPOSITORY,
   ORDER_ITEM_REPOSITORY,
-  ORDER_ITEM_MODIFIER_REPOSITORY,
   TICKET_IMPRESSION_REPOSITORY,
 } from '../common/tokens';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
@@ -40,8 +36,6 @@ export class OrdersService {
   constructor(
     @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: OrderRepository,
-    @Inject(ORDER_ITEM_MODIFIER_REPOSITORY)
-    private readonly orderItemModifierRepository: OrderItemModifierRepository,
     @Inject(ORDER_ITEM_REPOSITORY)
     private readonly orderItemRepository: OrderItemRepository,
     @Inject(TICKET_IMPRESSION_REPOSITORY)
@@ -65,7 +59,7 @@ export class OrdersService {
 
     // Obtener la configuración del restaurante
     const restaurantConfig = await this.restaurantConfigService.getConfig();
-    
+
     // Calcular el tiempo estimado de entrega basado en el tipo de orden
     let estimatedMinutes = 0;
     switch (createOrderDto.orderType) {
@@ -79,10 +73,12 @@ export class OrdersService {
         estimatedMinutes = restaurantConfig.estimatedDeliveryTime;
         break;
     }
-    
+
     // Calcular la fecha/hora estimada de entrega
     const now = new Date();
-    const estimatedDeliveryTime = new Date(now.getTime() + estimatedMinutes * 60000);
+    const estimatedDeliveryTime = new Date(
+      now.getTime() + estimatedMinutes * 60000,
+    );
 
     // Crear la información de entrega (siempre requerida)
     const deliveryInfo: DeliveryInfo = {
@@ -118,23 +114,13 @@ export class OrdersService {
           basePrice: itemDto.basePrice,
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
-          modifiers: itemDto.modifiers, // Pasar los modificadores aquí
+          productModifiers: itemDto.productModifiers, // Pasar los modificadores aquí
         };
         // Guardar el item y obtener su ID
         const savedOrderItem =
           await this.createOrderItemInternal(createOrderItemDto); // Usar método interno
 
-        // Crear modificadores asociados al item recién guardado
-        if (itemDto.modifiers && itemDto.modifiers.length > 0) {
-          for (const modifierDto of itemDto.modifiers) {
-            await this.createOrderItemModifier({
-              orderItemId: savedOrderItem.id,
-              productModifierId: modifierDto.productModifierId,
-              quantity: modifierDto.quantity,
-              price: modifierDto.price,
-            });
-          }
-        }
+        // Los modificadores ahora se manejan directamente como productModifierIds
       }
     }
     // Recargar la orden completa al final para incluir todos los items y modificadores
@@ -157,6 +143,11 @@ export class OrdersService {
     orderItem.preparationStatus = PreparationStatus.PENDING;
     orderItem.statusChangedAt = new Date();
     orderItem.preparationNotes = createOrderItemDto.preparationNotes || null;
+    orderItem.productModifiers = createOrderItemDto.productModifiers
+      ? createOrderItemDto.productModifiers.map(
+          (modifier) => ({ id: modifier.modifierId }) as any,
+        )
+      : [];
     return this.orderItemRepository.save(orderItem);
   }
 
@@ -230,15 +221,8 @@ export class OrdersService {
       // Obtener items existentes
       const existingItems = await this.orderItemRepository.findByOrderId(id);
 
-      // Eliminar TODOS los items existentes y sus modificadores
+      // Eliminar TODOS los items existentes
       for (const item of existingItems) {
-        // Primero eliminar los modificadores del item
-        const modifiers =
-          await this.orderItemModifierRepository.findByOrderItemId(item.id);
-        for (const modifier of modifiers) {
-          await this.orderItemModifierRepository.delete(modifier.id);
-        }
-        // Luego eliminar el item
         await this.orderItemRepository.delete(item.id);
       }
 
@@ -251,23 +235,10 @@ export class OrdersService {
           basePrice: itemDto.basePrice,
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
-          modifiers: itemDto.modifiers,
+          productModifiers: itemDto.productModifiers,
         };
 
-        const savedOrderItem =
-          await this.createOrderItemInternal(createOrderItemDto);
-
-        // Crear modificadores asociados si existen
-        if (itemDto.modifiers && itemDto.modifiers.length > 0) {
-          for (const modifierDto of itemDto.modifiers) {
-            await this.createOrderItemModifier({
-              orderItemId: savedOrderItem.id,
-              productModifierId: modifierDto.productModifierId,
-              quantity: modifierDto.quantity,
-              price: modifierDto.price,
-            });
-          }
-        }
+        await this.createOrderItemInternal(createOrderItemDto);
       }
     }
 
@@ -364,7 +335,11 @@ export class OrdersService {
     updatedOrderItem.order = existingOrderItem.order;
     updatedOrderItem.product = existingOrderItem.product;
     updatedOrderItem.productVariant = existingOrderItem.productVariant;
-    updatedOrderItem.modifiers = existingOrderItem.modifiers;
+    updatedOrderItem.productModifiers = updateOrderItemDto.productModifiers
+      ? updateOrderItemDto.productModifiers.map(
+          (modifier) => ({ id: modifier.modifierId }) as any,
+        )
+      : existingOrderItem.productModifiers;
     updatedOrderItem.createdAt = existingOrderItem.createdAt;
     // updatedAt y deletedAt serán manejados por TypeORM o el repositorio
     updatedOrderItem.deletedAt = existingOrderItem.deletedAt;
@@ -375,97 +350,10 @@ export class OrdersService {
   async deleteOrderItem(id: string): Promise<void> {
     const orderItem = await this.findOrderItemById(id);
 
-    // Eliminar primero los modificadores asociados
-    const modifiers = await this.findOrderItemModifiersByOrderItemId(id);
-    for (const modifier of modifiers) {
-      await this.deleteOrderItemModifier(modifier.id);
-    }
+    // La eliminación de las relaciones Many-to-Many se maneja automáticamente por TypeORM
+    // al eliminar el order item, las relaciones en order_item_product_modifiers se eliminan en cascada
 
     await this.orderItemRepository.delete(orderItem.id);
-  }
-
-  // OrderItemModifier methods
-  // Firma refactorizada para aceptar un objeto
-  async createOrderItemModifier(data: {
-    orderItemId: string;
-    productModifierId: string; // ID del ProductModifier (la opción específica)
-    quantity?: number;
-    price?: number | null;
-  }): Promise<OrderItemModifier> {
-    await this.findOrderItemById(data.orderItemId); // Verificar que el orderItem existe
-
-    // TODO: Aquí se podría obtener el precio del catálogo si data.price es null/undefined
-    // const productModifier = await this.productModifierRepository.findById(data.productModifierId);
-    // const finalPrice = data.price ?? productModifier?.price ?? 0;
-
-    const orderItemModifier = new OrderItemModifier();
-    orderItemModifier.id = uuidv4();
-    orderItemModifier.orderItemId = data.orderItemId;
-    orderItemModifier.productModifierId = data.productModifierId;
-    orderItemModifier.quantity = data.quantity ?? 1;
-    orderItemModifier.price = data.price ?? 0;
-
-    return this.orderItemModifierRepository.save(orderItemModifier);
-  }
-
-  async findOrderItemModifierById(id: string): Promise<OrderItemModifier> {
-    const orderItemModifier =
-      await this.orderItemModifierRepository.findById(id);
-
-    if (!orderItemModifier) {
-      throw new NotFoundException(`OrderItemModifier with ID ${id} not found`);
-    }
-
-    return orderItemModifier;
-  }
-
-  async findOrderItemModifiersByOrderItemId(
-    orderItemId: string,
-  ): Promise<OrderItemModifier[]> {
-    await this.findOrderItemById(orderItemId); // Verificar que el orderItem existe
-    return this.orderItemModifierRepository.findByOrderItemId(orderItemId);
-  }
-
-  async updateOrderItemModifier(
-    id: string,
-    updateOrderItemModifierDto: UpdateOrderItemModifierDto,
-  ): Promise<OrderItemModifier> {
-    const existingModifier = await this.findOrderItemModifierById(id);
-
-    // Crear objeto con datos actualizados
-    const updatedData = {
-      ...existingModifier,
-      productModifierId:
-        updateOrderItemModifierDto.productModifierId ??
-        existingModifier.productModifierId,
-      quantity:
-        updateOrderItemModifierDto.quantity ?? existingModifier.quantity,
-      price:
-        updateOrderItemModifierDto.price !== undefined
-          ? updateOrderItemModifierDto.price
-          : existingModifier.price, // Permite null
-    };
-
-    // Crear instancia y asignar propiedades
-    const updatedModifier = new OrderItemModifier();
-    updatedModifier.id = updatedData.id;
-    updatedModifier.orderItemId = updatedData.orderItemId;
-    updatedModifier.productModifierId = updatedData.productModifierId;
-    updatedModifier.quantity = updatedData.quantity;
-    updatedModifier.price = updatedData.price ?? 0; // Asegurar que sea number
-    // Asignar relaciones y timestamps existentes si es necesario para el repositorio
-    updatedModifier.orderItem = existingModifier.orderItem;
-    updatedModifier.createdAt = existingModifier.createdAt;
-    // updatedAt y deletedAt serán manejados por TypeORM o el repositorio
-    updatedModifier.deletedAt = existingModifier.deletedAt;
-
-    // Pasar el objeto creado con lógica de dominio
-    return this.orderItemModifierRepository.update(updatedModifier);
-  }
-
-  async deleteOrderItemModifier(id: string): Promise<void> {
-    const orderItemModifier = await this.findOrderItemModifierById(id);
-    await this.orderItemModifierRepository.delete(orderItemModifier.id);
   }
 
   // --- Ticket Impression Methods ---

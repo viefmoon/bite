@@ -24,7 +24,8 @@ export class UpdateAddressDto {
   @ApiPropertyOptional({
     type: String,
     example: 'Casa',
-    description: 'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
+    description:
+      'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
   })
   @IsOptional()
   @IsString()

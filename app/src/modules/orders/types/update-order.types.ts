@@ -2,13 +2,6 @@ import type { OrderType } from './orders.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
-// Interfaz para modificadores de items
-export interface OrderItemModifierDto {
-  productModifierId: string;
-  quantity?: number;
-  price?: number | null;
-}
-
 // Interfaz para items en el DTO de actualización
 export interface OrderItemDtoForBackend {
   id?: string;
@@ -18,7 +11,7 @@ export interface OrderItemDtoForBackend {
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
-  modifiers?: OrderItemModifierDto[];
+  productModifierIds?: string[]; // Ahora usa array de IDs directamente
 }
 
 // Interfaz para ajustes en el DTO

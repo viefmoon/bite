@@ -18,6 +18,8 @@ export class ModifierGroup {
 
   isActive: boolean;
 
+  sortOrder: number;
+
   productModifiers: ProductModifier[];
 
   products: Product[];

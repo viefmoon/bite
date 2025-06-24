@@ -70,7 +70,7 @@ export default function CustomerFormModal({
     defaultValues: {
       firstName: '',
       lastName: '',
-      phoneNumber: '',
+      whatsappPhoneNumber: '',
       email: '',
       birthDate: '',
       isActive: true,
@@ -82,7 +82,7 @@ export default function CustomerFormModal({
   useEffect(() => {
     if (editingItem) {
       // Extraer código de país del número si existe
-      let phoneWithoutCode = editingItem.phoneNumber || '';
+      let phoneWithoutCode = editingItem.whatsappPhoneNumber || '';
       let extractedCode = '+52'; // Por defecto México
 
       if (phoneWithoutCode.startsWith('+')) {
@@ -99,7 +99,7 @@ export default function CustomerFormModal({
       reset({
         firstName: editingItem.firstName,
         lastName: editingItem.lastName,
-        phoneNumber: phoneWithoutCode,
+        whatsappPhoneNumber: phoneWithoutCode,
         email: editingItem.email || '',
         birthDate: editingItem.birthDate
           ? new Date(editingItem.birthDate).toISOString().split('T')[0]
@@ -113,7 +113,7 @@ export default function CustomerFormModal({
       reset({
         firstName: '',
         lastName: '',
-        phoneNumber: '',
+        whatsappPhoneNumber: '',
         email: '',
         birthDate: '',
         isActive: true,
@@ -165,8 +165,8 @@ export default function CustomerFormModal({
     // Formatear el número de teléfono con el código de país si existe
     const formattedData = {
       ...data,
-      phoneNumber: data.phoneNumber
-        ? `${countryCode}${data.phoneNumber}`
+      whatsappPhoneNumber: data.whatsappPhoneNumber
+        ? `${countryCode}${data.whatsappPhoneNumber}`
         : undefined,
     };
 
@@ -307,7 +307,7 @@ export default function CustomerFormModal({
 
                 <Controller
                   control={control}
-                  name="phoneNumber"
+                  name="whatsappPhoneNumber"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputContainer}>
                       <View style={styles.phoneContainer}>
@@ -323,14 +323,14 @@ export default function CustomerFormModal({
                           outlineStyle={styles.inputOutline}
                         />
                         <TextInput
-                          label="Teléfono"
+                          label="WhatsApp"
                           value={formatPhoneNumber(value || '')}
                           onChangeText={(text) => {
                             const cleaned = text.replace(/\D/g, '');
                             onChange(cleaned);
                           }}
                           onBlur={onBlur}
-                          error={!!errors.phoneNumber}
+                          error={!!errors.whatsappPhoneNumber}
                           mode="outlined"
                           placeholder="55 1234 5678"
                           keyboardType="phone-pad"
@@ -340,9 +340,9 @@ export default function CustomerFormModal({
                           outlineStyle={styles.inputOutline}
                         />
                       </View>
-                      {errors.phoneNumber && (
-                        <HelperText type="error" visible={!!errors.phoneNumber}>
-                          {errors.phoneNumber.message}
+                      {errors.whatsappPhoneNumber && (
+                        <HelperText type="error" visible={!!errors.whatsappPhoneNumber}>
+                          {errors.whatsappPhoneNumber.message}
                         </HelperText>
                       )}
                     </View>
@@ -593,6 +593,42 @@ export default function CustomerFormModal({
                               : 'Sin mensajes'}
                           </Text>
                         </View>
+                      </View>
+                    </View>
+                  </Surface>
+                </View>
+              )}
+
+              {/* Sección de Stripe - Solo en modo edición */}
+              {editingItem?.stripeCustomerId && (
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle} variant="titleMedium">
+                      Información de Pago
+                    </Text>
+                  </View>
+
+                  <Surface style={styles.stripeCard} elevation={1}>
+                    <View style={styles.stripeContent}>
+                      <Icon
+                        source="credit-card"
+                        size={24}
+                        color={theme.colors.primary}
+                      />
+                      <View style={styles.stripeInfo}>
+                        <Text
+                          variant="bodySmall"
+                          style={styles.stripeLabel}
+                        >
+                          Stripe Customer ID
+                        </Text>
+                        <Text
+                          variant="bodyMedium"
+                          style={styles.stripeValue}
+                          selectable
+                        >
+                          {editingItem.stripeCustomerId}
+                        </Text>
                       </View>
                     </View>
                   </Surface>
@@ -925,6 +961,29 @@ const getStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.outlineVariant,
       marginHorizontal: theme.spacing.m,
     },
+    stripeCard: {
+      borderRadius: theme.roundness * 2,
+      padding: theme.spacing.m,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    stripeContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.m,
+    },
+    stripeInfo: {
+      flex: 1,
+    },
+    stripeLabel: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    stripeValue: {
+      color: theme.colors.onSurface,
+      fontWeight: '500',
+      fontFamily: 'monospace',
+    },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
@@ -961,6 +1020,10 @@ const getStyles = (theme: AppTheme) =>
     addressInfo: {
       flex: 1,
       marginLeft: theme.spacing.xs,
+    },
+    addressName: {
+      fontWeight: '600',
+      color: theme.colors.primary,
     },
     addressStreet: {
       fontWeight: '500',

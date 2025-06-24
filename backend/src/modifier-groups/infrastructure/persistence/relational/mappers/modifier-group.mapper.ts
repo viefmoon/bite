@@ -32,6 +32,7 @@ export class ModifierGroupMapper extends BaseMapper<
     domain.isRequired = entity.isRequired;
     domain.allowMultipleSelections = entity.allowMultipleSelections;
     domain.isActive = entity.isActive;
+    domain.sortOrder = entity.sortOrder;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -54,6 +55,7 @@ export class ModifierGroupMapper extends BaseMapper<
     entity.isRequired = domain.isRequired;
     entity.allowMultipleSelections = domain.allowMultipleSelections;
     entity.isActive = domain.isActive;
+    entity.sortOrder = domain.sortOrder;
     // No mapear products al crear/actualizar para evitar problemas
     // La relación se maneja desde el lado del producto
     return entity;

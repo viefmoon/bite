@@ -9,8 +9,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CreateOrderItemModifierDto } from './create-order-item-modifier.dto';
 import { CreateSelectedPizzaCustomizationDto } from '../../selected-pizza-customizations/dto/create-selected-pizza-customization.dto';
+import { ProductModifierDto } from './product-modifier.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderItemDto {
   @IsNotEmpty()
@@ -39,11 +40,16 @@ export class CreateOrderItemDto {
   @IsString()
   preparationNotes?: string;
 
+  @ApiProperty({
+    type: [ProductModifierDto],
+    description: 'Lista de modificadores del producto',
+    required: false,
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateOrderItemModifierDto)
-  modifiers?: CreateOrderItemModifierDto[];
+  @Type(() => ProductModifierDto)
+  productModifiers?: ProductModifierDto[];
 
   @IsOptional()
   @IsArray()

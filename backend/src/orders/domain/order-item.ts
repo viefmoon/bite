@@ -1,7 +1,7 @@
 import { Order } from './order';
 import { Product } from '../../products/domain/product';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
-import { OrderItemModifier } from './order-item-modifier';
+import { ProductModifier } from '../../product-modifiers/domain/product-modifier';
 import { Adjustment } from '../../adjustments/domain/adjustment';
 import { SelectedPizzaCustomization } from '../../selected-pizza-customizations/domain/selected-pizza-customization';
 
@@ -26,7 +26,7 @@ export class OrderItem {
   order?: Order;
   product?: Product;
   productVariant?: ProductVariant | null;
-  modifiers?: OrderItemModifier[];
+  productModifiers?: ProductModifier[];
   adjustments?: Adjustment[];
   selectedPizzaCustomizations?: SelectedPizzaCustomization[];
   createdAt?: Date;

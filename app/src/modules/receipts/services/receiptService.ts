@@ -112,7 +112,8 @@ export const receiptService = {
       filteredData = filteredData.filter(
         (order) =>
           order.orderNumber?.toString().includes(searchLower) ||
-          order.customerName?.toLowerCase().includes(searchLower) ||
+          // TODO: Implementar búsqueda por customerName cuando esté disponible
+          // order.customerName?.toLowerCase().includes(searchLower) ||
           order.dailyNumber?.toString().includes(searchLower),
       );
     }

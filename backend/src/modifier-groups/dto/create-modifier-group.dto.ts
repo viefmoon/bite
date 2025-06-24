@@ -79,4 +79,16 @@ export class CreateModifierGroupDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    default: 0,
+    description: 'Orden de visualización del grupo de modificadores',
+    required: false,
+  })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  sortOrder?: number;
 }

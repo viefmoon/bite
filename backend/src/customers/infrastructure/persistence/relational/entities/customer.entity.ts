@@ -27,16 +27,12 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 100, nullable: true })
   lastName: string | null;
 
-  @Index('uq_customer_phone', { unique: true })
+  @Index('uq_customer_whatsapp', { unique: true })
   @Column({ type: 'varchar', length: 20 })
-  phoneNumber: string;
+  whatsappPhoneNumber: string;
 
-  @Index('uq_customer_whatsapp', {
-    unique: true,
-    where: 'whatsappPhoneNumber IS NOT NULL',
-  })
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  whatsappPhoneNumber: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  stripeCustomerId: string | null;
 
   @Index('uq_customer_email', { unique: true, where: 'email IS NOT NULL' })
   @Column({ type: 'varchar', length: 255, nullable: true })

@@ -38,20 +38,11 @@ export class CreateCustomerDto {
   @ApiProperty({
     type: String,
     example: '+525512345678',
-    description: 'Número de teléfono del cliente (obligatorio)',
+    description: 'Número de WhatsApp del cliente (obligatorio)',
   })
-  @IsNotEmpty({ message: 'El número de teléfono es obligatorio' })
-  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
-  phoneNumber: string;
-
-  @ApiPropertyOptional({
-    type: String,
-    example: '+525587654321',
-    description: 'Número de WhatsApp del cliente (opcional, debe ser único)',
-  })
-  @IsOptional()
+  @IsNotEmpty({ message: 'El número de WhatsApp es obligatorio' })
   @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
-  whatsappPhoneNumber?: string;
+  whatsappPhoneNumber: string;
 
   @ApiPropertyOptional({
     type: String,

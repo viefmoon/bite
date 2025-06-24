@@ -38,12 +38,12 @@ export class FindAllCustomersDto extends PaginationParams {
   email?: string;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por número de teléfono exacto',
+    description: 'Filtrar por número de WhatsApp exacto',
     example: '+525512345678',
   })
   @IsOptional()
-  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
-  phoneNumber?: string;
+  @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
+  whatsappPhoneNumber?: string;
 
   @ApiPropertyOptional({
     description: 'Filtrar por estado activo',

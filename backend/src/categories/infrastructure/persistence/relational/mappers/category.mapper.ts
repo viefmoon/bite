@@ -25,6 +25,7 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     domain.name = entity.name;
     domain.description = entity.description;
     domain.isActive = entity.isActive;
+    domain.sortOrder = entity.sortOrder;
     domain.photoId = entity.photoId;
     domain.photo = entity.photo ? this.fileMapper.toDomain(entity.photo) : null;
     domain.subcategories = mapArray(entity.subcategories, (sub) =>
@@ -43,6 +44,7 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
+    entity.sortOrder = domain.sortOrder;
     // Solo asignar photoId si está presente en el DTO
     if (domain.photoId !== undefined) {
       entity.photoId = domain.photoId;

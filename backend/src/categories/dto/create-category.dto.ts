@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -44,4 +45,14 @@ export class CreateCategoryDto {
   @IsUUID()
   @IsOptional()
   photoId?: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    default: 0,
+  })
+  @TransformDefault(0)
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
 }

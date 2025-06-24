@@ -91,7 +91,8 @@ export class ModifierGroupsRelationalRepository
       'modifierGroup.productModifiers',
       'productModifiers',
     );
-    queryBuilder.orderBy('modifierGroup.name', 'ASC');
+    queryBuilder.orderBy('modifierGroup.sortOrder', 'ASC');
+    queryBuilder.addOrderBy('modifierGroup.name', 'ASC');
     queryBuilder.addOrderBy('productModifiers.sortOrder', 'ASC');
 
     queryBuilder.skip(skip).take(limit);

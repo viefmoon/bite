@@ -34,20 +34,11 @@ export class UpdateCustomerDto {
   @ApiPropertyOptional({
     type: String,
     example: '+525512345678',
-    description: 'Número de teléfono del cliente',
-  })
-  @IsOptional()
-  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' })
-  phoneNumber?: string;
-
-  @ApiPropertyOptional({
-    type: String,
-    example: '+525587654321',
-    description: 'Número de WhatsApp del cliente (debe ser único)',
+    description: 'Número de WhatsApp del cliente',
   })
   @IsOptional()
   @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
-  whatsappPhoneNumber?: string | null;
+  whatsappPhoneNumber?: string;
 
   @ApiPropertyOptional({
     type: String,

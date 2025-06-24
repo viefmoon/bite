@@ -154,6 +154,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
       isRequired: false,
       allowMultipleSelections: false,
       isActive: true,
+      sortOrder: 0,
     },
   });
 
@@ -170,6 +171,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
           isRequired: initialData.isRequired ?? false,
           allowMultipleSelections: initialData.allowMultipleSelections ?? false,
           isActive: initialData.isActive ?? true,
+          sortOrder: initialData.sortOrder ?? 0,
         });
       } else {
         reset({
@@ -180,6 +182,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
           isRequired: false,
           allowMultipleSelections: false,
           isActive: true,
+          sortOrder: 0,
         });
       }
     }
@@ -407,6 +410,33 @@ const ModifierGroupFormModal: React.FC<Props> = ({
                 style={styles.helperText}
               >
                 {errors.isRequired.message}
+              </HelperText>
+            )}
+
+            <Controller
+              name="sortOrder"
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  label="Orden de visualización"
+                  value={String(value ?? 0)}
+                  onChangeText={(text) => onChange(parseInt(text, 10) || 0)}
+                  onBlur={onBlur}
+                  error={!!errors.sortOrder}
+                  style={styles.input}
+                  keyboardType="numeric"
+                  disabled={isSubmitting}
+                  mode="outlined"
+                />
+              )}
+            />
+            {errors.sortOrder && (
+              <HelperText
+                type="error"
+                visible={!!errors.sortOrder}
+                style={styles.helperText}
+              >
+                {errors.sortOrder.message}
               </HelperText>
             )}
 

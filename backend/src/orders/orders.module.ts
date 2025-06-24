@@ -30,7 +30,12 @@ import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.m
     RestaurantConfigModule,
   ],
   controllers: [OrdersController, TicketImpressionsController],
-  providers: [OrdersService, OrderSubscriber, OrderChangeLogService, PizzaPriceCalculatorService],
+  providers: [
+    OrdersService,
+    OrderSubscriber,
+    OrderChangeLogService,
+    PizzaPriceCalculatorService,
+  ],
   exports: [
     OrdersService,
     OrderChangeLogService,

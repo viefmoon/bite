@@ -29,6 +29,9 @@ export class CategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: 0 })
+  sortOrder: number;
+
   @Column({ name: 'photo_id', nullable: true })
   photoId: string | null;
 

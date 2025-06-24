@@ -24,9 +24,6 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { OrderItem } from './domain/order-item';
-import { OrderItemModifier } from './domain/order-item-modifier';
-import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto';
-import { CreateOrderItemModifierDto } from './dto/create-order-item-modifier.dto';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import {
   ApiBearerAuth,
@@ -332,98 +329,6 @@ export class OrdersController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   removeOrderItem(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.ordersService.deleteOrderItem(id);
-  }
-  // OrderItemModifier endpoints
-  @Post('items/:orderItemId/modifiers')
-  @ApiOperation({ summary: 'Create a new modifier for an order item' })
-  @ApiResponse({
-    status: 201,
-    description: 'The order item modifier has been successfully created.',
-    type: OrderItemModifier,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  createOrderItemModifier(
-    @Param('orderItemId', ParseUUIDPipe) orderItemId: string,
-    // Corregir tipo de DTO
-    @Body() createDto: CreateOrderItemModifierDto,
-  ): Promise<OrderItemModifier> {
-    // Corregir llamada al servicio para pasar un objeto
-    return this.ordersService.createOrderItemModifier({
-      orderItemId: orderItemId,
-      productModifierId: createDto.productModifierId,
-      quantity: createDto.quantity,
-      price: createDto.price,
-    });
-  }
-
-  @Get('items/:orderItemId/modifiers')
-  @ApiOperation({ summary: 'Get all modifiers for a specific order item' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all modifiers for the specified order item.',
-    type: [OrderItemModifier],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  findOrderItemModifiersByOrderItemId(
-    @Param('orderItemId', ParseUUIDPipe) orderItemId: string,
-  ): Promise<OrderItemModifier[]> {
-    return this.ordersService.findOrderItemModifiersByOrderItemId(orderItemId);
-  }
-
-  @Get('items/modifiers/:id')
-  @ApiOperation({ summary: 'Get a specific order item modifier by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the order item modifier with the specified ID.',
-    type: OrderItemModifier,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  findOrderItemModifierById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderItemModifier> {
-    return this.ordersService.findOrderItemModifierById(id);
-  }
-
-  @Patch('items/modifiers/:id')
-  @ApiOperation({ summary: 'Update a specific order item modifier by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The order item modifier has been successfully updated.',
-    type: OrderItemModifier,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  updateOrderItemModifier(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateOrderItemModifierDto: UpdateOrderItemModifierDto,
-  ): Promise<OrderItemModifier> {
-    return this.ordersService.updateOrderItemModifier(
-      id,
-      updateOrderItemModifierDto,
-    );
-  }
-
-  @Delete('items/modifiers/:id')
-  @ApiOperation({ summary: 'Delete a specific order item modifier by ID' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'The order item modifier has been successfully deleted.',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  removeOrderItemModifier(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<void> {
-    return this.ordersService.deleteOrderItemModifier(id);
   }
 
   // --- Historial Endpoints ---

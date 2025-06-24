@@ -55,6 +55,10 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
     const entities = await this.ormRepo.find({
       where,
       relations: ['photo'],
+      order: {
+        sortOrder: 'ASC',
+        name: 'ASC',
+      },
     });
     return entities
       .map((e) => this.mapper.toDomain(e))
@@ -74,9 +78,18 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
       .leftJoinAndSelect('subcategory.photo', 'subcategoryPhoto')
       .leftJoinAndSelect('product.photo', 'productPhoto')
       .orderBy({
+        'category.sortOrder': 'ASC',
         'category.name': 'ASC',
+        'subcategory.sortOrder': 'ASC',
         'subcategory.name': 'ASC',
+        'product.sortOrder': 'ASC',
         'product.name': 'ASC',
+        'productVariant.sortOrder': 'ASC',
+        'productVariant.name': 'ASC',
+        'modifierGroup.sortOrder': 'ASC',
+        'modifierGroup.name': 'ASC',
+        'modifier.sortOrder': 'ASC',
+        'modifier.name': 'ASC',
       });
 
     const entities = await queryBuilder.getMany();

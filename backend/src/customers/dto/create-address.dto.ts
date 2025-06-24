@@ -24,7 +24,8 @@ export class CreateAddressDto {
   @ApiProperty({
     type: String,
     example: 'Casa',
-    description: 'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
+    description:
+      'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
   })
   @IsNotEmpty({ message: 'El nombre de la dirección es obligatorio' })
   @IsString()

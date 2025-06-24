@@ -36,7 +36,7 @@ export abstract class CustomerRepository
   ): Promise<NullableType<Customer>>;
 
   abstract findByPhone(
-    phone: Customer['phoneNumber'],
+    phone: Customer['whatsappPhoneNumber'],
   ): Promise<NullableType<Customer>>;
 
   abstract findBannedCustomers(): Promise<Customer[]>;

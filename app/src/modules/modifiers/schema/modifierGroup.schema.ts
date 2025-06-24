@@ -12,6 +12,7 @@ const modifierGroupBaseSchemaForForm = z.object({
   isRequired: z.boolean().optional(),
   allowMultipleSelections: z.boolean().optional(),
   isActive: z.boolean().optional(),
+  sortOrder: z.number().optional().default(0),
 });
 
 // Schema de validación para el formulario (usa el schema base local)
@@ -72,6 +73,7 @@ export const createModifierGroupSchema =
     isRequired: data.isRequired ?? false,
     allowMultipleSelections: data.allowMultipleSelections ?? false,
     isActive: data.isActive ?? true,
+    sortOrder: data.sortOrder ?? 0,
     maxSelections: data.allowMultipleSelections ? (data.maxSelections ?? 1) : 1,
   }));
 // Tipo inferido para DTO de creación

@@ -88,7 +88,7 @@ export class CustomersService extends BaseCrudService<
     const customerUpdatePayload: UpdateCustomerDto = {
       firstName: updateCustomerDto.firstName,
       lastName: updateCustomerDto.lastName,
-      phoneNumber: updateCustomerDto.phoneNumber,
+      whatsappPhoneNumber: updateCustomerDto.whatsappPhoneNumber,
       email: updateCustomerDto.email,
       birthDate: updateCustomerDto.birthDate,
       isActive: updateCustomerDto.isActive,

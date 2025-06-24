@@ -203,11 +203,12 @@ export const ReceiptsScreen: React.FC = () => {
               {getOrderTypeLabel(item.orderType)}
               {item.table && ` - ${item.table.area?.name} ${item.table.name}`}
             </Text>
+            {/* TODO: Implementar customerName cuando esté disponible en el backend
             {item.customerName && (
               <Text variant="bodySmall" style={styles.customerText}>
                 Cliente: {item.customerName}
               </Text>
-            )}
+            )} */}
             <Text variant="bodySmall" style={styles.itemsCountText}>
               {item.orderItems?.length || 0} productos
             </Text>
