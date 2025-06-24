@@ -23,6 +23,16 @@ export class UpdateAddressDto {
 
   @ApiPropertyOptional({
     type: String,
+    example: 'Casa',
+    description: 'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  name?: string;
+
+  @ApiPropertyOptional({
+    type: String,
     example: 'Calle Falsa',
     description: 'Nombre de la calle',
   })
@@ -104,12 +114,12 @@ export class UpdateAddressDto {
   @ApiPropertyOptional({
     type: String,
     example: 'Entre Calle A y Calle B, portón verde',
-    description: 'Referencias adicionales para la entrega',
+    description: 'Instrucciones adicionales para la entrega',
   })
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  references?: string | null; // Permitir null para borrar
+  deliveryInstructions?: string | null; // Permitir null para borrar
 
   @ApiPropertyOptional({
     type: Number,

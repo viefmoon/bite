@@ -5,6 +5,8 @@ export class Address {
 
   customerId: string;
 
+  name: string;
+
   street: string;
 
   number: string;
@@ -21,7 +23,7 @@ export class Address {
 
   country?: string;
 
-  references?: string;
+  deliveryInstructions?: string;
 
   latitude?: number;
 

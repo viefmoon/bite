@@ -32,6 +32,8 @@ import {
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
+import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
+import { OrderType } from './domain/enums/order-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -45,6 +47,7 @@ export class OrdersService {
     @Inject(TICKET_IMPRESSION_REPOSITORY)
     private readonly ticketImpressionRepository: TicketImpressionRepository,
     private readonly customersService: CustomersService,
+    private readonly restaurantConfigService: RestaurantConfigService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -59,6 +62,27 @@ export class OrdersService {
         );
       }
     }
+
+    // Obtener la configuración del restaurante
+    const restaurantConfig = await this.restaurantConfigService.getConfig();
+    
+    // Calcular el tiempo estimado de entrega basado en el tipo de orden
+    let estimatedMinutes = 0;
+    switch (createOrderDto.orderType) {
+      case OrderType.DINE_IN:
+        estimatedMinutes = restaurantConfig.estimatedDineInTime;
+        break;
+      case OrderType.TAKE_AWAY:
+        estimatedMinutes = restaurantConfig.estimatedPickupTime;
+        break;
+      case OrderType.DELIVERY:
+        estimatedMinutes = restaurantConfig.estimatedDeliveryTime;
+        break;
+    }
+    
+    // Calcular la fecha/hora estimada de entrega
+    const now = new Date();
+    const estimatedDeliveryTime = new Date(now.getTime() + estimatedMinutes * 60000);
 
     // Crear la información de entrega (siempre requerida)
     const deliveryInfo: DeliveryInfo = {
@@ -81,6 +105,7 @@ export class OrdersService {
       customerId: createOrderDto.customerId || null,
       isFromWhatsApp: createOrderDto.isFromWhatsApp || false,
       deliveryInfo: deliveryInfo,
+      estimatedDeliveryTime: estimatedDeliveryTime,
     });
 
     if (createOrderDto.items && createOrderDto.items.length > 0) {

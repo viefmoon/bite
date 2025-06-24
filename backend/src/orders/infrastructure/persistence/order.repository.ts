@@ -18,6 +18,7 @@ export abstract class OrderRepository {
     customerId?: string | null;
     isFromWhatsApp?: boolean;
     deliveryInfo: DeliveryInfo;
+    estimatedDeliveryTime?: Date | null;
   }): Promise<Order>;
 
   abstract findManyWithPagination({

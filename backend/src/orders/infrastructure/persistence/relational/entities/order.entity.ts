@@ -110,6 +110,9 @@ export class OrderEntity extends EntityRelationalHelper {
   })
   deliveryInfo: DeliveryInfoEntity;
 
+  @Column({ name: 'estimated_delivery_time', type: 'timestamptz', nullable: true })
+  estimatedDeliveryTime: Date | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

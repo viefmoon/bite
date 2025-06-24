@@ -25,6 +25,7 @@ export interface RestaurantConfig {
   acceptingOrders: boolean;
   estimatedPickupTime: number;
   estimatedDeliveryTime: number;
+  estimatedDineInTime: number;
   openingGracePeriod: number;
   closingGracePeriod: number;
   timeZone: string;
@@ -54,6 +55,7 @@ export interface UpdateRestaurantConfigDto {
   acceptingOrders?: boolean;
   estimatedPickupTime?: number;
   estimatedDeliveryTime?: number;
+  estimatedDineInTime?: number;
   openingGracePeriod?: number;
   closingGracePeriod?: number;
   timeZone?: string;

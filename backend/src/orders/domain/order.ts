@@ -55,4 +55,6 @@ export class Order {
   isFromWhatsApp?: boolean;
 
   deliveryInfo: DeliveryInfo;
+
+  estimatedDeliveryTime?: Date | null;
 }

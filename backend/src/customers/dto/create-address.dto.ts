@@ -23,6 +23,16 @@ export class CreateAddressDto {
 
   @ApiProperty({
     type: String,
+    example: 'Casa',
+    description: 'Nombre o identificador de la dirección (ej: Casa, Oficina, Casa de mamá)',
+  })
+  @IsNotEmpty({ message: 'El nombre de la dirección es obligatorio' })
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @ApiProperty({
+    type: String,
     example: 'Calle Falsa',
     description: 'Nombre de la calle',
   })
@@ -104,12 +114,12 @@ export class CreateAddressDto {
   @ApiPropertyOptional({
     type: String,
     example: 'Entre Calle A y Calle B, portón verde',
-    description: 'Referencias adicionales para la entrega',
+    description: 'Instrucciones adicionales para la entrega',
   })
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  references?: string;
+  deliveryInstructions?: string;
 
   @ApiPropertyOptional({
     type: Number,

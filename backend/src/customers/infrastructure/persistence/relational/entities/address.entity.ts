@@ -30,6 +30,9 @@ export class AddressEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'customer_id' }) // Especificar la columna de unión
   customer: CustomerEntity; // Relación muchos a uno con Customer
 
+  @Column({ type: 'varchar', length: 100, nullable: false })
+  name: string;
+
   @Column({ type: 'varchar', length: 200 })
   street: string;
 
@@ -55,8 +58,8 @@ export class AddressEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 100, nullable: true })
   country: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  references: string | null;
+  @Column({ type: 'text', nullable: true, name: 'delivery_instructions' })
+  deliveryInstructions: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
   latitude: number | null;

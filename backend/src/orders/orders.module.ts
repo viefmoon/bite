@@ -14,6 +14,7 @@ import { RelationalOrderPersistenceModule } from './infrastructure/persistence/r
 import { CommonModule } from '../common/common.module';
 import { CustomersModule } from '../customers/customers.module';
 import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.service';
+import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.s
     forwardRef(() => ProductVariantsModule),
     forwardRef(() => ProductModifiersModule),
     CustomersModule,
+    RestaurantConfigModule,
   ],
   controllers: [OrdersController, TicketImpressionsController],
   providers: [OrdersService, OrderSubscriber, OrderChangeLogService, PizzaPriceCalculatorService],

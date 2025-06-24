@@ -13,6 +13,7 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     const domain = new Address();
     domain.id = entity.id;
     domain.customerId = entity.customerId;
+    domain.name = entity.name;
     domain.street = entity.street;
     domain.number = entity.number;
     domain.interiorNumber = entity.interiorNumber ?? undefined;
@@ -21,7 +22,7 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     domain.state = entity.state ?? undefined;
     domain.zipCode = entity.zipCode ?? undefined;
     domain.country = entity.country ?? undefined;
-    domain.references = entity.references ?? undefined;
+    domain.deliveryInstructions = entity.deliveryInstructions ?? undefined;
     domain.latitude = entity.latitude ?? undefined;
     domain.longitude = entity.longitude ?? undefined;
     domain.isDefault = entity.isDefault;
@@ -39,6 +40,7 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     const entity = new AddressEntity();
     entity.id = domain.id;
     entity.customer = { id: domain.customerId } as CustomerEntity;
+    entity.name = domain.name;
     entity.street = domain.street;
     entity.number = domain.number;
     entity.interiorNumber = domain.interiorNumber ?? null;
@@ -47,7 +49,7 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     entity.state = domain.state ?? null;
     entity.zipCode = domain.zipCode ?? null;
     entity.country = domain.country ?? null;
-    entity.references = domain.references ?? null;
+    entity.deliveryInstructions = domain.deliveryInstructions ?? null;
     entity.latitude = domain.latitude ?? null;
     entity.longitude = domain.longitude ?? null;
     entity.isDefault = domain.isDefault;
