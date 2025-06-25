@@ -225,6 +225,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                        { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -251,6 +252,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -281,6 +283,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -313,6 +316,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -343,6 +347,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -371,6 +376,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -402,6 +408,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -434,6 +441,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -447,7 +455,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 7,
+                    index: 8,
                     routes: [
                       { name: 'OrdersStack' },
                       { name: 'ReceiptsStack' },
@@ -466,6 +474,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -475,7 +484,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             {renderDrawerItem('PrintersStack', 'Impresoras', 'printer', () => {
               props.navigation.dispatch(
                 CommonActions.reset({
-                  index: 8,
+                  index: 9,
                   routes: [
                     { name: 'OrdersStack' },
                     { name: 'ReceiptsStack' },
@@ -483,6 +492,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'MenuStack' },
                     { name: 'AvailabilityStack' },
                     { name: 'ModifiersStack' },
+                    { name: 'PizzaCustomizationsStack' },
                     { name: 'PreparationScreensStack' },
                     { name: 'AreasTablesStack' },
                     {
@@ -493,6 +503,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -505,7 +516,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 9,
+                    index: 10,
                     routes: [
                       { name: 'OrdersStack' },
                       { name: 'ReceiptsStack' },
@@ -524,6 +535,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                         },
                       },
                       { name: 'CustomersStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -537,7 +549,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               () => {
                 props.navigation.dispatch(
                   CommonActions.reset({
-                    index: 10,
+                    index: 11,
                     routes: [
                       { name: 'OrdersStack' },
                       { name: 'ReceiptsStack' },
@@ -554,6 +566,40 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                         name: 'CustomersStack',
                         state: {
                           routes: [{ name: 'Customers' }],
+                        },
+                      },
+                        { name: 'SyncStack' },
+                    ],
+                  }),
+                );
+              },
+            )}
+
+            {renderDrawerItem(
+              'SyncStack',
+              'Sincronización',
+              'sync',
+              () => {
+                props.navigation.dispatch(
+                  CommonActions.reset({
+                    index: 12,
+                    routes: [
+                      { name: 'OrdersStack' },
+                      { name: 'ReceiptsStack' },
+                      { name: 'OrderFinalizationStack' },
+                      { name: 'MenuStack' },
+                      { name: 'AvailabilityStack' },
+                      { name: 'ModifiersStack' },
+                      { name: 'PizzaCustomizationsStack' },
+                      { name: 'PreparationScreensStack' },
+                      { name: 'AreasTablesStack' },
+                      { name: 'PrintersStack' },
+                      { name: 'RestaurantConfigStack' },
+                      { name: 'CustomersStack' },
+                      {
+                        name: 'SyncStack',
+                        state: {
+                          routes: [{ name: 'SyncStatus' }],
                         },
                       },
                     ],

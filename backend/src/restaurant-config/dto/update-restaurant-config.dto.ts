@@ -176,7 +176,6 @@ export class UpdateRestaurantConfigDto {
     additionalProperties: true,
   })
   @IsOptional()
-  @IsObject()
   deliveryCoverageArea?: any | null;
 
   // Horarios de operación

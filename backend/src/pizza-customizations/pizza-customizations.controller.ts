@@ -19,7 +19,10 @@ import { PizzaCustomization } from './domain/pizza-customization';
 import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('pizza-customizations')
-@Controller('pizza-customizations')
+@Controller({
+  path: 'pizza-customizations',
+  version: '1',
+})
 export class PizzaCustomizationsController {
   constructor(
     private readonly pizzaCustomizationsService: PizzaCustomizationsService,

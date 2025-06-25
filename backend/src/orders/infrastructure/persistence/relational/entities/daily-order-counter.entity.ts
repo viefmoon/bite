@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -12,6 +13,10 @@ import { OrderEntity } from './order.entity';
 
 @Entity({
   name: 'daily_order_counter',
+})
+@Index('UQ_daily_order_counter_date', ['date'], {
+  unique: true,
+  where: '"deletedAt" IS NULL',
 })
 export class DailyOrderCounterEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')

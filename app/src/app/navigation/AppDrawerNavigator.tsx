@@ -13,6 +13,7 @@ import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization
 import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
 import { CustomersStackNavigator } from '../../modules/customers/navigation/CustomersStackNavigator';
 import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizations/navigation/PizzaCustomizationsStackNavigator';
+import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -129,6 +130,9 @@ export function AppDrawerNavigator() {
                 break;
               case 'PizzaCustomizationsStack':
                 title = 'Personalización Pizzas';
+                break;
+              case 'SyncStack':
+                title = 'Sincronización';
                 break;
 
               default:
@@ -273,6 +277,16 @@ export function AppDrawerNavigator() {
             title: 'Clientes',
             drawerIcon: ({ color, size }) => (
               <Icon source="account-group-outline" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="SyncStack"
+          component={SyncStackNavigator}
+          options={{
+            title: 'Sincronización',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="sync" color={color} size={size} />
             ),
           }}
         />

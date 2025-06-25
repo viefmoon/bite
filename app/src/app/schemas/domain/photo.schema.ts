@@ -5,7 +5,7 @@ import { z } from 'zod';
  * Fuente de verdad centralizada.
  */
 export const photoSchema = z.object({
-  id: z.string().uuid(),  // ID puede ser custom format
+  id: z.string().uuid(), // ID puede ser custom format
   path: z.string().url(), // Usar url() como en products/subcategories
 });
 

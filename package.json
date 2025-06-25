@@ -11,14 +11,12 @@
     "app:start": "npm run start --workspace=app",
     "install:all": "npm install",
     "lint": "npm run lint --workspaces --if-present",
-    "format": "npm run format --workspaces --if-present",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "format": "npm run format --workspaces --if-present"
   },
   "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "@nestjs/cli": "^10.0.0"
+    "typescript": "^5.0.0"
   },
   "version": "1.0.0"
 }

@@ -7,24 +7,18 @@ export const createSubCategoryDtoSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional().nullable(),
   isActive: z.boolean().optional().default(true),
-  categoryId: z.string().uuid('Debe seleccionar una categoría válida'),
-  photoId: z.string().uuid().optional().nullable(),
+  categoryId: z.string().min(1, 'Debe seleccionar una categoría válida'),
+  photoId: z.string().optional().nullable(),
   imageUri: z.string().nullable().optional(),
   sortOrder: z.number().optional().default(0),
 });
 export type CreateSubCategoryDto = z.infer<typeof createSubCategoryDtoSchema>;
 
-export const updateSubCategoryDtoSchema = createSubCategoryDtoSchema
-  .partial()
-  .extend({
-    photoId: z.string().uuid().nullable().optional(),
-    imageUri: z.string().nullable().optional(),
-    sortOrder: z.number().optional(),
-  });
+export const updateSubCategoryDtoSchema = createSubCategoryDtoSchema.partial();
 export type UpdateSubCategoryDto = z.infer<typeof updateSubCategoryDtoSchema>;
 
 export const findAllSubcategoriesDtoSchema = baseListQuerySchema.extend({
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 

@@ -1,3 +1,8 @@
+export interface DeliveryCoveragePoint {
+  lat: number;
+  lng: number;
+}
+
 export interface BusinessHours {
   id: string;
   dayOfWeek: number; // 0 = Domingo, 1 = Lunes, ... 6 = Sábado
@@ -31,7 +36,7 @@ export interface RestaurantConfig {
   timeZone: string;
 
   // Configuración de delivery
-  deliveryCoverageArea: any | null;
+  deliveryCoverageArea: DeliveryCoveragePoint[] | null;
 
   // Relaciones
   businessHours: BusinessHours[];
@@ -61,7 +66,7 @@ export interface UpdateRestaurantConfigDto {
   timeZone?: string;
 
   // Configuración de delivery
-  deliveryCoverageArea?: any | null;
+  deliveryCoverageArea?: DeliveryCoveragePoint[] | null;
 
   // Horarios
   businessHours?: CreateBusinessHoursDto[];

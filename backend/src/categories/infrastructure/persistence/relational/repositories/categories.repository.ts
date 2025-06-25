@@ -74,6 +74,8 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
       .leftJoinAndSelect('product.variants', 'productVariant')
       .leftJoinAndSelect('product.modifierGroups', 'modifierGroup')
       .leftJoinAndSelect('modifierGroup.productModifiers', 'modifier')
+      .leftJoinAndSelect('product.pizzaCustomizations', 'pizzaCustomization')
+      .leftJoinAndSelect('product.pizzaConfiguration', 'pizzaConfiguration')
       .leftJoinAndSelect('category.photo', 'categoryPhoto')
       .leftJoinAndSelect('subcategory.photo', 'subcategoryPhoto')
       .leftJoinAndSelect('product.photo', 'productPhoto')

@@ -31,6 +31,7 @@ export class SubcategoriesService {
     subcategory.description = createSubcategoryDto.description || null;
     subcategory.isActive = createSubcategoryDto.isActive ?? true;
     subcategory.categoryId = createSubcategoryDto.categoryId;
+    subcategory.sortOrder = createSubcategoryDto.sortOrder ?? 0;
 
     if (createSubcategoryDto.photoId) {
       subcategory.photoId = createSubcategoryDto.photoId;
@@ -73,6 +74,8 @@ export class SubcategoriesService {
       updateSubcategoryDto.isActive ?? existingSubcategory.isActive;
     subcategory.categoryId =
       updateSubcategoryDto.categoryId ?? existingSubcategory.categoryId;
+    subcategory.sortOrder =
+      updateSubcategoryDto.sortOrder ?? existingSubcategory.sortOrder;
 
     if (updateSubcategoryDto.photoId !== undefined) {
       subcategory.photoId = updateSubcategoryDto.photoId;
