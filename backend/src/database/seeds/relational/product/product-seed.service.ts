@@ -472,7 +472,7 @@ export class ProductSeedService {
         EntityPrefix.PIZZA_CUSTOMIZATION,
         'pizza_customization',
       );
-      
+
       await this.pizzaCustomizationRepository.save(
         this.pizzaCustomizationRepository.create({
           id,
@@ -748,7 +748,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT,
           'product',
         );
-        
+
         await this.productRepository.save(
           this.productRepository.create({
             id,
@@ -780,7 +780,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const michelada = await this.productRepository.save(
         this.productRepository.create({
           id: micheladaId,
@@ -806,7 +806,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -827,7 +827,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const frappe = await this.productRepository.save(
         this.productRepository.create({
           id: frappeId,
@@ -861,7 +861,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -877,13 +877,13 @@ export class ProductSeedService {
   private async seedFoodProducts() {
     // Hamburguesas con modificadores
     await this.seedHamburgers();
-    
+
     // Alitas con variantes y modificadores
     await this.seedAlitas();
-    
+
     // Papas con variantes y modificadores
     await this.seedPapas();
-    
+
     // Ensaladas con variantes y modificadores
     await this.seedEnsaladas();
 
@@ -902,7 +902,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const hamburguesa = await this.productRepository.save(
         this.productRepository.create({
           id: hamburguesaId,
@@ -933,7 +933,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -955,7 +955,7 @@ export class ProductSeedService {
       EntityPrefix.MODIFIER_GROUP,
       'modifier_group',
     );
-    
+
     const papasGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
         id: papasGroupId,
@@ -994,7 +994,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER,
         'product_modifier',
       );
-      
+
       await this.modifierRepository.save(
         this.modifierRepository.create({
           id: modifierId,
@@ -1011,7 +1011,7 @@ export class ProductSeedService {
       EntityPrefix.MODIFIER_GROUP,
       'modifier_group',
     );
-    
+
     const extrasGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
         id: extrasGroupId,
@@ -1041,7 +1041,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER,
         'product_modifier',
       );
-      
+
       await this.modifierRepository.save(
         this.modifierRepository.create({
           id: modifierId,
@@ -1058,7 +1058,7 @@ export class ProductSeedService {
       EntityPrefix.MODIFIER_GROUP,
       'modifier_group',
     );
-    
+
     const quitarGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
         id: quitarGroupId,
@@ -1093,7 +1093,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER,
         'product_modifier',
       );
-      
+
       await this.modifierRepository.save(
         this.modifierRepository.create({
           id: modifierId,
@@ -1121,7 +1121,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const alitas = await this.productRepository.save(
         this.productRepository.create({
           id: alitasId,
@@ -1146,7 +1146,11 @@ export class ProductSeedService {
         { name: 'Media Orden de Alitas BBQ', price: 70, sortOrder: 6 },
         { name: 'Media Orden de Alitas Picosas', price: 70, sortOrder: 7 },
         { name: 'Media Orden de Alitas Fritas', price: 70, sortOrder: 8 },
-        { name: 'Media Orden de Alitas Mango Habanero', price: 75, sortOrder: 9 },
+        {
+          name: 'Media Orden de Alitas Mango Habanero',
+          price: 75,
+          sortOrder: 9,
+        },
       ];
 
       for (const variant of alitasVariants) {
@@ -1154,7 +1158,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -1170,7 +1174,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER_GROUP,
         'modifier_group',
       );
-      
+
       const alitasModifierGroup = await this.modifierGroupRepository.save(
         this.modifierGroupRepository.create({
           id: alitasModifierGroupId,
@@ -1195,7 +1199,7 @@ export class ProductSeedService {
           EntityPrefix.MODIFIER,
           'product_modifier',
         );
-        
+
         await this.modifierRepository.save(
           this.modifierRepository.create({
             id: modifierId,
@@ -1224,7 +1228,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const papas = await this.productRepository.save(
         this.productRepository.create({
           id: papasId,
@@ -1243,7 +1247,11 @@ export class ProductSeedService {
       const papasVariants = [
         { name: 'Orden de Papas a la Francesa', price: 90, sortOrder: 1 },
         { name: 'Orden de Papas Gajo', price: 105, sortOrder: 2 },
-        { name: 'Orden de Papas Mixtas francesa y gajo', price: 105, sortOrder: 3 },
+        {
+          name: 'Orden de Papas Mixtas francesa y gajo',
+          price: 105,
+          sortOrder: 3,
+        },
         { name: 'Media Orden de Papas a la Francesa', price: 50, sortOrder: 4 },
         { name: 'Media Orden de Papas Gajo', price: 65, sortOrder: 5 },
       ];
@@ -1253,7 +1261,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -1269,7 +1277,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER_GROUP,
         'modifier_group',
       );
-      
+
       const papasQuesoGroup = await this.modifierGroupRepository.save(
         this.modifierGroupRepository.create({
           id: papasQuesoGroupId,
@@ -1293,7 +1301,7 @@ export class ProductSeedService {
           EntityPrefix.MODIFIER,
           'product_modifier',
         );
-        
+
         await this.modifierRepository.save(
           this.modifierRepository.create({
             id: modifierId,
@@ -1309,7 +1317,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER_GROUP,
         'modifier_group',
       );
-      
+
       const papasObservacionesGroup = await this.modifierGroupRepository.save(
         this.modifierGroupRepository.create({
           id: papasObservacionesGroupId,
@@ -1331,7 +1339,7 @@ export class ProductSeedService {
           EntityPrefix.MODIFIER,
           'product_modifier',
         );
-        
+
         await this.modifierRepository.save(
           this.modifierRepository.create({
             id: modifierId,
@@ -1360,7 +1368,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const ensalada = await this.productRepository.save(
         this.productRepository.create({
           id: ensaladaId,
@@ -1377,34 +1385,34 @@ export class ProductSeedService {
 
       // Crear variantes de ensaladas
       const ensaladaVariants = [
-        { 
-          name: 'Ensalada de Pollo Chica', 
-          price: 90, 
+        {
+          name: 'Ensalada de Pollo Chica',
+          price: 90,
           sortOrder: 1,
         },
-        { 
-          name: 'Ensalada de Pollo Grande', 
-          price: 120, 
+        {
+          name: 'Ensalada de Pollo Grande',
+          price: 120,
           sortOrder: 2,
         },
-        { 
-          name: 'Ensalada de Jamon Chica', 
-          price: 80, 
+        {
+          name: 'Ensalada de Jamon Chica',
+          price: 80,
           sortOrder: 3,
         },
-        { 
-          name: 'Ensalada de Jamon Grande', 
-          price: 100, 
+        {
+          name: 'Ensalada de Jamon Grande',
+          price: 100,
           sortOrder: 4,
         },
-        { 
-          name: 'Ensalada Vegetal Chica', 
-          price: 70, 
+        {
+          name: 'Ensalada Vegetal Chica',
+          price: 70,
           sortOrder: 5,
         },
-        { 
-          name: 'Ensalada Vegetal Grande', 
-          price: 90, 
+        {
+          name: 'Ensalada Vegetal Grande',
+          price: 90,
           sortOrder: 6,
         },
       ];
@@ -1414,7 +1422,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -1430,7 +1438,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER_GROUP,
         'modifier_group',
       );
-      
+
       const extrasEnsaladasGroup = await this.modifierGroupRepository.save(
         this.modifierGroupRepository.create({
           id: extrasEnsaladasGroupId,
@@ -1453,7 +1461,7 @@ export class ProductSeedService {
           EntityPrefix.MODIFIER,
           'product_modifier',
         );
-        
+
         await this.modifierRepository.save(
           this.modifierRepository.create({
             id: modifierId,
@@ -1469,7 +1477,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER_GROUP,
         'modifier_group',
       );
-      
+
       const quitarEnsaladaGroup = await this.modifierGroupRepository.save(
         this.modifierGroupRepository.create({
           id: quitarEnsaladaGroupId,
@@ -1500,7 +1508,7 @@ export class ProductSeedService {
           EntityPrefix.MODIFIER,
           'product_modifier',
         );
-        
+
         await this.modifierRepository.save(
           this.modifierRepository.create({
             id: modifierId,
@@ -1531,7 +1539,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       await this.productRepository.save(
         this.productRepository.create({
           id: dedosId,
@@ -1560,7 +1568,7 @@ export class ProductSeedService {
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       const pizza = await this.productRepository.save(
         this.productRepository.create({
           id: pizzaId,
@@ -1602,7 +1610,7 @@ export class ProductSeedService {
           EntityPrefix.PRODUCT_VARIANT,
           'product_variant',
         );
-        
+
         await this.variantRepository.save(
           this.variantRepository.create({
             id: variantId,
@@ -1630,13 +1638,13 @@ export class ProductSeedService {
 
       // Crear grupo de modificadores para pizza
       await this.createPizzaModifiers(pizza);
-      
+
       // Chile chillón
       const chileId = await this.customIdService.generateId(
         EntityPrefix.PRODUCT,
         'product',
       );
-      
+
       await this.productRepository.save(
         this.productRepository.create({
           id: chileId,
@@ -1660,7 +1668,7 @@ export class ProductSeedService {
       EntityPrefix.MODIFIER_GROUP,
       'modifier_group',
     );
-    
+
     const observacionesGroup = await this.modifierGroupRepository.save(
       this.modifierGroupRepository.create({
         id: observacionesGroupId,
@@ -1687,7 +1695,7 @@ export class ProductSeedService {
         EntityPrefix.MODIFIER,
         'product_modifier',
       );
-      
+
       await this.modifierRepository.save(
         this.modifierRepository.create({
           id: modifierId,

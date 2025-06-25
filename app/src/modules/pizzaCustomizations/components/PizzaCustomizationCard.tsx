@@ -20,12 +20,13 @@ export function PizzaCustomizationCard({
 
   const styles = StyleSheet.create({
     card: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     content: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      paddingVertical: -4,
     },
     info: {
       flex: 1,
@@ -33,33 +34,31 @@ export function PizzaCustomizationCard({
     name: {
       ...theme.fonts.titleMedium,
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.xs,
-    },
-    details: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
+      marginBottom: 2,
     },
     ingredients: {
       ...theme.fonts.bodySmall,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
+      lineHeight: 16,
     },
     chip: {
       marginRight: theme.spacing.xs,
+      height: 24,
     },
     rightSection: {
       alignItems: 'flex-end',
+      marginLeft: theme.spacing.s,
     },
     toppingValue: {
-      ...theme.fonts.headlineSmall,
+      ...theme.fonts.titleLarge,
       color: theme.colors.primary,
       fontWeight: 'bold',
     },
     toppingLabel: {
       ...theme.fonts.labelSmall,
       color: theme.colors.onSurfaceVariant,
+      marginTop: -2,
     },
   });
 
@@ -72,27 +71,33 @@ export function PizzaCustomizationCard({
   };
 
   return (
-    <Card style={styles.card} onPress={onPress}>
-      <Card.Content>
+    <Card style={styles.card} onPress={onPress} mode="contained">
+      <Card.Content style={{ paddingVertical: 12, paddingHorizontal: 16 }}>
         <View style={styles.content}>
           <View style={styles.info}>
-            <Text style={styles.name}>{customization.name}</Text>
-
-            <View style={styles.details}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 4,
+              }}
+            >
+              <Text style={styles.name}>{customization.name}</Text>
               <Chip
                 icon={getTypeIcon(customization.type)}
-                style={styles.chip}
+                style={[styles.chip, { marginLeft: theme.spacing.s }]}
                 compact
+                textStyle={{ fontSize: 11 }}
               >
                 {getTypeLabel(customization.type)}
               </Chip>
-
               {!customization.isActive && (
                 <Chip
                   icon="eye-off"
-                  style={styles.chip}
+                  style={[styles.chip, { marginLeft: theme.spacing.xs }]}
                   compact
                   mode="outlined"
+                  textStyle={{ fontSize: 11 }}
                 >
                   Inactivo
                 </Chip>
@@ -100,7 +105,7 @@ export function PizzaCustomizationCard({
             </View>
 
             {customization.ingredients && (
-              <Text style={styles.ingredients} numberOfLines={2}>
+              <Text style={styles.ingredients} numberOfLines={1}>
                 {customization.ingredients}
               </Text>
             )}

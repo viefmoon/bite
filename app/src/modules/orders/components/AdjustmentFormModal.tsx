@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Platform } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Text,
+  Text,
   Button,
   TextInput,
   HelperText,
   Chip,
   IconButton,
-  Icon,} from 'react-native-paper';
+  Icon,
+} from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import type {
   OrderAdjustment,

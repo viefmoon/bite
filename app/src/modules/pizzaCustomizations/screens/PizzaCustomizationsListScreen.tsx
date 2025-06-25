@@ -51,21 +51,27 @@ export function PizzaCustomizationsListScreen() {
       backgroundColor: theme.colors.background,
     },
     header: {
-      padding: theme.spacing.m,
+      padding: theme.spacing.s,
       backgroundColor: theme.colors.surface,
       elevation: 2,
     },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.s,
+    },
     searchbar: {
-      marginBottom: theme.spacing.m,
+      flex: 1,
+      marginRight: theme.spacing.s,
     },
     segmentedButtons: {
-      marginBottom: theme.spacing.m,
+      marginBottom: 0,
     },
     content: {
       flex: 1,
     },
     listContainer: {
-      padding: theme.spacing.m,
+      padding: theme.spacing.s,
     },
     emptyContainer: {
       flex: 1,
@@ -85,11 +91,6 @@ export function PizzaCustomizationsListScreen() {
       right: 0,
       bottom: 0,
       backgroundColor: theme.colors.primary,
-    },
-    menuButton: {
-      position: 'absolute',
-      top: theme.spacing.s,
-      right: theme.spacing.s,
     },
   });
 
@@ -124,12 +125,45 @@ export function PizzaCustomizationsListScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.header}>
-        <Searchbar
-          placeholder="Buscar personalización..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchbar}
-        />
+        <View style={styles.headerTop}>
+          <Searchbar
+            placeholder="Buscar personalización..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchbar}
+            mode="bar"
+            elevation={0}
+          />
+
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <IconButton
+                icon="dots-vertical"
+                onPress={() => setMenuVisible(true)}
+                size={24}
+              />
+            }
+          >
+            <Menu.Item
+              onPress={() => {
+                setMenuVisible(false);
+                navigation.navigate('PizzaConfigurations');
+              }}
+              title="Configuración de Precios"
+              leadingIcon="currency-usd"
+            />
+            <Menu.Item
+              onPress={() => {
+                setMenuVisible(false);
+                navigation.navigate('AssociatePizzaCustomizations');
+              }}
+              title="Asociar a Pizzas"
+              leadingIcon="link-variant"
+            />
+          </Menu>
+        </View>
 
         <SegmentedButtons
           value={selectedType}
@@ -142,36 +176,8 @@ export function PizzaCustomizationsListScreen() {
             { value: CustomizationType.INGREDIENT, label: 'Ingredientes' },
           ]}
           style={styles.segmentedButtons}
+          density="small"
         />
-
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <IconButton
-              icon="dots-vertical"
-              onPress={() => setMenuVisible(true)}
-              style={styles.menuButton}
-            />
-          }
-        >
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              navigation.navigate('PizzaConfigurations');
-            }}
-            title="Configuración de Precios"
-            leadingIcon="currency-usd"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              navigation.navigate('AssociatePizzaCustomizations');
-            }}
-            title="Asociar a Pizzas"
-            leadingIcon="link-variant"
-          />
-        </Menu>
       </View>
 
       <View style={styles.content}>
@@ -191,7 +197,7 @@ export function PizzaCustomizationsListScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => navigation.navigate('PizzaCustomizationDetail', {})}
-        label="Nueva"
+        size="medium"
       />
     </SafeAreaView>
   );

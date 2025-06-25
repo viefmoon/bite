@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Portal, Modal,
+import {
+  Portal,
+  Modal,
   Text,
   TextInput,
   Button,
@@ -10,7 +12,8 @@ import { Portal, Modal,
   IconButton,
   Chip,
   Avatar,
-  Icon, } from 'react-native-paper';
+  Icon,
+} from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -341,7 +344,10 @@ export default function CustomerFormModal({
                         />
                       </View>
                       {errors.whatsappPhoneNumber && (
-                        <HelperText type="error" visible={!!errors.whatsappPhoneNumber}>
+                        <HelperText
+                          type="error"
+                          visible={!!errors.whatsappPhoneNumber}
+                        >
                           {errors.whatsappPhoneNumber.message}
                         </HelperText>
                       )}
@@ -621,10 +627,7 @@ export default function CustomerFormModal({
                         color={theme.colors.primary}
                       />
                       <View style={styles.stripeInfo}>
-                        <Text
-                          variant="bodySmall"
-                          style={styles.stripeLabel}
-                        >
+                        <Text variant="bodySmall" style={styles.stripeLabel}>
                           Stripe Customer ID
                         </Text>
                         <Text

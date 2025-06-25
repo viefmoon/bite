@@ -145,7 +145,9 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     icon: {},
     disabledOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: theme.dark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: theme.dark
+        ? 'rgba(0, 0, 0, 0.2)'
+        : 'rgba(0, 0, 0, 0.05)',
       zIndex: 3,
       borderRadius: theme.roundness,
     },

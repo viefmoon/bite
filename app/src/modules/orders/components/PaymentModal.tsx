@@ -9,9 +9,9 @@ import {
   Keyboard,
 } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Text,
+  Text,
   Button,
   RadioButton,
   TextInput,
@@ -21,7 +21,8 @@ Text,
   Chip,
   Card,
   ActivityIndicator,
-  Surface,} from 'react-native-paper';
+  Surface,
+} from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   PaymentMethodEnum,

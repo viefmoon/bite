@@ -8,7 +8,6 @@ import {
   MaxLength,
   IsArray,
   ValidateNested,
-  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateBusinessHoursDto } from './create-business-hours.dto';

@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Portal, Modal,
+import {
+  Portal,
+  Modal,
   Card,
   TextInput,
   Button,
   Switch,
   Text,
-  HelperText, } from 'react-native-paper';
+  HelperText,
+} from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductVariant } from '../schema/products.schema';

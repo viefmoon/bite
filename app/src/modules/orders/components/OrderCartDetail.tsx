@@ -24,7 +24,6 @@ import {
   Menu,
   IconButton,
   Modal,
-  
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
@@ -418,8 +417,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [timePickerHours, setTimePickerHours] = useState<number>(new Date().getHours());
-  const [timePickerMinutes, setTimePickerMinutes] = useState<number>(new Date().getMinutes());
+  const [timePickerHours, setTimePickerHours] = useState<number>(
+    new Date().getHours(),
+  );
+  const [timePickerMinutes, setTimePickerMinutes] = useState<number>(
+    new Date().getMinutes(),
+  );
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -468,28 +471,33 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   } = useGetTablesByArea(selectedAreaId);
 
   // Función helper para buscar información de un modifier por su ID
-  const findModifierById = useCallback((modifierId: string): CartItemModifier | null => {
-    if (!menu) return null;
-    
-    for (const category of menu) {
-      for (const subcategory of category.subcategories || []) {
-        for (const product of subcategory.products || []) {
-          for (const modifierGroup of product.modifierGroups || []) {
-            const modifier = modifierGroup.productModifiers?.find((mod) => mod.id === modifierId);
-            if (modifier) {
-              return {
-                id: modifier.id,
-                modifierGroupId: modifierGroup.id,
-                name: modifier.name,
-                price: modifier.price,
-              };
+  const findModifierById = useCallback(
+    (modifierId: string): CartItemModifier | null => {
+      if (!menu) return null;
+
+      for (const category of menu) {
+        for (const subcategory of category.subcategories || []) {
+          for (const product of subcategory.products || []) {
+            for (const modifierGroup of product.modifierGroups || []) {
+              const modifier = modifierGroup.productModifiers?.find(
+                (mod) => mod.id === modifierId,
+              );
+              if (modifier) {
+                return {
+                  id: modifier.id,
+                  modifierGroupId: modifierGroup.id,
+                  name: modifier.name,
+                  price: modifier.price,
+                };
+              }
             }
           }
         }
       }
-    }
-    return null;
-  }, [menu]);
+      return null;
+    },
+    [menu],
+  );
 
   // Cargar datos de la orden cuando esté en modo edición
   useEffect(() => {
@@ -535,7 +543,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       orderData.orderItems.forEach((item: any) => {
         // Mapear los modificadores desde el nuevo formato (productModifiers)
         const modifiers: CartItemModifier[] = [];
-        
+
         // Si vienen en el formato antiguo (item.modifiers con objetos)
         if (item.modifiers && Array.isArray(item.modifiers)) {
           item.modifiers.forEach((mod: any) => {
@@ -548,7 +556,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           });
         }
         // Si vienen en el nuevo formato (item.productModifiers como array de entidades)
-        else if (item.productModifiers && Array.isArray(item.productModifiers)) {
+        else if (
+          item.productModifiers &&
+          Array.isArray(item.productModifiers)
+        ) {
           item.productModifiers.forEach((mod: any) => {
             const modifierInfo = findModifierById(mod.id) || {
               id: mod.id,

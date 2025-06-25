@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-Text,
+  Text,
   ActivityIndicator,
   Appbar,
   IconButton,
   Portal,
-Card,
-  Chip,} from 'react-native-paper';
+  Card,
+  Chip,
+} from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta

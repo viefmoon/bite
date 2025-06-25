@@ -245,7 +245,9 @@ export const useDeleteModifierMutation = (): UseMutationResult<
       // Invalidar lista por grupo si se conoce el groupId (desde el contexto)
       if (context?.previousDetail?.modifierGroupId) {
         queryClient.invalidateQueries({
-          queryKey: modifierKeys.listsByGroup(context.previousDetail.modifierGroupId),
+          queryKey: modifierKeys.listsByGroup(
+            context.previousDetail.modifierGroupId,
+          ),
         });
       }
 

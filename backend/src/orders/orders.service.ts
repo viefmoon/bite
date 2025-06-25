@@ -116,9 +116,8 @@ export class OrdersService {
           preparationNotes: itemDto.preparationNotes,
           productModifiers: itemDto.productModifiers, // Pasar los modificadores aquí
         };
-        // Guardar el item y obtener su ID
-        const savedOrderItem =
-          await this.createOrderItemInternal(createOrderItemDto); // Usar método interno
+        // Guardar el item
+        await this.createOrderItemInternal(createOrderItemDto); // Usar método interno
       }
     }
     // Recargar la orden completa al final para incluir todos los items y modificadores

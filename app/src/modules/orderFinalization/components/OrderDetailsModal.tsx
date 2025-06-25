@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Surface,
+  Surface,
   Text,
   Button,
   Divider,
-  IconButton,} from 'react-native-paper';
+  IconButton,
+} from 'react-native-paper';
 import {
   OrderForFinalization,
   OrderItemForFinalization,

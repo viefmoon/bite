@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Button,
+  Button,
   TextInput,
   Text,
   ActivityIndicator,
@@ -13,7 +13,8 @@ Button,
   IconButton,
   Card,
   Checkbox,
-  TouchableRipple,} from 'react-native-paper';
+  TouchableRipple,
+} from 'react-native-paper';
 import {
   useForm,
   Controller,

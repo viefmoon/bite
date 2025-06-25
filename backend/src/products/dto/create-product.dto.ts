@@ -171,10 +171,7 @@ export class CreateProductDto {
 
   @ApiProperty({
     type: [String],
-    example: [
-      'MODGRP-1',
-      'MODGRP-2',
-    ],
+    example: ['MODGRP-1', 'MODGRP-2'],
     description: 'IDs de los grupos de modificadores a asociar con el producto',
     required: false,
   })

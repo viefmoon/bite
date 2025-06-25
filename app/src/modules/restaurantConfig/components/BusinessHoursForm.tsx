@@ -1,11 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Switch, Chip, Surface, IconButton } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, Switch, Chip, IconButton, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { TimePicker } from 'react-native-paper-dates';
-import { Portal, Modal, Button } from 'react-native-paper';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import {
   BusinessHours,
   CreateBusinessHoursDto,
@@ -35,12 +33,12 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  const [showTimePicker, setShowTimePicker] = React.useState<{
+  const [showTimePicker, setShowTimePicker] = React.useState(false);
+  const [currentPickerConfig, setCurrentPickerConfig] = React.useState<{
     dayIndex: number;
     type: 'opening' | 'closing';
+    currentDate: Date;
   } | null>(null);
-  const [timePickerHours, setTimePickerHours] = React.useState(9);
-  const [timePickerMinutes, setTimePickerMinutes] = React.useState(0);
 
   // Initialize business hours if empty
   const initializedHours = React.useMemo(() => {
@@ -60,6 +58,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     type: 'opening' | 'closing',
     time: string | null,
   ) => {
+    if (!onChange || !isEditing) return;
+
     const updatedHours = [...initializedHours];
     const hourIndex = updatedHours.findIndex((h) => h.dayOfWeek === dayIndex);
 
@@ -74,6 +74,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
   };
 
   const handleClosedChange = (dayIndex: number, isClosed: boolean) => {
+    if (!onChange || !isEditing) return;
+
     const updatedHours = [...initializedHours];
     const hourIndex = updatedHours.findIndex((h) => h.dayOfWeek === dayIndex);
 
@@ -87,50 +89,61 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     }
   };
 
-  const parseTimeString = (timeString: string | null): Date | null => {
-    if (!timeString) return null;
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0);
-    return date;
-  };
-
-  const formatTimeToString = (date: Date): string => {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
-
   const formatTimeForDisplay = (
     timeString: string | null | undefined,
   ): string => {
     if (!timeString) return '';
+    // Si el string tiene segundos (formato HH:MM:SS), mostrar solo HH:MM
+    if (timeString.length > 5) {
+      return timeString.substring(0, 5);
+    }
     return timeString;
   };
 
-  const handleTimeConfirm = () => {
-    if (showTimePicker) {
-      const timeString = `${timePickerHours.toString().padStart(2, '0')}:${timePickerMinutes.toString().padStart(2, '0')}`;
+  const openTimePicker = (dayIndex: number, type: 'opening' | 'closing') => {
+    if (!isEditing) return;
+
+    const dayHours = initializedHours.find((h) => h.dayOfWeek === dayIndex);
+    const currentTimeString =
+      dayHours?.[type === 'opening' ? 'openingTime' : 'closingTime'];
+
+    const date = new Date();
+    if (currentTimeString) {
+      const [hours, minutes] = currentTimeString.split(':').map(Number);
+      date.setHours(hours, minutes, 0, 0);
+    } else {
+      // Default times
+      date.setHours(type === 'opening' ? 9 : 22, 0, 0, 0);
+    }
+
+    setCurrentPickerConfig({ dayIndex, type, currentDate: date });
+    setShowTimePicker(true);
+  };
+
+  const handleTimeConfirm = (date: Date) => {
+    setShowTimePicker(false);
+
+    if (currentPickerConfig && onChange) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const timeString = `${hours}:${minutes}`;
+
       handleTimeChange(
-        showTimePicker.dayIndex,
-        showTimePicker.type,
+        currentPickerConfig.dayIndex,
+        currentPickerConfig.type,
         timeString,
       );
     }
-    setShowTimePicker(null);
   };
 
-  const openTimePicker = (dayIndex: number, type: 'opening' | 'closing') => {
-    const currentTime = initializedHours.find((h) => h.dayOfWeek === dayIndex)?.[type === 'opening' ? 'openingTime' : 'closingTime'];
-    if (currentTime) {
-      const [hours, minutes] = currentTime.split(':').map(Number);
-      setTimePickerHours(hours);
-      setTimePickerMinutes(minutes);
-    }
-    setShowTimePicker({ dayIndex, type });
+  const handleTimeCancel = () => {
+    setShowTimePicker(false);
+    setCurrentPickerConfig(null);
   };
 
   const copyHoursToAllDays = (dayIndex: number) => {
+    if (!onChange || !isEditing) return;
+
     const sourceHour = initializedHours.find((h) => h.dayOfWeek === dayIndex);
     if (!sourceHour) return;
 
@@ -158,7 +171,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
           };
 
           return (
-            <Surface key={index} style={styles.dayCard} elevation={1}>
+            <Card key={index} style={styles.dayCard} mode="elevated">
               <View style={styles.dayHeader}>
                 <Text style={styles.dayName}>{day}</Text>
                 <View style={styles.dayActions}>
@@ -166,13 +179,23 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                     index === 1 && ( // Solo mostrar en Lunes
                       <IconButton
                         icon="content-copy"
-                        size={20}
-                        onPress={() => copyHoursToAllDays(index)}
+                        size={18}
+                        onPress={() => {
+                          if (onChange) {
+                            copyHoursToAllDays(index);
+                          }
+                        }}
+                        iconColor={theme.colors.primary}
+                        style={styles.copyButton}
                       />
                     )}
                   <Switch
                     value={!dayHours.isClosed}
-                    onValueChange={(value) => handleClosedChange(index, !value)}
+                    onValueChange={(value) => {
+                      if (isEditing && onChange) {
+                        handleClosedChange(index, !value);
+                      }
+                    }}
                     disabled={!isEditing}
                     color={theme.colors.primary}
                   />
@@ -181,34 +204,100 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
 
               {!dayHours.isClosed ? (
                 <View style={styles.timeContainer}>
-                  <View style={styles.timeInput}>
-                    <AnimatedLabelSelector
-                      label="Apertura"
-                      value={formatTimeForDisplay(dayHours.openingTime)}
-                      onPress={() =>
-                        isEditing &&
-                        openTimePicker(index, 'opening')
-                      }
-                      disabled={!isEditing}
-                    />
-                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.timeButton,
+                      !isEditing && styles.timeButtonDisabled,
+                    ]}
+                    onPress={() =>
+                      isEditing && openTimePicker(index, 'opening')
+                    }
+                    disabled={!isEditing}
+                  >
+                    <View style={styles.timeButtonContent}>
+                      <MaterialCommunityIcons
+                        name="clock-outline"
+                        size={20}
+                        color={
+                          !isEditing
+                            ? theme.colors.onSurfaceDisabled
+                            : theme.colors.primary
+                        }
+                      />
+                      <View style={styles.timeTextContainer}>
+                        <Text
+                          style={[
+                            styles.timeLabel,
+                            !isEditing && styles.timeLabelDisabled,
+                          ]}
+                        >
+                          Apertura
+                        </Text>
+                        <Text
+                          style={[
+                            styles.timeValue,
+                            !isEditing && styles.timeValueDisabled,
+                          ]}
+                        >
+                          {formatTimeForDisplay(dayHours.openingTime) ||
+                            '--:--'}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+
                   <MaterialCommunityIcons
                     name="arrow-right"
-                    size={20}
-                    color={theme.colors.onSurfaceVariant}
+                    size={24}
+                    color={
+                      !isEditing
+                        ? theme.colors.onSurfaceDisabled
+                        : theme.colors.onSurfaceVariant
+                    }
                     style={styles.arrow}
                   />
-                  <View style={styles.timeInput}>
-                    <AnimatedLabelSelector
-                      label="Cierre"
-                      value={formatTimeForDisplay(dayHours.closingTime)}
-                      onPress={() =>
-                        isEditing &&
-                        openTimePicker(index, 'closing')
-                      }
-                      disabled={!isEditing}
-                    />
-                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.timeButton,
+                      !isEditing && styles.timeButtonDisabled,
+                    ]}
+                    onPress={() =>
+                      isEditing && openTimePicker(index, 'closing')
+                    }
+                    disabled={!isEditing}
+                  >
+                    <View style={styles.timeButtonContent}>
+                      <MaterialCommunityIcons
+                        name="clock-check-outline"
+                        size={20}
+                        color={
+                          !isEditing
+                            ? theme.colors.onSurfaceDisabled
+                            : theme.colors.primary
+                        }
+                      />
+                      <View style={styles.timeTextContainer}>
+                        <Text
+                          style={[
+                            styles.timeLabel,
+                            !isEditing && styles.timeLabelDisabled,
+                          ]}
+                        >
+                          Cierre
+                        </Text>
+                        <Text
+                          style={[
+                            styles.timeValue,
+                            !isEditing && styles.timeValueDisabled,
+                          ]}
+                        >
+                          {formatTimeForDisplay(dayHours.closingTime) ||
+                            '--:--'}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={styles.closedContainer}>
@@ -222,42 +311,21 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                   </Chip>
                 </View>
               )}
-            </Surface>
+            </Card>
           );
         })}
       </View>
 
-      <Portal>
-        <Modal
-          visible={showTimePicker !== null}
-          onDismiss={() => setShowTimePicker(null)}
-          contentContainerStyle={styles.timePickerModal}
-        >
-          {showTimePicker && (
-            <>
-              <Text variant="titleMedium" style={styles.timePickerTitle}>
-                {showTimePicker.type === 'opening' ? 'Hora de apertura' : 'Hora de cierre'} - {DAYS_OF_WEEK[showTimePicker.dayIndex]}
-              </Text>
-              <TimePicker
-                hours={timePickerHours}
-                minutes={timePickerMinutes}
-                onHoursChange={setTimePickerHours}
-                onMinutesChange={setTimePickerMinutes}
-                locale="es"
-                use24HourClock
-              />
-              <View style={styles.timePickerButtons}>
-                <Button mode="text" onPress={() => setShowTimePicker(null)}>
-                  Cancelar
-                </Button>
-                <Button mode="contained" onPress={handleTimeConfirm}>
-                  Confirmar
-                </Button>
-              </View>
-            </>
-          )}
-        </Modal>
-      </Portal>
+      <DateTimePickerModal
+        isVisible={showTimePicker}
+        mode="time"
+        onConfirm={handleTimeConfirm}
+        onCancel={handleTimeCancel}
+        date={currentPickerConfig?.currentDate || new Date()}
+        locale="es_ES"
+        is24Hour={true}
+        display="spinner"
+      />
     </>
   );
 };
@@ -268,9 +336,10 @@ const createStyles = (theme: AppTheme) =>
       gap: theme.spacing.s,
     },
     dayCard: {
-      borderRadius: 12,
-      padding: theme.spacing.m,
+      marginBottom: theme.spacing.s,
       backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
+      padding: theme.spacing.m,
     },
     dayHeader: {
       flexDirection: 'row',
@@ -287,13 +356,50 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
     },
+    copyButton: {
+      margin: 0,
+    },
     timeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    timeButton: {
+      flex: 1,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
+      padding: theme.spacing.m,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    timeButtonDisabled: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.surfaceVariant,
+    },
+    timeButtonContent: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.s,
     },
-    timeInput: {
+    timeTextContainer: {
       flex: 1,
+    },
+    timeLabel: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 2,
+    },
+    timeLabelDisabled: {
+      color: theme.colors.onSurfaceDisabled,
+    },
+    timeValue: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    timeValueDisabled: {
+      color: theme.colors.onSurfaceDisabled,
+      fontWeight: '500',
     },
     arrow: {
       marginHorizontal: theme.spacing.xs,
@@ -308,22 +414,6 @@ const createStyles = (theme: AppTheme) =>
     closedChipText: {
       fontSize: 12,
       color: theme.colors.onErrorContainer,
-    },
-    timePickerModal: {
-      backgroundColor: theme.colors.surface,
-      padding: 20,
-      margin: 20,
-      borderRadius: 12,
-    },
-    timePickerTitle: {
-      textAlign: 'center',
-      marginBottom: 20,
-    },
-    timePickerButtons: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: 20,
-      gap: 10,
     },
   });
 

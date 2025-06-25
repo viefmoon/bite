@@ -191,10 +191,7 @@ export class UpdateProductDto {
 
   @ApiProperty({
     type: [String],
-    example: [
-      'MODGRP-1',
-      'MODGRP-2',
-    ],
+    example: ['MODGRP-1', 'MODGRP-2'],
     description:
       'Lista completa de IDs de los grupos de modificadores a asociar. Las asociaciones existentes no incluidas aquí serán eliminadas.',
     required: false,

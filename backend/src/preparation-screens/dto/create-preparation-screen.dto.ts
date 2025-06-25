@@ -44,10 +44,7 @@ export class CreatePreparationScreenDto {
 
   @ApiProperty({
     type: [String],
-    example: [
-      'PROD-1',
-      'PROD-2',
-    ],
+    example: ['PROD-1', 'PROD-2'],
     description: 'IDs de los productos asociados a esta pantalla',
     required: false,
   })

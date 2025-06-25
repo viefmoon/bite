@@ -21,7 +21,7 @@ export class PizzaCustomizationsService {
     createPizzaCustomizationDto: CreatePizzaCustomizationDto,
   ): Promise<PizzaCustomization> {
     const pizzaCustomization = new PizzaCustomization();
-    
+
     // Generar ID si no se proporciona
     if (createPizzaCustomizationDto.id) {
       pizzaCustomization.id = createPizzaCustomizationDto.id;
@@ -31,7 +31,7 @@ export class PizzaCustomizationsService {
         'pizza_customization',
       );
     }
-    
+
     pizzaCustomization.name = createPizzaCustomizationDto.name;
     pizzaCustomization.type = createPizzaCustomizationDto.type;
     pizzaCustomization.ingredients =

@@ -18,14 +18,15 @@ export const useRestaurantConfigQueries = () => {
     });
   };
 
-  const useUpdateConfig = () => {
+  const useUpdateConfig = (options?: { successMessage?: string }) => {
     return useMutation({
       mutationFn: (data: UpdateRestaurantConfigDto) =>
         restaurantConfigService.updateConfig(data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.config });
         showSnackbar({
-          message: 'Configuración actualizada exitosamente',
+          message:
+            options?.successMessage || 'Configuración actualizada exitosamente',
           type: 'success',
         });
       },

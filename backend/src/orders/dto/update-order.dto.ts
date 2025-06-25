@@ -7,12 +7,7 @@ import {
   IsPositive,
   IsUUID,
   ValidateNested,
-  ValidateIf,
   IsString,
-  IsNotEmpty,
-  MinLength,
-  MaxLength,
-  Matches,
 } from 'class-validator';
 import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';

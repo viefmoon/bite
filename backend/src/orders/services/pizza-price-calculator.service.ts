@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { OrderItem } from '../domain/order-item';
 import { Product } from '../../products/domain/product';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ProductModifier } from '../../product-modifiers/domain/product-modifier';

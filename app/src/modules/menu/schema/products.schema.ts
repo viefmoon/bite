@@ -47,7 +47,7 @@ const productBaseSchema = z.object({
   isActive: z.boolean(),
   isPizza: z.boolean().optional().default(false),
   subcategoryId: z.string().min(1, 'La subcategoría es requerida'),
-  photoId: z.string().uuid().optional().nullable(),// ID de la foto guardada en backend
+  photoId: z.string().uuid().optional().nullable(), // ID de la foto guardada en backend
   imageUri: z // Campo temporal para el formulario
     .string()
     .url()
@@ -106,43 +106,46 @@ export const productSchema = productBaseSchema.superRefine((data, ctx) => {
 export type ProductFormInputs = z.infer<typeof productSchema>;
 
 // Schema para actualización de productos
-export const updateProductSchema = productBaseSchema.partial().superRefine((data, ctx) => {
-  if (data.hasVariants !== undefined) {
-    if (data.hasVariants) {
-      if (data.variants !== undefined && data.variants.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Debe añadir al menos una variante si marca esta opción.',
-          path: ['variants'],
-        });
-      }
-      if (data.price !== null && data.price !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'El precio principal debe estar vacío si el producto tiene variantes.',
-          path: ['price'],
-        });
-      }
-    } else {
-      if (data.price === null || data.price === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El precio es requerido si el producto no tiene variantes.',
-          path: ['price'],
-        });
-      }
-      if (data.variants && data.variants.length > 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'No debe haber variantes si el producto no está marcado como "Tiene Variantes".',
-          path: ['variants'],
-        });
+export const updateProductSchema = productBaseSchema
+  .partial()
+  .superRefine((data, ctx) => {
+    if (data.hasVariants !== undefined) {
+      if (data.hasVariants) {
+        if (data.variants !== undefined && data.variants.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Debe añadir al menos una variante si marca esta opción.',
+            path: ['variants'],
+          });
+        }
+        if (data.price !== null && data.price !== undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              'El precio principal debe estar vacío si el producto tiene variantes.',
+            path: ['price'],
+          });
+        }
+      } else {
+        if (data.price === null || data.price === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              'El precio es requerido si el producto no tiene variantes.',
+            path: ['price'],
+          });
+        }
+        if (data.variants && data.variants.length > 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              'No debe haber variantes si el producto no está marcado como "Tiene Variantes".',
+            path: ['variants'],
+          });
+        }
       }
     }
-  }
-});
+  });
 
 export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 

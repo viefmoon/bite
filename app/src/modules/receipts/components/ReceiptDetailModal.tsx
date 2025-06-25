@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import {
-Text,
+  Text,
   Divider,
   List,
   Portal,
-Modal,
+  Modal,
   Appbar,
   Chip,
-  Surface,} from 'react-native-paper';
+  Surface,
+} from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { Order } from '@/app/schemas/domain/order.schema';
 import { format } from 'date-fns';

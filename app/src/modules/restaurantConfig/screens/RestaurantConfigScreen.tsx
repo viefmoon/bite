@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Portal } from 'react-native-paper';
 import {
   View,
   StyleSheet,
   ScrollView,
   useWindowDimensions,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -13,12 +14,12 @@ import {
   TextInput,
   Button,
   ActivityIndicator,
-  
   Dialog,
   Paragraph,
   Surface,
   Chip,
   SegmentedButtons,
+  IconButton,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -27,27 +28,109 @@ import {
   UpdateRestaurantConfigDto,
   CreateBusinessHoursDto,
 } from '../types/restaurantConfig.types';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
+import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 
-type TabType = 'basic' | 'operation' | 'schedule' | 'delivery';
+type TabType = 'basic' | 'operation' | 'schedule';
 
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const navigation = useNavigation();
   const styles = React.useMemo(
-    () => createStyles(theme, width),
-    [theme, width],
+    () => createStyles(theme, width, height),
+    [theme, width, height],
   );
 
   const { useGetConfig, useUpdateConfig } = useRestaurantConfigQueries();
   const { data: config, isLoading, error } = useGetConfig();
   const updateConfigMutation = useUpdateConfig();
+  const updateDeliveryAreaMutation = useUpdateConfig({
+    successMessage: 'Área de cobertura actualizada exitosamente',
+  });
 
   const [activeTab, setActiveTab] = useState<TabType>('basic');
+  const [pendingTab, setPendingTab] = useState<TabType | null>(null);
   const [formData, setFormData] = useState<UpdateRestaurantConfigDto>({});
   const [isEditing, setIsEditing] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [isEditingDelivery, setIsEditingDelivery] = useState(false);
+  const [isNavigatingAway, setIsNavigatingAway] = useState(false);
+
+  // Función para verificar si hay cambios sin guardar
+  const hasChanges = React.useCallback(() => {
+    if (!config) return false;
+    return (
+      JSON.stringify(formData) !==
+      JSON.stringify({
+        restaurantName: config.restaurantName,
+        phoneMain: config.phoneMain,
+        phoneSecondary: config.phoneSecondary,
+        address: config.address,
+        city: config.city,
+        state: config.state,
+        postalCode: config.postalCode,
+        country: config.country,
+        acceptingOrders: config.acceptingOrders,
+        estimatedPickupTime: config.estimatedPickupTime,
+        estimatedDeliveryTime: config.estimatedDeliveryTime,
+        estimatedDineInTime: config.estimatedDineInTime,
+        openingGracePeriod: config.openingGracePeriod,
+        closingGracePeriod: config.closingGracePeriod,
+        timeZone: config.timeZone,
+        deliveryCoverageArea: config.deliveryCoverageArea,
+        businessHours: config.businessHours,
+      })
+    );
+  }, [config, formData]);
+
+  // Interceptar navegación cuando hay cambios sin guardar
+  useFocusEffect(
+    React.useCallback(() => {
+      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+        if (!isEditing || !hasChanges()) {
+          // Si no está editando o no hay cambios, permitir navegación
+          return;
+        }
+
+        // Prevenir la navegación por defecto
+        e.preventDefault();
+
+        // Mostrar el diálogo de confirmación
+        setIsNavigatingAway(true);
+        setShowDiscardDialog(true);
+      });
+
+      return unsubscribe;
+    }, [navigation, isEditing, hasChanges]),
+  );
+
+  // Manejar botón de retroceso de Android
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (isEditing && hasChanges()) {
+          setIsNavigatingAway(true);
+          setShowDiscardDialog(true);
+          return true; // Prevenir el comportamiento por defecto
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, [isEditing, hasChanges]),
+  );
 
   React.useEffect(() => {
     if (config) {
@@ -79,8 +162,44 @@ const RestaurantConfigScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await updateConfigMutation.mutateAsync(formData);
+      // Formatear los datos antes de enviarlos
+      const dataToSubmit = {
+        ...formData,
+        // Formatear businessHours para quitar los segundos
+        businessHours: formData.businessHours?.map((hour) => ({
+          ...hour,
+          openingTime: hour.openingTime
+            ? hour.openingTime.substring(0, 5)
+            : null,
+          closingTime: hour.closingTime
+            ? hour.closingTime.substring(0, 5)
+            : null,
+        })),
+        // deliveryCoverageArea se envía tal como está (array de coordenadas)
+      };
+
+      await updateConfigMutation.mutateAsync(dataToSubmit);
       setIsEditing(false);
+    } catch (error) {
+      // Error handling is done in the mutation hook
+    }
+  };
+
+  const handleSaveDeliveryArea = async () => {
+    try {
+      // Guardar solo el área de cobertura
+      await updateDeliveryAreaMutation.mutateAsync({
+        deliveryCoverageArea: formData.deliveryCoverageArea,
+      });
+
+      // Actualizar el estado del config con la nueva área
+      if (config) {
+        // Esto asegura que el estado local se mantenga sincronizado
+        setFormData((prev) => ({
+          ...prev,
+          deliveryCoverageArea: formData.deliveryCoverageArea,
+        }));
+      }
     } catch (error) {
       // Error handling is done in the mutation hook
     }
@@ -92,32 +211,6 @@ const RestaurantConfigScreen: React.FC = () => {
     } else {
       resetForm();
     }
-  };
-
-  const hasChanges = () => {
-    if (!config) return false;
-    return (
-      JSON.stringify(formData) !==
-      JSON.stringify({
-        restaurantName: config.restaurantName,
-        phoneMain: config.phoneMain,
-        phoneSecondary: config.phoneSecondary,
-        address: config.address,
-        city: config.city,
-        state: config.state,
-        postalCode: config.postalCode,
-        country: config.country,
-        acceptingOrders: config.acceptingOrders,
-        estimatedPickupTime: config.estimatedPickupTime,
-        estimatedDeliveryTime: config.estimatedDeliveryTime,
-        estimatedDineInTime: config.estimatedDineInTime,
-        openingGracePeriod: config.openingGracePeriod,
-        closingGracePeriod: config.closingGracePeriod,
-        timeZone: config.timeZone,
-        deliveryCoverageArea: config.deliveryCoverageArea,
-        businessHours: config.businessHours,
-      })
-    );
   };
 
   const resetForm = () => {
@@ -148,6 +241,29 @@ const RestaurantConfigScreen: React.FC = () => {
   const confirmDiscard = () => {
     resetForm();
     setShowDiscardDialog(false);
+
+    // Si estaba navegando fuera de la pantalla
+    if (isNavigatingAway) {
+      setIsNavigatingAway(false);
+      navigation.goBack();
+      return;
+    }
+
+    // Si hay una pestaña pendiente, cambiar a ella
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setPendingTab(null);
+    }
+  };
+
+  const handleTabChange = (newTab: TabType) => {
+    if (isEditing && hasChanges()) {
+      // Guardar la pestaña a la que quiere ir
+      setPendingTab(newTab);
+      setShowDiscardDialog(true);
+    } else {
+      setActiveTab(newTab);
+    }
   };
 
   const renderBasicInfo = () => (
@@ -262,6 +378,35 @@ const RestaurantConfigScreen: React.FC = () => {
               style={[styles.input, styles.halfInput]}
               outlineStyle={styles.inputOutline}
             />
+          </View>
+
+          {/* Botón para área de cobertura */}
+          <View style={styles.deliveryButtonContainer}>
+            <Button
+              mode="contained-tonal"
+              onPress={() => setShowDeliveryModal(true)}
+              icon="map-marker-radius"
+              style={styles.deliveryButton}
+              contentStyle={styles.deliveryButtonContent}
+              labelStyle={styles.deliveryButtonLabel}
+            >
+              Área de Cobertura
+            </Button>
+            {formData.deliveryCoverageArea &&
+            formData.deliveryCoverageArea.length > 0 ? (
+              <Text style={styles.deliveryStatusText}>
+                Área de cobertura definida
+              </Text>
+            ) : (
+              <Text
+                style={[
+                  styles.deliveryStatusText,
+                  styles.deliveryStatusWarning,
+                ]}
+              >
+                Sin área de cobertura definida
+              </Text>
+            )}
           </View>
         </View>
       </Surface>
@@ -512,36 +657,6 @@ const RestaurantConfigScreen: React.FC = () => {
     </View>
   );
 
-  const renderDelivery = () => (
-    <View style={styles.tabContent}>
-      <Surface style={styles.section} elevation={1}>
-        <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons
-            name="map-marker-radius"
-            size={24}
-            color={theme.colors.primary}
-          />
-          <Text style={styles.sectionTitle}>Área de Cobertura</Text>
-        </View>
-
-        <View style={styles.sectionContent}>
-          <View style={styles.deliveryPlaceholder}>
-            <MaterialCommunityIcons
-              name="map"
-              size={64}
-              color={theme.colors.onSurfaceVariant}
-              style={{ opacity: 0.5 }}
-            />
-            <Text style={styles.placeholderText}>
-              La configuración del área de cobertura estará disponible
-              próximamente
-            </Text>
-          </View>
-        </View>
-      </Surface>
-    </View>
-  );
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -579,7 +694,7 @@ const RestaurantConfigScreen: React.FC = () => {
         >
           <SegmentedButtons
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value as TabType)}
+            onValueChange={(value) => handleTabChange(value as TabType)}
             buttons={[
               {
                 value: 'basic',
@@ -596,11 +711,6 @@ const RestaurantConfigScreen: React.FC = () => {
                 label: 'Horarios',
                 icon: 'calendar',
               },
-              {
-                value: 'delivery',
-                label: 'Delivery',
-                icon: 'moped',
-              },
             ]}
             style={styles.tabs}
           />
@@ -616,97 +726,180 @@ const RestaurantConfigScreen: React.FC = () => {
         {activeTab === 'basic' && renderBasicInfo()}
         {activeTab === 'operation' && renderOperationConfig()}
         {activeTab === 'schedule' && renderSchedule()}
-        {activeTab === 'delivery' && renderDelivery()}
-
-        {/* Action Buttons */}
-        <View style={styles.actionContainer}>
-          {!isEditing ? (
-            <Button
-              mode="contained"
-              onPress={() => setIsEditing(true)}
-              style={[
-                styles.editButton,
-                { backgroundColor: theme.colors.tertiary },
-              ]}
-              contentStyle={styles.editButtonContent}
-              labelStyle={styles.editButtonLabel}
-              icon="pencil"
-              textColor={theme.colors.onTertiary}
-            >
-              Editar Configuración
-            </Button>
-          ) : (
-            <View style={styles.editActions}>
-              <Button
-                mode="outlined"
-                onPress={handleCancel}
-                style={styles.cancelButton}
-                contentStyle={styles.buttonContent}
-              >
-                Cancelar
-              </Button>
-              <Button
-                mode="contained"
-                onPress={handleSubmit}
-                loading={updateConfigMutation.isPending}
-                disabled={updateConfigMutation.isPending || !hasChanges()}
-                style={styles.saveButton}
-                contentStyle={styles.buttonContent}
-                icon="check"
-              >
-                Guardar
-              </Button>
-            </View>
-          )}
-        </View>
-
-        {/* System Info Card */}
-        {config && (
-          <Surface style={styles.infoCard} elevation={1}>
-            <View style={styles.infoContent}>
-              <MaterialCommunityIcons
-                name="information-outline"
-                size={20}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoTitle}>Última actualización</Text>
-                <Text style={styles.infoText}>
-                  {new Date(config.updatedAt).toLocaleString('es-MX', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </Text>
-              </View>
-            </View>
-          </Surface>
-        )}
       </KeyboardAwareScrollView>
 
-      <Portal>
-        <Dialog
-          visible={showDiscardDialog}
-          onDismiss={() => setShowDiscardDialog(false)}
-        >
-          <Dialog.Title>Descartar cambios</Dialog.Title>
-          <Dialog.Content>
-            <Paragraph>
-              ¿Estás seguro de que deseas descartar los cambios realizados?
-            </Paragraph>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowDiscardDialog(false)}>
+      {/* Action Buttons */}
+      <View style={styles.actionContainer}>
+        {!isEditing ? (
+          <Button
+            mode="contained"
+            onPress={() => setIsEditing(true)}
+            style={[
+              styles.editButton,
+              { backgroundColor: theme.colors.tertiary },
+            ]}
+            contentStyle={styles.editButtonContent}
+            labelStyle={styles.editButtonLabel}
+            icon="pencil"
+            textColor={theme.colors.onTertiary}
+          >
+            Editar Configuración
+          </Button>
+        ) : (
+          <View style={styles.editActions}>
+            <Button
+              mode="outlined"
+              onPress={handleCancel}
+              style={styles.cancelButton}
+              contentStyle={styles.buttonContent}
+            >
               Cancelar
             </Button>
-            <Button onPress={confirmDiscard}>Descartar</Button>
-          </Dialog.Actions>
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              loading={updateConfigMutation.isPending}
+              disabled={updateConfigMutation.isPending || !hasChanges()}
+              style={styles.saveButton}
+              contentStyle={styles.buttonContent}
+              icon="check"
+            >
+              Guardar
+            </Button>
+          </View>
+        )}
+      </View>
+
+      {/* System Info Card */}
+      {config && (
+        <Surface style={styles.infoCard} elevation={1}>
+          <View style={styles.infoContent}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={20}
+              color={theme.colors.onSurfaceVariant}
+            />
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoTitle}>Última actualización</Text>
+              <Text style={styles.infoText}>
+                {new Date(config.updatedAt).toLocaleString('es-MX', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </Text>
+            </View>
+          </View>
+        </Surface>
+      )}
+
+      <ConfirmationModal
+        visible={showDiscardDialog}
+        title="Descartar cambios"
+        message="¿Estás seguro de que deseas descartar los cambios realizados?"
+        onConfirm={confirmDiscard}
+        onCancel={() => {
+          setShowDiscardDialog(false);
+          setIsNavigatingAway(false);
+          setPendingTab(null);
+        }}
+        confirmText="Descartar"
+        cancelText="Continuar editando"
+        confirmButtonColor={theme.colors.error}
+      />
+
+      {/* Modal de Área de Cobertura */}
+      <Portal>
+        <Dialog
+          visible={showDeliveryModal}
+          onDismiss={() => {
+            if (!updateDeliveryAreaMutation.isPending) {
+              setShowDeliveryModal(false);
+              setIsEditingDelivery(false);
+            }
+          }}
+          style={styles.deliveryDialog}
+        >
+          <Dialog.Content style={styles.deliveryDialogContent}>
+            <Surface style={styles.deliveryMapWrapper} elevation={1}>
+              <View style={styles.deliveryMapContainer}>
+                <WebViewDeliveryCoverageMap
+                  initialPolygon={formData.deliveryCoverageArea}
+                  isEditing={isEditingDelivery}
+                  onChange={(polygon) =>
+                    setFormData({ ...formData, deliveryCoverageArea: polygon })
+                  }
+                  restaurantLocation={{
+                    latitude: config?.latitude || 20.5425,
+                    longitude: config?.longitude || -102.7935,
+                  }}
+                />
+              </View>
+            </Surface>
+          </Dialog.Content>
+          <View style={styles.deliveryDialogActions}>
+            <View style={styles.deliveryDialogButtonsContainer}>
+              {!isEditingDelivery ? (
+                <>
+                  <Button
+                    onPress={() => setShowDeliveryModal(false)}
+                    mode="outlined"
+                    style={[styles.deliveryDialogButton, styles.cancelButton]}
+                    contentStyle={styles.deliveryButtonContent}
+                    labelStyle={styles.cancelButtonLabel}
+                  >
+                    Cerrar
+                  </Button>
+                  <Button
+                    onPress={() => setIsEditingDelivery(true)}
+                    icon="pencil"
+                    mode="contained"
+                    style={[styles.deliveryDialogButton, styles.editButton]}
+                    contentStyle={styles.deliveryButtonContent}
+                    labelStyle={styles.deliveryButtonLabel}
+                  >
+                    Editar
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onPress={() => setIsEditingDelivery(false)}
+                    mode="outlined"
+                    style={[styles.deliveryDialogButton, styles.cancelButton]}
+                    contentStyle={styles.deliveryButtonContent}
+                    labelStyle={styles.cancelButtonLabel}
+                    disabled={updateDeliveryAreaMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onPress={async () => {
+                      setIsEditingDelivery(false);
+                      // Guardar el área de cobertura inmediatamente
+                      await handleSaveDeliveryArea();
+                      setShowDeliveryModal(false);
+                    }}
+                    mode="contained"
+                    icon="check"
+                    style={[styles.deliveryDialogButton, styles.saveButton]}
+                    contentStyle={styles.deliveryButtonContent}
+                    labelStyle={styles.deliveryButtonLabel}
+                    loading={updateDeliveryAreaMutation.isPending}
+                    disabled={updateDeliveryAreaMutation.isPending}
+                  >
+                    Guardar
+                  </Button>
+                </>
+              )}
+            </View>
+          </View>
         </Dialog>
       </Portal>
     </SafeAreaView>
   );
 };
 
-const createStyles = (theme: AppTheme, width: number) =>
+const createStyles = (theme: AppTheme, width: number, height: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -714,6 +907,11 @@ const createStyles = (theme: AppTheme, width: number) =>
     },
     scrollContent: {
       paddingBottom: theme.spacing.xl,
+    },
+    deliveryContent: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
     },
     loadingContainer: {
       flex: 1,
@@ -790,6 +988,10 @@ const createStyles = (theme: AppTheme, width: number) =>
     sectionContent: {
       gap: theme.spacing.m,
     },
+    deliveryInfo: {
+      paddingHorizontal: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+    },
     // Input styles
     input: {
       backgroundColor: theme.colors.surface,
@@ -851,27 +1053,21 @@ const createStyles = (theme: AppTheme, width: number) =>
     chipText: {
       fontSize: 12,
     },
-    // Delivery placeholder
-    deliveryPlaceholder: {
+    // Delivery styles
+    deliveryInfo: {
+      marginTop: theme.spacing.m,
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: theme.spacing.xl * 2,
-      gap: theme.spacing.m,
-    },
-    placeholderText: {
-      fontSize: 14,
-      color: theme.colors.onSurfaceVariant,
-      textAlign: 'center',
-      opacity: 0.7,
     },
     // Action styles
     actionContainer: {
       marginHorizontal: theme.spacing.m,
       marginTop: theme.spacing.l,
+      alignItems: 'center',
     },
     editButton: {
       borderRadius: 12,
       elevation: 2,
+      alignSelf: 'stretch',
     },
     editButtonContent: {
       paddingVertical: theme.spacing.xs,
@@ -882,7 +1078,10 @@ const createStyles = (theme: AppTheme, width: number) =>
     },
     editActions: {
       flexDirection: 'row',
-      gap: theme.spacing.s,
+      gap: theme.spacing.l,
+      width: '100%',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.m,
     },
     cancelButton: {
       flex: 1,
@@ -921,6 +1120,115 @@ const createStyles = (theme: AppTheme, width: number) =>
       fontSize: 14,
       fontWeight: '500',
       color: theme.colors.onSurfaceVariant,
+    },
+    deliveryContainer: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+    },
+    deliveryActions: {
+      position: 'absolute',
+      bottom: 16,
+      right: 16,
+    },
+    deliveryFab: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+    },
+    deliveryFabSmall: {
+      position: 'absolute',
+      right: 0,
+    },
+    mapSection: {
+      paddingHorizontal: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
+    },
+    // Estilos para el botón de área de cobertura
+    deliveryButtonContainer: {
+      marginTop: theme.spacing.l,
+      alignItems: 'center',
+    },
+    deliveryButton: {
+      borderRadius: 12,
+      width: '100%',
+    },
+    deliveryButtonContent: {
+      paddingVertical: theme.spacing.s,
+    },
+    deliveryButtonLabel: {
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    deliveryStatusText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: theme.spacing.xs,
+      fontStyle: 'italic',
+    },
+    deliveryStatusWarning: {
+      color: theme.colors.error,
+    },
+    // Estilos para el modal
+    deliveryDialog: {
+      maxWidth: width * 0.95,
+      width: width * 0.95,
+      maxHeight: height * 0.9,
+      alignSelf: 'center',
+      borderRadius: 16,
+      backgroundColor: theme.colors.surface,
+    },
+    deliveryDialogContent: {
+      paddingHorizontal: theme.spacing.m,
+      paddingTop: theme.spacing.m,
+      paddingBottom: theme.spacing.m,
+    },
+    deliveryMapWrapper: {
+      borderRadius: 12,
+      padding: theme.spacing.xs,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    deliveryMapContainer: {
+      height: height * 0.65,
+      width: '100%',
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    deliveryDialogActions: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.m,
+      paddingBottom: theme.spacing.l,
+    },
+    deliveryDialogButtonsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: theme.spacing.m,
+    },
+    deliveryDialogButton: {
+      minWidth: 120,
+      borderRadius: 12,
+    },
+    editButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    cancelButton: {
+      borderColor: theme.colors.outline,
+    },
+    saveButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    deliveryButtonContent: {
+      paddingVertical: theme.spacing.s,
+    },
+    deliveryButtonLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    cancelButtonLabel: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: theme.colors.onSurface,
     },
   });
 

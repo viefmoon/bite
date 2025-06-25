@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
 import { CustomConflictException } from '../common/exceptions/custom-conflict.exception';
 import { ProductRepository } from './infrastructure/persistence/product.repository';

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Text,
+  Text,
   Button,
   RadioButton,
   Checkbox,
@@ -13,7 +13,8 @@ Text,
   IconButton,
   Card,
   Chip,
-  Surface,} from 'react-native-paper';
+  Surface,
+} from 'react-native-paper';
 import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { useAppTheme } from '@/app/styles/theme';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput'; // Importar SpeechRecognitionInput

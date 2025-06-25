@@ -21,7 +21,8 @@
     "submit:prod": "eas submit --platform android --profile production",
     "release:prod": "npm run build:prod && npm run submit:prod",
     "release:prod:auto": "eas build --platform android --profile production --auto-submit",
-    "release:playstore": "./scripts/release-to-playstore.sh"
+    "release:playstore": "./scripts/release-to-playstore.sh",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/config-plugins": "~10.0.0",
@@ -29,10 +30,12 @@
     "@expo/prebuild-config": "~9.0.0",
     "@expo/vector-icons": "^14.0.4",
     "@hookform/resolvers": "^5.0.1",
+    "@react-native-community/datetimepicker": "^8.4.2",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/drawer": "^7.3.8",
     "@react-navigation/native": "^7.1.5",
     "@react-navigation/native-stack": "^7.3.9",
+    "@react-navigation/stack": "^7.4.2",
     "@shopify/flash-list": "1.7.6",
     "@tanstack/react-query": "^5.72.1",
     "apisauce": "^3.1.1",
@@ -42,6 +45,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "expo": "^53.0.0",
+    "expo-application": "^6.1.4",
     "expo-audio": "~0.4.6",
     "expo-crypto": "~14.1.5",
     "expo-dev-client": "~5.2.1",
@@ -62,7 +66,9 @@
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-get-random-values": "^1.11.0",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-paper": "^5.13.1",
     "react-native-paper-dates": "^0.22.46",
     "react-native-reanimated": "~3.17.4",
@@ -70,6 +76,7 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-url-polyfill": "^2.0.0",
+    "react-native-webview": "^13.15.0",
     "zod": "^3.24.2",
     "zustand": "^5.0.3"
   },
@@ -85,6 +92,8 @@
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-native": "^4.1.0",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "typescript": "~5.8.3"
   },
   "private": true,

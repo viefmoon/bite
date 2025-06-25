@@ -225,7 +225,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                       { name: 'PrintersStack' },
                       { name: 'RestaurantConfigStack' },
                       { name: 'CustomersStack' },
-                        { name: 'SyncStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
@@ -252,7 +252,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
+                    { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -316,7 +316,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
+                    { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -376,7 +376,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     { name: 'PrintersStack' },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
+                    { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -503,7 +503,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     },
                     { name: 'RestaurantConfigStack' },
                     { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
+                    { name: 'SyncStack' },
                   ],
                 }),
               );
@@ -568,45 +568,40 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                           routes: [{ name: 'Customers' }],
                         },
                       },
-                        { name: 'SyncStack' },
+                      { name: 'SyncStack' },
                     ],
                   }),
                 );
               },
             )}
 
-            {renderDrawerItem(
-              'SyncStack',
-              'Sincronización',
-              'sync',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 12,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      {
-                        name: 'SyncStack',
-                        state: {
-                          routes: [{ name: 'SyncStatus' }],
-                        },
+            {renderDrawerItem('SyncStack', 'Sincronización', 'sync', () => {
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 12,
+                  routes: [
+                    { name: 'OrdersStack' },
+                    { name: 'ReceiptsStack' },
+                    { name: 'OrderFinalizationStack' },
+                    { name: 'MenuStack' },
+                    { name: 'AvailabilityStack' },
+                    { name: 'ModifiersStack' },
+                    { name: 'PizzaCustomizationsStack' },
+                    { name: 'PreparationScreensStack' },
+                    { name: 'AreasTablesStack' },
+                    { name: 'PrintersStack' },
+                    { name: 'RestaurantConfigStack' },
+                    { name: 'CustomersStack' },
+                    {
+                      name: 'SyncStack',
+                      state: {
+                        routes: [{ name: 'SyncStatus' }],
                       },
-                    ],
-                  }),
-                );
-              },
-            )}
+                    },
+                  ],
+                }),
+              );
+            })}
           </PaperDrawer.Section>
         </View>
       </DrawerContentScrollView>

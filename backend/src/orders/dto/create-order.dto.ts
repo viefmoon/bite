@@ -10,9 +10,6 @@ import {
   ValidateNested,
   ValidateIf, // Importar ValidateIf
   IsString,
-  MinLength,
-  MaxLength,
-  Matches,
 } from 'class-validator';
 import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';

@@ -62,13 +62,13 @@ export class RestaurantConfigRelationalRepository
       await this.businessHoursRepository.delete({ restaurantConfigId: id });
 
       // Crear los nuevos horarios
-      const newBusinessHours = businessHours.map(hour => 
+      const newBusinessHours = businessHours.map((hour) =>
         this.businessHoursRepository.create({
           ...hour,
           restaurantConfigId: id,
-        })
+        }),
       );
-      
+
       await this.businessHoursRepository.save(newBusinessHours);
     }
 

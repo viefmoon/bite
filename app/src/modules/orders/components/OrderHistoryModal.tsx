@@ -8,14 +8,15 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Text,
+  Text,
   IconButton,
   Card,
   Divider,
   Chip,
-  Button,} from 'react-native-paper';
+  Button,
+} from 'react-native-paper';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';

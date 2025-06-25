@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-Modal,
+  Modal,
   Portal,
-Text,
+  Text,
   TextInput,
   Button,
   Switch,
@@ -11,7 +11,8 @@ Text,
   Surface,
   Chip,
   Avatar,
-  IconButton,} from 'react-native-paper';
+  IconButton,
+} from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
