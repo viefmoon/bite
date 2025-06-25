@@ -7,11 +7,11 @@ import { photoSchema } from './photo.schema'; // Importar schema de Photo centra
  * Fuente de verdad centralizada.
  */
 export const subCategorySchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
-  categoryId: z.string().uuid('El ID de categoría no es válido'),
+  categoryId: z.string().min(1, 'El ID de categoría no es válido'),
   sortOrder: z.number(),
   photo: photoSchema.nullable().optional(), // Usar photoSchema centralizado
   // Opcional: Incluir productos si es relevante en el dominio general

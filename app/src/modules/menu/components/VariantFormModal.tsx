@@ -15,7 +15,7 @@ import { useAppTheme } from '@/app/styles/theme';
 
 // Schema local para el formulario de variantes
 const variantFormSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().optional(),
   name: z.string().min(1, 'El nombre es requerido'),
   price: z.coerce
     .number({

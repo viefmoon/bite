@@ -14,7 +14,7 @@ export const categoryPhotoSchema = z.object({
  * Fuente de verdad centralizada.
  */
 export const categorySchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),

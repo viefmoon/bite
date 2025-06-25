@@ -8,7 +8,7 @@ import { modifierGroupSchema } from './modifier-group.schema'; // Usar el schema
  * Fuente de verdad centralizada.
  */
 export const productSchema = z.object({
-  id: z.string().uuid(), // ID es requerido en el dominio
+  id: z.string(), // ID es requerido en el dominio
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(), // Campo descripción agregado
   price: z
@@ -22,14 +22,14 @@ export const productSchema = z.object({
   hasVariants: z.boolean(),
   isActive: z.boolean(),
   isPizza: z.boolean().default(false),
-  subcategoryId: z.string().uuid('La subcategoría es requerida'),
+  subcategoryId: z.string().min(1, 'La subcategoría es requerida'),
   sortOrder: z.number(),
   photo: photoSchema.optional().nullable(), // Usar schema centralizado
   estimatedPrepTime: z
     .number()
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
-  preparationScreenId: z.string().uuid().optional().nullable(),
+  preparationScreenId: z.string().optional().nullable(),
   variants: z.array(productVariantSchema).optional(), // Usar schema centralizado
   modifierGroups: z.array(modifierGroupSchema).optional(), // Usar schema centralizado
   createdAt: z.union([z.string().datetime(), z.date()]).optional(), // Incluido desde la interfaz original

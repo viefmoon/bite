@@ -26,6 +26,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   ProductFormInputs,
   productSchema,
+  updateProductSchema,
   ProductVariant,
   Product,
 } from '../schema/products.schema';
@@ -112,7 +113,7 @@ function ProductFormModal({
     setValue,
     formState: { errors },
   } = useForm<ProductFormInputs>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(initialData ? updateProductSchema : productSchema),
     defaultValues: defaultValues,
   });
 

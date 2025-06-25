@@ -61,11 +61,13 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
   const finalActiveBorderColor = focusedBorderColor || theme.colors.primary;
   const finalErrorColor = customErrorColor || theme.colors.error;
 
-  const currentBorderColor = error
-    ? finalErrorColor
-    : isActive
-      ? finalActiveBorderColor
-      : finalBorderColor;
+  const currentBorderColor = disabled
+    ? theme.colors.surfaceVariant
+    : error
+      ? finalErrorColor
+      : isActive
+        ? finalActiveBorderColor
+        : finalBorderColor;
 
   useEffect(() => {
     Animated.timing(animation, {
@@ -143,7 +145,7 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     icon: {},
     disabledOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(230, 230, 230, 0.4)',
+      backgroundColor: theme.dark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.05)',
       zIndex: 3,
       borderRadius: theme.roundness,
     },

@@ -5,7 +5,7 @@ import { z } from 'zod';
  * Fuente de verdad centralizada.
  */
 export const productVariantSchema = z.object({
-  id: z.string().uuid(), // ID es requerido en el dominio
+  id: z.string(), // ID es requerido en el dominio
   name: z.string().min(1, 'El nombre es requerido'),
   price: z.coerce.number({
     // Usar coerce para asegurar que sea número
