@@ -18,6 +18,13 @@ import { ProductsService } from '../../products/products.service';
 import { RestaurantConfigService } from '../../restaurant-config/restaurant-config.service';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { OrderEntity } from '../../orders/infrastructure/persistence/relational/entities/order.entity';
+import { OrderStatus } from '../../orders/domain/enums/order-status.enum';
+import { OrderType } from '../../orders/domain/enums/order-type.enum';
+import { CustomerEntity } from '../../customers/infrastructure/persistence/relational/entities/customer.entity';
+import { OrderItemEntity } from '../../orders/infrastructure/persistence/relational/entities/order-item.entity';
+import { DeliveryInfoEntity } from '../../orders/infrastructure/persistence/relational/entities/delivery-info.entity';
+import { AddressEntity } from '../../customers/infrastructure/persistence/relational/entities/address.entity';
 
 interface RemoteOrder {
   id: string;
@@ -26,8 +33,6 @@ interface RemoteOrder {
   deliveryInfo: any;
   [key: string]: any;
 }
-
-// RemoteCategory interface removed - not used
 
 @Injectable()
 export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
@@ -47,7 +52,9 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     private readonly restaurantConfigService: RestaurantConfigService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {
-    this.syncConfig = this.configService.get<SyncConfig>('sync', { infer: true }) || {
+    this.syncConfig = this.configService.get<SyncConfig>('sync', {
+      infer: true,
+    }) || {
       enabled: false,
       remoteApiUrl: '',
       remoteApiKey: '',
@@ -71,15 +78,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
   async initialize() {
     try {
-      // Conectar WebSocket si está habilitado
       if (this.syncConfig.webSocketEnabled) {
         await this.connectWebSocket();
       }
 
-      // Ejecutar primera sincronización
       await this.runFullSync();
-
-      // Configurar sincronización periódica
       const intervalMs = this.syncConfig.intervalMinutes * 60 * 1000;
       this.syncInterval = setInterval(async () => {
         await this.runFullSync();
@@ -121,7 +124,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       this.logger.error('Error de conexión WebSocket:', error.message);
     });
 
-    // Escuchar notificaciones de nuevas órdenes
     this.socket.on('order:new', async (data: { orderId: string }) => {
       this.logger.log(
         `🆕 Notificación de nueva orden recibida: ${data.orderId}`,
@@ -309,16 +311,118 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
               // Asignar número de orden diario
               const dailyNumber = await this.getNextDailyNumber(manager);
 
+              // Primero, guardar o actualizar el cliente si existe
+              let customer: CustomerEntity | null = null;
+              if (remoteOrder.customer) {
+                // Buscar cliente existente por email o teléfono
+                customer = await manager.findOne(CustomerEntity, {
+                  where: [
+                    { email: remoteOrder.customer.email },
+                    {
+                      whatsappPhoneNumber:
+                        remoteOrder.customer.phoneNumber ||
+                        remoteOrder.customer.whatsappPhoneNumber,
+                    },
+                  ],
+                });
+
+                if (!customer) {
+                  // Crear nuevo cliente
+                  customer = await manager.save(CustomerEntity, {
+                    firstName: remoteOrder.customer.firstName,
+                    lastName: remoteOrder.customer.lastName,
+                    email: remoteOrder.customer.email,
+                    whatsappPhoneNumber:
+                      remoteOrder.customer.phoneNumber ||
+                      remoteOrder.customer.whatsappPhoneNumber,
+                  });
+                }
+              }
+
               // Crear la orden con estado PENDING y isFromWhatsApp = true
-              const createdOrder = await manager.save(OrderEntity, {
-                ...remoteOrder,
+              const subtotal = remoteOrder.subtotal || 0;
+              const order = await manager.save(OrderEntity, {
+                id: remoteOrder.id,
+                customer,
                 dailyNumber,
+                dailyOrderCounterId: remoteOrder.dailyOrderCounterId,
                 isFromWhatsApp: true,
-                orderStatus: 'PENDING', // Las órdenes de WhatsApp inician como PENDING
+                orderStatus: OrderStatus.PENDING,
+                orderType: remoteOrder.orderType || OrderType.DELIVERY,
+                subtotal: subtotal,
+                total: subtotal, // Por ahora total = subtotal
+                notes: remoteOrder.notes,
+                scheduledAt: remoteOrder.scheduledAt,
+                estimatedDeliveryTime: remoteOrder.estimatedDeliveryTime,
               });
 
-              // TODO: Guardar la orden y sus relaciones (items, customer, etc.)
-              // await manager.save('orders', orderData);
+              // Guardar delivery info si existe
+              if (remoteOrder.deliveryInfo) {
+                // Crear o buscar dirección del cliente
+                let address: AddressEntity | null = null;
+                if (customer && remoteOrder.deliveryInfo.address) {
+                  const addressData = remoteOrder.deliveryInfo.address;
+                  address = await manager.save(AddressEntity, {
+                    customer,
+                    name: addressData.name || 'Dirección de entrega',
+                    street: addressData.street || addressData.addressLine1,
+                    number: addressData.number || 'S/N',
+                    interiorNumber:
+                      addressData.interiorNumber || addressData.addressLine2,
+                    neighborhood: addressData.neighborhood,
+                    city: addressData.city,
+                    state: addressData.state,
+                    zipCode: addressData.zipCode,
+                    country: addressData.country || 'México',
+                    latitude: addressData.latitude,
+                    longitude: addressData.longitude,
+                    deliveryInstructions: addressData.deliveryInstructions,
+                    isDefault: false,
+                  });
+                }
+
+                await manager.save(DeliveryInfoEntity, {
+                  order,
+                  recipientName: remoteOrder.deliveryInfo.recipientName,
+                  recipientPhone: remoteOrder.deliveryInfo.recipientPhone,
+                  deliveryInstructions:
+                    remoteOrder.deliveryInfo.deliveryInstructions,
+                  // Campos de dirección desde la dirección del cliente o los datos directos
+                  fullAddress: remoteOrder.deliveryInfo.fullAddress,
+                  street: address?.street || remoteOrder.deliveryInfo.street,
+                  number: address?.number || remoteOrder.deliveryInfo.number,
+                  interiorNumber:
+                    address?.interiorNumber ||
+                    remoteOrder.deliveryInfo.interiorNumber,
+                  neighborhood:
+                    address?.neighborhood ||
+                    remoteOrder.deliveryInfo.neighborhood,
+                  city: address?.city || remoteOrder.deliveryInfo.city,
+                  state: address?.state || remoteOrder.deliveryInfo.state,
+                  zipCode: address?.zipCode || remoteOrder.deliveryInfo.zipCode,
+                  country: address?.country || remoteOrder.deliveryInfo.country,
+                  latitude:
+                    address?.latitude || remoteOrder.deliveryInfo.latitude,
+                  longitude:
+                    address?.longitude || remoteOrder.deliveryInfo.longitude,
+                });
+              }
+
+              // Guardar order items
+              if (remoteOrder.orderItems && remoteOrder.orderItems.length > 0) {
+                for (const item of remoteOrder.orderItems) {
+                  await manager.save(OrderItemEntity, {
+                    order,
+                    productId: item.product?.id,
+                    productVariantId: item.productVariant?.id,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    subtotal: item.subtotal,
+                    notes: item.notes,
+                    // Los modificadores se manejarían aquí si fuera necesario
+                  });
+                }
+              }
 
               this.logger.log(
                 `✅ Orden ${remoteOrder.id} guardada con número diario: ${dailyNumber}`,
@@ -472,24 +576,53 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Método para aceptar órdenes de WhatsApp (cambiar de PENDING a IN_PROGRESS)
-  acceptWhatsAppOrders(
-    orderIds: string[],
-  ): { accepted: number; failed: number } {
+  async acceptWhatsAppOrders(orderIds: string[]): Promise<{
+    accepted: number;
+    failed: number;
+  }> {
     let accepted = 0;
     let failed = 0;
 
-    for (const orderId of orderIds) {
-      try {
-        // TODO: Implementar lógica para cambiar el estado de la orden
-        // await this.ordersService.updateOrderStatus(orderId, OrderStatus.IN_PROGRESS);
+    // Usar transacción para garantizar integridad
+    await this.dataSource.transaction(async (manager) => {
+      for (const orderId of orderIds) {
+        try {
+          // Buscar la orden
+          const order = await manager.findOne(OrderEntity, {
+            where: { id: orderId, isFromWhatsApp: true },
+          });
 
-        this.logger.log(`✅ Orden ${orderId} aceptada`);
-        accepted++;
-      } catch (error) {
-        this.logger.error(`Error al aceptar orden ${orderId}:`, error);
-        failed++;
+          if (!order) {
+            this.logger.warn(
+              `Orden ${orderId} no encontrada o no es de WhatsApp`,
+            );
+            failed++;
+            continue;
+          }
+
+          if (order.orderStatus !== OrderStatus.PENDING) {
+            this.logger.warn(`Orden ${orderId} no está en estado PENDING`);
+            failed++;
+            continue;
+          }
+
+          // Actualizar el estado de la orden
+          await manager.update(
+            OrderEntity,
+            { id: orderId },
+            {
+              orderStatus: OrderStatus.IN_PROGRESS,
+            },
+          );
+
+          this.logger.log(`✅ Orden ${orderId} aceptada`);
+          accepted++;
+        } catch (error) {
+          this.logger.error(`Error al aceptar orden ${orderId}:`, error);
+          failed++;
+        }
       }
-    }
+    });
 
     return { accepted, failed };
   }

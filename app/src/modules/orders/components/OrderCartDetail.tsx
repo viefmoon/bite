@@ -201,22 +201,44 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
   const [editAdjustments, setEditAdjustments] = useState<OrderAdjustment[]>([]);
 
-  // Obtener estado del carrito Y del formulario desde el contexto SOLO si NO estamos en modo edición
-  const cartContext = !isEditMode ? useCart() : null;
+  // Siempre llamar al hook, pero usar sus valores solo si no estamos en modo edición
+  const cartContext = useCart();
 
-  const cartItems = cartContext?.items || [];
-  const removeCartItem = cartContext?.removeItem || (() => {});
-  const updateCartItemQuantity = cartContext?.updateItemQuantity || (() => {});
-  const isCartVisible = cartContext?.isCartVisible || false;
-  const cartOrderType = cartContext?.orderType || OrderTypeEnum.DINE_IN;
-  const setCartOrderType = cartContext?.setOrderType || (() => {});
-  const cartSelectedAreaId = cartContext?.selectedAreaId || null;
-  const setCartSelectedAreaId = cartContext?.setSelectedAreaId || (() => {});
-  const cartSelectedTableId = cartContext?.selectedTableId || null;
-  const setCartSelectedTableId = cartContext?.setSelectedTableId || (() => {});
-  const cartScheduledTime = cartContext?.scheduledTime || null;
-  const setCartScheduledTime = cartContext?.setScheduledTime || (() => {});
-  const cartDeliveryInfo = cartContext?.deliveryInfo || {};
+  const cartItems = !isEditMode ? cartContext?.items || [] : [];
+  const removeCartItem = !isEditMode
+    ? cartContext?.removeItem || (() => {})
+    : () => {};
+  const updateCartItemQuantity = !isEditMode
+    ? cartContext?.updateItemQuantity || (() => {})
+    : () => {};
+  const isCartVisible = !isEditMode
+    ? cartContext?.isCartVisible || false
+    : false;
+  const cartOrderType = !isEditMode
+    ? cartContext?.orderType || OrderTypeEnum.DINE_IN
+    : OrderTypeEnum.DINE_IN;
+  const setCartOrderType = !isEditMode
+    ? cartContext?.setOrderType || (() => {})
+    : () => {};
+  const cartSelectedAreaId = !isEditMode
+    ? cartContext?.selectedAreaId || null
+    : null;
+  const setCartSelectedAreaId = !isEditMode
+    ? cartContext?.setSelectedAreaId || (() => {})
+    : () => {};
+  const cartSelectedTableId = !isEditMode
+    ? cartContext?.selectedTableId || null
+    : null;
+  const setCartSelectedTableId = !isEditMode
+    ? cartContext?.setSelectedTableId || (() => {})
+    : () => {};
+  const cartScheduledTime = !isEditMode
+    ? cartContext?.scheduledTime || null
+    : null;
+  const setCartScheduledTime = !isEditMode
+    ? cartContext?.setScheduledTime || (() => {})
+    : () => {};
+  const cartDeliveryInfo = !isEditMode ? cartContext?.deliveryInfo || {} : {};
   const setCartDeliveryInfo = cartContext?.setDeliveryInfo || (() => {});
   const cartOrderNotes = cartContext?.orderNotes || '';
   const setCartOrderNotes = cartContext?.setOrderNotes || (() => {});

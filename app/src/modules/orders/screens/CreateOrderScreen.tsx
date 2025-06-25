@@ -18,16 +18,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useGetFullMenu } from '../hooks/useMenuQueries';
-// Importar el hook de mutación para crear órdenes
-import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries'; // Usar ruta absoluta
+import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries';
 import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
 import {
-  OrderType,
   Product,
   Category,
   SubCategory,
-  Order, // Importar el tipo Order
 } from '../types/orders.types';
 import { Image } from 'expo-image';
 import { getImageUrl } from '@/app/lib/imageUtils';
@@ -37,11 +34,10 @@ import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
 import CartButton from '../components/CartButton';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
-import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar
-import { getApiErrorMessage } from '@/app/lib/errorMapping'; // Importar mapeo de errores
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 import { useAppTheme } from '@/app/styles/theme';
-// Importar el tipo completo para el payload de confirmación
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
 
 interface CartButtonHandle {
@@ -53,7 +49,6 @@ const CreateOrderScreen = () => {
   const { colors, fonts } = theme;
   const navigation = useNavigation();
   const {
-    items,
     isCartEmpty,
     addItem: originalAddItem,
     updateItem,
@@ -62,16 +57,9 @@ const CreateOrderScreen = () => {
     hideCart,
     clearCart,
     totalItemsCount,
-    setOrderType,
-    setSelectedTableId,
-    setDeliveryInfo,
-    setOrderNotes,
-    setItems,
-    setScheduledTime,
   } = useCart();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  // Instanciar la mutación para crear la orden
   const createOrderMutation = useCreateOrderMutation();
 
   const cartButtonRef = useRef<CartButtonHandle>(null);

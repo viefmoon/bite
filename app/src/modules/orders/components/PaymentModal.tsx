@@ -4,8 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard,
 } from 'react-native';
 import {
@@ -19,7 +17,6 @@ import {
   Divider,
   IconButton,
   Chip,
-  Card,
   ActivityIndicator,
   Surface,
 } from 'react-native-paper';
@@ -27,7 +24,6 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   PaymentMethodEnum,
   PaymentStatusEnum,
-  type Payment,
   type PaymentMethod,
 } from '../types/payment.types';
 import {
@@ -55,14 +51,14 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   TRANSFER: '📱 Transferencia',
 };
 
-const paymentMethodIcons: Record<PaymentMethod, string> = {
+const _paymentMethodIcons: Record<PaymentMethod, string> = {
   CASH: 'cash',
   CARD: 'credit-card',
   TRANSFER: 'bank-transfer',
 };
 
 // Métodos de pago deshabilitados temporalmente
-const disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
+const _disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   visible,
@@ -92,7 +88,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const { data: payments = [], isLoading: isLoadingPayments } =
     useGetPaymentsByOrderIdQuery(orderId);
   const createPaymentMutation = useCreatePaymentMutation();
-  const updatePaymentMutation = useUpdatePaymentMutation();
+  // const updatePaymentMutation = useUpdatePaymentMutation(); // No se usa actualmente
   const deletePaymentMutation = useDeletePaymentMutation();
   const completeOrderMutation = useCompleteOrderMutation();
 
@@ -185,7 +181,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onDismiss();
       }
     } catch (error) {
-      console.error('Error al crear pago:', error);
     }
   };
 
@@ -197,7 +192,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setShowDeleteConfirm(false);
       setPaymentToDelete(null);
     } catch (error) {
-      console.error('Error al eliminar pago:', error);
     }
   };
 
@@ -214,7 +208,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onDismiss();
       }
     } catch (error) {
-      console.error('Error al finalizar orden:', error);
     }
   };
 

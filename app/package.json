@@ -92,8 +92,10 @@
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-native": "^4.1.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
+    "ts-morph": "^26.0.0",
     "typescript": "~5.8.3"
   },
   "private": true,

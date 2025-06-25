@@ -4,17 +4,11 @@ import {
   StyleSheet,
   Alert,
   useWindowDimensions,
-  Platform,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import {
   Surface,
-  Text,
   IconButton,
-  Button,
-  Portal,
-  Dialog,
-  Chip,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
@@ -373,13 +367,14 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             }, 1000);
           }
           break;
-        case 'polygonUpdated':
+        case 'polygonUpdated': {
           const newPolygon = data.coordinates;
           setCurrentPolygon(newPolygon);
           if (onChange) {
             onChange(newPolygon);
           }
           break;
+        }
       }
     } catch (e) {
       console.error('Error handling WebView message:', e);

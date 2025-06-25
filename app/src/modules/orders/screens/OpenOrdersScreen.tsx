@@ -362,7 +362,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           : `No hay órdenes de tipo ${formatOrderType(
               selectedOrderType as OrderType,
             )
-              .replace(/[\u{1F37D}\u{FE0F}\u{1F961}\u{1F69A}]/gu, '')
+              .replace(/[\u{1F37D}]|[\u{FE0F}]|[\u{1F961}]|[\u{1F69A}]/gu, '')
               .trim()}`,
       message:
         selectedOrderType === 'ALL'

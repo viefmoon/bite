@@ -8,7 +8,7 @@ import {
   IsPositive,
   IsUUID,
   ValidateNested,
-  ValidateIf, // Importar ValidateIf
+  ValidateIf,
   IsString,
 } from 'class-validator';
 import { OrderType } from '../domain/enums/order-type.enum';
@@ -25,7 +25,7 @@ export class CreateOrderDto {
     required: false,
   })
   @IsOptional()
-  @ValidateIf((o) => !o.isFromWhatsApp) // Solo validar si no es de WhatsApp
+  @ValidateIf((o) => !o.isFromWhatsApp)
   @IsNotEmpty({
     message: 'El ID del usuario es requerido cuando la orden no es de WhatsApp',
   })

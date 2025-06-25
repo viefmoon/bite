@@ -6,11 +6,11 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './domain/product';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
-import { ProductVariantRepository } from '../product-variants/infrastructure/persistence/product-variant.repository'; // Importar repositorio
+import { ProductVariantRepository } from '../product-variants/infrastructure/persistence/product-variant.repository';
 import { ProductVariant } from '../product-variants/domain/product-variant';
-import { ModifierGroupRepository } from '../modifier-groups/infrastructure/persistence/modifier-group.repository'; // Importar repositorio
+import { ModifierGroupRepository } from '../modifier-groups/infrastructure/persistence/modifier-group.repository';
 import { ModifierGroup } from '../modifier-groups/domain/modifier-group';
-import { PreparationScreenRepository } from '../preparation-screens/infrastructure/persistence/preparation-screen.repository'; // Importar repositorio
+import { PreparationScreenRepository } from '../preparation-screens/infrastructure/persistence/preparation-screen.repository';
 import {
   PRODUCT_REPOSITORY,
   PRODUCT_VARIANT_REPOSITORY,
@@ -28,17 +28,16 @@ export class ProductsService {
   constructor(
     @Inject(PRODUCT_REPOSITORY)
     private readonly productRepository: ProductRepository,
-    @Inject(PRODUCT_VARIANT_REPOSITORY) // Inyectar repositorio
+    @Inject(PRODUCT_VARIANT_REPOSITORY)
     private readonly productVariantRepository: ProductVariantRepository,
-    @Inject(MODIFIER_GROUP_REPOSITORY) // Inyectar repositorio
+    @Inject(MODIFIER_GROUP_REPOSITORY)
     private readonly modifierGroupRepository: ModifierGroupRepository,
-    @Inject(PREPARATION_SCREEN_REPOSITORY) // Inyectar repositorio
+    @Inject(PREPARATION_SCREEN_REPOSITORY)
     private readonly preparationScreenRepository: PreparationScreenRepository,
     private readonly customIdService: CustomIdService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    // Verificar si ya existe un producto con el mismo nombre
     const existingProducts = await this.productRepository.findAll({
       page: 1,
       limit: 1,
@@ -73,7 +72,7 @@ export class ProductsService {
     if (createProductDto.photoId) {
       product.photo = {
         id: createProductDto.photoId,
-        path: '', // Path se resolverá en el dominio si es necesario
+        path: '',
       };
     }
 
@@ -84,22 +83,17 @@ export class ProductsService {
       const modifierGroups: ModifierGroup[] = [];
       for (const groupId of createProductDto.modifierGroupIds) {
         try {
-          // Usar repositorio en lugar de servicio
           const group = await this.modifierGroupRepository.findById(groupId);
           if (!group) {
-            // Manejar caso donde findById devuelve null
             throw new NotFoundException(
               `ModifierGroup with ID ${groupId} not found during creation`,
             );
           }
           modifierGroups.push(group);
         } catch (error) {
-          // Mantener el manejo de NotFoundException por si findById lanza otro error
           if (error instanceof NotFoundException) {
-            // Re-lanzar la excepción original para mantener el mensaje específico
             throw error;
           }
-          // Lanzar otros errores inesperados
           throw error;
         }
       }
@@ -110,21 +104,16 @@ export class ProductsService {
 
     if (createProductDto.preparationScreenId) {
       try {
-        // Usar repositorio en lugar de servicio
         const screen = await this.preparationScreenRepository.findOne(
           createProductDto.preparationScreenId,
         );
-        // findOne ya lanza NotFoundException si no encuentra
         product.preparationScreen = screen;
       } catch (error) {
-        // Mantener el manejo de NotFoundException por si findOne lanza otro error
         if (error instanceof NotFoundException) {
-          // Re-lanzar la excepción original para mantener el mensaje específico
           throw new NotFoundException(
             `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
           );
         }
-        // Lanzar otros errores inesperados
         throw error;
       }
     } else {
@@ -140,7 +129,6 @@ export class ProductsService {
     ) {
       const variants: ProductVariant[] = [];
       for (const variantDto of createProductDto.variants) {
-        // Usar repositorio en lugar de servicio
         const variantToCreate = new ProductVariant();
         variantToCreate.id = await this.customIdService.generateId(
           EntityPrefix.PRODUCT_VARIANT,

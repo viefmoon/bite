@@ -12,6 +12,9 @@ class SyncService {
     const response = await apiClient.get<SyncStatusInfo>(
       `${this.baseUrl}/status`,
     );
+    if (!response.data) {
+      throw new Error('No se pudo obtener el estado de sincronización');
+    }
     return response.data;
   }
 
@@ -19,6 +22,9 @@ class SyncService {
     const response = await apiClient.post<TriggerSyncResponse>(
       `${this.baseUrl}/trigger`,
     );
+    if (!response.data) {
+      throw new Error('No se pudo ejecutar la sincronización');
+    }
     return response.data;
   }
 
@@ -29,6 +35,9 @@ class SyncService {
       `${this.baseUrl}/history`,
       { params: { limit } },
     );
+    if (!response.data) {
+      throw new Error('No se pudo obtener el historial de sincronización');
+    }
     return response.data;
   }
 

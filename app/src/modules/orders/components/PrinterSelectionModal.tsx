@@ -1,19 +1,15 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, FlatList, ListRenderItemInfo } from 'react-native';
+import { StyleSheet, FlatList, ListRenderItemInfo } from 'react-native';
 import {
   Modal,
   Portal,
-  Text,
-  Button,
   List,
   Divider,
-  ActivityIndicator,
   Appbar,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { usePrintersQuery } from '../../printers/hooks/usePrintersQueries';
 import type { ThermalPrinter } from '../../printers/types/printer.types';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 import { useListState } from '../../../app/hooks/useListState';
 
 interface PrinterSelectionModalProps {
@@ -23,7 +19,7 @@ interface PrinterSelectionModalProps {
   title?: string;
 }
 
-const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
+const _PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
   visible,
   onDismiss,
   onPrinterSelect,

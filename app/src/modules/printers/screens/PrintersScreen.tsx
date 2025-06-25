@@ -1,10 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Text,
-  Button,
-  Surface,
   Portal,
   ActivityIndicator,
   IconButton,
@@ -24,14 +21,10 @@ import {
   DiscoveredPrinter,
   ThermalPrinter,
   CreateThermalPrinterDto,
-  UpdateThermalPrinterDto,
-  PrinterConnectionType,
 } from '../types/printer.types';
 import { useListState } from '../../../app/hooks/useListState';
 import {
   usePrintersQuery,
-  useCreatePrinterMutation,
-  useUpdatePrinterMutation,
   useDeletePrinterMutation,
   usePingPrinterMutation, // <-- Importar hook de ping
 } from '../hooks/usePrintersQueries';
@@ -40,7 +33,7 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-const PrintersScreen: React.FC = () => {
+const _PrintersScreen: React.FC = () => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const drawerStatus = useDrawerStatus();
