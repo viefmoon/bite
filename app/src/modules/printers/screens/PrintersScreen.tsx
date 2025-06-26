@@ -33,7 +33,7 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-const _PrintersScreen: React.FC = () => {
+const PrintersScreen: React.FC = () => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const drawerStatus = useDrawerStatus();

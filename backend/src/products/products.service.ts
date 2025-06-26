@@ -384,4 +384,44 @@ export class ProductsService {
     });
     return result.items;
   }
+
+  async getPizzaCustomizations(id: string): Promise<any[]> {
+    const product = await this.productRepository.findOneWithPizzaCustomizations(id);
+    if (!product) {
+      throw new NotFoundException(
+        `Producto con ID ${id} no encontrado`,
+        ERROR_CODES.PRODUCT_NOT_FOUND,
+      );
+    }
+    return product.pizzaCustomizations || [];
+  }
+
+  async updatePizzaCustomizations(
+    id: string,
+    customizationIds: string[],
+  ): Promise<Product> {
+    const product = await this.productRepository.findOne(id);
+    if (!product) {
+      throw new NotFoundException(
+        `Producto con ID ${id} no encontrado`,
+        ERROR_CODES.PRODUCT_NOT_FOUND,
+      );
+    }
+
+    // Actualizar las personalizaciones
+    await this.productRepository.updatePizzaCustomizations(
+      id,
+      customizationIds,
+    );
+
+    // Retornar el producto actualizado con las personalizaciones
+    const updatedProduct = await this.productRepository.findOneWithPizzaCustomizations(id);
+    if (!updatedProduct) {
+      throw new NotFoundException(
+        `Producto con ID ${id} no encontrado después de actualizar`,
+        ERROR_CODES.PRODUCT_NOT_FOUND,
+      );
+    }
+    return updatedProduct;
+  }
 }

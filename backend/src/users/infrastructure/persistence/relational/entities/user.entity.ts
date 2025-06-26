@@ -5,11 +5,14 @@ import {
   Entity,
   Index,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
 import { GenderEnum } from '../../../../enums/gender.enum';
+import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
@@ -72,6 +75,20 @@ export class UserEntity extends EntityRelationalHelper {
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @ManyToMany(() => PreparationScreenEntity, { eager: false })
+  @JoinTable({
+    name: 'user_preparation_screens',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'preparation_screen_id',
+      referencedColumnName: 'id',
+    },
+  })
+  preparationScreens?: PreparationScreenEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

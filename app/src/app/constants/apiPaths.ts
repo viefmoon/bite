@@ -31,6 +31,7 @@ export const API_PATHS = {
 
   AVAILABILITY_MENU: '/api/v1/availability/menu',
   AVAILABILITY_MODIFIER_GROUPS: '/api/v1/availability/modifier-groups',
+  AVAILABILITY_PIZZA_CUSTOMIZATIONS: '/api/v1/availability/pizza-customizations',
   AVAILABILITY_UPDATE: '/api/v1/availability/update',
   AVAILABILITY_BULK_UPDATE: '/api/v1/availability/bulk-update',
 

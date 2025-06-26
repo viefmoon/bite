@@ -309,13 +309,14 @@ const CategoriesScreen: React.FC = () => {
         renderItemActions={(item: Category) => (
           <IconButton
             icon="format-list-bulleted"
-            size={24}
+            size={28}
             onPress={() =>
               navigation.navigate('SubcategoriesScreen', {
                 categoryId: item.id,
                 categoryName: item.name,
               })
             }
+            style={{ margin: 0 }}
           />
         )}
         renderConfig={listRenderConfig}

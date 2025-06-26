@@ -52,7 +52,7 @@ export class AdjustmentsController {
   // }
 
   @Post('bulk')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
   @ApiOperation({ summary: 'Apply multiple adjustments' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -92,7 +92,7 @@ export class AdjustmentsController {
   // }
 
   @Get('order/:orderId')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
   @ApiOperation({ summary: 'Get adjustments for a specific order' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,7 +104,7 @@ export class AdjustmentsController {
   }
 
   @Get('order-item/:orderItemId')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
   @ApiOperation({ summary: 'Get adjustments for a specific order item' })
   @ApiResponse({
     status: HttpStatus.OK,

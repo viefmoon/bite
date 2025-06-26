@@ -12,6 +12,7 @@ import type { RestaurantConfigStackParamList } from '../../modules/restaurantCon
 import type { CustomersStackParamList } from '../../modules/customers/navigation/CustomersStackNavigator';
 import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCustomizations/navigation/types';
 import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStackNavigator';
+import type { UsersStackParamList } from '../../modules/users/navigation/UsersStackNavigator';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -62,6 +63,7 @@ export type AppDrawerParamList = {
   PizzaCustomizationsStack: NavigatorScreenParams<PizzaCustomizationsStackParamList>; // Stack de personalización de pizzas
   CustomersStack: NavigatorScreenParams<CustomersStackParamList>; // Stack de clientes
   SyncStack: NavigatorScreenParams<SyncStackParamList>; // Stack de sincronización
+  UsersStack: NavigatorScreenParams<UsersStackParamList>; // Stack de usuarios
 };
 
 export type DrawerScreenProps<T extends keyof AppDrawerParamList> =
@@ -83,6 +85,7 @@ declare global {
         RestaurantConfigStackParamList,
         PizzaCustomizationsStackParamList,
         CustomersStackParamList,
-        SyncStackParamList {}
+        SyncStackParamList,
+        UsersStackParamList {}
   }
 }

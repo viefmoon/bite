@@ -100,6 +100,11 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     entity.isFromWhatsApp = domain.isFromWhatsApp || false;
     entity.scheduledAt = domain.scheduledAt || null;
     entity.estimatedDeliveryTime = domain.estimatedDeliveryTime || null;
+    
+    // Mapear deliveryInfo si existe
+    if (domain.deliveryInfo) {
+      entity.deliveryInfo = this.deliveryInfoMapper.toEntity(domain.deliveryInfo);
+    }
 
     return entity;
   }

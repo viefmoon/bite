@@ -6,21 +6,27 @@ import {
   ActivityIndicator,
   Surface,
   Text,
+  Menu,
+  IconButton,
+  Badge,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryAvailabilityItem } from '../components/CategoryAvailabilityItem';
 import { ModifierGroupAvailabilityItem } from '../components/ModifierGroupAvailabilityItem';
+import { PizzaCustomizationAvailabilityItem } from '../components/PizzaCustomizationAvailabilityItem';
 import {
   useMenuAvailability,
   useModifierGroupsAvailability,
 } from '../hooks/useAvailabilityQueries';
+import { usePizzaCustomizationsAvailability } from '../hooks/usePizzaCustomizationsAvailability';
 import EmptyState from '@/app/components/common/EmptyState';
 import { useAppTheme } from '@/app/styles/theme';
 
 export const AvailabilityScreen: React.FC = () => {
   const theme = useAppTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'menu' | 'modifiers'>('menu');
+  const [viewMode, setViewMode] = useState<'menu' | 'modifiers' | 'pizzaCustomizations'>('menu');
+  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
 
   const {
     data: menuData,
@@ -34,13 +40,21 @@ export const AvailabilityScreen: React.FC = () => {
     refetch: refetchModifiers,
   } = useModifierGroupsAvailability();
 
+  const {
+    data: pizzaCustomizationsData,
+    isLoading: isLoadingPizzaCustomizations,
+    refetch: refetchPizzaCustomizations,
+  } = usePizzaCustomizationsAvailability(searchQuery);
+
   const handleRefresh = useCallback(() => {
     if (viewMode === 'menu') {
       refetchMenu();
-    } else {
+    } else if (viewMode === 'modifiers') {
       refetchModifiers();
+    } else {
+      refetchPizzaCustomizations();
     }
-  }, [viewMode, refetchMenu, refetchModifiers]);
+  }, [viewMode, refetchMenu, refetchModifiers, refetchPizzaCustomizations]);
 
   const filteredMenuData = useMemo(() => {
     if (!menuData) return [];
@@ -84,11 +98,18 @@ export const AvailabilityScreen: React.FC = () => {
       });
   }, [modifiersData, searchQuery]);
 
-  const isLoading = viewMode === 'menu' ? isLoadingMenu : isLoadingModifiers;
+  const isLoading = viewMode === 'menu' 
+    ? isLoadingMenu 
+    : viewMode === 'modifiers' 
+    ? isLoadingModifiers
+    : isLoadingPizzaCustomizations;
+    
   const isEmpty =
     viewMode === 'menu'
       ? filteredMenuData.length === 0
-      : filteredModifiersData.length === 0;
+      : viewMode === 'modifiers'
+      ? filteredModifiersData.length === 0
+      : !pizzaCustomizationsData || pizzaCustomizationsData.length === 0;
 
   return (
     <SafeAreaView
@@ -96,32 +117,79 @@ export const AvailabilityScreen: React.FC = () => {
       edges={['top']}
     >
       <Surface style={styles.header} elevation={2}>
-        <Searchbar
-          placeholder={`Buscar ${viewMode === 'menu' ? 'productos' : 'modificadores'}...`}
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchbar}
-          elevation={0}
-          icon="magnify"
-        />
-
-        <SegmentedButtons
-          value={viewMode}
-          onValueChange={setViewMode as any}
-          buttons={[
-            {
-              value: 'menu',
-              label: 'Menú',
-              icon: 'food',
-            },
-            {
-              value: 'modifiers',
-              label: 'Modificadores',
-              icon: 'tune',
-            },
-          ]}
-          style={styles.segmentedButtons}
-        />
+        <View style={styles.searchRow}>
+          <Searchbar
+            placeholder={`Buscar ${viewMode === 'menu' ? 'productos' : viewMode === 'modifiers' ? 'modificadores' : 'ingredientes y sabores'}...`}
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchbar}
+            elevation={0}
+            icon="magnify"
+            inputStyle={{ color: theme.colors.onSurface }}
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            iconColor={theme.colors.onSurfaceVariant}
+          />
+          <View style={styles.filterButtonContainer}>
+            <Menu
+              visible={filterMenuVisible}
+              onDismiss={() => setFilterMenuVisible(false)}
+              anchor={
+                <IconButton
+                  icon={viewMode === 'menu' ? 'food' : viewMode === 'modifiers' ? 'tune' : 'cheese'}
+                  mode="contained-tonal"
+                  size={24}
+                  onPress={() => setFilterMenuVisible(true)}
+                  style={styles.filterIconButton}
+                />
+              }
+              anchorPosition="bottom"
+              contentStyle={styles.menuContent}
+            >
+              <Menu.Item
+                onPress={() => {
+                  setViewMode('menu');
+                  setFilterMenuVisible(false);
+                }}
+                title="Menú"
+                leadingIcon="food"
+                trailingIcon={viewMode === 'menu' ? 'check' : undefined}
+                titleStyle={
+                  viewMode === 'menu'
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
+              />
+              <Menu.Item
+                onPress={() => {
+                  setViewMode('modifiers');
+                  setFilterMenuVisible(false);
+                }}
+                title="Modificadores"
+                leadingIcon="tune"
+                trailingIcon={viewMode === 'modifiers' ? 'check' : undefined}
+                titleStyle={
+                  viewMode === 'modifiers'
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
+              />
+              <Menu.Item
+                onPress={() => {
+                  setViewMode('pizzaCustomizations');
+                  setFilterMenuVisible(false);
+                }}
+                title="Ingredientes Pizza"
+                leadingIcon="cheese"
+                trailingIcon={viewMode === 'pizzaCustomizations' ? 'check' : undefined}
+                titleStyle={
+                  viewMode === 'pizzaCustomizations'
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
+              />
+            </Menu>
+          </View>
+        </View>
       </Surface>
 
       <View style={styles.content}>
@@ -134,7 +202,7 @@ export const AvailabilityScreen: React.FC = () => {
                 { color: theme.colors.onSurfaceVariant },
               ]}
             >
-              Cargando {viewMode === 'menu' ? 'categorías' : 'modificadores'}...
+              Cargando {viewMode === 'menu' ? 'categorías' : viewMode === 'modifiers' ? 'modificadores' : 'ingredientes'}...
             </Text>
           </View>
         ) : isEmpty ? (
@@ -168,7 +236,7 @@ export const AvailabilityScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           />
-        ) : (
+        ) : viewMode === 'modifiers' ? (
           <FlatList
             data={filteredModifiersData}
             keyExtractor={(item) => item.id}
@@ -176,6 +244,26 @@ export const AvailabilityScreen: React.FC = () => {
               <ModifierGroupAvailabilityItem
                 modifierGroup={item}
                 onRefresh={handleRefresh}
+              />
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+              />
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          />
+        ) : (
+          <FlatList
+            data={pizzaCustomizationsData || []}
+            keyExtractor={(item) => item.type}
+            renderItem={({ item }) => (
+              <PizzaCustomizationAvailabilityItem
+                group={item}
               />
             )}
             refreshControl={
@@ -200,19 +288,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 12,
     paddingBottom: 12,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   searchbar: {
-    marginBottom: 12,
+    flex: 1,
     borderRadius: 12,
     height: 48,
   },
-  segmentedButtons: {
-    marginBottom: 4,
+  filterButtonContainer: {
+    position: 'relative',
+  },
+  filterIconButton: {
+    margin: 0,
+  },
+  menuContent: {
+    marginTop: 4,
   },
   content: {
     flex: 1,

@@ -6,6 +6,7 @@ import { SubcategoriesModule } from '../subcategories/subcategories.module';
 import { ProductsModule } from '../products/products.module';
 import { ModifierGroupsModule } from '../modifier-groups/modifier-groups.module';
 import { ProductModifiersModule } from '../product-modifiers/product-modifiers.module';
+import { PizzaCustomizationsModule } from '../pizza-customizations/pizza-customizations.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProductModifiersModule } from '../product-modifiers/product-modifiers.m
     ProductsModule,
     ModifierGroupsModule,
     ProductModifiersModule,
+    PizzaCustomizationsModule,
   ],
   controllers: [AvailabilityController],
   providers: [AvailabilityService],

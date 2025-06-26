@@ -42,28 +42,28 @@ export class UserSeedService {
       );
     }
 
-    const countUser = await this.repository.count({
+    const countManager = await this.repository.count({
       where: {
         role: {
-          id: RoleEnum.user,
+          id: RoleEnum.manager,
         },
       },
     });
 
-    if (!countUser) {
+    if (!countManager) {
       const salt = await bcrypt.genSalt();
       const password = await bcrypt.hash('secret', salt);
 
       await this.repository.save(
         this.repository.create({
           firstName: 'John',
-          lastName: 'Doe',
-          email: 'john.doe@example.com',
-          username: 'user',
+          lastName: 'Manager',
+          email: 'manager@example.com',
+          username: 'manager',
           password,
           role: {
-            id: RoleEnum.user,
-            name: 'Admin',
+            id: RoleEnum.manager,
+            name: 'Manager',
           },
           isActive: true,
         }),

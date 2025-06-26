@@ -37,6 +37,18 @@ export class PizzaConfigurationRelationalRepository
     return domainResult;
   }
 
+  async findById(id: string): Promise<PizzaConfiguration | null> {
+    const entity = await this.pizzaConfigurationRepository.findOne({
+      where: { id },
+    });
+
+    if (!entity) {
+      return null;
+    }
+
+    return this.pizzaConfigurationMapper.toDomain(entity);
+  }
+
   async findByProductId(productId: string): Promise<PizzaConfiguration | null> {
     const entity = await this.pizzaConfigurationRepository.findOne({
       where: { productId },
@@ -47,6 +59,27 @@ export class PizzaConfigurationRelationalRepository
     }
 
     return this.pizzaConfigurationMapper.toDomain(entity);
+  }
+
+  async update(
+    id: string,
+    pizzaConfiguration: Partial<PizzaConfiguration>,
+  ): Promise<PizzaConfiguration> {
+    const result = await this.pizzaConfigurationRepository.update(
+      { id },
+      pizzaConfiguration,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+    }
+
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+    }
+
+    return updated;
   }
 
   async updateByProductId(
@@ -63,6 +96,14 @@ export class PizzaConfigurationRelationalRepository
     }
 
     return this.findByProductId(productId);
+  }
+
+  async delete(id: string): Promise<void> {
+    const result = await this.pizzaConfigurationRepository.delete({ id });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+    }
   }
 
   async deleteByProductId(productId: string): Promise<void> {

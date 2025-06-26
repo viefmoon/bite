@@ -4,10 +4,12 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
+import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Entity({ name: 'preparation_screens' })
 export class PreparationScreenEntity {
@@ -34,4 +36,7 @@ export class PreparationScreenEntity {
 
   @OneToMany(() => ProductEntity, (product) => product.preparationScreen)
   products: ProductEntity[];
+
+  @ManyToMany(() => UserEntity, (user) => user.preparationScreens)
+  users?: UserEntity[];
 }

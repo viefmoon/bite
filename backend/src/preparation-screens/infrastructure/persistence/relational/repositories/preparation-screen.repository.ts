@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
 import { PreparationScreenRepository } from '../../preparation-screen.repository';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
@@ -121,5 +121,22 @@ export class PreparationScreensRelationalRepository
     if (result.affected === 0) {
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
+  }
+
+  async findByIds(ids: string[]): Promise<PreparationScreen[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    const entities = await this.preparationScreenRepository.find({
+      where: { id: In(ids) },
+      relations: ['products'],
+    });
+
+    const domainResults = entities
+      .map((entity) => this.preparationScreenMapper.toDomain(entity))
+      .filter((item): item is PreparationScreen => item !== null);
+
+    return domainResults;
   }
 }

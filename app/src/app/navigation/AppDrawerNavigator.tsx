@@ -14,6 +14,7 @@ import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/n
 import { CustomersStackNavigator } from '../../modules/customers/navigation/CustomersStackNavigator';
 import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizations/navigation/PizzaCustomizationsStackNavigator';
 import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavigator';
+import { UsersStackNavigator } from '../../modules/users/navigation/UsersStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -129,10 +130,13 @@ export function AppDrawerNavigator() {
                 title = 'Clientes';
                 break;
               case 'PizzaCustomizationsStack':
-                title = 'Personalización Pizzas';
+                title = 'Gestión de Pizzas';
                 break;
               case 'SyncStack':
                 title = 'Sincronización';
+                break;
+              case 'UsersStack':
+                title = 'Usuarios';
                 break;
 
               default:
@@ -219,7 +223,7 @@ export function AppDrawerNavigator() {
           name="PizzaCustomizationsStack"
           component={PizzaCustomizationsStackNavigator}
           options={{
-            title: 'Personalización Pizzas',
+            title: 'Gestión de Pizzas',
             drawerIcon: ({ color, size }) => (
               <Icon source="pizza" color={color} size={size} />
             ),
@@ -287,6 +291,16 @@ export function AppDrawerNavigator() {
             title: 'Sincronización',
             drawerIcon: ({ color, size }) => (
               <Icon source="sync" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="UsersStack"
+          component={UsersStackNavigator}
+          options={{
+            title: 'Usuarios',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="account-multiple" color={color} size={size} />
             ),
           }}
         />

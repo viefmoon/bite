@@ -35,7 +35,7 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
 1. Run additional container:
 
    ```bash
-   docker compose up -d postgres adminer maildev
+docker compose up -d postgres adminer maildev
    ```
 
   //borrar todo

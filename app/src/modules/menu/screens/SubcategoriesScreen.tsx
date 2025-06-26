@@ -212,13 +212,14 @@ const SubcategoriesScreen: React.FC = () => {
   const renderSubcategoryActions = (item: SubCategory) => (
     <IconButton
       icon="chevron-right"
-      size={24}
+      size={28}
       onPress={() =>
         navigation.navigate('Products', {
           subcategoryId: item.id,
           subCategoryName: item.name,
         })
       }
+      style={{ margin: 0 }}
     />
   );
 

@@ -75,4 +75,17 @@ export const darkTheme = {
 
 export type AppTheme = typeof lightTheme;
 
-export const useAppTheme = () => useTheme() as AppTheme;
+export const useAppTheme = () => {
+  try {
+    const theme = useTheme();
+    // Verificar que el tema sea un objeto válido
+    if (!theme || typeof theme !== 'object') {
+      console.warn('Theme not available, using default light theme');
+      return lightTheme;
+    }
+    return theme as AppTheme;
+  } catch (error) {
+    console.warn('Error accessing theme, using default light theme:', error);
+    return lightTheme;
+  }
+};

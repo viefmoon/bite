@@ -37,7 +37,7 @@ import OrderCartDetail, {
   OrderDetailsForBackend,
 } from '../components/OrderCartDetail';
 import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
-import { CartItem } from '../context/CartContext'; // Para el tipo CartItem
+import { CartItem, CartProvider } from '../context/CartContext'; // Para el tipo CartItem y CartProvider
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
@@ -547,56 +547,57 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         />
         {/* Modal de Edición de Orden usando OrderCartDetail */}
         {editingOrderId && (
-          <OrderCartDetail
-            visible={isEditModalVisible}
-            isEditMode={true}
-            orderId={editingOrderId}
-            orderNumber={
-              ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber
-            }
-            orderDate={
-              ordersData?.find((o) => o.id === editingOrderId)?.createdAt
-                ? new Date(
-                    ordersData.find((o) => o.id === editingOrderId)!.createdAt,
-                  )
-                : undefined
-            }
-            navigation={navigation}
-            pendingProductsToAdd={
-              editingOrderId && temporaryProducts[editingOrderId]
-                ? temporaryProducts[editingOrderId]
-                : pendingProductsToAdd
-            }
-            onItemsCountChanged={(count) => {
-              // Actualizar el conteo de items existentes para esta orden
-              setExistingItemsCount((prev) => ({
-                ...prev,
-                [editingOrderId]: count,
-              }));
-            }}
-            onClose={() => {
-              setIsEditModalVisible(false);
-              setEditingOrderId(null);
-              setPendingProductsToAdd([]);
-              // NO limpiar temporaryProducts aquí para mantener los productos
-              // Refrescar la lista de órdenes por si hubo cambios
-              refetch();
-            }}
-            onAddProducts={() => {
-              // Cerrar el modal temporalmente para navegar
-              setIsEditModalVisible(false);
+          <CartProvider>
+            <OrderCartDetail
+              visible={isEditModalVisible}
+              isEditMode={true}
+              orderId={editingOrderId}
+              orderNumber={
+                ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber
+              }
+              orderDate={
+                ordersData?.find((o) => o.id === editingOrderId)?.createdAt
+                  ? new Date(
+                      ordersData.find((o) => o.id === editingOrderId)!.createdAt,
+                    )
+                  : undefined
+              }
+              navigation={navigation}
+              pendingProductsToAdd={
+                editingOrderId && temporaryProducts[editingOrderId]
+                  ? temporaryProducts[editingOrderId]
+                  : pendingProductsToAdd
+              }
+              onItemsCountChanged={(count) => {
+                // Actualizar el conteo de items existentes para esta orden
+                setExistingItemsCount((prev) => ({
+                  ...prev,
+                  [editingOrderId]: count,
+                }));
+              }}
+              onClose={() => {
+                setIsEditModalVisible(false);
+                setEditingOrderId(null);
+                setPendingProductsToAdd([]);
+                // NO limpiar temporaryProducts aquí para mantener los productos
+                // Refrescar la lista de órdenes por si hubo cambios
+                refetch();
+              }}
+              onAddProducts={() => {
+                // Cerrar el modal temporalmente para navegar
+                setIsEditModalVisible(false);
 
-              const orderId = editingOrderId;
-              const orderNumber = ordersData?.find(
-                (o) => o.id === editingOrderId,
-              )?.dailyNumber;
+                const orderId = editingOrderId;
+                const orderNumber = ordersData?.find(
+                  (o) => o.id === editingOrderId,
+                )?.dailyNumber;
 
-              // Navegar a añadir productos
-              setTimeout(() => {
-                const existingProducts = temporaryProducts[orderId!] || [];
-                navigation.navigate('AddProductsToOrder', {
-                  orderId: orderId!,
-                  orderNumber: orderNumber!,
+                // Navegar a añadir productos
+                setTimeout(() => {
+                  const existingProducts = temporaryProducts[orderId!] || [];
+                  navigation.navigate('AddProductsToOrder', {
+                    orderId: orderId!,
+                    orderNumber: orderNumber!,
                   // Pasar productos temporales existentes si los hay
                   existingTempProducts: existingProducts,
                   existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
@@ -676,6 +677,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               }
             }}
           />
+          </CartProvider>
         )}
       </Portal>
     </SafeAreaView>

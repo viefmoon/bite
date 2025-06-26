@@ -6,6 +6,7 @@ import {
   ScrollView,
   useWindowDimensions,
   BackHandler,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -18,7 +19,7 @@ import {
   Paragraph,
   Surface,
   Chip,
-  SegmentedButtons,
+  Icon,
   IconButton,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -62,33 +63,35 @@ const RestaurantConfigScreen: React.FC = () => {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
   const [isNavigatingAway, setIsNavigatingAway] = useState(false);
+  const [businessHoursModified, setBusinessHoursModified] = useState(false);
 
   // Función para verificar si hay cambios sin guardar
   const hasChanges = React.useCallback(() => {
     if (!config) return false;
-    return (
-      JSON.stringify(formData) !==
-      JSON.stringify({
-        restaurantName: config.restaurantName,
-        phoneMain: config.phoneMain,
-        phoneSecondary: config.phoneSecondary,
-        address: config.address,
-        city: config.city,
-        state: config.state,
-        postalCode: config.postalCode,
-        country: config.country,
-        acceptingOrders: config.acceptingOrders,
-        estimatedPickupTime: config.estimatedPickupTime,
-        estimatedDeliveryTime: config.estimatedDeliveryTime,
-        estimatedDineInTime: config.estimatedDineInTime,
-        openingGracePeriod: config.openingGracePeriod,
-        closingGracePeriod: config.closingGracePeriod,
-        timeZone: config.timeZone,
-        deliveryCoverageArea: config.deliveryCoverageArea,
-        businessHours: config.businessHours,
-      })
-    );
-  }, [config, formData]);
+    
+    // Comparación simple de campos individuales
+    const simpleFieldsChanged = 
+      formData.restaurantName !== config.restaurantName ||
+      formData.phoneMain !== config.phoneMain ||
+      formData.phoneSecondary !== config.phoneSecondary ||
+      formData.address !== config.address ||
+      formData.city !== config.city ||
+      formData.state !== config.state ||
+      formData.postalCode !== config.postalCode ||
+      formData.country !== config.country ||
+      formData.acceptingOrders !== config.acceptingOrders ||
+      formData.estimatedPickupTime !== config.estimatedPickupTime ||
+      formData.estimatedDeliveryTime !== config.estimatedDeliveryTime ||
+      formData.estimatedDineInTime !== config.estimatedDineInTime ||
+      formData.openingGracePeriod !== config.openingGracePeriod ||
+      formData.closingGracePeriod !== config.closingGracePeriod ||
+      formData.timeZone !== config.timeZone;
+    
+    // Comparar área de cobertura
+    const deliveryAreaChanged = JSON.stringify(formData.deliveryCoverageArea) !== JSON.stringify(config.deliveryCoverageArea);
+    
+    return simpleFieldsChanged || deliveryAreaChanged || businessHoursModified;
+  }, [config, formData, businessHoursModified]);
 
   // Interceptar navegación cuando hay cambios sin guardar
   useFocusEffect(
@@ -134,6 +137,16 @@ const RestaurantConfigScreen: React.FC = () => {
 
   React.useEffect(() => {
     if (config) {
+      // Si no hay businessHours, inicializar con valores por defecto
+      const initialBusinessHours = config.businessHours && config.businessHours.length > 0 
+        ? config.businessHours
+        : [0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => ({
+            dayOfWeek,
+            openingTime: '09:00',
+            closingTime: '22:00',
+            isClosed: false,
+          }));
+
       setFormData({
         // Información básica
         restaurantName: config.restaurantName,
@@ -155,7 +168,7 @@ const RestaurantConfigScreen: React.FC = () => {
         // Configuración de delivery
         deliveryCoverageArea: config.deliveryCoverageArea,
         // Horarios
-        businessHours: config.businessHours,
+        businessHours: initialBusinessHours,
       });
     }
   }, [config]);
@@ -180,6 +193,7 @@ const RestaurantConfigScreen: React.FC = () => {
 
       await updateConfigMutation.mutateAsync(dataToSubmit);
       setIsEditing(false);
+      setBusinessHoursModified(false);
     } catch (error) {
       // Error handling is done in the mutation hook
     }
@@ -215,6 +229,16 @@ const RestaurantConfigScreen: React.FC = () => {
 
   const resetForm = () => {
     if (config) {
+      // Usar la misma lógica de inicialización que en useEffect
+      const initialBusinessHours = config.businessHours && config.businessHours.length > 0 
+        ? config.businessHours
+        : [0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => ({
+            dayOfWeek,
+            openingTime: '09:00',
+            closingTime: '22:00',
+            isClosed: false,
+          }));
+
       setFormData({
         restaurantName: config.restaurantName,
         phoneMain: config.phoneMain,
@@ -232,10 +256,11 @@ const RestaurantConfigScreen: React.FC = () => {
         closingGracePeriod: config.closingGracePeriod,
         timeZone: config.timeZone,
         deliveryCoverageArea: config.deliveryCoverageArea,
-        businessHours: config.businessHours,
+        businessHours: initialBusinessHours,
       });
     }
     setIsEditing(false);
+    setBusinessHoursModified(false);
   };
 
   const confirmDiscard = () => {
@@ -257,13 +282,8 @@ const RestaurantConfigScreen: React.FC = () => {
   };
 
   const handleTabChange = (newTab: TabType) => {
-    if (isEditing && hasChanges()) {
-      // Guardar la pestaña a la que quiere ir
-      setPendingTab(newTab);
-      setShowDiscardDialog(true);
-    } else {
-      setActiveTab(newTab);
-    }
+    // Permitir cambio libre de tabs, sin importar si está editando
+    setActiveTab(newTab);
   };
 
   const renderBasicInfo = () => (
@@ -291,34 +311,33 @@ const RestaurantConfigScreen: React.FC = () => {
             outlineStyle={styles.inputOutline}
           />
 
-          <View style={styles.row}>
-            <TextInput
-              label="Teléfono principal"
-              value={formData.phoneMain || ''}
-              onChangeText={(text) =>
-                setFormData({ ...formData, phoneMain: text })
-              }
-              mode="outlined"
-              disabled={!isEditing}
-              style={[styles.input, styles.halfInput]}
-              outlineStyle={styles.inputOutline}
-              keyboardType="phone-pad"
-              left={<TextInput.Icon icon="phone" />}
-            />
-            <TextInput
-              label="Teléfono secundario"
-              value={formData.phoneSecondary || ''}
-              onChangeText={(text) =>
-                setFormData({ ...formData, phoneSecondary: text })
-              }
-              mode="outlined"
-              disabled={!isEditing}
-              style={[styles.input, styles.halfInput]}
-              outlineStyle={styles.inputOutline}
-              keyboardType="phone-pad"
-              left={<TextInput.Icon icon="cellphone" />}
-            />
-          </View>
+          <TextInput
+            label="Teléfono principal"
+            value={formData.phoneMain || ''}
+            onChangeText={(text) =>
+              setFormData({ ...formData, phoneMain: text })
+            }
+            mode="outlined"
+            disabled={!isEditing}
+            style={styles.input}
+            outlineStyle={styles.inputOutline}
+            keyboardType="phone-pad"
+            left={<TextInput.Icon icon="phone" />}
+          />
+          
+          <TextInput
+            label="Teléfono secundario"
+            value={formData.phoneSecondary || ''}
+            onChangeText={(text) =>
+              setFormData({ ...formData, phoneSecondary: text })
+            }
+            mode="outlined"
+            disabled={!isEditing}
+            style={styles.input}
+            outlineStyle={styles.inputOutline}
+            keyboardType="phone-pad"
+            left={<TextInput.Icon icon="cellphone" />}
+          />
 
           <TextInput
             label="Dirección"
@@ -648,9 +667,10 @@ const RestaurantConfigScreen: React.FC = () => {
           <BusinessHoursForm
             businessHours={formData.businessHours || []}
             isEditing={isEditing}
-            onChange={(hours: CreateBusinessHoursDto[]) =>
-              setFormData({ ...formData, businessHours: hours })
-            }
+            onChange={(hours: CreateBusinessHoursDto[]) => {
+              setFormData(prev => ({ ...prev, businessHours: hours }));
+              setBusinessHoursModified(true);
+            }}
           />
         </View>
       </Surface>
@@ -675,46 +695,51 @@ const RestaurantConfigScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Configuración del Restaurante</Text>
-          <Text style={styles.headerSubtitle}>
-            Administra todos los ajustes de tu negocio
-          </Text>
-        </View>
-      </View>
-
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContent}
-        >
-          <SegmentedButtons
-            value={activeTab}
-            onValueChange={(value) => handleTabChange(value as TabType)}
-            buttons={[
-              {
-                value: 'basic',
-                label: 'Información',
-                icon: 'store',
-              },
-              {
-                value: 'operation',
-                label: 'Operación',
-                icon: 'cog',
-              },
-              {
-                value: 'schedule',
-                label: 'Horarios',
-                icon: 'calendar',
-              },
-            ]}
-            style={styles.tabs}
-          />
-        </ScrollView>
+      <View style={styles.header}>
+        <View style={styles.tabsContainer}>
+          <Pressable
+            style={[styles.tab, activeTab === 'basic' && styles.tabActive]}
+            onPress={() => handleTabChange('basic')}
+          >
+            <Icon 
+              source="store" 
+              size={20} 
+              color={activeTab === 'basic' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            />
+            <Text style={[styles.tabText, activeTab === 'basic' && styles.tabTextActive]}>
+              Información
+            </Text>
+          </Pressable>
+          
+          <Pressable
+            style={[styles.tab, activeTab === 'operation' && styles.tabActive]}
+            onPress={() => handleTabChange('operation')}
+          >
+            <Icon 
+              source="cog" 
+              size={20} 
+              color={activeTab === 'operation' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            />
+            <Text style={[styles.tabText, activeTab === 'operation' && styles.tabTextActive]}>
+              Operación
+            </Text>
+          </Pressable>
+          
+          <Pressable
+            style={[styles.tab, activeTab === 'schedule' && styles.tabActive]}
+            onPress={() => handleTabChange('schedule')}
+          >
+            <Icon 
+              source="calendar" 
+              size={20} 
+              color={activeTab === 'schedule' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            />
+            <Text style={[styles.tabText, activeTab === 'schedule' && styles.tabTextActive]}>
+              Horarios
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Content */}
@@ -733,7 +758,10 @@ const RestaurantConfigScreen: React.FC = () => {
         {!isEditing ? (
           <Button
             mode="contained"
-            onPress={() => setIsEditing(true)}
+            onPress={() => {
+              setIsEditing(true);
+              setBusinessHoursModified(false);
+            }}
             style={[
               styles.editButton,
               { backgroundColor: theme.colors.tertiary },
@@ -929,40 +957,37 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       color: theme.colors.error,
       textAlign: 'center',
     },
-    // Header styles
+    // Header y Tabs
     header: {
-      backgroundColor: theme.colors.primaryContainer,
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.m,
-      paddingHorizontal: theme.spacing.m,
-    },
-    headerContent: {
-      alignItems: 'center',
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: theme.colors.onPrimaryContainer,
-      marginBottom: theme.spacing.xs,
-    },
-    headerSubtitle: {
-      fontSize: 13,
-      color: theme.colors.onPrimaryContainer,
-      opacity: 0.8,
-      textAlign: 'center',
-    },
-    // Tabs
-    tabsContainer: {
-      backgroundColor: theme.colors.background,
-      paddingVertical: theme.spacing.s,
+      backgroundColor: theme.colors.elevation.level2,
+      elevation: 0,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.surfaceVariant,
+      borderBottomColor: theme.colors.outlineVariant,
     },
-    tabsContent: {
+    tabsContainer: {
+      flexDirection: 'row',
+      height: 48,
+    },
+    tab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
       paddingHorizontal: theme.spacing.m,
+      gap: theme.spacing.xs,
     },
-    tabs: {
-      minWidth: width - theme.spacing.m * 2,
+    tabActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: theme.colors.primary,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.onSurfaceVariant,
+    },
+    tabTextActive: {
+      color: theme.colors.primary,
+      fontWeight: '600',
     },
     tabContent: {
       padding: theme.spacing.m,

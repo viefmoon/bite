@@ -17,6 +17,12 @@ import { useAuthStore } from '../../store/authStore';
 import { useAppTheme } from '../../styles/theme';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
+import { 
+  hasPermission, 
+  DRAWER_SECTIONS, 
+  DrawerSection 
+} from '../../constants/rolePermissions';
+import { generateNavigationAction } from '../helpers/navigationHelpers';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
@@ -119,6 +125,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     iconName: string,
     navigateToScreen: () => void,
   ) => {
+    // Verificar permisos antes de renderizar
+    if (!hasPermission(user?.role?.id, routeName as DrawerSection)) {
+      return null;
+    }
+
     const isActive = getItemActive(routeName);
 
     return (
@@ -142,6 +153,25 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </Text>
         </View>
       </TouchableRipple>
+    );
+  };
+
+  // Helper simplificado para renderizar items del drawer
+  const renderDrawerItemSimple = (
+    route: DrawerSection,
+    label: string,
+    icon: string,
+  ) => {
+    return renderDrawerItem(
+      route,
+      label,
+      icon,
+      () => {
+        const action = generateNavigationAction(route, user?.role?.id);
+        if (action) {
+          props.navigation.dispatch(action);
+        }
+      }
     );
   };
 
@@ -197,412 +227,60 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </Surface>
           <Divider style={styles.divider} />
 
-          <PaperDrawer.Section style={styles.drawerSection}>
-            <Text style={styles.configSubheader}>Ventas</Text>
-            {renderDrawerItem(
-              'OrdersStack',
-              'Órdenes',
-              'clipboard-list-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [
-                      {
-                        name: 'OrdersStack',
-                        state: {
-                          routes: [{ name: 'Orders' }],
-                        },
-                      },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-            {renderDrawerItem('ReceiptsStack', 'Recibos', 'receipt', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 1,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    {
-                      name: 'ReceiptsStack',
-                      state: {
-                        routes: [{ name: 'ReceiptsList' }],
-                      },
-                    },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                    { name: 'RestaurantConfigStack' },
-                    { name: 'CustomersStack' },
-                    { name: 'SyncStack' },
-                  ],
-                }),
-              );
-            })}
-            {renderDrawerItem(
-              'OrderFinalizationStack',
-              'Finalización',
-              'clipboard-check-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 2,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      {
-                        name: 'OrderFinalizationStack',
-                        state: {
-                          routes: [{ name: 'OrderFinalizationScreen' }],
-                        },
-                      },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-          </PaperDrawer.Section>
+          {/* Sección de Ventas - Solo visible si tiene permisos */}
+          {DRAWER_SECTIONS.sales.items.some(item => 
+            hasPermission(user?.role?.id, item.route as DrawerSection)
+          ) && (
+            <PaperDrawer.Section style={styles.drawerSection}>
+              <Text style={styles.configSubheader}>{DRAWER_SECTIONS.sales.title}</Text>
+              {DRAWER_SECTIONS.sales.items.map(item => 
+                renderDrawerItemSimple(
+                  item.route as DrawerSection,
+                  item.label,
+                  item.icon
+                )
+              )}
+            </PaperDrawer.Section>
+          )}
 
-          <Divider style={styles.divider} />
+          {/* Sección de Configuración - Solo visible si tiene permisos */}
+          {DRAWER_SECTIONS.configuration.items.some(item => 
+            hasPermission(user?.role?.id, item.route as DrawerSection)
+          ) && (
+            <>
+              <Divider style={styles.divider} />
+              <PaperDrawer.Section style={styles.drawerSection}>
+                <Text style={styles.configSubheader}>{DRAWER_SECTIONS.configuration.title}</Text>
+                {DRAWER_SECTIONS.configuration.items.map(item => 
+                  renderDrawerItemSimple(
+                    item.route as DrawerSection,
+                    item.label,
+                    item.icon
+                  )
+                )}
+              </PaperDrawer.Section>
+            </>
+          )}
 
-          <PaperDrawer.Section style={styles.drawerSection}>
-            <Text style={styles.configSubheader}>Configuración</Text>
-            {renderDrawerItem('MenuStack', 'Menú', 'menu', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 3,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    {
-                      name: 'MenuStack',
-                      state: {
-                        routes: [{ name: 'CategoriesScreen' }],
-                      },
-                    },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                    { name: 'RestaurantConfigStack' },
-                    { name: 'CustomersStack' },
-                    { name: 'SyncStack' },
-                  ],
-                }),
-              );
-            })}
+          {/* Sección de Administración - Solo visible si tiene permisos */}
+          {DRAWER_SECTIONS.administration.items.some(item => 
+            hasPermission(user?.role?.id, item.route as DrawerSection)
+          ) && (
+            <>
+              <Divider style={styles.divider} />
 
-            {renderDrawerItem(
-              'AvailabilityStack',
-              'Disponibilidad',
-              'eye-off-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 4,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      {
-                        name: 'AvailabilityStack',
-                        state: {
-                          routes: [{ name: 'AvailabilityScreen' }],
-                        },
-                      },
-                      { name: 'ModifiersStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem('ModifiersStack', 'Modificadores', 'tune', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 5,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    {
-                      name: 'ModifiersStack',
-                      state: {
-                        routes: [{ name: 'ModifierGroupsScreen' }],
-                      },
-                    },
-                    { name: 'PizzaCustomizationsStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                    { name: 'RestaurantConfigStack' },
-                    { name: 'CustomersStack' },
-                    { name: 'SyncStack' },
-                  ],
-                }),
-              );
-            })}
-
-            {renderDrawerItem(
-              'PizzaCustomizationsStack',
-              'Personalización Pizzas',
-              'pizza',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 6,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      {
-                        name: 'PizzaCustomizationsStack',
-                        state: {
-                          routes: [{ name: 'PizzaCustomizationsList' }],
-                        },
-                      },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem(
-              'PreparationScreensStack',
-              'Pantallas Preparación',
-              'monitor-dashboard',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 7,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      {
-                        name: 'PreparationScreensStack',
-                        state: {
-                          routes: [{ name: 'PreparationScreensList' }],
-                        },
-                      },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem(
-              'AreasTablesStack',
-              'Áreas y Mesas',
-              'map-marker-radius-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 8,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      {
-                        name: 'AreasTablesStack',
-                        state: {
-                          routes: [{ name: 'AreasList' }],
-                        },
-                      },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem('PrintersStack', 'Impresoras', 'printer', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 9,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    { name: 'PizzaCustomizationsStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    {
-                      name: 'PrintersStack',
-                      state: {
-                        routes: [{ name: 'PrintersList' }],
-                      },
-                    },
-                    { name: 'RestaurantConfigStack' },
-                    { name: 'CustomersStack' },
-                    { name: 'SyncStack' },
-                  ],
-                }),
-              );
-            })}
-
-            {renderDrawerItem(
-              'RestaurantConfigStack',
-              'Configuración',
-              'cog-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 10,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      {
-                        name: 'RestaurantConfigStack',
-                        state: {
-                          routes: [{ name: 'RestaurantConfig' }],
-                        },
-                      },
-                      { name: 'CustomersStack' },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem(
-              'CustomersStack',
-              'Clientes',
-              'account-group-outline',
-              () => {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 11,
-                    routes: [
-                      { name: 'OrdersStack' },
-                      { name: 'ReceiptsStack' },
-                      { name: 'OrderFinalizationStack' },
-                      { name: 'MenuStack' },
-                      { name: 'AvailabilityStack' },
-                      { name: 'ModifiersStack' },
-                      { name: 'PizzaCustomizationsStack' },
-                      { name: 'PreparationScreensStack' },
-                      { name: 'AreasTablesStack' },
-                      { name: 'PrintersStack' },
-                      { name: 'RestaurantConfigStack' },
-                      {
-                        name: 'CustomersStack',
-                        state: {
-                          routes: [{ name: 'Customers' }],
-                        },
-                      },
-                      { name: 'SyncStack' },
-                    ],
-                  }),
-                );
-              },
-            )}
-
-            {renderDrawerItem('SyncStack', 'Sincronización', 'sync', () => {
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 12,
-                  routes: [
-                    { name: 'OrdersStack' },
-                    { name: 'ReceiptsStack' },
-                    { name: 'OrderFinalizationStack' },
-                    { name: 'MenuStack' },
-                    { name: 'AvailabilityStack' },
-                    { name: 'ModifiersStack' },
-                    { name: 'PizzaCustomizationsStack' },
-                    { name: 'PreparationScreensStack' },
-                    { name: 'AreasTablesStack' },
-                    { name: 'PrintersStack' },
-                    { name: 'RestaurantConfigStack' },
-                    { name: 'CustomersStack' },
-                    {
-                      name: 'SyncStack',
-                      state: {
-                        routes: [{ name: 'SyncStatus' }],
-                      },
-                    },
-                  ],
-                }),
-              );
-            })}
-          </PaperDrawer.Section>
+              <PaperDrawer.Section style={styles.drawerSection}>
+                <Text style={styles.configSubheader}>{DRAWER_SECTIONS.administration.title}</Text>
+                {DRAWER_SECTIONS.administration.items.map(item => 
+                  renderDrawerItemSimple(
+                    item.route as DrawerSection,
+                    item.label,
+                    item.icon
+                  )
+                )}
+              </PaperDrawer.Section>
+            </>
+          )}
         </View>
       </DrawerContentScrollView>
 

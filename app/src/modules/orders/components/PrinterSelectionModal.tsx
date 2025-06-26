@@ -19,7 +19,7 @@ interface PrinterSelectionModalProps {
   title?: string;
 }
 
-const _PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
+const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
   visible,
   onDismiss,
   onPrinterSelect,

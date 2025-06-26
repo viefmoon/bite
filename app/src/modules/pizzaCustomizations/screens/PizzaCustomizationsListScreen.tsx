@@ -11,7 +11,7 @@ import {
   Button,
   Menu,
   IconButton,
-  SegmentedButtons,
+  Badge,
 } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
@@ -36,7 +36,8 @@ export function PizzaCustomizationsListScreen() {
   const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>(
     'all',
   );
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = usePizzaCustomizationsList({
     search: searchQuery || undefined,
@@ -55,17 +56,31 @@ export function PizzaCustomizationsListScreen() {
       backgroundColor: theme.colors.surface,
       elevation: 2,
     },
-    headerTop: {
+    searchRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
+      gap: theme.spacing.s,
     },
     searchbar: {
       flex: 1,
-      marginRight: theme.spacing.s,
+      backgroundColor: theme.colors.elevation.level2,
     },
-    segmentedButtons: {
-      marginBottom: 0,
+    filterButtonContainer: {
+      position: 'relative',
+    },
+    filterIconButton: {
+      margin: 0,
+      backgroundColor: theme.colors.elevation.level2,
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      backgroundColor: theme.colors.primary,
+    },
+    menuContent: {
+      backgroundColor: theme.colors.elevation.level3,
+      marginTop: theme.spacing.xs,
     },
     content: {
       flex: 1,
@@ -90,7 +105,9 @@ export function PizzaCustomizationsListScreen() {
       margin: 16,
       right: 0,
       bottom: 0,
-      backgroundColor: theme.colors.primary,
+    },
+    fabGroup: {
+      paddingBottom: 0,
     },
   });
 
@@ -125,59 +142,85 @@ export function PizzaCustomizationsListScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.header}>
-        <View style={styles.headerTop}>
+        <View style={styles.searchRow}>
           <Searchbar
             placeholder="Buscar personalización..."
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchbar}
-            mode="bar"
             elevation={0}
+            inputStyle={{ color: theme.colors.onSurface }}
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            iconColor={theme.colors.onSurfaceVariant}
           />
-
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={
-              <IconButton
-                icon="dots-vertical"
-                onPress={() => setMenuVisible(true)}
-                size={24}
+          <View style={styles.filterButtonContainer}>
+            <Menu
+              visible={filterMenuVisible}
+              onDismiss={() => setFilterMenuVisible(false)}
+              anchor={
+                <IconButton
+                  icon={selectedType === 'all' ? 'filter-variant' : selectedType === CustomizationType.FLAVOR ? 'food-apple' : 'food-variant'}
+                  mode="contained-tonal"
+                  size={24}
+                  onPress={() => setFilterMenuVisible(true)}
+                  style={styles.filterIconButton}
+                  iconColor={selectedType !== 'all' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                />
+              }
+              anchorPosition="bottom"
+              contentStyle={styles.menuContent}
+            >
+              <Menu.Item
+                onPress={() => {
+                  setSelectedType('all');
+                  setFilterMenuVisible(false);
+                }}
+                title="Todas"
+                leadingIcon="filter-variant"
+                trailingIcon={selectedType === 'all' ? 'check' : undefined}
+                titleStyle={
+                  selectedType === 'all'
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
               />
-            }
-          >
-            <Menu.Item
-              onPress={() => {
-                setMenuVisible(false);
-                navigation.navigate('PizzaConfigurations');
-              }}
-              title="Configuración de Precios"
-              leadingIcon="currency-usd"
-            />
-            <Menu.Item
-              onPress={() => {
-                setMenuVisible(false);
-                navigation.navigate('AssociatePizzaCustomizations');
-              }}
-              title="Asociar a Pizzas"
-              leadingIcon="link-variant"
-            />
-          </Menu>
+              <Menu.Item
+                onPress={() => {
+                  setSelectedType(CustomizationType.FLAVOR);
+                  setFilterMenuVisible(false);
+                }}
+                title="Sabores"
+                leadingIcon="food-apple"
+                trailingIcon={selectedType === CustomizationType.FLAVOR ? 'check' : undefined}
+                titleStyle={
+                  selectedType === CustomizationType.FLAVOR
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
+              />
+              <Menu.Item
+                onPress={() => {
+                  setSelectedType(CustomizationType.INGREDIENT);
+                  setFilterMenuVisible(false);
+                }}
+                title="Ingredientes"
+                leadingIcon="food-variant"
+                trailingIcon={selectedType === CustomizationType.INGREDIENT ? 'check' : undefined}
+                titleStyle={
+                  selectedType === CustomizationType.INGREDIENT
+                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    : undefined
+                }
+              />
+            </Menu>
+            {selectedType !== 'all' && (
+              <Badge
+                style={styles.filterBadge}
+                size={8}
+              />
+            )}
+          </View>
         </View>
-
-        <SegmentedButtons
-          value={selectedType}
-          onValueChange={(value) =>
-            setSelectedType(value as CustomizationType | 'all')
-          }
-          buttons={[
-            { value: 'all', label: 'Todas' },
-            { value: CustomizationType.FLAVOR, label: 'Sabores' },
-            { value: CustomizationType.INGREDIENT, label: 'Ingredientes' },
-          ]}
-          style={styles.segmentedButtons}
-          density="small"
-        />
       </View>
 
       <View style={styles.content}>
@@ -193,12 +236,42 @@ export function PizzaCustomizationsListScreen() {
         />
       </View>
 
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => navigation.navigate('PizzaCustomizationDetail', {})}
-        size="medium"
-      />
+      <Portal>
+        <FAB.Group
+          open={fabOpen}
+          visible
+          icon={fabOpen ? 'close' : 'pizza'}
+          actions={[
+            {
+              icon: 'link-variant',
+              label: 'Asociar a Pizzas',
+              onPress: () => {
+                navigation.navigate('AssociatePizzaCustomizations');
+                setFabOpen(false);
+              },
+            },
+            {
+              icon: 'currency-usd',
+              label: 'Configuración de Precios',
+              onPress: () => {
+                navigation.navigate('PizzaConfigurations');
+                setFabOpen(false);
+              },
+            },
+            {
+              icon: 'plus',
+              label: 'Nueva Personalización',
+              onPress: () => {
+                navigation.navigate('PizzaCustomizationDetail', {});
+                setFabOpen(false);
+              },
+            },
+          ]}
+          onStateChange={({ open }) => setFabOpen(open)}
+          style={styles.fabGroup}
+          fabStyle={styles.fab}
+        />
+      </Portal>
     </SafeAreaView>
   );
 }

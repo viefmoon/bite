@@ -35,8 +35,21 @@ export interface ModifierAvailability {
   modifierGroupId: string;
 }
 
+export interface PizzaCustomizationAvailability {
+  id: string;
+  name: string;
+  type: 'FLAVOR' | 'INGREDIENT';
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface PizzaCustomizationGroupAvailability {
+  type: string;
+  items: PizzaCustomizationAvailability[];
+}
+
 export interface AvailabilityUpdatePayload {
-  type: 'category' | 'subcategory' | 'product' | 'modifierGroup' | 'modifier';
+  type: 'category' | 'subcategory' | 'product' | 'modifierGroup' | 'modifier' | 'pizzaCustomization';
   id: string;
   isActive: boolean;
   cascade?: boolean;

@@ -39,7 +39,6 @@ export const useCreateOrderMutation = () => {
       // Invalidar queries relevantes si es necesario (ej. lista de órdenes)
       // queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       // El mensaje de éxito se maneja en el componente que llama a la mutación
-      console.log('Orden creada con éxito en backend:', newOrder);
     },
     onError: (error) => {
       // El mensaje de error se maneja en el componente que llama a la mutación
@@ -233,12 +232,26 @@ export const useGetOrderByIdQuery = (
 
   return useQuery<Order, ApiError>({
     queryKey: detailQueryKey,
-    queryFn: () => {
+    queryFn: async () => {
       if (!orderId) {
         // Si no hay orderId, no intentar hacer fetch y devolver un error o estado inicial
         return Promise.reject(new Error('Order ID no proporcionado'));
       }
-      return orderService.getOrderById(orderId);
+      const order = await orderService.getOrderById(orderId);
+      
+      // Debug log para ver qué datos vienen del backend
+      console.log('=== DEBUG useGetOrderByIdQuery - Order data from backend ===');
+      console.log('Order ID:', orderId);
+      if (order.orderItems && order.orderItems.length > 0) {
+        const pizzaItems = order.orderItems.filter(
+          (item: any) => item.selectedPizzaCustomizations && item.selectedPizzaCustomizations.length > 0
+        );
+        if (pizzaItems.length > 0) {
+          console.log('Found pizza items:', pizzaItems.length);
+          console.log('First pizza item customizations:', pizzaItems[0].selectedPizzaCustomizations);
+        }
+      }
+      return order;
     },
     enabled: !!orderId && (options?.enabled ?? true), // Habilitar solo si hay orderId y está habilitado externamente
     // Sin staleTime, se usará la configuración global (0)

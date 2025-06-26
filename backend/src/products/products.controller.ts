@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
   UseGuards,
   Query,
   HttpStatus,
@@ -92,6 +93,27 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  // Endpoints de pizza ingredients fueron removidos.
-  // Usar el módulo pizza-customizations en su lugar.
+  @Get(':id/pizza-customizations')
+  @ApiOperation({
+    summary: 'Obtener las personalizaciones de pizza de un producto',
+  })
+  @HttpCode(HttpStatus.OK)
+  async getPizzaCustomizations(@Param('id') id: string) {
+    return this.productsService.getPizzaCustomizations(id);
+  }
+
+  @Put(':id/pizza-customizations')
+  @ApiOperation({
+    summary: 'Actualizar las personalizaciones de pizza de un producto',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async updatePizzaCustomizations(
+    @Param('id') id: string,
+    @Body() customizationIds: string[],
+  ) {
+    return this.productsService.updatePizzaCustomizations(id, customizationIds);
+  }
 }

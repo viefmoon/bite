@@ -12,6 +12,8 @@ import {
   BaseMapper,
   mapArray,
 } from '../../../../../common/mappers/base.mapper';
+import { SelectedPizzaCustomizationEntity } from '../../../../../selected-pizza-customizations/infrastructure/persistence/relational/entities/selected-pizza-customization.entity';
+import { SelectedPizzaCustomization } from '../../../../../selected-pizza-customizations/domain/selected-pizza-customization';
 
 @Injectable()
 export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
@@ -45,6 +47,39 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     domain.productModifiers = mapArray(entity.productModifiers, (mod) =>
       this.productModifierMapper.toDomain(mod),
     );
+    
+    // Mapear selectedPizzaCustomizations
+    if (entity.selectedPizzaCustomizations) {
+      domain.selectedPizzaCustomizations = entity.selectedPizzaCustomizations.map(
+        (customization) => {
+          const domainCustomization = new SelectedPizzaCustomization();
+          domainCustomization.id = customization.id;
+          domainCustomization.orderItemId = customization.orderItemId;
+          domainCustomization.pizzaCustomizationId = customization.pizzaCustomizationId;
+          domainCustomization.half = customization.half;
+          domainCustomization.action = customization.action;
+          domainCustomization.createdAt = customization.createdAt;
+          domainCustomization.updatedAt = customization.updatedAt;
+          domainCustomization.deletedAt = customization.deletedAt;
+          
+          // Incluir información de pizzaCustomization si está disponible
+          if (customization.pizzaCustomization) {
+            domainCustomization.pizzaCustomization = {
+              id: customization.pizzaCustomization.id,
+              name: customization.pizzaCustomization.name,
+              type: customization.pizzaCustomization.type,
+              ingredients: customization.pizzaCustomization.ingredients,
+              toppingValue: customization.pizzaCustomization.toppingValue,
+              isActive: customization.pizzaCustomization.isActive,
+              sortOrder: customization.pizzaCustomization.sortOrder,
+            } as any;
+          }
+          
+          return domainCustomization;
+        },
+      );
+    }
+    
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -74,6 +109,22 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     entity.preparationStatus = domain.preparationStatus;
     entity.statusChangedAt = domain.statusChangedAt;
     entity.preparationNotes = domain.preparationNotes;
+    
+    // Mapear selectedPizzaCustomizations
+    if (domain.selectedPizzaCustomizations) {
+      entity.selectedPizzaCustomizations = domain.selectedPizzaCustomizations.map(
+        (customization) => {
+          const entityCustomization = new SelectedPizzaCustomizationEntity();
+          if (customization.id) entityCustomization.id = customization.id;
+          entityCustomization.orderItemId = customization.orderItemId;
+          entityCustomization.pizzaCustomizationId = customization.pizzaCustomizationId;
+          entityCustomization.half = customization.half;
+          entityCustomization.action = customization.action;
+          return entityCustomization;
+        },
+      );
+    }
+    
     return entity;
   }
 }

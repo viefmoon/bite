@@ -26,6 +26,10 @@ export class PizzaCustomizationMapper extends BaseMapper<
 
     if (entity.products) {
       domain.productIds = entity.products.map((product) => product.id);
+      domain.products = entity.products.map((product) => ({
+        id: product.id,
+        name: product.name,
+      }));
     }
 
     return domain;

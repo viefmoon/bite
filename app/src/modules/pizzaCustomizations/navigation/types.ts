@@ -1,6 +1,5 @@
 export type PizzaCustomizationsStackParamList = {
   PizzaCustomizationsList: undefined;
-  PizzaCustomizationDetail: { id?: string };
+  PizzaCustomizationForm: { id?: string };
   PizzaConfigurations: undefined;
-  AssociatePizzaCustomizations: undefined;
 };

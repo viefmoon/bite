@@ -9,7 +9,6 @@ import { ProductEntity } from '../entities/product.entity';
 import { ProductRepository } from '../../product.repository';
 import { Product } from '../../../../domain/product';
 import { ProductMapper } from '../mappers/product.mapper';
-import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { Paginated } from '../../../../../common/types/paginated.type';
 
 @Injectable()
@@ -17,8 +16,6 @@ export class ProductRelationalRepository implements ProductRepository {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
-    @InjectRepository(ModifierGroupEntity)
-    private readonly modifierGroupRepository: Repository<ModifierGroupEntity>,
     private readonly productMapper: ProductMapper,
   ) {}
 

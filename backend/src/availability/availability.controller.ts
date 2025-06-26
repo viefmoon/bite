@@ -24,7 +24,7 @@ export class AvailabilityController {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
   @Get('menu')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @ApiOperation({ summary: 'Get menu availability status' })
   @ApiResponse({
     status: 200,
@@ -36,7 +36,7 @@ export class AvailabilityController {
   }
 
   @Get('modifier-groups')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @ApiOperation({ summary: 'Get modifier groups availability status' })
   @ApiResponse({
     status: 200,
@@ -47,6 +47,17 @@ export class AvailabilityController {
     ModifierGroupAvailabilityDto[]
   > {
     return this.availabilityService.getModifierGroupsAvailability();
+  }
+
+  @Get('pizza-customizations')
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @ApiOperation({ summary: 'Get pizza customizations availability status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Pizza customizations availability retrieved successfully',
+  })
+  async getPizzaCustomizationsAvailability(): Promise<any[]> {
+    return this.availabilityService.getPizzaCustomizationsAvailability();
   }
 
   @Patch('update')

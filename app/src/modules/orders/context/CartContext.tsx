@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { Product, OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderType y Enum
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
+import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
 
 const generateId = () => {
   return (
@@ -42,6 +43,8 @@ export interface CartItem {
     | 'READY'
     | 'DELIVERED'
     | 'CANCELLED';
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
+  pizzaExtraCost?: number; // Costo extra de personalizaciones de pizza
 }
 
 interface CartContextType {
@@ -54,6 +57,8 @@ interface CartContextType {
     variantId?: string,
     modifiers?: CartItemModifier[],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => void;
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
@@ -65,6 +70,8 @@ interface CartContextType {
     variantId?: string,
     variantName?: string,
     unitPrice?: number,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => void;
   clearCart: () => void;
   isCartEmpty: boolean;
@@ -135,7 +142,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     variantId?: string,
     modifiers: CartItemModifier[] = [],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost: number = 0,
   ) => {
+    
     const variantToAdd = variantId
       ? product.variants?.find((v) => v.id === variantId)
       : undefined;
@@ -156,6 +166,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         if (item.variantId !== variantId) return false;
         if (item.preparationNotes !== preparationNotes) return false;
         if (item.modifiers.length !== modifiers.length) return false;
+        
+        // Comparar modifiers
         const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
           a.id.localeCompare(b.id),
         );
@@ -172,6 +184,33 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             return false;
           }
         }
+        
+        // Comparar pizza customizations
+        const existingCustomizations = item.selectedPizzaCustomizations || [];
+        const newCustomizations = selectedPizzaCustomizations || [];
+        
+        if (existingCustomizations.length !== newCustomizations.length) return false;
+        
+        const sortedExistingCustomizations = [...existingCustomizations].sort((a, b) =>
+          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+            `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+          ),
+        );
+        const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
+          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+            `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+          ),
+        );
+        
+        for (let i = 0; i < sortedExistingCustomizations.length; i++) {
+          if (
+            sortedExistingCustomizations[i].pizzaCustomizationId !== sortedNewCustomizations[i].pizzaCustomizationId ||
+            sortedExistingCustomizations[i].half !== sortedNewCustomizations[i].half ||
+            sortedExistingCustomizations[i].action !== sortedNewCustomizations[i].action
+          ) {
+            return false;
+          }
+        }
 
         return true;
       });
@@ -182,12 +221,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const existingItem = updatedItems[existingItemIndex];
         const newQuantity = existingItem.quantity + quantity;
         const newTotalPrice =
-          (existingItem.unitPrice + modifiersPrice) * newQuantity;
+          (existingItem.unitPrice + modifiersPrice + pizzaExtraCost) * newQuantity;
 
         updatedItems[existingItemIndex] = {
           ...existingItem,
           quantity: newQuantity,
           totalPrice: newTotalPrice,
+          pizzaExtraCost,
         };
 
         return updatedItems;
@@ -199,11 +239,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           productName: product.name,
           quantity,
           unitPrice: unitPrice as number,
-          totalPrice: ((unitPrice as number) + modifiersPrice) * quantity,
+          totalPrice: ((unitPrice as number) + modifiersPrice + pizzaExtraCost) * quantity,
           modifiers,
           variantId,
           variantName: variantToAdd?.name,
           preparationNotes,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
         };
 
         return [...currentItems, newItem];
@@ -230,7 +272,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             (sum, mod) => sum + Number(mod.price || 0),
             0,
           );
-          const newTotalPrice = (item.unitPrice + modifiersPrice) * quantity;
+          const pizzaExtraCost = item.pizzaExtraCost || 0;
+          const newTotalPrice = (item.unitPrice + modifiersPrice + pizzaExtraCost) * quantity;
           return {
             ...item,
             quantity,
@@ -250,6 +293,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     variantId?: string,
     variantName?: string,
     unitPrice?: number,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost: number = 0,
   ) => {
     setItems((currentItems) =>
       currentItems.map((item) => {
@@ -260,7 +305,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           );
           const finalUnitPrice =
             unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
+          const newTotalPrice = (finalUnitPrice + modifiersPrice + pizzaExtraCost) * quantity;
           return {
             ...item,
             quantity,
@@ -274,6 +319,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
               variantName !== undefined ? variantName : item.variantName,
             unitPrice: finalUnitPrice,
             totalPrice: newTotalPrice,
+            selectedPizzaCustomizations:
+              selectedPizzaCustomizations !== undefined
+                ? selectedPizzaCustomizations
+                : item.selectedPizzaCustomizations,
+            pizzaExtraCost,
           };
         }
         return item;

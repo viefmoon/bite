@@ -33,6 +33,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
 import { CartItem, CartItemModifier } from '../context/CartContext';
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 // Props de navegación
 type AddProductsRouteProps = {
@@ -153,6 +154,8 @@ const AddProductsToOrderScreen = () => {
     selectedVariantId?: string,
     selectedModifiers?: CartItemModifier[],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => {
     const selectedVariant = product.variants?.find(
       (v) => v.id === selectedVariantId,
@@ -160,7 +163,8 @@ const AddProductsToOrderScreen = () => {
     const variantPrice = selectedVariant?.price || product.price;
     const modifiersPrice =
       selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
-    const unitPrice = variantPrice + modifiersPrice;
+    const pizzaCost = pizzaExtraCost || 0;
+    const unitPrice = variantPrice + modifiersPrice + pizzaCost;
 
     // Buscar si ya existe un item idéntico en la selección actual
     const existingIndex = selectedProducts.findIndex((item) => {
@@ -178,8 +182,37 @@ const AddProductsToOrderScreen = () => {
         .map((m) => m.id)
         .sort()
         .join(',');
+      
+      if (itemModifierIds !== newModifierIds) return false;
 
-      return itemModifierIds === newModifierIds;
+      // Comparar pizza customizations
+      const existingCustomizations = item.selectedPizzaCustomizations || [];
+      const newCustomizations = selectedPizzaCustomizations || [];
+      
+      if (existingCustomizations.length !== newCustomizations.length) return false;
+      
+      const sortedExistingCustomizations = [...existingCustomizations].sort((a, b) =>
+        `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+          `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+        ),
+      );
+      const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
+        `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+          `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+        ),
+      );
+      
+      for (let i = 0; i < sortedExistingCustomizations.length; i++) {
+        if (
+          sortedExistingCustomizations[i].pizzaCustomizationId !== sortedNewCustomizations[i].pizzaCustomizationId ||
+          sortedExistingCustomizations[i].half !== sortedNewCustomizations[i].half ||
+          sortedExistingCustomizations[i].action !== sortedNewCustomizations[i].action
+        ) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     if (existingIndex !== -1) {
@@ -194,8 +227,9 @@ const AddProductsToOrderScreen = () => {
           (sum, mod) => sum + Number(mod.price || 0),
           0,
         );
+        const pizzaCostTotal = existingItem.pizzaExtraCost || 0;
         const unitPriceWithModifiers =
-          Number(existingItem.unitPrice || 0) + modifiersTotal;
+          Number(existingItem.unitPrice || 0) + modifiersTotal + pizzaCostTotal;
 
         updated[existingIndex] = {
           ...existingItem,
@@ -211,12 +245,14 @@ const AddProductsToOrderScreen = () => {
         productId: product.id,
         productName: product.name,
         quantity,
-        unitPrice,
+        unitPrice: variantPrice,
         totalPrice: unitPrice * quantity,
         modifiers: selectedModifiers || [],
         variantId: selectedVariantId,
         variantName: selectedVariant?.name,
         preparationNotes,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       };
 
       setSelectedProducts((prev) => [...prev, newItem]);
@@ -239,6 +275,8 @@ const AddProductsToOrderScreen = () => {
     variantId?: string,
     variantName?: string,
     unitPrice?: number,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => {
     setSelectedProducts((prev) =>
       prev.map((item) => {
@@ -247,9 +285,10 @@ const AddProductsToOrderScreen = () => {
             (sum, mod) => sum + Number(mod.price || 0),
             0,
           );
+          const pizzaCost = pizzaExtraCost || 0;
           const finalUnitPrice =
             unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
+          const newTotalPrice = (finalUnitPrice + modifiersPrice + pizzaCost) * quantity;
 
           return {
             ...item,
@@ -264,6 +303,11 @@ const AddProductsToOrderScreen = () => {
               variantName !== undefined ? variantName : item.variantName,
             unitPrice: finalUnitPrice,
             totalPrice: newTotalPrice,
+            selectedPizzaCustomizations:
+              selectedPizzaCustomizations !== undefined
+                ? selectedPizzaCustomizations
+                : item.selectedPizzaCustomizations,
+            pizzaExtraCost,
           };
         }
         return item;
@@ -277,6 +321,8 @@ const AddProductsToOrderScreen = () => {
     selectedVariantId?: string,
     selectedModifiers?: CartItemModifier[],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => {
     if (editingItem) {
       // Si estamos editando, actualizar el item existente
@@ -290,6 +336,8 @@ const AddProductsToOrderScreen = () => {
         selectedVariantId
           ? product.variants?.find((v) => v.id === selectedVariantId)?.price
           : product.price,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       );
       setEditingItem(null);
     } else {
@@ -300,6 +348,8 @@ const AddProductsToOrderScreen = () => {
         selectedVariantId,
         selectedModifiers,
         preparationNotes,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       );
     }
     setSelectedProduct(null);
@@ -723,6 +773,8 @@ const AddProductsToOrderScreen = () => {
                 variantId,
                 variantName,
                 unitPrice,
+                selectedPizzaCustomizations,
+                pizzaExtraCost,
               ) => {
                 updateItemInSelection(
                   itemId,
@@ -732,6 +784,8 @@ const AddProductsToOrderScreen = () => {
                   variantId,
                   variantName,
                   unitPrice,
+                  selectedPizzaCustomizations,
+                  pizzaExtraCost,
                 );
                 setEditingItem(null);
                 setSelectedProduct(null);

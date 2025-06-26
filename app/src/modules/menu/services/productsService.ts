@@ -161,7 +161,7 @@ async function updatePizzaCustomizations(
 ): Promise<Product> {
   const response = await apiClient.put<Product>(
     `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
-    { pizzaCustomizationIds },
+    pizzaCustomizationIds, // Enviar el array directamente
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);

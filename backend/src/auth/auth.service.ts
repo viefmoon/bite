@@ -106,7 +106,7 @@ export class AuthService {
       ...dto,
       email: dto.email,
       role: {
-        id: RoleEnum.user,
+        id: RoleEnum.waiter,
       },
       isActive: initialIsActive,
     });

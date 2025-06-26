@@ -1,6 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { Role } from '../../roles/domain/role';
 import { GenderEnum } from '../enums/gender.enum';
+import { PreparationScreen } from '../../preparation-screens/domain/preparation-screen';
 
 export class User {
   id: string;
@@ -39,6 +40,8 @@ export class User {
   role: Role;
 
   isActive: boolean;
+
+  preparationScreens?: PreparationScreen[];
 
   createdAt: Date;
 

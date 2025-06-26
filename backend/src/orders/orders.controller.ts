@@ -63,7 +63,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   create(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
     return this.ordersService.create(createOrderDto);
   }
@@ -77,7 +77,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   async findAll(
     @Query() filterOptions: FindAllOrdersDto,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -103,7 +103,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
   findOpenOrders(): Promise<Order[]> {
     return this.ordersService.findOpenOrders();
@@ -118,7 +118,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
   findOrdersForFinalization(): Promise<Order[]> {
     return this.ordersService.findOrdersForFinalization();
@@ -132,7 +132,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
   finalizeMultipleOrders(
     @Body() finalizeOrdersDto: FinalizeOrdersDto,
@@ -150,7 +150,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
     return this.ordersService.findOne(id);
   }
@@ -164,7 +164,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateOrderDto: UpdateOrderDto,
@@ -210,7 +210,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   findByUserId(
     @Param('userId', ParseUUIDPipe) userId: string,
   ): Promise<Order[]> {
@@ -226,7 +226,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   findByTableId(
     @Param('tableId', ParseUUIDPipe) tableId: string,
   ): Promise<Order[]> {
@@ -259,7 +259,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   createOrderItem(
     @Param('orderId', ParseUUIDPipe) orderId: string,
     @Body() createOrderItemDto: CreateOrderItemDto,
@@ -277,7 +277,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   findOrderItemsByOrderId(
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ): Promise<OrderItem[]> {
@@ -293,7 +293,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   findOrderItemById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<OrderItem> {
@@ -309,7 +309,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   updateOrderItem(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateOrderItemDto: UpdateOrderItemDto,
@@ -326,7 +326,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   removeOrderItem(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.ordersService.deleteOrderItem(id);
   }
@@ -343,7 +343,7 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   async getOrderHistory(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,

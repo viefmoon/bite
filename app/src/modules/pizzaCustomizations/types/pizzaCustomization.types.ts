@@ -5,8 +5,8 @@ export enum CustomizationType {
 
 export enum PizzaHalf {
   FULL = 'FULL',
-  LEFT = 'LEFT',
-  RIGHT = 'RIGHT',
+  HALF_1 = 'HALF_1',
+  HALF_2 = 'HALF_2',
 }
 
 export enum CustomizationAction {
@@ -22,6 +22,8 @@ export interface PizzaCustomization {
   toppingValue: number;
   isActive: boolean;
   sortOrder: number;
+  productIds?: string[];
+  products?: { id: string; name: string }[];
   createdAt: string;
   updatedAt: string;
 }

@@ -83,11 +83,10 @@ export class OrdersService {
     // Crear la información de entrega (siempre requerida)
     const deliveryInfo: DeliveryInfo = {
       id: uuidv4(),
-      orderId: '', // Se asignará después de crear la orden
       ...createOrderDto.deliveryInfo,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as DeliveryInfo;
 
     const order = await this.orderRepository.create({
       userId: createOrderDto.userId || null,
@@ -115,6 +114,7 @@ export class OrdersService {
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
           productModifiers: itemDto.productModifiers, // Pasar los modificadores aquí
+          selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations, // IMPORTANTE: Pasar las personalizaciones de pizza
         };
         // Guardar el item
         await this.createOrderItemInternal(createOrderItemDto); // Usar método interno
@@ -145,6 +145,20 @@ export class OrdersService {
           (modifier) => ({ id: modifier.modifierId }) as any,
         )
       : [];
+    
+    // Mapear las personalizaciones de pizza si existen
+    if (createOrderItemDto.selectedPizzaCustomizations) {
+      orderItem.selectedPizzaCustomizations = createOrderItemDto.selectedPizzaCustomizations.map(
+        (customization) => ({
+          id: uuidv4(),
+          orderItemId: orderItem.id,
+          pizzaCustomizationId: customization.pizzaCustomizationId,
+          half: customization.half,
+          action: customization.action,
+        }) as any,
+      );
+    }
+    
     return this.orderItemRepository.save(orderItem);
   }
 
@@ -233,6 +247,7 @@ export class OrdersService {
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
           productModifiers: itemDto.productModifiers,
+          selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations,
         };
 
         await this.createOrderItemInternal(createOrderItemDto);

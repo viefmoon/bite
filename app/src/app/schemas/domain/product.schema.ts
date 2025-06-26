@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { photoSchema } from './photo.schema';
 import { productVariantSchema } from './product-variant.schema';
-import { modifierGroupSchema } from './modifier-group.schema'; // Usar el schema centralizado
+import { modifierGroupSchema } from './modifier-group.schema';
 
 /**
  * Esquema Zod para validar un objeto Product completo.
@@ -21,20 +21,24 @@ export const productSchema = z.object({
     .nullable(),
   hasVariants: z.boolean(),
   isActive: z.boolean(),
-  isPizza: z.boolean().default(false),
+  isPizza: z.boolean(),
   subcategoryId: z.string().min(1, 'La subcategoría es requerida'),
   sortOrder: z.number(),
-  photo: photoSchema.optional().nullable(), // Usar schema centralizado
+  photo: photoSchema.optional().nullable(),
   estimatedPrepTime: z
     .number()
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
   preparationScreenId: z.string().optional().nullable(),
-  variants: z.array(productVariantSchema).optional(), // Usar schema centralizado
-  modifierGroups: z.array(modifierGroupSchema).optional(), // Usar schema centralizado
-  createdAt: z.union([z.string().datetime(), z.date()]).optional(), // Incluido desde la interfaz original
-  updatedAt: z.union([z.string().datetime(), z.date()]).optional(), // Incluido desde la interfaz original
+  variants: z.array(productVariantSchema).optional(),
+  modifierGroups: z.array(modifierGroupSchema).optional(),
+  pizzaCustomizations: z.array(z.any()).optional(),
+  pizzaConfiguration: z.any().optional(),
+  createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+  updatedAt: z.union([z.string().datetime(), z.date()]).optional()
 });
 
-// Tipo TypeScript inferido y exportado centralmente
-export type Product = z.infer<typeof productSchema>;
+export type Product = z.infer<typeof productSchema> & {
+  pizzaCustomizations?: any[];
+  pizzaConfiguration?: any;
+};

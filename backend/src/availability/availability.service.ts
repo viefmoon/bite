@@ -4,6 +4,7 @@ import { SubcategoriesService } from '../subcategories/subcategories.service';
 import { ProductsService } from '../products/products.service';
 import { ModifierGroupsService } from '../modifier-groups/modifier-groups.service';
 import { ProductModifiersService } from '../product-modifiers/product-modifiers.service';
+import { PizzaCustomizationsService } from '../pizza-customizations/pizza-customizations.service';
 import {
   AvailabilityType,
   AvailabilityUpdateDto,
@@ -22,14 +23,14 @@ export class AvailabilityService {
     private readonly productsService: ProductsService,
     private readonly modifierGroupsService: ModifierGroupsService,
     private readonly productModifiersService: ProductModifiersService,
+    private readonly pizzaCustomizationsService: PizzaCustomizationsService,
   ) {}
 
   async getMenuAvailability(): Promise<CategoryAvailabilityDto[]> {
-    // Obtener todas las categorías (activas e inactivas)
     const categoriesResult = await this.categoriesService.findAllPaginated({
       page: 1,
       limit: 1000,
-      isActive: undefined, // Obtener todas, activas e inactivas
+      isActive: undefined,
     });
 
     const menuAvailability: CategoryAvailabilityDto[] = [];
@@ -72,14 +73,41 @@ export class AvailabilityService {
     return menuAvailability;
   }
 
+  async getPizzaCustomizationsAvailability(): Promise<any[]> {
+    const customizationsResult = await this.pizzaCustomizationsService.findAll({
+      page: 1,
+      limit: 1000,
+      isActive: undefined,
+    });
+
+    const groupedByType = customizationsResult.items.reduce((acc, customization) => {
+      const type = customization.type;
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push({
+        id: customization.id,
+        name: customization.name,
+        type: customization.type,
+        isActive: customization.isActive ?? true,
+        sortOrder: customization.sortOrder,
+      });
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return Object.entries(groupedByType).map(([type, items]) => ({
+      type,
+      items: items.sort((a, b) => a.sortOrder - b.sortOrder),
+    }));
+  }
+
   async getModifierGroupsAvailability(): Promise<
     ModifierGroupAvailabilityDto[]
   > {
-    // Obtener todos los grupos de modificadores (activos e inactivos)
     const modifierGroupsResult = await this.modifierGroupsService.findAll({
       page: 1,
       limit: 1000,
-      isActive: undefined, // Obtener todos, activos e inactivos
+      isActive: undefined,
     });
 
     const availability: ModifierGroupAvailabilityDto[] = [];
@@ -124,6 +152,9 @@ export class AvailabilityService {
       case AvailabilityType.MODIFIER:
         await this.updateModifierAvailability(id, isActive);
         break;
+      case AvailabilityType.PIZZA_CUSTOMIZATION:
+        await this.updatePizzaCustomizationAvailability(id, isActive);
+        break;
     }
   }
 
@@ -132,15 +163,12 @@ export class AvailabilityService {
     isActive: boolean,
     cascade?: boolean,
   ): Promise<void> {
-    // Actualizar la categoría
     await this.categoriesService.update(categoryId, { isActive });
 
     if (cascade) {
-      // Obtener todas las subcategorías de esta categoría
       const subcategories =
         await this.subcategoriesService.findAllByCategoryId(categoryId);
 
-      // Actualizar cada subcategoría y sus productos
       for (const subcategory of subcategories) {
         await this.updateSubcategoryAvailability(
           subcategory.id,
@@ -156,15 +184,12 @@ export class AvailabilityService {
     isActive: boolean,
     cascade?: boolean,
   ): Promise<void> {
-    // Actualizar la subcategoría
     await this.subcategoriesService.update(subcategoryId, { isActive });
 
     if (cascade) {
-      // Obtener todos los productos de esta subcategoría
       const products =
         await this.productsService.findAllBySubcategoryId(subcategoryId);
 
-      // Actualizar cada producto
       for (const product of products) {
         await this.productsService.update(product.id, { isActive });
       }
@@ -183,15 +208,12 @@ export class AvailabilityService {
     isActive: boolean,
     cascade?: boolean,
   ): Promise<void> {
-    // Actualizar el grupo de modificadores
     await this.modifierGroupsService.update(groupId, { isActive });
 
     if (cascade) {
-      // Obtener todos los modificadores de este grupo
       const modifiers =
         await this.productModifiersService.findByGroupId(groupId);
 
-      // Actualizar cada modificador
       for (const modifier of modifiers) {
         await this.productModifiersService.update(modifier.id, { isActive });
       }
@@ -205,10 +227,16 @@ export class AvailabilityService {
     await this.productModifiersService.update(modifierId, { isActive });
   }
 
+  private async updatePizzaCustomizationAvailability(
+    customizationId: string,
+    isActive: boolean,
+  ): Promise<void> {
+    await this.pizzaCustomizationsService.update(customizationId, { isActive });
+  }
+
   async bulkUpdateAvailability(
     updates: AvailabilityUpdateDto[],
   ): Promise<void> {
-    // Procesar las actualizaciones en orden para respetar las dependencias
     for (const update of updates) {
       await this.updateAvailability(update);
     }

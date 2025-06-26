@@ -7,6 +7,7 @@ export enum AvailabilityType {
   PRODUCT = 'product',
   MODIFIER_GROUP = 'modifierGroup',
   MODIFIER = 'modifier',
+  PIZZA_CUSTOMIZATION = 'pizzaCustomization',
 }
 
 export class AvailabilityUpdateDto {

@@ -9,6 +9,7 @@ export class PizzaCustomization {
   isActive: boolean;
   sortOrder: number;
   productIds?: string[]; // Array de IDs de productos relacionados
+  products?: { id: string; name: string }[]; // Array de productos con información básica
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

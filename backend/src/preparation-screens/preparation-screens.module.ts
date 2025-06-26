@@ -15,6 +15,6 @@ import { RelationalSubcategoryPersistenceModule } from '../subcategories/infrast
   ],
   controllers: [PreparationScreensController],
   providers: [PreparationScreensService],
-  exports: [PreparationScreensService],
+  exports: [PreparationScreensService, RelationalPreparationScreenPersistenceModule],
 })
 export class PreparationScreensModule {}

@@ -100,6 +100,7 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @OneToMany(
     () => SelectedPizzaCustomizationEntity,
     (selectedCustomization) => selectedCustomization.orderItem,
+    { cascade: true }
   )
   selectedPizzaCustomizations: SelectedPizzaCustomizationEntity[];
 

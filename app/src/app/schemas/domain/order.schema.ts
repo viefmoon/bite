@@ -32,6 +32,15 @@ export type OrderItemModifier = z.infer<typeof orderItemModifierSchema>;
 // Schema para las personalizaciones de pizza seleccionadas
 export const selectedPizzaCustomizationSchema = z.object({
   pizzaCustomizationId: z.string(),
+  pizzaCustomization: z.object({
+    id: z.string(),
+    name: z.string(),
+    type: z.enum(['FLAVOR', 'INGREDIENT']),
+    ingredients: z.string().nullable().optional(),
+    toppingValue: z.number(),
+    isActive: z.boolean(),
+    sortOrder: z.number(),
+  }).optional(),
   half: z.nativeEnum(PizzaHalf),
   action: z.nativeEnum(CustomizationAction),
 });

@@ -17,7 +17,6 @@ import type { UpdateOrderPayload } from '../types/update-order.types'; // Import
 const createOrder = async (
   orderData: OrderDetailsForBackend,
 ): Promise<Order> => {
-  // Asegúrate de que la ruta sea correcta para crear órdenes
   const response = await apiClient.post<Order>(API_PATHS.ORDERS, orderData);
   return handleApiResponse(response);
 };

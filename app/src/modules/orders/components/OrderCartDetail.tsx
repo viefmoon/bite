@@ -54,10 +54,11 @@ import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para 
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
 import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema'; // Para personalizaciones de pizza
+import { CustomizationType, PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
-  productModifierId: string;
+  modifierId: string;
   quantity?: number;
   price?: number | null;
 }
@@ -625,6 +626,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             (unitPrice + modifiersPrice) * existingItem.quantity;
         } else {
           // Si es un nuevo item, agregarlo al mapa
+          
+          // Debug para pizzas (solo en desarrollo)
+          if (item.selectedPizzaCustomizations && item.selectedPizzaCustomizations.length > 0 && __DEV__) {
+            console.log('=== DEBUG OrderCartDetail - Mapeando pizza desde backend ===');
+            console.log('Product:', item.product?.name);
+            console.log('Raw customizations from backend:', item.selectedPizzaCustomizations);
+            console.log('First customization detail:', item.selectedPizzaCustomizations[0]);
+            
+            // Verificar si incluye información completa de pizzaCustomization
+            if (item.selectedPizzaCustomizations[0].pizzaCustomization) {
+              console.log('Pizza customization info available:', item.selectedPizzaCustomizations[0].pizzaCustomization);
+            } else {
+              console.log('WARNING: Pizza customization info NOT available, only ID');
+            }
+          }
+          
           const cartItem: CartItem = {
             id: item.id, // Usar el ID del primer item del grupo
             productId: item.productId,
@@ -679,6 +696,105 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setHasUnsavedChanges(false);
   }, [isEditMode, orderData, visible]);
 
+  // Función para formatear las personalizaciones de pizza
+  const formatPizzaCustomizations = (customizations: SelectedPizzaCustomization[]): string => {
+    if (!customizations || customizations.length === 0) return '';
+    
+    // Agrupar por mitad y tipo
+    const groupedByHalf = customizations.reduce((acc, curr) => {
+      const half = curr.half === PizzaHalf.HALF_1 ? 'HALF_1' : 
+                   curr.half === PizzaHalf.HALF_2 ? 'HALF_2' : 
+                   'FULL';
+      
+      if (!acc[half]) {
+        acc[half] = { flavors: [], addedIngredients: [], removedIngredients: [] };
+      }
+      
+      // Primero intentar obtener la información de pizzaCustomization si está disponible
+      let name = '';
+      let type = null;
+      
+      if (curr.pizzaCustomization) {
+        // Si viene la información completa del backend
+        name = curr.pizzaCustomization.name;
+        type = curr.pizzaCustomization.type;
+      } else if (menu) {
+        // Si no viene la información completa, buscarla en el menú
+        outer: for (const category of menu) {
+          for (const subcategory of category.subcategories || []) {
+            for (const product of subcategory.products || []) {
+              if (product.pizzaCustomizations) {
+                const customization = product.pizzaCustomizations.find(
+                  pc => pc.id === curr.pizzaCustomizationId
+                );
+                if (customization) {
+                  name = customization.name;
+                  type = customization.type;
+                  break outer;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Si aún no tenemos el nombre, usar el ID como fallback
+      if (!name) {
+        name = curr.pizzaCustomizationId;
+      }
+      
+      if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
+        acc[half].flavors.push(name);
+      } else if (type === 'INGREDIENT' || type === CustomizationType.INGREDIENT) {
+        if (curr.action === CustomizationAction.ADD) {
+          acc[half].addedIngredients.push(name);
+        } else {
+          acc[half].removedIngredients.push(name);
+        }
+      }
+      
+      return acc;
+    }, {} as Record<string, { flavors: string[], addedIngredients: string[], removedIngredients: string[] }>);
+    
+    // Formatear según el tipo de pizza
+    if (groupedByHalf.FULL) {
+      // Pizza completa
+      const parts: string[] = [];
+      if (groupedByHalf.FULL.flavors.length > 0) {
+        parts.push(groupedByHalf.FULL.flavors.join(', '));
+      }
+      if (groupedByHalf.FULL.addedIngredients.length > 0) {
+        parts.push(`con: ${groupedByHalf.FULL.addedIngredients.join(', ')}`);
+      }
+      if (groupedByHalf.FULL.removedIngredients.length > 0) {
+        parts.push(`sin: ${groupedByHalf.FULL.removedIngredients.join(', ')}`);
+      }
+      return parts.join(' - ');
+    } else if (groupedByHalf.HALF_1 || groupedByHalf.HALF_2) {
+      // Pizza mitad y mitad
+      const formatHalf = (halfData: { flavors: string[], addedIngredients: string[], removedIngredients: string[] }) => {
+        const parts: string[] = [];
+        if (halfData.flavors.length > 0) {
+          parts.push(halfData.flavors.join(', '));
+        }
+        if (halfData.addedIngredients.length > 0) {
+          parts.push(`con: ${halfData.addedIngredients.join(', ')}`);
+        }
+        if (halfData.removedIngredients.length > 0) {
+          parts.push(`sin: ${halfData.removedIngredients.join(', ')}`);
+        }
+        return parts.join(' - ');
+      };
+      
+      const half1 = groupedByHalf.HALF_1 ? formatHalf(groupedByHalf.HALF_1) : '';
+      const half2 = groupedByHalf.HALF_2 ? formatHalf(groupedByHalf.HALF_2) : '';
+      
+      return half1 && half2 ? `(${half1} / ${half2})` : half1 || half2;
+    }
+    
+    return '';
+  }
+
   // Función para agrupar items idénticos
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
@@ -689,8 +805,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         .map((m) => m.id)
         .sort()
         .join(',');
+      
+      // Incluir personalizaciones de pizza en la clave
+      const pizzaCustomizationIds = item.selectedPizzaCustomizations
+        ? item.selectedPizzaCustomizations
+            .map((pc) => `${pc.pizzaCustomizationId}-${pc.half}-${pc.action}`)
+            .sort()
+            .join(',')
+        : '';
 
-      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'NEW'}`;
+      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'NEW'}`;
 
       const existingItem = groupedMap.get(groupKey);
 
@@ -985,10 +1109,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
           preparationNotes: item.preparationNotes || null,
           // Mapear modificadores al formato del backend
-          modifiers:
+          productModifiers:
             item.modifiers && item.modifiers.length > 0
               ? item.modifiers.map((mod) => ({
-                  productModifierId: mod.id,
+                  modifierId: mod.id,
                   quantity: 1,
                   price: mod.price,
                 }))
@@ -997,6 +1121,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined,
         });
       }
+      
     });
 
     // Formatear el número de teléfono para el backend
@@ -1047,7 +1172,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           orderType === OrderTypeEnum.DELIVERY
             ? deliveryInfo.fullAddress
             : undefined,
-        ...deliveryInfo,
+        // Solo incluir instrucciones de entrega si es delivery y existen
+        deliveryInstructions:
+          orderType === OrderTypeEnum.DELIVERY && deliveryInfo.deliveryInstructions
+            ? deliveryInfo.deliveryInstructions
+            : undefined,
       },
       notes: orderNotes || undefined,
       adjustments: isEditMode
@@ -1067,10 +1196,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         : undefined,
     };
 
-    console.log(
-      'Payload final a enviar:',
-      JSON.stringify(orderDetails, null, 2),
-    );
 
     if (!orderDetails.userId) {
       console.error('Error: Falta el ID del usuario al confirmar la orden.');
@@ -2063,21 +2188,34 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                               const hasNotes =
                                 item.preparationNotes &&
                                 item.preparationNotes.trim() !== '';
+                              const hasPizzaCustomizations =
+                                item.selectedPizzaCustomizations &&
+                                item.selectedPizzaCustomizations.length > 0;
 
-                              if (hasModifiers && hasNotes) {
-                                return (
-                                  <View>
-                                    {item.modifiers.map((mod, index) => (
-                                      <Text
-                                        key={mod.id || index}
-                                        style={styles.itemDescription}
-                                      >
-                                        • {mod.name}{' '}
-                                        {mod.price && mod.price > 0
-                                          ? `(+$${mod.price.toFixed(2)})`
-                                          : ''}
-                                      </Text>
-                                    ))}
+                              return (
+                                <View>
+                                  {/* Renderizar personalizaciones de pizza */}
+                                  {hasPizzaCustomizations && (
+                                    <Text style={styles.itemDescription}>
+                                      {formatPizzaCustomizations(item.selectedPizzaCustomizations)}
+                                    </Text>
+                                  )}
+                                  
+                                  {/* Renderizar modificadores */}
+                                  {hasModifiers && item.modifiers.map((mod, index) => (
+                                    <Text
+                                      key={mod.id || index}
+                                      style={styles.itemDescription}
+                                    >
+                                      • {mod.name}{' '}
+                                      {mod.price && mod.price > 0
+                                        ? `(+$${mod.price.toFixed(2)})`
+                                        : ''}
+                                    </Text>
+                                  ))}
+                                  
+                                  {/* Renderizar notas */}
+                                  {hasNotes && (
                                     <Text
                                       style={[
                                         styles.itemDescription,
@@ -2086,38 +2224,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                                     >
                                       Notas: {item.preparationNotes}
                                     </Text>
-                                  </View>
-                                );
-                              } else if (hasModifiers) {
-                                return (
-                                  <View>
-                                    {item.modifiers.map((mod, index) => (
-                                      <Text
-                                        key={mod.id || index}
-                                        style={styles.itemDescription}
-                                      >
-                                        • {mod.name}{' '}
-                                        {mod.price && mod.price > 0
-                                          ? `(+$${mod.price.toFixed(2)})`
-                                          : ''}
-                                      </Text>
-                                    ))}
-                                  </View>
-                                );
-                              } else if (hasNotes) {
-                                return (
-                                  <Text
-                                    style={[
-                                      styles.itemDescription,
-                                      styles.notesText,
-                                    ]}
-                                  >
-                                    Notas: {item.preparationNotes}
-                                  </Text>
-                                );
-                              } else {
-                                return null;
-                              }
+                                  )}
+                                </View>
+                              );
                             })()}
                           </View>
                         )}

@@ -28,6 +28,10 @@ import { CartItemModifier, CartItem } from '../context/CartContext';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { PizzaCustomization, PizzaConfiguration } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import { PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import PizzaCustomizationSectionV2 from './PizzaCustomizationSectionV2';
 
 interface ProductCustomizationModalProps {
   visible: boolean;
@@ -40,6 +44,8 @@ interface ProductCustomizationModalProps {
     variantId?: string,
     modifiers?: CartItemModifier[],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => void;
   onUpdateItem?: (
     itemId: string,
@@ -49,6 +55,8 @@ interface ProductCustomizationModalProps {
     variantId?: string,
     variantName?: string,
     unitPrice?: number,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => void;
 }
 
@@ -96,6 +104,42 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  
+  // Estados para pizzas
+  const [pizzaCustomizations, setPizzaCustomizations] = useState<PizzaCustomization[]>([]);
+  const [pizzaConfiguration, setPizzaConfiguration] = useState<PizzaConfiguration | null>(null);
+  const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] = useState<SelectedPizzaCustomization[]>([]);
+
+  // Función para calcular el precio extra de las pizzas
+  const calculatePizzaExtraCost = useCallback(() => {
+    if (!product.isPizza || !pizzaConfiguration) return 0;
+    
+    let totalToppingValue = 0;
+    
+    // Solo contar customizaciones con action = ADD
+    const addedCustomizations = selectedPizzaCustomizations.filter(c => c.action === CustomizationAction.ADD);
+    
+    for (const selected of addedCustomizations) {
+      const customization = pizzaCustomizations.find(c => c.id === selected.pizzaCustomizationId);
+      if (!customization) continue;
+      
+      if (selected.half === PizzaHalf.FULL) {
+        // Pizza completa suma el toppingValue completo
+        totalToppingValue += customization.toppingValue;
+      } else {
+        // Media pizza suma la mitad del toppingValue
+        totalToppingValue += customization.toppingValue / 2;
+      }
+    }
+    
+    // Solo cobrar por toppings que excedan los incluidos
+    if (totalToppingValue > pizzaConfiguration.includedToppings) {
+      const extraToppings = totalToppingValue - pizzaConfiguration.includedToppings;
+      return extraToppings * Number(pizzaConfiguration.extraToppingCost);
+    }
+    
+    return 0;
+  }, [product.isPizza, pizzaConfiguration, selectedPizzaCustomizations, pizzaCustomizations]);
 
   // Función para verificar si hay cambios
   const checkForChanges = useCallback(() => {
@@ -205,6 +249,26 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       reset({ preparationNotes: '' });
     }
   }, [product, editingItem, reset]);
+
+  // Usar datos de pizza que ya vienen con el producto
+  useEffect(() => {
+    if (!product || !visible) return;
+    
+    // Si es una pizza, usar los datos que ya vienen con el producto
+    if (product.isPizza) {
+      if (product.pizzaConfiguration) {
+        setPizzaConfiguration(product.pizzaConfiguration);
+      }
+      if (product.pizzaCustomizations) {
+        setPizzaCustomizations(product.pizzaCustomizations);
+      }
+      
+      // Si estamos editando, cargar las personalizaciones seleccionadas
+      if (editingItem && editingItem.selectedPizzaCustomizations) {
+        setSelectedPizzaCustomizations(editingItem.selectedPizzaCustomizations);
+      }
+    }
+  }, [product, visible, editingItem]);
 
   // Detectar cambios
   useEffect(() => {
@@ -363,15 +427,25 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         selectedVariantId,
         variant?.name,
         unitPrice,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       );
     } else {
       // Si es un nuevo item, agregarlo al carrito
+      console.log('=== DEBUG ProductCustomizationModal - Añadiendo al carrito ===');
+      console.log('Product:', product.name, 'isPizza:', product.isPizza);
+      console.log('Selected Pizza Customizations:', selectedPizzaCustomizations);
+      console.log('Pizza Configuration:', pizzaConfiguration);
+      console.log('Pizza Extra Cost:', pizzaExtraCost);
+      
       onAddToCart(
         product,
         quantity,
         selectedVariantId,
         selectedModifiers,
         watchedPreparationNotes,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       );
     }
     onDismiss();
@@ -416,7 +490,8 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
     (sum, mod) => sum + Number(mod.price || 0),
     0,
   );
-  const totalPrice = (basePrice + modifiersPrice) * quantity;
+  const pizzaExtraCost = calculatePizzaExtraCost();
+  const totalPrice = (basePrice + modifiersPrice + pizzaExtraCost) * quantity;
 
   return (
     <Portal>
@@ -440,7 +515,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
           <View style={styles.appBarSpacer} />
         </Appbar.Header>
 
-        <ScrollView style={styles.scrollView}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={true}>
           {product.hasVariants &&
             product.variants &&
             Array.isArray(product.variants) &&
@@ -518,6 +593,17 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                 </Card.Content>
               </Card>
             )}
+
+          {/* Sección de Personalización de Pizza - Después de variantes */}
+          {product.isPizza && (
+            <PizzaCustomizationSectionV2
+              pizzaCustomizations={pizzaCustomizations}
+              pizzaConfiguration={pizzaConfiguration}
+              selectedPizzaCustomizations={selectedPizzaCustomizations}
+              onCustomizationChange={setSelectedPizzaCustomizations}
+              loading={false}
+            />
+          )}
 
           {product.modifierGroups &&
             Array.isArray(product.modifierGroups) &&
@@ -798,6 +884,14 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                     </Text>
                   </View>
                 )}
+                {pizzaExtraCost > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Toppings extra:</Text>
+                    <Text style={styles.summaryValue}>
+                      +${pizzaExtraCost.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Cantidad:</Text>
                   <Text style={styles.summaryValue}>×{quantity}</Text>
@@ -824,7 +918,9 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             // Podrías agregar lógica de disabled si es necesario
             // disabled={!isValidSelection()}
           >
-            {editingItem ? 'Actualizar Item' : 'Agregar al Carrito'}
+            {editingItem 
+              ? `Actualizar Item - $${totalPrice.toFixed(2)}` 
+              : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
           </Button>
         </View>
       </Modal>

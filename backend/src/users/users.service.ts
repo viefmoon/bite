@@ -16,11 +16,16 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 import { Role } from '../roles/domain/role';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
+import { PreparationScreenRepository } from '../preparation-screens/infrastructure/persistence/preparation-screen.repository';
+import { PREPARATION_SCREEN_REPOSITORY } from '../common/tokens';
+import { In } from 'typeorm';
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject(USER_REPOSITORY) private readonly usersRepository: UserRepository,
+    @Inject(PREPARATION_SCREEN_REPOSITORY)
+    private readonly preparationScreensRepository: PreparationScreenRepository,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -259,5 +264,53 @@ export class UsersService {
 
   async remove(id: User['id']): Promise<void> {
     await this.usersRepository.remove(id);
+  }
+
+  async updatePreparationScreens(
+    id: User['id'],
+    preparationScreenIds: string[],
+  ): Promise<User | null> {
+    const user = await this.usersRepository.findById(id);
+    
+    if (!user) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          id: 'userNotExists',
+        },
+      });
+    }
+
+    // Solo los usuarios con rol Kitchen pueden tener pantallas de preparación
+    if (user.role.id !== RoleEnum.kitchen) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          role: 'onlyKitchenUsersCanHavePreparationScreens',
+        },
+      });
+    }
+
+    // Verificar que todas las pantallas existen
+    if (preparationScreenIds.length > 0) {
+      const screens = await this.preparationScreensRepository.findByIds(
+        preparationScreenIds,
+      );
+      
+      if (screens.length !== preparationScreenIds.length) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            preparationScreens: 'somePreparationScreensNotExist',
+          },
+        });
+      }
+    }
+
+    // Actualizar las pantallas de preparación del usuario
+    return this.usersRepository.updatePreparationScreens(
+      id,
+      preparationScreenIds,
+    );
   }
 }

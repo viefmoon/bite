@@ -32,7 +32,7 @@ export class TicketImpressionsController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter, RoleEnum.kitchen)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:

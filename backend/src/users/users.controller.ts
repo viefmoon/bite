@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserPreparationScreensDto } from './dto/update-user-preparation-screens.dto';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -135,5 +136,28 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: User['id']): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @ApiOkResponse({
+    type: User,
+  })
+  @SerializeOptions({
+    groups: ['admin'],
+  })
+  @Patch(':id/preparation-screens')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  updatePreparationScreens(
+    @Param('id') id: User['id'],
+    @Body() updateUserPreparationScreensDto: UpdateUserPreparationScreensDto,
+  ): Promise<User | null> {
+    return this.usersService.updatePreparationScreens(
+      id,
+      updateUserPreparationScreensDto.preparationScreenIds,
+    );
   }
 }

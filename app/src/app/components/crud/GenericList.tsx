@@ -18,6 +18,9 @@ import {
   SegmentedButtons,
   FAB,
   Portal,
+  Menu,
+  IconButton,
+  Badge,
 } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
@@ -90,24 +93,52 @@ const getStyles = (theme: AppTheme) => {
       paddingBottom: theme.spacing.xs,
       backgroundColor: theme.colors.background,
     },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
     searchbar: {
+      flex: 1,
       backgroundColor: theme.colors.elevation.level2,
+    },
+    searchbarWithFilter: {
+      flex: 1,
+    },
+    filterButtonContainer: {
+      position: 'relative',
+    },
+    filterIconButton: {
+      margin: 0,
+      backgroundColor: theme.colors.elevation.level2,
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      backgroundColor: theme.colors.primary,
+    },
+    menuContent: {
+      backgroundColor: theme.colors.elevation.level3,
+      marginTop: theme.spacing.xs,
     },
     listItem: {
       backgroundColor: theme.colors.surface,
       marginVertical: theme.spacing.xs,
-      marginHorizontal: theme.spacing.m,
-      borderRadius: theme.roundness * 1.5,
+      marginHorizontal: theme.spacing.l,
+      borderRadius: theme.roundness * 2,
       elevation: 2,
       overflow: 'hidden',
     },
     listItemContent: {
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: theme.spacing.s,
+      paddingHorizontal: theme.spacing.xs,
     },
     listItemImage: {
-      width: 60,
-      height: 60,
+      width: 56,
+      height: 56,
       borderRadius: theme.roundness,
+      marginLeft: theme.spacing.s,
       marginRight: theme.spacing.m,
       backgroundColor: theme.colors.surfaceDisabled,
     },
@@ -199,6 +230,7 @@ const GenericList = <TItem extends { id: string }>({
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
   const isSearchControlled =
     externalSearchQuery !== undefined && onSearchChange !== undefined;
   const currentSearchTerm = isSearchControlled
@@ -458,58 +490,94 @@ const GenericList = <TItem extends { id: string }>({
     ]);
   }, [styles.defaultContentContainer, contentContainerStyle]);
 
+  const currentFilterLabel = useMemo(() => {
+    if (filterOptions && filterValue !== undefined) {
+      const currentFilter = filterOptions.find(
+        (opt) => opt.value === filterValue,
+      );
+      return currentFilter?.label || 'Filtros';
+    }
+    return 'Filtros';
+  }, [filterOptions, filterValue]);
+
+  const hasActiveFilter = filterValue !== 'all' && filterValue !== undefined;
+
   return (
     <View style={styles.listContainer}>
-      {filterOptions && filterValue !== undefined && onFilterChange && (
-        <Surface style={styles.filtersOuterContainer} elevation={0}>
-          <SegmentedButtons
-            value={String(filterValue)}
-            onValueChange={(value) => {
-              const selectedOption = filterOptions.find(
-                (opt) => String(opt.value) === value,
-              );
-              if (selectedOption) {
-                onFilterChange(selectedOption.value);
-              }
-            }}
-            buttons={filterOptions.map((option) => ({
-              value: String(option.value),
-              label: option.label,
-              icon: option.icon,
-              disabled: option.disabled,
-              style: styles.filterButton,
-              labelStyle: styles.filterButtonLabel,
-              showSelectedCheck: false,
-            }))}
-            style={styles.segmentedButtons}
-            density="medium"
-          />
-        </Surface>
-      )}
-
-      {enableSearch && (
+      {(enableSearch || (filterOptions && filterValue !== undefined && onFilterChange)) && (
         <View style={styles.searchbarContainer}>
-          <Searchbar
-            placeholder={searchPlaceholder}
-            onChangeText={
-              isSearchControlled ? onSearchChange : setInternalSearchTerm
-            }
-            value={currentSearchTerm}
-            style={styles.searchbar}
-            inputStyle={{ color: theme.colors.onSurface }}
-            placeholderTextColor={theme.colors.onSurfaceVariant}
-            iconColor={theme.colors.onSurfaceVariant}
-            clearIcon={
-              currentSearchTerm
-                ? () => <List.Icon icon="close-circle" />
-                : undefined
-            }
-            onClearIconPress={() =>
-              isSearchControlled
-                ? onSearchChange('')
-                : setInternalSearchTerm('')
-            }
-          />
+          <View style={styles.searchRow}>
+            {enableSearch && (
+              <Searchbar
+                placeholder={searchPlaceholder}
+                onChangeText={
+                  isSearchControlled ? onSearchChange : setInternalSearchTerm
+                }
+                value={currentSearchTerm}
+                style={[styles.searchbar, filterOptions ? styles.searchbarWithFilter : {}]}
+                inputStyle={{ color: theme.colors.onSurface }}
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                iconColor={theme.colors.onSurfaceVariant}
+                clearIcon={
+                  currentSearchTerm
+                    ? () => <List.Icon icon="close-circle" />
+                    : undefined
+                }
+                onClearIconPress={() =>
+                  isSearchControlled
+                    ? onSearchChange('')
+                    : setInternalSearchTerm('')
+                }
+              />
+            )}
+            {filterOptions && filterValue !== undefined && onFilterChange && (
+              <View style={styles.filterButtonContainer}>
+                <Menu
+                  visible={filterMenuVisible}
+                  onDismiss={() => setFilterMenuVisible(false)}
+                  anchor={
+                    <IconButton
+                      icon={hasActiveFilter ? "filter-check" : "filter-variant"}
+                      mode="contained-tonal"
+                      size={24}
+                      onPress={() => setFilterMenuVisible(true)}
+                      style={styles.filterIconButton}
+                      iconColor={hasActiveFilter ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    />
+                  }
+                  anchorPosition="bottom"
+                  contentStyle={styles.menuContent}
+                >
+                  {filterOptions.map((option) => (
+                    <Menu.Item
+                      key={String(option.value)}
+                      onPress={() => {
+                        onFilterChange(option.value);
+                        setFilterMenuVisible(false);
+                      }}
+                      title={option.label}
+                      leadingIcon={option.icon}
+                      trailingIcon={
+                        filterValue === option.value ? 'check' : undefined
+                      }
+                      disabled={option.disabled}
+                      titleStyle={
+                        filterValue === option.value
+                          ? { color: theme.colors.primary, fontWeight: '600' }
+                          : undefined
+                      }
+                    />
+                  ))}
+                </Menu>
+                {hasActiveFilter && (
+                  <Badge
+                    style={styles.filterBadge}
+                    size={8}
+                  />
+                )}
+              </View>
+            )}
+          </View>
         </View>
       )}
 

@@ -224,7 +224,6 @@ const CreateOrderScreen = () => {
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
     if (isProcessingOrder) return; // Prevenir múltiples envíos
 
-    console.log('Intentando confirmar orden con detalles:', details);
     setIsProcessingOrder(true);
 
     try {
@@ -260,6 +259,8 @@ const CreateOrderScreen = () => {
     selectedVariantId?: string,
     selectedModifiers?: CartItemModifier[],
     preparationNotes?: string,
+    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+    pizzaExtraCost?: number,
   ) => {
     originalAddItem(
       product,
@@ -267,6 +268,8 @@ const CreateOrderScreen = () => {
       selectedVariantId,
       selectedModifiers,
       preparationNotes,
+      selectedPizzaCustomizations,
+      pizzaExtraCost,
     );
     cartButtonRef.current?.animate();
   };

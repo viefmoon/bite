@@ -30,7 +30,7 @@ export class RestaurantConfigController {
 
   @Get()
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter, RoleEnum.kitchen, RoleEnum.delivery)
   @ApiOkResponse({
     type: RestaurantConfigDto,
   })

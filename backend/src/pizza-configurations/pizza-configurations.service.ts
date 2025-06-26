@@ -33,34 +33,30 @@ export class PizzaConfigurationsService {
     return this.pizzaConfigurationRepository.create(pizzaConfiguration);
   }
 
-  async findByProductId(productId: string): Promise<PizzaConfiguration> {
+  async findByProductId(productId: string): Promise<PizzaConfiguration | null> {
     const pizzaConfiguration =
       await this.pizzaConfigurationRepository.findByProductId(productId);
-    if (!pizzaConfiguration) {
-      throw new NotFoundException(
-        `Pizza configuration for product ${productId} not found`,
-      );
-    }
     return pizzaConfiguration;
   }
 
   async update(
-    productId: string,
+    id: string,
     updatePizzaConfigurationDto: UpdatePizzaConfigurationDto,
   ): Promise<PizzaConfiguration> {
-    const updated = await this.pizzaConfigurationRepository.updateByProductId(
-      productId,
-      updatePizzaConfigurationDto,
-    );
-    if (!updated) {
-      throw new NotFoundException(
-        `Pizza configuration for product ${productId} not found`,
-      );
+    const configuration = await this.pizzaConfigurationRepository.findById(id);
+    if (!configuration) {
+      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
     }
-    return updated;
+
+    Object.assign(configuration, updatePizzaConfigurationDto);
+    return this.pizzaConfigurationRepository.update(id, configuration);
   }
 
-  async remove(productId: string): Promise<void> {
-    await this.pizzaConfigurationRepository.deleteByProductId(productId);
+  async remove(id: string): Promise<void> {
+    const configuration = await this.pizzaConfigurationRepository.findById(id);
+    if (!configuration) {
+      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+    }
+    await this.pizzaConfigurationRepository.delete(id);
   }
 }

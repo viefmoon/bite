@@ -11,4 +11,5 @@ export interface PreparationScreenRepository {
   }): Promise<Paginated<PreparationScreen>>;
   update(id: string, data: PreparationScreen): Promise<PreparationScreen>;
   softDelete(id: string): Promise<void>;
+  findByIds(ids: string[]): Promise<PreparationScreen[]>;
 }

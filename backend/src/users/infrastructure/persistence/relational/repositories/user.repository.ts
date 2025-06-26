@@ -9,12 +9,15 @@ import { User } from '../../../../domain/user';
 import { UserRepository } from '../../user.repository';
 import { UserMapper } from '../mappers/user.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 
 @Injectable()
 export class UsersRelationalRepository implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    @InjectRepository(PreparationScreenEntity)
+    private readonly preparationScreensRepository: Repository<PreparationScreenEntity>,
     private readonly userMapper: UserMapper,
   ) {}
 
@@ -61,6 +64,7 @@ export class UsersRelationalRepository implements UserRepository {
         }),
         {},
       ),
+      relations: ['preparationScreens'],
     });
 
     return entities
@@ -71,6 +75,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
       where: { id: id },
+      relations: ['preparationScreens'],
     });
 
     return entity ? this.userMapper.toDomain(entity) : null;
@@ -79,6 +84,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findByIds(ids: User['id'][]): Promise<User[]> {
     const entities = await this.usersRepository.find({
       where: { id: In(ids) },
+      relations: ['preparationScreens'],
     });
 
     return entities
@@ -111,6 +117,7 @@ export class UsersRelationalRepository implements UserRepository {
   async update(id: User['id'], payload: Partial<User>): Promise<User> {
     const entity = await this.usersRepository.findOne({
       where: { id: id },
+      relations: ['preparationScreens'],
     });
 
     if (!entity) {
@@ -144,5 +151,48 @@ export class UsersRelationalRepository implements UserRepository {
 
   async remove(id: User['id']): Promise<void> {
     await this.usersRepository.softDelete(id);
+  }
+  
+  async updatePreparationScreens(
+    id: User['id'],
+    preparationScreenIds: string[],
+  ): Promise<User | null> {
+    const entity = await this.usersRepository.findOne({
+      where: { id: id },
+      relations: ['preparationScreens'],
+    });
+
+    if (!entity) {
+      throw new Error('User not found');
+    }
+
+    // Cargar las pantallas de preparación
+    let preparationScreens: PreparationScreenEntity[] = [];
+    if (preparationScreenIds.length > 0) {
+      preparationScreens = await this.preparationScreensRepository.find({
+        where: { id: In(preparationScreenIds) },
+      });
+    }
+
+    // Actualizar la relación
+    entity.preparationScreens = preparationScreens;
+    const updatedEntity = await this.usersRepository.save(entity);
+
+    // Cargar el usuario actualizado con las relaciones
+    const refreshedEntity = await this.usersRepository.findOne({
+      where: { id: id },
+      relations: ['preparationScreens'],
+    });
+
+    if (!refreshedEntity) {
+      throw new Error('Failed to load updated user');
+    }
+
+    const domainResult = this.userMapper.toDomain(refreshedEntity);
+    if (!domainResult) {
+      throw new Error('Failed to map updated user entity to domain');
+    }
+    
+    return domainResult;
   }
 }

@@ -34,6 +34,20 @@ export class UserMapper extends BaseMapper<UserEntity, User> {
     domain.country = entity.country;
     domain.zipCode = entity.zipCode;
     domain.emergencyContact = entity.emergencyContact;
+    
+    if (entity.preparationScreens && entity.preparationScreens.length > 0) {
+      domain.preparationScreens = entity.preparationScreens.map(ps => ({
+        id: ps.id,
+        name: ps.name,
+        description: ps.description,
+        isActive: ps.isActive,
+        createdAt: ps.createdAt,
+        updatedAt: ps.updatedAt,
+        deletedAt: ps.deletedAt,
+        products: ps.products || null,
+      }));
+    }
+    
     return domain;
   }
 
