@@ -53,6 +53,7 @@ import { AdjustmentFormModal } from './AdjustmentFormModal'; // Modal de ajustes
 import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para ajustes
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
 import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema'; // Para personalizaciones de pizza
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
@@ -68,6 +69,7 @@ interface OrderItemDtoForBackend {
   finalPrice: number;
   preparationNotes?: string | null;
   modifiers?: OrderItemModifierDto[];
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
 }
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
@@ -599,10 +601,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         );
         const unitPrice = parseFloat(item.basePrice || '0');
 
-        // Crear una clave única para agrupar items idénticos (incluyendo estado de preparación)
+        // Crear una clave única para agrupar items idénticos (incluyendo estado de preparación y personalizaciones de pizza)
+        const pizzaCustomizationsKey = item.selectedPizzaCustomizations
+          ? JSON.stringify(
+              item.selectedPizzaCustomizations
+                .map((c) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`)
+                .sort(),
+            )
+          : 'none';
         const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${JSON.stringify(
           modifiers.map((m) => m.id).sort(),
-        )}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
+        )}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}-${pizzaCustomizationsKey}`;
 
         const existingItem = groupedItemsMap.get(groupKey);
 
@@ -628,6 +637,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             variantName: item.productVariant?.name || undefined,
             preparationNotes: item.preparationNotes || undefined,
             preparationStatus: item.preparationStatus || 'PENDING', // Incluir estado de preparación
+            selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined, // Incluir personalizaciones de pizza
           };
           groupedItemsMap.set(groupKey, cartItem);
         }
@@ -974,11 +984,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           basePrice: Number(item.unitPrice), // Precio unitario
           finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
           preparationNotes: item.preparationNotes || null,
-          // Mapear modificadores al formato del backend (ahora solo IDs)
-          productModifierIds:
+          // Mapear modificadores al formato del backend
+          modifiers:
             item.modifiers && item.modifiers.length > 0
-              ? item.modifiers.map((mod) => mod.id)
+              ? item.modifiers.map((mod) => ({
+                  productModifierId: mod.id,
+                  quantity: 1,
+                  price: mod.price,
+                }))
               : undefined,
+          // Agregar personalizaciones de pizza si existen
+          selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined,
         });
       }
     });
