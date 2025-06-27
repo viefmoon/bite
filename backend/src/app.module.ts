@@ -8,6 +8,7 @@ import appConfig from './config/app.config';
 import mailConfig from './mail/config/mail.config';
 import fileConfig from './files/config/file.config';
 import syncConfig from './sync/config/sync.config';
+import audioOrderConfig from './audio-order-processing/config/audio-order.config';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
@@ -36,6 +37,7 @@ import { RestaurantConfigModule } from './restaurant-config/restaurant-config.mo
 import { PizzaCustomizationsModule } from './pizza-customizations/pizza-customizations.module';
 import { PizzaConfigurationsModule } from './pizza-configurations/pizza-configurations.module';
 import { SyncModule } from './sync/sync.module';
+import { AudioOrderProcessingModule } from './audio-order-processing/audio-order-processing.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -55,6 +57,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
         mailConfig,
         fileConfig,
         syncConfig,
+        audioOrderConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -86,6 +89,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     PizzaCustomizationsModule,
     PizzaConfigurationsModule,
     SyncModule,
+    AudioOrderProcessingModule,
   ],
 })
 export class AppModule {}

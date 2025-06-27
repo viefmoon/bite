@@ -121,19 +121,19 @@ export class SyncStatusService {
     // Obtener configuración de sincronización
     const syncEnabled =
       this.configService.get<boolean>('sync.enabled', { infer: true }) || false;
-    const remoteApiUrl =
-      this.configService.get<string>('sync.remoteApiUrl', { infer: true }) ||
+    const cloudApiUrl =
+      this.configService.get<string>('sync.cloudApiUrl', { infer: true }) ||
       '';
-    const remoteApiKey =
-      this.configService.get<string>('sync.remoteApiKey', { infer: true }) ||
+    const cloudApiKey =
+      this.configService.get<string>('sync.cloudApiKey', { infer: true }) ||
       '';
 
-    const isConfigured = syncEnabled && !!remoteApiUrl && !!remoteApiKey;
+    const isConfigured = syncEnabled && !!cloudApiUrl && !!cloudApiKey;
 
     return {
       isCurrentlySyncing: this.isSyncing,
       isConfigured,
-      remoteUrl: isConfigured ? remoteApiUrl : undefined,
+      remoteUrl: isConfigured ? cloudApiUrl : undefined,
       lastSync: lastSync
         ? {
             type: lastSync.syncType,

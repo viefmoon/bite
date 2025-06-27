@@ -15,11 +15,11 @@ class EnvironmentVariablesValidator {
 
   @IsString()
   @IsNotEmpty()
-  REMOTE_API_URL: string;
+  CLOUD_API_URL: string;
 
   @IsString()
   @IsNotEmpty()
-  REMOTE_API_KEY: string;
+  CLOUD_API_KEY: string;
 
   @IsNumber()
   @Min(1)
@@ -34,8 +34,8 @@ export default registerAs<SyncConfig>('sync', () => {
 
   return {
     enabled: process.env.SYNC_ENABLED === 'true',
-    remoteApiUrl: process.env.REMOTE_API_URL || '',
-    remoteApiKey: process.env.REMOTE_API_KEY || '',
+    cloudApiUrl: process.env.CLOUD_API_URL || '',
+    cloudApiKey: process.env.CLOUD_API_KEY || '',
     intervalMinutes: parseInt(process.env.SYNC_INTERVAL_MINUTES || '5', 10),
     webSocketEnabled: process.env.SYNC_WEBSOCKET_ENABLED === 'true',
   };

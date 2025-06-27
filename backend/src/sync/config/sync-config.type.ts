@@ -1,7 +1,7 @@
 export type SyncConfig = {
   enabled: boolean;
-  remoteApiUrl: string;
-  remoteApiKey: string;
+  cloudApiUrl: string;
+  cloudApiKey: string;
   intervalMinutes: number;
   webSocketEnabled: boolean;
 };

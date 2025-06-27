@@ -51,3 +51,11 @@ AUTH_CONFIRM_EMAIL_SECRET=secret_for_confirm_email
 AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN=1d
 
 WORKER_HOST=redis://redis:6379/1
+
+
+# Legacy sync configuration (can be shared with audio processing)
+SYNC_ENABLED=false
+CLOUD_API_URL=
+CLOUD_API_KEY=
+SYNC_INTERVAL_MINUTES=5
+SYNC_WEBSOCKET_ENABLED=false
