@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Portal } from 'react-native-paper';
+import { Portal, Chip, Text } from 'react-native-paper';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import GenericList from '@/app/components/crud/GenericList';
 import { UserFormModal } from '../components/UserFormModal';
@@ -71,9 +71,9 @@ export function UsersListScreen() {
   const getUserDescription = (user: User) => {
     const parts = [];
     if (user.email) parts.push(user.email);
-    parts.push(`@${user.username}`);
-    if (user.role?.name) parts.push(`• ${user.role.name}`);
-    return parts.join(' ');
+    parts.push(user.username);
+    // Removed role from description as it will be shown as a chip
+    return parts.join(' • ');
   };
 
   // Mapear los usuarios para agregar campos calculados
@@ -88,6 +88,7 @@ export function UsersListScreen() {
         ...user,
         displayName,
         displayInfo,
+        displayNameWithRole: { name: displayName, roleId: user.role?.id },
         statusText: getStatusText(user),
         statusColor: getStatusColor(user),
       };
@@ -133,6 +134,53 @@ export function UsersListScreen() {
     setIsRefreshing(false);
   };
 
+  const getRoleChipProps = (roleId: number | undefined) => {
+    switch (roleId) {
+      case 1:
+        return { label: 'Admin', icon: 'shield-account', color: theme.colors.error };
+      case 2:
+        return { label: 'Gerente', icon: 'account-tie', color: theme.colors.primary };
+      case 3:
+        return { label: 'Cajero', icon: 'cash-register', color: theme.colors.tertiary };
+      case 4:
+        return { label: 'Mesero', icon: 'room-service', color: theme.colors.secondary };
+      case 5:
+        return { label: 'Cocina', icon: 'chef-hat', color: '#FF6B6B' };
+      case 6:
+        return { label: 'Repartidor', icon: 'moped', color: '#4ECDC4' };
+      default:
+        return { label: 'Usuario', icon: 'account', color: theme.colors.onSurfaceVariant };
+    }
+  };
+
+  const renderTitle = (user: User) => {
+    const roleProps = getRoleChipProps(user.role?.id);
+    const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+    
+    return (
+      <View style={styles.titleContainer}>
+        <Text variant="titleMedium" style={styles.title} numberOfLines={1}>
+          {displayName}
+        </Text>
+        <Chip
+          mode="flat"
+          icon={roleProps.icon}
+          style={[
+            styles.roleChip,
+            { backgroundColor: roleProps.color + '15' }
+          ]}
+          textStyle={[
+            styles.roleChipText,
+            { color: roleProps.color }
+          ]}
+          compact
+        >
+          {roleProps.label}
+        </Chip>
+      </View>
+    );
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -140,6 +188,28 @@ export function UsersListScreen() {
     },
     listContainer: {
       flex: 1,
+    },
+    titleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    title: {
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      flex: 0,
+      flexShrink: 1,
+    },
+    roleChip: {
+      height: 28,
+      borderRadius: theme.roundness * 2,
+      marginLeft: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.s,
+    },
+    roleChipText: {
+      fontSize: 13,
+      fontWeight: '500',
+      lineHeight: 16,
     },
   });
 
@@ -162,6 +232,7 @@ export function UsersListScreen() {
               activeLabel: 'Activo',
               inactiveLabel: 'Inactivo',
             },
+            renderTitle: renderTitle,
           }}
           enableSearch={true}
           searchQuery={searchQuery}

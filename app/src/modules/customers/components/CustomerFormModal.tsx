@@ -53,7 +53,6 @@ export default function CustomerFormModal({
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
-  const [countryCode, setCountryCode] = useState('+52');
   const { showSnackbar } = useSnackbarStore();
 
   // Query para obtener direcciones del cliente
@@ -84,25 +83,10 @@ export default function CustomerFormModal({
 
   useEffect(() => {
     if (editingItem) {
-      // Extraer código de país del número si existe
-      let phoneWithoutCode = editingItem.whatsappPhoneNumber || '';
-      let extractedCode = '+52'; // Por defecto México
-
-      if (phoneWithoutCode.startsWith('+')) {
-        // Buscar el código de país (asumiendo que es de 2-4 dígitos después del +)
-        const match = phoneWithoutCode.match(/^(\+\d{1,3})/);
-        if (match) {
-          extractedCode = match[1];
-          phoneWithoutCode = phoneWithoutCode.substring(extractedCode.length);
-        }
-      }
-
-      setCountryCode(extractedCode);
-
       reset({
         firstName: editingItem.firstName,
         lastName: editingItem.lastName,
-        whatsappPhoneNumber: phoneWithoutCode,
+        whatsappPhoneNumber: editingItem.whatsappPhoneNumber || '',
         email: editingItem.email || '',
         birthDate: editingItem.birthDate
           ? new Date(editingItem.birthDate).toISOString().split('T')[0]
@@ -112,7 +96,6 @@ export default function CustomerFormModal({
         banReason: editingItem.banReason || '',
       });
     } else {
-      setCountryCode('+52');
       reset({
         firstName: '',
         lastName: '',
@@ -165,15 +148,7 @@ export default function CustomerFormModal({
   };
 
   const handleFormSubmit = async (data: CustomerFormInputs) => {
-    // Formatear el número de teléfono con el código de país si existe
-    const formattedData = {
-      ...data,
-      whatsappPhoneNumber: data.whatsappPhoneNumber
-        ? `${countryCode}${data.whatsappPhoneNumber}`
-        : undefined,
-    };
-
-    await onSubmit(formattedData);
+    await onSubmit(data);
   };
 
   return (
@@ -313,36 +288,22 @@ export default function CustomerFormModal({
                   name="whatsappPhoneNumber"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputContainer}>
-                      <View style={styles.phoneContainer}>
-                        <TextInput
-                          label="Código"
-                          value={countryCode}
-                          onChangeText={setCountryCode}
-                          mode="outlined"
-                          style={styles.countryCodeInput}
-                          placeholder="+52"
-                          keyboardType="phone-pad"
-                          maxLength={4}
-                          outlineStyle={styles.inputOutline}
-                        />
-                        <TextInput
-                          label="WhatsApp"
-                          value={formatPhoneNumber(value || '')}
-                          onChangeText={(text) => {
-                            const cleaned = text.replace(/\D/g, '');
-                            onChange(cleaned);
-                          }}
-                          onBlur={onBlur}
-                          error={!!errors.whatsappPhoneNumber}
-                          mode="outlined"
-                          placeholder="55 1234 5678"
-                          keyboardType="phone-pad"
-                          maxLength={13}
-                          style={styles.phoneNumberInput}
-                          left={<TextInput.Icon icon="phone" />}
-                          outlineStyle={styles.inputOutline}
-                        />
-                      </View>
+                      <TextInput
+                        label="WhatsApp"
+                        value={formatPhoneNumber(value || '')}
+                        onChangeText={(text) => {
+                          const cleaned = text.replace(/\D/g, '');
+                          onChange(cleaned);
+                        }}
+                        onBlur={onBlur}
+                        error={!!errors.whatsappPhoneNumber}
+                        mode="outlined"
+                        placeholder="55 1234 5678"
+                        keyboardType="phone-pad"
+                        maxLength={13}
+                        left={<TextInput.Icon icon="phone" />}
+                        outlineStyle={styles.inputOutline}
+                      />
                       {errors.whatsappPhoneNumber && (
                         <HelperText
                           type="error"
@@ -876,16 +837,6 @@ const getStyles = (theme: AppTheme) =>
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
-    },
-    phoneContainer: {
-      flexDirection: 'row',
-      gap: theme.spacing.s,
-    },
-    countryCodeInput: {
-      width: 80,
-    },
-    phoneNumberInput: {
-      flex: 1,
     },
     switchContainer: {
       borderRadius: theme.roundness * 2,

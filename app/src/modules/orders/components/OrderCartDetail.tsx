@@ -540,7 +540,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     // Cargar ajustes si existen
     if (orderData.adjustments && Array.isArray(orderData.adjustments)) {
-      console.log('Ajustes recibidos del backend:', orderData.adjustments);
       setEditAdjustments(
         orderData.adjustments.map((adj) => ({
           id: adj.id,
@@ -626,21 +625,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             (unitPrice + modifiersPrice) * existingItem.quantity;
         } else {
           // Si es un nuevo item, agregarlo al mapa
-          
-          // Debug para pizzas (solo en desarrollo)
-          if (item.selectedPizzaCustomizations && item.selectedPizzaCustomizations.length > 0 && __DEV__) {
-            console.log('=== DEBUG OrderCartDetail - Mapeando pizza desde backend ===');
-            console.log('Product:', item.product?.name);
-            console.log('Raw customizations from backend:', item.selectedPizzaCustomizations);
-            console.log('First customization detail:', item.selectedPizzaCustomizations[0]);
-            
-            // Verificar si incluye información completa de pizzaCustomization
-            if (item.selectedPizzaCustomizations[0].pizzaCustomization) {
-              console.log('Pizza customization info available:', item.selectedPizzaCustomizations[0].pizzaCustomization);
-            } else {
-              console.log('WARNING: Pizza customization info NOT available, only ID');
-            }
-          }
           
           const cartItem: CartItem = {
             id: item.id, // Usar el ID del primer item del grupo
@@ -1131,18 +1115,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       deliveryInfo.recipientPhone.trim() !== ''
     ) {
       formattedPhone = deliveryInfo.recipientPhone.trim();
-      if (!formattedPhone.startsWith('+')) {
-        formattedPhone = `+52${formattedPhone}`;
-      }
-      const digitsOnly = formattedPhone.replace(/\D/g, '');
-      if (digitsOnly.length < 10) {
-        setPhoneError('El teléfono debe tener al menos 10 dígitos');
-        return;
-      }
-      if (digitsOnly.length > 15) {
-        setPhoneError('El teléfono no puede tener más de 15 dígitos');
-        return;
-      }
     }
 
     const orderDetails: OrderDetailsForBackend = {

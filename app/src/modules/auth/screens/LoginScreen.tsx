@@ -68,6 +68,15 @@ const LoginScreen = () => {
       }),
     onSuccess: async (data, variables) => {
       try {
+        // Verificar si el usuario está activo antes de guardar los tokens
+        if (data.user && !data.user.isActive) {
+          showSnackbar({
+            message: 'Tu cuenta está inactiva. Contacta al administrador.',
+            type: 'error',
+          });
+          return;
+        }
+        
         await setTokens(data.token, data.refreshToken, data.user ?? null);
         const { emailOrUsername, password, rememberMe } = variables;
 
@@ -100,11 +109,20 @@ const LoginScreen = () => {
           type: 'success',
         });
         queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-      } catch (error) {
+      } catch (error: any) {
         console.error(
           'Error al procesar post-login o guardar credenciales:',
           error,
         );
+        
+        // Si el error es por usuario inactivo, mostrar mensaje específico
+        if (error.message === 'Usuario inactivo') {
+          showSnackbar({
+            message: 'Tu cuenta está inactiva. Contacta al administrador.',
+            type: 'error',
+          });
+        }
+        
         try {
           await EncryptedStorage.removeItem(
             STORAGE_KEYS.REMEMBERED_CREDENTIALS,

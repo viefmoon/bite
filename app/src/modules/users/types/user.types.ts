@@ -1,3 +1,9 @@
+export enum GenderEnum {
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
+}
+
 export interface User {
   id: string;
   email?: string | null;
@@ -5,7 +11,7 @@ export interface User {
   firstName?: string | null;
   lastName?: string | null;
   birthDate?: string | null;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY' | null;
+  gender?: GenderEnum | null;
   phoneNumber?: string | null;
   address?: string | null;
   city?: string | null;
@@ -44,7 +50,7 @@ export interface CreateUserDto {
   firstName: string;
   lastName: string;
   birthDate?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+  gender?: GenderEnum;
   phoneNumber?: string;
   address?: string;
   city?: string;
@@ -68,7 +74,7 @@ export interface UpdateUserDto {
   firstName?: string;
   lastName?: string;
   birthDate?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+  gender?: GenderEnum;
   phoneNumber?: string;
   address?: string;
   city?: string;

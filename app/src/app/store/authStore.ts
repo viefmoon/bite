@@ -35,6 +35,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     user: User | null,
   ) => {
     try {
+      // Verificar si el usuario está activo antes de guardar los tokens
+      if (user && 'isActive' in user && !user.isActive) {
+        console.error('[AuthStore] Usuario inactivo, no se guardarán las credenciales');
+        throw new Error('Usuario inactivo');
+      }
+
       await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       if (user) {
@@ -50,6 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     } catch (error) {
       console.error('Error guardando tokens y user info:', error);
+      throw error; // Re-lanzar el error para que el login lo maneje
     }
   },
 
@@ -74,6 +81,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: async (user: User | null) => {
     try {
       if (user) {
+        // Si el usuario se actualiza y está inactivo, cerrar sesión
+        if ('isActive' in user && !user.isActive) {
+          console.log('[AuthStore] Usuario actualizado a inactivo, cerrando sesión...');
+          await useAuthStore.getState().logout();
+          return;
+        }
         await EncryptedStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
       } else {
         await EncryptedStorage.removeItem(USER_INFO_KEY);
@@ -121,6 +134,21 @@ export const initializeAuthStore = async () => {
     }
 
     if (accessToken && refreshToken) {
+      // Verificar si el usuario está activo antes de restaurar la sesión
+      if (user && 'isActive' in user && !user.isActive) {
+        console.log('Usuario inactivo detectado, limpiando sesión...');
+        await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
+        await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
+        await EncryptedStorage.removeItem(USER_INFO_KEY);
+        useAuthStore.setState({
+          accessToken: null,
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false,
+        });
+        return;
+      }
+
       // Primero establecemos el token en el estado para que el apiClient pueda usarlo
       useAuthStore.setState({
         accessToken,

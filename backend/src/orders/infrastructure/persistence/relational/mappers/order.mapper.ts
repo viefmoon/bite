@@ -104,6 +104,8 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     // Mapear deliveryInfo si existe
     if (domain.deliveryInfo) {
       entity.deliveryInfo = this.deliveryInfoMapper.toEntity(domain.deliveryInfo);
+    } else {
+      entity.deliveryInfo = null;
     }
 
     return entity;

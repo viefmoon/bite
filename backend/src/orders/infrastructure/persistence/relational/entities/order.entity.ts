@@ -106,9 +106,9 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @OneToOne(() => DeliveryInfoEntity, (deliveryInfo) => deliveryInfo.order, {
     cascade: true,
-    nullable: false,
+    nullable: true,
   })
-  deliveryInfo: DeliveryInfoEntity;
+  deliveryInfo: DeliveryInfoEntity | null;
 
   @Column({
     name: 'estimated_delivery_time',

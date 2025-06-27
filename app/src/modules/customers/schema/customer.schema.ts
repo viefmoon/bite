@@ -23,11 +23,7 @@ export const createCustomerSchema = z.object({
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
   whatsappPhoneNumber: z
     .string()
-    .min(1, 'El número de WhatsApp es requerido')
-    .regex(
-      /^\+?\d{10,15}$/,
-      'El número de WhatsApp debe tener entre 10 y 15 dígitos',
-    ),
+    .min(1, 'El número de WhatsApp es requerido'),
   email: z
     .string()
     .email('El correo electrónico no es válido')
@@ -52,11 +48,7 @@ export const customerFormSchema = z.object({
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
   whatsappPhoneNumber: z
     .string()
-    .min(1, 'El número de WhatsApp es requerido')
-    .regex(
-      /^\+?\d{10,15}$/,
-      'El número de WhatsApp debe tener entre 10 y 15 dígitos',
-    ),
+    .min(1, 'El número de WhatsApp es requerido'),
   email: z
     .string()
     .email('El correo electrónico no es válido')

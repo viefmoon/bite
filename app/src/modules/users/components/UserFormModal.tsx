@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import {
   Portal,
   Modal,
@@ -23,41 +23,42 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useCreateUser, useUpdateUser } from '../hooks';
 import type { User, RoleEnum } from '../types';
 
-const userFormSchema = z.object({
+const createUserSchema = z.object({
   username: z.string()
     .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
     .max(20, 'El nombre de usuario no puede exceder 20 caracteres')
     .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guión bajo'),
-  email: z.string()
-    .email('Email inválido')
-    .optional()
-    .or(z.literal('')),
+  email: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
   password: z.string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .optional()
-    .or(z.literal('')),
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
   firstName: z.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(50, 'El nombre no puede exceder 50 caracteres'),
   lastName: z.string()
     .min(2, 'El apellido debe tener al menos 2 caracteres')
     .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phoneNumber: z.string()
-    .regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido')
-    .optional()
-    .or(z.literal('')),
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'])
-    .optional(),
-  address: z.string().optional().or(z.literal('')),
-  city: z.string().optional().or(z.literal('')),
-  state: z.string().optional().or(z.literal('')),
-  country: z.string().optional().or(z.literal('')),
-  zipCode: z.string().optional().or(z.literal('')),
+  phoneNumber: z.union([
+    z.string().regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido'),
+    z.literal('')
+  ]).optional(),
+  gender: z.enum(['male', 'female', 'other']).nullable().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  zipCode: z.string().optional(),
   role: z.number(),
   isActive: z.boolean(),
 });
 
-type UserFormInputs = z.infer<typeof userFormSchema>;
+const updateUserSchema = createUserSchema.omit({ password: true }).extend({
+  password: z.union([
+    z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    z.literal('')
+  ]).optional(),
+});
+
+type UserFormInputs = z.infer<typeof createUserSchema>;
 
 interface UserFormModalProps {
   visible: boolean;
@@ -84,7 +85,7 @@ export function UserFormModal({
     reset,
     watch,
   } = useForm<UserFormInputs>({
-    resolver: zodResolver(userFormSchema),
+    resolver: zodResolver(user ? updateUserSchema : createUserSchema),
     defaultValues: {
       username: '',
       email: '',
@@ -103,6 +104,7 @@ export function UserFormModal({
     },
   });
 
+
   useEffect(() => {
     if (user) {
       reset({
@@ -112,7 +114,7 @@ export function UserFormModal({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         phoneNumber: user.phoneNumber || '',
-        gender: user.gender,
+        gender: user.gender || undefined, // Convert null to undefined
         address: user.address || '',
         city: user.city || '',
         state: user.state || '',
@@ -143,25 +145,36 @@ export function UserFormModal({
 
   const onSubmit = async (data: UserFormInputs) => {
     try {
+      // Clean empty strings to undefined
+      const cleanData = {
+        username: data.username,
+        email: data.email || undefined,
+        password: data.password || undefined,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber || undefined,
+        gender: data.gender || undefined,
+        address: data.address || undefined,
+        city: data.city || undefined,
+        state: data.state || undefined,
+        country: data.country || undefined,
+        zipCode: data.zipCode || undefined,
+        role: { id: data.role },
+        isActive: data.isActive,
+      };
+
       if (user) {
-        // For update, only include password if it's provided
-        const updateData = {
-          ...data,
-          password: data.password || undefined,
-          role: { id: data.role },
-        };
-        await updateUserMutation.mutateAsync({ id: user.id, data: updateData });
+        // For update, remove password if empty and remove username (can't be changed)
+        const { username, password, ...updateData } = cleanData;
+        const finalUpdateData = password ? { ...updateData, password } : updateData;
+        
+        await updateUserMutation.mutateAsync({ id: user.id, data: finalUpdateData });
       } else {
         // For create, password is required
         if (!data.password) {
           return; // Should be caught by validation
         }
-        const createData = {
-          ...data,
-          password: data.password,
-          role: { id: data.role },
-        };
-        await createUserMutation.mutateAsync(createData);
+        await createUserMutation.mutateAsync(cleanData);
       }
       onDismiss();
     } catch (error) {
@@ -172,10 +185,9 @@ export function UserFormModal({
   const isSubmitting = createUserMutation.isPending || updateUserMutation.isPending;
 
   const genderOptions = [
-    { value: 'MALE', label: 'Masculino', icon: 'gender-male' },
-    { value: 'FEMALE', label: 'Femenino', icon: 'gender-female' },
-    { value: 'OTHER', label: 'Otro', icon: 'gender-transgender' },
-    { value: 'PREFER_NOT_TO_SAY', label: 'Prefiero no decir', icon: 'help' },
+    { value: 'male', label: 'Masculino', icon: 'gender-male', color: '#3498db' },
+    { value: 'female', label: 'Femenino', icon: 'gender-female', color: '#e74c3c' },
+    { value: 'other', label: 'Otro', icon: 'gender-transgender', color: '#9b59b6' },
   ];
 
   return (
@@ -231,12 +243,18 @@ export function UserFormModal({
             {/* Información de Cuenta */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
+                <Icon
+                  source="account-key"
+                  size={20}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.sectionTitle} variant="titleMedium">
                   Información de Cuenta
                 </Text>
                 <Chip
                   mode="flat"
                   compact
+                  icon="check"
                   style={styles.requiredChip}
                   textStyle={styles.requiredChipText}
                 >
@@ -257,8 +275,10 @@ export function UserFormModal({
                       error={!!errors.username}
                       mode="outlined"
                       placeholder="usuario123"
-                      left={<TextInput.Icon icon="at" />}
+                      left={<TextInput.Icon icon="account" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                       disabled={!!user} // Username can't be changed
                     />
                     {errors.username && (
@@ -287,6 +307,8 @@ export function UserFormModal({
                       autoCapitalize="none"
                       left={<TextInput.Icon icon="email" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                     {errors.email && (
                       <HelperText type="error" visible={!!errors.email}>
@@ -319,6 +341,8 @@ export function UserFormModal({
                         />
                       }
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                     {errors.password && (
                       <HelperText type="error" visible={!!errors.password}>
@@ -334,18 +358,25 @@ export function UserFormModal({
                 name="role"
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.fieldLabel} variant="labelLarge">
-                      Rol del usuario
-                    </Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={styles.fieldLabelContainer}>
+                      <Icon
+                        source="badge-account"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                      <Text style={styles.sectionTitle} variant="titleMedium">
+                        Rol del usuario
+                      </Text>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.s }}>
                       <View style={styles.rolesContainer}>
                         {[
                           { value: 1, label: 'Admin', icon: 'shield-account', description: 'Acceso completo' },
                           { value: 2, label: 'Gerente', icon: 'account-tie', description: 'Gestión general' },
-                          { value: 3, label: 'Cajero', icon: 'cash-register', description: 'Cobros y ventas' },
-                          { value: 4, label: 'Mesero', icon: 'room-service', description: 'Toma de órdenes' },
+                          { value: 3, label: 'Cajero', icon: 'cash-register', description: 'Ventas' },
+                          { value: 4, label: 'Mesero', icon: 'room-service', description: 'Órdenes' },
                           { value: 5, label: 'Cocina', icon: 'chef-hat', description: 'Preparación' },
-                          { value: 6, label: 'Delivery', icon: 'moped', description: 'Entregas' },
+                          { value: 6, label: 'Repartidor', icon: 'moped', description: 'Entregas' },
                         ].map((role) => (
                           <Surface
                             key={role.value}
@@ -361,7 +392,7 @@ export function UserFormModal({
                             >
                               <Icon
                                 source={role.icon}
-                                size={28}
+                                size={24}
                                 color={
                                   value === role.value
                                     ? theme.colors.primary
@@ -399,12 +430,18 @@ export function UserFormModal({
             {/* Información Personal */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
+                <Icon
+                  source="account-circle"
+                  size={20}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.sectionTitle} variant="titleMedium">
                   Información Personal
                 </Text>
                 <Chip
                   mode="flat"
                   compact
+                  icon="check"
                   style={styles.requiredChip}
                   textStyle={styles.requiredChipText}
                 >
@@ -427,6 +464,8 @@ export function UserFormModal({
                       placeholder="Juan"
                       left={<TextInput.Icon icon="account" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                     {errors.firstName && (
                       <HelperText type="error" visible={!!errors.firstName}>
@@ -452,6 +491,8 @@ export function UserFormModal({
                       placeholder="Pérez"
                       left={<TextInput.Icon icon="account" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                     {errors.lastName && (
                       <HelperText type="error" visible={!!errors.lastName}>
@@ -467,39 +508,55 @@ export function UserFormModal({
                 name="gender"
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.fieldLabel} variant="labelLarge">
-                      Género (opcional)
-                    </Text>
-                    <View style={styles.genderContainer}>
+                    <View style={styles.fieldLabelContainer}>
+                      <Icon
+                        source="gender-transgender"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                      <Text style={styles.sectionTitle} variant="titleMedium">
+                        Género
+                      </Text>
+                    </View>
+                    <View style={[styles.genderContainer, { marginTop: theme.spacing.s }]}>
                       {genderOptions.map((option) => (
-                        <Surface
+                        <TouchableOpacity
                           key={option.value}
-                          style={[
-                            styles.genderOption,
-                            value === option.value && styles.genderOptionActive,
-                          ]}
-                          elevation={value === option.value ? 2 : 0}
+                          onPress={() => onChange(option.value)}
+                          activeOpacity={0.7}
                         >
-                          <IconButton
-                            icon={option.icon}
-                            size={20}
-                            onPress={() => onChange(option.value)}
-                            iconColor={
-                              value === option.value
-                                ? theme.colors.primary
-                                : theme.colors.onSurfaceVariant
-                            }
-                          />
-                          <Text
+                          <Surface
                             style={[
-                              styles.genderLabel,
-                              value === option.value && styles.genderLabelActive,
+                              styles.genderOption,
+                              value === option.value && styles.genderOptionActive,
                             ]}
-                            variant="labelSmall"
+                            elevation={value === option.value ? 3 : 1}
                           >
-                            {option.label}
-                          </Text>
-                        </Surface>
+                            <View style={[
+                              styles.genderIconContainer,
+                              value === option.value && { backgroundColor: option.color + '20' }
+                            ]}>
+                              <Icon
+                                source={option.icon}
+                                size={20}
+                                color={
+                                  value === option.value
+                                    ? option.color
+                                    : theme.colors.onSurfaceVariant
+                                }
+                              />
+                            </View>
+                            <Text
+                              style={[
+                                styles.genderLabel,
+                                value === option.value && styles.genderLabelActive,
+                              ]}
+                              variant="labelMedium"
+                            >
+                              {option.label}
+                            </Text>
+                          </Surface>
+                        </TouchableOpacity>
                       ))}
                     </View>
                   </View>
@@ -512,12 +569,18 @@ export function UserFormModal({
             {/* Información de Contacto */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
+                <Icon
+                  source="phone-in-talk"
+                  size={20}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.sectionTitle} variant="titleMedium">
                   Información de Contacto
                 </Text>
                 <Chip
                   mode="flat"
                   compact
+                  icon="information"
                   style={styles.optionalChip}
                   textStyle={styles.optionalChipText}
                 >
@@ -541,6 +604,8 @@ export function UserFormModal({
                       keyboardType="phone-pad"
                       left={<TextInput.Icon icon="phone" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                     {errors.phoneNumber && (
                       <HelperText type="error" visible={!!errors.phoneNumber}>
@@ -565,6 +630,8 @@ export function UserFormModal({
                       placeholder="Calle Principal #123"
                       left={<TextInput.Icon icon="map-marker" />}
                       outlineStyle={styles.inputOutline}
+                      contentStyle={styles.inputContent}
+                      style={styles.input}
                     />
                   </View>
                 )}
@@ -653,6 +720,11 @@ export function UserFormModal({
             {/* Estado de la cuenta */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
+                <Icon
+                  source="shield-check"
+                  size={20}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.sectionTitle} variant="titleMedium">
                   Estado de la cuenta
                 </Text>
@@ -686,85 +758,8 @@ export function UserFormModal({
               />
             </View>
 
-            {/* Información adicional en modo edición */}
-            {user && (
-              <View style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle} variant="titleMedium">
-                    Información del sistema
-                  </Text>
-                </View>
-
-                <Surface style={styles.infoCard} elevation={1}>
-                  <View style={styles.infoRow}>
-                    <Icon
-                      source="identifier"
-                      size={20}
-                      color={theme.colors.onSurfaceVariant}
-                    />
-                    <View style={styles.infoContent}>
-                      <Text style={styles.infoLabel} variant="labelSmall">
-                        ID del usuario
-                      </Text>
-                      <Text style={styles.infoValue} variant="bodyMedium">
-                        {user.id}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Divider style={styles.infoDivider} />
-
-                  <View style={styles.infoRow}>
-                    <Icon
-                      source="calendar-plus"
-                      size={20}
-                      color={theme.colors.onSurfaceVariant}
-                    />
-                    <View style={styles.infoContent}>
-                      <Text style={styles.infoLabel} variant="labelSmall">
-                        Fecha de creación
-                      </Text>
-                      <Text style={styles.infoValue} variant="bodyMedium">
-                        {new Date(user.createdAt).toLocaleDateString('es-MX', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Divider style={styles.infoDivider} />
-
-                  <View style={styles.infoRow}>
-                    <Icon
-                      source="calendar-edit"
-                      size={20}
-                      color={theme.colors.onSurfaceVariant}
-                    />
-                    <View style={styles.infoContent}>
-                      <Text style={styles.infoLabel} variant="labelSmall">
-                        Última actualización
-                      </Text>
-                      <Text style={styles.infoValue} variant="bodyMedium">
-                        {new Date(user.updatedAt).toLocaleDateString('es-MX', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </Text>
-                    </View>
-                  </View>
-                </Surface>
-              </View>
-            )}
-
             {/* Espacio adicional para el teclado */}
-            <View style={{ height: 20 }} />
+            <View style={{ height: 10 }} />
           </ScrollView>
 
           <Surface style={styles.buttonContainer} elevation={2}>
@@ -802,6 +797,7 @@ const getStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
       maxHeight: '90%',
+      overflow: 'hidden',
     },
     headerContainer: {
       flexDirection: 'row',
@@ -827,48 +823,75 @@ const getStyles = (theme: AppTheme) =>
       fontWeight: '700',
     },
     formContainer: {
-      maxHeight: 400,
+      maxHeight: 500,
       paddingHorizontal: theme.spacing.m,
       paddingTop: theme.spacing.s,
     },
     sectionContainer: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
+      gap: theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 15,
+      fontSize: 14,
+      flex: 1,
     },
     requiredChip: {
-      backgroundColor: theme.colors.errorContainer,
+      backgroundColor: theme.colors.primary + '20',
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '40',
     },
     requiredChipText: {
-      color: theme.colors.onErrorContainer,
+      color: theme.colors.primary,
       fontSize: 11,
+      fontWeight: '600',
     },
     optionalChip: {
       backgroundColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     optionalChipText: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 11,
     },
     inputContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
+      borderWidth: 1,
+    },
+    input: {
+      fontSize: 14,
+      backgroundColor: theme.colors.surface,
+      height: 48,
+    },
+    inputContent: {
+      paddingVertical: 4,
+      fontSize: 14,
+      fontFamily: 'System',
     },
     fieldLabel: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: theme.spacing.xs,
+      fontWeight: '600',
+      fontSize: 12,
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      fontFamily: 'System',
+    },
+    fieldLabelContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
       marginBottom: theme.spacing.s,
-      fontWeight: '500',
     },
     segmentedButtons: {
       marginTop: theme.spacing.xs,
@@ -880,18 +903,29 @@ const getStyles = (theme: AppTheme) =>
     },
     genderOption: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.xs,
+      padding: theme.spacing.s,
       alignItems: 'center',
-      backgroundColor: theme.colors.surfaceVariant,
-      minWidth: 80,
+      backgroundColor: theme.colors.surface,
+      minWidth: 85,
+      borderWidth: 1.5,
+      borderColor: theme.colors.outlineVariant,
     },
     genderOptionActive: {
       backgroundColor: theme.colors.primaryContainer,
+      borderColor: theme.colors.primary,
+    },
+    genderIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: theme.spacing.xs,
     },
     genderLabel: {
       color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
       fontSize: 11,
+      textAlign: 'center',
     },
     genderLabelActive: {
       color: theme.colors.onPrimaryContainer,
@@ -907,6 +941,9 @@ const getStyles = (theme: AppTheme) =>
     switchContainer: {
       borderRadius: theme.roundness * 2,
       padding: theme.spacing.s,
+      backgroundColor: theme.colors.primaryContainer + '20',
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '30',
     },
     switchContent: {
       flexDirection: 'row',
@@ -927,30 +964,7 @@ const getStyles = (theme: AppTheme) =>
     },
     divider: {
       marginVertical: theme.spacing.s,
-    },
-    infoCard: {
-      borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.m,
-    },
-    infoContent: {
-      flex: 1,
-    },
-    infoLabel: {
-      color: theme.colors.onSurfaceVariant,
-      marginBottom: 2,
-    },
-    infoValue: {
-      color: theme.colors.onSurface,
-      fontWeight: '500',
-    },
-    infoDivider: {
-      marginVertical: theme.spacing.s,
+      marginHorizontal: -theme.spacing.m,
     },
     buttonContainer: {
       flexDirection: 'row',
@@ -975,16 +989,18 @@ const getStyles = (theme: AppTheme) =>
     },
     roleCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surfaceVariant,
-      marginRight: theme.spacing.s,
-      minWidth: 100,
-      borderWidth: 2,
-      borderColor: 'transparent',
+      padding: theme.spacing.s,
+      backgroundColor: theme.colors.surface,
+      marginRight: theme.spacing.xs,
+      minWidth: 90,
+      borderWidth: 1.5,
+      borderColor: theme.colors.outlineVariant,
+      elevation: 1,
     },
     roleCardActive: {
       backgroundColor: theme.colors.primaryContainer,
       borderColor: theme.colors.primary,
+      elevation: 3,
     },
     roleCardContent: {
       alignItems: 'center',

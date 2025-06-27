@@ -432,12 +432,6 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       );
     } else {
       // Si es un nuevo item, agregarlo al carrito
-      console.log('=== DEBUG ProductCustomizationModal - Añadiendo al carrito ===');
-      console.log('Product:', product.name, 'isPizza:', product.isPizza);
-      console.log('Selected Pizza Customizations:', selectedPizzaCustomizations);
-      console.log('Pizza Configuration:', pizzaConfiguration);
-      console.log('Pizza Extra Cost:', pizzaExtraCost);
-      
       onAddToCart(
         product,
         quantity,

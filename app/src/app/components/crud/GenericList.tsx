@@ -48,6 +48,7 @@ export interface RenderItemConfig<TItem> {
   imageField?: keyof TItem;
   isDefaultField?: keyof TItem;
   statusConfig?: StatusConfig<TItem>;
+  renderTitle?: (item: TItem) => React.ReactNode;
 }
 
 interface GenericListProps<TItem extends { id: string }> {
@@ -384,11 +385,15 @@ const GenericList = <TItem extends { id: string }>({
       return (
         <Surface style={[styles.listItem, listItemStyle]} elevation={1}>
           <List.Item
-            title={() => (
-              <Text variant="titleMedium" style={styles.title}>
-                {title}
-              </Text>
-            )}
+            title={() => 
+              renderConfig.renderTitle ? (
+                renderConfig.renderTitle(item)
+              ) : (
+                <Text variant="titleMedium" style={styles.title}>
+                  {title}
+                </Text>
+              )
+            }
             description={() => {
               // Construir las partes del texto
               const parts = [];
@@ -515,7 +520,11 @@ const GenericList = <TItem extends { id: string }>({
                 }
                 value={currentSearchTerm}
                 style={[styles.searchbar, filterOptions ? styles.searchbarWithFilter : {}]}
-                inputStyle={{ color: theme.colors.onSurface }}
+                inputStyle={{ 
+                  color: theme.colors.onSurface,
+                  fontSize: 14,
+                  minHeight: 40 
+                }}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
                 iconColor={theme.colors.onSurfaceVariant}
                 clearIcon={

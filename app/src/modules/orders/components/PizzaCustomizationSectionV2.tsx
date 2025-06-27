@@ -47,6 +47,7 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
     half1: false,
     half2: false,
   });
+  const [expandedFlavors, setExpandedFlavors] = useState(true);
 
   // Separar sabores e ingredientes
   const flavors = useMemo(() => 
@@ -409,119 +410,142 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
       {/* Selección de Sabores */}
       <Card style={styles.optionCard}>
         <Card.Content style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
-          <View style={styles.sectionHeaderWithSwitch}>
-            <View>
-              <Text style={styles.sectionTitle}>Sabores</Text>
-              <Text style={styles.helperText}>Selecciona hasta 2 sabores</Text>
-            </View>
-            {selectedFlavors.length <= 1 && (
-              <View style={styles.halvesSwitch}>
-                <Text style={styles.switchLabel}>Dividir mitades</Text>
-                <Switch
-                  value={manualHalvesMode}
-                  onValueChange={(value) => {
-                    setManualHalvesMode(value);
-                    
-                    // Si se activa el modo mitades, convertir las personalizaciones de FULL a HALF_1
-                    if (value && selectedFlavors.length <= 1) {
-                      const updatedCustomizations = selectedPizzaCustomizations.map(sc => {
-                        if (sc.half === PizzaHalf.FULL) {
-                          return { ...sc, half: PizzaHalf.HALF_1 };
-                        }
-                        return sc;
-                      });
-                      onCustomizationChange(updatedCustomizations);
-                    }
-                    // Si se desactiva el modo mitades y solo hay un sabor, convertir todo a FULL
-                    else if (!value && selectedFlavors.length === 1) {
-                      const updatedCustomizations = selectedPizzaCustomizations.map(sc => {
-                        if (sc.half === PizzaHalf.HALF_1 || sc.half === PizzaHalf.HALF_2) {
-                          return { ...sc, half: PizzaHalf.FULL };
-                        }
-                        return sc;
-                      });
-                      onCustomizationChange(updatedCustomizations);
-                    }
-                  }}
-                />
+          <TouchableRipple
+            onPress={() => setExpandedFlavors(!expandedFlavors)}
+            style={{ marginBottom: expandedFlavors ? 12 : 0 }}
+          >
+            <View style={styles.sectionHeaderWithSwitch}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.sectionTitle}>
+                    Sabores
+                    {selectedFlavors.length > 0 && (
+                      <Text style={styles.pizzaFormat}>
+                        {' - '}
+                        {selectedFlavors.map(sf => {
+                          const flavor = flavors.find(f => f.id === sf.pizzaCustomizationId);
+                          return flavor?.name || '';
+                        }).join(' / ')}
+                      </Text>
+                    )}
+                  </Text>
+                  <IconButton
+                    icon={expandedFlavors ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    style={{ margin: -8 }}
+                  />
+                </View>
+                {expandedFlavors && (
+                  <Text style={styles.helperText}>Selecciona hasta 2 sabores</Text>
+                )}
               </View>
-            )}
-          </View>
-          <View style={styles.flavorsGrid}>
-            {flavors.map((flavor) => {
-              const isSelected = selectedFlavors.some(sf => sf.pizzaCustomizationId === flavor.id);
-              const isDisabled = selectedFlavors.length >= 2 && !isSelected;
-              
-              return (
-                <Surface 
-                  key={flavor.id} 
-                  style={[
-                    styles.flavorChip,
-                    isSelected && styles.flavorChipSelected,
-                    isDisabled && styles.flavorChipDisabled
-                  ]}
-                >
-                  <TouchableRipple
-                    onPress={() => handleFlavorToggle(flavor.id)}
-                    disabled={isDisabled}
-                    style={{ paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8 }}
+              {expandedFlavors && selectedFlavors.length <= 1 && (
+                <View style={styles.halvesSwitch}>
+                  <Text style={styles.switchLabel}>Dividir mitades</Text>
+                  <Switch
+                    value={manualHalvesMode}
+                    onValueChange={(value) => {
+                      setManualHalvesMode(value);
+                      
+                      // Si se activa el modo mitades, convertir las personalizaciones de FULL a HALF_1
+                      if (value && selectedFlavors.length <= 1) {
+                        const updatedCustomizations = selectedPizzaCustomizations.map(sc => {
+                          if (sc.half === PizzaHalf.FULL) {
+                            return { ...sc, half: PizzaHalf.HALF_1 };
+                          }
+                          return sc;
+                        });
+                        onCustomizationChange(updatedCustomizations);
+                      }
+                      // Si se desactiva el modo mitades y solo hay un sabor, convertir todo a FULL
+                      else if (!value && selectedFlavors.length === 1) {
+                        const updatedCustomizations = selectedPizzaCustomizations.map(sc => {
+                          if (sc.half === PizzaHalf.HALF_1 || sc.half === PizzaHalf.HALF_2) {
+                            return { ...sc, half: PizzaHalf.FULL };
+                          }
+                          return sc;
+                        });
+                        onCustomizationChange(updatedCustomizations);
+                      }
+                    }}
+                  />
+                </View>
+              )}
+            </View>
+          </TouchableRipple>
+          {expandedFlavors && (
+            <View style={styles.flavorsGrid}>
+              {flavors.map((flavor) => {
+                const isSelected = selectedFlavors.some(sf => sf.pizzaCustomizationId === flavor.id);
+                const isDisabled = selectedFlavors.length >= 2 && !isSelected;
+                
+                return (
+                  <Surface 
+                    key={flavor.id} 
+                    style={[
+                      styles.flavorChip,
+                      isSelected && styles.flavorChipSelected,
+                      isDisabled && styles.flavorChipDisabled
+                    ]}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Checkbox
-                        status={isSelected ? 'checked' : 'unchecked'}
-                        onPress={() => handleFlavorToggle(flavor.id)}
-                        disabled={isDisabled}
-                      />
-                      <View style={{ flex: 1, marginLeft: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Text style={[styles.flavorLabel, isDisabled && styles.flavorLabelDisabled]}>
-                            {flavor.name}
-                          </Text>
-                          <Text style={[styles.toppingValue, isDisabled && styles.flavorLabelDisabled]}>
-                            ({flavor.toppingValue})
-                          </Text>
+                    <TouchableRipple
+                      onPress={() => handleFlavorToggle(flavor.id)}
+                      disabled={isDisabled}
+                      style={{ paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8 }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Checkbox
+                          status={isSelected ? 'checked' : 'unchecked'}
+                          onPress={() => handleFlavorToggle(flavor.id)}
+                          disabled={isDisabled}
+                        />
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={[styles.flavorLabel, isDisabled && styles.flavorLabelDisabled]}>
+                              {flavor.name}
+                            </Text>
+                            <Text style={[styles.toppingValue, isDisabled && styles.flavorLabelDisabled]}>
+                              ({flavor.toppingValue})
+                            </Text>
+                          </View>
+                          {flavor.ingredients && (
+                            <Text style={[styles.ingredientsText, isDisabled && styles.flavorLabelDisabled]}>
+                              {flavor.ingredients}
+                            </Text>
+                          )}
                         </View>
-                        {flavor.ingredients && (
-                          <Text style={[styles.ingredientsText, isDisabled && styles.flavorLabelDisabled]}>
-                            {flavor.ingredients}
-                          </Text>
-                        )}
                       </View>
-                    </View>
-                  </TouchableRipple>
-                </Surface>
-              );
-            })}
-          </View>
+                    </TouchableRipple>
+                  </Surface>
+                );
+              })}
+            </View>
+          )}
         </Card.Content>
       </Card>
 
       {/* Secciones de Personalización */}
-      {(selectedFlavors.length > 0 || manualHalvesMode) && (
+      {showHalvesMode ? (
+        // Modo mitades (2 sabores o modo manual)
         <>
-          {showHalvesMode ? (
-            // Modo mitades (2 sabores o modo manual)
-            <>
-              {renderCustomizationSection(
-                PizzaHalf.HALF_1, 
-                'Mitad 1', 
-                selectedFlavors[0] ? getFlavorName(selectedFlavors[0].pizzaCustomizationId) : undefined
-              )}
-              {renderCustomizationSection(
-                PizzaHalf.HALF_2, 
-                'Mitad 2', 
-                selectedFlavors[1] ? getFlavorName(selectedFlavors[1].pizzaCustomizationId) : undefined
-              )}
-            </>
-          ) : (
-            // Modo completo (1 sabor)
-            renderCustomizationSection(
-              PizzaHalf.FULL, 
-              'Pizza Completa', 
-              selectedFlavors[0] ? getFlavorName(selectedFlavors[0].pizzaCustomizationId) : undefined
-            )
+          {renderCustomizationSection(
+            PizzaHalf.HALF_1, 
+            'Mitad 1', 
+            selectedFlavors[0] ? getFlavorName(selectedFlavors[0].pizzaCustomizationId) : undefined
+          )}
+          {renderCustomizationSection(
+            PizzaHalf.HALF_2, 
+            'Mitad 2', 
+            selectedFlavors[1] ? getFlavorName(selectedFlavors[1].pizzaCustomizationId) : undefined
           )}
         </>
+      ) : (
+        // Modo completo (sin sabores o 1 sabor)
+        renderCustomizationSection(
+          PizzaHalf.FULL, 
+          'Pizza Completa', 
+          selectedFlavors[0] ? getFlavorName(selectedFlavors[0].pizzaCustomizationId) : undefined
+        )
       )}
 
     </View>
