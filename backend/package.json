@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "typeorm": "env-cmd ts-node -r tsconfig-paths/register ../node_modules/typeorm/cli.js",
+    "typeorm": "env-cmd ts-node --project tsconfig.cli.json -r tsconfig-paths/register ../node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- --dataSource=src/database/data-source.ts migration:generate",
     "postmigration:generate": "npm run lint -- --fix",
     "migration:create": "npm run typeorm -- migration:create",
@@ -123,7 +123,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "tslib": "2.8.1",
-    "typescript": "5.7.3"
+    "typescript": "^5.3.3"
   },
   "jest": {
     "moduleFileExtensions": [
