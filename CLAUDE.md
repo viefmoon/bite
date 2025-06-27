@@ -148,6 +148,7 @@ Estos errores son causados por conflictos de versiones en el ecosistema y no afe
 - `customers/` - Customer and address management
 - `areas/` & `tables/` - Restaurant layout management
 - `restaurant-config/` - Restaurant configuration (hours, acceptance status)
+- `audio-order-processing/` - Voice order processing with remote AI service integration
 
 **Infrastructure Patterns:**
 - Repository pattern with TypeORM entities
@@ -164,6 +165,7 @@ Estos errores son causados por conflictos de versiones en el ecosistema y no afe
 - Swagger API documentation on all endpoints
 - Order change tracking with jsondiffpatch
 - Thermal printer integration via node-thermal-printer
+- Voice order processing with speech recognition and AI parsing
 
 ### App Architecture
 
@@ -180,7 +182,7 @@ Estos errores son causados por conflictos de versiones en el ecosistema y no afe
 - React Hook Form for form state management
 
 **Key Screens:**
-- Order creation with product customization
+- Order creation with product customization and voice input
 - Open orders management
 - Product catalog with categories and variants
 - Table and area configuration
@@ -215,6 +217,8 @@ Create `.env` from `env-example-relational`:
 - `FILE_DRIVER` - 'local', 's3', or 's3-presigned'
 - `AUTH_JWT_SECRET` - Must be changed in production
 - `MAIL_*` - Email service configuration
+- `CLOUD_API_URL` - URL for remote services (sync, audio processing)
+- `CLOUD_API_KEY` - API key for remote services authentication
 
 ### App Configuration
 - `app/.env` - API_URL and other environment variables

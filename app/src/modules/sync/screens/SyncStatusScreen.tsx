@@ -351,10 +351,10 @@ export const SyncStatusScreen: React.FC = () => {
               • SYNC_ENABLED=true
             </Text>
             <Text variant="bodySmall" style={styles.configVar}>
-              • REMOTE_API_URL=https://tu-servidor.com
+              • CLOUD_API_URL=https://tu-servidor.com
             </Text>
             <Text variant="bodySmall" style={styles.configVar}>
-              • REMOTE_API_KEY=tu_api_key
+              • CLOUD_API_KEY=tu_api_key
             </Text>
             <Text variant="bodySmall" style={styles.configVar}>
               • SYNC_INTERVAL_MINUTES=5

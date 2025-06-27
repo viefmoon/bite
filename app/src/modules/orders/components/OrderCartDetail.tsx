@@ -32,7 +32,7 @@ import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.sch
 import OrderHeader from './OrderHeader';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
-import { TimePicker } from 'react-native-paper-dates';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -442,12 +442,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [timePickerHours, setTimePickerHours] = useState<number>(
-    new Date().getHours(),
-  );
-  const [timePickerMinutes, setTimePickerMinutes] = useState<number>(
-    new Date().getMinutes(),
-  );
+  const [timePickerDate, setTimePickerDate] = useState<Date>(new Date());
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -1220,23 +1215,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   );
 
   const showTimePicker = () => {
-    const currentTime = scheduledTime || new Date();
-    setTimePickerHours(currentTime.getHours());
-    setTimePickerMinutes(currentTime.getMinutes());
+    const currentTime = isEditMode ? (editScheduledTime || new Date()) : (scheduledTime || new Date());
+    setTimePickerDate(currentTime);
     setTimePickerVisible(true);
   };
   const hideTimePicker = () => setTimePickerVisible(false);
-  const handleTimeConfirm = () => {
-    const selectedDate = new Date();
-    selectedDate.setHours(timePickerHours, timePickerMinutes, 0, 0);
+  const handleTimeConfirm = (date: Date) => {
     const now = new Date();
     now.setSeconds(0, 0);
 
-    if (selectedDate < now) {
+    if (date < now) {
       hideTimePicker();
       setTimeAlertVisible(true);
     } else {
-      setScheduledTime(selectedDate);
+      if (isEditMode) {
+        setEditScheduledTime(date);
+      } else {
+        setScheduledTime(date);
+      }
       hideTimePicker();
     }
   };
@@ -2569,30 +2565,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
           {/* Modals */}
           <Portal>
-            <Modal
-              visible={isTimePickerVisible}
-              onDismiss={hideTimePicker}
-              contentContainerStyle={styles.timePickerModal}
-            >
-              <Text variant="titleMedium" style={styles.timePickerTitle}>
-                Seleccionar hora de entrega
-              </Text>
-              <TimePicker
-                hours={timePickerHours}
-                minutes={timePickerMinutes}
-                onHoursChange={setTimePickerHours}
-                onMinutesChange={setTimePickerMinutes}
-                locale="es"
-              />
-              <View style={styles.timePickerButtons}>
-                <Button mode="text" onPress={hideTimePicker}>
-                  Cancelar
-                </Button>
-                <Button mode="contained" onPress={handleTimeConfirm}>
-                  Confirmar
-                </Button>
-              </View>
-            </Modal>
+            <DateTimePickerModal
+              isVisible={isTimePickerVisible}
+              mode="time"
+              onConfirm={handleTimeConfirm}
+              onCancel={hideTimePicker}
+              date={timePickerDate}
+              locale="es_ES"
+              is24Hour={true}
+              display="spinner"
+            />
           </Portal>
 
           <ConfirmationModal
@@ -3118,22 +3100,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       height: 56,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    timePickerModal: {
-      backgroundColor: theme.colors.surface,
-      padding: 20,
-      margin: 20,
-      borderRadius: 12,
-    },
-    timePickerTitle: {
-      textAlign: 'center',
-      marginBottom: 20,
-    },
-    timePickerButtons: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: 20,
-      gap: 10,
     },
   });
 export default OrderCartDetail;

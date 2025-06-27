@@ -36,6 +36,9 @@ import CartButton from '../components/CartButton';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { AudioRecorderWidget } from '@/components/AudioRecorderWidget';
+import { AudioOrderModal } from '@/components/AudioOrderModal';
+import { audioOrderService, type AIOrderItem } from '@/services/audioOrderService';
 
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
@@ -85,6 +88,12 @@ const CreateOrderScreen = () => {
     useState<Product | null>(null);
   const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
     useState(false);
+  
+  // Estados para el widget de audio
+  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [audioOrderData, setAudioOrderData] = useState<any>(null);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [audioError, setAudioError] = useState<string | undefined>();
 
   const { data: menu, isLoading } = useGetFullMenu();
 
@@ -247,7 +256,6 @@ const CreateOrderScreen = () => {
         message: `Error al crear orden: ${message}`,
         type: 'error',
       });
-      console.error('Error al crear la orden:', error);
     } finally {
       setIsProcessingOrder(false);
     }
@@ -272,6 +280,145 @@ const CreateOrderScreen = () => {
       pizzaExtraCost,
     );
     cartButtonRef.current?.animate();
+  };
+
+  // Handlers para el widget de audio
+  const handleAudioRecordingComplete = useCallback(async (audioUri: string, transcription: string) => {
+    setIsProcessingAudio(true);
+    setShowAudioModal(true);
+    setAudioError(undefined);
+    
+    try {
+      const response = await audioOrderService.processAudioOrder(audioUri, transcription);
+      
+      if (response.success && response.data) {
+        setAudioOrderData(response.data);
+      } else {
+        setAudioError(response.error?.message || 'Error procesando la orden');
+      }
+    } catch (error) {
+      setAudioError('Error al procesar la orden por voz');
+    } finally {
+      setIsProcessingAudio(false);
+    }
+  }, []);
+
+  const handleAudioError = useCallback((error: string) => {
+    showSnackbar({
+      message: error,
+      type: 'error',
+    });
+  }, [showSnackbar]);
+
+  const handleConfirmAudioOrder = async (items: AIOrderItem[], deliveryInfo?: any, scheduledDelivery?: any) => {
+    // Procesamos los items detectados por voz y los agregamos al carrito
+    try {
+      if (!menu) {
+        throw new Error('El menú no está disponible');
+      }
+      
+      let addedCount = 0;
+      let failedCount = 0;
+      
+      // Procesar cada item detectado
+      for (const item of items) {
+        let foundProduct: Product | null = null;
+        
+        // Buscar el producto en el menú
+        outer: for (const category of menu) {
+          for (const subcategory of category.subcategories || []) {
+            for (const product of subcategory.products || []) {
+              if (product.id === item.productId) {
+                foundProduct = product;
+                break outer;
+              }
+            }
+          }
+        }
+        
+        if (foundProduct) {
+          // Preparar modificadores
+          const selectedModifiers: CartItemModifier[] = [];
+          if (item.modifiers && item.modifiers.length > 0) {
+            for (const modName of item.modifiers) {
+              // Buscar el modificador en el producto
+              for (const modGroup of foundProduct.modifierGroups || []) {
+                const modifier = modGroup.productModifiers?.find(m => m.name === modName);
+                if (modifier) {
+                  selectedModifiers.push({
+                    id: modifier.id,
+                    modifierGroupId: modGroup.id,
+                    name: modifier.name,
+                    price: modifier.price || 0,
+                  });
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Preparar personalizaciones de pizza
+          const pizzaCustomizations = item.pizzaCustomizations?.map(pc => ({
+            pizzaCustomizationId: pc.customizationId,
+            half: pc.half as any,
+            action: pc.action as any,
+          }));
+          
+          // Agregar al carrito
+          handleAddItem(
+            foundProduct,
+            item.quantity,
+            item.variantId,
+            selectedModifiers,
+            undefined, // preparationNotes
+            pizzaCustomizations,
+            0 // pizzaExtraCost (se calculará en el modal si es necesario)
+          );
+          
+          addedCount++;
+        } else {
+          failedCount++;
+        }
+      }
+      
+      // Mostrar resultado
+      if (addedCount > 0 && failedCount === 0) {
+        showSnackbar({
+          message: `Se agregaron ${addedCount} producto${addedCount > 1 ? 's' : ''} al carrito`,
+          type: 'success',
+        });
+      } else if (addedCount > 0 && failedCount > 0) {
+        showSnackbar({
+          message: `Se agregaron ${addedCount} producto${addedCount > 1 ? 's' : ''}, ${failedCount} no se encontraron`,
+          type: 'warning',
+        });
+      } else {
+        showSnackbar({
+          message: 'No se pudieron agregar los productos al carrito',
+          type: 'error',
+        });
+      }
+      
+      // Si hay información de entrega, guardarla en el contexto del carrito
+      if (deliveryInfo && Object.keys(deliveryInfo).length > 0) {
+        // TODO: Implementar setDeliveryInfo en el contexto del carrito
+        // Por ahora solo mostramos que se detectó
+        console.log('Información de entrega detectada:', deliveryInfo);
+      }
+      
+      setShowAudioModal(false);
+      setAudioOrderData(null);
+      
+      // Animar el botón del carrito si se agregaron productos
+      if (addedCount > 0) {
+        cartButtonRef.current?.animate();
+      }
+    } catch (error) {
+      showSnackbar({
+        message: 'Error al agregar los productos al carrito',
+        type: 'error',
+      });
+    }
   };
 
   const getCategories = () => {
@@ -700,17 +847,76 @@ const CreateOrderScreen = () => {
             product={selectedProductForDescription}
             onDismiss={handleCloseDescriptionModal}
           />
+          <AudioOrderModal
+            visible={showAudioModal}
+            onDismiss={() => {
+              setShowAudioModal(false);
+              setAudioOrderData(null);
+              setAudioError(undefined);
+            }}
+            onConfirm={handleConfirmAudioOrder}
+            isProcessing={isProcessingAudio}
+            orderData={audioOrderData}
+            error={audioError}
+          />
         </Portal>
+        
+        {/* Widget de grabación de audio */}
+        {!isCartVisible && !selectedProduct && (
+          <AudioRecorderWidget
+            onRecordingComplete={handleAudioRecordingComplete}
+            onError={handleAudioError}
+          />
+        )}
       </SafeAreaView>
     );
   };
   return renderContent();
 };
 
-const CreateOrderScreenWithCart = () => (
-  <CartProvider>
-    <CreateOrderScreen />
-  </CartProvider>
-);
+const CreateOrderScreenWithCart = () => {
+  const InnerComponent = () => {
+    const { isCartVisible, hideCart } = useCart();
+    const createOrderMutation = useCreateOrderMutation();
+    const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+    const navigation = useNavigation();
+    
+    const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
+      try {
+        const createdOrder = await createOrderMutation.mutateAsync(details);
+        showSnackbar({
+          message: `Orden #${createdOrder.dailyNumber} creada con éxito`,
+          type: 'success',
+        });
+        hideCart();
+        navigation.goBack();
+      } catch (error) {
+        showSnackbar({
+          message: getApiErrorMessage(error as any),
+          type: 'error',
+        });
+        throw error;
+      }
+    };
+    
+    return (
+      <>
+        <CreateOrderScreen />
+        <OrderCartDetail
+          visible={isCartVisible}
+          isEditMode={false}
+          onClose={hideCart}
+          onConfirmOrder={handleConfirmOrder}
+        />
+      </>
+    );
+  };
+  
+  return (
+    <CartProvider>
+      <InnerComponent />
+    </CartProvider>
+  );
+};
 
 export default CreateOrderScreenWithCart;

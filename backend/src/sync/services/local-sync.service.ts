@@ -56,8 +56,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       infer: true,
     }) || {
       enabled: false,
-      remoteApiUrl: '',
-      remoteApiKey: '',
+      cloudApiUrl: '',
+      cloudApiKey: '',
       intervalMinutes: 5,
       webSocketEnabled: false,
     };
@@ -101,11 +101,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       this.socket.disconnect();
     }
 
-    const wsUrl = `${this.syncConfig.remoteApiUrl}/sync`;
+    const wsUrl = `${this.syncConfig.cloudApiUrl}/sync`;
     this.logger.log(`🔌 Conectando a WebSocket: ${wsUrl}`);
 
     this.socket = io(wsUrl, {
-      auth: { apiKey: this.syncConfig.remoteApiKey },
+      auth: { apiKey: this.syncConfig.cloudApiKey },
       reconnection: true,
       reconnectionDelay: 5000,
       reconnectionAttempts: 10,
@@ -206,7 +206,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     error?: any;
   }> {
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.remoteApiKey };
+      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
       let synced = 0;
       let failed = 0;
       const errors: any[] = [];
@@ -222,7 +222,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
         await firstValueFrom(
           this.httpService.post(
-            `${this.syncConfig.remoteApiUrl}/api/sync/menu`,
+            `${this.syncConfig.cloudApiUrl}/api/sync/menu`,
             menuPayload,
             { headers },
           ),
@@ -243,7 +243,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
           await firstValueFrom(
             this.httpService.post(
-              `${this.syncConfig.remoteApiUrl}/api/sync/config`,
+              `${this.syncConfig.cloudApiUrl}/api/sync/config`,
               configPayload,
               { headers },
             ),
@@ -275,12 +275,12 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     error?: any;
   }> {
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.remoteApiKey };
+      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
 
       // Descargar órdenes pendientes
       const response = await firstValueFrom(
         this.httpService.get<{ data: RemoteOrder[] }>(
-          `${this.syncConfig.remoteApiUrl}/api/sync/orders/pending`,
+          `${this.syncConfig.cloudApiUrl}/api/sync/orders/pending`,
           { headers },
         ),
       );
@@ -448,7 +448,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       if (orderUpdates.length > 0) {
         await firstValueFrom(
           this.httpService.post(
-            `${this.syncConfig.remoteApiUrl}/api/sync/orders/confirm`,
+            `${this.syncConfig.cloudApiUrl}/api/sync/orders/confirm`,
             { orderUpdates },
             { headers },
           ),
@@ -472,7 +472,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     error?: any;
   }> {
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.remoteApiKey };
+      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
 
       // Obtener fecha de última sincronización de clientes
       const lastCustomerSync = await this.syncStatusService[
@@ -484,7 +484,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
       const response = await firstValueFrom(
         this.httpService.get<{ data: any[] }>(
-          `${this.syncConfig.remoteApiUrl}/api/sync/customers/changes?since=${since}`,
+          `${this.syncConfig.cloudApiUrl}/api/sync/customers/changes?since=${since}`,
           { headers },
         ),
       );
@@ -511,7 +511,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     error?: any;
   }> {
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.remoteApiKey };
+      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
 
       // TODO: Obtener clientes modificados localmente desde la última sincronización
       // Filtrar por lastSyncedAt < updatedAt
@@ -528,7 +528,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
       await firstValueFrom(
         this.httpService.post(
-          `${this.syncConfig.remoteApiUrl}/api/sync/customers/bulk`,
+          `${this.syncConfig.cloudApiUrl}/api/sync/customers/bulk`,
           { customers: modifiedCustomers },
           { headers },
         ),
