@@ -4,6 +4,23 @@
       "eas": {
         "projectId": "0eb3c4d0-a8be-4327-9313-be8b3b1038b3"
       }
+    },
+    "plugins": [
+      "expo-speech-recognition",
+      "expo-audio"
+    ],
+    "android": {
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.viefmoon.pizza"
+    },
+    "ios": {
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
+      },
+      "bundleIdentifier": "com.viefmoon.pizza"
     }
   }
 }

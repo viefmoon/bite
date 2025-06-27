@@ -32,7 +32,6 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 expoAutolinking.useExpoModules()
 
 rootProject.name = 'Bite'
-
 expoAutolinking.useExpoVersionCatalog()
 
 include ':app'

@@ -1,4 +1,4 @@
-package com.viefmoon.bite
+package com.viefmoon.pizza
 
 import android.os.Build
 import android.os.Bundle
