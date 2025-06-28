@@ -37,12 +37,13 @@ import { Swipeable } from 'react-native-gesture-handler';
 interface AudioOrderModalProps {
   visible: boolean;
   onDismiss: () => void;
-  onConfirm: (items: AIOrderItem[], deliveryInfo?: DeliveryInfoData, scheduledDelivery?: ScheduledDeliveryData) => void;
+  onConfirm: (items: AIOrderItem[], deliveryInfo?: DeliveryInfoData, scheduledDelivery?: ScheduledDeliveryData, orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => void;
   isProcessing: boolean;
   orderData?: {
     orderItems?: AIOrderItem[];
     deliveryInfo?: DeliveryInfoData;
     scheduledDelivery?: ScheduledDeliveryData;
+    orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN';
     warnings?: string;
     processingTime?: number;
   };
@@ -95,6 +96,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   };
 
   const handleConfirm = () => {
+    console.log('=== DEBUG AudioOrderModal handleConfirm ===');
+    console.log('orderData:', orderData);
+    console.log('orderData.orderType:', orderData?.orderType);
+    console.log('editableItems:', editableItems);
+    console.log('==========================================');
+    
     if (editableItems && editableItems.length > 0) {
       // Validar información de entrega si hay datos
       if (editableDeliveryInfo && Object.keys(editableDeliveryInfo).length > 0) {
@@ -121,10 +128,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         }
       }
       
+      console.log('Calling onConfirm with orderType:', orderData?.orderType);
       onConfirm(
         editableItems,
         editableDeliveryInfo,
-        orderData?.scheduledDelivery
+        orderData?.scheduledDelivery,
+        orderData?.orderType
       );
     }
   };
@@ -361,7 +370,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const renderOrderSummary = () => {
     if (!orderData) return null;
 
-    const { orderItems = [], deliveryInfo, scheduledDelivery, warnings } = orderData;
+    const { orderItems = [], deliveryInfo, scheduledDelivery, orderType, warnings } = orderData;
+    
+    console.log('=== DEBUG AudioOrderModal renderOrderSummary ===');
+    console.log('orderType from orderData:', orderType);
+    console.log('Full orderData:', orderData);
+    console.log('===============================================');
 
     return (
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -600,6 +614,27 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             />
             <Card.Content>
               <Text style={styles.scheduledTime}>{scheduledDelivery.time}</Text>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Tipo de orden */}
+        {orderType && (
+          <Card style={styles.sectionCard}>
+            <Card.Title 
+              title="Tipo de Orden"
+              left={(props) => <MaterialIcons {...props} name="restaurant" size={24} />}
+            />
+            <Card.Content>
+              <View style={styles.orderTypeContainer}>
+                <Chip 
+                  icon={orderType === 'DELIVERY' ? 'moped' : orderType === 'TAKE_AWAY' ? 'shopping-bag' : 'restaurant'}
+                  style={[styles.orderTypeChip, { backgroundColor: colors.primaryContainer }]}
+                  textStyle={{ color: colors.onPrimaryContainer }}
+                >
+                  {orderType === 'DELIVERY' ? 'Entrega a domicilio' : orderType === 'TAKE_AWAY' ? 'Para llevar' : 'Para comer aquí'}
+                </Chip>
+              </View>
             </Card.Content>
           </Card>
         )}
@@ -933,5 +968,13 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     marginTop: 4,
+  },
+  orderTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  orderTypeChip: {
+    paddingHorizontal: 16,
   },
 });

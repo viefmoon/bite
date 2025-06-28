@@ -71,13 +71,13 @@ export function PizzaCustomizationDetailModal({
         },
         {
           field: 'products',
-          label: 'Asociado a pizzas',
+          label: 'Asociado a productos',
           render: (products) => {
             if (!products || products.length === 0) {
-              return 'No asociado a ninguna pizza';
+              return 'No asociado a ningún producto';
             }
-            const pizzaNames = products.map(p => p.name).join(', ');
-            return `${products.length} pizza${products.length > 1 ? 's' : ''}: ${pizzaNames}`;
+            const productNames = products.map(p => p.name).join(', ');
+            return `${products.length} producto${products.length > 1 ? 's' : ''}: ${productNames}`;
           },
         },
       ]}

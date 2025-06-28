@@ -60,6 +60,8 @@ const CreateOrderScreen = () => {
     hideCart,
     clearCart,
     totalItemsCount,
+    setOrderType,
+    setDeliveryInfo,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
@@ -291,6 +293,12 @@ const CreateOrderScreen = () => {
     try {
       const response = await audioOrderService.processAudioOrder(audioUri, transcription);
       
+      console.log('=== DEBUG CreateOrderScreen ===');
+      console.log('Response from audioOrderService:', JSON.stringify(response, null, 2));
+      console.log('response.data:', JSON.stringify(response.data, null, 2));
+      console.log('orderType from response:', response.data?.orderType);
+      console.log('===============================');
+      
       if (response.success && response.data) {
         setAudioOrderData(response.data);
       } else {
@@ -310,7 +318,7 @@ const CreateOrderScreen = () => {
     });
   }, [showSnackbar]);
 
-  const handleConfirmAudioOrder = async (items: AIOrderItem[], deliveryInfo?: any, scheduledDelivery?: any) => {
+  const handleConfirmAudioOrder = async (items: AIOrderItem[], deliveryInfo?: any, scheduledDelivery?: any, orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => {
     // Procesamos los items detectados por voz y los agregamos al carrito
     try {
       if (!menu) {
@@ -401,9 +409,22 @@ const CreateOrderScreen = () => {
       
       // Si hay información de entrega, guardarla en el contexto del carrito
       if (deliveryInfo && Object.keys(deliveryInfo).length > 0) {
-        // TODO: Implementar setDeliveryInfo en el contexto del carrito
-        // Por ahora solo mostramos que se detectó
-        console.log('Información de entrega detectada:', deliveryInfo);
+        setDeliveryInfo(deliveryInfo);
+        console.log('Información de entrega guardada en el carrito:', deliveryInfo);
+      }
+      
+      // Si se detectó un tipo de orden, actualizarlo en el contexto del carrito
+      console.log('=== DEBUG handleConfirmAudioOrder ===');
+      console.log('orderType parameter:', orderType);
+      console.log('items:', items);
+      console.log('deliveryInfo:', deliveryInfo);
+      console.log('=====================================');
+      
+      if (orderType) {
+        setOrderType(orderType);
+        console.log('Setting orderType in cart context:', orderType);
+      } else {
+        console.log('No orderType detected!');
       }
       
       setShowAudioModal(false);

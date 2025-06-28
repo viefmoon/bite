@@ -240,11 +240,11 @@ export function PizzaCustomizationsListScreen() {
         <FAB.Group
           open={fabOpen}
           visible
-          icon={fabOpen ? 'close' : 'pizza'}
+          icon={fabOpen ? 'close' : 'food-variant'}
           actions={[
             {
               icon: 'link-variant',
-              label: 'Asociar a Pizzas',
+              label: 'Asociar a Productos',
               onPress: () => {
                 navigation.navigate('AssociatePizzaCustomizations');
                 setFabOpen(false);

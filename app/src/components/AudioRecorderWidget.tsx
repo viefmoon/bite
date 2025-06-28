@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -6,11 +6,12 @@ import {
   Animated,
   Easing,
   Dimensions,
+  Text,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import LottieView from 'lottie-react-native';
+import { audioServiceHealth, type AudioServiceHealthStatus } from '@/services/audioServiceHealth';
 
 interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;
@@ -36,56 +37,187 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     error,
   } = useAudioRecorder();
 
+  // Estado para el tiempo de grabación
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingInterval = useRef<NodeJS.Timeout | null>(null);
+  
+  // Estado de disponibilidad del servicio
+  const [serviceHealth, setServiceHealth] = useState<AudioServiceHealthStatus>(
+    audioServiceHealth.getStatus()
+  );
+  const [isServiceAvailable, setIsServiceAvailable] = useState(false);
+
   // Animaciones
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const waveAnim1 = useRef(new Animated.Value(0.8)).current;
+  const waveAnim2 = useRef(new Animated.Value(0.8)).current;
+  const waveAnim3 = useRef(new Animated.Value(0.8)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Animación de pulsación cuando está grabando
+  // Suscribirse a cambios en el estado del servicio
+  useEffect(() => {
+    const unsubscribe = audioServiceHealth.subscribe((status) => {
+      setServiceHealth(status);
+      setIsServiceAvailable(status.isAvailable);
+    });
+    
+    // Iniciar verificación periódica
+    audioServiceHealth.startPeriodicCheck();
+    
+    // Verificar inmediatamente
+    audioServiceHealth.checkHealth();
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Animación de entrada del widget (siempre visible)
+  useEffect(() => {
+    Animated.spring(bounceAnim, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  // Animación de ondas cuando está grabando
   useEffect(() => {
     if (isRecording) {
-      const pulseAnimation = Animated.loop(
+      // Iniciar contador de tiempo
+      recordingInterval.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
+      // Animaciones de onda
+      const wave1 = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.3,
-            duration: 1000,
-            easing: Easing.ease,
+          Animated.timing(waveAnim1, {
+            toValue: 1.5,
+            duration: 2000,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            easing: Easing.ease,
+          Animated.timing(waveAnim1, {
+            toValue: 0.8,
+            duration: 2000,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
         ])
       );
-      pulseAnimation.start();
-      return () => pulseAnimation.stop();
-    } else {
-      pulseAnim.setValue(1);
-    }
-  }, [isRecording, pulseAnim]);
 
-  // Animación de rotación cuando está procesando
+      const wave2 = Animated.loop(
+        Animated.sequence([
+          Animated.timing(waveAnim2, {
+            toValue: 1.8,
+            duration: 2500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(waveAnim2, {
+            toValue: 0.8,
+            duration: 2500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      const wave3 = Animated.loop(
+        Animated.sequence([
+          Animated.timing(waveAnim3, {
+            toValue: 2.1,
+            duration: 3000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(waveAnim3, {
+            toValue: 0.8,
+            duration: 3000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      // Animación de brillo
+      const glow = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      wave1.start();
+      wave2.start();
+      wave3.start();
+      glow.start();
+
+      // Fade in de las ondas
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      return () => {
+        wave1.stop();
+        wave2.stop();
+        wave3.stop();
+        glow.stop();
+        if (recordingInterval.current) {
+          clearInterval(recordingInterval.current);
+        }
+        setRecordingTime(0);
+      };
+    } else {
+      // Fade out de las ondas
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      waveAnim1.setValue(0.8);
+      waveAnim2.setValue(0.8);
+      waveAnim3.setValue(0.8);
+      glowAnim.setValue(0);
+    }
+  }, [isRecording]);
+
+  // Animación de procesamiento
   useEffect(() => {
     if (isProcessing || isPreparing) {
-      const rotationAnimation = Animated.loop(
+      const spin = Animated.loop(
         Animated.timing(rotateAnim, {
           toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
+          duration: 1500,
+          easing: Easing.bezier(0.645, 0.045, 0.355, 1),
           useNativeDriver: true,
         })
       );
-      rotationAnimation.start();
+      spin.start();
       return () => {
-        rotationAnimation.stop();
+        spin.stop();
         rotateAnim.setValue(0);
       };
     }
-  }, [isProcessing, isPreparing, rotateAnim]);
+  }, [isProcessing, isPreparing]);
 
   // Estado para evitar llamadas duplicadas
   const hasCompletedRef = useRef(false);
@@ -118,30 +250,39 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       onError(error);
     }
   }, [error, onError]);
-  
-  // Cleanup al desmontar el componente
-  useEffect(() => {
-    return () => {
-      // El hook maneja su propia limpieza, no necesitamos forzarla aquí
-    };
-  }, []);
 
   const handlePress = async () => {
+    // Verificar disponibilidad del servicio
+    if (!isServiceAvailable) {
+      // Animación de "shake" para indicar que no está disponible
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]).start();
+      
+      onError(serviceHealth.message || 'Servicio de voz no disponible');
+      return;
+    }
+    
     // Prevenir múltiples clics mientras procesa
     if (isProcessing || isPreparing) {
       return;
     }
     
-    // Animación de presión
+    // Animación de presión más suave
     Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.9,
-        duration: 100,
+      Animated.spring(scaleAnim, {
+        toValue: 0.85,
+        friction: 3,
+        tension: 40,
         useNativeDriver: true,
       }),
-      Animated.timing(scaleAnim, {
+      Animated.spring(scaleAnim, {
         toValue: 1,
-        duration: 100,
+        friction: 3,
+        tension: 40,
         useNativeDriver: true,
       }),
     ]).start();
@@ -157,92 +298,194 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     }
   };
 
-
   const rotateInterpolate = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
-  const getIconName = () => {
-    if (isProcessing || isPreparing) return 'hourglass-empty';
-    if (isRecording) return 'stop';
-    return 'mic';
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const getIcon = () => {
+    if (isRecording) {
+      return <MaterialIcons name="stop" size={30} color="white" />;
+    }
+    return <MaterialIcons name="mic" size={30} color="white" />;
   };
 
   const getBackgroundColor = () => {
-    if (isProcessing || isPreparing) return theme.colors.tertiary;
-    if (isRecording) return theme.colors.error;
+    if (!isServiceAvailable) return theme.colors.surfaceDisabled || '#E0E0E0';
+    if (isProcessing || isPreparing) return theme.colors.secondary;
+    if (isRecording) return '#FF3B30'; // Rojo vibrante
     return theme.colors.primary;
   };
 
+
+
   return (
-    <View style={styles.container}>
-      {/* Círculos de onda cuando está grabando */}
+    <Animated.View 
+      style={[
+        styles.container,
+        {
+          transform: [
+            { 
+              translateY: bounceAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [100, 0]
+              })
+            },
+            { scale: bounceAnim }
+          ],
+          opacity: bounceAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, isServiceAvailable ? 1 : 0.6]
+          })
+        }
+      ]}
+    >
+      {/* Ondas animadas de fondo */}
       {isRecording && (
-        <>
+        <View style={styles.wavesContainer}>
           <Animated.View
             style={[
-              styles.pulseCircle,
+              styles.wave,
               {
-                backgroundColor: theme.colors.primary,
-                transform: [{ scale: pulseAnim }],
+                transform: [{ scale: waveAnim1 }],
                 opacity: fadeAnim.interpolate({
-                  inputRange: [1, 1.3],
-                  outputRange: [0.3, 0],
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.1]
                 }),
+                backgroundColor: theme.colors.primary,
               },
             ]}
           />
           <Animated.View
             style={[
-              styles.pulseCircle,
-              styles.pulseCircleSecond,
+              styles.wave,
               {
-                backgroundColor: theme.colors.primary,
-                transform: [{ scale: Animated.multiply(pulseAnim, 0.8) }],
+                transform: [{ scale: waveAnim2 }],
                 opacity: fadeAnim.interpolate({
-                  inputRange: [1, 1.3],
-                  outputRange: [0.2, 0],
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.15]
                 }),
+                backgroundColor: theme.colors.primary,
               },
             ]}
           />
-        </>
+          <Animated.View
+            style={[
+              styles.wave,
+              {
+                transform: [{ scale: waveAnim3 }],
+                opacity: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.2]
+                }),
+                backgroundColor: theme.colors.primary,
+              },
+            ]}
+          />
+        </View>
+      )}
+
+      {/* Contador de tiempo */}
+      {isRecording && (
+        <Animated.View 
+          style={[
+            styles.timerContainer,
+            {
+              opacity: fadeAnim,
+              transform: [
+                {
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-10, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <View style={[styles.timerBadge, { backgroundColor: '#FF3B30' }]}>
+            <View style={styles.recordingDot} />
+            <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>
+          </View>
+        </Animated.View>
+      )}
+
+
+      {/* Indicador de servicio no disponible */}
+      {!isServiceAvailable && (
+        <View style={[styles.disabledIndicator, { backgroundColor: theme.colors.error }]}>
+          <MaterialIcons name="cloud-off" size={12} color="white" />
+        </View>
       )}
 
       <TouchableOpacity
         onPress={handlePress}
-        disabled={isProcessing || isPreparing}
-        activeOpacity={0.8}
+        disabled={isProcessing || isPreparing || !isServiceAvailable}
+        activeOpacity={0.9}
       >
         <Animated.View
           style={[
-            styles.button,
+            styles.buttonContainer,
             {
-              backgroundColor: getBackgroundColor(),
-              transform: [
-                { scale: scaleAnim },
-                { rotate: rotateInterpolate },
-              ],
-              shadowColor: theme.colors.primary,
-            },
+              transform: [{ scale: scaleAnim }],
+            }
           ]}
         >
-          <MaterialIcons
-            name={getIconName()}
-            size={32}
-            color="white"
-          />
+          {/* Brillo de fondo cuando graba */}
+          {isRecording && (
+            <Animated.View
+              style={[
+                styles.glowEffect,
+                {
+                  backgroundColor: '#FF3B30',
+                  opacity: glowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 0.6]
+                  }),
+                  transform: [
+                    {
+                      scale: glowAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.2]
+                      })
+                    }
+                  ]
+                }
+              ]}
+            />
+          )}
+          
+          <View
+            style={[
+              styles.button,
+              {
+                backgroundColor: getBackgroundColor(),
+                shadowColor: isRecording ? '#FF3B30' : theme.colors.primary,
+                shadowOpacity: isRecording ? 0.5 : 0.3,
+              },
+            ]}
+          >
+            {isProcessing || isPreparing ? (
+              <Animated.View
+                style={{
+                  transform: [{ rotate: rotateInterpolate }],
+                }}
+              >
+                <MaterialCommunityIcons name="brain" size={30} color="white" />
+              </Animated.View>
+            ) : (
+              getIcon()
+            )}
+          </View>
         </Animated.View>
       </TouchableOpacity>
-
-      {/* Indicador de grabación */}
-      {isRecording && (
-        <View style={[styles.recordingIndicator, { backgroundColor: theme.colors.error }]}>
-          <View style={styles.recordingDot} />
-        </View>
-      )}
-    </View>
+    </Animated.View>
   );
 };
 
@@ -254,42 +497,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  button: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  wavesContainer: {
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
-  pulseCircle: {
+  wave: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  button: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    zIndex: 10,
+  },
+  glowEffect: {
     position: 'absolute',
     width: 80,
     height: 80,
     borderRadius: 40,
+    zIndex: 5,
   },
-  pulseCircleSecond: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  timerContainer: {
+    position: 'absolute',
+    top: -45,
+    alignItems: 'center',
   },
-  recordingIndicator: {
+  timerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  recordingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'white',
+    opacity: 0.9,
+  },
+  timerText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  disabledIndicator: {
     position: 'absolute',
     top: -5,
     right: -5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  recordingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'white',
+    zIndex: 20,
+    elevation: 12,
   },
 });

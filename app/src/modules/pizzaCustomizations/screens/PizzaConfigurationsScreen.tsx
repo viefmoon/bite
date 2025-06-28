@@ -18,7 +18,7 @@ export function PizzaConfigurationsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text>Configuración de Pizzas - Por implementar</Text>
+      <Text>Configuración de Productos - Por implementar</Text>
     </SafeAreaView>
   );
 }

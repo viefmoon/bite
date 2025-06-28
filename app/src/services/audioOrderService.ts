@@ -33,6 +33,7 @@ export interface AudioOrderResponse {
     orderItems?: AIOrderItem[];
     deliveryInfo?: DeliveryInfoData;
     scheduledDelivery?: ScheduledDeliveryData;
+    orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN';
     warnings?: string;
     processingTime: number;
   };
@@ -77,6 +78,12 @@ class AudioOrderService {
       
       const responseData = response.data as any;
       
+      console.log('=== DEBUG audioOrderService ===');
+      console.log('Response from backend:', JSON.stringify(responseData, null, 2));
+      console.log('extractedData:', JSON.stringify(responseData.extractedData, null, 2));
+      console.log('orderType:', responseData.extractedData?.orderType);
+      console.log('==============================');
+      
       // Adaptar la respuesta del backend al formato esperado
       if (responseData.success) {
         return {
@@ -85,6 +92,7 @@ class AudioOrderService {
             orderItems: [],
             deliveryInfo: {},
             scheduledDelivery: {},
+            orderType: undefined,
             warnings: undefined,
             processingTime: 0
           }

@@ -165,6 +165,11 @@ export class AudioOrderProcessingService {
     // El servidor en la nube devuelve directamente los datos estructurados
     // No hay una acción específica, solo los datos extraídos
     
+    this.logger.log('=== DEBUG processCloudResponse ===');
+    this.logger.log('Data from cloud:', JSON.stringify(data, null, 2));
+    this.logger.log('orderType:', data.orderType);
+    this.logger.log('=================================');
+    
     return {
       success: true,
       message: 'Audio procesado exitosamente',
@@ -172,6 +177,7 @@ export class AudioOrderProcessingService {
         orderItems: data.orderItems || [],
         deliveryInfo: data.deliveryInfo || {},
         scheduledDelivery: data.scheduledDelivery || {},
+        orderType: data.orderType, // Agregando orderType aquí
         warnings: data.warnings,
         processingTime: data.processingTime,
       },
@@ -186,5 +192,82 @@ export class AudioOrderProcessingService {
     const sizeInBytes = (base64Data.length * 3) / 4;
     // Convertir a MB
     return sizeInBytes / (1024 * 1024);
+  }
+
+  async checkServiceHealth(): Promise<{
+    status: string;
+    available: boolean;
+    message: string;
+    timestamp: string;
+  }> {
+    try {
+      // Verificar configuración local primero
+      if (!this.isEnabled) {
+        return {
+          status: 'disabled',
+          available: false,
+          message: 'El servicio de procesamiento de audio está deshabilitado',
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      if (!this.cloudApiUrl || !this.cloudApiKey) {
+        return {
+          status: 'misconfigured',
+          available: false,
+          message: 'Configuración del servicio incompleta',
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Hacer ping al servicio remoto
+      // Si cloudApiUrl ya incluye /api/v1/audio, entonces solo agregamos /health
+      // Si no, agregamos la ruta completa
+      const healthCheckUrl = this.cloudApiUrl.includes('/api/v1/audio') 
+        ? `${this.cloudApiUrl}/health`
+        : `${this.cloudApiUrl}/api/v1/audio/health`;
+      const response = await firstValueFrom(
+        this.httpService.get(healthCheckUrl, {
+          headers: {
+            'X-API-Key': this.cloudApiKey,
+          },
+          timeout: 5000, // Timeout corto para health check
+        }),
+      );
+
+      if (response.status === 200) {
+        return {
+          status: 'ok',
+          available: true,
+          message: 'Servicio de procesamiento de audio disponible',
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      return {
+        status: 'error',
+        available: false,
+        message: 'Servicio no responde correctamente',
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error('Error verificando salud del servicio:', error);
+      
+      let message = 'No se puede conectar con el servicio de procesamiento';
+      if (error instanceof AxiosError) {
+        if (error.code === 'ECONNREFUSED') {
+          message = 'Servicio de procesamiento no disponible';
+        } else if (error.code === 'ETIMEDOUT') {
+          message = 'Tiempo de espera agotado al conectar con el servicio';
+        }
+      }
+
+      return {
+        status: 'error',
+        available: false,
+        message,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }

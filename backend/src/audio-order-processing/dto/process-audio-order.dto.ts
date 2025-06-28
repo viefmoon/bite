@@ -5,7 +5,9 @@ import {
   IsOptional,
   IsNumber,
   IsUUID,
+  IsEnum,
 } from 'class-validator';
+import { OrderType } from '../../orders/domain/enums/order-type.enum';
 
 export class ProcessAudioOrderDto {
   @ApiProperty({
@@ -53,6 +55,15 @@ export class ProcessAudioOrderDto {
   @IsUUID()
   @IsOptional()
   orderId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Type of order',
+    enum: OrderType,
+    example: OrderType.DELIVERY,
+  })
+  @IsEnum(OrderType)
+  @IsOptional()
+  orderType?: OrderType;
 }
 
 export class AudioOrderResponseDto {
@@ -76,17 +87,45 @@ export class AudioOrderResponseDto {
   @ApiPropertyOptional({
     description: 'Structured data extracted from audio',
     example: {
-      action: 'create_order',
-      products: [
+      orderItems: [
         {
-          name: 'Pizza Familiar Pepperoni',
+          productId: 'PR-39',
+          variantId: 'PVA-20',
           quantity: 1,
-          variant: 'familiar',
         },
       ],
+      deliveryInfo: {
+        fullAddress: 'Nicolás Bravo 165',
+      },
+      orderType: 'DELIVERY',
+      warnings: null,
+      processingTime: 1500,
     },
   })
-  extractedData?: any;
+  extractedData?: {
+    orderItems?: Array<{
+      productId: string;
+      variantId?: string;
+      quantity: number;
+      modifiers?: string[];
+      pizzaCustomizations?: Array<{
+        customizationId: string;
+        half: string;
+        action: string;
+      }>;
+    }>;
+    deliveryInfo?: {
+      fullAddress?: string;
+      recipientName?: string;
+      recipientPhone?: string;
+    };
+    scheduledDelivery?: {
+      time?: string;
+    };
+    orderType?: OrderType;
+    warnings?: string;
+    processingTime?: number;
+  };
 
   @ApiPropertyOptional({
     description: 'Error details if processing failed',
@@ -105,6 +144,7 @@ export class CloudApiRequestDto {
     customerId?: string;
     orderId?: string;
     timestamp: string;
+    orderType?: OrderType;
   };
 }
 

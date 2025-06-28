@@ -1,5 +1,19 @@
 {
   "expo": {
+    "name": "CloudBite",
+    "slug": "cloudbite",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "eas": {
         "projectId": "0eb3c4d0-a8be-4327-9313-be8b3b1038b3"
@@ -13,14 +27,22 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.viefmoon.pizza"
+      "package": "com.viefmoon.cloudbite",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "ios": {
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
       },
-      "bundleIdentifier": "com.viefmoon.pizza"
+      "bundleIdentifier": "com.viefmoon.cloudbite",
+      "supportsTablet": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

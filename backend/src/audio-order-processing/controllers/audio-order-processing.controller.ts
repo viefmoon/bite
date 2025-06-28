@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   HttpCode,
@@ -52,5 +53,47 @@ export class AudioOrderProcessingController {
     @Body() dto: ProcessAudioOrderDto,
   ): Promise<AudioOrderResponseDto> {
     return this.audioOrderProcessingService.processAudioOrder(dto);
+  }
+
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Check audio service availability',
+    description:
+      'Verifies if the audio processing service is available and can connect to the remote AI service',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Service is available',
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', example: 'ok' },
+        available: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Audio processing service is available' },
+        timestamp: { type: 'string', example: '2024-01-20T12:00:00Z' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    description: 'Service is not available',
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', example: 'error' },
+        available: { type: 'boolean', example: false },
+        message: { type: 'string', example: 'Cannot connect to audio processing service' },
+        timestamp: { type: 'string', example: '2024-01-20T12:00:00Z' },
+      },
+    },
+  })
+  async checkHealth(): Promise<{
+    status: string;
+    available: boolean;
+    message: string;
+    timestamp: string;
+  }> {
+    return this.audioOrderProcessingService.checkServiceHealth();
   }
 }

@@ -333,12 +333,12 @@ export function AssociatePizzaToppingsModal({
           <View style={styles.headerContent}>
             <View style={styles.titleContainer}>
               <IconButton
-                icon="pizza"
+                icon="food-variant"
                 size={20}
                 iconColor={theme.colors.primary}
                 style={styles.titleIcon}
               />
-              <Text style={styles.title}>Personalizar Pizza</Text>
+              <Text style={styles.title}>Personalizar Producto</Text>
             </View>
             <IconButton
               icon="close"

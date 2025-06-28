@@ -1,0 +1,177 @@
+import axios from 'axios';
+import { API_URL } from '@env';
+import { useAuthStore } from '@/app/store/authStore';
+import NetInfo from '@react-native-community/netinfo';
+
+export interface AudioServiceHealthStatus {
+  isAvailable: boolean;
+  hasInternet: boolean;
+  serviceStatus: 'ok' | 'error' | 'disabled' | 'misconfigured' | 'checking';
+  message?: string;
+  lastChecked: Date;
+}
+
+class AudioServiceHealthChecker {
+  private static instance: AudioServiceHealthChecker;
+  private healthStatus: AudioServiceHealthStatus = {
+    isAvailable: false,
+    hasInternet: false,
+    serviceStatus: 'checking',
+    lastChecked: new Date(),
+  };
+  private listeners: ((status: AudioServiceHealthStatus) => void)[] = [];
+  private checkInterval: NodeJS.Timeout | null = null;
+  private lastCheckTime: number = 0;
+  private readonly CHECK_INTERVAL = 30000; // 30 segundos
+  private readonly MIN_CHECK_INTERVAL = 5000; // 5 segundos mínimo entre checks
+
+  private constructor() {
+    // Iniciar verificación inmediata
+    this.checkHealth();
+    
+    // Escuchar cambios de conectividad
+    NetInfo.addEventListener(state => {
+      if (state.isConnected !== this.healthStatus.hasInternet) {
+        this.checkHealth();
+      }
+    });
+  }
+
+  static getInstance(): AudioServiceHealthChecker {
+    if (!AudioServiceHealthChecker.instance) {
+      AudioServiceHealthChecker.instance = new AudioServiceHealthChecker();
+    }
+    return AudioServiceHealthChecker.instance;
+  }
+
+  async checkHealth(force: boolean = false): Promise<AudioServiceHealthStatus> {
+    const now = Date.now();
+    
+    // Evitar checks muy frecuentes
+    if (!force && now - this.lastCheckTime < this.MIN_CHECK_INTERVAL) {
+      return this.healthStatus;
+    }
+    
+    this.lastCheckTime = now;
+    
+    try {
+      // Primero verificar conexión a internet
+      const netInfo = await NetInfo.fetch();
+      const hasInternet = netInfo.isConnected && netInfo.isInternetReachable !== false;
+      
+      if (!hasInternet) {
+        this.updateStatus({
+          isAvailable: false,
+          hasInternet: false,
+          serviceStatus: 'error',
+          message: 'Sin conexión a internet',
+          lastChecked: new Date(),
+        });
+        return this.healthStatus;
+      }
+
+      // Luego verificar el servicio
+      const accessToken = useAuthStore.getState().accessToken;
+      if (!accessToken) {
+        this.updateStatus({
+          isAvailable: false,
+          hasInternet: true,
+          serviceStatus: 'error',
+          message: 'Usuario no autenticado',
+          lastChecked: new Date(),
+        });
+        return this.healthStatus;
+      }
+
+      const response = await axios.get(`${API_URL}/api/v1/audio-orders/health`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 5000,
+      });
+
+      const { available, status, message } = response.data;
+      
+      this.updateStatus({
+        isAvailable: available,
+        hasInternet: true,
+        serviceStatus: status,
+        message,
+        lastChecked: new Date(),
+      });
+    } catch (error) {
+      // Solo log en modo debug, no en producción
+      if (__DEV__) {
+        console.log('Audio service health check failed (this is expected if not implemented yet)');
+      }
+      
+      let errorMessage = 'Servicio de voz no disponible';
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Tiempo de espera agotado';
+        } else if (error.response?.status === 503) {
+          errorMessage = 'Servicio temporalmente no disponible';
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Servicio de voz no configurado';
+        }
+      }
+      
+      this.updateStatus({
+        isAvailable: false,
+        hasInternet: true,
+        serviceStatus: 'error',
+        message: errorMessage,
+        lastChecked: new Date(),
+      });
+    }
+    
+    return this.healthStatus;
+  }
+
+  private updateStatus(status: AudioServiceHealthStatus) {
+    this.healthStatus = status;
+    this.notifyListeners();
+  }
+
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener(this.healthStatus));
+  }
+
+  subscribe(listener: (status: AudioServiceHealthStatus) => void): () => void {
+    this.listeners.push(listener);
+    
+    // Notificar inmediatamente con el estado actual
+    listener(this.healthStatus);
+    
+    // Retornar función para desuscribirse
+    return () => {
+      const index = this.listeners.indexOf(listener);
+      if (index > -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+
+  startPeriodicCheck() {
+    if (this.checkInterval) {
+      return;
+    }
+    
+    this.checkInterval = setInterval(() => {
+      this.checkHealth();
+    }, this.CHECK_INTERVAL);
+  }
+
+  stopPeriodicCheck() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+  }
+
+  getStatus(): AudioServiceHealthStatus {
+    return this.healthStatus;
+  }
+}
+
+export const audioServiceHealth = AudioServiceHealthChecker.getInstance();

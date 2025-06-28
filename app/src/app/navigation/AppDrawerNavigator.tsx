@@ -130,7 +130,7 @@ export function AppDrawerNavigator() {
                 title = 'Clientes';
                 break;
               case 'PizzaCustomizationsStack':
-                title = 'Gestión de Pizzas';
+                title = 'Personalizaciones';
                 break;
               case 'SyncStack':
                 title = 'Sincronización';

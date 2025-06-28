@@ -1,4 +1,4 @@
-package com.viefmoon.pizza
+package com.viefmoon.cloudbite
 
 import android.app.Application
 import android.content.res.Configuration
