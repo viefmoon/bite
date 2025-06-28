@@ -16,7 +16,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "0eb3c4d0-a8be-4327-9313-be8b3b1038b3"
+        "projectId": "556b2536-af8e-4b1c-8013-20f9e876d57e"
       }
     },
     "plugins": [
@@ -25,7 +25,8 @@
     ],
     "android": {
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.viefmoon.cloudbite",
       "adaptiveIcon": {
@@ -43,6 +44,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "owner": "viefmoon"
   }
 }

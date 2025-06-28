@@ -12,6 +12,7 @@ import {
 import { AppNavigator } from './src/app/navigation/AppNavigator';
 import GlobalSnackbar from './src/app/components/common/GlobalSnackbar';
 import { useInitializeAuth } from './src/app/hooks/useInitializeAuth';
+import { useServerConnection } from './src/app/hooks/useServerConnection';
 import { es, registerTranslation } from 'react-native-paper-dates';
 
 // Registrar la traducción al español para react-native-paper-dates
@@ -25,21 +26,19 @@ const queryClient = new QueryClient({
       refetchOnMount: 'always', // Siempre refrescar al montar
       refetchOnWindowFocus: true, // Refrescar al enfocar la ventana
       refetchOnReconnect: true, // Refrescar al reconectar
-      retry: 1, // Reintentar solo una vez en caso de error
+      retry: 0, // No reintentar, ya lo maneja axios-retry
       refetchInterval: false, // No refrescar automáticamente por intervalo
     },
     mutations: {
-      retry: 1, // Reintentar mutaciones solo una vez
+      retry: 0, // No reintentar, ya lo maneja axios-retry
     },
   },
 });
 
-export default function App() {
+function AppContent() {
   const isInitializingAuth = useInitializeAuth();
-
-  useSystemThemeDetector(); // Detecta y actualiza el tema del sistema en el store
-
-  const activeTheme = useThemeStore((state) => state.activeTheme); // Lee el tema activo del store
+  useServerConnection(); // Mantener el hook activo para el monitoreo de conexión
+  const activeTheme = useThemeStore((state) => state.activeTheme);
 
   // Muestra pantalla de carga durante la inicialización de autenticación
   if (isInitializingAuth) {
@@ -57,15 +56,26 @@ export default function App() {
     );
   }
 
-  // Renderiza la app principal una vez inicializada la autenticación
+  // Renderiza la app con indicador de conexión no bloqueante
+  return (
+    <>
+      <AppNavigator />
+      <GlobalSnackbar />
+    </>
+  );
+}
+
+export default function App() {
+  useSystemThemeDetector(); // Detecta y actualiza el tema del sistema en el store
+  const activeTheme = useThemeStore((state) => state.activeTheme); // Lee el tema activo del store
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <RootSiblingParent>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
             <PaperProvider theme={activeTheme}>
-              <AppNavigator />
-              <GlobalSnackbar />
+              <AppContent />
             </PaperProvider>
           </QueryClientProvider>
         </SafeAreaProvider>

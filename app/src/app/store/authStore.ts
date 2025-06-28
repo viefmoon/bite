@@ -183,7 +183,7 @@ export const initializeAuthStore = async () => {
         user: null,
         isAuthenticated: false,
       });
-      console.log('AuthStore inicializado sin tokens.');
+
     }
   } catch (error) {
     console.error('Error inicializando auth store:', error);

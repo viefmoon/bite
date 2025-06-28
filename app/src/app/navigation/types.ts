@@ -13,6 +13,7 @@ import type { CustomersStackParamList } from '../../modules/customers/navigation
 import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCustomizations/navigation/types';
 import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStackNavigator';
 import type { UsersStackParamList } from '../../modules/users/navigation/UsersStackNavigator';
+import type { KitchenStackParamList } from '../../modules/kitchen/navigation/KitchenNavigator';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -50,6 +51,7 @@ export type ModifiersStackScreenProps<T extends keyof ModifiersStackParamList> =
 
 export type AppDrawerParamList = {
   Welcome: undefined; // Mantener si existe una pantalla de bienvenida
+  KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
   MenuStack: NavigatorScreenParams<MenuStackParamList>; // Renombrado
   ModifiersStack: NavigatorScreenParams<ModifiersStackParamList>; // Renombrado
   PreparationScreensStack: NavigatorScreenParams<PreparationScreensStackParamList>; // Renombrado para consistencia
@@ -74,6 +76,7 @@ declare global {
     interface RootParamList
       extends AuthStackParamList,
         AppDrawerParamList,
+        KitchenStackParamList,
         ModifiersStackParamList,
         PreparationScreensStackParamList,
         AreasTablesStackParamList,

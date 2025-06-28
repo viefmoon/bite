@@ -4,54 +4,120 @@ import axios, {
   AxiosResponse,
 } from 'axios';
 import { create as createApisauceInstance } from 'apisauce';
-import { API_URL } from '@env';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useAuthStore } from '../store/authStore';
 import { ApiError } from '../lib/errors';
 import axiosRetry from 'axios-retry';
+import { discoveryService } from './discoveryService';
+import { useSnackbarStore } from '../store/snackbarStore';
 
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const AUTH_REFRESH_PATH = '/api/v1/auth/refresh';
 
-// --- Instancia de Axios (para interceptores) ---
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Cache-Control': 'no-cache',
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // Reducido a 10 segundos para detectar problemas de red más rápido
-});
+// Variables para manejar la inicialización del cliente
+let axiosInstance: any = null;
+let apiClient: any = null;
+let initializationPromise: Promise<void> | null = null;
+let currentBaseURL: string | null = null;
+
+// Función para inicializar el cliente con la URL descubierta
+async function initializeApiClient(providedUrl?: string) {
+  // Si ya está inicializado con la misma URL, no reinicializar
+  if (apiClient && currentBaseURL && currentBaseURL === providedUrl) {
+    return;
+  }
+
+  if (initializationPromise && !providedUrl) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    try {
+      const baseURL = providedUrl || await discoveryService.getApiUrl();
+      currentBaseURL = baseURL;
+      
+
+      // Crear instancia de Axios
+      axiosInstance = axios.create({
+        baseURL,
+        headers: {
+          'Cache-Control': 'no-cache',
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000, // Reducido a 5 segundos por defecto
+      });
+
+      // Configurar retry automático
+      configureAxiosRetry();
+
+      // Configurar interceptores
+      configureInterceptors();
+
+      // Crear cliente Apisauce
+      apiClient = createApisauceInstance({
+        baseURL, // Apisauce requiere baseURL aunque no lo use
+        axiosInstance: axiosInstance as any,
+      });
+
+      // Agregar transforms
+      addResponseTransforms(apiClient);
+    } catch (error) {
+      // Limpiar la promesa para permitir reintentos manuales
+      initializationPromise = null;
+      throw error;
+    }
+  })();
+
+  return initializationPromise;
+}
+
+// Función para obtener el cliente inicializado
+export async function getApiClient(url?: string) {
+  if (!apiClient || (url && url !== currentBaseURL)) {
+    await initializeApiClient(url);
+  }
+  return apiClient;
+}
+
+// Función para reinicializar el cliente (útil si cambia la IP del servidor)
+export async function reinitializeApiClient(url?: string) {
+  axiosInstance = null;
+  apiClient = null;
+  initializationPromise = null;
+  currentBaseURL = null;
+  cachedClient = null; // Limpiar también el cache del wrapper
+  return initializeApiClient(url);
+}
 
 // Configurar retry automático para errores de red
-axiosRetry(axiosInstance, {
-  retries: 3, // Número de reintentos
+function configureAxiosRetry() {
+  if (!axiosInstance) return;
+  
+  axiosRetry(axiosInstance, {
+  retries: 1, // Solo 1 reintento para fallar más rápido
   retryDelay: (retryCount: number) => {
-    console.log(
-      `[ApiClient] Reintento ${retryCount} después de error de red...`,
-    );
-    return retryCount * 1000; // Espera incremental: 1s, 2s, 3s
+    return 500; // Solo 500ms de espera
   },
   retryCondition: (error: AxiosError) => {
-    // Reintentar en errores de red y timeouts
+    // NO reintentar en timeouts para fallar rápido
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return false;
+    }
+    
+    // Solo reintentar en errores de red reales
     return (
-      axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-      error.code === 'ECONNABORTED' ||
-      error.code === 'ETIMEDOUT' ||
       error.code === 'ENOTFOUND' ||
       error.code === 'ECONNREFUSED' ||
-      error.code === 'ECONNRESET' ||
-      !error.response
+      error.code === 'ECONNRESET'
     );
   },
-  shouldResetTimeout: true, // Resetear timeout en cada reintento
+  shouldResetTimeout: false, // No resetear timeout
   onRetry: (retryCount: number, error: AxiosError, requestConfig: any) => {
-    console.log(`[ApiClient] Error de red detectado: ${error.message}`);
-    console.log(`[ApiClient] Reintentando petición a: ${requestConfig.url}`);
-    console.log(`[ApiClient] Intento ${retryCount} de 3`);
+    // Silencioso, sin logs
   },
 });
+}
 
 // --- Lógica de Refresco de Token (igual que antes) ---
 let isRefreshing = false;
@@ -73,17 +139,15 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 async function refreshToken(): Promise<string> {
   try {
-    console.log('[ApiClient] Iniciando renovación de token...');
     const currentRefreshToken =
       await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
     if (!currentRefreshToken) {
-      console.error('[ApiClient] No hay refresh token disponible');
       throw new Error('No refresh token available.');
     }
 
-    console.log('[ApiClient] Enviando solicitud de refresh...');
+    const baseURL = await discoveryService.getApiUrl();
     const response = await axios.post<{ token: string; refreshToken?: string }>(
-      `${API_URL}${AUTH_REFRESH_PATH}`,
+      `${baseURL}${AUTH_REFRESH_PATH}`,
       {},
       { headers: { Authorization: `Bearer ${currentRefreshToken}` } },
     );
@@ -91,90 +155,105 @@ async function refreshToken(): Promise<string> {
     const newAccessToken = response.data.token;
     const newRefreshToken = response.data.refreshToken;
 
-    console.log('[ApiClient] Token renovado exitosamente');
-
     // Actualizar tokens en el store
     const authStore = useAuthStore.getState();
 
     // Si viene un nuevo refresh token, actualizarlo primero
     if (newRefreshToken && newRefreshToken !== currentRefreshToken) {
-      console.log('[ApiClient] Actualizando refresh token...');
       await authStore.setRefreshToken(newRefreshToken);
     }
 
     // Luego actualizar el access token
     await authStore.setAccessToken(newAccessToken);
 
-    console.log('[ApiClient] Tokens actualizados en el store');
-
     return newAccessToken;
   } catch (error: any) {
-    console.error(
-      '[ApiClient] Error renovando token:',
-      error.response?.status,
-      error.message,
-    );
     if (error.response?.status === 401 || error.response?.status === 404) {
-      console.log(
-        '[ApiClient] Token inválido o backend diferente, cerrando sesión...',
-      );
       await useAuthStore.getState().logout();
     }
     throw error;
   }
 }
 
-// --- Interceptores de Axios (aplicados a axiosInstance) ---
+// --- Interceptores de Axios ---
+function configureInterceptors() {
+  if (!axiosInstance) return;
 
-// 1. Interceptor de Peticiones
-axiosInstance.interceptors.request.use(
+  // 1. Interceptor de Peticiones
+  axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = useAuthStore.getState().accessToken;
     if (accessToken && config.url !== AUTH_REFRESH_PATH) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
     }
+    
+    // Configurar timeouts específicos según el tipo de operación
+    if (config.method === 'get') {
+      // GETs con timeout uniforme
+      config.timeout = 5000; // 5 segundos para todas las consultas
+    } else if (config.method === 'post' && config.url?.includes('/files/upload')) {
+      // Uploads necesitan más tiempo
+      config.timeout = 30000; // 30 segundos para uploads
+    } else if (config.method === 'post' || config.method === 'put') {
+      // POSTs y PUTs normales
+      config.timeout = 5000; // 5 segundos para guardar
+    }
+    
     return config;
   },
-  (error) => Promise.reject(error),
+  (error: any) => Promise.reject(error),
 );
 
-// 2. Interceptor de Respuestas
-axiosInstance.interceptors.response.use(
+  // 2. Interceptor de Respuestas
+  axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response, // Pasa respuestas exitosas
   async (error: AxiosError) => {
     // Maneja errores
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      _skipQueue?: boolean;
     };
 
-    // Log detallado para errores de red
+    // Detectar errores de red
     if (!error.response) {
-      console.log('[ApiClient] Error de red detectado:');
-      console.log('[ApiClient] - Código:', error.code);
-      console.log('[ApiClient] - Mensaje:', error.message);
-      console.log('[ApiClient] - URL:', originalRequest?.url);
-      console.log(
-        '[ApiClient] - Timeout configurado:',
-        originalRequest?.timeout,
-        'ms',
-      );
 
-      // Información adicional para debug
-      if (error.code === 'ECONNABORTED') {
-        console.log('[ApiClient] La petición excedió el tiempo de espera');
-      } else if (error.code === 'ENOTFOUND') {
-        console.log('[ApiClient] No se pudo resolver el host');
-      } else if (error.code === 'ECONNREFUSED') {
-        console.log('[ApiClient] Conexión rechazada por el servidor');
-      } else if (error.code === 'ECONNRESET') {
-        console.log('[ApiClient] La conexión fue reiniciada');
+      // Manejar error de red de manera no bloqueante
+      const showSnackbar = useSnackbarStore.getState().showSnackbar;
+      
+      // Mensajes específicos según el tipo de error
+      let errorMessage = 'Sin conexión al servidor';
+      
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        // Error de timeout
+        errorMessage = 'La operación tardó demasiado. Intenta nuevamente.';
+      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        // Servidor no encontrado
+        errorMessage = 'No se puede conectar al servidor';
+      } else {
+        // Otros errores de red - mensajes según método
+        if (originalRequest.method === 'POST') {
+          errorMessage = 'No se puede guardar sin conexión';
+        } else if (originalRequest.method === 'PUT') {
+          errorMessage = 'No se puede actualizar sin conexión';
+        } else if (originalRequest.method === 'DELETE') {
+          errorMessage = 'No se puede eliminar sin conexión';
+        } else if (originalRequest.method === 'GET') {
+          errorMessage = 'No se pueden cargar los datos sin conexión';
+        }
       }
+      
+      // Mostrar error no bloqueante
+      showSnackbar({
+        message: errorMessage,
+        type: 'error',
+        duration: 5000,
+      });
+      
+      // Rechazar con el error para que el componente pueda manejarlo
+      const apiError = ApiError.fromAxiosError(error);
+      return Promise.reject(apiError);
     }
 
-    // Log para debug
-    if (error.response?.status === 401) {
-      console.log('[ApiClient] Error 401 detectado en:', originalRequest.url);
-    }
 
     // No intentar renovar si:
     // 1. No es un error 401
@@ -193,16 +272,10 @@ axiosInstance.interceptors.response.use(
 
     // --- Manejo del 401 ---
     if (isRefreshing) {
-      console.log(
-        '[ApiClient] Ya hay una renovación en curso, encolando petición...',
-      );
       // Encolar petición
       return new Promise((resolve, reject) => {
         failedQueue.push({
           resolve: (token) => {
-            console.log(
-              '[ApiClient] Reintentando petición encolada con nuevo token',
-            );
             originalRequest.headers['Authorization'] = `Bearer ${token}`;
             originalRequest._retry = true;
             resolve(axiosInstance(originalRequest));
@@ -212,23 +285,15 @@ axiosInstance.interceptors.response.use(
       });
     }
 
-    console.log('[ApiClient] Iniciando proceso de renovación de token...');
     isRefreshing = true;
     originalRequest._retry = true;
 
     try {
       const newAccessToken = await refreshToken();
-      console.log(
-        '[ApiClient] Token renovado, procesando cola de peticiones...',
-      );
       processQueue(null, newAccessToken);
       originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-      console.log('[ApiClient] Reintentando petición original con nuevo token');
       return axiosInstance(originalRequest);
     } catch (refreshError: any) {
-      console.error(
-        '[ApiClient] Fallo al renovar token, rechazando todas las peticiones en cola',
-      );
       processQueue(refreshError, null);
 
       // Si el error es 401 o 404, ya se habrá cerrado la sesión en refreshToken()
@@ -238,29 +303,73 @@ axiosInstance.interceptors.response.use(
       isRefreshing = false;
     }
   },
-);
+  );
+}
 
-// --- Crear instancia de Apisauce USANDO la instancia de Axios configurada ---
-const apiClient = createApisauceInstance({
-  baseURL: API_URL,
-  headers: {
-    // Headers base que Apisauce podría usar/mergear
-    'Cache-Control': 'no-cache',
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000,
-  axiosInstance: axiosInstance, // ¡Aquí está la clave!
-});
+// Función para agregar transforms al cliente
+function addResponseTransforms(client: any) {
+  client.addResponseTransform((response: any) => {
+    // Si hay un problema de red, mostrar snackbar aquí también
+    if (response.problem === 'NETWORK_ERROR' || response.problem === 'TIMEOUT_ERROR' || response.problem === 'CONNECTION_ERROR' || (!response.ok && !response.status)) {
+      const showSnackbar = useSnackbarStore.getState().showSnackbar;
+      
+      let errorMessage = 'Sin conexión al servidor';
+      const method = response.config?.method || response.originalError?.config?.method;
+      
+      if (method === 'POST') {
+        errorMessage = 'No se puede guardar sin conexión';
+      } else if (method === 'PUT') {
+        errorMessage = 'No se puede actualizar sin conexión';
+      } else if (method === 'DELETE') {
+        errorMessage = 'No se puede eliminar sin conexión';
+      } else if (method === 'GET') {
+        errorMessage = 'No se pueden cargar los datos sin conexión';
+      }
+      
+      // Usar setTimeout para asegurar que se muestre
+      setTimeout(() => {
+        showSnackbar({
+          message: errorMessage,
+          type: 'error',
+          duration: 5000,
+        });
+      }, 100);
+    }
+    
+    // Si la respuesta no es ok y tenemos un error original del interceptor
+    if (!response.ok && response.originalError instanceof ApiError) {
+      // Preservar el ApiError original
+      (response as any).apiError = response.originalError;
+    }
+  });
+}
 
-// Agregar un response transform para manejar errores
-apiClient.addResponseTransform((response) => {
-  // Si la respuesta no es ok y tenemos un error original del interceptor
-  if (!response.ok && response.originalError instanceof ApiError) {
-    // Preservar el ApiError original
-    (response as any).apiError = response.originalError;
-  }
-});
+// Cache para el cliente inicializado
+let cachedClient: any = null;
 
-// Exportamos la instancia de APISAUCE que usa nuestro Axios configurado
-export default apiClient;
+// Función wrapper que devuelve el cliente real
+const createApiClientWrapper = () => {
+  const handler = {
+    get(_target: any, prop: string) {
+      // Retornar una función que inicializa el cliente cuando se necesita
+      return async (...args: any[]) => {
+        if (!cachedClient) {
+          cachedClient = await getApiClient();
+        }
+        
+        const method = cachedClient[prop];
+        if (typeof method === 'function') {
+          return method.apply(cachedClient, args);
+        }
+        
+        return method;
+      };
+    }
+  };
+  
+  return new Proxy({}, handler);
+};
+
+const apiClientProxy = createApiClientWrapper();
+
+export default apiClientProxy;

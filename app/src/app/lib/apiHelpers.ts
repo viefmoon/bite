@@ -10,6 +10,11 @@ import { ApiError } from './errors';
  * @throws ApiError if the response is not ok
  */
 export function handleApiResponse<T>(response: ApiResponse<T>): T {
+  // Caso especial: si data es un array vacío, es una respuesta válida
+  if (response.ok && Array.isArray(response.data) && response.data.length === 0) {
+    return response.data;
+  }
+  
   if (!response.ok || !response.data) {
     // Check if the originalError is already an ApiError (from interceptor)
     if (response.originalError && response.originalError instanceof ApiError) {

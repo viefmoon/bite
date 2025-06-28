@@ -18,10 +18,12 @@ This is a restaurant management system with two main components:
 ```bash
 cd backend
 npm install
-npm run start:dev     # Start in watch mode
-npm run start:debug   # Start with debugger
-npm run start:prod    # Start production build
+npm run start:dev     # Start in watch mode (puerto 3737)
+npm run start:debug   # Start with debugger (puerto 3737)
+npm run start:prod    # Start production build (puerto 3737)
 ```
+
+**IMPORTANTE**: El backend ahora usa el puerto 3737 para permitir auto-descubrimiento desde la app.
 
 ### Database & Migrations
 ```bash
@@ -213,6 +215,7 @@ app/src/modules/
 
 ### Backend Environment
 Create `.env` from `env-example-relational`:
+- `APP_PORT` - Puerto del servidor (debe ser 3737)
 - `DATABASE_*` - PostgreSQL connection
 - `FILE_DRIVER` - 'local', 's3', or 's3-presigned'
 - `AUTH_JWT_SECRET` - Must be changed in production
@@ -221,11 +224,19 @@ Create `.env` from `env-example-relational`:
 - `CLOUD_API_KEY` - API key for remote services authentication
 
 ### App Configuration
-- `app/.env` - API_URL and other environment variables
+- **Auto-descubrimiento**: La app encuentra automáticamente el backend en la red local (puerto 3737)
+- **Cero configuración**: No requiere archivos `.env` ni configuración manual
 - Module-specific services in each module's `services/` directory
 - Global configuration in `app/constants/`
 - Theme configuration in `app/styles/`
 - Path aliases: `@/` resolves to `src/`
+
+### Sistema de Auto-Descubrimiento
+La app implementa un sistema robusto de auto-descubrimiento del backend:
+1. Escanea la red local buscando el servidor en el puerto 3737
+2. Cachea la URL encontrada para uso posterior
+3. Incluye fallback para última URL conocida
+4. Soporta re-descubrimiento manual si cambia la IP del servidor
 
 ## Development Notes
 

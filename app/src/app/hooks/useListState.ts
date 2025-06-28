@@ -12,6 +12,13 @@ interface UseListStateProps {
     onAction?: () => void;
     icon?: string;
   };
+  errorConfig?: {
+    title?: string;
+    message?: string;
+    actionLabel?: string;
+    onAction?: () => void;
+    icon?: string;
+  };
 }
 
 export const useListState = ({
@@ -19,6 +26,7 @@ export const useListState = ({
   isError,
   data,
   emptyConfig,
+  errorConfig,
 }: UseListStateProps) => {
   const isEmpty = useMemo(() => {
     return !isLoading && !isError && data && data.length === 0;
@@ -31,12 +39,12 @@ export const useListState = ({
 
       if (isError) {
         return React.createElement(EmptyState, {
-          icon: 'alert-circle',
-          title: 'Error al cargar los datos',
+          icon: errorConfig?.icon || 'alert-circle',
+          title: errorConfig?.title || 'Error al cargar los datos',
           message:
-            'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
-          actionLabel: 'Reintentar',
-          onAction: emptyConfig.onAction,
+            errorConfig?.message || 'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
+          actionLabel: errorConfig?.actionLabel || 'Reintentar',
+          onAction: errorConfig?.onAction || emptyConfig.onAction,
         });
       }
 
@@ -52,7 +60,7 @@ export const useListState = ({
 
       return null;
     };
-  }, [isLoading, isError, isEmpty, emptyConfig]);
+  }, [isLoading, isError, isEmpty, emptyConfig, errorConfig]);
 
   return {
     isEmpty,

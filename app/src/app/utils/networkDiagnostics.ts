@@ -1,6 +1,6 @@
-import { API_URL } from '@env';
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
+import { discoveryService } from '@/app/services/discoveryService';
 
 interface NetworkDiagnosticResult {
   timestamp: Date;
@@ -26,9 +26,17 @@ interface NetworkDiagnosticResult {
 }
 
 export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> {
+  // Obtener la URL del API dinámicamente
+  let apiUrl = '';
+  try {
+    apiUrl = await discoveryService.getApiUrl();
+  } catch (error) {
+    console.log('[NetworkDiagnostics] Error obteniendo URL del API:', error);
+  }
+
   const result: NetworkDiagnosticResult = {
     timestamp: new Date(),
-    apiUrl: API_URL,
+    apiUrl: apiUrl || 'URL no disponible',
     networkState: {
       isConnected: null,
       isInternetReachable: null,
@@ -66,8 +74,8 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
   // 2. Probar conexión directa a la API
   const apiStartTime = Date.now();
   try {
-    console.log('[NetworkDiagnostics] Probando conexión a API:', API_URL);
-    const response = await axios.get(`${API_URL}/api/v1/health`, {
+    console.log('[NetworkDiagnostics] Probando conexión a API:', apiUrl);
+    const response = await axios.get(`${apiUrl}api/v1/health`, {
       timeout: 5000,
       validateStatus: () => true, // Aceptar cualquier status
     });
