@@ -64,7 +64,7 @@ export class UsersRelationalRepository implements UserRepository {
         }),
         {},
       ),
-      relations: ['preparationScreens'],
+      relations: ['preparationScreen'],
     });
 
     return entities
@@ -75,7 +75,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
       where: { id: id },
-      relations: ['preparationScreens'],
+      relations: ['preparationScreen'],
     });
 
     return entity ? this.userMapper.toDomain(entity) : null;
@@ -84,7 +84,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findByIds(ids: User['id'][]): Promise<User[]> {
     const entities = await this.usersRepository.find({
       where: { id: In(ids) },
-      relations: ['preparationScreens'],
+      relations: ['preparationScreen'],
     });
 
     return entities
@@ -97,6 +97,7 @@ export class UsersRelationalRepository implements UserRepository {
 
     const entity = await this.usersRepository.findOne({
       where: { email },
+      relations: ['preparationScreen'],
     });
 
     return entity ? this.userMapper.toDomain(entity) : null;
@@ -109,6 +110,7 @@ export class UsersRelationalRepository implements UserRepository {
 
     const entity = await this.usersRepository.findOne({
       where: { username },
+      relations: ['preparationScreen'],
     });
 
     return entity ? this.userMapper.toDomain(entity) : null;
@@ -117,7 +119,7 @@ export class UsersRelationalRepository implements UserRepository {
   async update(id: User['id'], payload: Partial<User>): Promise<User> {
     const entity = await this.usersRepository.findOne({
       where: { id: id },
-      relations: ['preparationScreens'],
+      relations: ['preparationScreen'],
     });
 
     if (!entity) {
@@ -152,36 +154,38 @@ export class UsersRelationalRepository implements UserRepository {
   async remove(id: User['id']): Promise<void> {
     await this.usersRepository.softDelete(id);
   }
-  
-  async updatePreparationScreens(
+
+  async updatePreparationScreen(
     id: User['id'],
-    preparationScreenIds: string[],
+    preparationScreenId: string | null,
   ): Promise<User | null> {
     const entity = await this.usersRepository.findOne({
       where: { id: id },
-      relations: ['preparationScreens'],
     });
 
     if (!entity) {
       throw new Error('User not found');
     }
 
-    // Cargar las pantallas de preparación
-    let preparationScreens: PreparationScreenEntity[] = [];
-    if (preparationScreenIds.length > 0) {
-      preparationScreens = await this.preparationScreensRepository.find({
-        where: { id: In(preparationScreenIds) },
+    // Cargar la pantalla de preparación si se proporciona
+    let preparationScreen: PreparationScreenEntity | null = null;
+    if (preparationScreenId) {
+      preparationScreen = await this.preparationScreensRepository.findOne({
+        where: { id: preparationScreenId },
       });
+      if (!preparationScreen) {
+        throw new Error('Preparation screen not found');
+      }
     }
 
     // Actualizar la relación
-    entity.preparationScreens = preparationScreens;
+    entity.preparationScreen = preparationScreen;
     const updatedEntity = await this.usersRepository.save(entity);
 
     // Cargar el usuario actualizado con las relaciones
     const refreshedEntity = await this.usersRepository.findOne({
       where: { id: id },
-      relations: ['preparationScreens'],
+      relations: ['preparationScreen'],
     });
 
     if (!refreshedEntity) {
@@ -192,7 +196,7 @@ export class UsersRelationalRepository implements UserRepository {
     if (!domainResult) {
       throw new Error('Failed to map updated user entity to domain');
     }
-    
+
     return domainResult;
   }
 }
