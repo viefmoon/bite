@@ -211,7 +211,7 @@ export class ProductRelationalRepository implements ProductRepository {
 
   async updatePreparationScreen(
     productId: string,
-    preparationScreenId: string | null,
+    preparationScreenId: string,
   ): Promise<void> {
     const result = await this.productRepository.update(productId, {
       preparationScreenId: preparationScreenId,
