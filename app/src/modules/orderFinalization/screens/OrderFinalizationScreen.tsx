@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import {
   Surface,
   Text,
@@ -53,6 +53,8 @@ export const OrderFinalizationScreen: React.FC = () => {
 
   // Filtrar órdenes según el filtro seleccionado
   const filteredOrders = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) return [];
+    
     return orders.filter((order) => {
       if (filter === 'takeout')
         return order.orderType === 'TAKEOUT' || order.orderType === 'DELIVERY';
@@ -72,6 +74,8 @@ export const OrderFinalizationScreen: React.FC = () => {
 
   const handleToggleOrderSelection = useCallback(
     (orderId: string) => {
+      if (!orders || !Array.isArray(orders)) return;
+      
       const order = orders.find((o) => o.id === orderId);
       if (!order) return;
 
@@ -198,7 +202,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             renderItem={renderOrderCard}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            ItemSeparatorComponent={() => null}
             onRefresh={refetch}
             refreshing={isLoading}
           />
@@ -229,49 +233,68 @@ export const OrderFinalizationScreen: React.FC = () => {
         >
           <Dialog.Title>Finalizar Órdenes</Dialog.Title>
           <Dialog.Content>
-            <Text style={{ marginBottom: 16 }}>
-              ¿Finalizar {selectionState.selectedOrders.size}{' '}
-              {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}{' '}
-              por un total de ${(selectionState.totalAmount || 0).toFixed(2)}?
-            </Text>
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, marginBottom: 8, color: theme.colors.onSurface }}>
+                ¿Finalizar {selectionState.selectedOrders.size}{' '}
+                {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}?
+              </Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.primary }}>
+                Total: ${(selectionState.totalAmount || 0).toFixed(2)}
+              </Text>
+            </View>
 
-            <Text style={{ marginBottom: 8, fontWeight: '600' }}>
+            <Text style={{ marginBottom: 12, fontWeight: '600', fontSize: 16, color: theme.colors.onSurface }}>
               Método de pago:
             </Text>
             <RadioButton.Group
               onValueChange={setPaymentMethod}
               value={paymentMethod}
             >
-              <View
+              <TouchableOpacity
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 8,
                   marginBottom: 8,
+                  borderRadius: 8,
+                  backgroundColor: paymentMethod === 'cash' ? theme.colors.primaryContainer : 'transparent',
                 }}
+                onPress={() => setPaymentMethod('cash')}
               >
                 <RadioButton value="cash" />
-                <Text>Efectivo</Text>
-              </View>
-              <View
+                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>💵 Efectivo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 8,
                   marginBottom: 8,
+                  borderRadius: 8,
+                  backgroundColor: paymentMethod === 'card' ? theme.colors.primaryContainer : 'transparent',
                 }}
+                onPress={() => setPaymentMethod('card')}
               >
                 <RadioButton value="card" />
-                <Text>Tarjeta</Text>
-              </View>
-              <View
+                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>💳 Tarjeta</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 8,
                   marginBottom: 16,
+                  borderRadius: 8,
+                  backgroundColor: paymentMethod === 'transfer' ? theme.colors.primaryContainer : 'transparent',
                 }}
+                onPress={() => setPaymentMethod('transfer')}
               >
                 <RadioButton value="transfer" />
-                <Text>Transferencia</Text>
-              </View>
+                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>📱 Transferencia</Text>
+              </TouchableOpacity>
             </RadioButton.Group>
 
             <TextInput
@@ -334,15 +357,18 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 16,
     right: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 8,
+    elevation: 8,
   },
   finalizeButton: {
-    borderRadius: 8,
+    borderRadius: 12,
+    paddingVertical: 4,
   },
   finalizeButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,
@@ -357,7 +383,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   listContent: {
-    paddingVertical: 8,
-    paddingBottom: 80, // Espacio para el botón flotante
+    padding: 8,
+    paddingBottom: 100, // Espacio para el botón flotante
+    flexGrow: 1,
   },
 });

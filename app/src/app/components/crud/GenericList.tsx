@@ -100,8 +100,8 @@ const getStyles = (
     },
     searchbarContainer: {
       paddingHorizontal: listItemHorizontalMargin - responsive.spacing.xs,
-      paddingTop: responsive.spacing.s,
-      paddingBottom: responsive.spacing.xs,
+      paddingTop: responsive.spacing.xs,
+      paddingBottom: responsive.spacing.xxs,
       backgroundColor: theme.colors.background,
     },
     searchRow: {
@@ -135,10 +135,10 @@ const getStyles = (
     },
     listItem: {
       backgroundColor: theme.colors.surface,
-      marginVertical: responsive.spacing.xs,
-      marginHorizontal: responsive.spacing.l,
-      borderRadius: theme.roundness * 2,
-      elevation: 2,
+      marginVertical: responsive.spacing.xxs,
+      marginHorizontal: responsive.spacing.m,
+      borderRadius: theme.roundness * 1.5,
+      elevation: 1,
       overflow: 'hidden',
     },
     gridListItem: {
@@ -151,16 +151,16 @@ const getStyles = (
       overflow: 'hidden',
     },
     listItemContent: {
-      paddingVertical: responsive.spacing.m,
-      paddingHorizontal: responsive.spacing.s,
-      minHeight: 72,
+      paddingVertical: responsive.spacing.s,
+      paddingHorizontal: responsive.spacing.xs,
+      minHeight: responsive.isTablet ? 64 : 56,
     },
     listItemImage: {
-      width: 48,
-      height: 48,
+      width: responsive.isTablet ? 44 : 40,
+      height: responsive.isTablet ? 44 : 40,
       borderRadius: theme.roundness,
-      marginLeft: responsive.spacing.s,
-      marginRight: responsive.spacing.m,
+      marginLeft: responsive.spacing.xs,
+      marginRight: responsive.spacing.s,
       backgroundColor: theme.colors.surfaceDisabled,
     },
     gridItemImage: {
@@ -173,15 +173,20 @@ const getStyles = (
     },
     statusChip: {
       borderRadius: theme.roundness * 1.5,
-      height: 40,
+      height: responsive.isTablet ? 32 : 28,
       alignSelf: 'center',
+      paddingHorizontal: responsive.spacing.s,
     },
     title: {
       fontWeight: '600',
       color: theme.colors.onSurface,
+      fontSize: responsive.isTablet ? 15 : 14,
+      lineHeight: responsive.isTablet ? 20 : 18,
     },
     description: {
       color: theme.colors.onSurfaceVariant,
+      fontSize: responsive.isTablet ? 13 : 12,
+      lineHeight: responsive.isTablet ? 18 : 16,
     },
     emptyListContainer: {
       flex: 1,
@@ -191,12 +196,12 @@ const getStyles = (
     },
     defaultContentContainer: {
       paddingBottom: 80,
-      paddingTop: responsive.spacing.xs,
+      paddingTop: responsive.spacing.xxs,
     },
     itemActionsContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingLeft: responsive.spacing.s,
+      paddingLeft: responsive.spacing.xs,
     },
     filtersOuterContainer: {
       paddingTop: responsive.spacing.s,
@@ -442,6 +447,11 @@ const GenericList = <TItem extends { id: string }>({
                   : theme.colors.surfaceVariant,
               },
             ]}
+            textStyle={{
+              fontSize: responsive.isTablet ? 12 : 11,
+              marginVertical: 0,
+            }}
+            compact
           >
             {chipLabel}
           </Chip>
@@ -463,7 +473,11 @@ const GenericList = <TItem extends { id: string }>({
               renderConfig.renderTitle ? (
                 renderConfig.renderTitle(item)
               ) : (
-                <Text variant="titleMedium" style={styles.title}>
+                <Text
+                  variant="bodyLarge"
+                  style={styles.title}
+                  numberOfLines={1}
+                >
                   {title}
                 </Text>
               )
@@ -504,9 +518,9 @@ const GenericList = <TItem extends { id: string }>({
               if (combinedText.trim()) {
                 return (
                   <Text
-                    variant="bodyMedium"
+                    variant="bodySmall"
                     style={styles.description}
-                    numberOfLines={2}
+                    numberOfLines={1}
                     ellipsizeMode="tail"
                   >
                     {combinedText}

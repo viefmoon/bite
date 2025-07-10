@@ -9,6 +9,8 @@ import { UserSeedModule } from './user/user-seed.module';
 import { RestaurantConfigSeedModule } from './restaurant-config/restaurant-config-seed.module';
 import { ProductSeedModule } from './product/product-seed.module';
 import { PreparationScreenSeedModule } from './preparation-screen/preparation-screen-seed.module';
+import { AreaSeedModule } from './area/area-seed.module';
+import { TableSeedModule } from './table/table-seed.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
 
@@ -19,6 +21,8 @@ import appConfig from '../../../config/app.config';
     RestaurantConfigSeedModule,
     ProductSeedModule,
     PreparationScreenSeedModule,
+    AreaSeedModule,
+    TableSeedModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],

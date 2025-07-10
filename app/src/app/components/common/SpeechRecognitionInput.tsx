@@ -4,13 +4,137 @@ import { IconButton } from 'react-native-paper';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
-  ExpoSpeechRecognitionResultEvent,
-  ExpoSpeechRecognitionErrorEvent,
 } from 'expo-speech-recognition';
 import AnimatedLabelInput from './AnimatedLabelInput';
 import { useAppTheme } from '../../styles/theme';
 
-let activeRecognizerId: string | null = null;
+// Clase para manejar instancias de reconocimiento de forma aislada
+class RecognitionInstance {
+  private static instances = new Map<string, RecognitionInstance>();
+  private static activeInstanceId: string | null = null;
+
+  private id: string;
+  private isActive: boolean = false;
+  private onResultCallback: ((text: string) => void) | null = null;
+  private onErrorCallback: ((error: string) => void) | null = null;
+  private onStartCallback: (() => void) | null = null;
+  private onEndCallback: (() => void) | null = null;
+
+  constructor(id: string) {
+    this.id = id;
+    RecognitionInstance.instances.set(id, this);
+  }
+
+  static getInstance(id: string): RecognitionInstance {
+    if (!RecognitionInstance.instances.has(id)) {
+      new RecognitionInstance(id);
+    }
+    return RecognitionInstance.instances.get(id)!;
+  }
+
+  static removeInstance(id: string) {
+    const instance = RecognitionInstance.instances.get(id);
+    if (instance && instance.isActive) {
+      instance.stop();
+    }
+    RecognitionInstance.instances.delete(id);
+  }
+
+  static getActiveInstance(): RecognitionInstance | null {
+    if (RecognitionInstance.activeInstanceId) {
+      return (
+        RecognitionInstance.instances.get(
+          RecognitionInstance.activeInstanceId,
+        ) || null
+      );
+    }
+    return null;
+  }
+
+  setCallbacks(callbacks: {
+    onResult?: (text: string) => void;
+    onError?: (error: string) => void;
+    onStart?: () => void;
+    onEnd?: () => void;
+  }) {
+    this.onResultCallback = callbacks.onResult || null;
+    this.onErrorCallback = callbacks.onError || null;
+    this.onStartCallback = callbacks.onStart || null;
+    this.onEndCallback = callbacks.onEnd || null;
+  }
+
+  async start(lang: string) {
+    // Si hay otra instancia activa, detenerla primero
+    const activeInstance = RecognitionInstance.getActiveInstance();
+    if (activeInstance && activeInstance.id !== this.id) {
+      await activeInstance.stop();
+    }
+
+    try {
+      const permissions =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!permissions.granted) {
+        this.onErrorCallback?.('Permiso de micrófono denegado');
+        return;
+      }
+
+      RecognitionInstance.activeInstanceId = this.id;
+      this.isActive = true;
+
+      await ExpoSpeechRecognitionModule.start({
+        lang,
+        interimResults: false,
+        continuous: false,
+      });
+
+      this.onStartCallback?.();
+    } catch (error: any) {
+      this.isActive = false;
+      RecognitionInstance.activeInstanceId = null;
+      this.onErrorCallback?.(
+        error.message || 'Error al iniciar reconocimiento',
+      );
+    }
+  }
+
+  async stop() {
+    if (this.isActive) {
+      try {
+        await ExpoSpeechRecognitionModule.stop();
+      } catch (error) {
+        // Ignorar errores al detener
+      } finally {
+        this.isActive = false;
+        if (RecognitionInstance.activeInstanceId === this.id) {
+          RecognitionInstance.activeInstanceId = null;
+        }
+        this.onEndCallback?.();
+      }
+    }
+  }
+
+  handleResult(transcript: string) {
+    if (this.isActive && RecognitionInstance.activeInstanceId === this.id) {
+      this.onResultCallback?.(transcript);
+    }
+  }
+
+  handleError(error: string) {
+    if (this.isActive && RecognitionInstance.activeInstanceId === this.id) {
+      this.isActive = false;
+      RecognitionInstance.activeInstanceId = null;
+      this.onErrorCallback?.(error);
+    }
+  }
+
+  handleEnd() {
+    if (this.isActive && RecognitionInstance.activeInstanceId === this.id) {
+      this.isActive = false;
+      RecognitionInstance.activeInstanceId = null;
+      this.onEndCallback?.();
+    }
+  }
+}
 
 interface SpeechRecognitionInputProps
   extends Omit<
@@ -45,28 +169,83 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
 }) => {
   const theme = useAppTheme();
   const [isRecognizingSpeech, setIsRecognizingSpeech] = useState(false);
-  const isMounted = useRef(true);
+  const [localValue, setLocalValue] = useState(value);
   const instanceId = useRef(
     `speech-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
   ).current;
+  const recognitionInstance = useRef<RecognitionInstance | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const inputRef = useRef<any>(null);
+  const lastProcessedValue = useRef(value);
+  const isUpdatingFromSpeech = useRef(false);
 
+  // Sincronizar valor externo con valor local solo cuando cambia externamente
   useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-      if (activeRecognizerId === instanceId) {
-        try {
-          ExpoSpeechRecognitionModule.stop();
-        } catch (err) {
-        } finally {
-          activeRecognizerId = null;
-        }
-      }
-    };
-  }, []);
+    if (!isUpdatingFromSpeech.current && value !== lastProcessedValue.current) {
+      setLocalValue(value);
+      lastProcessedValue.current = value;
+    }
+  }, [value]);
 
+  // Configurar la instancia de reconocimiento
+  useEffect(() => {
+    recognitionInstance.current = RecognitionInstance.getInstance(instanceId);
+
+    recognitionInstance.current.setCallbacks({
+      onStart: () => {
+        setIsRecognizingSpeech(true);
+        if (clearOnStart) {
+          setLocalValue('');
+          lastProcessedValue.current = '';
+          onChangeText('');
+        }
+      },
+      onEnd: () => {
+        setIsRecognizingSpeech(false);
+      },
+      onResult: (transcript: string) => {
+        let newValue: string;
+
+        if (replaceContent) {
+          if (rest.keyboardType === 'phone-pad') {
+            newValue = transcript.replace(/\D/g, '');
+          } else {
+            newValue = transcript;
+          }
+        } else {
+          // Usar el valor local más actualizado
+          newValue = localValue ? localValue + ' ' + transcript : transcript;
+        }
+
+        isUpdatingFromSpeech.current = true;
+        setLocalValue(newValue);
+        lastProcessedValue.current = newValue;
+        onChangeText(newValue);
+
+        // Resetear flag después de un breve delay
+        setTimeout(() => {
+          isUpdatingFromSpeech.current = false;
+        }, 100);
+      },
+      onError: (errorMsg: string) => {
+        setIsRecognizingSpeech(false);
+        onError?.(errorMsg);
+      },
+    });
+
+    return () => {
+      RecognitionInstance.removeInstance(instanceId);
+    };
+  }, [
+    instanceId,
+    clearOnStart,
+    onChangeText,
+    replaceContent,
+    rest.keyboardType,
+    onError,
+    localValue,
+  ]);
+
+  // Animación del botón
   useEffect(() => {
     Animated.spring(scaleAnim, {
       toValue: isRecognizingSpeech ? 1.2 : 1,
@@ -75,132 +254,41 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
     }).start();
   }, [isRecognizingSpeech, scaleAnim]);
 
-  const handleRecognitionStart = useCallback(() => {
-    if (isMounted.current && activeRecognizerId === instanceId) {
-      if (!isRecognizingSpeech) {
-        setIsRecognizingSpeech(true);
-        if (clearOnStart) {
-          onChangeText('');
-        }
-      }
-    }
-  }, [clearOnStart, onChangeText, instanceId, isRecognizingSpeech]);
+  // Event listeners globales - solo procesan si la instancia activa coincide
+  useSpeechRecognitionEvent('start', () => {
+    // El evento start ya se maneja en el método start() de RecognitionInstance
+  });
 
-  const handleRecognitionEnd = useCallback(() => {
-    if (isMounted.current && activeRecognizerId === instanceId) {
-      setIsRecognizingSpeech(false);
-      activeRecognizerId = null;
-    }
-  }, [instanceId]);
-
-  const handleRecognitionResult = useCallback(
-    (event: ExpoSpeechRecognitionResultEvent) => {
-      if (
-        isMounted.current &&
-        activeRecognizerId === instanceId &&
-        event.results &&
-        event.results[0]
-      ) {
-        const transcript = event.results[0].transcript;
-        if (replaceContent) {
-          if (rest.keyboardType === 'phone-pad') {
-            const numericTranscript = transcript.replace(/\D/g, '');
-            onChangeText(numericTranscript);
-          } else {
-            onChangeText(transcript);
-          }
-        } else {
-          const newValue = value ? value + ' ' + transcript : transcript;
-          onChangeText(newValue);
-        }
-      }
-    },
-    [instanceId, onChangeText, replaceContent, rest.keyboardType, value],
-  );
-
-  const handleRecognitionError = useCallback(
-    (event: ExpoSpeechRecognitionErrorEvent) => {
-      if (isMounted.current && activeRecognizerId === instanceId) {
-        setIsRecognizingSpeech(false);
-        activeRecognizerId = null;
-        onError?.(event.message || event.error || 'Unknown recognition error');
-      }
-    },
-    [instanceId, onError],
-  );
-
-  // Only register event listeners when this instance is active
-  useSpeechRecognitionEvent('start', (_event) => {
-    if (activeRecognizerId === instanceId) {
-      handleRecognitionStart();
+  useSpeechRecognitionEvent('end', () => {
+    const activeInstance = RecognitionInstance.getActiveInstance();
+    if (activeInstance?.id === instanceId) {
+      activeInstance.handleEnd();
     }
   });
 
-  useSpeechRecognitionEvent('end', (_event) => {
-    if (activeRecognizerId === instanceId) {
-      handleRecognitionEnd();
+  useSpeechRecognitionEvent('result', (event) => {
+    const activeInstance = RecognitionInstance.getActiveInstance();
+    if (activeInstance?.id === instanceId && event.results?.[0]) {
+      activeInstance.handleResult(event.results[0].transcript);
     }
   });
 
-  useSpeechRecognitionEvent(
-    'result',
-    (event: ExpoSpeechRecognitionResultEvent) => {
-      if (activeRecognizerId === instanceId) {
-        handleRecognitionResult(event);
-      }
-    },
-  );
-
-  useSpeechRecognitionEvent(
-    'error',
-    (event: ExpoSpeechRecognitionErrorEvent) => {
-      if (activeRecognizerId === instanceId) {
-        handleRecognitionError(event);
-      }
-    },
-  );
+  useSpeechRecognitionEvent('error', (event) => {
+    const activeInstance = RecognitionInstance.getActiveInstance();
+    if (activeInstance?.id === instanceId) {
+      activeInstance.handleError(
+        event.message || event.error || 'Error desconocido',
+      );
+    }
+  });
 
   const toggleRecognition = async () => {
-    if (activeRecognizerId === instanceId) {
-      try {
-        await ExpoSpeechRecognitionModule.stop();
-      } catch (err) {
-      } finally {
-        if (isMounted.current) {
-          setIsRecognizingSpeech(false);
-        }
-        if (activeRecognizerId === instanceId) {
-          activeRecognizerId = null;
-        }
-      }
-    } else if (!activeRecognizerId) {
-      const permissions =
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!permissions.granted) {
-        onError?.('Permiso de micrófono denegado');
-        return;
-      }
-      try {
-        activeRecognizerId = instanceId;
-        if (isMounted.current) {
-          setIsRecognizingSpeech(true);
-        }
-        await ExpoSpeechRecognitionModule.start({
-          lang: speechLang,
-          interimResults: false,
-          continuous: false,
-        });
-      } catch (err: any) {
-        if (isMounted.current) {
-          setIsRecognizingSpeech(false);
-        }
-        if (activeRecognizerId === instanceId) {
-          activeRecognizerId = null;
-        }
-        onError?.(err.message || 'Error al iniciar');
-      }
+    if (!recognitionInstance.current) return;
+
+    if (isRecognizingSpeech) {
+      await recognitionInstance.current.stop();
     } else {
-      onError?.('Otro micrófono ya está activo');
+      await recognitionInstance.current.start(speechLang);
     }
   };
 
@@ -208,13 +296,25 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
     ? theme.colors.error
     : theme.colors.primary;
 
+  // Manejar cambios de texto desde el teclado
+  const handleTextChange = useCallback(
+    (text: string) => {
+      // Actualizar estado local inmediatamente
+      setLocalValue(text);
+      lastProcessedValue.current = text;
+
+      // Notificar al padre
+      onChangeText(text);
+    },
+    [onChangeText],
+  );
+
   return (
     <View style={styles.wrapper}>
       <AnimatedLabelInput
-        ref={inputRef}
         label={label}
-        value={value}
-        onChangeText={onChangeText}
+        value={localValue}
+        onChangeText={handleTextChange}
         error={error}
         errorColor={errorColor}
         activeBorderColor={activeBorderColor}

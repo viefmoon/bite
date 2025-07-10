@@ -7,7 +7,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity';
@@ -21,8 +20,8 @@ export class PaymentEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @RelationId((payment: PaymentEntity) => payment.order)
-  orderId: string;
+  @Column({ name: 'order_id', type: 'uuid', nullable: true })
+  orderId: string | null;
 
   @Column({
     type: 'enum',
@@ -51,10 +50,10 @@ export class PaymentEntity extends EntityRelationalHelper {
 
   @ManyToOne(() => OrderEntity, (order) => order.payments, {
     eager: true,
-    nullable: false,
+    nullable: true, // Permitir pagos sin orden temporalmente
   })
   @JoinColumn({ name: 'order_id' })
-  order: OrderEntity;
+  order: OrderEntity | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

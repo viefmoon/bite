@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -219,23 +219,40 @@ const CategoriesScreen: React.FC = () => {
     [theme],
   );
 
-  const formInitialValues = useMemo((): CategoryFormData => {
-    if (editingCategory) {
-      return {
-        name: editingCategory.name,
-        description: editingCategory.description ?? null,
-        isActive: editingCategory.isActive,
-        sortOrder: editingCategory.sortOrder ?? 0,
-        imageUri: getImageUrl(editingCategory.photo?.path) ?? null,
-      };
-    }
-    return {
-      name: '',
-      description: null,
-      isActive: true,
-      sortOrder: 0,
-      imageUri: null,
+  const [formInitialValues, setFormInitialValues] = useState<CategoryFormData>({
+    name: '',
+    description: null,
+    isActive: true,
+    sortOrder: 0,
+    imageUri: null,
+  });
+
+  useEffect(() => {
+    const loadInitialValues = async () => {
+      if (editingCategory) {
+        let imageUrl = null;
+        if (editingCategory.photo?.path) {
+          imageUrl = await getImageUrl(editingCategory.photo.path);
+        }
+        setFormInitialValues({
+          name: editingCategory.name,
+          description: editingCategory.description ?? null,
+          isActive: editingCategory.isActive,
+          sortOrder: editingCategory.sortOrder ?? 0,
+          imageUri: imageUrl,
+        });
+      } else {
+        setFormInitialValues({
+          name: '',
+          description: null,
+          isActive: true,
+          sortOrder: 0,
+          imageUri: null,
+        });
+      }
     };
+
+    loadInitialValues();
   }, [editingCategory]);
 
   const selectedCategoryMapped = useMemo(() => {
@@ -369,6 +386,39 @@ const CategoriesScreen: React.FC = () => {
           imageField="photo"
           descriptionField="description"
           statusConfig={listRenderConfig.statusConfig}
+          fieldsToDisplay={[
+            {
+              field: 'sortOrder',
+              label: 'Orden de visualización',
+              render: (value) => value ?? '0',
+            },
+            {
+              field: 'createdAt',
+              label: 'Fecha de creación',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                });
+              },
+            },
+            {
+              field: 'updatedAt',
+              label: 'Última actualización',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                });
+              },
+            },
+          ]}
           onEdit={openEditModal as (item: any) => void}
           onDelete={handleDelete}
           isDeleting={deleteCategoryMutation.isPending}

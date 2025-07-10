@@ -19,8 +19,8 @@ export const useSnackbarStore = create<SnackbarState>((set) => ({
   visible: false,
   message: '',
   type: 'info',
-  duration: 3000,
-  showSnackbar: ({ message, type = 'info', duration = 3000 }) =>
+  duration: 2000,
+  showSnackbar: ({ message, type = 'info', duration = 2000 }) =>
     set({ visible: true, message, type, duration }),
   hideSnackbar: () => set({ visible: false }),
 }));

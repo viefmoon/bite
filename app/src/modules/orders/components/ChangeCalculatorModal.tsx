@@ -60,130 +60,134 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}
-      >
-        <Pressable style={styles.modalContent}>
-          <View style={styles.content}>
-            {/* Inputs en línea */}
-            <View style={styles.inputsRow}>
-              {/* Total a pagar */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Total a pagar</Text>
-                <TextInput
-                  value={`$${amountToPay.toFixed(2)}`}
-                  editable={false}
-                  mode="flat"
-                  style={styles.totalInput}
-                  dense
-                  theme={{
-                    colors: {
-                      primary: theme.colors.primary,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      text: theme.dark ? '#FFFFFF' : '#000000',
-                    },
-                  }}
-                />
-              </View>
+    <>
+      {visible && (
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={onDismiss}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <Pressable style={styles.modalContent}>
+              <View style={styles.content}>
+                {/* Inputs en línea */}
+                <View style={styles.inputsRow}>
+                  {/* Total a pagar */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Total a pagar</Text>
+                    <TextInput
+                      value={`$${amountToPay.toFixed(2)}`}
+                      editable={false}
+                      mode="flat"
+                      style={styles.totalInput}
+                      dense
+                      theme={{
+                        colors: {
+                          primary: theme.colors.primary,
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          text: theme.dark ? '#FFFFFF' : '#000000',
+                        },
+                      }}
+                    />
+                  </View>
 
-              {/* Monto recibido */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Monto recibido</Text>
-                <TextInput
-                  value={receivedAmount}
-                  onChangeText={setReceivedAmount}
-                  keyboardType="decimal-pad"
-                  mode="flat"
-                  left={<TextInput.Affix text="$" />}
-                  style={styles.receivedInput}
-                  error={
-                    receivedAmount !== '' &&
-                    (isNaN(parseFloat(receivedAmount)) ||
-                      parseFloat(receivedAmount) < amountToPay)
-                  }
-                  dense
-                  theme={{
-                    colors: {
-                      primary: theme.colors.primary,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                    },
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* Error message */}
-            {receivedAmount !== '' &&
-              (isNaN(parseFloat(receivedAmount)) ||
-                parseFloat(receivedAmount) < amountToPay) && (
-                <Text style={styles.errorText}>Monto insuficiente</Text>
-              )}
-
-            {/* Botones de billetes comunes */}
-            {availableBills.length > 0 && (
-              <View style={styles.quickAmountsRow}>
-                {availableBills.map((bill) => (
-                  <Pressable
-                    key={bill}
-                    onPress={() => setReceivedAmount(`${bill}.00`)}
-                    style={({ pressed }) => [
-                      styles.quickAmountButton,
-                      pressed && styles.quickAmountButtonPressed,
-                    ]}
-                  >
-                    <Text style={styles.quickAmountButtonText}>
-                      ${bill >= 1000 ? '1k' : bill}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
-            {/* Mostrar cambio */}
-            {receivedAmount !== '' &&
-              !isNaN(parseFloat(receivedAmount)) &&
-              parseFloat(receivedAmount) >= amountToPay && (
-                <View style={styles.changeSection}>
-                  <Text style={styles.changeLabel}>Cambio</Text>
-                  <Text style={styles.changeAmount}>
-                    ${changeAmount.toFixed(2)}
-                  </Text>
+                  {/* Monto recibido */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Monto recibido</Text>
+                    <TextInput
+                      value={receivedAmount}
+                      onChangeText={setReceivedAmount}
+                      keyboardType="decimal-pad"
+                      mode="flat"
+                      left={<TextInput.Affix text="$" />}
+                      style={styles.receivedInput}
+                      error={
+                        receivedAmount !== '' &&
+                        (isNaN(parseFloat(receivedAmount)) ||
+                          parseFloat(receivedAmount) < amountToPay)
+                      }
+                      dense
+                      theme={{
+                        colors: {
+                          primary: theme.colors.primary,
+                          background: 'rgba(255, 255, 255, 0.05)',
+                        },
+                      }}
+                    />
+                  </View>
                 </View>
-              )}
-          </View>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Button
-              mode="outlined"
-              onPress={onDismiss}
-              style={styles.cancelButton}
-              labelStyle={styles.cancelButtonLabel}
-              contentStyle={styles.footerButtonContent}
-            >
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleConfirm}
-              disabled={
-                !receivedAmount ||
-                isNaN(parseFloat(receivedAmount)) ||
-                parseFloat(receivedAmount) < amountToPay
-              }
-              style={styles.confirmButton}
-              contentStyle={styles.footerButtonContent}
-              labelStyle={styles.confirmButtonLabel}
-            >
-              Confirmar Pago
-            </Button>
-          </View>
-        </Pressable>
-      </Modal>
-    </Portal>
+                {/* Error message */}
+                {receivedAmount !== '' &&
+                  (isNaN(parseFloat(receivedAmount)) ||
+                    parseFloat(receivedAmount) < amountToPay) && (
+                    <Text style={styles.errorText}>Monto insuficiente</Text>
+                  )}
+
+                {/* Botones de billetes comunes */}
+                {availableBills.length > 0 && (
+                  <View style={styles.quickAmountsRow}>
+                    {availableBills.map((bill) => (
+                      <Pressable
+                        key={bill}
+                        onPress={() => setReceivedAmount(`${bill}.00`)}
+                        style={({ pressed }) => [
+                          styles.quickAmountButton,
+                          pressed && styles.quickAmountButtonPressed,
+                        ]}
+                      >
+                        <Text style={styles.quickAmountButtonText}>
+                          ${bill >= 1000 ? '1k' : bill}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+
+                {/* Mostrar cambio */}
+                {receivedAmount !== '' &&
+                  !isNaN(parseFloat(receivedAmount)) &&
+                  parseFloat(receivedAmount) >= amountToPay && (
+                    <View style={styles.changeSection}>
+                      <Text style={styles.changeLabel}>Cambio</Text>
+                      <Text style={styles.changeAmount}>
+                        ${changeAmount.toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+              </View>
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                <Button
+                  mode="outlined"
+                  onPress={onDismiss}
+                  style={styles.cancelButton}
+                  labelStyle={styles.cancelButtonLabel}
+                  contentStyle={styles.footerButtonContent}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleConfirm}
+                  disabled={
+                    !receivedAmount ||
+                    isNaN(parseFloat(receivedAmount)) ||
+                    parseFloat(receivedAmount) < amountToPay
+                  }
+                  style={styles.confirmButton}
+                  contentStyle={styles.footerButtonContent}
+                  labelStyle={styles.confirmButtonLabel}
+                >
+                  Confirmar Pago
+                </Button>
+              </View>
+            </Pressable>
+          </Modal>
+        </Portal>
+      )}
+    </>
   );
 };
 

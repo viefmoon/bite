@@ -182,7 +182,10 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
           // Esperar un momento para asegurar que se capture la transcripción final
           await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
-          console.error('[AudioRecorder] Error al detener reconocimiento:', error);
+          console.error(
+            '[AudioRecorder] Error al detener reconocimiento:',
+            error,
+          );
         } finally {
           isTranscribing.current = false;
         }

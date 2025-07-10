@@ -69,7 +69,9 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
       this.modifierGroupMapper.toDomain(group),
     );
     if (entity.preparationScreen) {
-      const screen = this.preparationScreenMapper.toDomain(entity.preparationScreen);
+      const screen = this.preparationScreenMapper.toDomain(
+        entity.preparationScreen,
+      );
       if (screen) {
         domain.preparationScreen = screen;
       }
@@ -117,7 +119,9 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     // Establecer tanto la relación como el ID de preparationScreen
     if (domain.preparationScreenId) {
       entity.preparationScreenId = domain.preparationScreenId;
-      entity.preparationScreen = { id: domain.preparationScreenId } as PreparationScreenEntity;
+      entity.preparationScreen = {
+        id: domain.preparationScreenId,
+      } as PreparationScreenEntity;
     } else if (domain.preparationScreen?.id) {
       entity.preparationScreenId = domain.preparationScreen.id;
       entity.preparationScreen = {

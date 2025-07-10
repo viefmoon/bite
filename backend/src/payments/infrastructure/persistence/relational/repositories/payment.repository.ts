@@ -58,13 +58,20 @@ export class RelationalPaymentRepository implements PaymentRepository {
   }
 
   async update(id: string, payment: Payment): Promise<Payment> {
-    const paymentEntity = this.paymentMapper.toEntity(payment);
-    if (!paymentEntity) {
-      throw new InternalServerErrorException(
-        'Error creating payment entity for update',
-      );
+    // Solo actualizar los campos que realmente cambian, no las relaciones
+    const updateData: any = {};
+
+    if (payment.paymentMethod !== undefined) {
+      updateData.paymentMethod = payment.paymentMethod;
     }
-    await this.paymentRepository.update(id, paymentEntity);
+    if (payment.amount !== undefined) {
+      updateData.amount = payment.amount;
+    }
+    if (payment.paymentStatus !== undefined) {
+      updateData.paymentStatus = payment.paymentStatus;
+    }
+
+    await this.paymentRepository.update(id, updateData);
 
     const updatedEntity = await this.paymentRepository.findOne({
       where: { id },

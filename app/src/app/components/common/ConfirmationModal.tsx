@@ -61,37 +61,41 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   );
 
   return (
-    <Portal>
-      <Dialog
-        visible={visible}
-        onDismiss={onDismiss || onCancel}
-        style={styles.dialog}
-      >
-        <Dialog.Title style={styles.title}>{title}</Dialog.Title>
-        <Dialog.Content>
-          <Paragraph style={styles.paragraph}>{message}</Paragraph>
-        </Dialog.Content>
-        <Dialog.Actions style={styles.actions}>
-          {onCancel && (
-            <Button
-              onPress={onCancel}
-              textColor={theme.colors.onSecondaryContainer}
-              style={[styles.button, styles.cancelButton]}
-            >
-              {cancelText}
-            </Button>
-          )}
-          <Button
-            onPress={onConfirm}
-            mode="contained"
-            buttonColor={confirmButtonColor || theme.colors.primary}
-            style={[styles.button, styles.confirmButton]}
+    <>
+      {visible && (
+        <Portal>
+          <Dialog
+            visible={visible}
+            onDismiss={onDismiss || onCancel}
+            style={styles.dialog}
           >
-            {confirmText}
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+            <Dialog.Title style={styles.title}>{title}</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph style={styles.paragraph}>{message}</Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions style={styles.actions}>
+              {onCancel && (
+                <Button
+                  onPress={onCancel}
+                  textColor={theme.colors.onSecondaryContainer}
+                  style={[styles.button, styles.cancelButton]}
+                >
+                  {cancelText}
+                </Button>
+              )}
+              <Button
+                onPress={onConfirm}
+                mode="contained"
+                buttonColor={confirmButtonColor || theme.colors.primary}
+                style={[styles.button, styles.confirmButton]}
+              >
+                {confirmText}
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+      )}
+    </>
   );
 };
 

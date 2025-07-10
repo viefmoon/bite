@@ -109,13 +109,41 @@ export const receiptService = {
     // Si hay búsqueda, filtrar adicionalmente del lado del cliente
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredData = filteredData.filter(
-        (order) =>
+      filteredData = filteredData.filter((order) => {
+        // Buscar por número de orden
+        if (
           order.orderNumber?.toString().includes(searchLower) ||
-          // TODO: Implementar búsqueda por customerName cuando esté disponible
-          // order.customerName?.toLowerCase().includes(searchLower) ||
-          order.dailyNumber?.toString().includes(searchLower),
-      );
+          order.dailyNumber?.toString().includes(searchLower)
+        ) {
+          return true;
+        }
+
+        // Buscar en deliveryInfo (nombre, teléfono, dirección)
+        if (order.deliveryInfo) {
+          const { recipientName, recipientPhone, fullAddress } =
+            order.deliveryInfo;
+
+          if (recipientName?.toLowerCase().includes(searchLower)) {
+            return true;
+          }
+
+          if (recipientPhone?.includes(search)) {
+            // Para teléfono usar búsqueda exacta
+            return true;
+          }
+
+          if (fullAddress?.toLowerCase().includes(searchLower)) {
+            return true;
+          }
+        }
+
+        // Buscar en notas de la orden
+        if (order.notes?.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+
+        return false;
+      });
     }
 
     // Si estamos filtrando del lado del cliente, actualizar el total

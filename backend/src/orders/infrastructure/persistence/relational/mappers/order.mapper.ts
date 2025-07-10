@@ -70,9 +70,9 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       this.adjustmentMapper.toDomain(adjustment),
     );
 
-    domain.deliveryInfo = this.deliveryInfoMapper.toDomain(
-      entity.deliveryInfo!,
-    )!;
+    domain.deliveryInfo = entity.deliveryInfo
+      ? this.deliveryInfoMapper.toDomain(entity.deliveryInfo)
+      : null;
     domain.estimatedDeliveryTime = entity.estimatedDeliveryTime;
 
     return domain;

@@ -491,17 +491,21 @@ export class ProductSeedService {
     const preparationScreens = await this.preparationScreenRepository.find({
       where: { isActive: true },
     });
-    
-    const barScreen = preparationScreens.find(screen => screen.name === 'Bar');
+
+    const barScreen = preparationScreens.find(
+      (screen) => screen.name === 'Bar',
+    );
     const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada si no se encuentra "Bar"
-    
+
     if (!defaultScreen) {
-      console.error('No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.');
+      console.error(
+        'No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.',
+      );
       return;
     }
-    
+
     const beverageScreen = barScreen || defaultScreen;
-    
+
     // Productos de bebidas simples (sin variantes)
     const simpleBeverages = [
       // Aguas frescas
@@ -789,7 +793,9 @@ export class ProductSeedService {
     await this.seedBeveragesWithVariants(beverageScreen);
   }
 
-  private async seedBeveragesWithVariants(beverageScreen: PreparationScreenEntity) {
+  private async seedBeveragesWithVariants(
+    beverageScreen: PreparationScreenEntity,
+  ) {
     // Micheladas
     const micheladaSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-8' },
@@ -900,30 +906,39 @@ export class ProductSeedService {
     const preparationScreens = await this.preparationScreenRepository.find({
       where: { isActive: true },
     });
-    
-    const pizzaScreen = preparationScreens.find(screen => screen.name === 'Pizza');
-    const hamburguesasScreen = preparationScreens.find(screen => screen.name === 'Hamburguesas');
+
+    const pizzaScreen = preparationScreens.find(
+      (screen) => screen.name === 'Pizza',
+    );
+    const hamburguesasScreen = preparationScreens.find(
+      (screen) => screen.name === 'Hamburguesas',
+    );
     const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada
-    
+
     if (!defaultScreen) {
-      console.error('No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.');
+      console.error(
+        'No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.',
+      );
       return;
     }
-    
+
     // Hamburguesas con modificadores
     await this.seedHamburgers(hamburguesasScreen || defaultScreen);
 
-    // Alitas con variantes y modificadores
-    await this.seedAlitas(hamburguesasScreen || defaultScreen);
+    // Alitas con variantes y modificadores - van a pantalla de Pizza
+    await this.seedAlitas(pizzaScreen || defaultScreen);
 
-    // Papas con variantes y modificadores
-    await this.seedPapas(hamburguesasScreen || defaultScreen);
+    // Papas con variantes y modificadores - van a pantalla de Pizza
+    await this.seedPapas(pizzaScreen || defaultScreen);
 
     // Ensaladas con variantes y modificadores
     await this.seedEnsaladas(hamburguesasScreen || defaultScreen);
 
     // Otros productos de comida
-    await this.seedOtherFoodProducts(pizzaScreen || defaultScreen, hamburguesasScreen || defaultScreen);
+    await this.seedOtherFoodProducts(
+      pizzaScreen || defaultScreen,
+      hamburguesasScreen || defaultScreen,
+    );
   }
 
   private async seedHamburgers(preparationScreen: PreparationScreenEntity) {
@@ -1565,7 +1580,10 @@ export class ProductSeedService {
     }
   }
 
-  private async seedOtherFoodProducts(pizzaScreen: PreparationScreenEntity, hamburguesasScreen: PreparationScreenEntity) {
+  private async seedOtherFoodProducts(
+    pizzaScreen: PreparationScreenEntity,
+    hamburguesasScreen: PreparationScreenEntity,
+  ) {
     // Pizzas
     await this.seedPizzas(pizzaScreen);
 

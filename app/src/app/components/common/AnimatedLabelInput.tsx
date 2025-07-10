@@ -9,6 +9,7 @@ import {
   ViewStyle,
   TextStyle,
   TouchableWithoutFeedback,
+  Easing,
 } from 'react-native';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -66,8 +67,9 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
     useEffect(() => {
       Animated.timing(animation, {
         toValue: isActive ? 1 : 0,
-        duration: 200,
+        duration: 150,
         useNativeDriver: false,
+        easing: Easing.bezier(0.4, 0.0, 0.2, 1), // Material Design easing
       }).start();
     }, [isActive, animation]);
 
@@ -87,7 +89,7 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
 
     const labelScale = animation.interpolate({
       inputRange: [0, 1],
-      outputRange: [1, 0.75],
+      outputRange: [1, 0.8], // Escala más sutil
     });
 
     const labelColor = animation.interpolate({
@@ -148,25 +150,23 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
 
     const animatedLabelStyle = {
       position: 'absolute' as const,
-      top: 18,
+      top: 20,
       left: 12,
-      zIndex: 1,
+      zIndex: 10, // Aumentar z-index para mejor visibilidad
       transform: [
         { translateX: animatedTranslateX },
         { translateY: animatedTranslateY },
         { scale: labelScale },
       ],
       color: labelColor,
-      backgroundColor: animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['transparent', theme.colors.background],
-      }),
-      maxWidth: '90%' as `${number}%`,
+      backgroundColor: theme.colors.background,
+      maxWidth: isActive ? ('85%' as `${number}%`) : ('90%' as `${number}%`),
     };
 
     // Estilos estáticos que no deben ser animados
     const staticLabelStyle = {
       paddingHorizontal: isActive ? 4 : 0,
+      paddingVertical: isActive ? 1 : 0,
     };
 
     const handleContainerPress = () => {
@@ -192,6 +192,30 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
             containerStyle,
           ]}
         >
+          {/* Línea de fondo para crear efecto de muesca en el borde */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: -1, // Sobre el borde superior
+              left: 10,
+              height: 2, // Mismo grosor que el borde
+              backgroundColor: theme.colors.background,
+              zIndex: 5,
+              opacity: animation.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, 0.8, 1],
+              }),
+              transform: [
+                {
+                  scaleX: animation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 1],
+                  }),
+                },
+              ],
+              width: Math.min(label.length * 6.5 + 16, 200), // Ancho fijo basado en el texto con límite máximo
+            }}
+          />
           <Animated.Text
             style={[
               styles.label,
@@ -199,6 +223,8 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
               labelStyle,
               animatedLabelStyle,
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {label}
           </Animated.Text>

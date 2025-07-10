@@ -352,10 +352,11 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
 
 const styles = StyleSheet.create({
   modal: {
-    flex: 1,
-    margin: 20,
+    margin: 10,
     borderRadius: 8,
-    maxHeight: '90%',
+    height: '95%',
+    minHeight: 600,
+    overflow: 'hidden',
   },
   scrollView: {
     flex: 1,

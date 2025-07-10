@@ -102,19 +102,25 @@ export class ProductsService {
       product.modifierGroups = [];
     }
 
-    // preparationScreenId es requerido
-    try {
-      const screen = await this.preparationScreenRepository.findOne(
-        createProductDto.preparationScreenId,
-      );
-      product.preparationScreen = screen;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(
-          `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
+    // preparationScreenId es opcional
+    if (createProductDto.preparationScreenId) {
+      try {
+        const screen = await this.preparationScreenRepository.findOne(
+          createProductDto.preparationScreenId,
         );
+        product.preparationScreen = screen;
+        product.preparationScreenId = createProductDto.preparationScreenId;
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(
+            `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
+          );
+        }
+        throw error;
       }
-      throw error;
+    } else {
+      product.preparationScreen = null;
+      product.preparationScreenId = null;
     }
 
     const createdProduct = await this.productRepository.create(product);
@@ -262,22 +268,26 @@ export class ProductsService {
 
     // Actualizar pantalla de preparación
     if (updateProductDto.preparationScreenId !== undefined) {
-      try {
-        // Usar repositorio en lugar de servicio
-        const screen = await this.preparationScreenRepository.findOne(
-          updateProductDto.preparationScreenId,
-        );
-        // findOne ya lanza NotFoundException si no encuentra
-        product.preparationScreen = screen;
-        product.preparationScreenId = screen.id; // Asegurar que el ID también se actualice
-      } catch (error) {
-        // Mantener el manejo de NotFoundException por si findOne lanza otro error
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(
-            `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
+      if (updateProductDto.preparationScreenId === null) {
+        // Si se envía null, remover la pantalla de preparación
+        product.preparationScreen = null;
+        product.preparationScreenId = null;
+      } else {
+        // Si se envía un ID, buscar y asignar la pantalla
+        try {
+          const screen = await this.preparationScreenRepository.findOne(
+            updateProductDto.preparationScreenId,
           );
+          product.preparationScreen = screen;
+          product.preparationScreenId = screen.id;
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            throw new NotFoundException(
+              `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
+            );
+          }
+          throw error;
         }
-        throw error; // Lanzar otros errores
       }
     }
 

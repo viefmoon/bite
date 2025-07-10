@@ -42,7 +42,7 @@ import { ImageUploadService } from '@/app/lib/imageUploadService';
 import { getImageUrl } from '@/app/lib/imageUtils';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQueries';
 import { modifierService } from '../../modifiers/services/modifierService';
-import { usePreparationScreensQuery } from '../../preparationScreens/hooks/usePreparationScreensQueries';
+import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
 import { Menu } from 'react-native-paper';
 
 interface ProductFormModalProps {
@@ -86,7 +86,8 @@ function ProductFormModal({
     {},
   );
   const [priceInputValue, setPriceInputValue] = useState<string>('');
-  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] = useState(false);
+  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] =
+    useState(false);
 
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
@@ -99,7 +100,7 @@ function ProductFormModal({
       subcategoryId: subcategoryId,
       photoId: null,
       estimatedPrepTime: 10,
-      preparationScreenId: '',
+      preparationScreenId: null,
       sortOrder: 0,
       variants: [],
       variantsToDelete: [],
@@ -159,7 +160,7 @@ function ProductFormModal({
             subcategoryId: initialData.subcategoryId,
             photoId: initialData.photo?.id ?? null,
             estimatedPrepTime: initialData.estimatedPrepTime,
-            preparationScreenId: initialData.preparationScreenId || '',
+            preparationScreenId: initialData.preparationScreenId || null,
             sortOrder: initialData.sortOrder ?? 0,
             variants: initialData.variants || [],
             variantsToDelete: [],
@@ -195,7 +196,11 @@ function ProductFormModal({
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
 
   // Query para obtener las pantallas de preparación
-  const { data: preparationScreens = [] } = usePreparationScreensQuery();
+  const { data: preparationScreensResponse } = useGetPreparationScreens(
+    {},
+    { page: 1, limit: 50 },
+  );
+  const preparationScreens = preparationScreensResponse?.data || [];
 
   const allModifierGroups = modifierGroupsResponse?.data || [];
 
@@ -632,15 +637,19 @@ function ProductFormModal({
                       onDismiss={() => setPreparationScreenMenuVisible(false)}
                       anchor={
                         <TextInput
-                          label="Pantalla de Preparación *"
+                          label="Pantalla de Preparación"
                           value={
-                            preparationScreens.find(screen => screen.id === value)?.name || ''
+                            preparationScreens.find(
+                              (screen) => screen.id === value,
+                            )?.name || ''
                           }
                           onPress={() => setPreparationScreenMenuVisible(true)}
                           right={
-                            <TextInput.Icon 
+                            <TextInput.Icon
                               icon="chevron-down"
-                              onPress={() => setPreparationScreenMenuVisible(true)}
+                              onPress={() =>
+                                setPreparationScreenMenuVisible(true)
+                              }
                             />
                           }
                           editable={false}

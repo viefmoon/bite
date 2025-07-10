@@ -17,7 +17,7 @@ import { Modifier } from '../schema/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 
 import ModifierFormModal from '@/modules/modifiers/components/ModifierFormModal';
@@ -231,8 +231,7 @@ const ModifiersScreen = () => {
         onFabPress={handleOpenCreateModal}
         fabLabel="Añadir Modificador"
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={true}
-        placeholderIcon="tune-variant"
+        showImagePlaceholder={false}
         isDrawerOpen={isDrawerOpen}
       />
 
@@ -256,7 +255,7 @@ const ModifiersScreen = () => {
           onEdit={handleEditFromDetails}
           onDelete={handleDeleteItem}
           isDeleting={isDeleting}
-          showImage={true}
+          showImage={false}
         />
       </Portal>
     </SafeAreaView>

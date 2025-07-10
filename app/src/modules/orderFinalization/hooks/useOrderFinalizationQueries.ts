@@ -7,7 +7,15 @@ export const useOrdersForFinalization = () => {
   return useQuery({
     queryKey: ['orders', 'for-finalization'],
     queryFn: orderFinalizationService.getOrdersForFinalization,
-    refetchInterval: 30000, // Refrescar cada 30 segundos
+    refetchInterval: 10000, // Actualizar cada 10 segundos
+    refetchIntervalInBackground: false, // No actualizar cuando la app está en background
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 5000, // Los datos se consideran frescos por 5 segundos
+    // IMPORTANTE: Mantener datos previos durante refetch para evitar parpadeos
+    keepPreviousData: true,
+    // No mostrar loading en refetch para mantener la UI estable
+    notifyOnChangeProps: ['data', 'error'],
   });
 };
 

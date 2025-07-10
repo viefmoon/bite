@@ -65,10 +65,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const isSubmitting =
     createTableMutation.isPending || updateTableMutation.isPending;
 
-  const handleFormSubmit = async (
-    data: CreateTableDto | UpdateTableDto,
-    _photoId: string | null | undefined,
-  ) => {
+  const handleFormSubmit = async (data: CreateTableDto | UpdateTableDto) => {
     try {
       const dataWithAreaId = { ...data, areaId: areaId };
 
@@ -196,8 +193,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         showFab={true}
         onFabPress={handleOpenCreateModal}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={true}
-        placeholderIcon="table-furniture"
+        showImagePlaceholder={false}
         isDrawerOpen={isDrawerOpen}
       />
 
@@ -223,7 +219,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}
-        showImage={true}
+        showImage={false}
       />
     </SafeAreaView>
   );

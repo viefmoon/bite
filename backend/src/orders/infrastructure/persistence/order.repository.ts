@@ -17,7 +17,7 @@ export abstract class OrderRepository {
     notes?: string;
     customerId?: string | null;
     isFromWhatsApp?: boolean;
-    deliveryInfo: DeliveryInfo;
+    deliveryInfo: DeliveryInfo | null;
     estimatedDeliveryTime?: Date | null;
   }): Promise<Order>;
 

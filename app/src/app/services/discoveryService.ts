@@ -23,7 +23,7 @@ export class DiscoveryService {
   private discovering = false;
   private discoveryPromise: Promise<string | null> | null = null;
   private lastDiscoveryTime = 0;
-  private MIN_DISCOVERY_INTERVAL = 3000; // 3 segundos mínimo entre descubrimientos
+  private MIN_DISCOVERY_INTERVAL = 10000; // 10 segundos mínimo entre descubrimientos
 
   private constructor() {}
 
@@ -35,11 +35,13 @@ export class DiscoveryService {
   }
 
   /**
-   * Obtiene la URL del API, usando cache o descubrimiento automático
+   * Obtiene la URL del API desde cache o almacenamiento
+   * Solo verifica si la URL almacenada sigue funcionando
    */
   async getApiUrl(): Promise<string> {
     // Si ya tenemos una URL en cache, verificar que siga funcionando
     if (this.cachedUrl) {
+      // Hacer una verificación rápida
       if (await this.checkServer(this.cachedUrl)) {
         return this.cachedUrl;
       }
@@ -47,63 +49,60 @@ export class DiscoveryService {
       this.cachedUrl = null;
     }
 
-    // Intentar con la última URL conocida
+    // Intentar con la última URL conocida almacenada
     try {
       const lastKnown = await EncryptedStorage.getItem(STORAGE_KEY);
-      if (lastKnown && (await this.checkServer(lastKnown))) {
-        this.cachedUrl = lastKnown;
-        return lastKnown;
+      if (lastKnown) {
+        // Verificar si sigue funcionando
+        if (await this.checkServer(lastKnown)) {
+          this.cachedUrl = lastKnown;
+          return lastKnown;
+        }
       }
     } catch (error) {
       // Ignorar error silenciosamente
     }
 
-    // En desarrollo con emulador Android, usar localhost especial
-    if (__DEV__ && Platform.OS === 'android') {
-      const androidUrl = `http://10.0.2.2:${DISCOVERY_PORT}/`;
-      if (await this.checkServer(androidUrl)) {
-        this.cachedUrl = androidUrl;
-        await this.saveUrl(androidUrl);
-        return androidUrl;
-      }
-    }
-
-    // Realizar descubrimiento completo
-    const discoveredUrl = await this.discoverBackend();
-    if (!discoveredUrl) {
-      throw new Error(
-        'No se pudo encontrar el servidor CloudBite en la red local',
-      );
-    }
-
-    this.cachedUrl = discoveredUrl;
-    await this.saveUrl(discoveredUrl);
-    return discoveredUrl;
+    // Si no hay URL conocida o no funciona, lanzar error
+    throw new Error(
+      'No hay servidor configurado. Es necesario ejecutar discovery.',
+    );
   }
 
   /**
    * Fuerza un nuevo descubrimiento del backend
+   * IMPORTANTE: Solo debe llamarse después de múltiples health checks fallidos
    */
   async forceRediscovery(): Promise<string> {
-    // Si hay un descubrimiento en progreso, esperar a que termine
+    // Si hay un descubrimiento en progreso, esperar a que termine y devolver su resultado
     if (this.discoveryPromise) {
-      await this.discoveryPromise;
+      try {
+        const result = await this.discoveryPromise;
+        if (result) return result;
+      } catch (error) {
+        // Si el discovery anterior falló, intentar uno nuevo
+      }
     }
 
-    // Limpiar todo
-    this.cachedUrl = null;
-    this.discovering = false;
-    this.discoveryPromise = null;
+    // Verificar que no se esté llamando muy frecuentemente
+    const now = Date.now();
+    const timeSinceLastDiscovery = now - this.lastDiscoveryTime;
+    if (
+      timeSinceLastDiscovery < this.MIN_DISCOVERY_INTERVAL &&
+      this.cachedUrl
+    ) {
+      // Si tenemos una URL cacheada y no ha pasado suficiente tiempo, devolverla
+      return this.cachedUrl;
+    }
 
+    // Limpiar cache para forzar nueva búsqueda
+    this.cachedUrl = null;
     try {
       await EncryptedStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       // Ignorar error
     }
 
-    // Esperar un momento para asegurar que se limpió todo
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
     const discoveredUrl = await this.discoverBackend();
     if (!discoveredUrl) {
       throw new Error(
@@ -115,9 +114,9 @@ export class DiscoveryService {
   }
 
   /**
-   * Limpia el cache sin intentar reconectar
+   * Limpia el cache y el almacenamiento (útil para forzar nuevo discovery)
    */
-  async clearCacheOnly(): Promise<void> {
+  async clearCache(): Promise<void> {
     this.cachedUrl = null;
     try {
       await EncryptedStorage.removeItem(STORAGE_KEY);
@@ -136,8 +135,6 @@ export class DiscoveryService {
 
     try {
       const lastKnown = await EncryptedStorage.getItem(STORAGE_KEY);
-      if (lastKnown) {
-      }
       return lastKnown;
     } catch {
       return null;
@@ -176,30 +173,29 @@ export class DiscoveryService {
    */
   private async discoverBackend(): Promise<string | null> {
     // Si ya hay un descubrimiento en progreso, devolver la promesa existente
-    if (this.discoveryPromise) {
+    if (this.discoveryPromise && this.discovering) {
       return this.discoveryPromise;
     }
 
-    // Verificar si ha pasado suficiente tiempo desde el último descubrimiento
-    const now = Date.now();
-    if (now - this.lastDiscoveryTime < this.MIN_DISCOVERY_INTERVAL) {
-      throw new Error(
-        'Descubrimiento en progreso, intente nuevamente en unos segundos',
-      );
-    }
-
-    this.lastDiscoveryTime = now;
+    // Actualizar timestamp
+    this.lastDiscoveryTime = Date.now();
 
     // Crear nueva promesa de descubrimiento
-    this.discoveryPromise = this.performDiscovery();
+    this.discoveryPromise = this.performDiscovery()
+      .then(async (result) => {
+        if (result) {
+          this.cachedUrl = result;
+          await this.saveUrl(result);
+        }
+        return result;
+      })
+      .finally(() => {
+        // Limpiar estado al terminar
+        this.discoveryPromise = null;
+        this.discovering = false;
+      });
 
-    try {
-      const result = await this.discoveryPromise;
-      return result;
-    } finally {
-      // Limpiar la promesa al terminar
-      this.discoveryPromise = null;
-    }
+    return this.discoveryPromise;
   }
 
   private async performDiscovery(): Promise<string | null> {
@@ -207,6 +203,7 @@ export class DiscoveryService {
     try {
       // Obtener información de red
       const netInfo = await NetInfo.fetch();
+
       if (!netInfo.isConnected) {
         throw new Error('No hay conexión de red disponible');
       }
@@ -228,13 +225,12 @@ export class DiscoveryService {
         totalScanned += chunks[i].length;
 
         // Buscar si alguna petición fue exitosa
-        for (const result of results) {
+        for (let j = 0; j < results.length; j++) {
+          const result = results[j];
           if (result.status === 'fulfilled' && result.value) {
             return result.value;
           }
         }
-
-        // Progreso cada 60 IPs escaneadas
       }
 
       return null;
@@ -367,18 +363,6 @@ export class DiscoveryService {
       chunks.push(array.slice(i, i + size));
     }
     return chunks;
-  }
-
-  /**
-   * Limpia la cache y el almacenamiento
-   */
-  async clearCache(): Promise<void> {
-    this.cachedUrl = null;
-    try {
-      await EncryptedStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      // Ignorar error
-    }
   }
 
   /**

@@ -14,24 +14,6 @@ export function formatCurrency(amount: number, currency = 'MXN'): string {
 }
 
 /**
- * Formatea una fecha a un string legible
- * @param date - Fecha a formatear
- * @param options - Opciones de formato
- * @returns String formateado
- */
-export function formatDate(
-  date: Date | string,
-  options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  },
-): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('es-MX', options).format(dateObj);
-}
-
-/**
  * Formatea un número de teléfono
  * @param phoneNumber - Número de teléfono
  * @returns String formateado

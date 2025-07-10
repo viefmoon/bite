@@ -89,18 +89,18 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @Column({ name: 'preparation_screen_id', nullable: false, type: 'uuid' })
-  preparationScreenId: string;
+  @Column({ name: 'preparation_screen_id', nullable: true, type: 'uuid' })
+  preparationScreenId: string | null;
 
   @ManyToOne(
     () => PreparationScreenEntity,
     (preparationScreen) => preparationScreen.products,
     {
-      nullable: false,
+      nullable: true,
     },
   )
   @JoinColumn({ name: 'preparation_screen_id' })
-  preparationScreen: PreparationScreenEntity;
+  preparationScreen: PreparationScreenEntity | null;
 
   @ManyToMany(
     () => PizzaCustomizationEntity,

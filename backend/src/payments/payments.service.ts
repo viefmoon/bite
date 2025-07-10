@@ -1,10 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PaymentRepository } from './infrastructure/persistence/payment.repository';
 import { Payment } from './domain/payment';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePrepaymentDto } from './dto/create-prepayment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { PaymentStatus } from './domain/enums/payment-status.enum';
 import { PaymentMethod } from './domain/enums/payment-method.enum';
 import { PAYMENT_REPOSITORY } from '../common/tokens';
@@ -17,8 +22,12 @@ export class PaymentsService {
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
+    // Validar que el monto sea positivo
+    if (createPaymentDto.amount <= 0) {
+      throw new BadRequestException('El monto del pago debe ser mayor a cero');
+    }
+
     const payment = new Payment();
-    payment.id = uuidv4();
     payment.orderId = createPaymentDto.orderId;
     payment.paymentMethod = createPaymentDto.paymentMethod;
     payment.amount = createPaymentDto.amount;
@@ -74,6 +83,11 @@ export class PaymentsService {
   ): Promise<Payment> {
     const existingPayment = await this.findOne(id);
 
+    // Validar el monto si se está actualizando
+    if (updatePaymentDto.amount !== undefined && updatePaymentDto.amount <= 0) {
+      throw new BadRequestException('El monto del pago debe ser mayor a cero');
+    }
+
     const updatedPayment = new Payment();
     updatedPayment.id = id;
     updatedPayment.orderId = existingPayment.orderId;
@@ -92,5 +106,49 @@ export class PaymentsService {
   async remove(id: string): Promise<void> {
     await this.findOne(id);
     await this.paymentRepository.delete(id);
+  }
+
+  async createPrepayment(
+    createPrepaymentDto: CreatePrepaymentDto,
+  ): Promise<Payment> {
+    // Validar que el monto sea positivo
+    if (createPrepaymentDto.amount <= 0) {
+      throw new BadRequestException(
+        'El monto del prepago debe ser mayor a cero',
+      );
+    }
+
+    const payment = new Payment();
+    payment.orderId = null; // Sin orden asociada inicialmente
+    payment.paymentMethod = createPrepaymentDto.paymentMethod;
+    payment.amount = createPrepaymentDto.amount;
+    // Los pagos en efectivo se crean como completados
+    payment.paymentStatus =
+      createPrepaymentDto.paymentMethod === PaymentMethod.CASH
+        ? PaymentStatus.COMPLETED
+        : PaymentStatus.PENDING;
+
+    return this.paymentRepository.create(payment);
+  }
+
+  async associatePaymentToOrder(
+    paymentId: string,
+    orderId: string,
+  ): Promise<Payment> {
+    const payment = await this.findOne(paymentId);
+
+    if (payment.orderId) {
+      throw new Error('Este pago ya está asociado a una orden');
+    }
+
+    const updatedPayment = new Payment();
+    updatedPayment.id = payment.id;
+    updatedPayment.orderId = orderId;
+    updatedPayment.paymentMethod = payment.paymentMethod;
+    updatedPayment.amount = payment.amount;
+    updatedPayment.paymentStatus = payment.paymentStatus;
+    updatedPayment.createdAt = payment.createdAt;
+
+    return this.paymentRepository.update(paymentId, updatedPayment);
   }
 }

@@ -24,10 +24,13 @@ export const categoryFormSchema = z.object({
   isActive: z.boolean(),
   sortOrder: z.number().optional().default(0),
   imageUri: z
-    .string()
-    .url()
-    .or(z.string().startsWith('file://'))
-    .nullable()
+    .union([
+      z.string().url(),
+      z.string().startsWith('file://'),
+      z.string().startsWith('http://'),
+      z.string().startsWith('https://'),
+      z.null(),
+    ])
     .optional(),
 });
 

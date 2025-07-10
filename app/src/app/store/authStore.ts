@@ -90,7 +90,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user });
     } catch (error) {
-      console.error('[AuthStore] Error al guardar información del usuario:', error);
+      console.error(
+        '[AuthStore] Error al guardar información del usuario:',
+        error,
+      );
     }
   },
 

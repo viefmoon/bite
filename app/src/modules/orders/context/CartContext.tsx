@@ -89,12 +89,24 @@ interface CartContextType {
   setSelectedAreaId: (id: string | null) => void;
   selectedTableId: string | null;
   setSelectedTableId: (id: string | null) => void;
+  isTemporaryTable: boolean;
+  setIsTemporaryTable: (isTemp: boolean) => void;
+  temporaryTableName: string;
+  setTemporaryTableName: (name: string) => void;
   scheduledTime: Date | null;
   setScheduledTime: (time: Date | null) => void;
   deliveryInfo: DeliveryInfo;
   setDeliveryInfo: (info: DeliveryInfo) => void;
   orderNotes: string;
   setOrderNotes: (notes: string) => void;
+
+  // --- Estado del prepago ---
+  prepaymentId: string | null;
+  setPrepaymentId: (id: string | null) => void;
+  prepaymentAmount: string;
+  setPrepaymentAmount: (amount: string) => void;
+  prepaymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | null;
+  setPrepaymentMethod: (method: 'CASH' | 'CARD' | 'TRANSFER' | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -118,9 +130,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [orderType, setOrderType] = useState<OrderType>(OrderTypeEnum.DINE_IN);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [isTemporaryTable, setIsTemporaryTable] = useState<boolean>(false);
+  const [temporaryTableName, setTemporaryTableName] = useState<string>('');
   const [scheduledTime, setScheduledTime] = useState<Date | null>(null);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({});
   const [orderNotes, setOrderNotes] = useState<string>('');
+
+  // --- Estados del prepago ---
+  const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
+  const [prepaymentAmount, setPrepaymentAmount] = useState<string>('');
+  const [prepaymentMethod, setPrepaymentMethod] = useState<
+    'CASH' | 'CARD' | 'TRANSFER' | null
+  >(null);
 
   const subtotal = useMemo(() => {
     return items.reduce((sum, item: CartItem) => sum + item.totalPrice, 0);
@@ -136,243 +157,259 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const isCartEmpty = items.length === 0;
 
-  const addItem = (
-    product: Product,
-    quantity: number = 1,
-    variantId?: string,
-    modifiers: CartItemModifier[] = [],
-    preparationNotes?: string,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost: number = 0,
-  ) => {
-    const variantToAdd = variantId
-      ? product.variants?.find((v) => v.id === variantId)
-      : undefined;
+  const addItem = useCallback(
+    (
+      product: Product,
+      quantity: number = 1,
+      variantId?: string,
+      modifiers: CartItemModifier[] = [],
+      preparationNotes?: string,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost: number = 0,
+    ) => {
+      const variantToAdd = variantId
+        ? product.variants?.find((v) => v.id === variantId)
+        : undefined;
 
-    // Validar y sanitizar precios
-    const safeParsePrice = (price: any): number => {
-      const parsed = Number(price);
-      if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
-        console.error('[CartContext] Precio inválido:', price);
-        return 0;
-      }
-      // Limitar a 2 decimales y máximo razonable
-      return Math.min(Math.round(parsed * 100) / 100, 999999.99);
-    };
-
-    const unitPrice = variantToAdd
-      ? safeParsePrice(variantToAdd.price)
-      : safeParsePrice(product.price);
-
-    const modifiersPrice = modifiers.reduce(
-      (sum, mod) => sum + safeParsePrice(mod.price || 0),
-      0,
-    );
-
-    setItems((currentItems) => {
-      // Buscar si existe un item idéntico
-      const existingItemIndex = currentItems.findIndex((item) => {
-        if (item.productId !== product.id) return false;
-        if (item.variantId !== variantId) return false;
-        if (item.preparationNotes !== preparationNotes) return false;
-        if (item.modifiers.length !== modifiers.length) return false;
-
-        // Comparar modifiers
-        const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
-          a.id.localeCompare(b.id),
-        );
-        const sortedNewModifiers = [...modifiers].sort((a, b) =>
-          a.id.localeCompare(b.id),
-        );
-
-        for (let i = 0; i < sortedExistingModifiers.length; i++) {
-          if (
-            sortedExistingModifiers[i].id !== sortedNewModifiers[i].id ||
-            sortedExistingModifiers[i].name !== sortedNewModifiers[i].name ||
-            sortedExistingModifiers[i].price !== sortedNewModifiers[i].price
-          ) {
-            return false;
-          }
+      // Validar y sanitizar precios
+      const safeParsePrice = (price: any): number => {
+        const parsed = Number(price);
+        if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
+          // Precio inválido, retornar 0
+          return 0;
         }
+        // Limitar a 2 decimales y máximo razonable
+        return Math.min(Math.round(parsed * 100) / 100, 999999.99);
+      };
 
-        // Comparar pizza customizations
-        const existingCustomizations = item.selectedPizzaCustomizations || [];
-        const newCustomizations = selectedPizzaCustomizations || [];
+      const unitPrice = variantToAdd
+        ? safeParsePrice(variantToAdd.price)
+        : safeParsePrice(product.price);
 
-        if (existingCustomizations.length !== newCustomizations.length)
-          return false;
+      const modifiersPrice = modifiers.reduce(
+        (sum, mod) => sum + safeParsePrice(mod.price || 0),
+        0,
+      );
 
-        const sortedExistingCustomizations = [...existingCustomizations].sort(
-          (a, b) =>
+      setItems((currentItems) => {
+        // Buscar si existe un item idéntico
+        const existingItemIndex = currentItems.findIndex((item) => {
+          if (item.productId !== product.id) return false;
+          if (item.variantId !== variantId) return false;
+          if (item.preparationNotes !== preparationNotes) return false;
+          if (item.modifiers.length !== modifiers.length) return false;
+
+          // Comparar modifiers
+          const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
+            a.id.localeCompare(b.id),
+          );
+          const sortedNewModifiers = [...modifiers].sort((a, b) =>
+            a.id.localeCompare(b.id),
+          );
+
+          for (let i = 0; i < sortedExistingModifiers.length; i++) {
+            if (
+              sortedExistingModifiers[i].id !== sortedNewModifiers[i].id ||
+              sortedExistingModifiers[i].name !== sortedNewModifiers[i].name ||
+              sortedExistingModifiers[i].price !== sortedNewModifiers[i].price
+            ) {
+              return false;
+            }
+          }
+
+          // Comparar pizza customizations
+          const existingCustomizations = item.selectedPizzaCustomizations || [];
+          const newCustomizations = selectedPizzaCustomizations || [];
+
+          if (existingCustomizations.length !== newCustomizations.length)
+            return false;
+
+          const sortedExistingCustomizations = [...existingCustomizations].sort(
+            (a, b) =>
+              `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+                `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+              ),
+          );
+          const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
             `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
               `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
             ),
-        );
-        const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
-          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-            `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
-          ),
-        );
+          );
 
-        for (let i = 0; i < sortedExistingCustomizations.length; i++) {
-          if (
-            sortedExistingCustomizations[i].pizzaCustomizationId !==
-              sortedNewCustomizations[i].pizzaCustomizationId ||
-            sortedExistingCustomizations[i].half !==
-              sortedNewCustomizations[i].half ||
-            sortedExistingCustomizations[i].action !==
-              sortedNewCustomizations[i].action
-          ) {
-            return false;
+          for (let i = 0; i < sortedExistingCustomizations.length; i++) {
+            if (
+              sortedExistingCustomizations[i].pizzaCustomizationId !==
+                sortedNewCustomizations[i].pizzaCustomizationId ||
+              sortedExistingCustomizations[i].half !==
+                sortedNewCustomizations[i].half ||
+              sortedExistingCustomizations[i].action !==
+                sortedNewCustomizations[i].action
+            ) {
+              return false;
+            }
           }
-        }
 
-        return true;
-      });
+          return true;
+        });
 
-      if (existingItemIndex !== -1) {
-        // Si existe un item idéntico, actualizar la cantidad
-        const updatedItems = [...currentItems];
-        const existingItem = updatedItems[existingItemIndex];
-        const newQuantity = existingItem.quantity + quantity;
-        const newTotalPrice =
-          (existingItem.unitPrice + modifiersPrice + pizzaExtraCost) *
-          newQuantity;
+        if (existingItemIndex !== -1) {
+          // Si existe un item idéntico, actualizar la cantidad
+          const updatedItems = [...currentItems];
+          const existingItem = updatedItems[existingItemIndex];
+          const newQuantity = existingItem.quantity + quantity;
+          const newTotalPrice =
+            (existingItem.unitPrice + modifiersPrice + pizzaExtraCost) *
+            newQuantity;
 
-        updatedItems[existingItemIndex] = {
-          ...existingItem,
-          quantity: newQuantity,
-          totalPrice: newTotalPrice,
-          pizzaExtraCost,
-        };
+          updatedItems[existingItemIndex] = {
+            ...existingItem,
+            quantity: newQuantity,
+            totalPrice: newTotalPrice,
+            pizzaExtraCost,
+          };
 
-        return updatedItems;
-      } else {
-        // Si no existe, crear un nuevo item
-        const newItem: CartItem = {
-          id: generateId(),
-          productId: product.id,
-          productName: product.name,
-          quantity,
-          unitPrice: unitPrice as number,
-          totalPrice:
-            ((unitPrice as number) + modifiersPrice + pizzaExtraCost) *
+          return updatedItems;
+        } else {
+          // Si no existe, crear un nuevo item
+          const newItem: CartItem = {
+            id: generateId(),
+            productId: product.id,
+            productName: product.name,
             quantity,
-          modifiers,
-          variantId,
-          variantName: variantToAdd?.name,
-          preparationNotes,
-          selectedPizzaCustomizations,
-          pizzaExtraCost,
-        };
+            unitPrice: unitPrice as number,
+            totalPrice:
+              ((unitPrice as number) + modifiersPrice + pizzaExtraCost) *
+              quantity,
+            modifiers,
+            variantId,
+            variantName: variantToAdd?.name,
+            preparationNotes,
+            selectedPizzaCustomizations,
+            pizzaExtraCost,
+          };
 
-        return [...currentItems, newItem];
-      }
-    });
-  };
+          return [...currentItems, newItem];
+        }
+      });
+    },
+    [],
+  );
 
-  const removeItem = (itemId: string) => {
+  const removeItem = useCallback((itemId: string) => {
     setItems((currentItems) =>
       currentItems.filter((item) => item.id !== itemId),
     );
-  };
+  }, []);
 
-  const updateItemQuantity = (itemId: string, quantity: number) => {
-    // Validar y sanitizar cantidad
-    const safeQuantity = Math.round(quantity);
-    
-    if (!Number.isInteger(quantity) || safeQuantity !== quantity) {
-      console.warn('[CartContext] Cantidad debe ser un número entero:', quantity);
-    }
-    
-    if (safeQuantity <= 0 || isNaN(safeQuantity)) {
-      removeItem(itemId);
-      return;
-    }
-    
-    // Límite máximo razonable
-    const MAX_QUANTITY = 9999;
-    const finalQuantity = Math.min(safeQuantity, MAX_QUANTITY);
+  const updateItemQuantity = useCallback(
+    (itemId: string, quantity: number) => {
+      // Validar y sanitizar cantidad
+      const safeQuantity = Math.round(quantity);
 
-    setItems((currentItems) =>
-      currentItems.map((item) => {
-        if (item.id === itemId) {
-          const modifiersPrice = item.modifiers.reduce(
-            (sum, mod) => sum + Number(mod.price || 0),
-            0,
-          );
-          const pizzaExtraCost = item.pizzaExtraCost || 0;
-          const newTotalPrice =
-            (item.unitPrice + modifiersPrice + pizzaExtraCost) * finalQuantity;
-          return {
-            ...item,
-            quantity: finalQuantity,
-            totalPrice: newTotalPrice,
-          };
-        }
-        return item;
-      }),
-    );
-  };
+      if (!Number.isInteger(quantity) || safeQuantity !== quantity) {
+        // Cantidad debe ser un número entero
+      }
 
-  const updateItem = (
-    itemId: string,
-    quantity: number,
-    modifiers: CartItemModifier[],
-    preparationNotes?: string,
-    variantId?: string,
-    variantName?: string,
-    unitPrice?: number,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost: number = 0,
-  ) => {
-    setItems((currentItems) =>
-      currentItems.map((item) => {
-        if (item.id === itemId) {
-          const modifiersPrice = modifiers.reduce(
-            (sum, mod) => sum + Number(mod.price || 0),
-            0,
-          );
-          const finalUnitPrice =
-            unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice =
-            (finalUnitPrice + modifiersPrice + pizzaExtraCost) * quantity;
-          return {
-            ...item,
-            quantity,
-            modifiers,
-            preparationNotes:
-              preparationNotes !== undefined
-                ? preparationNotes
-                : item.preparationNotes,
-            variantId: variantId !== undefined ? variantId : item.variantId,
-            variantName:
-              variantName !== undefined ? variantName : item.variantName,
-            unitPrice: finalUnitPrice,
-            totalPrice: newTotalPrice,
-            selectedPizzaCustomizations:
-              selectedPizzaCustomizations !== undefined
-                ? selectedPizzaCustomizations
-                : item.selectedPizzaCustomizations,
-            pizzaExtraCost,
-          };
-        }
-        return item;
-      }),
-    );
-  };
+      if (safeQuantity <= 0 || isNaN(safeQuantity)) {
+        removeItem(itemId);
+        return;
+      }
+
+      // Límite máximo razonable
+      const MAX_QUANTITY = 9999;
+      const finalQuantity = Math.min(safeQuantity, MAX_QUANTITY);
+
+      setItems((currentItems) =>
+        currentItems.map((item) => {
+          if (item.id === itemId) {
+            const modifiersPrice = item.modifiers.reduce(
+              (sum, mod) => sum + Number(mod.price || 0),
+              0,
+            );
+            const pizzaExtraCost = item.pizzaExtraCost || 0;
+            const newTotalPrice =
+              (item.unitPrice + modifiersPrice + pizzaExtraCost) *
+              finalQuantity;
+            return {
+              ...item,
+              quantity: finalQuantity,
+              totalPrice: newTotalPrice,
+            };
+          }
+          return item;
+        }),
+      );
+    },
+    [removeItem],
+  );
+
+  const updateItem = useCallback(
+    (
+      itemId: string,
+      quantity: number,
+      modifiers: CartItemModifier[],
+      preparationNotes?: string,
+      variantId?: string,
+      variantName?: string,
+      unitPrice?: number,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost: number = 0,
+    ) => {
+      setItems((currentItems) =>
+        currentItems.map((item) => {
+          if (item.id === itemId) {
+            const modifiersPrice = modifiers.reduce(
+              (sum, mod) => sum + Number(mod.price || 0),
+              0,
+            );
+            const finalUnitPrice =
+              unitPrice !== undefined ? unitPrice : item.unitPrice;
+            const newTotalPrice =
+              (finalUnitPrice + modifiersPrice + pizzaExtraCost) * quantity;
+            return {
+              ...item,
+              quantity,
+              modifiers,
+              preparationNotes:
+                preparationNotes !== undefined
+                  ? preparationNotes
+                  : item.preparationNotes,
+              variantId: variantId !== undefined ? variantId : item.variantId,
+              variantName:
+                variantName !== undefined ? variantName : item.variantName,
+              unitPrice: finalUnitPrice,
+              totalPrice: newTotalPrice,
+              selectedPizzaCustomizations:
+                selectedPizzaCustomizations !== undefined
+                  ? selectedPizzaCustomizations
+                  : item.selectedPizzaCustomizations,
+              pizzaExtraCost,
+            };
+          }
+          return item;
+        }),
+      );
+    },
+    [],
+  );
 
   // Modificar clearCart para resetear todo
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([]);
     // Resetear estado del formulario
     setOrderType(OrderTypeEnum.DINE_IN);
     setSelectedAreaId(null);
     setSelectedTableId(null);
+    setIsTemporaryTable(false);
+    setTemporaryTableName('');
     setScheduledTime(null);
     setDeliveryInfo({});
     setOrderNotes('');
-  };
+    // Resetear estado del prepago
+    setPrepaymentId(null);
+    setPrepaymentAmount('');
+    setPrepaymentMethod(null);
+  }, []);
 
   const showCart = useCallback(() => {
     setIsCartVisible(true);
@@ -382,34 +419,72 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsCartVisible(false);
   }, []);
 
-  const value: CartContextType = {
-    items,
-    setItems,
-    addItem,
-    removeItem,
-    updateItemQuantity,
-    updateItem,
-    clearCart,
-    isCartEmpty,
-    subtotal,
-    total,
-    totalItemsCount,
-    isCartVisible,
-    showCart,
-    hideCart,
-    orderType,
-    setOrderType,
-    selectedAreaId,
-    setSelectedAreaId,
-    selectedTableId,
-    setSelectedTableId,
-    scheduledTime,
-    setScheduledTime,
-    deliveryInfo,
-    setDeliveryInfo,
-    orderNotes,
-    setOrderNotes,
-  };
+  const value: CartContextType = useMemo(
+    () => ({
+      items,
+      setItems,
+      addItem,
+      removeItem,
+      updateItemQuantity,
+      updateItem,
+      clearCart,
+      isCartEmpty,
+      subtotal,
+      total,
+      totalItemsCount,
+      isCartVisible,
+      showCart,
+      hideCart,
+      orderType,
+      setOrderType,
+      selectedAreaId,
+      setSelectedAreaId,
+      selectedTableId,
+      setSelectedTableId,
+      isTemporaryTable,
+      setIsTemporaryTable,
+      temporaryTableName,
+      setTemporaryTableName,
+      scheduledTime,
+      setScheduledTime,
+      deliveryInfo,
+      setDeliveryInfo,
+      orderNotes,
+      setOrderNotes,
+      prepaymentId,
+      setPrepaymentId,
+      prepaymentAmount,
+      setPrepaymentAmount,
+      prepaymentMethod,
+      setPrepaymentMethod,
+    }),
+    [
+      items,
+      isCartEmpty,
+      subtotal,
+      total,
+      totalItemsCount,
+      isCartVisible,
+      showCart,
+      hideCart,
+      addItem,
+      removeItem,
+      updateItemQuantity,
+      updateItem,
+      clearCart,
+      orderType,
+      selectedAreaId,
+      selectedTableId,
+      isTemporaryTable,
+      temporaryTableName,
+      scheduledTime,
+      deliveryInfo,
+      orderNotes,
+      prepaymentId,
+      prepaymentAmount,
+      prepaymentMethod,
+    ],
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

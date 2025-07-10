@@ -41,6 +41,8 @@ import {
   PreparationScreenStatus,
   OrderPreparationScreenStatus,
 } from './domain/order-preparation-screen-status';
+import { PaymentsService } from '../payments/payments.service';
+import { TablesService } from '../tables/tables.service';
 
 @Injectable()
 export class OrdersService {
@@ -59,6 +61,8 @@ export class OrdersService {
     private readonly restaurantConfigService: RestaurantConfigService,
     private readonly orderChangeTracker: OrderChangeTrackerV2Service,
     private readonly dataSource: DataSource,
+    private readonly paymentsService: PaymentsService,
+    private readonly tablesService: TablesService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -72,6 +76,26 @@ export class OrdersService {
           'No se puede crear un pedido para un cliente baneado',
         );
       }
+    }
+
+    // Manejar la creación de mesa temporal si es necesario
+    let tableId = createOrderDto.tableId;
+    if (
+      createOrderDto.isTemporaryTable &&
+      createOrderDto.temporaryTableName &&
+      createOrderDto.temporaryTableAreaId
+    ) {
+      // Crear mesa temporal
+      const temporaryTable = await this.tablesService.create({
+        name: createOrderDto.temporaryTableName,
+        areaId: createOrderDto.temporaryTableAreaId,
+        isTemporary: true,
+        temporaryIdentifier: uuidv4(), // Identificador único para esta mesa temporal
+        isActive: true,
+        isAvailable: false, // La mesa temporal se ocupa inmediatamente
+        capacity: 4, // Capacidad por defecto para mesas temporales
+      });
+      tableId = temporaryTable.id;
     }
 
     // Obtener la configuración del restaurante
@@ -97,17 +121,25 @@ export class OrdersService {
       now.getTime() + estimatedMinutes * 60000,
     );
 
-    // Crear la información de entrega (siempre requerida)
-    const deliveryInfo: DeliveryInfo = {
-      id: uuidv4(),
-      ...createOrderDto.deliveryInfo,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as DeliveryInfo;
+    // Crear la información de entrega solo si tiene datos reales
+    let deliveryInfo: DeliveryInfo | null = null;
+    
+    // Verificar si deliveryInfo tiene algún campo con valor
+    const hasDeliveryData = createOrderDto.deliveryInfo && Object.entries(createOrderDto.deliveryInfo)
+      .some(([key, value]) => value !== undefined && value !== null && value !== '');
+    
+    if (hasDeliveryData) {
+      deliveryInfo = {
+        id: uuidv4(),
+        ...createOrderDto.deliveryInfo,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as DeliveryInfo;
+    }
 
     const order = await this.orderRepository.create({
       userId: createOrderDto.userId || null,
-      tableId: createOrderDto.tableId || null,
+      tableId: tableId || null, // Usar el tableId que puede ser de una mesa temporal
       scheduledAt: createOrderDto.scheduledAt || null,
       orderType: createOrderDto.orderType,
       orderStatus: OrderStatus.IN_PROGRESS, // Estado inicial cuando se crea una orden
@@ -119,6 +151,19 @@ export class OrdersService {
       deliveryInfo: deliveryInfo,
       estimatedDeliveryTime: estimatedDeliveryTime,
     });
+
+    // Marcar la mesa como ocupada si se asignó una mesa a la orden
+    if (tableId && !createOrderDto.isTemporaryTable) {
+      // Verificar que la mesa esté disponible antes de asignarla
+      const table = await this.tablesService.findOne(tableId);
+      if (!table.isAvailable) {
+        throw new BadRequestException(
+          `La mesa ${table.name} no está disponible`,
+        );
+      }
+      
+      await this.tablesService.update(tableId, { isAvailable: false });
+    }
 
     if (createOrderDto.items && createOrderDto.items.length > 0) {
       for (const itemDto of createOrderDto.items) {
@@ -140,6 +185,20 @@ export class OrdersService {
 
     // Crear estados de pantalla para cada pantalla que tenga items
     await this.createInitialScreenStatuses(order.id);
+
+    // Asociar pre-pago si se proporcionó uno
+    if (createOrderDto.prepaymentId) {
+      try {
+        await this.paymentsService.associatePaymentToOrder(
+          createOrderDto.prepaymentId,
+          order.id,
+        );
+      } catch (error) {
+        // Si falla la asociación del pago, registrar el error pero continuar
+        // Ya que la orden ya fue creada exitosamente
+        // TODO: Implementar logger de NestJS aquí
+      }
+    }
 
     // Recargar la orden completa con todas las relaciones
     const fullOrder = await this.findOne(order.id);
@@ -267,8 +326,46 @@ export class OrdersService {
     if (
       updateOrderDto.tableId !== undefined &&
       updateOrderDto.tableId !== existingOrder.tableId
-    )
+    ) {
       updatePayload.tableId = updateOrderDto.tableId;
+
+      // Manejar cambio de mesa: liberar la anterior y ocupar la nueva
+      // Solo si la orden no está finalizada
+      if (
+        existingOrder.orderStatus !== OrderStatus.COMPLETED &&
+        existingOrder.orderStatus !== OrderStatus.CANCELLED
+      ) {
+        // Liberar mesa anterior si existía
+        if (existingOrder.tableId) {
+          const oldTable = await this.tablesService.findOne(existingOrder.tableId);
+          
+          if (oldTable.isTemporary) {
+            // Eliminar mesa temporal
+            await this.tablesService.remove(existingOrder.tableId);
+          } else {
+            // Liberar mesa normal
+            await this.tablesService.update(existingOrder.tableId, {
+              isAvailable: true,
+            });
+          }
+        }
+
+        // Ocupar nueva mesa si se especificó
+        if (updateOrderDto.tableId) {
+          // Verificar que la mesa esté disponible
+          const newTable = await this.tablesService.findOne(updateOrderDto.tableId);
+          if (!newTable.isAvailable) {
+            throw new BadRequestException(
+              `La mesa ${newTable.name} no está disponible`,
+            );
+          }
+          
+          await this.tablesService.update(updateOrderDto.tableId, {
+            isAvailable: false,
+          });
+        }
+      }
+    }
     if (
       updateOrderDto.scheduledAt !== undefined &&
       new Date(updateOrderDto.scheduledAt).getTime() !==
@@ -278,13 +375,58 @@ export class OrdersService {
     if (
       updateOrderDto.orderStatus !== undefined &&
       updateOrderDto.orderStatus !== existingOrder.orderStatus
-    )
+    ) {
       updatePayload.orderStatus = updateOrderDto.orderStatus;
+
+      // Si la orden se está completando o cancelando, liberar la mesa
+      if (
+        existingOrder.tableId &&
+        (updateOrderDto.orderStatus === OrderStatus.COMPLETED ||
+          updateOrderDto.orderStatus === OrderStatus.CANCELLED)
+      ) {
+        // Verificar si es una mesa temporal
+        const table = await this.tablesService.findOne(existingOrder.tableId);
+        
+        if (table.isTemporary) {
+          // Eliminar mesa temporal
+          await this.tablesService.remove(existingOrder.tableId);
+        } else {
+          // Liberar mesa normal
+          await this.tablesService.update(existingOrder.tableId, {
+            isAvailable: true,
+          });
+        }
+      }
+    }
     if (
       updateOrderDto.orderType !== undefined &&
       updateOrderDto.orderType !== existingOrder.orderType
-    )
+    ) {
       updatePayload.orderType = updateOrderDto.orderType;
+      
+      // Si se cambia de DINE_IN a otro tipo, liberar la mesa
+      if (
+        existingOrder.orderType === OrderType.DINE_IN &&
+        updateOrderDto.orderType !== OrderType.DINE_IN &&
+        existingOrder.tableId &&
+        existingOrder.orderStatus !== OrderStatus.COMPLETED &&
+        existingOrder.orderStatus !== OrderStatus.CANCELLED
+      ) {
+        // Verificar si es mesa temporal
+        const table = await this.tablesService.findOne(existingOrder.tableId);
+        
+        if (table.isTemporary) {
+          // Eliminar mesa temporal
+          await this.tablesService.remove(existingOrder.tableId);
+        } else {
+          // Liberar mesa normal
+          await this.tablesService.update(existingOrder.tableId, {
+            isAvailable: true,
+          });
+        }
+        updatePayload.tableId = null; // Quitar la mesa de la orden
+      }
+    }
     if (
       updateOrderDto.subtotal !== undefined &&
       Number(updateOrderDto.subtotal) !== Number(existingOrder.subtotal)
@@ -836,6 +978,20 @@ export class OrdersService {
       };
 
       await this.update(orderId, updateData);
+
+      // Liberar la mesa si la orden tenía una asignada
+      if (order.tableId) {
+        // Verificar si es una mesa temporal
+        const table = await this.tablesService.findOne(order.tableId);
+        
+        if (table.isTemporary) {
+          // Eliminar mesa temporal
+          await this.tablesService.remove(order.tableId);
+        } else {
+          // Liberar mesa normal
+          await this.tablesService.update(order.tableId, { isAvailable: true });
+        }
+      }
     }
   }
 
@@ -874,7 +1030,28 @@ export class OrdersService {
       );
     }
 
-    return this.update(id, { orderStatus: newStatus });
+    // Actualizar el estado de la orden
+    const updatedOrder = await this.update(id, { orderStatus: newStatus });
+
+    // Liberar la mesa si la orden se completa o cancela
+    if (
+      order.tableId &&
+      (newStatus === OrderStatus.COMPLETED ||
+        newStatus === OrderStatus.CANCELLED)
+    ) {
+      // Verificar si es una mesa temporal
+      const table = await this.tablesService.findOne(order.tableId);
+      
+      if (table.isTemporary) {
+        // Eliminar mesa temporal
+        await this.tablesService.remove(order.tableId);
+      } else {
+        // Liberar mesa normal
+        await this.tablesService.update(order.tableId, { isAvailable: true });
+      }
+    }
+
+    return updatedOrder;
   }
 
   async hasItemsWithStatus(orderId: string, status: string): Promise<boolean> {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Surface, Text, Checkbox, Chip, IconButton } from 'react-native-paper';
+import { Card, Text, Checkbox, Chip, IconButton } from 'react-native-paper';
 import { OrderForFinalization } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -11,256 +11,257 @@ interface OrderCardProps {
   onShowDetails: (order: OrderForFinalization) => void;
 }
 
-export const OrderCard: React.FC<OrderCardProps> = ({
-  order,
-  isSelected,
-  onToggleSelection,
-  onShowDetails,
-}) => {
-  const theme = useAppTheme();
+export const OrderCard = React.memo<OrderCardProps>(
+  ({ order, isSelected, onToggleSelection, onShowDetails }) => {
+    const theme = useAppTheme();
 
-  const getOrderTypeIcon = () => {
-    switch (order.orderType) {
-      case 'TAKEOUT':
-        return 'bag-personal-outline';
-      case 'DELIVERY':
-        return 'truck-delivery';
-      case 'DINE_IN':
-        return 'silverware-fork-knife';
-      default:
-        return 'receipt';
-    }
-  };
+    const getOrderTypeIcon = () => {
+      switch (order.orderType) {
+        case 'TAKEOUT':
+          return 'bag-personal-outline';
+        case 'DELIVERY':
+          return 'truck-delivery';
+        case 'DINE_IN':
+          return 'silverware-fork-knife';
+        default:
+          return 'receipt';
+      }
+    };
 
-  const getOrderTypeLabel = () => {
-    switch (order.orderType) {
-      case 'TAKEOUT':
-        return 'Para llevar';
-      case 'DELIVERY':
-        return 'Domicilio';
-      case 'DINE_IN':
-        return 'Mesa';
-      default:
-        return 'Orden';
-    }
-  };
+    const getOrderTypeLabel = () => {
+      switch (order.orderType) {
+        case 'TAKEOUT':
+          return 'Para llevar';
+        case 'DELIVERY':
+          return 'Domicilio';
+        case 'DINE_IN':
+          return 'Mesa';
+        default:
+          return 'Orden';
+      }
+    };
 
-  const getStatusColor = () => {
-    switch (order.orderStatus) {
-      case 'READY':
-        return theme.colors.primary;
-      case 'DELIVERED':
-        return theme.colors.secondary;
-      case 'IN_PROGRESS':
-        return theme.colors.tertiary;
-      case 'PENDING':
-        return theme.colors.outline;
-      default:
-        return theme.colors.outline;
-    }
-  };
+    const getStatusColor = () => {
+      switch (order.orderStatus) {
+        case 'READY':
+          return theme.colors.primary;
+        case 'DELIVERED':
+          return theme.colors.secondary;
+        case 'IN_PROGRESS':
+          return theme.colors.tertiary;
+        case 'PENDING':
+          return theme.colors.outline;
+        default:
+          return theme.colors.outline;
+      }
+    };
 
-  const getStatusLabel = () => {
-    switch (order.orderStatus) {
-      case 'READY':
-        return 'Listo';
-      case 'DELIVERED':
-        return 'Entregado';
-      case 'IN_PROGRESS':
-        return 'En preparación';
-      case 'PENDING':
-        return 'Pendiente';
-      default:
-        return 'Desconocido';
-    }
-  };
+    const getStatusLabel = () => {
+      switch (order.orderStatus) {
+        case 'READY':
+          return 'Listo';
+        case 'DELIVERED':
+          return 'Entregado';
+        case 'IN_PROGRESS':
+          return 'En preparación';
+        case 'PENDING':
+          return 'Pendiente';
+        default:
+          return 'Desconocido';
+      }
+    };
 
-  return (
-    <Surface
-      style={[
-        styles.container,
-        {
-          backgroundColor: isSelected
-            ? theme.colors.primaryContainer
-            : theme.colors.surface,
-          borderColor: isSelected ? theme.colors.primary : 'transparent',
-        },
-      ]}
-      elevation={isSelected ? 2 : 1}
-    >
-      <TouchableOpacity
-        style={styles.content}
-        onPress={() => onToggleSelection(order.id)}
-        activeOpacity={0.7}
+    return (
+      <Card
+        style={[
+          styles.container,
+          {
+            backgroundColor: isSelected
+              ? theme.colors.primaryContainer
+              : theme.colors.surface,
+            borderColor: isSelected ? theme.colors.primary : 'transparent',
+          },
+        ]}
+        elevation={isSelected ? 2 : 1}
       >
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.orderInfo}>
-              <View style={styles.orderNumberRow}>
-                <Text
-                  style={[
-                    styles.orderNumber,
-                    { color: theme.colors.onSurface },
-                  ]}
-                >
-                  Orden #{order.dailyNumber}
-                </Text>
-                <Chip
-                  icon={getOrderTypeIcon()}
-                  style={[
-                    styles.typeChip,
-                    { backgroundColor: theme.colors.secondaryContainer },
-                  ]}
-                  textStyle={[
-                    styles.chipText,
-                    { color: theme.colors.onSecondaryContainer },
-                  ]}
-                  compact={true}
-                  mode="flat"
-                >
-                  {getOrderTypeLabel()}
-                </Chip>
-                <Chip
-                  style={[
-                    styles.statusChip,
-                    { backgroundColor: getStatusColor() + '20' },
-                  ]}
-                  textStyle={[styles.chipText, { color: getStatusColor() }]}
-                  compact={true}
-                  mode="flat"
-                >
-                  {getStatusLabel()}
-                </Chip>
-                {order.isFromWhatsApp && (
-                  <Chip
-                    icon="whatsapp"
+        <TouchableOpacity
+          onPress={() => onToggleSelection(order.id)}
+          activeOpacity={0.7}
+        >
+          <Card.Content style={styles.cardContent}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={styles.orderInfo}>
+                <View style={styles.orderNumberRow}>
+                  <Text
                     style={[
-                      styles.whatsappChip,
-                      { backgroundColor: '#25D366' + '20' },
+                      styles.orderNumber,
+                      { color: theme.colors.onSurface },
                     ]}
-                    textStyle={[styles.chipText, { color: '#25D366' }]}
+                  >
+                    Orden #{order.dailyNumber}
+                  </Text>
+                  <Chip
+                    icon={getOrderTypeIcon()}
+                    style={[
+                      styles.typeChip,
+                      { backgroundColor: theme.colors.secondaryContainer },
+                    ]}
+                    textStyle={[
+                      styles.chipText,
+                      { color: theme.colors.onSecondaryContainer },
+                    ]}
                     compact={true}
                     mode="flat"
                   >
-                    WhatsApp
+                    {getOrderTypeLabel()}
                   </Chip>
-                )}
+                  <Chip
+                    style={[
+                      styles.statusChip,
+                      { backgroundColor: getStatusColor() + '20' },
+                    ]}
+                    textStyle={[styles.chipText, { color: getStatusColor() }]}
+                    compact={true}
+                    mode="flat"
+                  >
+                    {getStatusLabel()}
+                  </Chip>
+                  {order.isFromWhatsApp && (
+                    <Chip
+                      icon="whatsapp"
+                      style={[
+                        styles.whatsappChip,
+                        { backgroundColor: '#25D366' + '20' },
+                      ]}
+                      textStyle={[styles.chipText, { color: '#25D366' }]}
+                      compact={true}
+                      mode="flat"
+                    >
+                      WhatsApp
+                    </Chip>
+                  )}
+                </View>
+              </View>
+            </View>
+            <View style={styles.headerRight}>
+              <Text style={[styles.time, { color: theme.colors.primary }]}>
+                {new Date(order.createdAt).toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+              <View style={styles.priceAndCheckbox}>
+                <Text style={[styles.total, { color: theme.colors.primary }]}>
+                  $
+                  {typeof order.total === 'string'
+                    ? parseFloat(order.total).toFixed(2)
+                    : order.total.toFixed(2)}
+                </Text>
+                <Checkbox
+                  status={isSelected ? 'checked' : 'unchecked'}
+                  onPress={() => onToggleSelection(order.id)}
+                  color={theme.colors.primary}
+                  style={styles.checkbox}
+                />
               </View>
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <Text style={[styles.time, { color: theme.colors.primary }]}>
-              {new Date(order.createdAt).toLocaleTimeString('es-ES', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-            <View style={styles.priceAndCheckbox}>
-              <Text style={[styles.total, { color: theme.colors.primary }]}>
-                $
-                {typeof order.total === 'string'
-                  ? parseFloat(order.total).toFixed(2)
-                  : order.total.toFixed(2)}
-              </Text>
-              <Checkbox
-                status={isSelected ? 'checked' : 'unchecked'}
-                onPress={() => onToggleSelection(order.id)}
-                color={theme.colors.primary}
-                style={styles.checkbox}
-              />
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.details}>
-          <View style={styles.detailsContent}>
-            {order.deliveryInfo?.recipientName && (
-              <Text
-                style={[
-                  styles.customerName,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-                numberOfLines={1}
-              >
-                {order.deliveryInfo.recipientName}{' '}
-                {order.deliveryInfo.recipientPhone &&
-                  `• ${order.deliveryInfo.recipientPhone}`}
-              </Text>
-            )}
-
-            {order.orderType === 'DINE_IN' && order.table && (
-              <Text
-                style={[
-                  styles.tableInfo,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-                numberOfLines={1}
-              >
-                Mesa {order.table.number}{' '}
-                {order.table.area?.name && `- ${order.table.area.name}`}
-              </Text>
-            )}
-
-            {order.orderType === 'DELIVERY' &&
-              order.deliveryInfo?.fullAddress && (
+          <View style={styles.details}>
+            <View style={styles.detailsContent}>
+              {order.deliveryInfo?.recipientName && (
                 <Text
                   style={[
-                    styles.address,
+                    styles.customerName,
                     { color: theme.colors.onSurfaceVariant },
                   ]}
                   numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
-                  {order.deliveryInfo.fullAddress}
+                  {order.deliveryInfo.recipientName}{' '}
+                  {order.deliveryInfo.recipientPhone &&
+                    `• ${order.deliveryInfo.recipientPhone}`}
                 </Text>
               )}
 
-            <View style={styles.itemsInfo}>
-              <Text
-                style={[
-                  styles.itemsCount,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)}{' '}
-                {order.orderItems.reduce(
-                  (sum, item) => sum + item.quantity,
-                  0,
-                ) === 1
-                  ? 'artículo'
-                  : 'artículos'}
-              </Text>
-            </View>
-          </View>
+              {order.orderType === 'DINE_IN' && order.table && (
+                <Text
+                  style={[
+                    styles.tableInfo,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                  numberOfLines={1}
+                >
+                  Mesa {order.table.number}{' '}
+                  {order.table.area?.name && `- ${order.table.area.name}`}
+                </Text>
+              )}
 
-          <IconButton
-            icon="format-list-bulleted"
-            size={18}
-            onPress={() => onShowDetails(order)}
-            style={styles.detailsButton}
-            iconColor={theme.colors.primary}
-          />
-        </View>
-      </TouchableOpacity>
-    </Surface>
-  );
-};
+              {order.orderType === 'DELIVERY' &&
+                order.deliveryInfo?.fullAddress && (
+                  <Text
+                    style={[
+                      styles.address,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {order.deliveryInfo.fullAddress}
+                  </Text>
+                )}
+
+              <View style={styles.itemsInfo}>
+                <Text
+                  style={[
+                    styles.itemsCount,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  {order.orderItems.reduce(
+                    (sum, item) => sum + item.quantity,
+                    0,
+                  )}{' '}
+                  {order.orderItems.reduce(
+                    (sum, item) => sum + item.quantity,
+                    0,
+                  ) === 1
+                    ? 'artículo'
+                    : 'artículos'}
+                </Text>
+              </View>
+            </View>
+
+            <IconButton
+              icon="format-list-bulleted"
+              size={18}
+              onPress={() => onShowDetails(order)}
+              style={styles.detailsButton}
+              iconColor={theme.colors.primary}
+            />
+          </View>
+          </Card.Content>
+        </TouchableOpacity>
+      </Card>
+    );
+  },
+);
+
+OrderCard.displayName = 'OrderCard';
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    borderRadius: 8,
-    overflow: 'hidden',
+    marginBottom: 8,
     borderWidth: 1.5,
   },
-  content: {
-    padding: 8,
+  cardContent: {
+    paddingBottom: 12,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -277,30 +278,35 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   orderNumber: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
+    lineHeight: 22,
   },
   typeChip: {
     height: 28,
+    minHeight: 28,
     marginVertical: 0,
     minWidth: 65,
     paddingHorizontal: 6,
   },
   statusChip: {
     height: 28,
+    minHeight: 28,
     marginVertical: 0,
     minWidth: 65,
     paddingHorizontal: 6,
   },
   whatsappChip: {
     height: 28,
+    minHeight: 28,
     marginVertical: 0,
     minWidth: 65,
     paddingHorizontal: 6,
   },
   chipText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
   },
   headerRight: {
     alignItems: 'flex-end',
@@ -315,8 +321,9 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   total: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
+    marginBottom: 4,
   },
   details: {
     flexDirection: 'row',

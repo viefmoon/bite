@@ -57,7 +57,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
 
   useEffect(() => {
     let isMounted = true;
-    
+
     (async () => {
       try {
         const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
@@ -70,7 +70,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
         }
       }
     })();
-    
+
     return () => {
       isMounted = false;
     };

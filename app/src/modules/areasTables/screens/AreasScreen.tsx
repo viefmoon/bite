@@ -76,10 +76,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const isSubmitting =
     createAreaMutation.isPending || updateAreaMutation.isPending;
 
-  const handleFormSubmit = async (
-    data: CreateAreaDto | UpdateAreaDto,
-    _photoId: string | null | undefined,
-  ) => {
+  const handleFormSubmit = async (data: CreateAreaDto | UpdateAreaDto) => {
     try {
       if (editingItem) {
         await updateAreaMutation.mutateAsync({
@@ -183,8 +180,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         renderItemActions={renderItemActions}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
         isDrawerOpen={isDrawerOpen}
-        showImagePlaceholder={true}
-        placeholderIcon="floor-plan"
+        showImagePlaceholder={false}
       />
 
       <AreaFormModal
@@ -209,7 +205,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}
-        showImage={true}
+        showImage={false}
       />
     </SafeAreaView>
   );

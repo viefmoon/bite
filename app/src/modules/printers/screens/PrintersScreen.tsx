@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   IconButton,
   FAB, // <-- Importar FAB
+  Button,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import PrinterDiscoveryModal from '../components/PrinterDiscoveryModal';
@@ -27,6 +28,7 @@ import {
   usePrintersQuery,
   useDeletePrinterMutation,
   usePingPrinterMutation, // <-- Importar hook de ping
+  useTestPrintPrinter, // <-- Importar hook de test print
 } from '../hooks/usePrintersQueries';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic'; // Importar hook CRUD
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -44,6 +46,9 @@ const PrintersScreen: React.FC = () => {
     useState<Partial<CreateThermalPrinterDto> | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [pingingPrinterId, setPingingPrinterId] = useState<string | null>(null);
+  const [testPrintingPrinterId, setTestPrintingPrinterId] = useState<
+    string | null
+  >(null);
   const [fabOpen, setFabOpen] = useState(false); // Estado para el FAB.Group
 
   // --- Lógica CRUD ---
@@ -67,6 +72,7 @@ const PrintersScreen: React.FC = () => {
 
   const { mutateAsync: deletePrinter } = useDeletePrinterMutation();
   const pingPrinterMutation = usePingPrinterMutation(); // Instanciar la mutación de ping
+  const testPrintMutation = useTestPrintPrinter(); // Instanciar la mutación de test print
 
   const {
     isFormModalVisible,
@@ -85,6 +91,21 @@ const PrintersScreen: React.FC = () => {
     deleteMutationFn: deletePrinter,
   });
   // --- Fin Lógica CRUD ---
+
+  // Handler para imprimir ticket de prueba
+  const handleTestPrint = useCallback(
+    async (printerId: string) => {
+      setTestPrintingPrinterId(printerId);
+      try {
+        await testPrintMutation.mutateAsync(printerId);
+      } catch (error) {
+        // El error ya se maneja en el hook con un snackbar
+      } finally {
+        setTestPrintingPrinterId(null);
+      }
+    },
+    [testPrintMutation],
+  );
 
   const handleOpenAddModal = () => {
     setDiscoveredPrinterData(null); // Limpiar datos de descubrimiento
@@ -232,15 +253,14 @@ const PrintersScreen: React.FC = () => {
         isRefreshing={isFetchingList && !isLoadingList}
         ListEmptyComponent={ListEmptyComponent}
         isLoading={isLoadingList && !isFetchingList}
-        filterValue={statusFilter}
-        onFilterChange={handleFilterChange} // Usar el wrapper
-        filterOptions={filterOptions}
+        // filterValue={statusFilter}
+        // onFilterChange={handleFilterChange} // Usar el wrapper
+        // filterOptions={filterOptions}
         // showFab ya no es necesario aquí, se maneja con FAB.Group
         isModalOpen={
           isFormModalVisible || isDetailModalVisible || isDiscoveryModalVisible
         }
-        showImagePlaceholder={true}
-        placeholderIcon="printer-outline"
+        showImagePlaceholder={false}
         isDrawerOpen={isDrawerOpen}
         contentContainerStyle={styles.listPadding} // Añadir padding inferior
         renderItemActions={renderItemActions} // <-- Pasar la función para renderizar acciones
@@ -274,8 +294,26 @@ const PrintersScreen: React.FC = () => {
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
           onDelete={() => selectedItem && handleDeleteItem(selectedItem.id)}
           isDeleting={isDeleting}
-          showImage={true}
-        />
+          showImage={false}
+        >
+          {/* Botón de ticket de prueba */}
+          {selectedItem && (
+            <View style={styles.testPrintContainer}>
+              <Button
+                icon="printer-check"
+                mode="outlined"
+                onPress={() => handleTestPrint(selectedItem.id)}
+                loading={testPrintingPrinterId === selectedItem.id}
+                disabled={
+                  testPrintingPrinterId === selectedItem.id || isDeleting
+                }
+                style={styles.testPrintButton}
+              >
+                Imprimir Ticket de Prueba
+              </Button>
+            </View>
+          )}
+        </GenericDetailModal>
         {/* Añadir FAB.Group dentro del Portal */}
         <FAB.Group
           open={fabOpen}
@@ -365,6 +403,16 @@ const createStyles = (theme: AppTheme) =>
     errorText: {
       color: theme.colors.error,
       textAlign: 'center',
+    },
+    testPrintContainer: {
+      marginTop: theme.spacing.m,
+      marginBottom: theme.spacing.s,
+      paddingHorizontal: theme.spacing.s,
+      width: '100%',
+    },
+    testPrintButton: {
+      borderColor: theme.colors.primary,
+      borderWidth: 1,
     },
   });
 

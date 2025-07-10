@@ -152,12 +152,12 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     if (maxHeight || maxHeightMobile || maxHeightTablet) {
       dims.maxHeight = (
         responsive.isTablet
-          ? maxHeightTablet || maxHeight || '80%'
-          : maxHeightMobile || maxHeight || '90%'
+          ? maxHeightTablet || maxHeight || '95%'
+          : maxHeightMobile || maxHeight || '92%'
       ) as any;
     } else {
       // Default max height
-      dims.maxHeight = responsive.isTablet ? '80%' : '90%';
+      dims.maxHeight = responsive.isTablet ? '95%' : '92%';
     }
 
     // Si es fullscreen, ajustar dimensiones
@@ -294,32 +294,36 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   );
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        dismissable={dismissable}
-        dismissableBackButton={dismissableBackButton}
-        contentContainerStyle={[positionStyles, style]}
-        style={{ margin: isFullScreen ? 0 : undefined }}
-      >
-        {keyboardAvoiding && Platform.OS === 'ios' ? (
-          <KeyboardAvoidingView
-            behavior="padding"
-            style={containerStyles}
-            keyboardVerticalOffset={isFullScreen ? 0 : 100}
+    <>
+      {visible && (
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={onDismiss}
+            dismissable={dismissable}
+            dismissableBackButton={dismissableBackButton}
+            contentContainerStyle={[positionStyles, style]}
+            style={{ margin: isFullScreen ? 0 : undefined }}
           >
-            {modalContent}
-            {stickyFooter && modalFooter}
-          </KeyboardAvoidingView>
-        ) : (
-          <View style={containerStyles}>
-            {modalContent}
-            {stickyFooter && modalFooter}
-          </View>
-        )}
-      </Modal>
-    </Portal>
+            {keyboardAvoiding && Platform.OS === 'ios' ? (
+              <KeyboardAvoidingView
+                behavior="padding"
+                style={containerStyles}
+                keyboardVerticalOffset={isFullScreen ? 0 : 100}
+              >
+                {modalContent}
+                {stickyFooter && modalFooter}
+              </KeyboardAvoidingView>
+            ) : (
+              <View style={containerStyles}>
+                {modalContent}
+                {stickyFooter && modalFooter}
+              </View>
+            )}
+          </Modal>
+        </Portal>
+      )}
+    </>
   );
 };
 

@@ -9,7 +9,15 @@ export const createSubCategoryDtoSchema = z.object({
   isActive: z.boolean().optional().default(true),
   categoryId: z.string().min(1, 'Debe seleccionar una categoría válida'),
   photoId: z.string().optional().nullable(),
-  imageUri: z.string().nullable().optional(),
+  imageUri: z
+    .union([
+      z.string().url(),
+      z.string().startsWith('file://'),
+      z.string().startsWith('http://'),
+      z.string().startsWith('https://'),
+      z.null(),
+    ])
+    .optional(),
   sortOrder: z.number().optional().default(0),
 });
 export type CreateSubCategoryDto = z.infer<typeof createSubCategoryDtoSchema>;

@@ -111,10 +111,10 @@ export class OrdersController {
   }
 
   @Get('for-finalization')
-  @ApiOperation({ summary: 'Obtener órdenes listas para finalizar' })
+  @ApiOperation({ summary: 'Obtener todas las órdenes para finalizar' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de órdenes listas para finalizar (READY y DELIVERED).',
+    description: 'Lista de todas las órdenes disponibles para finalización.',
     type: [Order],
   })
   @ApiBearerAuth()

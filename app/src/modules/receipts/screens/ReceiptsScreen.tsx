@@ -1,11 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, FlatList, RefreshControl, StyleSheet } from 'react-native';
 import {
   Text,
   Searchbar,
@@ -16,8 +10,9 @@ import {
   IconButton,
   Divider,
   Badge,
+  Card,
 } from 'react-native-paper';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   useReceiptsInfinite,
   useRecoverOrder,
@@ -35,6 +30,7 @@ type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 
 export const ReceiptsScreen: React.FC = () => {
   const theme = useAppTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   // Estados para filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,14 +126,14 @@ export const ReceiptsScreen: React.FC = () => {
     }
   }, [orderToRecover, recoverOrderMutation]);
 
-  const getOrderTypeLabel = (type: string) => {
+  const formatOrderTypeShort = (type: string): string => {
     switch (type) {
       case OrderTypeEnum.DINE_IN:
-        return 'Mesa';
+        return '🍽️ Local';
       case OrderTypeEnum.DELIVERY:
-        return 'Domicilio';
+        return '🚚 Envío';
       case OrderTypeEnum.TAKE_AWAY:
-        return 'Para llevar';
+        return '🥡 Llevar';
       default:
         return type;
     }
@@ -168,72 +164,102 @@ export const ReceiptsScreen: React.FC = () => {
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
   // Renderizar item de recibo
-  const renderReceiptItem = ({ item }: { item: Order }) => (
-    <Surface style={styles.receiptCard} elevation={1}>
-      <TouchableOpacity onPress={() => handleReceiptPress(item)}>
-        <View style={styles.receiptHeader}>
-          <View style={styles.receiptInfo}>
-            <Text variant="titleMedium" style={styles.orderNumber}>
-              Orden #{item.dailyNumber}
-            </Text>
-            <Text variant="bodySmall" style={styles.dateText}>
-              {format(new Date(item.createdAt), "d 'de' MMMM, HH:mm", {
-                locale: es,
-              })}
-            </Text>
-          </View>
-          <Chip
-            mode="flat"
-            compact
-            style={{
-              backgroundColor: getStatusColor(item.orderStatus),
-            }}
-            textStyle={{ color: theme.colors.onPrimary, fontSize: 12 }}
-          >
-            {getStatusLabel(item.orderStatus)}
-          </Chip>
-        </View>
+  const renderReceiptItem = ({ item }: { item: Order }) => {
+    // Construir el título según el tipo de orden
+    let orderTitle = `#${item.dailyNumber} • ${formatOrderTypeShort(item.orderType)}`;
 
-        <Divider style={styles.divider} />
+    if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
+      // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
+      const tableDisplay = item.table.isTemporary
+        ? item.table.name
+        : `Mesa ${item.table.name || item.table.number || 'N/A'}`;
+      orderTitle += ` • ${item.table.area?.name || 'Sin área'} • ${tableDisplay}`;
+    } else if (item.orderType === OrderTypeEnum.TAKE_AWAY) {
+      if (item.deliveryInfo?.recipientName) {
+        orderTitle += ` • ${item.deliveryInfo.recipientName}`;
+      }
+      if (item.deliveryInfo?.recipientPhone) {
+        orderTitle += ` • ${item.deliveryInfo.recipientPhone}`;
+      }
+    } else if (item.orderType === OrderTypeEnum.DELIVERY) {
+      if (item.deliveryInfo?.fullAddress) {
+        orderTitle += ` • ${item.deliveryInfo.fullAddress}`;
+      }
+      if (item.deliveryInfo?.recipientPhone) {
+        orderTitle += ` • ${item.deliveryInfo.recipientPhone}`;
+      }
+    }
 
-        <View style={styles.receiptBody}>
-          <View style={styles.receiptDetails}>
-            <Text variant="bodyMedium">
-              {getOrderTypeLabel(item.orderType)}
-              {item.table && ` - ${item.table.area?.name} ${item.table.name}`}
-            </Text>
-            {/* TODO: Implementar customerName cuando esté disponible en el backend
-            {item.customerName && (
-              <Text variant="bodySmall" style={styles.customerText}>
-                Cliente: {item.customerName}
+    return (
+      <Card
+        style={styles.orderCard}
+        mode="elevated"
+        onPress={() => handleReceiptPress(item)}
+      >
+        <Card.Content style={styles.cardContent}>
+          {/* Main Container */}
+          <View style={styles.mainContainer}>
+            {/* Left Side - Title and Time */}
+            <View style={styles.leftContainer}>
+              <Text style={styles.orderNumber} numberOfLines={2}>
+                {orderTitle}
+                <Text style={styles.orderPrice}>
+                  {' '}
+                  • ${parseFloat(item.total?.toString() || '0').toFixed(2)}
+                </Text>
               </Text>
-            )} */}
-            <Text variant="bodySmall" style={styles.itemsCountText}>
-              {item.orderItems?.length || 0} productos
-            </Text>
+              <View style={styles.timeAndPaymentRow}>
+                <Text style={styles.orderTime}>
+                  {format(new Date(item.createdAt), 'p', { locale: es })}
+                </Text>
+                <Text style={styles.dateText}>
+                  {format(new Date(item.createdAt), "d 'de' MMMM", {
+                    locale: es,
+                  })}
+                </Text>
+              </View>
+            </View>
+
+            {/* Right Side - Status and Actions */}
+            <View style={styles.rightContainer}>
+              <Chip
+                mode="flat"
+                style={[
+                  styles.statusChip,
+                  { backgroundColor: getStatusColor(item.orderStatus) },
+                ]}
+                textStyle={styles.statusChipText}
+              >
+                {getStatusLabel(item.orderStatus)}
+              </Chip>
+              {/* Botón de recuperar solo para órdenes completadas o canceladas */}
+              {(item.orderStatus === 'COMPLETED' ||
+                item.orderStatus === 'CANCELLED') && (
+                <IconButton
+                  icon="restore"
+                  size={28}
+                  style={[
+                    styles.restoreButton,
+                    { backgroundColor: theme.colors.primaryContainer },
+                  ]}
+                  iconColor={theme.colors.primary}
+                  onPress={() => handleRecoverPress(item)}
+                  disabled={recoverOrderMutation.isPending}
+                />
+              )}
+            </View>
           </View>
-          <View style={styles.receiptActions}>
-            <Text variant="titleLarge" style={styles.totalText}>
-              ${parseFloat(item.total?.toString() || '0').toFixed(2)}
+
+          {/* Notes - if present */}
+          {item.notes && (
+            <Text style={styles.notes} numberOfLines={2}>
+              📝 {item.notes}
             </Text>
-            {/* Botón de recuperar solo para órdenes completadas o canceladas */}
-            {(item.orderStatus === 'COMPLETED' ||
-              item.orderStatus === 'CANCELLED') && (
-              <IconButton
-                icon="restore"
-                mode="contained"
-                size={20}
-                onPress={() => handleRecoverPress(item)}
-                style={styles.recoverButton}
-                iconColor={theme.colors.onPrimary}
-                disabled={recoverOrderMutation.isPending}
-              />
-            )}
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Surface>
-  );
+          )}
+        </Card.Content>
+      </Card>
+    );
+  };
 
   // Renderizar lista vacía
   const renderEmptyComponent = () => {
@@ -277,7 +303,7 @@ export const ReceiptsScreen: React.FC = () => {
       <Surface style={styles.header} elevation={2}>
         <View style={styles.searchContainer}>
           <Searchbar
-            placeholder="Buscar por número o cliente..."
+            placeholder="Buscar por nombre, teléfono o dirección..."
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchbar}
@@ -456,108 +482,132 @@ export const ReceiptsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  searchbar: {
-    flex: 1,
-  },
-  filterButton: {
-    position: 'relative',
-  },
-  filterIconButton: {
-    margin: 0,
-  },
-  filterIconButtonActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
-  },
-  filterBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  activeFilters: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 12,
-  },
-  filterChip: {
-    height: 32,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  receiptCard: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  receiptHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  receiptInfo: {
-    flex: 1,
-  },
-  orderNumber: {
-    fontWeight: 'bold',
-  },
-  dateText: {
-    opacity: 0.7,
-    marginTop: 2,
-  },
-  divider: {
-    marginVertical: 12,
-  },
-  receiptBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  receiptDetails: {
-    flex: 1,
-  },
-  customerText: {
-    opacity: 0.8,
-    marginTop: 2,
-  },
-  itemsCountText: {
-    opacity: 0.6,
-    marginTop: 4,
-  },
-  receiptActions: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  totalText: {
-    fontWeight: 'bold',
-  },
-  recoverButton: {
-    margin: 0,
-    backgroundColor: '#10B981',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    searchbar: {
+      flex: 1,
+    },
+    filterButton: {
+      position: 'relative',
+    },
+    filterIconButton: {
+      margin: 0,
+    },
+    filterIconButtonActive: {
+      backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+    },
+    activeFilters: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 12,
+    },
+    filterChip: {
+      height: 32,
+    },
+    listContent: {
+      padding: theme.spacing.s, // Reducido de 16 a theme.spacing.s
+      paddingBottom: theme.spacing.l * 2,
+      flexGrow: 1,
+    },
+    orderCard: {
+      marginBottom: theme.spacing.s, // Reducido para coincidir con órdenes abiertas
+      backgroundColor: theme.colors.surface,
+    },
+    cardContent: {
+      paddingBottom: theme.spacing.s,
+    },
+    mainContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    leftContainer: {
+      flex: 1,
+      paddingRight: theme.spacing.s,
+    },
+    rightContainer: {
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+    },
+    orderNumber: {
+      ...theme.fonts.bodyLarge,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      lineHeight: 22,
+      marginBottom: theme.spacing.xs,
+    },
+    orderPrice: {
+      color: theme.colors.primary,
+      fontWeight: '700',
+    },
+    statusChip: {
+      height: 28,
+      minHeight: 28,
+      marginBottom: theme.spacing.xs,
+    },
+    statusChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'white',
+      lineHeight: 16,
+    },
+    orderTime: {
+      ...theme.fonts.titleMedium,
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    dateText: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: theme.spacing.xs,
+    },
+    timeAndPaymentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    printButton: {
+      margin: 0,
+      padding: theme.spacing.xs,
+    },
+    restoreButton: {
+      margin: 0,
+      padding: theme.spacing.xs,
+      borderRadius: theme.roundness * 2,
+      elevation: 1,
+    },
+    notes: {
+      ...theme.fonts.bodySmall,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: theme.spacing.xs,
+      fontStyle: 'italic',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+  });

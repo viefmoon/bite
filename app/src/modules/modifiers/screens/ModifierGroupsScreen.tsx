@@ -15,7 +15,7 @@ import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '../schema/modifierGroup.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
 import GenericList, {
   RenderItemConfig,
@@ -206,8 +206,7 @@ const ModifierGroupsScreen = () => {
         showFab={true}
         onFabPress={handleOpenCreateModal}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={true}
-        placeholderIcon="format-list-group"
+        showImagePlaceholder={false}
         isDrawerOpen={isDrawerOpen}
         renderItemActions={(item) => (
           <IconButton
@@ -245,7 +244,7 @@ const ModifierGroupsScreen = () => {
         isDeleting={isDeleting}
         editButtonLabel="Editar"
         deleteButtonLabel="Eliminar"
-        showImage={true}
+        showImage={false}
       ></GenericDetailModal>
     </SafeAreaView>
   );

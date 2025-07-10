@@ -272,25 +272,34 @@ export class OrdersRelationalRepository implements OrderRepository {
     const endUtc = endLocal;
     const queryBuilder = this.ordersRepository
       .createQueryBuilder('order')
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.table', 'table')
-      .leftJoinAndSelect('table.area', 'area')
-      .leftJoinAndSelect('order.dailyOrderCounter', 'dailyOrderCounter')
-      .leftJoinAndSelect('order.orderItems', 'orderItems')
-      .leftJoinAndSelect('orderItems.product', 'product')
-      .leftJoinAndSelect('orderItems.productVariant', 'productVariant')
-      .leftJoinAndSelect('orderItems.productModifiers', 'productModifiers')
-      .leftJoinAndSelect('orderItems.preparedBy', 'preparedBy')
-      .leftJoinAndSelect(
-        'orderItems.selectedPizzaCustomizations',
-        'selectedPizzaCustomizations',
-      )
-      .leftJoinAndSelect(
-        'selectedPizzaCustomizations.pizzaCustomization',
-        'pizzaCustomization',
-      )
-      .leftJoinAndSelect('order.payments', 'payments')
-      .leftJoinAndSelect('order.adjustments', 'adjustments')
+      .select([
+        'order.id',
+        'order.dailyNumber',
+        'order.dailyOrderCounterId',
+        'order.orderType',
+        'order.orderStatus',
+        'order.subtotal',
+        'order.total',
+        'order.createdAt',
+        'order.estimatedDeliveryTime',
+        'order.notes',
+      ])
+      .leftJoin('order.user', 'user')
+      .addSelect(['user.id', 'user.firstName', 'user.lastName'])
+      .leftJoin('order.table', 'table')
+      .addSelect(['table.id', 'table.name', 'table.isTemporary'])
+      .leftJoin('table.area', 'area')
+      .addSelect(['area.id', 'area.name'])
+      .leftJoin('order.deliveryInfo', 'deliveryInfo')
+      .addSelect([
+        'deliveryInfo.recipientName',
+        'deliveryInfo.recipientPhone',
+        'deliveryInfo.fullAddress',
+      ])
+      .leftJoin('order.orderItems', 'orderItems')
+      .addSelect(['orderItems.id', 'orderItems.preparationStatus'])
+      .leftJoin('order.dailyOrderCounter', 'dailyOrderCounter')
+      .addSelect(['dailyOrderCounter.id'])
       .where('order.createdAt >= :start', { start: startUtc })
       .andWhere('order.createdAt < :end', { end: endUtc })
       .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
@@ -383,9 +392,8 @@ export class OrdersRelationalRepository implements OrderRepository {
   }
   async findOrdersForFinalization(): Promise<Order[]> {
     const entities = await this.ordersRepository.find({
-      where: {
-        orderStatus: In([OrderStatus.READY, OrderStatus.DELIVERED]),
-      },
+      // Obtener todas las órdenes sin importar el estado
+      // para permitir finalización de cualquier orden
       relations: [
         'user',
         'table',

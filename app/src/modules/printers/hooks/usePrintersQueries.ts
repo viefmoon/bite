@@ -236,3 +236,32 @@ export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
     },
   });
 };
+
+/**
+ * Hook para imprimir un ticket de prueba en una impresora configurada.
+ */
+export const useTestPrintPrinter = (): UseMutationResult<
+  { success: boolean; message?: string },
+  ApiError,
+  string
+> => {
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  return useMutation<{ success: boolean; message?: string }, ApiError, string>({
+    mutationFn: (printerId: string) =>
+      printerService.testPrintPrinter(printerId),
+    onSuccess: (data) => {
+      showSnackbar({
+        message: data.message || 'Ticket de prueba impreso correctamente',
+        type: 'success',
+      });
+    },
+    onError: (error) => {
+      showSnackbar({
+        message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
+        type: 'error',
+      });
+      console.error('Error printing test ticket:', error);
+    },
+  });
+};

@@ -108,7 +108,9 @@ export const OrderDetailContent: React.FC<{
             size={48}
             color={theme.colors.error}
           />
-          <Text style={styles.errorText}>No hay datos de la orden disponibles</Text>
+          <Text style={styles.errorText}>
+            No hay datos de la orden disponibles
+          </Text>
         </View>
       ) : (
         <>
@@ -189,14 +191,16 @@ export const OrderDetailContent: React.FC<{
                       <View style={styles.itemTimesContainer}>
                         {item.createdAt && (
                           <Text style={styles.itemCreatedTime}>
-                            Creado: {format(new Date(item.createdAt), 'HH:mm', {
+                            Creado:{' '}
+                            {format(new Date(item.createdAt), 'HH:mm', {
                               locale: es,
                             })}
                           </Text>
                         )}
                         {item.preparedById && item.preparedBy && (
                           <Text style={styles.preparedByText}>
-                            Preparado por: {item.preparedBy.firstName} {item.preparedBy.lastName}
+                            Preparado por: {item.preparedBy.firstName}{' '}
+                            {item.preparedBy.lastName}
                           </Text>
                         )}
                       </View>

@@ -70,700 +70,626 @@ interface NotesFormData extends FieldValues {
   preparationNotes: string;
 }
 
-const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
-  visible,
-  onDismiss,
-  product,
-  editingItem,
-  onAddToCart,
-  onUpdateItem,
-}) => {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
+  ({ visible, onDismiss, product, editingItem, onAddToCart, onUpdateItem }) => {
+    const theme = useAppTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
+    const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const { control, reset, watch } = useForm<NotesFormData>({
-    defaultValues: { preparationNotes: '' },
-  });
-  const watchedPreparationNotes = watch('preparationNotes');
+    const { control, reset, watch } = useForm<NotesFormData>({
+      defaultValues: { preparationNotes: '' },
+    });
+    const watchedPreparationNotes = watch('preparationNotes');
 
-  const [selectedVariantId, setSelectedVariantId] = useState<
-    string | undefined
-  >(
-    product &&
-      product.variants &&
-      Array.isArray(product.variants) &&
-      product.variants.length > 0
-      ? product.variants[0].id
-      : undefined,
-  );
-  const [selectedModifiersByGroup, setSelectedModifiersByGroup] = useState<
-    Record<string, CartItemModifier[]>
-  >({});
-
-  const selectedModifiers = useMemo(() => {
-    return Object.values(selectedModifiersByGroup).flat();
-  }, [selectedModifiersByGroup]);
-  const [quantity, setQuantity] = useState(1);
-  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-
-  // Estados para pizzas
-  const [pizzaCustomizations, setPizzaCustomizations] = useState<
-    PizzaCustomization[]
-  >([]);
-  const [pizzaConfiguration, setPizzaConfiguration] =
-    useState<PizzaConfiguration | null>(null);
-  const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
-    useState<SelectedPizzaCustomization[]>([]);
-
-  // Función para calcular el precio extra de las pizzas
-  const calculatePizzaExtraCost = useCallback(() => {
-    if (!product.isPizza || !pizzaConfiguration) return 0;
-
-    let totalToppingValue = 0;
-
-    // Solo contar customizaciones con action = ADD
-    const addedCustomizations = selectedPizzaCustomizations.filter(
-      (c) => c.action === CustomizationAction.ADD,
-    );
-
-    for (const selected of addedCustomizations) {
-      const customization = pizzaCustomizations.find(
-        (c) => c.id === selected.pizzaCustomizationId,
-      );
-      if (!customization) continue;
-
-      if (selected.half === PizzaHalf.FULL) {
-        // Pizza completa suma el toppingValue completo
-        totalToppingValue += customization.toppingValue;
-      } else {
-        // Media pizza suma la mitad del toppingValue
-        totalToppingValue += customization.toppingValue / 2;
-      }
-    }
-
-    // Solo cobrar por toppings que excedan los incluidos
-    if (totalToppingValue > pizzaConfiguration.includedToppings) {
-      const extraToppings =
-        totalToppingValue - pizzaConfiguration.includedToppings;
-      return extraToppings * Number(pizzaConfiguration.extraToppingCost);
-    }
-
-    return 0;
-  }, [
-    product.isPizza,
-    pizzaConfiguration,
-    selectedPizzaCustomizations,
-    pizzaCustomizations,
-  ]);
-
-  // Función para verificar si hay cambios
-  const checkForChanges = useCallback(() => {
-    if (!editingItem) return false;
-
-    // Comparar cantidad
-    if (quantity !== editingItem.quantity) return true;
-
-    // Comparar variante
-    if (selectedVariantId !== editingItem.variantId) return true;
-
-    // Comparar notas
-    if (watchedPreparationNotes !== (editingItem.preparationNotes || ''))
-      return true;
-
-    // Comparar modificadores
-    const currentModifierIds = selectedModifiers.map((m) => m.id).sort();
-    const originalModifierIds = editingItem.modifiers.map((m) => m.id).sort();
-
-    if (currentModifierIds.length !== originalModifierIds.length) return true;
-
-    for (let i = 0; i < currentModifierIds.length; i++) {
-      if (currentModifierIds[i] !== originalModifierIds[i]) return true;
-    }
-
-    return false;
-  }, [
-    editingItem,
-    quantity,
-    selectedVariantId,
-    watchedPreparationNotes,
-    selectedModifiers,
-  ]);
-
-  useEffect(() => {
-    if (!product) return;
-
-    if (editingItem) {
-      // Si estamos editando, usar los valores del item
-      setSelectedVariantId(editingItem.variantId);
-      setQuantity(editingItem.quantity);
-      reset({ preparationNotes: editingItem.preparationNotes || '' });
-
-      // Reconstruir los modificadores por grupo
-      const modifiersByGroup: Record<string, CartItemModifier[]> = {};
-      if (editingItem.modifiers && product.modifierGroups) {
-        editingItem.modifiers.forEach((mod) => {
-          // Encontrar a qué grupo pertenece este modificador
-          const group = product.modifierGroups?.find((g) =>
-            g.productModifiers?.some((pm) => pm.id === mod.id),
-          );
-          if (group) {
-            if (!modifiersByGroup[group.id]) {
-              modifiersByGroup[group.id] = [];
-            }
-            modifiersByGroup[group.id].push(mod);
-          }
-        });
-      }
-      setSelectedModifiersByGroup(modifiersByGroup);
-    } else {
-      // Si es un nuevo item, valores por defecto
-      if (
+    const [selectedVariantId, setSelectedVariantId] = useState<
+      string | undefined
+    >(
+      product &&
         product.variants &&
         Array.isArray(product.variants) &&
         product.variants.length > 0
-      ) {
-        setSelectedVariantId(product.variants[0].id);
-      } else {
-        setSelectedVariantId(undefined);
+        ? product.variants[0].id
+        : undefined,
+    );
+    const [selectedModifiersByGroup, setSelectedModifiersByGroup] = useState<
+      Record<string, CartItemModifier[]>
+    >({});
+
+    const selectedModifiers = useMemo(() => {
+      return Object.values(selectedModifiersByGroup).flat();
+    }, [selectedModifiersByGroup]);
+    const [quantity, setQuantity] = useState(1);
+    const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<
+      Record<string, string>
+    >({});
+
+    // Estados para pizzas
+    const [pizzaCustomizations, setPizzaCustomizations] = useState<
+      PizzaCustomization[]
+    >([]);
+    const [pizzaConfiguration, setPizzaConfiguration] =
+      useState<PizzaConfiguration | null>(null);
+    const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
+      useState<SelectedPizzaCustomization[]>([]);
+
+    // Función para calcular el precio extra de las pizzas
+    const calculatePizzaExtraCost = useCallback(() => {
+      if (!product.isPizza || !pizzaConfiguration) return 0;
+
+      let totalToppingValue = 0;
+
+      // Solo contar customizaciones con action = ADD
+      const addedCustomizations = selectedPizzaCustomizations.filter(
+        (c) => c.action === CustomizationAction.ADD,
+      );
+
+      for (const selected of addedCustomizations) {
+        const customization = pizzaCustomizations.find(
+          (c) => c.id === selected.pizzaCustomizationId,
+        );
+        if (!customization) continue;
+
+        if (selected.half === PizzaHalf.FULL) {
+          // Pizza completa suma el toppingValue completo
+          totalToppingValue += customization.toppingValue;
+        } else {
+          // Media pizza suma la mitad del toppingValue
+          totalToppingValue += customization.toppingValue / 2;
+        }
       }
 
-      // Aplicar modificadores por defecto
-      const defaultModifiersByGroup: Record<string, CartItemModifier[]> = {};
+      // Solo cobrar por toppings que excedan los incluidos
+      if (totalToppingValue > pizzaConfiguration.includedToppings) {
+        const extraToppings =
+          totalToppingValue - pizzaConfiguration.includedToppings;
+        return extraToppings * Number(pizzaConfiguration.extraToppingCost);
+      }
+
+      return 0;
+    }, [
+      product.isPizza,
+      pizzaConfiguration,
+      selectedPizzaCustomizations,
+      pizzaCustomizations,
+    ]);
+
+    // Función para verificar si hay cambios
+    const checkForChanges = useCallback(() => {
+      if (!editingItem) return false;
+
+      // Comparar cantidad
+      if (quantity !== editingItem.quantity) return true;
+
+      // Comparar variante
+      if (selectedVariantId !== editingItem.variantId) return true;
+
+      // Comparar notas
+      if (watchedPreparationNotes !== (editingItem.preparationNotes || ''))
+        return true;
+
+      // Comparar modificadores
+      const currentModifierIds = selectedModifiers.map((m) => m.id).sort();
+      const originalModifierIds = editingItem.modifiers.map((m) => m.id).sort();
+
+      if (currentModifierIds.length !== originalModifierIds.length) return true;
+
+      for (let i = 0; i < currentModifierIds.length; i++) {
+        if (currentModifierIds[i] !== originalModifierIds[i]) return true;
+      }
+
+      return false;
+    }, [
+      editingItem,
+      quantity,
+      selectedVariantId,
+      watchedPreparationNotes,
+      selectedModifiers,
+    ]);
+
+    useEffect(() => {
+      if (!product) return;
+
+      if (editingItem) {
+        // Si estamos editando, usar los valores del item
+        setSelectedVariantId(editingItem.variantId);
+        setQuantity(editingItem.quantity);
+        reset({ preparationNotes: editingItem.preparationNotes || '' });
+
+        // Reconstruir los modificadores por grupo
+        const modifiersByGroup: Record<string, CartItemModifier[]> = {};
+        if (editingItem.modifiers && product.modifierGroups) {
+          editingItem.modifiers.forEach((mod) => {
+            // Encontrar a qué grupo pertenece este modificador
+            const group = product.modifierGroups?.find((g) =>
+              g.productModifiers?.some((pm) => pm.id === mod.id),
+            );
+            if (group) {
+              if (!modifiersByGroup[group.id]) {
+                modifiersByGroup[group.id] = [];
+              }
+              modifiersByGroup[group.id].push(mod);
+            }
+          });
+        }
+        setSelectedModifiersByGroup(modifiersByGroup);
+      } else {
+        // Si es un nuevo item, valores por defecto
+        if (
+          product.variants &&
+          Array.isArray(product.variants) &&
+          product.variants.length > 0
+        ) {
+          setSelectedVariantId(product.variants[0].id);
+        } else {
+          setSelectedVariantId(undefined);
+        }
+
+        // Aplicar modificadores por defecto
+        const defaultModifiersByGroup: Record<string, CartItemModifier[]> = {};
+
+        if (product.modifierGroups) {
+          product.modifierGroups.forEach((group) => {
+            const defaultModifiers: CartItemModifier[] = [];
+
+            if (group.productModifiers) {
+              group.productModifiers.forEach((modifier) => {
+                if (modifier.isDefault && modifier.isActive) {
+                  defaultModifiers.push({
+                    id: modifier.id,
+                    modifierGroupId: group.id,
+                    name: modifier.name,
+                    price: Number(modifier.price) || 0,
+                  });
+                }
+              });
+            }
+
+            if (defaultModifiers.length > 0) {
+              // Respetar el límite máximo de selecciones
+              const maxSelections =
+                group.maxSelections || defaultModifiers.length;
+              defaultModifiersByGroup[group.id] = defaultModifiers.slice(
+                0,
+                maxSelections,
+              );
+            }
+          });
+        }
+
+        setSelectedModifiersByGroup(defaultModifiersByGroup);
+        setQuantity(1);
+        reset({ preparationNotes: '' });
+      }
+    }, [product, editingItem, reset]);
+
+    // Usar datos de pizza que ya vienen con el producto
+    useEffect(() => {
+      if (!product || !visible) return;
+
+      // Si es una pizza, usar los datos que ya vienen con el producto
+      if (product.isPizza) {
+        if (product.pizzaConfiguration) {
+          setPizzaConfiguration(product.pizzaConfiguration);
+        }
+        if (product.pizzaCustomizations) {
+          setPizzaCustomizations(product.pizzaCustomizations);
+        }
+
+        // Si estamos editando, cargar las personalizaciones seleccionadas
+        if (editingItem && editingItem.selectedPizzaCustomizations) {
+          setSelectedPizzaCustomizations(
+            editingItem.selectedPizzaCustomizations,
+          );
+        }
+      }
+    }, [product, visible, editingItem]);
+
+    // Detectar cambios
+    useEffect(() => {
+      if (editingItem) {
+        setHasChanges(checkForChanges());
+      }
+    }, [editingItem, checkForChanges]);
+
+    // Validar en tiempo real
+    useEffect(() => {
+      const errors: Record<string, string> = {};
 
       if (product.modifierGroups) {
         product.modifierGroups.forEach((group) => {
-          const defaultModifiers: CartItemModifier[] = [];
-
-          if (group.productModifiers) {
-            group.productModifiers.forEach((modifier) => {
-              if (modifier.isDefault && modifier.isActive) {
-                defaultModifiers.push({
-                  id: modifier.id,
-                  modifierGroupId: group.id,
-                  name: modifier.name,
-                  price: Number(modifier.price) || 0,
-                });
-              }
-            });
-          }
-
-          if (defaultModifiers.length > 0) {
-            // Respetar el límite máximo de selecciones
-            const maxSelections =
-              group.maxSelections || defaultModifiers.length;
-            defaultModifiersByGroup[group.id] = defaultModifiers.slice(
-              0,
-              maxSelections,
-            );
-          }
-        });
-      }
-
-      setSelectedModifiersByGroup(defaultModifiersByGroup);
-      setQuantity(1);
-      reset({ preparationNotes: '' });
-    }
-  }, [product, editingItem, reset]);
-
-  // Usar datos de pizza que ya vienen con el producto
-  useEffect(() => {
-    if (!product || !visible) return;
-
-    // Si es una pizza, usar los datos que ya vienen con el producto
-    if (product.isPizza) {
-      if (product.pizzaConfiguration) {
-        setPizzaConfiguration(product.pizzaConfiguration);
-      }
-      if (product.pizzaCustomizations) {
-        setPizzaCustomizations(product.pizzaCustomizations);
-      }
-
-      // Si estamos editando, cargar las personalizaciones seleccionadas
-      if (editingItem && editingItem.selectedPizzaCustomizations) {
-        setSelectedPizzaCustomizations(editingItem.selectedPizzaCustomizations);
-      }
-    }
-  }, [product, visible, editingItem]);
-
-  // Detectar cambios
-  useEffect(() => {
-    if (editingItem) {
-      setHasChanges(checkForChanges());
-    }
-  }, [editingItem, checkForChanges]);
-
-  // Validar en tiempo real
-  useEffect(() => {
-    const errors: Record<string, string> = {};
-
-    if (product.modifierGroups) {
-      product.modifierGroups.forEach((group) => {
-        const selectedInGroup = selectedModifiersByGroup[group.id] || [];
-        const selectedCount = selectedInGroup.length;
-        const minRequired = Math.max(
-          group.minSelections || 0,
-          group.isRequired ? 1 : 0,
-        );
-
-        if (selectedCount < minRequired) {
-          if (group.isRequired && minRequired === 1) {
-            errors[group.id] = 'Requerido';
-          } else {
-            errors[group.id] = `Mínimo ${minRequired}`;
-          }
-        }
-      });
-    }
-
-    setValidationErrors(errors);
-  }, [product, selectedModifiersByGroup]);
-
-  const handleVariantSelect = (variantId: string) => {
-    setSelectedVariantId(variantId);
-  };
-
-  const handleModifierToggle = (
-    modifier: Modifier,
-    group: FullMenuModifierGroup,
-  ) => {
-    const currentGroupModifiers = selectedModifiersByGroup[group.id] || [];
-    const isSelected = currentGroupModifiers.some(
-      (mod) => mod.id === modifier.id,
-    );
-
-    const updatedModifiersByGroup = { ...selectedModifiersByGroup };
-
-    if (isSelected) {
-      // Verificar si al deseleccionar quedaríamos por debajo del mínimo
-      const newCount = currentGroupModifiers.length - 1;
-      const minRequired = Math.max(
-        group.minSelections || 0,
-        group.isRequired ? 1 : 0,
-      );
-
-      if (newCount < minRequired) {
-        showSnackbar({
-          message: `No puedes deseleccionar. "${group.name}" requiere al menos ${minRequired} ${minRequired === 1 ? 'opción seleccionada' : 'opciones seleccionadas'}.`,
-          type: 'warning',
-        });
-        return;
-      }
-
-      updatedModifiersByGroup[group.id] = currentGroupModifiers.filter(
-        (mod) => mod.id !== modifier.id,
-      );
-    } else {
-      const newModifier: CartItemModifier = {
-        id: modifier.id,
-        modifierGroupId: group.id,
-        name: modifier.name,
-        price: Number(modifier.price) || 0,
-      };
-
-      if (!group.allowMultipleSelections) {
-        updatedModifiersByGroup[group.id] = [newModifier];
-      } else {
-        if (currentGroupModifiers.length < (group.maxSelections || 0)) {
-          updatedModifiersByGroup[group.id] = [
-            ...currentGroupModifiers,
-            newModifier,
-          ];
-        } else {
-          showSnackbar({
-            message: `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
-            type: 'warning',
-          });
-          return;
-        }
-      }
-    }
-
-    setSelectedModifiersByGroup(updatedModifiersByGroup);
-  };
-
-  const handleAddToCart = () => {
-    // Validar grupos requeridos y límites de selección
-    if (product.modifierGroups) {
-      for (const group of product.modifierGroups) {
-        const selectedInGroup = selectedModifiersByGroup[group.id] || [];
-        const selectedCount = selectedInGroup.length;
-
-        // Validar grupos requeridos y mínimo de selecciones
-        if (
-          group.isRequired ||
-          (group.minSelections && group.minSelections > 0)
-        ) {
+          const selectedInGroup = selectedModifiersByGroup[group.id] || [];
+          const selectedCount = selectedInGroup.length;
           const minRequired = Math.max(
             group.minSelections || 0,
             group.isRequired ? 1 : 0,
           );
 
           if (selectedCount < minRequired) {
-            let message = '';
             if (group.isRequired && minRequired === 1) {
-              message = `"${group.name}" es requerido. Debes seleccionar al menos una opción.`;
-            } else if (minRequired > 1) {
-              message = `Debes seleccionar al menos ${minRequired} ${minRequired === 1 ? 'opción' : 'opciones'} en "${group.name}"`;
+              errors[group.id] = 'Requerido';
             } else {
-              message = `Debes seleccionar al menos una opción en "${group.name}"`;
+              errors[group.id] = `Mínimo ${minRequired}`;
             }
+          }
+        });
+      }
 
+      setValidationErrors(errors);
+    }, [product, selectedModifiersByGroup]);
+
+    const handleVariantSelect = (variantId: string) => {
+      setSelectedVariantId(variantId);
+    };
+
+    const handleModifierToggle = (
+      modifier: Modifier,
+      group: FullMenuModifierGroup,
+    ) => {
+      const currentGroupModifiers = selectedModifiersByGroup[group.id] || [];
+      const isSelected = currentGroupModifiers.some(
+        (mod) => mod.id === modifier.id,
+      );
+
+      const updatedModifiersByGroup = { ...selectedModifiersByGroup };
+
+      if (isSelected) {
+        // Verificar si al deseleccionar quedaríamos por debajo del mínimo
+        const newCount = currentGroupModifiers.length - 1;
+        const minRequired = Math.max(
+          group.minSelections || 0,
+          group.isRequired ? 1 : 0,
+        );
+
+        if (newCount < minRequired) {
+          showSnackbar({
+            message: `No puedes deseleccionar. "${group.name}" requiere al menos ${minRequired} ${minRequired === 1 ? 'opción seleccionada' : 'opciones seleccionadas'}.`,
+            type: 'warning',
+          });
+          return;
+        }
+
+        updatedModifiersByGroup[group.id] = currentGroupModifiers.filter(
+          (mod) => mod.id !== modifier.id,
+        );
+      } else {
+        const newModifier: CartItemModifier = {
+          id: modifier.id,
+          modifierGroupId: group.id,
+          name: modifier.name,
+          price: Number(modifier.price) || 0,
+        };
+
+        if (!group.allowMultipleSelections) {
+          updatedModifiersByGroup[group.id] = [newModifier];
+        } else {
+          if (currentGroupModifiers.length < (group.maxSelections || 0)) {
+            updatedModifiersByGroup[group.id] = [
+              ...currentGroupModifiers,
+              newModifier,
+            ];
+          } else {
             showSnackbar({
-              message,
+              message: `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
+              type: 'warning',
+            });
+            return;
+          }
+        }
+      }
+
+      setSelectedModifiersByGroup(updatedModifiersByGroup);
+    };
+
+    const handleAddToCart = () => {
+      // Validar grupos requeridos y límites de selección
+      if (product.modifierGroups) {
+        for (const group of product.modifierGroups) {
+          const selectedInGroup = selectedModifiersByGroup[group.id] || [];
+          const selectedCount = selectedInGroup.length;
+
+          // Validar grupos requeridos y mínimo de selecciones
+          if (
+            group.isRequired ||
+            (group.minSelections && group.minSelections > 0)
+          ) {
+            const minRequired = Math.max(
+              group.minSelections || 0,
+              group.isRequired ? 1 : 0,
+            );
+
+            if (selectedCount < minRequired) {
+              let message = '';
+              if (group.isRequired && minRequired === 1) {
+                message = `"${group.name}" es requerido. Debes seleccionar al menos una opción.`;
+              } else if (minRequired > 1) {
+                message = `Debes seleccionar al menos ${minRequired} ${minRequired === 1 ? 'opción' : 'opciones'} en "${group.name}"`;
+              } else {
+                message = `Debes seleccionar al menos una opción en "${group.name}"`;
+              }
+
+              showSnackbar({
+                message,
+                type: 'error',
+              });
+              return;
+            }
+          }
+
+          // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
+          if (group.maxSelections && selectedCount > group.maxSelections) {
+            showSnackbar({
+              message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
               type: 'error',
             });
             return;
           }
         }
-
-        // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
-        if (group.maxSelections && selectedCount > group.maxSelections) {
-          showSnackbar({
-            message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
-            type: 'error',
-          });
-          return;
-        }
       }
-    }
 
-    if (editingItem && onUpdateItem) {
-      // Si estamos editando, actualizar el item existente
-      const variant = product.variants?.find((v) => v.id === selectedVariantId);
-      const unitPrice = variant
-        ? Number(variant.price)
-        : Number(product.price) || 0;
+      if (editingItem && onUpdateItem) {
+        // Si estamos editando, actualizar el item existente
+        const variant = product.variants?.find(
+          (v) => v.id === selectedVariantId,
+        );
+        const unitPrice = variant
+          ? Number(variant.price)
+          : Number(product.price) || 0;
 
-      onUpdateItem(
-        editingItem.id,
-        quantity,
-        selectedModifiers,
-        watchedPreparationNotes,
-        selectedVariantId,
-        variant?.name,
-        unitPrice,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      );
-    } else {
-      // Si es un nuevo item, agregarlo al carrito
-      onAddToCart(
-        product,
-        quantity,
-        selectedVariantId,
-        selectedModifiers,
-        watchedPreparationNotes,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      );
-    }
-    onDismiss();
-  };
-
-  const increaseQuantity = () => setQuantity((prev) => prev + 1);
-  const decreaseQuantity = () =>
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
-  const handleDismiss = () => {
-    if (editingItem && hasChanges) {
-      setShowExitConfirmation(true);
-    } else {
+        onUpdateItem(
+          editingItem.id,
+          quantity,
+          selectedModifiers,
+          watchedPreparationNotes,
+          selectedVariantId,
+          variant?.name,
+          unitPrice,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
+        );
+      } else {
+        // Si es un nuevo item, agregarlo al carrito
+        onAddToCart(
+          product,
+          quantity,
+          selectedVariantId,
+          selectedModifiers,
+          watchedPreparationNotes,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
+        );
+      }
       onDismiss();
+    };
+
+    const increaseQuantity = () => setQuantity((prev) => prev + 1);
+    const decreaseQuantity = () =>
+      setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+    const handleDismiss = () => {
+      if (editingItem && hasChanges) {
+        setShowExitConfirmation(true);
+      } else {
+        onDismiss();
+      }
+    };
+
+    const handleConfirmExit = () => {
+      setShowExitConfirmation(false);
+      onDismiss();
+    };
+
+    const handleCancelExit = () => {
+      setShowExitConfirmation(false);
+    };
+
+    if (!product) {
+      return null;
     }
-  };
 
-  const handleConfirmExit = () => {
-    setShowExitConfirmation(false);
-    onDismiss();
-  };
+    const selectedVariant =
+      product.variants && Array.isArray(product.variants)
+        ? product.variants.find(
+            (variant: ProductVariant) => variant.id === selectedVariantId,
+          )
+        : undefined;
 
-  const handleCancelExit = () => {
-    setShowExitConfirmation(false);
-  };
+    const basePrice = selectedVariant
+      ? Number(selectedVariant.price)
+      : Number(product.price) || 0;
+    const modifiersPrice = selectedModifiers.reduce(
+      (sum, mod) => sum + Number(mod.price || 0),
+      0,
+    );
+    const pizzaExtraCost = calculatePizzaExtraCost();
+    const totalPrice = (basePrice + modifiersPrice + pizzaExtraCost) * quantity;
 
-  if (!product) {
-    return null;
-  }
-
-  const selectedVariant =
-    product.variants && Array.isArray(product.variants)
-      ? product.variants.find(
-          (variant: ProductVariant) => variant.id === selectedVariantId,
-        )
-      : undefined;
-
-  const basePrice = selectedVariant
-    ? Number(selectedVariant.price)
-    : Number(product.price) || 0;
-  const modifiersPrice = selectedModifiers.reduce(
-    (sum, mod) => sum + Number(mod.price || 0),
-    0,
-  );
-  const pizzaExtraCost = calculatePizzaExtraCost();
-  const totalPrice = (basePrice + modifiersPrice + pizzaExtraCost) * quantity;
-
-  return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={handleDismiss}
-        contentContainerStyle={styles.modalContent}
-      >
-        {/* Encabezado Refactorizado con Appbar */}
-        <Appbar.Header style={styles.appBar} elevated>
-          <Appbar.BackAction
-            onPress={handleDismiss}
-            color={theme.colors.onSurface}
-          />
-          <Appbar.Content
-            title={product?.name || 'Producto'}
-            titleStyle={styles.appBarTitle}
-            style={styles.appBarContent}
-          />
-          {/* Espaciador si no hay acción a la derecha */}
-          <View style={styles.appBarSpacer} />
-        </Appbar.Header>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          showsVerticalScrollIndicator={true}
+    return (
+      <Portal>
+        <Modal
+          visible={visible}
+          onDismiss={handleDismiss}
+          contentContainerStyle={styles.modalContent}
         >
-          {product.hasVariants &&
-            product.variants &&
-            Array.isArray(product.variants) &&
-            product.variants.length > 0 && (
-              <Card style={styles.sectionCard}>
-                <Card.Content>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Variantes</Text>
-                    <Chip mode="flat" compact style={styles.requiredChip}>
-                      Requerido
-                    </Chip>
-                  </View>
-                  <RadioButton.Group
-                    onValueChange={(value) => handleVariantSelect(value)}
-                    value={selectedVariantId || ''}
-                  >
-                    {product.variants.map((variant: ProductVariant) => (
-                      <Surface
-                        key={variant.id}
-                        style={[
-                          styles.variantSurface,
-                          selectedVariantId === variant.id &&
-                            styles.variantSurfaceSelected,
-                          !variant.isActive && styles.inactiveVariantSurface,
-                        ]}
-                        elevation={
-                          selectedVariantId === variant.id && variant.isActive
-                            ? 2
-                            : 0
-                        }
-                      >
-                        <TouchableRipple
-                          onPress={() =>
-                            variant.isActive && handleVariantSelect(variant.id)
+          {/* Encabezado Refactorizado con Appbar */}
+          <Appbar.Header style={styles.appBar} elevated>
+            <Appbar.BackAction
+              onPress={handleDismiss}
+              color={theme.colors.onSurface}
+            />
+            <Appbar.Content
+              title={product?.name || 'Producto'}
+              titleStyle={styles.appBarTitle}
+              style={styles.appBarContent}
+            />
+            {/* Espaciador si no hay acción a la derecha */}
+            <View style={styles.appBarSpacer} />
+          </Appbar.Header>
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={true}
+          >
+            {product.hasVariants &&
+              product.variants &&
+              Array.isArray(product.variants) &&
+              product.variants.length > 0 && (
+                <Card style={styles.sectionCard}>
+                  <Card.Content>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Variantes</Text>
+                      <Chip mode="flat" compact style={styles.requiredChip}>
+                        Requerido
+                      </Chip>
+                    </View>
+                    <RadioButton.Group
+                      onValueChange={(value) => handleVariantSelect(value)}
+                      value={selectedVariantId || ''}
+                    >
+                      {product.variants.map((variant: ProductVariant) => (
+                        <Surface
+                          key={variant.id}
+                          style={[
+                            styles.variantSurface,
+                            selectedVariantId === variant.id &&
+                              styles.variantSurfaceSelected,
+                            !variant.isActive && styles.inactiveVariantSurface,
+                          ]}
+                          elevation={
+                            selectedVariantId === variant.id && variant.isActive
+                              ? 2
+                              : 0
                           }
-                          disabled={!variant.isActive}
-                          style={styles.variantTouchable}
                         >
-                          <View style={styles.variantRow}>
-                            <RadioButton
-                              value={variant.id}
-                              status={
-                                selectedVariantId === variant.id
-                                  ? 'checked'
-                                  : 'unchecked'
-                              }
-                              onPress={() =>
-                                variant.isActive &&
-                                handleVariantSelect(variant.id)
-                              }
-                              disabled={!variant.isActive}
-                            />
-                            <Text
-                              style={[
-                                styles.variantName,
-                                !variant.isActive && styles.inactiveText,
-                              ]}
-                            >
-                              {variant.name}
-                              {!variant.isActive && ' (No disponible)'}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.variantPrice,
-                                !variant.isActive && styles.inactiveText,
-                              ]}
-                            >
-                              ${Number(variant.price).toFixed(2)}
-                            </Text>
-                          </View>
-                        </TouchableRipple>
-                      </Surface>
-                    ))}
-                  </RadioButton.Group>
-                </Card.Content>
-              </Card>
+                          <TouchableRipple
+                            onPress={() =>
+                              variant.isActive &&
+                              handleVariantSelect(variant.id)
+                            }
+                            disabled={!variant.isActive}
+                            style={styles.variantTouchable}
+                          >
+                            <View style={styles.variantRow}>
+                              <RadioButton
+                                value={variant.id}
+                                status={
+                                  selectedVariantId === variant.id
+                                    ? 'checked'
+                                    : 'unchecked'
+                                }
+                                onPress={() =>
+                                  variant.isActive &&
+                                  handleVariantSelect(variant.id)
+                                }
+                                disabled={!variant.isActive}
+                              />
+                              <Text
+                                style={[
+                                  styles.variantName,
+                                  !variant.isActive && styles.inactiveText,
+                                ]}
+                              >
+                                {variant.name}
+                                {!variant.isActive && ' (No disponible)'}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.variantPrice,
+                                  !variant.isActive && styles.inactiveText,
+                                ]}
+                              >
+                                ${Number(variant.price).toFixed(2)}
+                              </Text>
+                            </View>
+                          </TouchableRipple>
+                        </Surface>
+                      ))}
+                    </RadioButton.Group>
+                  </Card.Content>
+                </Card>
+              )}
+
+            {/* Sección de Personalización de Pizza - Después de variantes */}
+            {product.isPizza && (
+              <PizzaCustomizationSectionV2
+                pizzaCustomizations={pizzaCustomizations}
+                pizzaConfiguration={pizzaConfiguration}
+                selectedPizzaCustomizations={selectedPizzaCustomizations}
+                onCustomizationChange={setSelectedPizzaCustomizations}
+                loading={false}
+              />
             )}
 
-          {/* Sección de Personalización de Pizza - Después de variantes */}
-          {product.isPizza && (
-            <PizzaCustomizationSectionV2
-              pizzaCustomizations={pizzaCustomizations}
-              pizzaConfiguration={pizzaConfiguration}
-              selectedPizzaCustomizations={selectedPizzaCustomizations}
-              onCustomizationChange={setSelectedPizzaCustomizations}
-              loading={false}
-            />
-          )}
-
-          {product.modifierGroups &&
-            Array.isArray(product.modifierGroups) &&
-            product.modifierGroups.length > 0 &&
-            product.modifierGroups.map((group: FullMenuModifierGroup) => (
-              <Card key={group.id} style={styles.sectionCard}>
-                <Card.Content>
-                  <View style={styles.sectionHeader}>
-                    <View style={styles.groupTitleContainer}>
-                      <Text style={styles.groupTitle}>{group.name}</Text>
-                      <View style={styles.selectionInfo}>
-                        {group.minSelections !== undefined &&
-                          group.maxSelections !== undefined && (
-                            <Text style={styles.selectionRules}>
-                              {(group.minSelections || 0) === 0 &&
-                              group.maxSelections === 1
-                                ? 'Hasta 1 opción'
-                                : (group.minSelections || 0) ===
-                                    group.maxSelections
-                                  ? `Elegir ${group.maxSelections}`
-                                  : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+            {product.modifierGroups &&
+              Array.isArray(product.modifierGroups) &&
+              product.modifierGroups.length > 0 &&
+              product.modifierGroups.map((group: FullMenuModifierGroup) => (
+                <Card key={group.id} style={styles.sectionCard}>
+                  <Card.Content>
+                    <View style={styles.sectionHeader}>
+                      <View style={styles.groupTitleContainer}>
+                        <Text style={styles.groupTitle}>{group.name}</Text>
+                        <View style={styles.selectionInfo}>
+                          {group.minSelections !== undefined &&
+                            group.maxSelections !== undefined && (
+                              <Text style={styles.selectionRules}>
+                                {(group.minSelections || 0) === 0 &&
+                                group.maxSelections === 1
+                                  ? 'Hasta 1 opción'
+                                  : (group.minSelections || 0) ===
+                                      group.maxSelections
+                                    ? `Elegir ${group.maxSelections}`
+                                    : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+                              </Text>
+                            )}
+                          {group.allowMultipleSelections && (
+                            <Text style={styles.selectedCount}>
+                              (
+                              {
+                                (selectedModifiersByGroup[group.id] || [])
+                                  .length
+                              }{' '}
+                              seleccionadas)
                             </Text>
                           )}
-                        {group.allowMultipleSelections && (
-                          <Text style={styles.selectedCount}>
-                            ({(selectedModifiersByGroup[group.id] || []).length}{' '}
-                            seleccionadas)
-                          </Text>
-                        )}
+                        </View>
                       </View>
-                    </View>
-                    <View style={styles.chipContainer}>
-                      {validationErrors[group.id] && (
+                      <View style={styles.chipContainer}>
+                        {validationErrors[group.id] && (
+                          <Chip
+                            mode="flat"
+                            compact
+                            style={styles.errorChip}
+                            icon="alert-circle"
+                          >
+                            {validationErrors[group.id]}
+                          </Chip>
+                        )}
                         <Chip
                           mode="flat"
                           compact
-                          style={styles.errorChip}
-                          icon="alert-circle"
+                          style={
+                            group.isRequired
+                              ? styles.requiredChip
+                              : styles.optionalChip
+                          }
                         >
-                          {validationErrors[group.id]}
+                          {group.isRequired ? 'Requerido' : 'Opcional'}
                         </Chip>
-                      )}
-                      <Chip
-                        mode="flat"
-                        compact
-                        style={
-                          group.isRequired
-                            ? styles.requiredChip
-                            : styles.optionalChip
-                        }
-                      >
-                        {group.isRequired ? 'Requerido' : 'Opcional'}
-                      </Chip>
+                      </View>
                     </View>
-                  </View>
 
-                  {group.allowMultipleSelections ? (
-                    <View style={styles.modifiersContainer}>
-                      {Array.isArray(group.productModifiers) &&
-                        group.productModifiers.map((modifier: Modifier) => {
-                          const groupModifiers =
-                            selectedModifiersByGroup[group.id] || [];
-                          const isSelected = groupModifiers.some(
-                            (mod) => mod.id === modifier.id,
-                          );
-
-                          return (
-                            <Surface
-                              key={modifier.id}
-                              style={[
-                                styles.modifierSurface,
-                                isSelected && styles.modifierSurfaceSelected,
-                                !modifier.isActive &&
-                                  styles.inactiveModifierSurface,
-                              ]}
-                              elevation={
-                                isSelected && modifier.isActive ? 1 : 0
-                              }
-                            >
-                              <TouchableRipple
-                                onPress={() =>
-                                  modifier.isActive &&
-                                  handleModifierToggle(modifier, group)
-                                }
-                                disabled={!modifier.isActive}
-                                style={styles.modifierTouchable}
-                              >
-                                <View style={styles.modifierRow}>
-                                  <Checkbox
-                                    status={
-                                      isSelected ? 'checked' : 'unchecked'
-                                    }
-                                    onPress={() =>
-                                      modifier.isActive &&
-                                      handleModifierToggle(modifier, group)
-                                    }
-                                    disabled={!modifier.isActive}
-                                  />
-                                  <Text
-                                    style={[
-                                      styles.modifierName,
-                                      !modifier.isActive && styles.inactiveText,
-                                    ]}
-                                  >
-                                    {modifier.name}
-                                    {!modifier.isActive && ' (No disponible)'}
-                                  </Text>
-                                  {Number(modifier.price) > 0 && (
-                                    <Text
-                                      style={[
-                                        styles.modifierPrice,
-                                        !modifier.isActive &&
-                                          styles.inactiveText,
-                                      ]}
-                                    >
-                                      +${Number(modifier.price).toFixed(2)}
-                                    </Text>
-                                  )}
-                                </View>
-                              </TouchableRipple>
-                            </Surface>
-                          );
-                        })}
-                    </View>
-                  ) : (
-                    <RadioButton.Group
-                      onValueChange={(value) => {
-                        const modifier = group.productModifiers?.find(
-                          (m: Modifier) => m.id === value,
-                        );
-                        if (modifier) {
-                          handleModifierToggle(modifier, group);
-                        }
-                      }}
-                      value={selectedModifiersByGroup[group.id]?.[0]?.id || ''}
-                    >
+                    {group.allowMultipleSelections ? (
                       <View style={styles.modifiersContainer}>
                         {Array.isArray(group.productModifiers) &&
                           group.productModifiers.map((modifier: Modifier) => {
-                            const isSelected =
-                              selectedModifiersByGroup[group.id]?.[0]?.id ===
-                              modifier.id;
+                            const groupModifiers =
+                              selectedModifiersByGroup[group.id] || [];
+                            const isSelected = groupModifiers.some(
+                              (mod) => mod.id === modifier.id,
+                            );
 
                             return (
                               <Surface
@@ -787,10 +713,13 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                                   style={styles.modifierTouchable}
                                 >
                                   <View style={styles.modifierRow}>
-                                    <RadioButton
-                                      value={modifier.id}
+                                    <Checkbox
                                       status={
                                         isSelected ? 'checked' : 'unchecked'
+                                      }
+                                      onPress={() =>
+                                        modifier.isActive &&
+                                        handleModifierToggle(modifier, group)
                                       }
                                       disabled={!modifier.isActive}
                                     />
@@ -821,141 +750,222 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
                             );
                           })}
                       </View>
-                    </RadioButton.Group>
-                  )}
-                </Card.Content>
-              </Card>
-            ))}
+                    ) : (
+                      <RadioButton.Group
+                        onValueChange={(value) => {
+                          const modifier = group.productModifiers?.find(
+                            (m: Modifier) => m.id === value,
+                          );
+                          if (modifier) {
+                            handleModifierToggle(modifier, group);
+                          }
+                        }}
+                        value={
+                          selectedModifiersByGroup[group.id]?.[0]?.id || ''
+                        }
+                      >
+                        <View style={styles.modifiersContainer}>
+                          {Array.isArray(group.productModifiers) &&
+                            group.productModifiers.map((modifier: Modifier) => {
+                              const isSelected =
+                                selectedModifiersByGroup[group.id]?.[0]?.id ===
+                                modifier.id;
 
-          {/* Sección Cantidad - Mejorada */}
-          <Card style={styles.sectionCard}>
-            <Card.Content>
-              <Text style={styles.sectionTitle}>Cantidad</Text>
-              <View style={styles.quantityContainer}>
-                <IconButton
-                  icon="minus-circle-outline"
-                  size={36}
-                  onPress={decreaseQuantity}
-                  style={[
-                    styles.quantityIconButton,
-                    quantity <= 1 && styles.quantityIconButtonDisabled,
-                  ]}
-                  iconColor={
-                    quantity <= 1
-                      ? theme.colors.onSurfaceDisabled
-                      : theme.colors.primary
-                  }
-                  disabled={quantity <= 1}
-                />
-                <Surface style={styles.quantityBadge} elevation={1}>
-                  <Text style={styles.quantityText}>{quantity}</Text>
-                </Surface>
-                <IconButton
-                  icon="plus-circle-outline"
-                  size={36}
-                  onPress={increaseQuantity}
-                  style={styles.quantityIconButton}
-                  iconColor={theme.colors.primary}
-                />
-              </View>
-            </Card.Content>
-          </Card>
+                              return (
+                                <Surface
+                                  key={modifier.id}
+                                  style={[
+                                    styles.modifierSurface,
+                                    isSelected &&
+                                      styles.modifierSurfaceSelected,
+                                    !modifier.isActive &&
+                                      styles.inactiveModifierSurface,
+                                  ]}
+                                  elevation={
+                                    isSelected && modifier.isActive ? 1 : 0
+                                  }
+                                >
+                                  <TouchableRipple
+                                    onPress={() =>
+                                      modifier.isActive &&
+                                      handleModifierToggle(modifier, group)
+                                    }
+                                    disabled={!modifier.isActive}
+                                    style={styles.modifierTouchable}
+                                  >
+                                    <View style={styles.modifierRow}>
+                                      <RadioButton
+                                        value={modifier.id}
+                                        status={
+                                          isSelected ? 'checked' : 'unchecked'
+                                        }
+                                        disabled={!modifier.isActive}
+                                      />
+                                      <Text
+                                        style={[
+                                          styles.modifierName,
+                                          !modifier.isActive &&
+                                            styles.inactiveText,
+                                        ]}
+                                      >
+                                        {modifier.name}
+                                        {!modifier.isActive &&
+                                          ' (No disponible)'}
+                                      </Text>
+                                      {Number(modifier.price) > 0 && (
+                                        <Text
+                                          style={[
+                                            styles.modifierPrice,
+                                            !modifier.isActive &&
+                                              styles.inactiveText,
+                                          ]}
+                                        >
+                                          +${Number(modifier.price).toFixed(2)}
+                                        </Text>
+                                      )}
+                                    </View>
+                                  </TouchableRipple>
+                                </Surface>
+                              );
+                            })}
+                        </View>
+                      </RadioButton.Group>
+                    )}
+                  </Card.Content>
+                </Card>
+              ))}
 
-          {/* Sección Notas de Preparación - Mejorada */}
-          <Card style={styles.sectionCard}>
-            <Card.Content>
-              <Controller
-                control={control}
-                name="preparationNotes"
-                render={({ field: { onChange, value } }) => (
-                  <SpeechRecognitionInput
-                    key="preparation-notes-input"
-                    label="Notas de Preparación"
-                    value={value}
-                    onChangeText={onChange}
-                    multiline
-                    numberOfLines={2}
-                    style={styles.preparationInput}
-                    speechLang="es-MX"
+            {/* Sección Cantidad - Mejorada */}
+            <Card style={styles.sectionCard}>
+              <Card.Content>
+                <Text style={styles.sectionTitle}>Cantidad</Text>
+                <View style={styles.quantityContainer}>
+                  <IconButton
+                    icon="minus-circle-outline"
+                    size={36}
+                    onPress={decreaseQuantity}
+                    style={[
+                      styles.quantityIconButton,
+                      quantity <= 1 && styles.quantityIconButtonDisabled,
+                    ]}
+                    iconColor={
+                      quantity <= 1
+                        ? theme.colors.onSurfaceDisabled
+                        : theme.colors.primary
+                    }
+                    disabled={quantity <= 1}
                   />
-                )}
-              />
-            </Card.Content>
-          </Card>
-
-          {/* Sección Resumen - Mejorada */}
-          <Card style={[styles.sectionCard, styles.summaryCard]}>
-            <Card.Content>
-              <Text style={styles.sectionTitle}>Resumen del pedido</Text>
-              <View style={styles.summaryContent}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Precio base:</Text>
-                  <Text style={styles.summaryValue}>
-                    ${basePrice.toFixed(2)}
-                  </Text>
+                  <Surface style={styles.quantityBadge} elevation={1}>
+                    <Text style={styles.quantityText}>{quantity}</Text>
+                  </Surface>
+                  <IconButton
+                    icon="plus-circle-outline"
+                    size={36}
+                    onPress={increaseQuantity}
+                    style={styles.quantityIconButton}
+                    iconColor={theme.colors.primary}
+                  />
                 </View>
-                {selectedModifiers.length > 0 && (
+              </Card.Content>
+            </Card>
+
+            {/* Sección Notas de Preparación - Mejorada */}
+            <Card style={styles.sectionCard}>
+              <Card.Content>
+                <Controller
+                  control={control}
+                  name="preparationNotes"
+                  render={({ field: { onChange, value } }) => (
+                    <SpeechRecognitionInput
+                      key="preparation-notes-input"
+                      label="Notas de Preparación"
+                      value={value}
+                      onChangeText={onChange}
+                      multiline
+                      numberOfLines={2}
+                      style={styles.preparationInput}
+                      speechLang="es-MX"
+                    />
+                  )}
+                />
+              </Card.Content>
+            </Card>
+
+            {/* Sección Resumen - Mejorada */}
+            <Card style={[styles.sectionCard, styles.summaryCard]}>
+              <Card.Content>
+                <Text style={styles.sectionTitle}>Resumen del pedido</Text>
+                <View style={styles.summaryContent}>
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Adicionales:</Text>
+                    <Text style={styles.summaryLabel}>Precio base:</Text>
                     <Text style={styles.summaryValue}>
-                      +${modifiersPrice.toFixed(2)}
+                      ${basePrice.toFixed(2)}
                     </Text>
                   </View>
-                )}
-                {pizzaExtraCost > 0 && (
+                  {selectedModifiers.length > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Adicionales:</Text>
+                      <Text style={styles.summaryValue}>
+                        +${modifiersPrice.toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                  {pizzaExtraCost > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Toppings extra:</Text>
+                      <Text style={styles.summaryValue}>
+                        +${pizzaExtraCost.toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Toppings extra:</Text>
-                    <Text style={styles.summaryValue}>
-                      +${pizzaExtraCost.toFixed(2)}
+                    <Text style={styles.summaryLabel}>Cantidad:</Text>
+                    <Text style={styles.summaryValue}>×{quantity}</Text>
+                  </View>
+                  <Divider style={styles.summaryDivider} />
+                  <View style={[styles.summaryRow, styles.totalRow]}>
+                    <Text style={styles.totalLabel}>Total:</Text>
+                    <Text style={styles.totalValue}>
+                      ${totalPrice.toFixed(2)}
                     </Text>
                   </View>
-                )}
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Cantidad:</Text>
-                  <Text style={styles.summaryValue}>×{quantity}</Text>
                 </View>
-                <Divider style={styles.summaryDivider} />
-                <View style={[styles.summaryRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total:</Text>
-                  <Text style={styles.totalValue}>
-                    ${totalPrice.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </Card.Content>
-          </Card>
-        </ScrollView>
+              </Card.Content>
+            </Card>
+          </ScrollView>
 
-        {/* Footer Button - Estilo OrderCartDetail */}
-        <View style={styles.footer}>
-          <Button
-            mode="contained"
-            onPress={handleAddToCart}
-            style={styles.confirmButton} // Usar estilo de OrderCartDetail
-            icon={editingItem ? 'cart-check' : 'cart-plus'}
-            // Podrías agregar lógica de disabled si es necesario
-            // disabled={!isValidSelection()}
-          >
-            {editingItem
-              ? `Actualizar Item - $${totalPrice.toFixed(2)}`
-              : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
-          </Button>
-        </View>
-      </Modal>
+          {/* Footer Button - Estilo OrderCartDetail */}
+          <View style={styles.footer}>
+            <Button
+              mode="contained"
+              onPress={handleAddToCart}
+              style={styles.confirmButton} // Usar estilo de OrderCartDetail
+              icon={editingItem ? 'cart-check' : 'cart-plus'}
+              // Podrías agregar lógica de disabled si es necesario
+              // disabled={!isValidSelection()}
+            >
+              {editingItem
+                ? `Actualizar Item - $${totalPrice.toFixed(2)}`
+                : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
+            </Button>
+          </View>
+        </Modal>
 
-      <ConfirmationModal
-        visible={showExitConfirmation}
-        onDismiss={handleCancelExit}
-        onConfirm={handleConfirmExit}
-        title="¿Descartar cambios?"
-        message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
-        confirmText="Descartar"
-        cancelText="Cancelar"
-        confirmButtonColor={theme.colors.error}
-      />
-    </Portal>
-  );
-};
+        <ConfirmationModal
+          visible={showExitConfirmation}
+          onDismiss={handleCancelExit}
+          onConfirm={handleConfirmExit}
+          title="¿Descartar cambios?"
+          message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+          confirmText="Descartar"
+          cancelText="Cancelar"
+          confirmButtonColor={theme.colors.error}
+        />
+      </Portal>
+    );
+  },
+);
+
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     modalContent: {
@@ -1332,5 +1342,7 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.outlineVariant,
     },
   });
+
+ProductCustomizationModal.displayName = 'ProductCustomizationModal';
 
 export default ProductCustomizationModal;

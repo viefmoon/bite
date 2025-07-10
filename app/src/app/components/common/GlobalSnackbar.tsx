@@ -16,7 +16,7 @@ const GlobalSnackbar: React.FC = () => {
       const textColor = getTextColor(type);
 
       const toast = Toast.show(message, {
-        duration: duration || 4000,
+        duration: duration || 2500,
         position: Toast.positions.BOTTOM,
         shadow: true,
         animation: true,

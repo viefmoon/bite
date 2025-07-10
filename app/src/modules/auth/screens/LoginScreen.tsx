@@ -32,6 +32,8 @@ import LoginForm from '../components/LoginForm';
 import { ConnectionIndicator } from '../../../app/components/ConnectionIndicator';
 import { useResponsive } from '../../../app/hooks/useResponsive';
 import { ResponsiveView } from '../../../app/components/responsive';
+import { ConnectionErrorModal } from '../../../app/components/ConnectionErrorModal';
+import { useServerConnection } from '../../../app/hooks/useServerConnection';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
@@ -41,6 +43,12 @@ const LoginScreen = () => {
   const { showSnackbar } = useSnackbarStore();
   const { setThemePreference } = useThemeStore();
   const setTokens = useAuthStore((state) => state.setTokens);
+  const {
+    hasWifi,
+    isConnected,
+    isSearching,
+    error: connectionErrorMessage,
+  } = useServerConnection();
 
   const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<
     string | undefined
@@ -123,13 +131,25 @@ const LoginScreen = () => {
         });
       }
     },
-    onError: (error: unknown) => {
-      const userMessage = getApiErrorMessage(error);
-      showSnackbar({
-        message: userMessage,
-        type: 'error',
-        duration: 5000,
-      });
+    onError: (error: any) => {
+      const errorMessage = getApiErrorMessage(error);
+
+      // Si es un error de autenticación, mostrar snackbar
+      if (
+        errorMessage.includes('credenciales') ||
+        errorMessage.includes('contraseña') ||
+        errorMessage.includes('usuario') ||
+        error.response?.status === 401
+      ) {
+        showSnackbar({
+          message: errorMessage,
+          type: 'error',
+          duration: 5000,
+        });
+        return;
+      }
+
+      // Los errores de conexión serán manejados por el modal automáticamente
     },
   });
 
@@ -276,6 +296,7 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <ConnectionErrorModal />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}

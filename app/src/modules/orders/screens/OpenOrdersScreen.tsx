@@ -204,7 +204,11 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
       if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
-        orderTitle += ` • ${order.table.area?.name || 'Sin área'} • Mesa ${order.table.name || order.table.number || 'N/A'}`;
+        // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
+        const tableDisplay = order.table.isTemporary
+          ? order.table.name
+          : `Mesa ${order.table.name || order.table.number || 'N/A'}`;
+        orderTitle += ` • ${order.table.area?.name || 'Sin área'} • ${tableDisplay}`;
       } else if (order.orderType === OrderTypeEnum.TAKE_AWAY) {
         if (order.deliveryInfo?.recipientName) {
           orderTitle += ` • ${order.deliveryInfo.recipientName}`;
@@ -588,8 +592,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 setEditingOrderId(null);
                 setPendingProductsToAdd([]);
                 // NO limpiar temporaryProducts aquí para mantener los productos
-                // Refrescar la lista de órdenes por si hubo cambios
-                refetch();
+                // NO llamar refetch() aquí porque ya se maneja con invalidateQueries
+                // y el refetchInterval automático
               }}
               onAddProducts={() => {
                 // Cerrar el modal temporalmente para navegar

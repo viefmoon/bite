@@ -40,6 +40,7 @@ import { SyncModule } from './sync/sync.module';
 import { AudioOrderProcessingModule } from './audio-order-processing/audio-order-processing.module';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { KitchenModule } from './kitchen/kitchen.module';
+import { HealthModule } from './health/health.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -94,6 +95,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     AudioOrderProcessingModule,
     DiscoveryModule,
     KitchenModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

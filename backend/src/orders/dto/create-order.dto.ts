@@ -43,6 +43,47 @@ export class CreateOrderDto {
   tableId?: string;
 
   @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Indica si se debe crear una mesa temporal',
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  isTemporaryTable?: boolean;
+
+  @ApiProperty({
+    type: String,
+    example: 'Mesa Exterior 1',
+    description:
+      'Nombre de la mesa temporal a crear (requerido si isTemporaryTable es true)',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.isTemporaryTable === true)
+  @IsNotEmpty({
+    message:
+      'El nombre de la mesa temporal es requerido cuando isTemporaryTable es true',
+  })
+  @IsString()
+  temporaryTableName?: string;
+
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description:
+      'ID del área donde se creará la mesa temporal (requerido si isTemporaryTable es true)',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.isTemporaryTable === true)
+  @IsNotEmpty({
+    message: 'El ID del área es requerido cuando isTemporaryTable es true',
+  })
+  @IsUUID()
+  temporaryTableAreaId?: string;
+
+  @ApiProperty({
     type: Date,
     example: '2023-01-01T14:30:00.000Z',
     description: 'Fecha y hora programada para la orden (opcional)',
@@ -146,4 +187,14 @@ export class CreateOrderDto {
   @IsOptional()
   @IsDateString()
   estimatedDeliveryTime?: Date;
+
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'ID del pre-pago a asociar con la orden (opcional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  prepaymentId?: string;
 }

@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 import {

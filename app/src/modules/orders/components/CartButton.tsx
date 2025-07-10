@@ -18,12 +18,17 @@ const CartButton = React.forwardRef(
       cartButton: {
         margin: 0,
         backgroundColor: theme.colors.surfaceVariant,
+        zIndex: 999,
       },
       cartBadge: {
         position: 'absolute',
         top: 0,
         right: 0,
         backgroundColor: theme.colors.error,
+        zIndex: 1000,
+      },
+      touchableArea: {
+        padding: 5,
       },
     });
 
@@ -60,19 +65,18 @@ const CartButton = React.forwardRef(
     }));
 
     const handlePress = useCallback(() => {
-      if (isPressedRef.current) return; // Prevenir múltiples clics
+      if (isPressedRef.current) return;
 
       isPressedRef.current = true;
       onPress();
 
-      // Re-habilitar después de 150ms
       setTimeout(() => {
         isPressedRef.current = false;
       }, 150);
     }, [onPress]);
 
     return (
-      <View>
+      <View style={styles.touchableArea}>
         <Animated.View style={{ transform: [{ scale: cartBounceAnimation }] }}>
           <IconButton
             icon="cart-outline"
@@ -80,6 +84,7 @@ const CartButton = React.forwardRef(
             size={30}
             onPress={handlePress}
             style={styles.cartButton}
+            rippleColor={theme.colors.primary + '20'}
           />
         </Animated.View>
         {itemCount > 0 && (
@@ -89,6 +94,7 @@ const CartButton = React.forwardRef(
               position: 'absolute',
               top: 0,
               right: 0,
+              pointerEvents: 'none',
             }}
           >
             <Badge style={styles.cartBadge} size={22}>

@@ -4,7 +4,7 @@ import { Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -247,15 +247,17 @@ function ProductsScreen(): React.ReactElement {
       />
 
       <Portal>
-        <ProductFormModal
-          visible={isFormModalVisible}
-          onDismiss={handleCloseModals}
-          onSubmit={handleFormSubmit}
-          initialData={editingItem}
-          isSubmitting={createMutation.isPending || updateMutation.isPending}
-          productId={editingItem?.id}
-          subcategoryId={subcategoryId}
-        />
+        {isFormModalVisible && (
+          <ProductFormModal
+            visible={isFormModalVisible}
+            onDismiss={handleCloseModals}
+            onSubmit={handleFormSubmit}
+            initialData={editingItem}
+            isSubmitting={createMutation.isPending || updateMutation.isPending}
+            productId={editingItem?.id}
+            subcategoryId={subcategoryId}
+          />
+        )}
       </Portal>
     </SafeAreaView>
   );

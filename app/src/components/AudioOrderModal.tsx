@@ -785,85 +785,89 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[
-          styles.modalContainer,
-          { width: modalWidth, backgroundColor: colors.surface },
-        ]}
-      >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.onSurface }]}>
-            Agregar a tu orden 🛒
-          </Text>
-          <IconButton
-            icon="close"
-            size={24}
-            onPress={onDismiss}
-            style={styles.closeButton}
-          />
-        </View>
-
-        <Divider style={{ backgroundColor: colors.outlineVariant }} />
-
-        {isProcessing && renderProcessingState()}
-        {error && renderErrorState()}
-        {!isProcessing && !error && orderData && renderOrderSummary()}
-
-        {!isProcessing && !error && orderData && (
-          <>
-            <Divider style={{ backgroundColor: colors.outlineVariant }} />
-            <View style={styles.footer}>
-              {editableItems && editableItems.length > 0 ? (
-                <>
-                  <Button
-                    mode="outlined"
-                    onPress={onDismiss}
-                    style={styles.footerButton}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    mode="contained"
-                    onPress={handleConfirm}
-                    style={styles.footerButton}
-                    icon="plus"
-                  >
-                    Agregar
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  mode="contained"
-                  onPress={onDismiss}
-                  style={[styles.footerButton, { flex: 1 }]}
-                >
-                  Cerrar
-                </Button>
-              )}
+    <>
+      {visible && (
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={onDismiss}
+            contentContainerStyle={[
+              styles.modalContainer,
+              { width: modalWidth, backgroundColor: colors.surface },
+            ]}
+          >
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: colors.onSurface }]}>
+                Agregar a tu orden 🛒
+              </Text>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={onDismiss}
+                style={styles.closeButton}
+              />
             </View>
-          </>
-        )}
-      </Modal>
 
-      {/* Modal de personalización de producto */}
-      {showCustomizationModal && editingProduct && editingItem && (
-        <ProductCustomizationModal
-          visible={showCustomizationModal}
-          product={editingProduct}
-          editingItem={editingItem}
-          onDismiss={() => {
-            setShowCustomizationModal(false);
-            setEditingItem(null);
-            setEditingProduct(null);
-          }}
-          onAddToCart={() => {}}
-          onUpdateItem={handleUpdateEditedItem}
-        />
+            <Divider style={{ backgroundColor: colors.outlineVariant }} />
+
+            {isProcessing && renderProcessingState()}
+            {error && renderErrorState()}
+            {!isProcessing && !error && orderData && renderOrderSummary()}
+
+            {!isProcessing && !error && orderData && (
+              <>
+                <Divider style={{ backgroundColor: colors.outlineVariant }} />
+                <View style={styles.footer}>
+                  {editableItems && editableItems.length > 0 ? (
+                    <>
+                      <Button
+                        mode="outlined"
+                        onPress={onDismiss}
+                        style={styles.footerButton}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        mode="contained"
+                        onPress={handleConfirm}
+                        style={styles.footerButton}
+                        icon="plus"
+                      >
+                        Agregar
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      mode="contained"
+                      onPress={onDismiss}
+                      style={[styles.footerButton, { flex: 1 }]}
+                    >
+                      Cerrar
+                    </Button>
+                  )}
+                </View>
+              </>
+            )}
+          </Modal>
+
+          {/* Modal de personalización de producto */}
+          {showCustomizationModal && editingProduct && editingItem && (
+            <ProductCustomizationModal
+              visible={showCustomizationModal}
+              product={editingProduct}
+              editingItem={editingItem}
+              onDismiss={() => {
+                setShowCustomizationModal(false);
+                setEditingItem(null);
+                setEditingProduct(null);
+              }}
+              onAddToCart={() => {}}
+              onUpdateItem={handleUpdateEditedItem}
+            />
+          )}
+        </Portal>
       )}
-    </Portal>
+    </>
   );
 };
 

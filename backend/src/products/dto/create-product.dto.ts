@@ -151,10 +151,11 @@ export class CreateProductDto {
     type: String,
     example: 'PREPSCR-1',
     description: 'ID de la pantalla de preparación',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  preparationScreenId: string;
+  preparationScreenId?: string;
 
   @ApiProperty({
     type: [CreateProductVariantDto],

@@ -31,22 +31,18 @@ const orderKeys = {
  */
 export const useCreateOrderMutation = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   return useMutation<Order, ApiError, OrderDetailsForBackend>({
     mutationFn: orderService.createOrder,
-    onSuccess: (newOrder) => {
+    onSuccess: () => {
       // Invalidar queries relevantes si es necesario (ej. lista de órdenes)
-      // queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      // Invalidar queries de mesas para reflejar cambios de disponibilidad
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
       // El mensaje de éxito se maneja en el componente que llama a la mutación
     },
     onError: (error) => {
       // El mensaje de error se maneja en el componente que llama a la mutación
-      // Pero podemos loguearlo aquí también
-      console.error('Error en useCreateOrderMutation:', error);
-      const message = getApiErrorMessage(error);
-      // Opcional: Mostrar snackbar genérico desde aquí si se prefiere
-      // showSnackbar({ message: `Error al crear orden: ${message}`, type: 'error' });
     },
   });
 };
@@ -56,7 +52,6 @@ export const useCreateOrderMutation = () => {
  */
 export const useUpdateOrderMutation = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Definir el tipo de las variables de la mutación
   type UpdateVariables = { orderId: string; payload: UpdateOrderPayload };
@@ -68,8 +63,13 @@ export const useUpdateOrderMutation = () => {
       // Invalidar queries relevantes para refrescar datos
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() }); // Invalida todas las listas
       queryClient.invalidateQueries({ queryKey: orderKeys.openToday() }); // Invalida la lista de órdenes abiertas
-      // Opcional: invalidar detalle específico si se implementa query de detalle
-      // queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
+      // IMPORTANTE: Invalidar también el detalle específico de la orden
+      queryClient.invalidateQueries({
+        queryKey: [...orderKeys.details(), variables.orderId],
+      });
+
+      // Invalidar queries de mesas para reflejar cambios de disponibilidad
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
 
       showSnackbar({
         message: `Orden #${updatedOrder.dailyNumber} actualizada`,
@@ -82,7 +82,7 @@ export const useUpdateOrderMutation = () => {
         message: `Error al actualizar orden #${variables.orderId}: ${message}`,
         type: 'error',
       });
-      console.error(`Error updating order ${variables.orderId}:`, error);
+      // Error manejado en el componente
     },
   });
 };
@@ -96,10 +96,16 @@ export const useCancelOrderMutation = () => {
 
   return useMutation<Order, ApiError, string>({
     mutationFn: (orderId) => orderService.cancelOrder(orderId),
-    onSuccess: (cancelledOrder) => {
+    onSuccess: (cancelledOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+      // Invalidar también el detalle específico
+      queryClient.invalidateQueries({
+        queryKey: [...orderKeys.details(), orderId],
+      });
+      // Invalidar queries de mesas para reflejar cambios de disponibilidad
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
 
       showSnackbar({
         message: `Orden #${cancelledOrder.dailyNumber} cancelada`,
@@ -112,7 +118,7 @@ export const useCancelOrderMutation = () => {
         message: `Error al cancelar orden: ${message}`,
         type: 'error',
       });
-      console.error('Error en useCancelOrderMutation:', error);
+      // Error manejado en el componente
     },
   });
 };
@@ -127,10 +133,14 @@ export const useCompleteOrderMutation = () => {
   return useMutation<Order, ApiError, string>({
     mutationFn: (orderId) =>
       orderService.updateOrder(orderId, { orderStatus: 'COMPLETED' }),
-    onSuccess: (completedOrder) => {
+    onSuccess: (completedOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+      // Invalidar también el detalle específico
+      queryClient.invalidateQueries({
+        queryKey: [...orderKeys.details(), orderId],
+      });
 
       showSnackbar({
         message: `Orden #${completedOrder.dailyNumber} finalizada exitosamente`,
@@ -143,7 +153,7 @@ export const useCompleteOrderMutation = () => {
         message: `Error al finalizar orden: ${message}`,
         type: 'error',
       });
-      console.error('Error en useCompleteOrderMutation:', error);
+      // Error manejado en el componente
     },
   });
 };
@@ -195,7 +205,7 @@ export const usePrintKitchenTicketMutation = () => {
         message: `Error al imprimir ticket: ${message}`,
         type: 'error',
       });
-      console.error('Error printing kitchen ticket:', error);
+      // Error manejado en el componente
     },
   });
 };
@@ -210,7 +220,14 @@ export const useGetOpenOrdersQuery = (options?: {
     queryKey: queryKey,
     queryFn: () => orderService.getOpenOrdersToday(), // Llamar a la nueva función del servicio
     enabled: options?.enabled ?? true,
-    // Sin staleTime, se usará la configuración global (0)
+    refetchInterval: 10000, // Actualizar cada 10 segundos
+    refetchIntervalInBackground: false, // No actualizar cuando la app está en background
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 5000, // Los datos se consideran frescos por 5 segundos
+    gcTime: 10 * 60 * 1000, // Mantener en caché por 10 minutos
+    // IMPORTANTE: Usar placeholderData en lugar de keepPreviousData (deprecated en v5)
+    placeholderData: (previousData) => previousData,
   });
 
   // La lógica de useQueries y combinación se elimina
@@ -241,6 +258,7 @@ export const useGetOrderByIdQuery = (
       return order;
     },
     enabled: !!orderId && (options?.enabled ?? true), // Habilitar solo si hay orderId y está habilitado externamente
-    // Sin staleTime, se usará la configuración global (0)
+    staleTime: 0, // Los datos del detalle de la orden siempre deben estar frescos
+    gcTime: 5 * 60 * 1000, // Mantener en caché por 5 minutos
   });
 };

@@ -8,6 +8,7 @@ import { AuthStack } from './AuthStack';
 import { ConditionalAppNavigator } from './ConditionalAppNavigator';
 import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
+import { reconnectionSnackbarService } from '@/services/reconnectionSnackbarService';
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -15,7 +16,18 @@ export function AppNavigator() {
 
   useEffect(() => {
     initImageCache();
-  }, []);
+
+    // Iniciar el servicio de snackbars de reconexión cuando el usuario esté autenticado
+    if (isAuthenticated) {
+      reconnectionSnackbarService.start();
+    } else {
+      reconnectionSnackbarService.stop();
+    }
+
+    return () => {
+      reconnectionSnackbarService.stop();
+    };
+  }, [isAuthenticated]);
 
   const navigationTheme: NavigationTheme = {
     dark: paperTheme.dark,

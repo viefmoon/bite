@@ -6,15 +6,7 @@ import React, {
   useEffect,
 } from 'react';
 import { StyleSheet, View, FlatList } from 'react-native';
-import {
-  Text,
-  Portal,
-  ActivityIndicator,
-  Card,
-  Title,
-  Appbar,
-  IconButton,
-} from 'react-native-paper';
+import { Text, Portal, ActivityIndicator, Appbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useGetFullMenu } from '../hooks/useMenuQueries';
@@ -22,13 +14,12 @@ import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries'
 import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
 import { Product, Category, SubCategory } from '../types/orders.types';
-import { Image } from 'expo-image';
-import { getImageUrl } from '@/app/lib/imageUtils';
 
 import OrderCartDetail from '../components/OrderCartDetail';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
 import CartButton from '../components/CartButton';
+import MenuItemCard from '../components/MenuItemCard';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
@@ -102,15 +93,30 @@ const CreateOrderScreen = () => {
 
   const { data: menu, isLoading } = useGetFullMenu();
 
-  // Calcular número de columnas para el grid
-  const numColumns = useMemo(() => {
-    const minItemWidth = 150; // Ancho mínimo de cada tarjeta
-    return responsive.getGridColumns(
-      minItemWidth,
-      responsive.spacing.xs * 2,
-      responsive.spacing.m,
-    );
-  }, [responsive]);
+  // Estado para mantener numColumns estable
+  const [numColumns, setNumColumns] = useState(2); // Por defecto 2 columnas
+
+  // Calcular número de columnas para el grid basado en el ancho de pantalla
+  useEffect(() => {
+    let newColumns;
+
+    if (responsive.width < 400) {
+      newColumns = 2; // Pantallas muy pequeñas
+    } else if (responsive.width < 600) {
+      newColumns = 3; // Pantallas medianas
+    } else if (responsive.width < 900) {
+      newColumns = 4; // Pantallas grandes
+    } else if (responsive.width < 1200) {
+      newColumns = 5; // Tablets
+    } else {
+      newColumns = 6; // Tablets grandes o landscape
+    }
+
+    // Solo actualizar si realmente cambió
+    if (newColumns !== numColumns) {
+      setNumColumns(newColumns);
+    }
+  }, [responsive.width, numColumns]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -531,59 +537,6 @@ const CreateOrderScreen = () => {
         row: {
           justifyContent: 'flex-start',
         },
-        cardItem: {
-          flex: 1,
-          marginHorizontal: responsive.spacing.xs,
-          marginVertical: responsive.spacing.xs,
-          overflow: 'hidden',
-          borderRadius: theme.roundness,
-          elevation: 2,
-        },
-        cardItemInactive: {
-          opacity: 0.5,
-        },
-        itemImage: {
-          width: '100%',
-          height: responsive.getResponsiveDimension(100, 140),
-        },
-        imagePlaceholder: {
-          width: '100%',
-          height: responsive.getResponsiveDimension(100, 140),
-          backgroundColor: colors.surfaceVariant,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        imageInactive: {
-          opacity: 0.6,
-        },
-        placeholderText: {
-          fontSize: responsive.fontSize.xl,
-          fontWeight: 'bold',
-          color: colors.onSurfaceVariant,
-        },
-        cardContent: {
-          padding: responsive.spacing.m,
-        },
-        cardTitle: {
-          fontSize: responsive.fontSize.l,
-          fontWeight: 'bold',
-          marginBottom: responsive.spacing.xs,
-        },
-        cardHeader: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-        },
-        infoButton: {
-          margin: -8,
-          marginTop: -12,
-          marginRight: -12,
-        },
-        priceText: {
-          color: '#2e7d32',
-          fontWeight: 'bold',
-          marginTop: 4,
-        },
         noItemsText: {
           textAlign: 'center',
           marginTop: 40,
@@ -688,21 +641,12 @@ const CreateOrderScreen = () => {
       );
     }
 
-    const blurhash =
-      '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
-
     const renderItem = ({
       item,
     }: {
       item: Category | SubCategory | Product;
     }) => {
-      const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
-      const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
-
       const handlePress = () => {
-        // No hacer nada si el elemento está inactivo
-        if (!isActive) return;
-
         if (navigationLevel === 'categories') {
           handleCategorySelect(item.id);
         } else if (navigationLevel === 'subcategories') {
@@ -712,80 +656,20 @@ const CreateOrderScreen = () => {
         }
       };
 
-      const renderPrice = () => {
-        if (
-          navigationLevel === 'products' &&
-          'price' in item &&
-          'hasVariants' in item
-        ) {
-          const productItem = item as Product;
-          if (
-            !productItem.hasVariants &&
-            productItem.price !== null &&
-            productItem.price !== undefined
-          ) {
-            return (
-              <Text style={styles.priceText}>
-                ${Number(productItem.price).toFixed(2)}
-              </Text>
-            );
-          }
-        }
-        return null;
-      };
-
       return (
-        <Card
-          style={[styles.cardItem, !isActive && styles.cardItemInactive]}
-          onPress={handlePress}
-          disabled={!isActive}
-        >
-          {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              style={[styles.itemImage, !isActive && styles.imageInactive]}
-              contentFit="cover"
-              placeholder={blurhash}
-              transition={300}
-            />
-          ) : (
-            <View
-              style={[
-                styles.imagePlaceholder,
-                !isActive && styles.imageInactive,
-              ]}
-            >
-              <Text style={styles.placeholderText}>
-                {item.name.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
-          {!isActive && (
-            <View style={styles.inactiveBadge}>
-              <Text style={styles.inactiveBadgeText}>INACTIVO</Text>
-            </View>
-          )}
-          <View style={styles.cardContent}>
-            {navigationLevel === 'products' &&
-            'price' in item &&
-            (item as Product).description ? (
-              <View style={styles.cardHeader}>
-                <Title style={[styles.cardTitle, { flex: 1 }]}>
-                  {item.name}
-                </Title>
-                <IconButton
-                  icon="information-outline"
-                  size={20}
-                  onPress={() => handleShowProductDescription(item as Product)}
-                  style={styles.infoButton}
-                />
-              </View>
-            ) : (
-              <Title style={styles.cardTitle}>{item.name}</Title>
-            )}
-            {renderPrice()}
-          </View>
-        </Card>
+        <View style={{ flex: 1 / numColumns, padding: responsive.spacing.xs }}>
+          <MenuItemCard
+            item={item}
+            onPress={handlePress}
+            onInfoPress={
+              navigationLevel === 'products' && 'description' in item
+                ? () => handleShowProductDescription(item as Product)
+                : undefined
+            }
+            navigationLevel={navigationLevel}
+            showPrice={true}
+          />
+        </View>
       );
     };
 
@@ -848,7 +732,7 @@ const CreateOrderScreen = () => {
               initialNumToRender={6}
               maxToRenderPerBatch={10}
               windowSize={5}
-              key={`grid-${numColumns}`} // Key para forzar re-render cuando cambian las columnas
+              key={`${navigationLevel}-${numColumns}`} // Key única por nivel y columnas
             />
           ) : (
             <Text style={styles.noItemsText}>

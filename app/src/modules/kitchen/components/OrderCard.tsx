@@ -33,709 +33,736 @@ interface OrderCardProps {
   onSwipeEnd?: () => void;
 }
 
-export const OrderCard: React.FC<OrderCardProps> = ({
-  order,
-  onStartPreparation,
-  onCancelPreparation,
-  onCompletePreparation,
-  onSwipeStart,
-  onSwipeEnd,
-}) => {
-  const theme = useAppTheme();
-  const responsive = useResponsive();
-  const styles = createStyles(responsive, theme);
-  const [isSwipeable, setIsSwipeable] = React.useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const swipeableRef = useRef<Swipeable>(null);
-  const [isPressing, setIsPressing] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const animatedValue = useRef(new Animated.Value(0)).current;
-  const markItemPrepared = useMarkItemPrepared();
+export const OrderCard = React.memo<OrderCardProps>(
+  ({
+    order,
+    onStartPreparation,
+    onCancelPreparation,
+    onCompletePreparation,
+    onSwipeStart,
+    onSwipeEnd,
+  }) => {
+    const theme = useAppTheme();
+    const responsive = useResponsive();
+    const styles = createStyles(responsive, theme);
+    const [isSwipeable, setIsSwipeable] = React.useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+    const swipeableRef = useRef<Swipeable>(null);
+    const [isPressing, setIsPressing] = useState(false);
+    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const animatedValue = useRef(new Animated.Value(0)).current;
+    const markItemPrepared = useMarkItemPrepared();
 
-  const getOrderTypeColor = () => {
-    switch (order.orderType) {
-      case OrderType.DELIVERY:
-        return theme.colors.error;
-      case OrderType.TAKE_AWAY:
-        return '#00ACC1'; // Cyan/Turquesa
-      case OrderType.DINE_IN:
-        return theme.colors.primary;
-      default:
-        return theme.colors.surface;
-    }
-  };
+    const getOrderTypeColor = () => {
+      switch (order.orderType) {
+        case OrderType.DELIVERY:
+          return theme.colors.error;
+        case OrderType.TAKE_AWAY:
+          return '#00ACC1'; // Cyan/Turquesa
+        case OrderType.DINE_IN:
+          return theme.colors.primary;
+        default:
+          return theme.colors.surface;
+      }
+    };
 
-  const getOrderTypeLabel = () => {
-    switch (order.orderType) {
-      case OrderType.DELIVERY:
-        return 'DOMICILIO';
-      case OrderType.TAKE_AWAY:
-        return 'PARA LLEVAR';
-      case OrderType.DINE_IN:
-        return 'MESA';
-      default:
-        return '';
-    }
-  };
+    const getOrderTypeLabel = () => {
+      switch (order.orderType) {
+        case OrderType.DELIVERY:
+          return 'DOMICILIO';
+        case OrderType.TAKE_AWAY:
+          return 'PARA LLEVAR';
+        case OrderType.DINE_IN:
+          return 'MESA';
+        default:
+          return '';
+      }
+    };
 
-  // Calcular el estado de preparación basado en myScreenStatus
-  const getOrderPreparationStatus = () => {
-    // Primero verificar si hay items
-    if (!order.items || order.items.length === 0) {
-      return {
-        label: 'Sin items',
-        color: '#E0E0E0',
-        textColor: '#424242',
-        borderColor: '#BDBDBD',
-      };
-    }
-
-    const myItems = order.items.filter((item) => item.belongsToMyScreen);
-    if (myItems.length === 0) {
-      return {
-        label: 'Sin items asignados',
-        color: '#E0E0E0',
-        textColor: '#424242',
-        borderColor: '#BDBDBD',
-      };
-    }
-
-    // Usar el estado de mi pantalla específica
-    switch (order.myScreenStatus) {
-      case PreparationScreenStatus.READY:
+    // Calcular el estado de preparación basado en myScreenStatus
+    const getOrderPreparationStatus = () => {
+      // Primero verificar si hay items
+      if (!order.items || order.items.length === 0) {
         return {
-          label: 'Lista',
-          color: '#4CAF50', // Verde
-          textColor: '#FFFFFF',
-          borderColor: null,
+          label: 'Sin items',
+          color: '#E0E0E0',
+          textColor: '#424242',
+          borderColor: '#BDBDBD',
         };
+      }
 
-      case PreparationScreenStatus.IN_PREPARATION:
+      const myItems = order.items.filter((item) => item.belongsToMyScreen);
+      if (myItems.length === 0) {
         return {
-          label: 'En preparación',
-          color: '#FF6B35', // Naranja
-          textColor: '#FFFFFF',
-          borderColor: null,
+          label: 'Sin items asignados',
+          color: '#E0E0E0',
+          textColor: '#424242',
+          borderColor: '#BDBDBD',
         };
+      }
 
-      case PreparationScreenStatus.PENDING:
-      default:
-        return {
-          label: 'Pendiente',
-          color: '#9C27B0', // Púrpura
-          textColor: '#FFFFFF',
-          borderColor: null,
-        };
-    }
-  };
+      // Usar el estado de mi pantalla específica
+      switch (order.myScreenStatus) {
+        case PreparationScreenStatus.READY:
+          return {
+            label: 'Lista',
+            color: '#4CAF50', // Verde
+            textColor: '#FFFFFF',
+            borderColor: null,
+          };
 
-  const hasOrderDetails = () => {
-    switch (order.orderType) {
-      case OrderType.DELIVERY:
-        return !!order.deliveryAddress;
-      case OrderType.TAKE_AWAY:
-        return !!order.receiptName;
-      case OrderType.DINE_IN:
-        return !!(order.areaName || order.tableName);
-      default:
-        return false;
-    }
-  };
+        case PreparationScreenStatus.IN_PREPARATION:
+          return {
+            label: 'En preparación',
+            color: '#FF6B35', // Naranja
+            textColor: '#FFFFFF',
+            borderColor: null,
+          };
 
-  const orderStatus = getOrderPreparationStatus();
+        case PreparationScreenStatus.PENDING:
+        default:
+          return {
+            label: 'Pendiente',
+            color: '#9C27B0', // Púrpura
+            textColor: '#FFFFFF',
+            borderColor: null,
+          };
+      }
+    };
 
-  // Verificar si mi pantalla está en preparación
-  const isOrderInPreparation = order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION;
+    const hasOrderDetails = () => {
+      switch (order.orderType) {
+        case OrderType.DELIVERY:
+          return !!order.deliveryAddress;
+        case OrderType.TAKE_AWAY:
+          return !!order.receiptName;
+        case OrderType.DINE_IN:
+          return !!(order.areaName || order.tableName);
+        default:
+          return false;
+      }
+    };
 
-  const handleToggleItemPrepared = (itemId: string, currentStatus: boolean) => {
-    markItemPrepared.mutate({
-      itemId,
-      isPrepared: !currentStatus,
-    });
-  };
+    const orderStatus = getOrderPreparationStatus();
 
-  // Verificar si la orden puede hacer swipe
-  React.useEffect(() => {
-    setIsSwipeable(!!swipeActions.rightAction || !!swipeActions.leftAction);
-  }, [swipeActions]);
+    // Verificar si mi pantalla está en preparación
+    const isOrderInPreparation =
+      order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION;
 
-  // Renderizar las acciones del swipe hacia la derecha (lo que aparece detrás)
-  const renderRightActions = () => {
-    if (!swipeActions.rightAction) return null;
+    const handleToggleItemPrepared = (
+      itemId: string,
+      currentStatus: boolean,
+    ) => {
+      markItemPrepared.mutate({
+        itemId,
+        isPrepared: !currentStatus,
+      });
+    };
 
-    return (
-      <View
-        style={[
-          styles.swipeAction,
-          { backgroundColor: swipeActions.rightAction.color },
-        ]}
-      >
-        <Icon
-          name={swipeActions.rightAction.icon}
-          size={24}
-          color={swipeActions.rightAction.textColor}
-        />
-        <Text
+    // Verificar si la orden puede hacer swipe
+    React.useEffect(() => {
+      setIsSwipeable(!!swipeActions.rightAction || !!swipeActions.leftAction);
+    }, [swipeActions]);
+
+    // Renderizar las acciones del swipe hacia la derecha (lo que aparece detrás)
+    const renderRightActions = () => {
+      if (!swipeActions.rightAction) return null;
+
+      return (
+        <View
           style={[
-            styles.swipeText,
-            { color: swipeActions.rightAction.textColor },
+            styles.swipeAction,
+            { backgroundColor: swipeActions.rightAction.color },
           ]}
         >
-          {swipeActions.rightAction.text}
-        </Text>
-      </View>
-    );
-  };
+          <Icon
+            name={swipeActions.rightAction.icon}
+            size={24}
+            color={swipeActions.rightAction.textColor}
+          />
+          <Text
+            style={[
+              styles.swipeText,
+              { color: swipeActions.rightAction.textColor },
+            ]}
+          >
+            {swipeActions.rightAction.text}
+          </Text>
+        </View>
+      );
+    };
 
-  // Renderizar las acciones del swipe hacia la izquierda
-  const renderLeftActions = () => {
-    if (!swipeActions.leftAction) return null;
+    // Renderizar las acciones del swipe hacia la izquierda
+    const renderLeftActions = () => {
+      if (!swipeActions.leftAction) return null;
 
-    return (
-      <View
-        style={[
-          styles.swipeAction,
-          { backgroundColor: swipeActions.leftAction.color },
-        ]}
-      >
-        <Text
+      return (
+        <View
           style={[
-            styles.swipeText,
-            { color: swipeActions.leftAction.textColor },
+            styles.swipeAction,
+            { backgroundColor: swipeActions.leftAction.color },
           ]}
         >
-          {swipeActions.leftAction.text}
-        </Text>
-        <Icon
-          name={swipeActions.leftAction.icon}
-          size={24}
-          color={swipeActions.leftAction.textColor}
-        />
-      </View>
-    );
-  };
+          <Text
+            style={[
+              styles.swipeText,
+              { color: swipeActions.leftAction.textColor },
+            ]}
+          >
+            {swipeActions.leftAction.text}
+          </Text>
+          <Icon
+            name={swipeActions.leftAction.icon}
+            size={24}
+            color={swipeActions.leftAction.textColor}
+          />
+        </View>
+      );
+    };
 
-  // Determinar qué acciones de swipe están disponibles basado en myScreenStatus
-  const getSwipeActions = () => {
-    const rightAction = (() => {
-      // Solo permitir iniciar preparación si mi pantalla está PENDING
-      if (order.myScreenStatus === PreparationScreenStatus.PENDING) {
-        return {
-          type: 'start',
-          color: '#FF6B35', // Naranja
-          textColor: '#FFFFFF',
-          icon: 'chef-hat',
-          text: 'En Preparación',
-        };
+    // Determinar qué acciones de swipe están disponibles basado en myScreenStatus
+    const getSwipeActions = () => {
+      const rightAction = (() => {
+        // Solo permitir iniciar preparación si mi pantalla está PENDING
+        if (order.myScreenStatus === PreparationScreenStatus.PENDING) {
+          return {
+            type: 'start',
+            color: '#FF6B35', // Naranja
+            textColor: '#FFFFFF',
+            icon: 'chef-hat',
+            text: 'En Preparación',
+          };
+        }
+        return null;
+      })();
+
+      const leftAction = (() => {
+        // Permitir regresar si mi pantalla está en preparación o lista
+        if (
+          order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION ||
+          order.myScreenStatus === PreparationScreenStatus.READY
+        ) {
+          return {
+            type: 'cancel',
+            color: '#9C27B0', // Púrpura
+            textColor: '#FFFFFF',
+            icon: 'arrow-left',
+            text: 'Regresar',
+          };
+        }
+        return null;
+      })();
+
+      return { rightAction, leftAction };
+    };
+
+    const swipeActions = getSwipeActions();
+
+    // Verificar si la orden puede ser marcada como lista con long press
+    const canMarkAsReady = () => {
+      // Solo se puede marcar como lista si mi pantalla está en preparación
+      return (
+        order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION &&
+        onCompletePreparation
+      );
+    };
+
+    // Verificar si la orden puede regresar a en preparación con long press
+    const canReturnToInProgress = () => {
+      // Solo permitir long press para regresar si mi pantalla está EN PREPARACIÓN (no READY)
+      // Si está READY, debe usar el swipe
+      return (
+        order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION &&
+        onCancelPreparation
+      );
+    };
+
+    // Manejar el inicio del long press
+    const handlePressIn = () => {
+      const canComplete = canMarkAsReady();
+      const canReturn = canReturnToInProgress();
+
+      if (!canComplete && !canReturn) return;
+
+      // Limpiar cualquier timer o animación previa
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        if ((longPressTimer.current as any).interval) {
+          clearInterval((longPressTimer.current as any).interval);
+        }
+        longPressTimer.current = null;
       }
-      return null;
-    })();
 
-    const leftAction = (() => {
-      // Permitir regresar si mi pantalla está en preparación o lista
-      if (
-        order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION ||
-        order.myScreenStatus === PreparationScreenStatus.READY
-      ) {
-        return {
-          type: 'cancel',
-          color: '#9C27B0', // Púrpura
-          textColor: '#FFFFFF',
-          icon: 'arrow-left',
-          text: 'Regresar',
-        };
-      }
-      return null;
-    })();
+      // Detener cualquier animación en curso y resetear
+      animatedValue.stopAnimation();
+      animatedValue.setValue(0);
 
-    return { rightAction, leftAction };
-  };
+      // Vibración suave al iniciar
+      Vibration.vibrate(10);
 
-  const swipeActions = getSwipeActions();
+      setIsPressing(true);
 
-  // Verificar si la orden puede ser marcada como lista con long press
-  const canMarkAsReady = () => {
-    // Solo se puede marcar como lista si mi pantalla está en preparación
-    return order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION && onCompletePreparation;
-  };
+      // Iniciar animación
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: false,
+      }).start();
 
-  // Verificar si la orden puede regresar a en preparación con long press
-  const canReturnToInProgress = () => {
-    // Solo permitir long press para regresar si mi pantalla está EN PREPARACIÓN (no READY)
-    // Si está READY, debe usar el swipe
-    return order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION && onCancelPreparation;
-  };
+      // Timer para completar después de 1 segundo
+      longPressTimer.current = setTimeout(() => {
+        // Vibración de éxito
+        Vibration.vibrate([0, 50, 100, 50]);
 
-  // Manejar el inicio del long press
-  const handlePressIn = () => {
-    const canComplete = canMarkAsReady();
-    const canReturn = canReturnToInProgress();
+        if (canComplete && onCompletePreparation) {
+          onCompletePreparation(order.id);
+        } else if (canReturn && onCancelPreparation) {
+          onCancelPreparation(order.id);
+        }
 
-    if (!canComplete && !canReturn) return;
+        setIsPressing(false);
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: false,
+        }).start();
+      }, 1000);
+    };
 
-    // Limpiar cualquier timer o animación previa
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      if ((longPressTimer.current as any).interval) {
-        clearInterval((longPressTimer.current as any).interval);
-      }
-      longPressTimer.current = null;
-    }
-
-    // Detener cualquier animación en curso y resetear
-    animatedValue.stopAnimation();
-    animatedValue.setValue(0);
-
-    // Vibración suave al iniciar
-    Vibration.vibrate(10);
-
-    setIsPressing(true);
-
-    // Iniciar animación
-    Animated.timing(animatedValue, {
-      toValue: 1,
-      duration: 2000,
-      useNativeDriver: false,
-    }).start();
-
-    // Timer para completar después de 2 segundos
-    longPressTimer.current = setTimeout(() => {
-      // Vibración de éxito
-      Vibration.vibrate([0, 50, 100, 50]);
-
-      if (canComplete && onCompletePreparation) {
-        onCompletePreparation(order.id);
-      } else if (canReturn && onCancelPreparation) {
-        onCancelPreparation(order.id);
+    // Manejar cuando se suelta la presión
+    const handlePressOut = () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
       }
 
       setIsPressing(false);
-      Animated.timing(animatedValue, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }, 2000);
-  };
 
-  // Manejar cuando se suelta la presión
-  const handlePressOut = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+      // Detener cualquier animación en curso
+      animatedValue.stopAnimation();
 
-    setIsPressing(false);
-
-    // Detener cualquier animación en curso
-    animatedValue.stopAnimation();
-
-    // Resetear el valor animado a 0
-    animatedValue.setValue(0);
-  };
-
-  // Limpiar timer al desmontar
-  useEffect(() => {
-    return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
+      // Resetear el valor animado a 0
+      animatedValue.setValue(0);
     };
-  }, []);
 
-  // Manejar cuando se completa el swipe hacia la derecha
-  const handleRightSwipeComplete = () => {
-    if (!swipeActions.rightAction) return;
+    // Limpiar timer al desmontar
+    useEffect(() => {
+      return () => {
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+        }
+      };
+    }, []);
 
-    switch (swipeActions.rightAction.type) {
-      case 'start':
-        if (onStartPreparation) onStartPreparation(order.id);
-        break;
-    }
+    // Manejar cuando se completa el swipe hacia la derecha
+    const handleRightSwipeComplete = () => {
+      if (!swipeActions.rightAction) return;
 
-    // Cerrar el swipeable después de ejecutar la acción
-    swipeableRef.current?.close();
-  };
+      switch (swipeActions.rightAction.type) {
+        case 'start':
+          if (onStartPreparation) onStartPreparation(order.id);
+          break;
+      }
 
-  // Manejar cuando se completa el swipe hacia la izquierda
-  const handleLeftSwipeComplete = () => {
-    if (!swipeActions.leftAction) return;
+      // Cerrar el swipeable después de ejecutar la acción
+      swipeableRef.current?.close();
+    };
 
-    if (swipeActions.leftAction.type === 'cancel') {
-      if (onCancelPreparation) onCancelPreparation(order.id);
-    }
+    // Manejar cuando se completa el swipe hacia la izquierda
+    const handleLeftSwipeComplete = () => {
+      if (!swipeActions.leftAction) return;
 
-    // Cerrar el swipeable después de ejecutar la acción
-    swipeableRef.current?.close();
-  };
+      if (swipeActions.leftAction.type === 'cancel') {
+        if (onCancelPreparation) onCancelPreparation(order.id);
+      }
 
-  return (
-    <Surface
-      style={[styles.card, { backgroundColor: theme.colors.surface }]}
-      elevation={1}
-    >
-      {/* Header */}
-      {isSwipeable ? (
-        <Swipeable
-          ref={swipeableRef}
-          renderRightActions={renderRightActions}
-          renderLeftActions={renderLeftActions}
-          onSwipeableWillOpen={() => onSwipeStart && onSwipeStart()}
-          onSwipeableWillClose={() => onSwipeEnd && onSwipeEnd()}
-          onSwipeableRightOpen={handleRightSwipeComplete}
-          onSwipeableLeftOpen={handleLeftSwipeComplete}
-          overshootRight={false}
-          overshootLeft={false}
-          friction={1.2}
-          rightThreshold={50}
-          leftThreshold={50}
-          activationDistance={15}
-        >
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            delayLongPress={0}
+      // Cerrar el swipeable después de ejecutar la acción
+      swipeableRef.current?.close();
+    };
+
+    return (
+      <Surface
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={1}
+      >
+        {/* Header */}
+        {isSwipeable ? (
+          <Swipeable
+            ref={swipeableRef}
+            renderRightActions={renderRightActions}
+            renderLeftActions={renderLeftActions}
+            onSwipeableWillOpen={() => onSwipeStart && onSwipeStart()}
+            onSwipeableWillClose={() => onSwipeEnd && onSwipeEnd()}
+            onSwipeableRightOpen={handleRightSwipeComplete}
+            onSwipeableLeftOpen={handleLeftSwipeComplete}
+            overshootRight={false}
+            overshootLeft={false}
+            friction={1.2}
+            rightThreshold={50}
+            leftThreshold={50}
+            activationDistance={15}
           >
-            <View
-              style={[
-                styles.header,
-                {
-                  backgroundColor: getOrderTypeColor(),
-                },
-              ]}
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              delayLongPress={0}
             >
-              <View style={styles.headerLeft}>
-                <View style={styles.headerTopRow}>
-                  <Text
-                    style={[
-                      styles.orderNumber,
-                      { color: theme.colors.surface },
-                    ]}
-                  >
-                    #{order.dailyNumber}
-                  </Text>
+              <View
+                style={[
+                  styles.header,
+                  {
+                    backgroundColor: getOrderTypeColor(),
+                  },
+                ]}
+              >
+                <View style={styles.headerLeft}>
+                  <View style={styles.headerTopRow}>
+                    <Text
+                      style={[
+                        styles.orderNumber,
+                        { color: theme.colors.surface },
+                      ]}
+                    >
+                      #{order.dailyNumber}
+                    </Text>
+                    <View
+                      style={[
+                        styles.typeChip,
+                        { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.typeChipText,
+                          { color: theme.colors.surface },
+                        ]}
+                      >
+                        {getOrderTypeLabel()}
+                      </Text>
+                    </View>
+                  </View>
+                  {hasOrderDetails() && (
+                    <Text
+                      style={[
+                        styles.headerDetails,
+                        { color: theme.colors.surface },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {(() => {
+                        switch (order.orderType) {
+                          case OrderType.DELIVERY:
+                            return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
+                          case OrderType.TAKE_AWAY:
+                            return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
+                          case OrderType.DINE_IN:
+                            return `🪑 ${order.areaName} - ${order.tableName}`;
+                          default:
+                            return '';
+                        }
+                      })()}
+                    </Text>
+                  )}
+                </View>
+                <View style={styles.headerRight}>
                   <View
                     style={[
-                      styles.typeChip,
-                      { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+                      styles.statusChip,
+                      {
+                        backgroundColor: orderStatus.color,
+                        borderWidth:
+                          orderStatus.label === 'En progreso' ? 1 : 0,
+                        borderColor: theme.colors.outline,
+                      },
                     ]}
                   >
                     <Text
                       style={[
-                        styles.typeChipText,
-                        { color: theme.colors.surface },
+                        styles.statusChipText,
+                        {
+                          color:
+                            orderStatus.label === 'En progreso'
+                              ? theme.colors.onSurface
+                              : theme.colors.surface,
+                        },
                       ]}
                     >
-                      {getOrderTypeLabel()}
+                      {orderStatus.label}
                     </Text>
                   </View>
-                </View>
-                {hasOrderDetails() && (
                   <Text
-                    style={[
-                      styles.headerDetails,
-                      { color: theme.colors.surface },
-                    ]}
-                    numberOfLines={2}
+                    style={[styles.headerTime, { color: theme.colors.surface }]}
                   >
-                    {(() => {
-                      switch (order.orderType) {
-                        case OrderType.DELIVERY:
-                          return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                        case OrderType.TAKE_AWAY:
-                          return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                        case OrderType.DINE_IN:
-                          return `🪑 ${order.areaName} - ${order.tableName}`;
-                        default:
-                          return '';
-                      }
-                    })()}
-                  </Text>
-                )}
-              </View>
-              <View style={styles.headerRight}>
-                <View
-                  style={[
-                    styles.statusChip,
-                    {
-                      backgroundColor: orderStatus.color,
-                      borderWidth: orderStatus.label === 'En progreso' ? 1 : 0,
-                      borderColor: theme.colors.outline,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusChipText,
-                      {
-                        color:
-                          orderStatus.label === 'En progreso'
-                            ? theme.colors.onSurface
-                            : theme.colors.surface,
-                      },
-                    ]}
-                  >
-                    {orderStatus.label}
+                    {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
                   </Text>
                 </View>
-                <Text
-                  style={[styles.headerTime, { color: theme.colors.surface }]}
-                >
-                  {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
-                </Text>
               </View>
-            </View>
-            {/* Indicador de progreso del long press */}
-            {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
-              <>
-                {/* Barra de progreso superior clara y simple */}
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 20,
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Animated.View
+              {/* Indicador de progreso del long press */}
+              {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
+                <>
+                  {/* Barra de progreso superior clara y simple */}
+                  <View
                     style={{
-                      height: '100%',
-                      width: animatedValue.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0%', '100%'],
-                      }),
-                      backgroundColor: canMarkAsReady() ? '#4CAF50' : '#FF6B35',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 20,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      overflow: 'hidden',
                     }}
-                  />
-                </View>
-              </>
-            )}
-          </Pressable>
-        </Swipeable>
-      ) : (
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: getOrderTypeColor(),
-            },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <View style={styles.headerTopRow}>
-              <Text
-                style={[styles.orderNumber, { color: theme.colors.surface }]}
-              >
-                #{order.dailyNumber}
-              </Text>
-              <View
-                style={[
-                  styles.typeChip,
-                  {
-                    backgroundColor: (() => {
-                      switch (order.orderType) {
-                        case OrderType.DELIVERY:
-                          return '#FFEBEE'; // Rojo muy claro
-                        case OrderType.TAKE_AWAY:
-                          return '#E0F2F1'; // Cyan/Turquesa muy claro
-                        case OrderType.DINE_IN:
-                          return '#E3F2FD'; // Azul muy claro
-                        default:
-                          return theme.colors.surfaceVariant;
-                      }
-                    })(),
-                  },
-                ]}
-              >
+                  >
+                    <Animated.View
+                      style={{
+                        height: '100%',
+                        width: animatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                        backgroundColor: canMarkAsReady()
+                          ? '#4CAF50'
+                          : '#FF6B35',
+                      }}
+                    />
+                  </View>
+                </>
+              )}
+            </Pressable>
+          </Swipeable>
+        ) : (
+          <View
+            style={[
+              styles.header,
+              {
+                backgroundColor: getOrderTypeColor(),
+              },
+            ]}
+          >
+            <View style={styles.headerLeft}>
+              <View style={styles.headerTopRow}>
                 <Text
+                  style={[styles.orderNumber, { color: theme.colors.surface }]}
+                >
+                  #{order.dailyNumber}
+                </Text>
+                <View
                   style={[
-                    styles.typeChipText,
+                    styles.typeChip,
                     {
-                      color: (() => {
+                      backgroundColor: (() => {
                         switch (order.orderType) {
                           case OrderType.DELIVERY:
-                            return '#C62828'; // Rojo oscuro
+                            return '#FFEBEE'; // Rojo muy claro
                           case OrderType.TAKE_AWAY:
-                            return '#00838F'; // Cyan/Turquesa oscuro
+                            return '#E0F2F1'; // Cyan/Turquesa muy claro
                           case OrderType.DINE_IN:
-                            return '#1565C0'; // Azul oscuro
+                            return '#E3F2FD'; // Azul muy claro
                           default:
-                            return theme.colors.onSurfaceVariant;
+                            return theme.colors.surfaceVariant;
                         }
                       })(),
                     },
                   ]}
                 >
-                  {getOrderTypeLabel()}
-                </Text>
-              </View>
-            </View>
-            {hasOrderDetails() && (
-              <Text
-                style={[styles.headerDetails, { color: theme.colors.surface }]}
-                numberOfLines={2}
-              >
-                {(() => {
-                  switch (order.orderType) {
-                    case OrderType.DELIVERY:
-                      return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                    case OrderType.TAKE_AWAY:
-                      return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                    case OrderType.DINE_IN:
-                      return `🪑 ${order.areaName} - ${order.tableName}`;
-                    default:
-                      return '';
-                  }
-                })()}
-              </Text>
-            )}
-          </View>
-          <View style={styles.headerRight}>
-            <View
-              style={[
-                styles.statusChip,
-                {
-                  backgroundColor: orderStatus.color,
-                  borderWidth: orderStatus.borderColor ? 1 : 0,
-                  borderColor: orderStatus.borderColor || 'transparent',
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.statusChipText,
-                  { color: orderStatus.textColor },
-                ]}
-              >
-                {orderStatus.label}
-              </Text>
-            </View>
-            <Text style={[styles.headerTime, { color: theme.colors.surface }]}>
-              {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Order Notes - Solo mostrar si hay notas */}
-      {order.orderNotes && (
-        <>
-          <View
-            style={[
-              styles.details,
-              { backgroundColor: theme.colors.errorContainer },
-            ]}
-          >
-            <Text
-              variant="bodyMedium"
-              style={[styles.notes, { color: theme.colors.onErrorContainer }]}
-            >
-              📝 {order.orderNotes}
-            </Text>
-          </View>
-          <Divider
-            style={{
-              backgroundColor: theme.colors.outlineVariant,
-              height: 0.5,
-            }}
-          />
-        </>
-      )}
-
-      {/* Screen Statuses - Mostrar el estado de otras pantallas */}
-      {order.screenStatuses && order.screenStatuses.length > 1 && (
-        <>
-          <View style={[styles.screenStatusContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.screenStatusList}>
-                {order.screenStatuses.map((screenStatus) => (
-                  <View
-                    key={screenStatus.screenId}
+                  <Text
                     style={[
-                      styles.screenStatusItem,
+                      styles.typeChipText,
                       {
-                        backgroundColor: (() => {
-                          switch (screenStatus.status) {
-                            case PreparationScreenStatus.READY:
-                              return '#4CAF50';
-                            case PreparationScreenStatus.IN_PREPARATION:
-                              return '#FF6B35';
+                        color: (() => {
+                          switch (order.orderType) {
+                            case OrderType.DELIVERY:
+                              return '#C62828'; // Rojo oscuro
+                            case OrderType.TAKE_AWAY:
+                              return '#00838F'; // Cyan/Turquesa oscuro
+                            case OrderType.DINE_IN:
+                              return '#1565C0'; // Azul oscuro
                             default:
-                              return '#9C27B0';
+                              return theme.colors.onSurfaceVariant;
                           }
                         })(),
                       },
                     ]}
                   >
-                    <Text style={styles.screenStatusText}>
-                      {screenStatus.screenName}
-                    </Text>
-                  </View>
-                ))}
+                    {getOrderTypeLabel()}
+                  </Text>
+                </View>
               </View>
-            </ScrollView>
-          </View>
-          <Divider
-            style={{
-              backgroundColor: theme.colors.outlineVariant,
-              height: 0.5,
-            }}
-          />
-        </>
-      )}
-
-      {/* Items */}
-      <View style={styles.itemsWrapper}>
-        {order.items && order.items.length > 0 ? (
-          <ScrollView
-            style={styles.itemsContainer}
-            showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
-          >
-            {order.items.map((item, index) => (
-              <OrderItemRow
-                key={`${item.id}-${index}`}
-                item={item}
-                onTogglePrepared={handleToggleItemPrepared}
-                isOrderInPreparation={isOrderInPreparation}
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <View style={styles.emptyItemsContainer}>
-            <Text
-              variant="bodyLarge"
-              style={{ color: theme.colors.onSurfaceVariant, opacity: 0.6 }}
-            >
-              No hay productos para mostrar
-            </Text>
+              {hasOrderDetails() && (
+                <Text
+                  style={[
+                    styles.headerDetails,
+                    { color: theme.colors.surface },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {(() => {
+                    switch (order.orderType) {
+                      case OrderType.DELIVERY:
+                        return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
+                      case OrderType.TAKE_AWAY:
+                        return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
+                      case OrderType.DINE_IN:
+                        return `🪑 ${order.areaName} - ${order.tableName}`;
+                      default:
+                        return '';
+                    }
+                  })()}
+                </Text>
+              )}
+            </View>
+            <View style={styles.headerRight}>
+              <View
+                style={[
+                  styles.statusChip,
+                  {
+                    backgroundColor: orderStatus.color,
+                    borderWidth: orderStatus.borderColor ? 1 : 0,
+                    borderColor: orderStatus.borderColor || 'transparent',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusChipText,
+                    { color: orderStatus.textColor },
+                  ]}
+                >
+                  {orderStatus.label}
+                </Text>
+              </View>
+              <Text
+                style={[styles.headerTime, { color: theme.colors.surface }]}
+              >
+                {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
+              </Text>
+            </View>
           </View>
         )}
-      </View>
 
-      {/* Botón de detalles e historial */}
-      <IconButton
-        icon="file-document-multiple-outline"
-        size={20}
-        iconColor={theme.colors.onSurfaceVariant}
-        style={styles.historyButton}
-        onPress={() => setShowHistory(true)}
-      />
+        {/* Order Notes - Solo mostrar si hay notas */}
+        {order.orderNotes && (
+          <>
+            <View
+              style={[
+                styles.details,
+                { backgroundColor: theme.colors.errorContainer },
+              ]}
+            >
+              <Text
+                variant="bodyMedium"
+                style={[styles.notes, { color: theme.colors.onErrorContainer }]}
+              >
+                📝 {order.orderNotes}
+              </Text>
+            </View>
+            <Divider
+              style={{
+                backgroundColor: theme.colors.outlineVariant,
+                height: 0.5,
+              }}
+            />
+          </>
+        )}
 
-      {/* Modal de historial */}
-      <OrderHistoryModal
-        visible={showHistory}
-        onDismiss={() => setShowHistory(false)}
-        orderId={order.id}
-        orderNumber={order.dailyNumber}
-        orderData={order}
-      />
-    </Surface>
-  );
-};
+        {/* Screen Statuses - Mostrar el estado de otras pantallas */}
+        {order.screenStatuses && order.screenStatuses.length > 1 && (
+          <>
+            <View
+              style={[
+                styles.screenStatusContainer,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.screenStatusList}>
+                  {order.screenStatuses.map((screenStatus) => (
+                    <View
+                      key={screenStatus.screenId}
+                      style={[
+                        styles.screenStatusItem,
+                        {
+                          backgroundColor: (() => {
+                            switch (screenStatus.status) {
+                              case PreparationScreenStatus.READY:
+                                return '#4CAF50';
+                              case PreparationScreenStatus.IN_PREPARATION:
+                                return '#FF6B35';
+                              default:
+                                return '#9C27B0';
+                            }
+                          })(),
+                        },
+                      ]}
+                    >
+                      <Text style={styles.screenStatusText}>
+                        {screenStatus.screenName}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+            <Divider
+              style={{
+                backgroundColor: theme.colors.outlineVariant,
+                height: 0.5,
+              }}
+            />
+          </>
+        )}
+
+        {/* Items */}
+        <View style={styles.itemsWrapper}>
+          {order.items && order.items.length > 0 ? (
+            <ScrollView
+              style={styles.itemsContainer}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {order.items.map((item, index) => (
+                <OrderItemRow
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  onTogglePrepared={handleToggleItemPrepared}
+                  isOrderInPreparation={isOrderInPreparation}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.emptyItemsContainer}>
+              <Text
+                variant="bodyLarge"
+                style={{ color: theme.colors.onSurfaceVariant, opacity: 0.6 }}
+              >
+                No hay productos para mostrar
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Botón de detalles e historial */}
+        <IconButton
+          icon="file-document-multiple-outline"
+          size={20}
+          iconColor={theme.colors.onSurfaceVariant}
+          style={styles.historyButton}
+          onPress={() => setShowHistory(true)}
+        />
+
+        {/* Modal de historial */}
+        <OrderHistoryModal
+          visible={showHistory}
+          onDismiss={() => setShowHistory(false)}
+          orderId={order.id}
+          orderNumber={order.dailyNumber}
+          orderData={order}
+        />
+      </Surface>
+    );
+  },
+);
+
+OrderCard.displayName = 'OrderCard';
 
 // Crear estilos responsive
 const createStyles = (responsive: any, theme: any) =>

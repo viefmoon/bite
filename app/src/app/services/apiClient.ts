@@ -218,44 +218,37 @@ function configureInterceptors() {
 
       // Detectar errores de red
       if (!error.response) {
-        // Manejar error de red de manera no bloqueante
-        const showSnackbar = useSnackbarStore.getState().showSnackbar;
-
-        // Mensajes específicos según el tipo de error
-        let errorMessage = 'Sin conexión al servidor';
+        // Crear error más específico
+        let specificError: Error;
 
         if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-          // Error de timeout
-          errorMessage = 'La operación tardó demasiado. Intenta nuevamente.';
+          // Error de timeout - el servidor existe pero no responde
+          specificError = new Error('El servidor no responde');
+          (specificError as any).code = 'SERVER_TIMEOUT';
+        } else if (error.code === 'ECONNREFUSED') {
+          // Conexión rechazada - el servidor está apagado
+          specificError = new Error('El servidor está apagado o no accesible');
+          (specificError as any).code = 'SERVER_DOWN';
         } else if (
-          error.code === 'ENOTFOUND' ||
-          error.code === 'ECONNREFUSED'
+          error.message === 'Network Error' ||
+          error.code === 'ENETUNREACH'
         ) {
-          // Servidor no encontrado
-          errorMessage = 'No se puede conectar al servidor';
+          // Error de red - no se puede alcanzar el servidor
+          specificError = new Error(
+            'No se pudo encontrar el servidor CloudBite',
+          );
+          (specificError as any).code = 'SERVER_NOT_FOUND';
         } else {
-          // Otros errores de red - mensajes según método
-          if (originalRequest.method === 'POST') {
-            errorMessage = 'No se puede guardar sin conexión';
-          } else if (originalRequest.method === 'PUT') {
-            errorMessage = 'No se puede actualizar sin conexión';
-          } else if (originalRequest.method === 'DELETE') {
-            errorMessage = 'No se puede eliminar sin conexión';
-          } else if (originalRequest.method === 'GET') {
-            errorMessage = 'No se pueden cargar los datos sin conexión';
-          }
+          // Error genérico de red
+          specificError = new Error('Error de conexión de red');
+          (specificError as any).code = 'NETWORK_ERROR';
         }
 
-        // Mostrar error no bloqueante
-        showSnackbar({
-          message: errorMessage,
-          type: 'error',
-          duration: 5000,
-        });
+        // Asignar el error específico al error original
+        (error as any).specificError = specificError;
 
-        // Rechazar con el error para que el componente pueda manejarlo
-        const apiError = ApiError.fromAxiosError(error);
-        return Promise.reject(apiError);
+        // No mostrar snackbar aquí, dejar que el componente lo maneje
+        return Promise.reject(error);
       }
 
       // No intentar renovar si:

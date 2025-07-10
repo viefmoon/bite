@@ -16,15 +16,13 @@ class AuthService {
     // Validación mejorada de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(loginData.emailOrUsername);
-    
+
     // Sanitizar entrada
     const sanitizedInput = loginData.emailOrUsername.trim().toLowerCase();
-    
+
     const payload: AuthEmailLoginDto = {
       password: loginData.password,
-      ...(isEmail
-        ? { email: sanitizedInput }
-        : { username: sanitizedInput }),
+      ...(isEmail ? { email: sanitizedInput } : { username: sanitizedInput }),
     };
 
     const response = await ApiClientWrapper.post<LoginResponseDto>(

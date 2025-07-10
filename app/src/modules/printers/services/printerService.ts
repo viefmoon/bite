@@ -187,6 +187,39 @@ const testPrintDiscoveredPrinter = async (
   return response.data;
 };
 
+const testPrintPrinter = async (
+  id: string,
+): Promise<{ success: boolean; message?: string }> => {
+  // Primero obtener la información de la impresora
+  const printer = await findOnePrinter(id);
+
+  // Preparar los datos según el tipo de conexión
+  const printerInfo: any = {
+    connectionType: printer.connectionType,
+  };
+
+  if (printer.connectionType === 'NETWORK') {
+    printerInfo.ip = printer.ipAddress;
+    printerInfo.port = printer.port;
+  } else {
+    // Para otros tipos de conexión, usar la ruta
+    printerInfo.path = printer.path;
+  }
+
+  const response = await ApiClientWrapper.post<{
+    success: boolean;
+    message?: string;
+  }>(`${API_PATHS.THERMAL_PRINTERS}/test-print`, printerInfo);
+
+  if (!response.ok || !response.data) {
+    throw ApiError.fromApiResponse(
+      response.data as BackendErrorResponse | undefined,
+      response.status,
+    );
+  }
+  return response.data;
+};
+
 export const printerService = {
   discoverPrinters,
   findAllPrinters,
@@ -196,4 +229,5 @@ export const printerService = {
   deletePrinter,
   pingPrinter,
   testPrintDiscoveredPrinter,
+  testPrintPrinter,
 };

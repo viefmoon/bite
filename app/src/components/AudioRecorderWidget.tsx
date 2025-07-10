@@ -345,7 +345,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   };
 
   const getBackgroundColor = () => {
-    if (!isServiceAvailable) return theme.colors.surfaceDisabled || '#E0E0E0';
+    if (!isServiceAvailable) return '#B0B0B0'; // Gris más suave
     if (isProcessing || isPreparing) return theme.colors.secondary;
     if (isRecording) return '#FF3B30'; // Rojo vibrante
     return theme.colors.primary;
@@ -367,7 +367,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
           ],
           opacity: bounceAnim.interpolate({
             inputRange: [0, 1],
-            outputRange: [0, isServiceAvailable ? 1 : 0.6],
+            outputRange: [0, isServiceAvailable ? 1 : 0.8],
           }),
         },
       ]}
@@ -450,7 +450,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             { backgroundColor: theme.colors.error },
           ]}
         >
-          <MaterialIcons name="cloud-off" size={12} color="white" />
+          <MaterialIcons name="cloud-off" size={14} color="white" />
         </View>
       )}
 
@@ -496,8 +496,16 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
               styles.button,
               {
                 backgroundColor: getBackgroundColor(),
-                shadowColor: isRecording ? '#FF3B30' : theme.colors.primary,
-                shadowOpacity: isRecording ? 0.5 : 0.3,
+                shadowColor: !isServiceAvailable
+                  ? 'transparent'
+                  : isRecording
+                    ? '#FF3B30'
+                    : theme.colors.primary,
+                shadowOpacity: !isServiceAvailable
+                  ? 0
+                  : isRecording
+                    ? 0.4
+                    : 0.25,
               },
             ]}
           >
@@ -548,9 +556,9 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 10,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
+    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
     zIndex: 10,
   },
   glowEffect: {
@@ -587,14 +595,16 @@ const styles = StyleSheet.create({
   },
   disabledIndicator: {
     position: 'absolute',
-    top: -5,
-    right: -5,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20,
     elevation: 12,
+    borderWidth: 2,
+    borderColor: 'white',
   },
 });

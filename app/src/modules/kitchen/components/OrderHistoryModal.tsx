@@ -73,39 +73,46 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 
   // Usar los datos pasados como prop o hacer la query si no están disponibles
   const { data: orderDataFromQuery } = useGetOrderByIdQuery(orderId, {
-    enabled: visible && !!orderId && activeTab === 'details' && !orderDataFromProps,
+    enabled:
+      visible && !!orderId && activeTab === 'details' && !orderDataFromProps,
   });
-  
+
   // Transformar los datos de kitchen al formato esperado por OrderDetailContent
   const transformKitchenOrderToDetailFormat = (kitchenOrder: any) => {
     if (!kitchenOrder) return null;
-    
+
     return {
       ...kitchenOrder,
-      orderItems: kitchenOrder.items?.map((item: any) => ({
-        id: item.id,
-        product: {
-          name: item.productName,
-        },
-        productVariant: item.variantName ? { name: item.variantName } : null,
-        preparationNotes: item.preparationNotes,
-        preparationStatus: item.preparationStatus,
-        preparedAt: item.preparedAt,
-        createdAt: item.createdAt || kitchenOrder.createdAt, // Usar createdAt del item o de la orden como fallback
-        preparedBy: item.preparedByUser || (item.preparedBy ? {
-          firstName: item.preparedBy.split(' ')[0] || item.preparedBy,
-          lastName: item.preparedBy.split(' ').slice(1).join(' ') || '',
-        } : null),
-        preparedById: item.preparedBy ? 'kitchen-user' : null,
-        modifiers: item.modifiers?.map((mod: string) => ({ name: mod })) || [],
-        pizzaCustomizations: item.pizzaCustomizations || [],
-      })) || [],
+      orderItems:
+        kitchenOrder.items?.map((item: any) => ({
+          id: item.id,
+          product: {
+            name: item.productName,
+          },
+          productVariant: item.variantName ? { name: item.variantName } : null,
+          preparationNotes: item.preparationNotes,
+          preparationStatus: item.preparationStatus,
+          preparedAt: item.preparedAt,
+          createdAt: item.createdAt || kitchenOrder.createdAt, // Usar createdAt del item o de la orden como fallback
+          preparedBy:
+            item.preparedByUser ||
+            (item.preparedBy
+              ? {
+                  firstName: item.preparedBy.split(' ')[0] || item.preparedBy,
+                  lastName: item.preparedBy.split(' ').slice(1).join(' ') || '',
+                }
+              : null),
+          preparedById: item.preparedBy ? 'kitchen-user' : null,
+          modifiers:
+            item.modifiers?.map((mod: string) => ({ name: mod })) || [],
+          pizzaCustomizations: item.pizzaCustomizations || [],
+        })) || [],
       total: 0, // Kitchen no tiene información de precios
     };
   };
-  
+
   // Usar los datos de props si están disponibles, sino usar los de la query
-  const orderData = orderDataFromProps 
+  const orderData = orderDataFromProps
     ? transformKitchenOrderToDetailFormat(orderDataFromProps)
     : orderDataFromQuery;
 
