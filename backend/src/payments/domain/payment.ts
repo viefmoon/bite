@@ -5,7 +5,7 @@ import { PaymentStatus } from './enums/payment-status.enum';
 export class Payment {
   id: string;
 
-  orderId: string;
+  orderId: string | null;
 
   paymentMethod: PaymentMethod;
 
@@ -13,7 +13,7 @@ export class Payment {
 
   paymentStatus: PaymentStatus;
 
-  order: Order;
+  order: Order | null;
 
   createdAt: Date;
 

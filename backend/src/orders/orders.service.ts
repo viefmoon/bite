@@ -41,6 +41,7 @@ import {
   PreparationScreenStatus,
   OrderPreparationScreenStatus,
 } from './domain/order-preparation-screen-status';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class OrdersService {
@@ -59,6 +60,7 @@ export class OrdersService {
     private readonly restaurantConfigService: RestaurantConfigService,
     private readonly orderChangeTracker: OrderChangeTrackerV2Service,
     private readonly dataSource: DataSource,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -140,6 +142,23 @@ export class OrdersService {
 
     // Crear estados de pantalla para cada pantalla que tenga items
     await this.createInitialScreenStatuses(order.id);
+
+    // Asociar pre-pago si se proporcionó uno
+    if (createOrderDto.prepaymentId) {
+      try {
+        await this.paymentsService.associatePaymentToOrder(
+          createOrderDto.prepaymentId,
+          order.id,
+        );
+      } catch (error) {
+        // Si falla la asociación del pago, registrar el error pero continuar
+        // Ya que la orden ya fue creada exitosamente
+        console.error(
+          `Error asociando pre-pago ${createOrderDto.prepaymentId} a orden ${order.id}:`,
+          error,
+        );
+      }
+    }
 
     // Recargar la orden completa con todas las relaciones
     const fullOrder = await this.findOne(order.id);

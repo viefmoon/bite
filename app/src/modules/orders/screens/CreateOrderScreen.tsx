@@ -698,10 +698,15 @@ const CreateOrderScreen = () => {
     }) => {
       const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
       const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
+      
+      // Verificar si es un producto sin pantalla de preparación
+      const isProductWithoutScreen = navigationLevel === 'products' && 
+        'preparationScreenId' in item && 
+        !item.preparationScreenId;
 
       const handlePress = () => {
-        // No hacer nada si el elemento está inactivo
-        if (!isActive) return;
+        // No hacer nada si el elemento está inactivo o es un producto sin pantalla
+        if (!isActive || isProductWithoutScreen) return;
 
         if (navigationLevel === 'categories') {
           handleCategorySelect(item.id);
@@ -736,14 +741,20 @@ const CreateOrderScreen = () => {
 
       return (
         <Card
-          style={[styles.cardItem, !isActive && styles.cardItemInactive]}
+          style={[
+            styles.cardItem, 
+            (!isActive || isProductWithoutScreen) && styles.cardItemInactive
+          ]}
           onPress={handlePress}
-          disabled={!isActive}
+          disabled={!isActive || isProductWithoutScreen}
         >
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={[styles.itemImage, !isActive && styles.imageInactive]}
+              style={[
+                styles.itemImage, 
+                (!isActive || isProductWithoutScreen) && styles.imageInactive
+              ]}
               contentFit="cover"
               placeholder={blurhash}
               transition={300}
@@ -752,7 +763,7 @@ const CreateOrderScreen = () => {
             <View
               style={[
                 styles.imagePlaceholder,
-                !isActive && styles.imageInactive,
+                (!isActive || isProductWithoutScreen) && styles.imageInactive,
               ]}
             >
               <Text style={styles.placeholderText}>
@@ -763,6 +774,11 @@ const CreateOrderScreen = () => {
           {!isActive && (
             <View style={styles.inactiveBadge}>
               <Text style={styles.inactiveBadgeText}>INACTIVO</Text>
+            </View>
+          )}
+          {isProductWithoutScreen && (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>SIN PANTALLA</Text>
             </View>
           )}
           <View style={styles.cardContent}>

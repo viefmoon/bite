@@ -99,7 +99,7 @@ function ProductFormModal({
       subcategoryId: subcategoryId,
       photoId: null,
       estimatedPrepTime: 10,
-      preparationScreenId: '',
+      preparationScreenId: null,
       sortOrder: 0,
       variants: [],
       variantsToDelete: [],
@@ -159,7 +159,7 @@ function ProductFormModal({
             subcategoryId: initialData.subcategoryId,
             photoId: initialData.photo?.id ?? null,
             estimatedPrepTime: initialData.estimatedPrepTime,
-            preparationScreenId: initialData.preparationScreenId || '',
+            preparationScreenId: initialData.preparationScreenId || null,
             sortOrder: initialData.sortOrder ?? 0,
             variants: initialData.variants || [],
             variantsToDelete: [],
@@ -632,7 +632,7 @@ function ProductFormModal({
                       onDismiss={() => setPreparationScreenMenuVisible(false)}
                       anchor={
                         <TextInput
-                          label="Pantalla de Preparación *"
+                          label="Pantalla de Preparación"
                           value={
                             preparationScreens.find(screen => screen.id === value)?.name || ''
                           }

@@ -24,6 +24,8 @@ import {
   Menu,
   IconButton,
   Modal,
+  Checkbox,
+  TextInput,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
@@ -61,6 +63,7 @@ import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para 
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
 import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema'; // Para personalizaciones de pizza
+import { prepaymentService } from '@/modules/payments/services/prepaymentService'; // Servicio de prepagos
 import {
   CustomizationType,
   PizzaHalf,
@@ -96,6 +99,10 @@ export interface OrderDetailsForBackend {
   scheduledAt?: Date;
   deliveryInfo: DeliveryInfo;
   notes?: string;
+  payment?: {
+    amount: number;
+    method: 'CASH' | 'CARD' | 'TRANSFER';
+  };
   adjustments?: {
     orderId?: string;
     name: string;
@@ -106,6 +113,7 @@ export interface OrderDetailsForBackend {
   }[];
   customerId?: string;
   isFromWhatsApp?: boolean;
+  prepaymentId?: string;
 }
 
 interface OrderCartDetailProps {
@@ -443,6 +451,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   const { user } = useAuthStore(); // Obtener usuario autenticado
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
+  
+  // Verificar si el usuario puede registrar pagos (admin, manager, cashier)
+  const canRegisterPayments = useMemo(() => {
+    if (!user?.role?.id) return false;
+    // RoleEnum: admin = 1, manager = 2, cashier = 3
+    return [1, 2, 3].includes(user.role.id);
+  }, [user]);
 
   // Estados locales solo para UI (errores, visibilidad de menús/modales)
   const [areaMenuVisible, setAreaMenuVisible] = useState(false);
@@ -481,6 +496,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [adjustmentToEdit, setAdjustmentToEdit] =
     useState<OrderAdjustment | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
+  const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
+  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
 
   // Estado original de la orden para detectar cambios
   const [originalOrderState, setOriginalOrderState] = useState<{
@@ -1236,6 +1255,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     setIsConfirming(true); // Marcar como procesando
 
+    // Si hay un pre-pago creado, incluir su ID
+    if (!isEditMode && prepaymentId) {
+      orderDetails.prepaymentId = prepaymentId;
+    }
+
     try {
       await onConfirmOrder(orderDetails);
       // Si llegamos aquí, la orden fue exitosa
@@ -1270,6 +1294,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   };
 
+
   const selectedAreaName = useMemo(
     () => areasData?.find((a: any) => a.id === selectedAreaId)?.name,
     [areasData, selectedAreaId],
@@ -1284,6 +1309,44 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   };
 
   const hideTimePicker = () => setTimePickerVisible(false);
+
+  const handlePrepaymentCreated = async (prepaymentIdCreated: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => {
+    // Si hay un pre-pago existente, eliminarlo primero
+    if (prepaymentId && prepaymentId !== prepaymentIdCreated) {
+      try {
+        await prepaymentService.deletePrepayment(prepaymentId);
+      } catch (error) {
+        console.error('Error eliminando pre-pago anterior:', error);
+        showSnackbar({
+          message: 'Error al actualizar el pago',
+          type: 'error',
+        });
+        return;
+      }
+    }
+
+    setPrepaymentId(prepaymentIdCreated);
+    setPaymentAmount(amount.toFixed(2));
+    setPaymentMethod(method);
+    setShowPrepaymentModal(false);
+    
+    showSnackbar({
+      message: prepaymentId ? 'Pago actualizado correctamente' : 'Pago registrado correctamente',
+      type: 'success',
+    });
+  };
+
+  const handlePrepaymentDeleted = () => {
+    setPrepaymentId(null);
+    setPaymentAmount('');
+    setPaymentMethod('CASH');
+    setShowPrepaymentModal(false);
+    
+    showSnackbar({
+      message: 'Pago eliminado correctamente',
+      type: 'success',
+    });
+  };
 
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
@@ -2576,6 +2639,36 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               </Text>
             </View>
 
+            {/* Mostrar desglose de pago cuando hay pre-pago registrado */}
+            {!isEditMode && prepaymentId && (
+              <>
+                <View style={styles.totalsContainer}>
+                  <Text style={styles.totalsText}>Pagado:</Text>
+                  <View style={styles.paymentValueContainer}>
+                    <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
+                      ${parseFloat(paymentAmount || '0').toFixed(2)}
+                    </Text>
+                    <IconButton
+                      icon="pencil"
+                      size={16}
+                      iconColor={theme.colors.primary}
+                      onPress={() => setShowPrepaymentModal(true)}
+                      style={styles.editPaymentButton}
+                    />
+                  </View>
+                </View>
+                <View style={styles.totalsContainer}>
+                  <Text style={[styles.totalsText, { fontWeight: '600' }]}>Restante:</Text>
+                  <Text style={[styles.totalsValue, { 
+                    fontWeight: 'bold',
+                    color: (total - parseFloat(paymentAmount || '0')) <= 0 ? '#4CAF50' : theme.colors.error 
+                  }]}>
+                    ${Math.max(0, total - parseFloat(paymentAmount || '0')).toFixed(2)}
+                  </Text>
+                </View>
+              </>
+            )}
+
             {/* Mostrar información de pagos solo en modo edición */}
             {isEditMode && (
               <>
@@ -2604,9 +2697,23 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 </View>
               </>
             )}
+
           </ScrollView>
 
-          {/* Footer Button */}
+          {/* Botón de pago - solo mostrar si es creación y el usuario tiene permisos y no hay pre-pago */}
+          {!isEditMode && canRegisterPayments && !prepaymentId && (
+            <View style={styles.paymentButtonContainer}>
+              <Button
+                mode="outlined"
+                onPress={() => setShowPrepaymentModal(true)}
+                style={styles.paymentButton}
+                icon="credit-card"
+              >
+                💵 Registrar pago con la orden
+              </Button>
+            </View>
+          )}
+
           <View style={styles.footer}>
             <Button
               mode="contained"
@@ -2831,6 +2938,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               orderSubtotal={subtotal}
             />
           )}
+
+          {/* Modal de pago para pre-pagos */}
+          <PaymentModal
+            visible={showPrepaymentModal}
+            onDismiss={() => setShowPrepaymentModal(false)}
+            orderTotal={total}
+            mode="prepayment"
+            onPrepaymentCreated={handlePrepaymentCreated}
+            existingPrepaymentId={prepaymentId || undefined}
+            onPrepaymentDeleted={handlePrepaymentDeleted}
+          />
+
         </GestureHandlerRootView>
       </Modal>
     </Portal>
@@ -3084,7 +3203,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     }, // <<< COMA RESTAURADA
     confirmButton: {
       paddingVertical: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     input: {}, // <<< COMA RESTAURADA
     fieldContainer: {
       marginTop: theme.spacing.s,
@@ -3201,6 +3320,28 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       height: 56,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    paymentConfigButton: {
+      marginTop: theme.spacing.s,
+    },
+    paymentButtonContainer: {
+      paddingHorizontal: theme.spacing.s,
+      paddingVertical: theme.spacing.m,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+    },
+    paymentButton: {
+      marginVertical: theme.spacing.xs,
+    },
+    paymentValueContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    editPaymentButton: {
+      margin: 0,
+      marginLeft: theme.spacing.xs,
+      width: 28,
+      height: 28,
     },
   });
 export default OrderCartDetail;

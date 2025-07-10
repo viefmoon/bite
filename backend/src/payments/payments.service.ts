@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PaymentRepository } from './infrastructure/persistence/payment.repository';
 import { Payment } from './domain/payment';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePrepaymentDto } from './dto/create-prepayment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -92,5 +93,43 @@ export class PaymentsService {
   async remove(id: string): Promise<void> {
     await this.findOne(id);
     await this.paymentRepository.delete(id);
+  }
+
+  async createPrepayment(
+    createPrepaymentDto: CreatePrepaymentDto,
+  ): Promise<Payment> {
+    const payment = new Payment();
+    payment.id = uuidv4();
+    payment.orderId = null; // Sin orden asociada inicialmente
+    payment.paymentMethod = createPrepaymentDto.paymentMethod;
+    payment.amount = createPrepaymentDto.amount;
+    // Los pagos en efectivo se crean como completados
+    payment.paymentStatus =
+      createPrepaymentDto.paymentMethod === PaymentMethod.CASH
+        ? PaymentStatus.COMPLETED
+        : PaymentStatus.PENDING;
+
+    return this.paymentRepository.create(payment);
+  }
+
+  async associatePaymentToOrder(
+    paymentId: string,
+    orderId: string,
+  ): Promise<Payment> {
+    const payment = await this.findOne(paymentId);
+
+    if (payment.orderId) {
+      throw new Error('Este pago ya está asociado a una orden');
+    }
+
+    const updatedPayment = new Payment();
+    updatedPayment.id = payment.id;
+    updatedPayment.orderId = orderId;
+    updatedPayment.paymentMethod = payment.paymentMethod;
+    updatedPayment.amount = payment.amount;
+    updatedPayment.paymentStatus = payment.paymentStatus;
+    updatedPayment.createdAt = payment.createdAt;
+
+    return this.paymentRepository.update(paymentId, updatedPayment);
   }
 }

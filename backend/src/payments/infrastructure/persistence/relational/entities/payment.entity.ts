@@ -22,7 +22,7 @@ export class PaymentEntity extends EntityRelationalHelper {
   id: string;
 
   @RelationId((payment: PaymentEntity) => payment.order)
-  orderId: string;
+  orderId: string | null;
 
   @Column({
     type: 'enum',
@@ -51,10 +51,10 @@ export class PaymentEntity extends EntityRelationalHelper {
 
   @ManyToOne(() => OrderEntity, (order) => order.payments, {
     eager: true,
-    nullable: false,
+    nullable: true, // Permitir pagos sin orden temporalmente
   })
   @JoinColumn({ name: 'order_id' })
-  order: OrderEntity;
+  order: OrderEntity | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

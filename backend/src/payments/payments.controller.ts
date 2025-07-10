@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePrepaymentDto } from './dto/create-prepayment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -99,5 +100,30 @@ export class PaymentsController {
   })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.paymentsService.remove(id);
+  }
+
+  @Post('prepayment')
+  @ApiOperation({ summary: 'Crear un pre-pago (sin orden asociada)' })
+  @ApiResponse({
+    status: 201,
+    description: 'El pre-pago ha sido creado exitosamente',
+    type: Payment,
+  })
+  createPrepayment(@Body() createPrepaymentDto: CreatePrepaymentDto) {
+    return this.paymentsService.createPrepayment(createPrepaymentDto);
+  }
+
+  @Patch(':paymentId/associate/:orderId')
+  @ApiOperation({ summary: 'Asociar un pre-pago a una orden' })
+  @ApiResponse({
+    status: 200,
+    description: 'El pago ha sido asociado a la orden exitosamente',
+    type: Payment,
+  })
+  associateToOrder(
+    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+  ) {
+    return this.paymentsService.associatePaymentToOrder(paymentId, orderId);
   }
 }

@@ -18,7 +18,7 @@ export class PaymentMapper extends BaseMapper<PaymentEntity, Payment> {
     if (!entity) return null;
     const domain = new Payment();
     domain.id = entity.id;
-    domain.orderId = entity.orderId || entity.order?.id;
+    domain.orderId = entity.orderId || entity.order?.id || null;
     domain.paymentMethod = entity.paymentMethod;
     domain.amount = entity.amount;
     domain.paymentStatus = entity.paymentStatus;
@@ -38,7 +38,10 @@ export class PaymentMapper extends BaseMapper<PaymentEntity, Payment> {
     if (!domain) return null;
     const entity = new PaymentEntity();
     if (domain.id) entity.id = domain.id;
-    entity.order = { id: domain.orderId } as OrderEntity;
+    entity.orderId = domain.orderId;
+    if (domain.orderId) {
+      entity.order = { id: domain.orderId } as OrderEntity;
+    }
     entity.paymentMethod = domain.paymentMethod;
     entity.amount = domain.amount;
     entity.paymentStatus = domain.paymentStatus;

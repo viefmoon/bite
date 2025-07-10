@@ -146,4 +146,14 @@ export class CreateOrderDto {
   @IsOptional()
   @IsDateString()
   estimatedDeliveryTime?: Date;
+
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'ID del pre-pago a asociar con la orden (opcional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  prepaymentId?: string;
 }

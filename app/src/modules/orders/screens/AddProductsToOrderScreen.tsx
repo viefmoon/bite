@@ -603,9 +603,14 @@ const AddProductsToOrderScreen = () => {
       return photoPath ? getImageUrl(photoPath) : null;
     })();
     const isActive = item.isActive !== false;
+    
+    // Verificar si es un producto sin pantalla de preparación
+    const isProductWithoutScreen = navigationLevel === 'products' && 
+      'preparationScreenId' in item && 
+      !item.preparationScreenId;
 
     const handlePress = () => {
-      if (!isActive) return;
+      if (!isActive || isProductWithoutScreen) return;
 
       if (navigationLevel === 'categories') {
         handleCategorySelect(item.id);
@@ -653,22 +658,31 @@ const AddProductsToOrderScreen = () => {
 
     return (
       <Card
-        style={[styles.cardItem, !isActive && styles.cardItemInactive]}
+        style={[
+          styles.cardItem, 
+          (!isActive || isProductWithoutScreen) && styles.cardItemInactive
+        ]}
         onPress={handlePress}
         onLongPress={handleLongPress}
-        disabled={!isActive}
+        disabled={!isActive || isProductWithoutScreen}
       >
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
-            style={[styles.itemImage, !isActive && styles.imageInactive]}
+            style={[
+              styles.itemImage, 
+              (!isActive || isProductWithoutScreen) && styles.imageInactive
+            ]}
             contentFit="cover"
             placeholder={blurhash}
             transition={300}
           />
         ) : (
           <View
-            style={[styles.imagePlaceholder, !isActive && styles.imageInactive]}
+            style={[
+              styles.imagePlaceholder, 
+              (!isActive || isProductWithoutScreen) && styles.imageInactive
+            ]}
           >
             <Text style={styles.placeholderText}>
               {navigationLevel === 'categories'
@@ -700,6 +714,11 @@ const AddProductsToOrderScreen = () => {
         {!isActive && (
           <View style={styles.inactiveBadge}>
             <Text style={styles.inactiveBadgeText}>No disponible</Text>
+          </View>
+        )}
+        {isProductWithoutScreen && (
+          <View style={styles.inactiveBadge}>
+            <Text style={styles.inactiveBadgeText}>SIN PANTALLA</Text>
           </View>
         )}
       </Card>

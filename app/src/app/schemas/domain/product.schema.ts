@@ -29,7 +29,7 @@ export const productSchema = z.object({
     .number()
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
-  preparationScreenId: z.string().min(1, 'La pantalla de preparación es requerida'),
+  preparationScreenId: z.string().optional().nullable(),
   variants: z.array(productVariantSchema).optional(),
   modifierGroups: z.array(modifierGroupSchema).optional(),
   pizzaCustomizations: z.array(z.any()).optional(),
