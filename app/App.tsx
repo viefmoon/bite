@@ -21,11 +21,11 @@ registerTranslation('es', es);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Los datos se consideran obsoletos inmediatamente
-      gcTime: 0, // No mantener caché (antes cacheTime en v4)
-      refetchOnMount: 'always', // Siempre refrescar al montar
-      refetchOnWindowFocus: true, // Refrescar al enfocar la ventana
-      refetchOnReconnect: true, // Refrescar al reconectar
+      staleTime: 5 * 60 * 1000, // Los datos se consideran frescos por 5 minutos
+      gcTime: 10 * 60 * 1000, // Mantener en caché por 10 minutos (antes cacheTime en v4)
+      refetchOnMount: false, // No refrescar automáticamente al montar si los datos están frescos
+      refetchOnWindowFocus: false, // No refrescar automáticamente al enfocar
+      refetchOnReconnect: 'always', // Siempre refrescar al reconectar
       retry: 0, // No reintentar, ya lo maneja axios-retry
       refetchInterval: false, // No refrescar automáticamente por intervalo
     },

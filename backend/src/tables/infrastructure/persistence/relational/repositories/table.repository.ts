@@ -73,8 +73,11 @@ export class TablesRelationalRepository implements TableRepository {
       where.isAvailable = filterOptions.isAvailable;
     }
 
+    // Si no se especifica explícitamente, excluir mesas temporales
     if (filterOptions?.isTemporary !== undefined) {
       where.isTemporary = filterOptions.isTemporary;
+    } else {
+      where.isTemporary = false; // Por defecto, no mostrar mesas temporales
     }
 
     const entities = await this.tablesRepository.find({
@@ -109,7 +112,10 @@ export class TablesRelationalRepository implements TableRepository {
 
   async findByAreaId(areaId: Table['areaId']): Promise<Table[]> {
     const entities = await this.tablesRepository.find({
-      where: { area: { id: areaId } },
+      where: {
+        area: { id: areaId },
+        isTemporary: false, // Excluir mesas temporales de los listados generales
+      },
       relations: ['area'],
     });
 
