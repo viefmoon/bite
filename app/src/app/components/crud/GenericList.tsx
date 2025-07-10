@@ -15,7 +15,6 @@ import {
   Text,
   Surface,
   Searchbar,
-  SegmentedButtons,
   FAB,
   Portal,
   Menu,
@@ -24,7 +23,7 @@ import {
 } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
-import { getImageUrl } from '../../lib/imageUtils';
+import { useResponsive } from '../../hooks/useResponsive';
 export interface FilterOption<TValue> {
   value: TValue;
   label: string;
@@ -49,6 +48,7 @@ export interface RenderItemConfig<TItem> {
   isDefaultField?: keyof TItem;
   statusConfig?: StatusConfig<TItem>;
   renderTitle?: (item: TItem) => React.ReactNode;
+  renderDescription?: (item: TItem) => React.ReactNode;
 }
 
 interface GenericListProps<TItem extends { id: string }> {
@@ -64,6 +64,7 @@ interface GenericListProps<TItem extends { id: string }> {
   imageStyle?: StyleProp<ViewStyle>;
   itemActionsContainerStyle?: StyleProp<ViewStyle>;
   renderItemActions?: (item: TItem) => React.ReactNode;
+  renderItem?: ({ item }: { item: TItem }) => React.ReactElement;
   enableSearch?: boolean;
   searchPlaceholder?: string;
   searchQuery?: string;
@@ -78,26 +79,35 @@ interface GenericListProps<TItem extends { id: string }> {
   fabLabel?: string;
   fabVisible?: boolean;
   showImagePlaceholder?: boolean;
+  placeholderIcon?: string;
   isModalOpen?: boolean;
   isDrawerOpen?: boolean;
+  enableGrid?: boolean;
+  gridColumns?: number;
+  gridColumnsTablet?: number;
+  minItemWidth?: number;
+  itemSpacing?: number;
 }
 
-const getStyles = (theme: AppTheme) => {
-  const listItemHorizontalMargin = theme.spacing.m;
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) => {
+  const listItemHorizontalMargin = responsive.spacing.m;
   return StyleSheet.create({
     listContainer: {
       flex: 1,
     },
     searchbarContainer: {
-      paddingHorizontal: listItemHorizontalMargin - theme.spacing.xs,
-      paddingTop: theme.spacing.s,
-      paddingBottom: theme.spacing.xs,
+      paddingHorizontal: listItemHorizontalMargin - responsive.spacing.xs,
+      paddingTop: responsive.spacing.s,
+      paddingBottom: responsive.spacing.xs,
       backgroundColor: theme.colors.background,
     },
     searchRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.spacing.s,
     },
     searchbar: {
       flex: 1,
@@ -121,26 +131,44 @@ const getStyles = (theme: AppTheme) => {
     },
     menuContent: {
       backgroundColor: theme.colors.elevation.level3,
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.spacing.xs,
     },
     listItem: {
       backgroundColor: theme.colors.surface,
-      marginVertical: theme.spacing.xs,
-      marginHorizontal: theme.spacing.l,
+      marginVertical: responsive.spacing.xs,
+      marginHorizontal: responsive.spacing.l,
+      borderRadius: theme.roundness * 2,
+      elevation: 2,
+      overflow: 'hidden',
+    },
+    gridListItem: {
+      backgroundColor: theme.colors.surface,
+      flex: 1,
+      marginHorizontal: responsive.spacing.xs,
+      marginVertical: responsive.spacing.xs,
       borderRadius: theme.roundness * 2,
       elevation: 2,
       overflow: 'hidden',
     },
     listItemContent: {
-      paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: responsive.spacing.m,
+      paddingHorizontal: responsive.spacing.s,
+      minHeight: 72,
     },
     listItemImage: {
-      width: 56,
-      height: 56,
+      width: 48,
+      height: 48,
       borderRadius: theme.roundness,
-      marginLeft: theme.spacing.s,
-      marginRight: theme.spacing.m,
+      marginLeft: responsive.spacing.s,
+      marginRight: responsive.spacing.m,
+      backgroundColor: theme.colors.surfaceDisabled,
+    },
+    gridItemImage: {
+      width: responsive.scaleWidth(64),
+      height: responsive.scaleWidth(64),
+      borderRadius: theme.roundness,
+      marginLeft: responsive.spacing.s,
+      marginRight: responsive.spacing.m,
       backgroundColor: theme.colors.surfaceDisabled,
     },
     statusChip: {
@@ -159,21 +187,21 @@ const getStyles = (theme: AppTheme) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
+      padding: responsive.spacing.l,
     },
     defaultContentContainer: {
       paddingBottom: 80,
-      paddingTop: theme.spacing.xs,
+      paddingTop: responsive.spacing.xs,
     },
     itemActionsContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingLeft: theme.spacing.s,
+      paddingLeft: responsive.spacing.s,
     },
     filtersOuterContainer: {
-      paddingTop: theme.spacing.s,
-      paddingBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
+      paddingTop: responsive.spacing.s,
+      paddingBottom: responsive.spacing.xs,
+      paddingHorizontal: responsive.spacing.xs,
       backgroundColor: theme.colors.background,
     },
     segmentedButtons: {
@@ -183,12 +211,12 @@ const getStyles = (theme: AppTheme) => {
     },
     filterButton: {
       borderWidth: 0,
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: responsive.spacing.xs,
     },
     filterButtonLabel: {
       fontSize: 15,
       letterSpacing: 0.15,
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: responsive.spacing.xs,
     },
     fab: {
       position: 'absolute',
@@ -225,11 +253,22 @@ const GenericList = <TItem extends { id: string }>({
   fabLabel,
   fabVisible = true,
   showImagePlaceholder = true,
+  placeholderIcon = 'image-outline',
   isModalOpen = false,
   isDrawerOpen = false,
+  renderItem,
+  enableGrid = false,
+  gridColumns = 1,
+  gridColumnsTablet,
+  minItemWidth,
+  itemSpacing,
 }: GenericListProps<TItem>) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = useMemo(
+    () => getStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
   const isSearchControlled =
@@ -278,6 +317,31 @@ const GenericList = <TItem extends { id: string }>({
     currentSearchTerm,
     renderConfig,
   ]);
+
+  // Calcular número de columnas para el grid
+  const numColumns = useMemo(() => {
+    if (!enableGrid) return 1;
+
+    if (minItemWidth) {
+      const gap = itemSpacing || responsive.spacing.m;
+      const padding = responsive.spacing.m;
+      return responsive.getGridColumns(minItemWidth, gap, padding);
+    }
+
+    if (responsive.isTablet && gridColumnsTablet) {
+      return gridColumnsTablet;
+    }
+
+    return gridColumns;
+  }, [
+    enableGrid,
+    minItemWidth,
+    itemSpacing,
+    responsive,
+    gridColumns,
+    gridColumnsTablet,
+  ]);
+
   const renderGenericItem = useCallback(
     ({ item }: { item: TItem }) => {
       const title = String(item[renderConfig.titleField] ?? '');
@@ -341,8 +405,10 @@ const GenericList = <TItem extends { id: string }>({
           'path' in imageFieldValue &&
           typeof imageFieldValue.path === 'string'
         ) {
-          const url = getImageUrl(imageFieldValue.path);
-          imageSource = url ?? undefined;
+          // TODO: Fix async getImageUrl call
+          // const url = getImageUrl(imageFieldValue.path);
+          // imageSource = url ?? undefined;
+          imageSource = imageFieldValue.path;
         } else if (typeof imageFieldValue === 'string') {
           imageSource = imageFieldValue;
         }
@@ -382,10 +448,18 @@ const GenericList = <TItem extends { id: string }>({
         );
       }
 
+      const isGrid = enableGrid && numColumns > 1;
+
       return (
-        <Surface style={[styles.listItem, listItemStyle]} elevation={1}>
+        <Surface
+          style={[
+            isGrid ? styles.gridListItem : styles.listItem,
+            listItemStyle,
+          ]}
+          elevation={1}
+        >
           <List.Item
-            title={() => 
+            title={() =>
               renderConfig.renderTitle ? (
                 renderConfig.renderTitle(item)
               ) : (
@@ -395,6 +469,11 @@ const GenericList = <TItem extends { id: string }>({
               )
             }
             description={() => {
+              // Si hay un renderDescription personalizado, usarlo
+              if (renderConfig.renderDescription) {
+                return renderConfig.renderDescription(item);
+              }
+
               // Construir las partes del texto
               const parts = [];
 
@@ -437,18 +516,19 @@ const GenericList = <TItem extends { id: string }>({
               return null;
             }}
             left={() => {
-              if (imageSource) {
+              if (imageSource || showImagePlaceholder) {
                 return (
                   <AutoImage
                     source={imageSource}
-                    placeholder={require('../../../../assets/icon.png')}
-                    style={[styles.listItemImage, imageStyle]}
+                    placeholderIcon={placeholderIcon}
+                    style={[
+                      isGrid ? styles.gridItemImage : styles.listItemImage,
+                      imageStyle,
+                    ]}
                     contentFit="cover"
                     transition={300}
                   />
                 );
-              } else if (showImagePlaceholder) {
-                return <View style={[styles.listItemImage, imageStyle]} />;
               } else {
                 return null;
               }
@@ -483,6 +563,8 @@ const GenericList = <TItem extends { id: string }>({
       imageStyle,
       renderItemActions,
       itemActionsContainerStyle,
+      enableGrid,
+      numColumns,
     ],
   );
 
@@ -495,21 +577,12 @@ const GenericList = <TItem extends { id: string }>({
     ]);
   }, [styles.defaultContentContainer, contentContainerStyle]);
 
-  const currentFilterLabel = useMemo(() => {
-    if (filterOptions && filterValue !== undefined) {
-      const currentFilter = filterOptions.find(
-        (opt) => opt.value === filterValue,
-      );
-      return currentFilter?.label || 'Filtros';
-    }
-    return 'Filtros';
-  }, [filterOptions, filterValue]);
-
   const hasActiveFilter = filterValue !== 'all' && filterValue !== undefined;
 
   return (
     <View style={styles.listContainer}>
-      {(enableSearch || (filterOptions && filterValue !== undefined && onFilterChange)) && (
+      {(enableSearch ||
+        (filterOptions && filterValue !== undefined && onFilterChange)) && (
         <View style={styles.searchbarContainer}>
           <View style={styles.searchRow}>
             {enableSearch && (
@@ -519,11 +592,14 @@ const GenericList = <TItem extends { id: string }>({
                   isSearchControlled ? onSearchChange : setInternalSearchTerm
                 }
                 value={currentSearchTerm}
-                style={[styles.searchbar, filterOptions ? styles.searchbarWithFilter : {}]}
-                inputStyle={{ 
+                style={[
+                  styles.searchbar,
+                  filterOptions ? styles.searchbarWithFilter : {},
+                ]}
+                inputStyle={{
                   color: theme.colors.onSurface,
                   fontSize: 14,
-                  minHeight: 40 
+                  minHeight: 40,
                 }}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
                 iconColor={theme.colors.onSurfaceVariant}
@@ -546,12 +622,16 @@ const GenericList = <TItem extends { id: string }>({
                   onDismiss={() => setFilterMenuVisible(false)}
                   anchor={
                     <IconButton
-                      icon={hasActiveFilter ? "filter-check" : "filter-variant"}
+                      icon={hasActiveFilter ? 'filter-check' : 'filter-variant'}
                       mode="contained-tonal"
                       size={24}
                       onPress={() => setFilterMenuVisible(true)}
                       style={styles.filterIconButton}
-                      iconColor={hasActiveFilter ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                      iconColor={
+                        hasActiveFilter
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
                     />
                   }
                   anchorPosition="bottom"
@@ -579,10 +659,7 @@ const GenericList = <TItem extends { id: string }>({
                   ))}
                 </Menu>
                 {hasActiveFilter && (
-                  <Badge
-                    style={styles.filterBadge}
-                    size={8}
-                  />
+                  <Badge style={styles.filterBadge} size={8} />
                 )}
               </View>
             )}
@@ -592,12 +669,20 @@ const GenericList = <TItem extends { id: string }>({
 
       <FlashList
         data={processedItems}
-        renderItem={renderGenericItem}
+        renderItem={renderItem || renderGenericItem}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={80}
+        estimatedItemSize={enableGrid && numColumns > 1 ? 150 : 80}
+        numColumns={numColumns}
         contentContainerStyle={finalContentContainerStyle}
         ListEmptyComponent={
-          processedItems.length === 0 ? ListEmptyComponent : null
+          processedItems.length === 0 ? ListEmptyComponent || null : null
+        }
+        ItemSeparatorComponent={
+          enableGrid && numColumns > 1
+            ? () => (
+                <View style={{ height: itemSpacing || responsive.spacing.m }} />
+              )
+            : undefined
         }
         refreshControl={
           <RefreshControl

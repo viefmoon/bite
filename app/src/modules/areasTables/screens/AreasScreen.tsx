@@ -90,9 +90,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         await createAreaMutation.mutateAsync(data as CreateAreaDto);
       }
       handleCloseModals();
-    } catch (error) {
-      console.error('Submit failed:', error);
-    }
+    } catch (error) {}
   };
 
   const handleNavigateToTables = (area: Area) => {
@@ -157,26 +155,13 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         'No hay áreas registradas. Presiona el botón + para crear la primera.',
       icon: 'map-marker-outline',
     },
+    errorConfig: {
+      title: 'Error al cargar áreas',
+      message: 'No se pudieron cargar las áreas. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetchAreas,
+    },
   });
-
-  if (isLoadingAreas && !isRefetching) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator animating={true} size="large" />
-        <Text>Cargando áreas...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (isErrorAreas) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <Text style={{ color: theme.colors.error }}>
-          Error al cargar las áreas.
-        </Text>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -198,7 +183,8 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         renderItemActions={renderItemActions}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
         isDrawerOpen={isDrawerOpen}
-        showImagePlaceholder={false}
+        showImagePlaceholder={true}
+        placeholderIcon="floor-plan"
       />
 
       <AreaFormModal
@@ -223,6 +209,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}
+        showImage={true}
       />
     </SafeAreaView>
   );

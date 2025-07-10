@@ -24,6 +24,7 @@ const PreparationScreensStackNavigator = () => {
         component={PreparationScreensScreen}
         options={{
           title: 'Pantallas de Preparación',
+          headerShown: false,
         }}
       />
       {/* <Stack.Screen name="PreparationScreenDetail" component={DetailScreenComponent} /> */}

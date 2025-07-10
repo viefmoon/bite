@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import {
   handleApiResponse,
   handleApiResponseVoid,
@@ -13,15 +13,21 @@ import {
 
 class AuthService {
   async login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
-    const isEmail = loginData.emailOrUsername.includes('@');
+    // Validación mejorada de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmail = emailRegex.test(loginData.emailOrUsername);
+    
+    // Sanitizar entrada
+    const sanitizedInput = loginData.emailOrUsername.trim().toLowerCase();
+    
     const payload: AuthEmailLoginDto = {
       password: loginData.password,
       ...(isEmail
-        ? { email: loginData.emailOrUsername }
-        : { username: loginData.emailOrUsername }),
+        ? { email: sanitizedInput }
+        : { username: sanitizedInput }),
     };
 
-    const response = await apiClient.post<LoginResponseDto>(
+    const response = await ApiClientWrapper.post<LoginResponseDto>(
       API_PATHS.AUTH_EMAIL_LOGIN,
       payload,
     );
@@ -30,7 +36,7 @@ class AuthService {
   }
 
   async register(data: RegisterFormInputs): Promise<void> {
-    const response = await apiClient.post<{ message?: string }>(
+    const response = await ApiClientWrapper.post<{ message?: string }>(
       API_PATHS.AUTH_EMAIL_REGISTER,
       data,
     );
@@ -40,7 +46,7 @@ class AuthService {
 
   async verifyToken(): Promise<boolean> {
     try {
-      const response = await apiClient.get(API_PATHS.AUTH_ME);
+      const response = await ApiClientWrapper.get(API_PATHS.AUTH_ME);
       return response.status === 200;
     } catch (error) {
       console.log('[AuthService] Token inválido o expirado');

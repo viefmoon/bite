@@ -2,6 +2,18 @@ import type { OrderType } from './orders.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
+// Interfaz para modificadores de producto
+export interface ProductModifierDto {
+  modifierId: string;
+}
+
+// Interfaz para personalizaciones de pizza seleccionadas
+export interface SelectedPizzaCustomizationDto {
+  pizzaCustomizationId: string;
+  half: 'FULL' | 'HALF_1' | 'HALF_2';
+  action: 'ADD' | 'REMOVE';
+}
+
 // Interfaz para items en el DTO de actualización
 export interface OrderItemDtoForBackend {
   id?: string;
@@ -11,7 +23,8 @@ export interface OrderItemDtoForBackend {
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
-  productModifierIds?: string[]; // Ahora usa array de IDs directamente
+  productModifiers?: ProductModifierDto[]; // Array de objetos con modifierId
+  selectedPizzaCustomizations?: SelectedPizzaCustomizationDto[]; // Personalizaciones de pizza
 }
 
 // Interfaz para ajustes en el DTO

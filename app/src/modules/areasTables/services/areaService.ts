@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BackendErrorResponse } from '../../../app/types/api.types';
@@ -15,7 +15,7 @@ export const getAreas = async (
   filterOptions: FindAllAreasDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Area[]> => {
-  const response = await apiClient.get<{
+  const response = await ApiClientWrapper.get<{
     items: Area[];
     total: number;
     page: number;
@@ -39,7 +39,7 @@ export const getAreas = async (
 };
 
 export const getAreaById = async (id: string): Promise<Area> => {
-  const response = await apiClient.get<Area>(`${API_PATHS.AREAS}/${id}`);
+  const response = await ApiClientWrapper.get<Area>(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok || !response.data) {
     console.error(
@@ -55,7 +55,7 @@ export const getAreaById = async (id: string): Promise<Area> => {
 };
 
 export const createArea = async (data: CreateAreaDto): Promise<Area> => {
-  const response = await apiClient.post<Area>(API_PATHS.AREAS, data);
+  const response = await ApiClientWrapper.post<Area>(API_PATHS.AREAS, data);
 
   if (!response.ok || !response.data) {
     console.error('[areaService.createArea] Failed to create area:', response);
@@ -71,7 +71,7 @@ export const updateArea = async (
   id: string,
   data: UpdateAreaDto,
 ): Promise<Area> => {
-  const response = await apiClient.patch<Area>(
+  const response = await ApiClientWrapper.patch<Area>(
     `${API_PATHS.AREAS}/${id}`,
     data,
   );
@@ -90,7 +90,7 @@ export const updateArea = async (
 };
 
 export const deleteArea = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(`${API_PATHS.AREAS}/${id}`);
+  const response = await ApiClientWrapper.delete(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok) {
     console.error(

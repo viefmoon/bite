@@ -10,6 +10,7 @@ import {
   TouchableRipple,
 } from 'react-native-paper';
 import { useAppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 import { loginSchema, LoginFormInputs } from '../schema/auth.schema';
 
 interface LoginFormProps {
@@ -28,6 +29,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   initialRememberMe = false,
 }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [rememberMe, setRememberMe] = useState(initialRememberMe);
 
@@ -64,27 +66,33 @@ const LoginForm: React.FC<LoginFormProps> = ({
           width: '100%',
         },
         input: {
-          marginBottom: 8,
+          marginBottom: responsive.spacing.s,
+          fontSize: responsive.fontSize.m,
         },
         button: {
-          marginTop: 16,
+          marginTop: responsive.spacing.m,
+          paddingVertical: responsive.spacing.xs,
         },
         helperText: {
-          marginBottom: 8,
+          marginBottom: responsive.spacing.s,
+          fontSize: responsive.fontSize.s,
         },
         checkboxContainer: {
           flexDirection: 'row',
           alignItems: 'center',
-          marginTop: 8,
-          marginBottom: 8,
+          marginTop: responsive.spacing.s,
+          marginBottom: responsive.spacing.s,
         },
         checkbox: {},
         checkboxLabel: {
           color: theme.colors.onSurface,
-          marginLeft: 8,
+          marginLeft: responsive.spacing.s,
+          flex: 1,
+          flexShrink: 1,
+          fontSize: responsive.fontSize.m,
         },
       }),
-    [theme],
+    [theme, responsive],
   );
 
   return (
@@ -168,7 +176,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
             onPress={() => setRememberMe(!rememberMe)}
             disabled={isLoading}
           />
-          <Text style={styles.checkboxLabel} disabled={isLoading}>
+          <Text
+            style={styles.checkboxLabel}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+            disabled={isLoading}
+          >
             Recordarme
           </Text>
         </>
@@ -180,8 +194,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
         loading={isLoading}
         disabled={isLoading}
         style={styles.button}
+        contentStyle={{ height: responsive.getResponsiveDimension(48, 56) }}
+        labelStyle={{ fontSize: responsive.fontSize.m }}
       >
-        <Text>{isLoading ? 'Ingresando...' : 'Ingresar'}</Text>
+        {isLoading ? 'Ingresando...' : 'Ingresar'}
       </Button>
     </View>
   );

@@ -160,15 +160,12 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
       inputRange: [0, 1],
       outputRange: ['transparent', theme.colors.background],
     }),
-    paddingHorizontal: animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 4],
-    }),
+  };
 
-    zIndex: animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 2],
-    }),
+  // Estilos estáticos que no deben ser animados
+  const staticLabelStyle = {
+    paddingHorizontal: isActive ? 4 : 0,
+    zIndex: isActive ? 2 : 0,
   };
 
   return (
@@ -185,7 +182,12 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
         {...rest}
       >
         <Animated.Text
-          style={[styles.label, labelStyle, animatedLabelStyle]}
+          style={[
+            styles.label,
+            staticLabelStyle,
+            labelStyle,
+            animatedLabelStyle,
+          ]}
           numberOfLines={1}
         >
           {label}

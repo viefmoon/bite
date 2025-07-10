@@ -168,12 +168,11 @@ export class UpdateProductDto {
     type: String,
     example: 'PREPSCR-1',
     description: 'ID de la pantalla de preparación',
-    nullable: true,
     required: false,
   })
   @IsOptional()
   @IsString()
-  preparationScreenId?: string | null;
+  preparationScreenId?: string;
 
   @ApiProperty({
     type: [UpdateProductVariantDto],

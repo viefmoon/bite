@@ -180,7 +180,7 @@ export class UsersRelationalRepository implements UserRepository {
 
     // Actualizar la relación
     entity.preparationScreen = preparationScreen;
-    const updatedEntity = await this.usersRepository.save(entity);
+    await this.usersRepository.save(entity);
 
     // Cargar el usuario actualizado con las relaciones
     const refreshedEntity = await this.usersRepository.findOne({

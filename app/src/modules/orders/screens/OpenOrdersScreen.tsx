@@ -51,6 +51,8 @@ const formatOrderStatus = (status: OrderStatus): string => {
       return 'Pendiente';
     case OrderStatusEnum.IN_PROGRESS:
       return 'En Progreso';
+    case OrderStatusEnum.IN_PREPARATION:
+      return 'En Preparación';
     case OrderStatusEnum.READY:
       return 'Lista';
     case OrderStatusEnum.DELIVERED:
@@ -150,6 +152,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const {
     data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
     isLoading,
+    isError,
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
@@ -353,7 +356,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   const { ListEmptyComponent } = useListState({
     isLoading,
-    isError: false, // Ya no usamos isError porque no está disponible desde useGetOpenOrdersQuery
+    isError,
     data: filteredOrders,
     emptyConfig: {
       title:
@@ -369,6 +372,13 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           ? 'No hay órdenes abiertas en este momento.'
           : `No hay órdenes de este tipo en este momento.`,
       icon: 'clipboard-text-outline',
+    },
+    errorConfig: {
+      title: 'Error al cargar órdenes',
+      message: 'No se pudieron cargar las órdenes. Verifica tu conexión.',
+      icon: 'wifi-off',
+      actionLabel: 'Reintentar',
+      onAction: () => refetch(),
     },
   });
 
@@ -411,9 +421,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         });
         setOrderToPrintId(null); // Limpiar el ID de la orden
       } else {
-        console.warn(
-          'Se seleccionó una impresora pero no había ID de orden guardado.',
-        );
       }
     },
     [orderToPrintId, printKitchenTicketMutation],
@@ -428,7 +435,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         setIsEditModalVisible(false);
         setEditingOrderId(null);
       } catch (error) {
-        console.error('Error al cancelar la orden:', error);
         // El error se muestra a través del hook useCancelOrderMutation
       }
     },
@@ -558,7 +564,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               orderDate={
                 ordersData?.find((o) => o.id === editingOrderId)?.createdAt
                   ? new Date(
-                      ordersData.find((o) => o.id === editingOrderId)!.createdAt,
+                      ordersData.find(
+                        (o) => o.id === editingOrderId,
+                      )!.createdAt,
                     )
                   : undefined
               }
@@ -598,85 +606,83 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   navigation.navigate('AddProductsToOrder', {
                     orderId: orderId!,
                     orderNumber: orderNumber!,
-                  // Pasar productos temporales existentes si los hay
-                  existingTempProducts: existingProducts,
-                  existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
-                  onProductsAdded: (newProducts) => {
-                    // Actualizar productos temporales para esta orden
-                    setTemporaryProducts((prev) => ({
-                      ...prev,
-                      [orderId!]: newProducts,
-                    }));
-                    // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
-                    // Reabrir el modal cuando regresemos
-                    setIsEditModalVisible(true);
-                  },
-                });
-              }, 100);
-            }}
-            onConfirmOrder={async (details: OrderDetailsForBackend) => {
-              // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
-              const payload = {
-                orderType: details.orderType,
-                items: details.items, // Enviar items para actualizar
-                tableId: details.tableId || null,
-                scheduledAt: details.scheduledAt || null,
-                deliveryInfo: details.deliveryInfo,
-                notes: details.notes || null,
-                total: details.total,
-                subtotal: details.subtotal,
-                // NO incluir ajustes aquí, se manejan por separado
-              };
+                    // Pasar productos temporales existentes si los hay
+                    existingTempProducts: existingProducts,
+                    existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
+                    onProductsAdded: (newProducts) => {
+                      // Actualizar productos temporales para esta orden
+                      setTemporaryProducts((prev) => ({
+                        ...prev,
+                        [orderId!]: newProducts,
+                      }));
+                      // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
+                      // Reabrir el modal cuando regresemos
+                      setIsEditModalVisible(true);
+                    },
+                  });
+                }, 100);
+              }}
+              onConfirmOrder={async (details: OrderDetailsForBackend) => {
+                // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
+                const payload = {
+                  orderType: details.orderType,
+                  items: details.items, // Enviar items para actualizar
+                  tableId: details.tableId || null,
+                  scheduledAt: details.scheduledAt || null,
+                  deliveryInfo: details.deliveryInfo,
+                  notes: details.notes || null,
+                  total: details.total,
+                  subtotal: details.subtotal,
+                  // NO incluir ajustes aquí, se manejan por separado
+                };
 
-              try {
-                // Primero actualizar la orden
-                await updateOrderMutation.mutateAsync({
-                  orderId: editingOrderId,
-                  payload,
-                });
+                try {
+                  // Primero actualizar la orden
+                  await updateOrderMutation.mutateAsync({
+                    orderId: editingOrderId,
+                    payload,
+                  });
 
-                // Luego, si hay ajustes, crearlos
-                if (details.adjustments && details.adjustments.length > 0) {
-                  // Asegurarse de que cada ajuste tenga el orderId correcto
-                  const adjustmentsWithOrderId = details.adjustments.map(
-                    (adj) => ({
-                      ...adj,
-                      orderId: editingOrderId,
-                    }),
-                  );
-                  console.log('Ajustes a crear:', adjustmentsWithOrderId);
-                  await createBulkAdjustmentsMutation.mutateAsync(
-                    adjustmentsWithOrderId,
-                  );
+                  // Luego, si hay ajustes, crearlos
+                  if (details.adjustments && details.adjustments.length > 0) {
+                    // Asegurarse de que cada ajuste tenga el orderId correcto
+                    const adjustmentsWithOrderId = details.adjustments.map(
+                      (adj) => ({
+                        ...adj,
+                        orderId: editingOrderId,
+                      }),
+                    );
+                    await createBulkAdjustmentsMutation.mutateAsync(
+                      adjustmentsWithOrderId,
+                    );
+                  }
+
+                  // Limpiar estados después de actualización exitosa
+                  setIsEditModalVisible(false);
+                  setEditingOrderId(null);
+                  // Limpiar productos temporales y conteo para esta orden
+                  if (editingOrderId) {
+                    setTemporaryProducts((prev) => {
+                      const newState = { ...prev };
+                      delete newState[editingOrderId];
+                      return newState;
+                    });
+                    setExistingItemsCount((prev) => {
+                      const newState = { ...prev };
+                      delete newState[editingOrderId];
+                      return newState;
+                    });
+                  }
+                } catch (error) {
+                  // No cerrar el modal en caso de error para que el usuario pueda reintentar
                 }
-
-                // Limpiar estados después de actualización exitosa
-                setIsEditModalVisible(false);
-                setEditingOrderId(null);
-                // Limpiar productos temporales y conteo para esta orden
+              }}
+              onCancelOrder={() => {
                 if (editingOrderId) {
-                  setTemporaryProducts((prev) => {
-                    const newState = { ...prev };
-                    delete newState[editingOrderId];
-                    return newState;
-                  });
-                  setExistingItemsCount((prev) => {
-                    const newState = { ...prev };
-                    delete newState[editingOrderId];
-                    return newState;
-                  });
+                  handleCancelOrder(editingOrderId);
                 }
-              } catch (error) {
-                console.error('Error al actualizar la orden:', error);
-                // No cerrar el modal en caso de error para que el usuario pueda reintentar
-              }
-            }}
-            onCancelOrder={() => {
-              if (editingOrderId) {
-                handleCancelOrder(editingOrderId);
-              }
-            }}
-          />
+              }}
+            />
           </CartProvider>
         )}
       </Portal>

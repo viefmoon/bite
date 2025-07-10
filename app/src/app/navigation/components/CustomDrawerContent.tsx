@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { CommonActions } from '@react-navigation/native';
 import {
   Drawer as PaperDrawer,
   Text,
@@ -17,14 +16,30 @@ import { useAuthStore } from '../../store/authStore';
 import { useAppTheme } from '../../styles/theme';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
-import { 
-  hasPermission, 
-  DRAWER_SECTIONS, 
-  DrawerSection 
+import {
+  hasPermission,
+  DRAWER_SECTIONS,
+  DrawerSection,
 } from '../../constants/rolePermissions';
 import { generateNavigationAction } from '../helpers/navigationHelpers';
+import { RoleEnum } from '@/modules/users/types/user.types';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
+
+// Traducciones de roles
+const ROLE_TRANSLATIONS: Record<number, string> = {
+  [RoleEnum.ADMIN]: 'Administrador',
+  [RoleEnum.MANAGER]: 'Gerente',
+  [RoleEnum.CASHIER]: 'Cajero',
+  [RoleEnum.WAITER]: 'Mesero',
+  [RoleEnum.KITCHEN]: 'Cocina',
+  [RoleEnum.DELIVERY]: 'Repartidor',
+};
+
+const getRoleTranslation = (roleId?: number): string => {
+  if (!roleId) return 'Desconocido';
+  return ROLE_TRANSLATIONS[roleId] || 'Desconocido';
+};
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const theme = useAppTheme();
@@ -162,17 +177,19 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     label: string,
     icon: string,
   ) => {
-    return renderDrawerItem(
-      route,
-      label,
-      icon,
-      () => {
+    return renderDrawerItem(route, label, icon, () => {
+      // For kitchen users in KitchenOnlyNavigator, handle navigation differently
+      const isKitchenUser = user?.role?.id === 5;
+      if (isKitchenUser && route === 'KitchenStack') {
+        // Simply navigate to the Kitchen screen without reset
+        props.navigation.navigate('Kitchen');
+      } else {
         const action = generateNavigationAction(route, user?.role?.id);
         if (action) {
           props.navigation.dispatch(action);
         }
       }
-    );
+    });
   };
 
   const handleClearCache = async () => {
@@ -212,7 +229,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                     'Usuario'}
                 </Text>
                 <Text style={styles.caption} numberOfLines={1}>
-                  Rol: {user.role?.name ?? 'Desconocido'}
+                  Rol: {getRoleTranslation(user.role?.id)}
                 </Text>
                 <Text style={styles.caption} numberOfLines={1}>
                   {user.email ?? ''}
@@ -228,55 +245,73 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           <Divider style={styles.divider} />
 
           {/* Sección de Ventas - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.sales.items.some(item => 
-            hasPermission(user?.role?.id, item.route as DrawerSection)
+          {DRAWER_SECTIONS.sales.items.some((item) =>
+            hasPermission(user?.role?.id, item.route as DrawerSection),
           ) && (
             <PaperDrawer.Section style={styles.drawerSection}>
-              <Text style={styles.configSubheader}>{DRAWER_SECTIONS.sales.title}</Text>
-              {DRAWER_SECTIONS.sales.items.map(item => 
+              <Text style={styles.configSubheader}>
+                {DRAWER_SECTIONS.sales.title}
+              </Text>
+              {DRAWER_SECTIONS.sales.items.map((item) =>
                 renderDrawerItemSimple(
                   item.route as DrawerSection,
                   item.label,
-                  item.icon
-                )
+                  item.icon,
+                ),
+              )}
+            </PaperDrawer.Section>
+          )}
+
+          {/* Sección de Cocina - Solo para usuarios con rol kitchen */}
+          {hasPermission(user?.role?.id, 'KitchenStack') && (
+            <PaperDrawer.Section style={styles.drawerSection}>
+              <Text style={styles.configSubheader}>Cocina</Text>
+              {renderDrawerItemSimple(
+                'KitchenStack',
+                'Pantalla de Preparación',
+                'chef-hat',
               )}
             </PaperDrawer.Section>
           )}
 
           {/* Sección de Configuración - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.configuration.items.some(item => 
-            hasPermission(user?.role?.id, item.route as DrawerSection)
+          {DRAWER_SECTIONS.configuration.items.some((item) =>
+            hasPermission(user?.role?.id, item.route as DrawerSection),
           ) && (
             <>
               <Divider style={styles.divider} />
               <PaperDrawer.Section style={styles.drawerSection}>
-                <Text style={styles.configSubheader}>{DRAWER_SECTIONS.configuration.title}</Text>
-                {DRAWER_SECTIONS.configuration.items.map(item => 
+                <Text style={styles.configSubheader}>
+                  {DRAWER_SECTIONS.configuration.title}
+                </Text>
+                {DRAWER_SECTIONS.configuration.items.map((item) =>
                   renderDrawerItemSimple(
                     item.route as DrawerSection,
                     item.label,
-                    item.icon
-                  )
+                    item.icon,
+                  ),
                 )}
               </PaperDrawer.Section>
             </>
           )}
 
           {/* Sección de Administración - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.administration.items.some(item => 
-            hasPermission(user?.role?.id, item.route as DrawerSection)
+          {DRAWER_SECTIONS.administration.items.some((item) =>
+            hasPermission(user?.role?.id, item.route as DrawerSection),
           ) && (
             <>
               <Divider style={styles.divider} />
 
               <PaperDrawer.Section style={styles.drawerSection}>
-                <Text style={styles.configSubheader}>{DRAWER_SECTIONS.administration.title}</Text>
-                {DRAWER_SECTIONS.administration.items.map(item => 
+                <Text style={styles.configSubheader}>
+                  {DRAWER_SECTIONS.administration.title}
+                </Text>
+                {DRAWER_SECTIONS.administration.items.map((item) =>
                   renderDrawerItemSimple(
                     item.route as DrawerSection,
                     item.label,
-                    item.icon
-                  )
+                    item.icon,
+                  ),
                 )}
               </PaperDrawer.Section>
             </>

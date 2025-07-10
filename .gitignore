@@ -69,6 +69,10 @@ temp/
 *.seed
 *.pid.lock
 .eslintcache
+lint-results.json
+*.backup.*
+*.backup.tsx
+*.backup.ts
 
 # Backend specific (if running from root)
 /backend/dist/
@@ -77,6 +81,8 @@ temp/
 /backend/files/
 /backend/.data/
 /backend/ormconfig.json
+/backend/backend.log
+/backend/*.log
 
 # App specific (if running from root)
 /app/node_modules/
@@ -91,6 +97,8 @@ temp/
 /app/*.p12
 /app/*.key
 /app/*.mobileprovision
+/app/*.apk
+/app/build-*.apk
 
 # Documentation builds
 docs/_build/

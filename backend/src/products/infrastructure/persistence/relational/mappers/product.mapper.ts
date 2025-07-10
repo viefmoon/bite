@@ -68,9 +68,12 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     domain.modifierGroups = mapArray(entity.modifierGroups, (group) =>
       this.modifierGroupMapper.toDomain(group),
     );
-    domain.preparationScreen = entity.preparationScreen
-      ? this.preparationScreenMapper.toDomain(entity.preparationScreen)
-      : null;
+    if (entity.preparationScreen) {
+      const screen = this.preparationScreenMapper.toDomain(entity.preparationScreen);
+      if (screen) {
+        domain.preparationScreen = screen;
+      }
+    }
 
     if (entity.pizzaCustomizations) {
       domain.pizzaCustomizations = entity.pizzaCustomizations
@@ -112,19 +115,14 @@ export class ProductMapper extends BaseMapper<ProductEntity, Product> {
     entity.estimatedPrepTime = domain.estimatedPrepTime;
 
     // Establecer tanto la relación como el ID de preparationScreen
-    if (domain.preparationScreenId !== undefined) {
+    if (domain.preparationScreenId) {
       entity.preparationScreenId = domain.preparationScreenId;
-      entity.preparationScreen = domain.preparationScreenId
-        ? ({ id: domain.preparationScreenId } as PreparationScreenEntity)
-        : null;
+      entity.preparationScreen = { id: domain.preparationScreenId } as PreparationScreenEntity;
     } else if (domain.preparationScreen?.id) {
       entity.preparationScreenId = domain.preparationScreen.id;
       entity.preparationScreen = {
         id: domain.preparationScreen.id,
       } as PreparationScreenEntity;
-    } else {
-      entity.preparationScreenId = null;
-      entity.preparationScreen = null;
     }
 
     if (domain.modifierGroups !== undefined) {

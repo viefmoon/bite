@@ -32,7 +32,13 @@ import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.sch
 import OrderHeader from './OrderHeader';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
+import {
+  safeTimeStringToDate,
+  safeDateToTimeString,
+  getNextAvailableTime,
+  parseDateFromBackend,
+} from '@/app/utils/dateTimeHelpers';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -47,6 +53,7 @@ import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar
 import { useGetFullMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
 import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subcategorías
 import OrderHistoryModal from './OrderHistoryModal'; // Modal de historial
+import { OrderDetailModal } from './OrderDetailModal'; // Modal de detalles
 import PaymentModal from './PaymentModal'; // Modal de pagos
 import { FAB } from 'react-native-paper'; // Para el floating action button
 import { AdjustmentFormModal } from './AdjustmentFormModal'; // Modal de ajustes
@@ -54,7 +61,11 @@ import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para 
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
 import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema'; // Para personalizaciones de pizza
-import { CustomizationType, PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import {
+  CustomizationType,
+  PizzaHalf,
+  CustomizationAction,
+} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 // Definir la estructura esperada para los items en el DTO de backend
 interface OrderItemModifierDto {
@@ -64,6 +75,7 @@ interface OrderItemModifierDto {
 }
 
 interface OrderItemDtoForBackend {
+  id?: string; // ID opcional para actualizaciones
   productId: string;
   productVariantId?: string | null;
   basePrice: number;
@@ -367,7 +379,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   // Calcular totales
   const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.totalPrice, 0);
+    if (!items || !Array.isArray(items)) return 0;
+    return items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
   }, [items]);
 
   // Calcular total de ajustes
@@ -436,13 +449,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [tableMenuVisible, setTableMenuVisible] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [tableError, setTableError] = useState<string | null>(null);
-  const [customerNameError, setCustomerNameError] = useState<string | null>(
+  const [recipientNameError, setRecipientNameError] = useState<string | null>(
     null,
   );
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [recipientPhoneError, setRecipientPhoneError] = useState<string | null>(
+    null,
+  );
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [timePickerDate, setTimePickerDate] = useState<Date>(new Date());
   const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -461,6 +475,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   >(null);
   const [modifyingItemName, setModifyingItemName] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [adjustmentToEdit, setAdjustmentToEdit] =
@@ -570,7 +585,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               id: mod.productModifierId,
               modifierGroupId: mod.productModifier?.modifierGroupId || '',
               name: mod.productModifier?.name || 'Modificador',
-              price: parseFloat(mod.price || '0'),
+              price: parseFloat(mod.price) || 0,
             });
           });
         }
@@ -584,29 +599,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               id: mod.id,
               modifierGroupId: mod.modifierGroupId || '',
               name: mod.name || 'Modificador',
-              price: mod.price || 0,
+              price: parseFloat(mod.price) || 0,
             };
             modifiers.push(modifierInfo);
           });
         }
 
         const modifiersPrice = modifiers.reduce(
-          (sum: number, mod: any) => sum + (mod.price || 0),
+          (sum: number, mod: any) => sum + (parseFloat(mod.price) || 0),
           0,
         );
         const unitPrice = parseFloat(item.basePrice || '0');
 
-        // Crear una clave única para agrupar items idénticos (incluyendo estado de preparación y personalizaciones de pizza)
-        const pizzaCustomizationsKey = item.selectedPizzaCustomizations
-          ? JSON.stringify(
-              item.selectedPizzaCustomizations
-                .map((c) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`)
-                .sort(),
-            )
-          : 'none';
-        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${JSON.stringify(
-          modifiers.map((m) => m.id).sort(),
-        )}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}-${pizzaCustomizationsKey}`;
+        // Crear una clave única para agrupar items idénticos (incluye estado de preparación)
+        const modifierIds = modifiers
+          .map((m) => m.id)
+          .sort()
+          .join(',');
+        const pizzaCustomizationIds = item.selectedPizzaCustomizations
+          ? item.selectedPizzaCustomizations
+              .map((c) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`)
+              .sort()
+              .join(',')
+          : '';
+        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
 
         const existingItem = groupedItemsMap.get(groupKey);
 
@@ -618,11 +634,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           existingItem.quantity += 1;
           existingItem.totalPrice =
             (unitPrice + modifiersPrice) * existingItem.quantity;
+          existingItem.id = `${existingItem.id},${item.id}`;
         } else {
           // Si es un nuevo item, agregarlo al mapa
-          
+
           const cartItem: CartItem = {
-            id: item.id, // Usar el ID del primer item del grupo
+            id: item.id,
             productId: item.productId,
             productName: item.product?.name || 'Producto desconocido',
             quantity: 1, // Empezar con 1, el backend ya no envía quantity
@@ -633,7 +650,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             variantName: item.productVariant?.name || undefined,
             preparationNotes: item.preparationNotes || undefined,
             preparationStatus: item.preparationStatus || 'PENDING', // Incluir estado de preparación
-            selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined, // Incluir personalizaciones de pizza
+            selectedPizzaCustomizations:
+              item.selectedPizzaCustomizations || undefined, // Incluir personalizaciones de pizza
           };
           groupedItemsMap.set(groupKey, cartItem);
         }
@@ -641,6 +659,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
       // Convertir el mapa a array
       const mappedItems = Array.from(groupedItemsMap.values());
+
       setEditItems(mappedItems);
     }
 
@@ -676,65 +695,87 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   }, [isEditMode, orderData, visible]);
 
   // Función para formatear las personalizaciones de pizza
-  const formatPizzaCustomizations = (customizations: SelectedPizzaCustomization[]): string => {
+  const formatPizzaCustomizations = (
+    customizations: SelectedPizzaCustomization[],
+  ): string => {
     if (!customizations || customizations.length === 0) return '';
-    
+
     // Agrupar por mitad y tipo
-    const groupedByHalf = customizations.reduce((acc, curr) => {
-      const half = curr.half === PizzaHalf.HALF_1 ? 'HALF_1' : 
-                   curr.half === PizzaHalf.HALF_2 ? 'HALF_2' : 
-                   'FULL';
-      
-      if (!acc[half]) {
-        acc[half] = { flavors: [], addedIngredients: [], removedIngredients: [] };
-      }
-      
-      // Primero intentar obtener la información de pizzaCustomization si está disponible
-      let name = '';
-      let type = null;
-      
-      if (curr.pizzaCustomization) {
-        // Si viene la información completa del backend
-        name = curr.pizzaCustomization.name;
-        type = curr.pizzaCustomization.type;
-      } else if (menu) {
-        // Si no viene la información completa, buscarla en el menú
-        outer: for (const category of menu) {
-          for (const subcategory of category.subcategories || []) {
-            for (const product of subcategory.products || []) {
-              if (product.pizzaCustomizations) {
-                const customization = product.pizzaCustomizations.find(
-                  pc => pc.id === curr.pizzaCustomizationId
-                );
-                if (customization) {
-                  name = customization.name;
-                  type = customization.type;
-                  break outer;
+    const groupedByHalf = customizations.reduce(
+      (acc, curr) => {
+        const half =
+          curr.half === PizzaHalf.HALF_1
+            ? 'HALF_1'
+            : curr.half === PizzaHalf.HALF_2
+              ? 'HALF_2'
+              : 'FULL';
+
+        if (!acc[half]) {
+          acc[half] = {
+            flavors: [],
+            addedIngredients: [],
+            removedIngredients: [],
+          };
+        }
+
+        // Primero intentar obtener la información de pizzaCustomization si está disponible
+        let name = '';
+        let type = null;
+
+        if (curr.pizzaCustomization) {
+          // Si viene la información completa del backend
+          name = curr.pizzaCustomization.name;
+          type = curr.pizzaCustomization.type;
+        } else if (menu) {
+          // Si no viene la información completa, buscarla en el menú
+          outer: for (const category of menu) {
+            for (const subcategory of category.subcategories || []) {
+              for (const product of subcategory.products || []) {
+                if (product.pizzaCustomizations) {
+                  const customization = product.pizzaCustomizations.find(
+                    (pc) => pc.id === curr.pizzaCustomizationId,
+                  );
+                  if (customization) {
+                    name = customization.name;
+                    type = customization.type;
+                    break outer;
+                  }
                 }
               }
             }
           }
         }
-      }
-      
-      // Si aún no tenemos el nombre, usar el ID como fallback
-      if (!name) {
-        name = curr.pizzaCustomizationId;
-      }
-      
-      if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
-        acc[half].flavors.push(name);
-      } else if (type === 'INGREDIENT' || type === CustomizationType.INGREDIENT) {
-        if (curr.action === CustomizationAction.ADD) {
-          acc[half].addedIngredients.push(name);
-        } else {
-          acc[half].removedIngredients.push(name);
+
+        // Si aún no tenemos el nombre, usar el ID como fallback
+        if (!name) {
+          name = curr.pizzaCustomizationId;
         }
-      }
-      
-      return acc;
-    }, {} as Record<string, { flavors: string[], addedIngredients: string[], removedIngredients: string[] }>);
-    
+
+        if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
+          acc[half].flavors.push(name);
+        } else if (
+          type === 'INGREDIENT' ||
+          type === CustomizationType.INGREDIENT
+        ) {
+          if (curr.action === CustomizationAction.ADD) {
+            acc[half].addedIngredients.push(name);
+          } else {
+            acc[half].removedIngredients.push(name);
+          }
+        }
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          flavors: string[];
+          addedIngredients: string[];
+          removedIngredients: string[];
+        }
+      >,
+    );
+
     // Formatear según el tipo de pizza
     if (groupedByHalf.FULL) {
       // Pizza completa
@@ -751,7 +792,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       return parts.join(' - ');
     } else if (groupedByHalf.HALF_1 || groupedByHalf.HALF_2) {
       // Pizza mitad y mitad
-      const formatHalf = (halfData: { flavors: string[], addedIngredients: string[], removedIngredients: string[] }) => {
+      const formatHalf = (halfData: {
+        flavors: string[];
+        addedIngredients: string[];
+        removedIngredients: string[];
+      }) => {
         const parts: string[] = [];
         if (halfData.flavors.length > 0) {
           parts.push(halfData.flavors.join(', '));
@@ -764,15 +809,19 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }
         return parts.join(' - ');
       };
-      
-      const half1 = groupedByHalf.HALF_1 ? formatHalf(groupedByHalf.HALF_1) : '';
-      const half2 = groupedByHalf.HALF_2 ? formatHalf(groupedByHalf.HALF_2) : '';
-      
+
+      const half1 = groupedByHalf.HALF_1
+        ? formatHalf(groupedByHalf.HALF_1)
+        : '';
+      const half2 = groupedByHalf.HALF_2
+        ? formatHalf(groupedByHalf.HALF_2)
+        : '';
+
       return half1 && half2 ? `(${half1} / ${half2})` : half1 || half2;
     }
-    
+
     return '';
-  }
+  };
 
   // Función para agrupar items idénticos
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
@@ -784,7 +833,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         .map((m) => m.id)
         .sort()
         .join(',');
-      
+
       // Incluir personalizaciones de pizza en la clave
       const pizzaCustomizationIds = item.selectedPizzaCustomizations
         ? item.selectedPizzaCustomizations
@@ -793,7 +842,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             .join(',')
         : '';
 
-      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'NEW'}`;
+      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
 
       const existingItem = groupedMap.get(groupKey);
 
@@ -807,13 +856,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         );
         existingItem.totalPrice =
           (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
+
+        // Concatenar IDs si ambos items tienen IDs reales (no temporales)
+        if (
+          !existingItem.id.startsWith('new-') &&
+          !item.id.startsWith('new-')
+        ) {
+          const existingIds = existingItem.id.split(',');
+          const newIds = item.id.split(',');
+          const allIds = [...new Set([...existingIds, ...newIds])];
+          existingItem.id = allIds.join(',');
+        }
       } else {
         // Si es nuevo, agregarlo al mapa con una copia completa
         groupedMap.set(groupKey, { ...item });
       }
     });
 
-    return Array.from(groupedMap.values());
+    const result = Array.from(groupedMap.values());
+
+    return result;
   }, []);
 
   // Estado para controlar si ya procesamos los productos pendientes
@@ -843,23 +905,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       });
 
       if (unprocessedProducts.length > 0) {
-        console.log(
-          'Procesando productos pendientes:',
-          unprocessedProducts.length,
-        );
-
-        // Marcar los nuevos productos con estado "NEW"
+        // Marcar los nuevos productos con estado "NEW" temporal
         const newProductsWithStatus = unprocessedProducts.map((item) => ({
           ...item,
           preparationStatus: 'NEW' as const,
-          id: `new-${Date.now()}-${Math.random()}`, // Asegurar IDs únicos para nuevos items
+          id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
         }));
 
         // Combinar con items existentes y agrupar
         setEditItems((prevItems) => {
           const allItems = [...prevItems, ...newProductsWithStatus];
           const grouped = groupIdenticalItems(allItems);
-          console.log('Items después de agrupar:', grouped.length);
+
           return grouped;
         });
 
@@ -895,8 +952,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   useEffect(() => {
     setAreaError(null);
     setTableError(null);
-    setCustomerNameError(null);
-    setPhoneError(null);
+    setRecipientNameError(null);
+    setRecipientPhoneError(null);
     setAddressError(null);
   }, [orderType]);
 
@@ -920,8 +977,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
       // Cambios en hora programada
-      (editScheduledTime?.getTime() || null) !==
-        (originalOrderState.scheduledAt?.getTime() || null) ||
+      editScheduledTime !== originalOrderState.scheduledAt ||
       // Cambios en ajustes
       JSON.stringify(editAdjustments) !==
         JSON.stringify(originalOrderState.adjustments);
@@ -980,7 +1036,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         // Asegurar que el ajuste tenga un ID único
         const newAdjustment = {
           ...adjustment,
-          id: adjustment.id || `new-adjustment-${Date.now()}-${Math.random()}`,
+          id:
+            adjustment.id ||
+            `new-adjustment-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
           isNew: true,
         };
         setEditAdjustments((prev) => [...prev, newAdjustment]);
@@ -1016,8 +1074,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     setAreaError(null);
     setTableError(null);
-    setCustomerNameError(null);
-    setPhoneError(null);
+    setRecipientNameError(null);
+    setRecipientPhoneError(null);
     setAddressError(null);
 
     if (items.length === 0) {
@@ -1042,7 +1100,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         !deliveryInfo.recipientName ||
         deliveryInfo.recipientName.trim() === ''
       ) {
-        setCustomerNameError('El nombre del cliente es obligatorio');
+        setRecipientNameError('El nombre del cliente es obligatorio');
         isValid = false;
       }
       // Phone is optional for take away
@@ -1057,7 +1115,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         !deliveryInfo.recipientPhone ||
         deliveryInfo.recipientPhone.trim() === ''
       ) {
-        setPhoneError('El teléfono es obligatorio para Domicilio');
+        setRecipientPhoneError('El teléfono es obligatorio para Domicilio');
         isValid = false;
       }
     }
@@ -1069,38 +1127,46 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Mapear items del carrito al formato esperado por el DTO del backend
     const itemsForBackend: OrderItemDtoForBackend[] = [];
 
-    console.log('Items a enviar al backend:', items.length);
-    console.log(
-      'Items con estado NEW:',
-      items.filter((item) => item.preparationStatus === 'NEW').length,
-    );
-
-    // En ambos modos (creación y edición), expandir items según su cantidad
-    // El backend identifica items únicos por productId + variantId, así que necesitamos
-    // enviar items individuales para poder tener múltiples del mismo producto
+    // Mapear items según el modo (creación o edición)
     items.forEach((item: CartItem) => {
-      // Crear un item individual por cada unidad de la cantidad
-      for (let i = 0; i < item.quantity; i++) {
+      if (isEditMode && item.id && !item.id.startsWith('new-')) {
+        // En modo edición, items con ID real se envían agrupados
         itemsForBackend.push({
+          id: item.id, // IDs concatenados del grupo
           productId: item.productId,
           productVariantId: item.variantId || null,
-          basePrice: Number(item.unitPrice), // Precio unitario
-          finalPrice: Number(item.totalPrice / item.quantity), // Precio final unitario
+          basePrice: Number(item.unitPrice),
+          finalPrice: Number(item.totalPrice / item.quantity),
           preparationNotes: item.preparationNotes || null,
-          // Mapear modificadores al formato del backend
           productModifiers:
             item.modifiers && item.modifiers.length > 0
               ? item.modifiers.map((mod) => ({
                   modifierId: mod.id,
-                  quantity: 1,
-                  price: mod.price,
                 }))
               : undefined,
-          // Agregar personalizaciones de pizza si existen
-          selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined,
+          selectedPizzaCustomizations:
+            item.selectedPizzaCustomizations || undefined,
         });
+      } else {
+        // Items nuevos se expanden según cantidad
+        for (let i = 0; i < item.quantity; i++) {
+          itemsForBackend.push({
+            productId: item.productId,
+            productVariantId: item.variantId || null,
+            basePrice: Number(item.unitPrice),
+            finalPrice: Number(item.totalPrice / item.quantity),
+            preparationNotes: item.preparationNotes || null,
+            productModifiers:
+              item.modifiers && item.modifiers.length > 0
+                ? item.modifiers.map((mod) => ({
+                    modifierId: mod.id,
+                  }))
+                : undefined,
+            selectedPizzaCustomizations:
+              item.selectedPizzaCustomizations || undefined,
+          });
+        }
       }
-      
     });
 
     // Formatear el número de teléfono para el backend
@@ -1122,7 +1188,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         orderType === OrderTypeEnum.DINE_IN
           ? (selectedTableId ?? undefined)
           : undefined, // Usar Enum
-      scheduledAt: scheduledTime ?? undefined,
+      scheduledAt: scheduledTime ? scheduledTime : undefined,
       deliveryInfo: {
         recipientName:
           orderType === OrderTypeEnum.TAKE_AWAY ||
@@ -1141,7 +1207,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             : undefined,
         // Solo incluir instrucciones de entrega si es delivery y existen
         deliveryInstructions:
-          orderType === OrderTypeEnum.DELIVERY && deliveryInfo.deliveryInstructions
+          orderType === OrderTypeEnum.DELIVERY &&
+          deliveryInfo.deliveryInstructions
             ? deliveryInfo.deliveryInstructions
             : undefined,
       },
@@ -1150,7 +1217,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         ? editAdjustments
             .filter((adj) => !adj.isDeleted)
             .map((adj) => {
-              console.log('Mapeando ajuste:', adj);
               return {
                 orderId: orderId || undefined,
                 name: adj.name,
@@ -1162,7 +1228,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             })
         : undefined,
     };
-
 
     if (!orderDetails.userId) {
       console.error('Error: Falta el ID del usuario al confirmar la orden.');
@@ -1215,11 +1280,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   );
 
   const showTimePicker = () => {
-    const currentTime = isEditMode ? (editScheduledTime || new Date()) : (scheduledTime || new Date());
-    setTimePickerDate(currentTime);
     setTimePickerVisible(true);
   };
+
   const hideTimePicker = () => setTimePickerVisible(false);
+
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
     now.setSeconds(0, 0);
@@ -1240,12 +1305,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const formattedScheduledTime = useMemo(() => {
     if (!scheduledTime) return null;
     try {
-      return format(scheduledTime, 'p', { locale: es });
+      return format(scheduledTime, 'h:mm a').toLowerCase(); // Formato 12 horas con am/pm
     } catch (error) {
       console.error('Error formatting time:', error);
       return 'Hora inválida';
     }
   }, [scheduledTime]);
+
+  // [HELPER MOVIDO A dateTimeHelpers.ts para evitar problemas con Hermes]
 
   // [FUNCIÓN ELIMINADA - hasUnsavedChanges ya existe como estado]
   /*
@@ -1379,7 +1446,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         const proceedWithEdit = () => {
           // En modo edición, buscar el producto real del menú
           if (!menu || !Array.isArray(menu)) {
-            console.warn('El menú no está disponible');
             return;
           }
 
@@ -1411,9 +1477,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             setEditingProduct(product);
           } else {
             // Si no encontramos el producto en el menú, crear uno temporal
-            console.warn(
-              'Producto no encontrado en el menú, usando datos temporales',
-            );
             setEditingItemFromList(item);
 
             const tempProduct: Product = {
@@ -1465,6 +1528,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       variantId?: string,
       variantName?: string,
       unitPrice?: number,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
     ) => {
       if (!isEditMode) return;
 
@@ -1477,7 +1542,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             );
             const finalUnitPrice =
               unitPrice !== undefined ? unitPrice : item.unitPrice;
-            const newTotalPrice = (finalUnitPrice + modifiersPrice) * quantity;
+            const extraCost = pizzaExtraCost || 0;
+            const newTotalPrice =
+              (finalUnitPrice + modifiersPrice + extraCost) * quantity;
 
             return {
               ...item,
@@ -1492,6 +1559,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 variantName !== undefined ? variantName : item.variantName,
               unitPrice: finalUnitPrice,
               totalPrice: newTotalPrice,
+              selectedPizzaCustomizations:
+                selectedPizzaCustomizations !== undefined
+                  ? selectedPizzaCustomizations
+                  : item.selectedPizzaCustomizations,
             };
           }
           return item;
@@ -1656,20 +1727,20 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 value={deliveryInfo.recipientName || ''}
                 onChangeText={(text) => {
                   setDeliveryInfo({ ...deliveryInfo, recipientName: text });
-                  if (customerNameError) setCustomerNameError(null);
+                  if (recipientNameError) setRecipientNameError(null);
                 }}
-                error={!!customerNameError}
+                error={!!recipientNameError}
                 speechLang="es-MX"
                 autoCapitalize="words"
                 autoCorrect={false}
               />
-              {customerNameError && (
+              {recipientNameError && (
                 <HelperText
                   type="error"
                   visible={true}
                   style={styles.helperTextFix}
                 >
-                  {customerNameError}
+                  {recipientNameError}
                 </HelperText>
               )}
             </View>
@@ -1683,15 +1754,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   value={deliveryInfo.recipientPhone || ''}
                   onChangeText={(text) => {
                     setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
-                    if (phoneError) setPhoneError(null);
+                    if (recipientPhoneError) setRecipientPhoneError(null);
                   }}
                   keyboardType="phone-pad"
-                  error={!!phoneError} // Aunque opcional, puede tener errores de formato si se ingresa
+                  error={!!recipientPhoneError} // Aunque opcional, puede tener errores de formato si se ingresa
                   speechLang="es-MX"
                   autoCorrect={false}
                 />
                 {(deliveryInfo.recipientPhone || '').length > 0 &&
-                  !phoneError && (
+                  !recipientPhoneError && (
                     <Text style={styles.digitCounterAbsolute}>
                       {
                         (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
@@ -1701,13 +1772,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     </Text>
                   )}
               </View>
-              {phoneError && (
+              {recipientPhoneError && (
                 <HelperText
                   type="error"
                   visible={true}
                   style={styles.helperTextFix}
                 >
-                  {phoneError}
+                  {recipientPhoneError}
                 </HelperText>
               )}
             </View>
@@ -1746,7 +1817,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 value={deliveryInfo.recipientName || ''}
                 onChangeText={(text) => {
                   setDeliveryInfo({ ...deliveryInfo, recipientName: text });
-                  if (customerNameError) setCustomerNameError(null);
+                  if (recipientNameError) setRecipientNameError(null);
                 }}
                 speechLang="es-MX"
                 autoCapitalize="words"
@@ -1789,23 +1860,23 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 onChangeText={(text) => {
                   // Asegurar que la función esté bien definida aquí
                   setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
-                  if (phoneError) {
-                    setPhoneError(null);
+                  if (recipientPhoneError) {
+                    setRecipientPhoneError(null);
                   }
                 }}
                 keyboardType="phone-pad"
-                error={!!phoneError}
+                error={!!recipientPhoneError}
                 speechLang="es-MX"
                 autoCorrect={false}
               />
               <View style={styles.phoneHelperContainer}>
-                {phoneError ? (
+                {recipientPhoneError ? (
                   <HelperText
                     type="error"
                     visible={true}
-                    style={[styles.helperTextFix, styles.phoneError]}
+                    style={[styles.helperTextFix, styles.recipientPhoneError]}
                   >
-                    {phoneError}
+                    {recipientPhoneError}
                   </HelperText>
                 ) : (
                   (deliveryInfo.recipientPhone || '').length > 0 && (
@@ -1941,6 +2012,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       />
                     }
                   >
+                    <Menu.Item
+                      onPress={() => {
+                        setShowOptionsMenu(false);
+                        setShowDetailModal(true);
+                      }}
+                      title="Ver Detalles"
+                      leadingIcon="file-document-outline"
+                    />
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
@@ -2101,7 +2180,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                           <View style={styles.itemTextContainer}>
                             <View>
                               <Text style={styles.itemTitleText}>
-                                {`${item.quantity}x ${String(item.productName ?? '')}${item.variantName ? ` (${String(item.variantName ?? '')})` : ''}`}
+                                {`${item.quantity}x ${item.variantName ? String(item.variantName ?? '') : String(item.productName ?? '')}`}
                               </Text>
                               {/* Mostrar estado de preparación solo en modo edición - siempre en nueva línea */}
                               {isEditMode && item.preparationStatus && (
@@ -2165,23 +2244,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                                   {/* Renderizar personalizaciones de pizza */}
                                   {hasPizzaCustomizations && (
                                     <Text style={styles.itemDescription}>
-                                      {formatPizzaCustomizations(item.selectedPizzaCustomizations)}
+                                      {formatPizzaCustomizations(
+                                        item.selectedPizzaCustomizations,
+                                      )}
                                     </Text>
                                   )}
-                                  
+
                                   {/* Renderizar modificadores */}
-                                  {hasModifiers && item.modifiers.map((mod, index) => (
-                                    <Text
-                                      key={mod.id || index}
-                                      style={styles.itemDescription}
-                                    >
-                                      • {mod.name}{' '}
-                                      {mod.price && mod.price > 0
-                                        ? `(+$${mod.price.toFixed(2)})`
-                                        : ''}
-                                    </Text>
-                                  ))}
-                                  
+                                  {hasModifiers &&
+                                    item.modifiers.map((mod, index) => (
+                                      <Text
+                                        key={mod.id || index}
+                                        style={styles.itemDescription}
+                                      >
+                                        • {mod.name}{' '}
+                                        {mod.price && Number(mod.price) > 0
+                                          ? `(+$${Number(mod.price).toFixed(2)})`
+                                          : ''}
+                                      </Text>
+                                    ))}
+
                                   {/* Renderizar notas */}
                                   {hasNotes && (
                                     <Text
@@ -2233,7 +2315,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                                   ($
                                   {(
                                     Number(item.unitPrice || 0) +
-                                    item.modifiers.reduce(
+                                    (item.modifiers || []).reduce(
                                       (sum, mod) =>
                                         sum + Number(mod.price || 0),
                                       0,
@@ -2425,7 +2507,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             (item) => ({
                               ...item,
                               preparationStatus: 'NEW' as const,
-                              id: `new-${Date.now()}-${Math.random()}`,
+                              id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
                             }),
                           );
 
@@ -2464,7 +2546,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* Totals */}
             <View style={styles.totalsContainer}>
               <Text style={styles.totalsText}>Subtotal:</Text>
-              <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
+              <Text style={styles.totalsValue}>
+                ${(subtotal || 0).toFixed(2)}
+              </Text>
             </View>
             {isEditMode && totalAdjustments !== 0 && (
               <View style={styles.totalsContainer}>
@@ -2481,14 +2565,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   ]}
                 >
                   {totalAdjustments < 0 ? '-' : '+'}$
-                  {Math.abs(totalAdjustments).toFixed(2)}
+                  {Math.abs(totalAdjustments || 0).toFixed(2)}
                 </Text>
               </View>
             )}
             <View style={styles.totalsContainer}>
               <Text style={[styles.totalsText, styles.totalLabel]}>Total:</Text>
               <Text style={[styles.totalsValue, styles.totalValue]}>
-                ${total.toFixed(2)}
+                ${(total || 0).toFixed(2)}
               </Text>
             </View>
 
@@ -2498,7 +2582,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 <View style={styles.totalsContainer}>
                   <Text style={styles.totalsText}>Pagado:</Text>
                   <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
-                    ${totalPaid.toFixed(2)}
+                    ${(totalPaid || 0).toFixed(2)}
                   </Text>
                 </View>
                 <View style={styles.totalsContainer}>
@@ -2515,7 +2599,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       },
                     ]}
                   >
-                    ${pendingAmount.toFixed(2)}
+                    ${(pendingAmount || 0).toFixed(2)}
                   </Text>
                 </View>
               </>
@@ -2565,15 +2649,21 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
           {/* Modals */}
           <Portal>
-            <DateTimePickerModal
-              isVisible={isTimePickerVisible}
+            <DateTimePickerSafe
+              visible={isTimePickerVisible}
               mode="time"
+              value={scheduledTime}
               onConfirm={handleTimeConfirm}
               onCancel={hideTimePicker}
-              date={timePickerDate}
-              locale="es_ES"
-              is24Hour={true}
-              display="spinner"
+              minimumDate={new Date()}
+              minuteInterval={5}
+              title={
+                orderType === OrderTypeEnum.DELIVERY
+                  ? 'Seleccionar Hora de Entrega'
+                  : orderType === OrderTypeEnum.TAKE_AWAY
+                    ? 'Seleccionar Hora de Recolección'
+                    : 'Seleccionar Hora'
+              }
             />
           </Portal>
 
@@ -2649,6 +2739,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               }}
               onAddToCart={() => {}} // No usado en modo edición
               onUpdateItem={handleUpdateEditedItem}
+            />
+          )}
+
+          {/* Modal de detalles de orden */}
+          {isEditMode && (
+            <OrderDetailModal
+              visible={showDetailModal}
+              onDismiss={() => setShowDetailModal(false)}
+              orderId={orderId}
+              orderNumber={orderNumber}
+              orderData={orderData}
             />
           )}
 
@@ -3014,7 +3115,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       paddingHorizontal: 12,
       minHeight: 20,
     },
-    phoneError: {
+    recipientPhoneError: {
       flex: 1,
       marginBottom: 0,
       marginTop: 0,

@@ -83,7 +83,6 @@ export class AudioOrderProcessingService {
       // Procesar la respuesta del servidor en la nube
       const result = await this.processCloudResponse(
         cloudResponse.data || cloudResponse,
-        dto,
       );
 
       return result;
@@ -111,20 +110,20 @@ export class AudioOrderProcessingService {
     try {
       // Convertir base64 a Buffer
       const audioBuffer = Buffer.from(request.audio, 'base64');
-      
+
       // Crear FormData
       const FormData = require('form-data');
       const formData = new FormData();
-      
+
       // Agregar archivo de audio
       formData.append('audio', audioBuffer, {
         filename: `order_${Date.now()}.mp4`,
         contentType: 'audio/mp4',
       });
-      
+
       // Agregar transcripción
       formData.append('transcription', request.transcript);
-      
+
       const response = await firstValueFrom(
         this.httpService.post<any>(
           `${this.cloudApiUrl}/api/v1/audio/process-order`,
@@ -160,16 +159,15 @@ export class AudioOrderProcessingService {
 
   private async processCloudResponse(
     data: any,
-    originalDto: ProcessAudioOrderDto,
   ): Promise<AudioOrderResponseDto> {
     // El servidor en la nube devuelve directamente los datos estructurados
     // No hay una acción específica, solo los datos extraídos
-    
+
     this.logger.log('=== DEBUG processCloudResponse ===');
     this.logger.log('Data from cloud:', JSON.stringify(data, null, 2));
     this.logger.log('orderType:', data.orderType);
     this.logger.log('=================================');
-    
+
     return {
       success: true,
       message: 'Audio procesado exitosamente',
@@ -183,7 +181,6 @@ export class AudioOrderProcessingService {
       },
     };
   }
-
 
   private calculateBase64SizeMb(base64String: string): number {
     // Remover el prefijo data:audio/xxx;base64, si existe
@@ -223,7 +220,7 @@ export class AudioOrderProcessingService {
       // Hacer ping al servicio remoto
       // Si cloudApiUrl ya incluye /api/v1/audio, entonces solo agregamos /health
       // Si no, agregamos la ruta completa
-      const healthCheckUrl = this.cloudApiUrl.includes('/api/v1/audio') 
+      const healthCheckUrl = this.cloudApiUrl.includes('/api/v1/audio')
         ? `${this.cloudApiUrl}/health`
         : `${this.cloudApiUrl}/api/v1/audio/health`;
       const response = await firstValueFrom(
@@ -252,7 +249,7 @@ export class AudioOrderProcessingService {
       };
     } catch (error) {
       this.logger.error('Error verificando salud del servicio:', error);
-      
+
       let message = 'No se puede conectar con el servicio de procesamiento';
       if (error instanceof AxiosError) {
         if (error.code === 'ECONNREFUSED') {

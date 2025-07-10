@@ -46,7 +46,9 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
   const theme = useAppTheme();
   const [isRecognizingSpeech, setIsRecognizingSpeech] = useState(false);
   const isMounted = useRef(true);
-  const instanceId = useRef(Math.random().toString(36).substring(2)).current;
+  const instanceId = useRef(
+    `speech-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+  ).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const inputRef = useRef<any>(null);
 
@@ -58,7 +60,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
         try {
           ExpoSpeechRecognitionModule.stop();
         } catch (err) {
-          console.error('Error stopping on unmount:', err);
         } finally {
           activeRecognizerId = null;
         }
@@ -120,7 +121,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
   const handleRecognitionError = useCallback(
     (event: ExpoSpeechRecognitionErrorEvent) => {
       if (isMounted.current && activeRecognizerId === instanceId) {
-        console.error('Speech recognition error:', event.error, event.message);
         setIsRecognizingSpeech(false);
         activeRecognizerId = null;
         onError?.(event.message || event.error || 'Unknown recognition error');
@@ -165,7 +165,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
       try {
         await ExpoSpeechRecognitionModule.stop();
       } catch (err) {
-        console.error('Failed to stop speech recognition:', err);
       } finally {
         if (isMounted.current) {
           setIsRecognizingSpeech(false);
@@ -178,7 +177,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
       const permissions =
         await ExpoSpeechRecognitionModule.requestPermissionsAsync();
       if (!permissions.granted) {
-        console.warn('Permissions not granted for speech recognition');
         onError?.('Permiso de micrófono denegado');
         return;
       }
@@ -193,7 +191,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
           continuous: false,
         });
       } catch (err: any) {
-        console.error('Failed to start speech recognition:', err);
         if (isMounted.current) {
           setIsRecognizingSpeech(false);
         }
@@ -203,9 +200,6 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
         onError?.(err.message || 'Error al iniciar');
       }
     } else {
-      console.log(
-        `Recognizer ${activeRecognizerId} is already active. Cannot start ${instanceId}.`,
-      );
       onError?.('Otro micrófono ya está activo');
     }
   };

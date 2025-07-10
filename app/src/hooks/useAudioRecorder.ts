@@ -1,5 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useAudioRecorder as useExpoAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
+import {
+  useAudioRecorder as useExpoAudioRecorder,
+  AudioModule,
+  RecordingPresets,
+} from 'expo-audio';
 import { Platform } from 'react-native';
 import {
   ExpoSpeechRecognitionModule,
@@ -26,7 +30,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
   const [transcription, setTranscription] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Usar el hook de expo-audio con configuración de alta calidad para voz
   const audioRecorder = useExpoAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
@@ -52,21 +56,21 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
   const currentTranscriptionRef = useRef<string>('');
   const isTranscribing = useRef(false);
   const isMounted = useRef(true);
-  
+
   // Verificar que el audio recorder esté listo
   useEffect(() => {
     if (audioRecorder && typeof audioRecorder.record === 'function') {
       setIsInitialized(true);
     }
   }, [audioRecorder]);
-  
+
   // Estado interno para rastrear si estamos en proceso de detener
   const isStopping = useRef(false);
 
   // Eventos de reconocimiento de voz
-  useSpeechRecognitionEvent("result", (event) => {
+  useSpeechRecognitionEvent('result', (event) => {
     if (!isMounted.current) return;
-    
+
     const results = event.results;
     if (results && results.length > 0) {
       const bestResult = results[0];
@@ -74,7 +78,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
         const newTranscript = bestResult.transcript;
         currentTranscriptionRef.current = newTranscript;
         setCurrentTranscription(newTranscript);
-        
+
         if (event.isFinal || bestResult.isFinal) {
           setTranscription(newTranscript);
         }
@@ -82,7 +86,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
     }
   });
 
-  useSpeechRecognitionEvent("end", () => {
+  useSpeechRecognitionEvent('end', () => {
     if (!isMounted.current) return;
     isTranscribing.current = false;
   });
@@ -93,22 +97,24 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       setError('El grabador de audio no está listo');
       return;
     }
-    
+
     try {
       setError(null);
       setIsPreparing(true);
       setCurrentTranscription('');
       currentTranscriptionRef.current = '';
       setTranscription('');
-      
+
       // Solicitar permisos de audio
-      const audioPermission = await AudioModule.requestRecordingPermissionsAsync();
+      const audioPermission =
+        await AudioModule.requestRecordingPermissionsAsync();
       if (!audioPermission.granted) {
         throw new Error('Se requiere permiso para grabar audio');
       }
 
       // Solicitar permisos de reconocimiento de voz
-      const speechPermissions = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      const speechPermissions =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
       if (!speechPermissions.granted) {
         throw new Error('Se requiere permiso para reconocimiento de voz');
       }
@@ -116,7 +122,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       // Iniciar reconocimiento de voz ANTES de la grabación
       isTranscribing.current = true;
       setCurrentTranscription('');
-      
+
       try {
         await ExpoSpeechRecognitionModule.start({
           lang: 'es-MX',
@@ -125,27 +131,25 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
           maxAlternatives: 1,
         });
       } catch (speechError) {
-        console.warn('Error iniciando reconocimiento de voz:', speechError);
         // Continuar sin reconocimiento si falla
       }
 
       // Esperar un momento para que se establezca el reconocimiento
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Preparar y comenzar la grabación de audio
       await audioRecorder.prepareToRecordAsync();
       await audioRecorder.record();
-      
+
       if (isMounted.current) {
         setIsRecording(true);
         setIsPreparing(false);
       }
-      
     } catch (err) {
-      console.error('Error al iniciar grabación:', err);
       if (isMounted.current) {
         setIsPreparing(false);
-        const errorMessage = err instanceof Error ? err.message : 'Error al iniciar grabación';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Error al iniciar grabación';
         setError(errorMessage);
       }
     }
@@ -153,21 +157,19 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
 
   const stopRecording = useCallback(async () => {
     if (!isMounted.current) return;
-    
+
     // Prevenir múltiples llamadas simultáneas
     if (isStopping.current) {
-      console.warn('Ya se está deteniendo la grabación');
       return;
     }
-    
+
     try {
       // Verificar si realmente está grabando
       const isCurrentlyRecording = audioRecorder.isRecording;
       if (!isCurrentlyRecording) {
-        console.warn('No hay grabación activa');
         return;
       }
-      
+
       isStopping.current = true;
 
       setIsProcessing(true);
@@ -177,15 +179,15 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       if (isTranscribing.current) {
         try {
           await ExpoSpeechRecognitionModule.stop();
+          // Esperar un momento para asegurar que se capture la transcripción final
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
-          console.warn('Error al detener reconocimiento de voz:', error);
+          console.error('[AudioRecorder] Error al detener reconocimiento:', error);
+        } finally {
+          isTranscribing.current = false;
         }
-        isTranscribing.current = false;
       }
 
-      // Esperar un momento para asegurar que se capture la transcripción final
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
       // Detener grabación de audio
       let uri: string | undefined;
       try {
@@ -194,38 +196,39 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       } catch (audioError) {
         // Si el error es "stop failed", intentar obtener el URI de todas formas
         if (audioError?.message?.includes('stop failed')) {
-          console.warn('Grabación ya detenida, obteniendo URI...');
           uri = audioRecorder.uri;
         } else {
-          console.error('Error al detener audio recorder:', audioError);
           throw audioError;
         }
       }
-      
+
       if (!uri) {
         throw new Error('No se pudo obtener el archivo de audio');
       }
 
       if (isMounted.current) {
         // Usar la transcripción que se capturó durante la grabación
-        const finalTranscription = currentTranscriptionRef.current || currentTranscription || transcription || '';
-        
+        const finalTranscription =
+          currentTranscriptionRef.current ||
+          currentTranscription ||
+          transcription ||
+          '';
+
         if (finalTranscription) {
           setTranscription(finalTranscription);
         } else {
           setTranscription('');
         }
-        
+
         // Establecer el URI del audio al final
         setAudioUri(uri);
         setIsProcessing(false);
       }
-      
     } catch (err) {
-      console.error('Error en stopRecording:', err);
       if (isMounted.current) {
         setIsProcessing(false);
-        const errorMessage = err instanceof Error ? err.message : 'Error al detener grabación';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Error al detener grabación';
         setError(errorMessage);
       }
     } finally {
@@ -235,22 +238,18 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
 
   const resetRecording = useCallback(() => {
     if (!isMounted.current) return;
-    
+
     // Detener reconocimiento si está activo
     if (isTranscribing.current) {
       try {
         const stopPromise = ExpoSpeechRecognitionModule.stop();
         if (stopPromise && typeof stopPromise.catch === 'function') {
-          stopPromise.catch((err) => {
-            console.warn('Error al detener reconocimiento en reset:', err);
-          });
+          stopPromise.catch((err) => {});
         }
-      } catch (err) {
-        console.warn('Error sincrónico al detener reconocimiento:', err);
-      }
+      } catch (err) {}
       isTranscribing.current = false;
     }
-    
+
     // Detener grabación si está activa
     if (audioRecorder && audioRecorder.isRecording) {
       try {
@@ -258,19 +257,13 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
         if (stopPromise && typeof stopPromise.catch === 'function') {
           stopPromise.catch((err) => {
             // Ignorar el error "stop failed" ya que es esperado cuando se resetea rápidamente
-            if (!err?.message?.includes('stop failed')) {
-              console.warn('Error al detener grabación en reset:', err);
-            }
           });
         }
       } catch (err) {
         // Ignorar el error "stop failed"
-        if (!err?.message?.includes('stop failed')) {
-          console.warn('Error sincrónico al detener grabación:', err);
-        }
       }
     }
-    
+
     // Limpiar estados
     setAudioUri(null);
     setTranscription(null);
@@ -286,10 +279,10 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
   // Limpiar al desmontar
   useEffect(() => {
     isMounted.current = true;
-    
+
     return () => {
       isMounted.current = false;
-      
+
       // Limpiar el reconocimiento de voz
       if (isTranscribing.current) {
         isTranscribing.current = false;
@@ -302,7 +295,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
           // Ignorar errores en cleanup
         }
       }
-      
+
       // No intentar detener el audio recorder aquí porque puede causar el error
       // El hook de expo-audio maneja su propia limpieza
     };

@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { Platform } from 'react-native';
 import { API_PATHS } from '../../../app/constants/apiPaths';
@@ -52,7 +52,7 @@ export const uploadFile = async (
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await apiClient.post<FileUploadResponse>(
+      const response = await ApiClientWrapper.post<FileUploadResponse>(
         API_PATHS.FILES_UPLOAD,
         formData,
         {

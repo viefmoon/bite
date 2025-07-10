@@ -42,6 +42,8 @@ import { ImageUploadService } from '@/app/lib/imageUploadService';
 import { getImageUrl } from '@/app/lib/imageUtils';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQueries';
 import { modifierService } from '../../modifiers/services/modifierService';
+import { usePreparationScreensQuery } from '../../preparationScreens/hooks/usePreparationScreensQueries';
+import { Menu } from 'react-native-paper';
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -84,6 +86,7 @@ function ProductFormModal({
     {},
   );
   const [priceInputValue, setPriceInputValue] = useState<string>('');
+  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] = useState(false);
 
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
@@ -96,7 +99,7 @@ function ProductFormModal({
       subcategoryId: subcategoryId,
       photoId: null,
       estimatedPrepTime: 10,
-      preparationScreenId: null,
+      preparationScreenId: '',
       sortOrder: 0,
       variants: [],
       variantsToDelete: [],
@@ -129,44 +132,55 @@ function ProductFormModal({
   });
 
   useEffect(() => {
-    if (visible) {
-      if (isEditing && initialData) {
-        const initialPrice = initialData.price;
-        const parsedPrice =
-          initialPrice !== null &&
-          initialPrice !== undefined &&
-          !isNaN(parseFloat(String(initialPrice)))
-            ? parseFloat(String(initialPrice))
-            : null;
+    const loadInitialData = async () => {
+      if (visible) {
+        if (isEditing && initialData) {
+          const initialPrice = initialData.price;
+          const parsedPrice =
+            initialPrice !== null &&
+            initialPrice !== undefined &&
+            !isNaN(parseFloat(String(initialPrice)))
+              ? parseFloat(String(initialPrice))
+              : null;
 
-        reset({
-          name: initialData.name,
-          description: initialData.description || null,
-          price: parsedPrice,
-          hasVariants: initialData.hasVariants,
-          isActive: initialData.isActive,
-          isPizza: initialData.isPizza ?? false,
-          subcategoryId: initialData.subcategoryId,
-          photoId: initialData.photo?.id ?? null,
-          estimatedPrepTime: initialData.estimatedPrepTime,
-          preparationScreenId: initialData.preparationScreenId,
-          sortOrder: initialData.sortOrder ?? 0,
-          variants: initialData.variants || [],
-          variantsToDelete: [],
-          imageUri: getImageUrl(initialData.photo?.path) ?? null,
-          modifierGroupIds: [],
-        });
-        setLocalSelectedFile(null);
-      } else {
-        reset(defaultValues);
-        setLocalSelectedFile(null);
+          // Only set imageUri if there's actually a photo path
+          let imageUri = null;
+          if (initialData.photo?.path) {
+            imageUri = await getImageUrl(initialData.photo.path);
+          }
+
+          reset({
+            name: initialData.name,
+            description: initialData.description || null,
+            price: parsedPrice,
+            hasVariants: initialData.hasVariants,
+            isActive: initialData.isActive,
+            isPizza: initialData.isPizza ?? false,
+            subcategoryId: initialData.subcategoryId,
+            photoId: initialData.photo?.id ?? null,
+            estimatedPrepTime: initialData.estimatedPrepTime,
+            preparationScreenId: initialData.preparationScreenId || '',
+            sortOrder: initialData.sortOrder ?? 0,
+            variants: initialData.variants || [],
+            variantsToDelete: [],
+            imageUri: imageUri,
+            modifierGroupIds: [],
+          });
+          setLocalSelectedFile(null);
+        } else {
+          reset(defaultValues);
+          setLocalSelectedFile(null);
+        }
       }
-    }
+    };
+
+    loadInitialData();
   }, [visible, isEditing, initialData, reset, defaultValues, subcategoryId]);
 
   const hasVariants = watch('hasVariants');
   const currentImageUri = watch('imageUri');
   const priceValue = watch('price');
+  const selectedPreparationScreenId = watch('preparationScreenId');
 
   // Sincronizar el valor del precio con el estado del input
   useEffect(() => {
@@ -180,6 +194,9 @@ function ProductFormModal({
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
 
+  // Query para obtener las pantallas de preparación
+  const { data: preparationScreens = [] } = usePreparationScreensQuery();
+
   const allModifierGroups = modifierGroupsResponse?.data || [];
 
   // Cargar los modificadores de cada grupo
@@ -192,10 +209,6 @@ function ProductFormModal({
           const modifiers = await modifierService.findByGroupId(group.id);
           modifiersMap[group.id] = modifiers.filter((mod) => mod.isActive);
         } catch (error) {
-          console.error(
-            `Error loading modifiers for group ${group.id}:`,
-            error,
-          );
           modifiersMap[group.id] = [];
         }
       }
@@ -364,6 +377,8 @@ function ProductFormModal({
                   isLoading={isInternalImageUploading}
                   disabled={isSubmitting}
                   size={150}
+                  placeholderIcon="food-outline"
+                  placeholderText="Imagen del producto"
                 />
                 {errors.imageUri && (
                   <HelperText type="error">
@@ -603,6 +618,55 @@ function ProductFormModal({
               {errors.estimatedPrepTime && (
                 <HelperText type="error" visible={!!errors.estimatedPrepTime}>
                   {errors.estimatedPrepTime.message}
+                </HelperText>
+              )}
+
+              {/* Campo de Pantalla de Preparación */}
+              <Controller
+                control={control}
+                name="preparationScreenId"
+                render={({ field: { onChange, value } }) => (
+                  <View>
+                    <Menu
+                      visible={preparationScreenMenuVisible}
+                      onDismiss={() => setPreparationScreenMenuVisible(false)}
+                      anchor={
+                        <TextInput
+                          label="Pantalla de Preparación *"
+                          value={
+                            preparationScreens.find(screen => screen.id === value)?.name || ''
+                          }
+                          onPress={() => setPreparationScreenMenuVisible(true)}
+                          right={
+                            <TextInput.Icon 
+                              icon="chevron-down"
+                              onPress={() => setPreparationScreenMenuVisible(true)}
+                            />
+                          }
+                          editable={false}
+                          error={!!errors.preparationScreenId}
+                          style={styles.input}
+                          disabled={isSubmitting}
+                        />
+                      }
+                    >
+                      {preparationScreens.map((screen) => (
+                        <Menu.Item
+                          key={screen.id}
+                          onPress={() => {
+                            onChange(screen.id);
+                            setPreparationScreenMenuVisible(false);
+                          }}
+                          title={screen.name}
+                        />
+                      ))}
+                    </Menu>
+                  </View>
+                )}
+              />
+              {errors.preparationScreenId && (
+                <HelperText type="error" visible={!!errors.preparationScreenId}>
+                  {errors.preparationScreenId.message}
                 </HelperText>
               )}
 

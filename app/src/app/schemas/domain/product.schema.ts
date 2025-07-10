@@ -29,13 +29,13 @@ export const productSchema = z.object({
     .number()
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
-  preparationScreenId: z.string().optional().nullable(),
+  preparationScreenId: z.string().min(1, 'La pantalla de preparación es requerida'),
   variants: z.array(productVariantSchema).optional(),
   modifierGroups: z.array(modifierGroupSchema).optional(),
   pizzaCustomizations: z.array(z.any()).optional(),
   pizzaConfiguration: z.any().optional(),
   createdAt: z.union([z.string().datetime(), z.date()]).optional(),
-  updatedAt: z.union([z.string().datetime(), z.date()]).optional()
+  updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
 });
 
 export type Product = z.infer<typeof productSchema> & {

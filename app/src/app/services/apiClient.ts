@@ -10,9 +10,9 @@ import { ApiError } from '../lib/errors';
 import axiosRetry from 'axios-retry';
 import { discoveryService } from './discoveryService';
 import { useSnackbarStore } from '../store/snackbarStore';
+import { API_PATHS } from '../constants/apiPaths';
 
 const REFRESH_TOKEN_KEY = 'refresh_token';
-const AUTH_REFRESH_PATH = '/api/v1/auth/refresh';
 
 // Variables para manejar la inicialización del cliente
 let axiosInstance: any = null;
@@ -33,9 +33,8 @@ async function initializeApiClient(providedUrl?: string) {
 
   initializationPromise = (async () => {
     try {
-      const baseURL = providedUrl || await discoveryService.getApiUrl();
+      const baseURL = providedUrl || (await discoveryService.getApiUrl());
       currentBaseURL = baseURL;
-      
 
       // Crear instancia de Axios
       axiosInstance = axios.create({
@@ -93,30 +92,30 @@ export async function reinitializeApiClient(url?: string) {
 // Configurar retry automático para errores de red
 function configureAxiosRetry() {
   if (!axiosInstance) return;
-  
+
   axiosRetry(axiosInstance, {
-  retries: 1, // Solo 1 reintento para fallar más rápido
-  retryDelay: (retryCount: number) => {
-    return 500; // Solo 500ms de espera
-  },
-  retryCondition: (error: AxiosError) => {
-    // NO reintentar en timeouts para fallar rápido
-    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-      return false;
-    }
-    
-    // Solo reintentar en errores de red reales
-    return (
-      error.code === 'ENOTFOUND' ||
-      error.code === 'ECONNREFUSED' ||
-      error.code === 'ECONNRESET'
-    );
-  },
-  shouldResetTimeout: false, // No resetear timeout
-  onRetry: (retryCount: number, error: AxiosError, requestConfig: any) => {
-    // Silencioso, sin logs
-  },
-});
+    retries: 1, // Solo 1 reintento para fallar más rápido
+    retryDelay: (_retryCount: number) => {
+      return 500; // Solo 500ms de espera
+    },
+    retryCondition: (error: AxiosError) => {
+      // NO reintentar en timeouts para fallar rápido
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        return false;
+      }
+
+      // Solo reintentar en errores de red reales
+      return (
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ECONNRESET'
+      );
+    },
+    shouldResetTimeout: false, // No resetear timeout
+    onRetry: (_retryCount: number, _error: AxiosError, _requestConfig: any) => {
+      // Silencioso, sin logs
+    },
+  });
 }
 
 // --- Lógica de Refresco de Token (igual que antes) ---
@@ -147,7 +146,7 @@ async function refreshToken(): Promise<string> {
 
     const baseURL = await discoveryService.getApiUrl();
     const response = await axios.post<{ token: string; refreshToken?: string }>(
-      `${baseURL}${AUTH_REFRESH_PATH}`,
+      `${baseURL}${API_PATHS.AUTH_REFRESH}`,
       {},
       { headers: { Authorization: `Bearer ${currentRefreshToken}` } },
     );
@@ -181,128 +180,132 @@ function configureInterceptors() {
 
   // 1. Interceptor de Peticiones
   axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const accessToken = useAuthStore.getState().accessToken;
-    if (accessToken && config.url !== AUTH_REFRESH_PATH) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-    
-    // Configurar timeouts específicos según el tipo de operación
-    if (config.method === 'get') {
-      // GETs con timeout uniforme
-      config.timeout = 5000; // 5 segundos para todas las consultas
-    } else if (config.method === 'post' && config.url?.includes('/files/upload')) {
-      // Uploads necesitan más tiempo
-      config.timeout = 30000; // 30 segundos para uploads
-    } else if (config.method === 'post' || config.method === 'put') {
-      // POSTs y PUTs normales
-      config.timeout = 5000; // 5 segundos para guardar
-    }
-    
-    return config;
-  },
-  (error: any) => Promise.reject(error),
-);
+    (config: InternalAxiosRequestConfig) => {
+      const accessToken = useAuthStore.getState().accessToken;
+      if (accessToken && config.url !== API_PATHS.AUTH_REFRESH) {
+        config.headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      // Configurar timeouts específicos según el tipo de operación
+      if (config.method === 'get') {
+        // GETs con timeout uniforme
+        config.timeout = 5000; // 5 segundos para todas las consultas
+      } else if (
+        config.method === 'post' &&
+        config.url?.includes('/files/upload')
+      ) {
+        // Uploads necesitan más tiempo
+        config.timeout = 30000; // 30 segundos para uploads
+      } else if (config.method === 'post' || config.method === 'put') {
+        // POSTs y PUTs normales
+        config.timeout = 5000; // 5 segundos para guardar
+      }
+
+      return config;
+    },
+    (error: any) => Promise.reject(error),
+  );
 
   // 2. Interceptor de Respuestas
   axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => response, // Pasa respuestas exitosas
-  async (error: AxiosError) => {
-    // Maneja errores
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-      _skipQueue?: boolean;
-    };
+    (response: AxiosResponse) => response, // Pasa respuestas exitosas
+    async (error: AxiosError) => {
+      // Maneja errores
+      const originalRequest = error.config as InternalAxiosRequestConfig & {
+        _retry?: boolean;
+        _skipQueue?: boolean;
+      };
 
-    // Detectar errores de red
-    if (!error.response) {
+      // Detectar errores de red
+      if (!error.response) {
+        // Manejar error de red de manera no bloqueante
+        const showSnackbar = useSnackbarStore.getState().showSnackbar;
 
-      // Manejar error de red de manera no bloqueante
-      const showSnackbar = useSnackbarStore.getState().showSnackbar;
-      
-      // Mensajes específicos según el tipo de error
-      let errorMessage = 'Sin conexión al servidor';
-      
-      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-        // Error de timeout
-        errorMessage = 'La operación tardó demasiado. Intenta nuevamente.';
-      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-        // Servidor no encontrado
-        errorMessage = 'No se puede conectar al servidor';
-      } else {
-        // Otros errores de red - mensajes según método
-        if (originalRequest.method === 'POST') {
-          errorMessage = 'No se puede guardar sin conexión';
-        } else if (originalRequest.method === 'PUT') {
-          errorMessage = 'No se puede actualizar sin conexión';
-        } else if (originalRequest.method === 'DELETE') {
-          errorMessage = 'No se puede eliminar sin conexión';
-        } else if (originalRequest.method === 'GET') {
-          errorMessage = 'No se pueden cargar los datos sin conexión';
+        // Mensajes específicos según el tipo de error
+        let errorMessage = 'Sin conexión al servidor';
+
+        if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+          // Error de timeout
+          errorMessage = 'La operación tardó demasiado. Intenta nuevamente.';
+        } else if (
+          error.code === 'ENOTFOUND' ||
+          error.code === 'ECONNREFUSED'
+        ) {
+          // Servidor no encontrado
+          errorMessage = 'No se puede conectar al servidor';
+        } else {
+          // Otros errores de red - mensajes según método
+          if (originalRequest.method === 'POST') {
+            errorMessage = 'No se puede guardar sin conexión';
+          } else if (originalRequest.method === 'PUT') {
+            errorMessage = 'No se puede actualizar sin conexión';
+          } else if (originalRequest.method === 'DELETE') {
+            errorMessage = 'No se puede eliminar sin conexión';
+          } else if (originalRequest.method === 'GET') {
+            errorMessage = 'No se pueden cargar los datos sin conexión';
+          }
         }
-      }
-      
-      // Mostrar error no bloqueante
-      showSnackbar({
-        message: errorMessage,
-        type: 'error',
-        duration: 5000,
-      });
-      
-      // Rechazar con el error para que el componente pueda manejarlo
-      const apiError = ApiError.fromAxiosError(error);
-      return Promise.reject(apiError);
-    }
 
-
-    // No intentar renovar si:
-    // 1. No es un error 401
-    // 2. Es la propia petición de refresh
-    // 3. Es la petición de verificación de token (/auth/me)
-    // 4. Ya se intentó renovar antes
-    if (
-      error.response?.status !== 401 ||
-      originalRequest.url === AUTH_REFRESH_PATH ||
-      originalRequest.url?.includes('/auth/me') ||
-      originalRequest._retry
-    ) {
-      const apiError = ApiError.fromAxiosError(error);
-      return Promise.reject(apiError);
-    }
-
-    // --- Manejo del 401 ---
-    if (isRefreshing) {
-      // Encolar petición
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: (token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-            originalRequest._retry = true;
-            resolve(axiosInstance(originalRequest));
-          },
-          reject: (err) => reject(ApiError.fromAxiosError(err as AxiosError)),
+        // Mostrar error no bloqueante
+        showSnackbar({
+          message: errorMessage,
+          type: 'error',
+          duration: 5000,
         });
-      });
-    }
 
-    isRefreshing = true;
-    originalRequest._retry = true;
+        // Rechazar con el error para que el componente pueda manejarlo
+        const apiError = ApiError.fromAxiosError(error);
+        return Promise.reject(apiError);
+      }
 
-    try {
-      const newAccessToken = await refreshToken();
-      processQueue(null, newAccessToken);
-      originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-      return axiosInstance(originalRequest);
-    } catch (refreshError: any) {
-      processQueue(refreshError, null);
+      // No intentar renovar si:
+      // 1. No es un error 401
+      // 2. Es la propia petición de refresh
+      // 3. Es la petición de verificación de token (/auth/me)
+      // 4. Ya se intentó renovar antes
+      if (
+        error.response?.status !== 401 ||
+        originalRequest.url === API_PATHS.AUTH_REFRESH ||
+        originalRequest.url?.includes('/auth/me') ||
+        originalRequest._retry
+      ) {
+        const apiError = ApiError.fromAxiosError(error);
+        return Promise.reject(apiError);
+      }
 
-      // Si el error es 401 o 404, ya se habrá cerrado la sesión en refreshToken()
-      // Solo necesitamos rechazar la promesa
-      return Promise.reject(ApiError.fromRefreshError(refreshError));
-    } finally {
-      isRefreshing = false;
-    }
-  },
+      // --- Manejo del 401 ---
+      if (isRefreshing) {
+        // Encolar petición
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token) => {
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              originalRequest._retry = true;
+              resolve(axiosInstance(originalRequest));
+            },
+            reject: (err) => reject(ApiError.fromAxiosError(err as AxiosError)),
+          });
+        });
+      }
+
+      isRefreshing = true;
+      originalRequest._retry = true;
+
+      try {
+        const newAccessToken = await refreshToken();
+        processQueue(null, newAccessToken);
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError: any) {
+        processQueue(refreshError, null);
+
+        // Si el error es 401 o 404, ya se habrá cerrado la sesión en refreshToken()
+        // Solo necesitamos rechazar la promesa
+        return Promise.reject(ApiError.fromRefreshError(refreshError));
+      } finally {
+        isRefreshing = false;
+      }
+    },
   );
 }
 
@@ -310,12 +313,18 @@ function configureInterceptors() {
 function addResponseTransforms(client: any) {
   client.addResponseTransform((response: any) => {
     // Si hay un problema de red, mostrar snackbar aquí también
-    if (response.problem === 'NETWORK_ERROR' || response.problem === 'TIMEOUT_ERROR' || response.problem === 'CONNECTION_ERROR' || (!response.ok && !response.status)) {
+    if (
+      response.problem === 'NETWORK_ERROR' ||
+      response.problem === 'TIMEOUT_ERROR' ||
+      response.problem === 'CONNECTION_ERROR' ||
+      (!response.ok && !response.status)
+    ) {
       const showSnackbar = useSnackbarStore.getState().showSnackbar;
-      
+
       let errorMessage = 'Sin conexión al servidor';
-      const method = response.config?.method || response.originalError?.config?.method;
-      
+      const method =
+        response.config?.method || response.originalError?.config?.method;
+
       if (method === 'POST') {
         errorMessage = 'No se puede guardar sin conexión';
       } else if (method === 'PUT') {
@@ -325,7 +334,7 @@ function addResponseTransforms(client: any) {
       } else if (method === 'GET') {
         errorMessage = 'No se pueden cargar los datos sin conexión';
       }
-      
+
       // Usar setTimeout para asegurar que se muestre
       setTimeout(() => {
         showSnackbar({
@@ -335,7 +344,7 @@ function addResponseTransforms(client: any) {
         });
       }, 100);
     }
-    
+
     // Si la respuesta no es ok y tenemos un error original del interceptor
     if (!response.ok && response.originalError instanceof ApiError) {
       // Preservar el ApiError original
@@ -356,17 +365,17 @@ const createApiClientWrapper = () => {
         if (!cachedClient) {
           cachedClient = await getApiClient();
         }
-        
+
         const method = cachedClient[prop];
         if (typeof method === 'function') {
           return method.apply(cachedClient, args);
         }
-        
+
         return method;
       };
-    }
+    },
   };
-  
+
   return new Proxy({}, handler);
 };
 

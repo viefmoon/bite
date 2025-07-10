@@ -22,6 +22,7 @@ import { PaymentEntity } from '../../../../../payments/infrastructure/persistenc
 import { TicketImpressionEntity } from './ticket-impression.entity';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
 import { DeliveryInfoEntity } from './delivery-info.entity';
+import { OrderPreparationScreenStatusEntity } from './order-preparation-screen-status.entity';
 
 @Entity({
   name: 'orders',
@@ -57,7 +58,7 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.PENDING,
+    default: OrderStatus.IN_PROGRESS,
   })
   orderStatus: OrderStatus;
 
@@ -109,6 +110,9 @@ export class OrderEntity extends EntityRelationalHelper {
     nullable: true,
   })
   deliveryInfo: DeliveryInfoEntity | null;
+
+  @OneToMany(() => OrderPreparationScreenStatusEntity, (status) => status.order)
+  preparationScreenStatuses: OrderPreparationScreenStatusEntity[];
 
   @Column({
     name: 'estimated_delivery_time',

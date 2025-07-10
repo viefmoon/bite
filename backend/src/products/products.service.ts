@@ -102,22 +102,19 @@ export class ProductsService {
       product.modifierGroups = [];
     }
 
-    if (createProductDto.preparationScreenId) {
-      try {
-        const screen = await this.preparationScreenRepository.findOne(
-          createProductDto.preparationScreenId,
+    // preparationScreenId es requerido
+    try {
+      const screen = await this.preparationScreenRepository.findOne(
+        createProductDto.preparationScreenId,
+      );
+      product.preparationScreen = screen;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(
+          `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
         );
-        product.preparationScreen = screen;
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(
-            `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
-          );
-        }
-        throw error;
       }
-    } else {
-      product.preparationScreen = null;
+      throw error;
     }
 
     const createdProduct = await this.productRepository.create(product);
@@ -265,27 +262,22 @@ export class ProductsService {
 
     // Actualizar pantalla de preparación
     if (updateProductDto.preparationScreenId !== undefined) {
-      if (updateProductDto.preparationScreenId === null) {
-        product.preparationScreen = null;
-        product.preparationScreenId = null; // Asegurar que el ID también se actualice
-      } else {
-        try {
-          // Usar repositorio en lugar de servicio
-          const screen = await this.preparationScreenRepository.findOne(
-            updateProductDto.preparationScreenId,
+      try {
+        // Usar repositorio en lugar de servicio
+        const screen = await this.preparationScreenRepository.findOne(
+          updateProductDto.preparationScreenId,
+        );
+        // findOne ya lanza NotFoundException si no encuentra
+        product.preparationScreen = screen;
+        product.preparationScreenId = screen.id; // Asegurar que el ID también se actualice
+      } catch (error) {
+        // Mantener el manejo de NotFoundException por si findOne lanza otro error
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(
+            `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
           );
-          // findOne ya lanza NotFoundException si no encuentra
-          product.preparationScreen = screen;
-          product.preparationScreenId = screen.id; // Asegurar que el ID también se actualice
-        } catch (error) {
-          // Mantener el manejo de NotFoundException por si findOne lanza otro error
-          if (error instanceof NotFoundException) {
-            throw new NotFoundException(
-              `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
-            );
-          }
-          throw error; // Lanzar otros errores
         }
+        throw error; // Lanzar otros errores
       }
     }
 
@@ -332,9 +324,6 @@ export class ProductsService {
             }
           } else {
             // Advertir si se intenta actualizar una variante que no pertenece al producto
-            console.warn(
-              `Variant with ID ${variantDto.id} provided for update but does not belong to product ${id}. Skipping.`,
-            );
           }
         } else {
           // Crear nueva variante
@@ -386,7 +375,8 @@ export class ProductsService {
   }
 
   async getPizzaCustomizations(id: string): Promise<any[]> {
-    const product = await this.productRepository.findOneWithPizzaCustomizations(id);
+    const product =
+      await this.productRepository.findOneWithPizzaCustomizations(id);
     if (!product) {
       throw new NotFoundException(
         `Producto con ID ${id} no encontrado`,
@@ -415,7 +405,8 @@ export class ProductsService {
     );
 
     // Retornar el producto actualizado con las personalizaciones
-    const updatedProduct = await this.productRepository.findOneWithPizzaCustomizations(id);
+    const updatedProduct =
+      await this.productRepository.findOneWithPizzaCustomizations(id);
     if (!updatedProduct) {
       throw new NotFoundException(
         `Producto con ID ${id} no encontrado después de actualizar`,

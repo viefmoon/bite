@@ -244,11 +244,7 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                 (item: any, index: number) => (
                   <View key={item.id || index}>
                     <List.Item
-                      title={`${item.product?.name || item.productName || 'Producto'} ${
-                        item.productVariant?.name
-                          ? `(${item.productVariant.name})`
-                          : ''
-                      }`}
+                      title={`${item.quantity || 1}x ${item.productVariant?.name || item.product?.name || item.productName || 'Producto'}`}
                       description={() => (
                         <View>
                           {item.modifiers && item.modifiers.length > 0 && (
@@ -275,12 +271,6 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                               Nota: {item.preparationNotes}
                             </Text>
                           )}
-                          <Text
-                            variant="bodyMedium"
-                            style={styles.quantityText}
-                          >
-                            Cantidad: {item.quantity}
-                          </Text>
                         </View>
                       )}
                       right={() => (

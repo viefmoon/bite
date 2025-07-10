@@ -21,9 +21,7 @@ export const addressSchema = z.object({
 export const createCustomerSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  whatsappPhoneNumber: z
-    .string()
-    .min(1, 'El número de WhatsApp es requerido'),
+  whatsappPhoneNumber: z.string().min(1, 'El número de WhatsApp es requerido'),
   email: z
     .string()
     .email('El correo electrónico no es válido')
@@ -46,9 +44,7 @@ export const updateCustomerSchema = createCustomerSchema.partial();
 export const customerFormSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido').max(100),
   lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  whatsappPhoneNumber: z
-    .string()
-    .min(1, 'El número de WhatsApp es requerido'),
+  whatsappPhoneNumber: z.string().min(1, 'El número de WhatsApp es requerido'),
   email: z
     .string()
     .email('El correo electrónico no es válido')

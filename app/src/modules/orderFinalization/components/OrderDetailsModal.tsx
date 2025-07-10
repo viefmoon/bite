@@ -78,18 +78,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         <View style={styles.itemHeader}>
           <View style={styles.itemInfo}>
             <Text style={[styles.itemName, { color: theme.colors.onSurface }]}>
-              {quantity}x {item.product.name}
+              {quantity}x {item.productVariant?.name || item.product.name}
             </Text>
-            {item.productVariant && (
-              <Text
-                style={[
-                  styles.variantText,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                {item.productVariant.name}
-              </Text>
-            )}
           </View>
           <Text style={[styles.itemPrice, { color: theme.colors.primary }]}>
             ${itemTotal.toFixed(2)}

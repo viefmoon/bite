@@ -14,6 +14,17 @@ export const PreparationScreenSchema = z.object({
       }),
     )
     .optional(),
+  users: z
+    .array(
+      z.object({
+        id: z.string(),
+        username: z.string(),
+        firstName: z.string().nullable().optional(),
+        lastName: z.string().nullable().optional(),
+      }),
+    )
+    .nullable()
+    .optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -31,6 +42,7 @@ export const CreatePreparationScreenSchema = z.object({
     .optional(),
   isActive: z.boolean().optional().default(true),
   productIds: z.array(z.string().uuid()).optional(), // IDs de productos asociados (opcional)
+  userId: z.string().uuid({ message: 'Debe seleccionar un usuario de cocina' }), // ID del usuario asignado (requerido)
 });
 
 // Esquema para actualizar una pantalla de preparación existente
@@ -47,6 +59,7 @@ export const UpdatePreparationScreenSchema = z.object({
     .optional(),
   isActive: z.boolean().optional(),
   productIds: z.array(z.string().uuid()).optional(), // IDs de productos asociados (opcional)
+  userId: z.string().uuid().nullable().optional(), // ID del usuario asignado (opcional)
 });
 
 // Tipos inferidos de los esquemas Zod

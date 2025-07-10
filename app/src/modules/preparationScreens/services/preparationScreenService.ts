@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
@@ -24,20 +24,15 @@ export const getPreparationScreens = async (
   filterOptions: FindAllPreparationScreensDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 15 }, // Default limit 15
 ): Promise<PaginatedResponse<PreparationScreen>> => {
-  const response = await apiClient.get<PaginatedResponse<PreparationScreen>>(
-    API_PATHS.PREPARATION_SCREENS,
-    {
-      ...filterOptions,
-      page: paginationOptions.page,
-      limit: paginationOptions.limit,
-    },
-  );
+  const response = await ApiClientWrapper.get<
+    PaginatedResponse<PreparationScreen>
+  >(API_PATHS.PREPARATION_SCREENS, {
+    ...filterOptions,
+    page: paginationOptions.page,
+    limit: paginationOptions.limit,
+  });
 
   if (!response.ok || !response.data) {
-    console.error(
-      '[preparationScreenService.getPreparationScreens] API request failed:',
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -62,10 +57,6 @@ export const getPreparationScreens = async (
       totalPages: Math.ceil(response.data.total / response.data.limit),
     };
   } else {
-    console.error(
-      '[preparationScreenService.getPreparationScreens] Invalid API response structure:',
-      response.data,
-    );
     throw new Error('Invalid response format from API');
   }
 };
@@ -79,15 +70,11 @@ export const getPreparationScreens = async (
 export const getPreparationScreenById = async (
   id: string,
 ): Promise<PreparationScreen> => {
-  const response = await apiClient.get<PreparationScreen>(
+  const response = await ApiClientWrapper.get<PreparationScreen>(
     `${API_PATHS.PREPARATION_SCREENS}/${id}`,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[preparationScreenService.getPreparationScreenById] Failed to fetch screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -105,16 +92,12 @@ export const getPreparationScreenById = async (
 export const createPreparationScreen = async (
   data: CreatePreparationScreenDto,
 ): Promise<PreparationScreen> => {
-  const response = await apiClient.post<PreparationScreen>(
+  const response = await ApiClientWrapper.post<PreparationScreen>(
     API_PATHS.PREPARATION_SCREENS,
     data,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      '[preparationScreenService.createPreparationScreen] Failed to create screen:',
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -134,16 +117,12 @@ export const updatePreparationScreen = async (
   id: string,
   data: UpdatePreparationScreenDto,
 ): Promise<PreparationScreen> => {
-  const response = await apiClient.patch<PreparationScreen>(
+  const response = await ApiClientWrapper.patch<PreparationScreen>(
     `${API_PATHS.PREPARATION_SCREENS}/${id}`,
     data,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[preparationScreenService.updatePreparationScreen] Failed to update screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -159,15 +138,11 @@ export const updatePreparationScreen = async (
  * @throws {ApiError} If the API request fails.
  */
 export const deletePreparationScreen = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(
+  const response = await ApiClientWrapper.delete(
     `${API_PATHS.PREPARATION_SCREENS}/${id}`,
   );
 
   if (!response.ok) {
-    console.error(
-      `[preparationScreenService.deletePreparationScreen] Failed to delete screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -184,15 +159,11 @@ export const deletePreparationScreen = async (id: string): Promise<void> => {
 export const getPreparationScreenProducts = async (
   id: string,
 ): Promise<any[]> => {
-  const response = await apiClient.get<any[]>(
+  const response = await ApiClientWrapper.get<any[]>(
     `${API_PATHS.PREPARATION_SCREENS}/${id}/products`,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[preparationScreenService.getPreparationScreenProducts] Failed to fetch products for screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -208,15 +179,11 @@ export const getPreparationScreenProducts = async (
  * @throws {ApiError} If the API request fails.
  */
 export const getMenuWithAssociations = async (id: string): Promise<any> => {
-  const response = await apiClient.get<any>(
+  const response = await ApiClientWrapper.get<any>(
     `${API_PATHS.PREPARATION_SCREENS}/${id}/menu-with-associations`,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[preparationScreenService.getMenuWithAssociations] Failed to fetch menu for screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -236,16 +203,12 @@ export const associateProducts = async (
   id: string,
   productIds: string[],
 ): Promise<PreparationScreen> => {
-  const response = await apiClient.post<PreparationScreen>(
+  const response = await ApiClientWrapper.post<PreparationScreen>(
     `${API_PATHS.PREPARATION_SCREENS}/${id}/products`,
     { productIds },
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[preparationScreenService.associateProducts] Failed to associate products with screen ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,

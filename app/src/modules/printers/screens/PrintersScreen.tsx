@@ -152,6 +152,12 @@ const PrintersScreen: React.FC = () => {
           : 'No hay impresoras configuradas. Presiona el botón + para agregar una nueva o descubrir impresoras en la red.',
       icon: 'printer-outline',
     },
+    errorConfig: {
+      title: 'Error al cargar impresoras',
+      message: 'No se pudieron cargar las impresoras. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetchList,
+    },
   });
 
   // Wrapper para el cambio de filtro
@@ -233,7 +239,8 @@ const PrintersScreen: React.FC = () => {
         isModalOpen={
           isFormModalVisible || isDetailModalVisible || isDiscoveryModalVisible
         }
-        showImagePlaceholder={false} // No hay imágenes para impresoras
+        showImagePlaceholder={true}
+        placeholderIcon="printer-outline"
         isDrawerOpen={isDrawerOpen}
         contentContainerStyle={styles.listPadding} // Añadir padding inferior
         renderItemActions={renderItemActions} // <-- Pasar la función para renderizar acciones
@@ -267,6 +274,7 @@ const PrintersScreen: React.FC = () => {
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
           onDelete={() => selectedItem && handleDeleteItem(selectedItem.id)}
           isDeleting={isDeleting}
+          showImage={true}
         />
         {/* Añadir FAB.Group dentro del Portal */}
         <FAB.Group

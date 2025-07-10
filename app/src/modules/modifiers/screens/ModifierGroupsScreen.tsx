@@ -112,9 +112,6 @@ const ModifierGroupsScreen = () => {
       setStatusFilter(value as StatusFilter);
     } else {
       // Opcional: manejar valor inesperado, por ahora default a 'all'
-      console.warn(
-        `Valor de filtro inesperado recibido: ${value}, usando 'all'.`,
-      );
       setStatusFilter('all');
     }
   };
@@ -180,6 +177,13 @@ const ModifierGroupsScreen = () => {
           : 'No hay grupos de modificadores registrados. Presiona el botón + para crear el primero.',
       icon: 'folder-multiple-outline',
     },
+    errorConfig: {
+      title: 'Error al cargar grupos',
+      message:
+        'No se pudieron cargar los grupos de modificadores. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetch,
+    },
   });
 
   return (
@@ -202,7 +206,8 @@ const ModifierGroupsScreen = () => {
         showFab={true}
         onFabPress={handleOpenCreateModal}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={false}
+        showImagePlaceholder={true}
+        placeholderIcon="format-list-group"
         isDrawerOpen={isDrawerOpen}
         renderItemActions={(item) => (
           <IconButton
@@ -240,6 +245,7 @@ const ModifierGroupsScreen = () => {
         isDeleting={isDeleting}
         editButtonLabel="Editar"
         deleteButtonLabel="Eliminar"
+        showImage={true}
       ></GenericDetailModal>
     </SafeAreaView>
   );

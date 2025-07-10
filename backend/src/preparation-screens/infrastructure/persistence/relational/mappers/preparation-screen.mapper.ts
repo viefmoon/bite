@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
+import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import {
   BaseMapper,
   mapArray,
@@ -16,6 +17,8 @@ export class PreparationScreenMapper extends BaseMapper<
   constructor(
     @Inject(forwardRef(() => ProductMapper))
     private readonly productMapper: ProductMapper,
+    @Inject(forwardRef(() => UserMapper))
+    private readonly userMapper: UserMapper,
   ) {
     super();
   }
@@ -30,6 +33,8 @@ export class PreparationScreenMapper extends BaseMapper<
     domain.products = mapArray(entity.products, (p) =>
       this.productMapper.toDomain(p),
     );
+    // Mapear usuarios
+    domain.users = mapArray(entity.users, (u) => this.userMapper.toDomain(u));
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;

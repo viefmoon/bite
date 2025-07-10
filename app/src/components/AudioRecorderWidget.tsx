@@ -11,7 +11,10 @@ import {
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import { audioServiceHealth, type AudioServiceHealthStatus } from '@/services/audioServiceHealth';
+import {
+  audioServiceHealth,
+  type AudioServiceHealthStatus,
+} from '@/services/audioServiceHealth';
 
 interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;
@@ -40,10 +43,10 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   // Estado para el tiempo de grabación
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingInterval = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Estado de disponibilidad del servicio
   const [serviceHealth, setServiceHealth] = useState<AudioServiceHealthStatus>(
-    audioServiceHealth.getStatus()
+    audioServiceHealth.getStatus(),
   );
   const [isServiceAvailable, setIsServiceAvailable] = useState(false);
 
@@ -64,13 +67,13 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       setServiceHealth(status);
       setIsServiceAvailable(status.isAvailable);
     });
-    
+
     // Iniciar verificación periódica
     audioServiceHealth.startPeriodicCheck();
-    
+
     // Verificar inmediatamente
     audioServiceHealth.checkHealth();
-    
+
     return () => {
       unsubscribe();
     };
@@ -91,7 +94,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     if (isRecording) {
       // Iniciar contador de tiempo
       recordingInterval.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
 
       // Animaciones de onda
@@ -109,7 +112,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
 
       const wave2 = Animated.loop(
@@ -126,7 +129,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
 
       const wave3 = Animated.loop(
@@ -143,7 +146,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
 
       // Animación de brillo
@@ -161,7 +164,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
 
       wave1.start();
@@ -209,7 +212,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
           duration: 1500,
           easing: Easing.bezier(0.645, 0.045, 0.355, 1),
           useNativeDriver: true,
-        })
+        }),
       );
       spin.start();
       return () => {
@@ -221,28 +224,39 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
 
   // Estado para evitar llamadas duplicadas
   const hasCompletedRef = useRef(false);
-  
+
   // Efecto cuando se completa la grabación
   useEffect(() => {
-    if (audioUri && transcription && !isProcessing && !hasCompletedRef.current) {
+    if (
+      audioUri &&
+      transcription &&
+      !isProcessing &&
+      !hasCompletedRef.current
+    ) {
       hasCompletedRef.current = true;
-      
+
       // Guardar valores antes de resetear
       const uri = audioUri;
       const trans = transcription;
-      
+
       // Reset primero para evitar loops
       resetRecording();
-      
+
       // Luego llamar a onRecordingComplete
       onRecordingComplete(uri, trans);
-      
+
       // Resetear el flag después de un tiempo
       setTimeout(() => {
         hasCompletedRef.current = false;
       }, 1000);
     }
-  }, [audioUri, transcription, isProcessing, onRecordingComplete, resetRecording]);
+  }, [
+    audioUri,
+    transcription,
+    isProcessing,
+    onRecordingComplete,
+    resetRecording,
+  ]);
 
   // Efecto para manejar errores
   useEffect(() => {
@@ -256,21 +270,37 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     if (!isServiceAvailable) {
       // Animación de "shake" para indicar que no está disponible
       Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
       ]).start();
-      
+
       onError(serviceHealth.message || 'Servicio de voz no disponible');
       return;
     }
-    
+
     // Prevenir múltiples clics mientras procesa
     if (isProcessing || isPreparing) {
       return;
     }
-    
+
     // Animación de presión más suave
     Animated.sequence([
       Animated.spring(scaleAnim, {
@@ -293,9 +323,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       } else {
         await startRecording();
       }
-    } catch (err) {
-      console.error('Error en handlePress:', err);
-    }
+    } catch (err) {}
   };
 
   const rotateInterpolate = rotateAnim.interpolate({
@@ -323,27 +351,25 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     return theme.colors.primary;
   };
 
-
-
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
           transform: [
-            { 
+            {
               translateY: bounceAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [100, 0]
-              })
+                outputRange: [100, 0],
+              }),
             },
-            { scale: bounceAnim }
+            { scale: bounceAnim },
           ],
           opacity: bounceAnim.interpolate({
             inputRange: [0, 1],
-            outputRange: [0, isServiceAvailable ? 1 : 0.6]
-          })
-        }
+            outputRange: [0, isServiceAvailable ? 1 : 0.6],
+          }),
+        },
       ]}
     >
       {/* Ondas animadas de fondo */}
@@ -356,7 +382,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                 transform: [{ scale: waveAnim1 }],
                 opacity: fadeAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 0.1]
+                  outputRange: [0, 0.1],
                 }),
                 backgroundColor: theme.colors.primary,
               },
@@ -369,7 +395,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                 transform: [{ scale: waveAnim2 }],
                 opacity: fadeAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 0.15]
+                  outputRange: [0, 0.15],
                 }),
                 backgroundColor: theme.colors.primary,
               },
@@ -382,7 +408,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                 transform: [{ scale: waveAnim3 }],
                 opacity: fadeAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 0.2]
+                  outputRange: [0, 0.2],
                 }),
                 backgroundColor: theme.colors.primary,
               },
@@ -393,7 +419,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
 
       {/* Contador de tiempo */}
       {isRecording && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.timerContainer,
             {
@@ -402,11 +428,11 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                 {
                   translateY: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [-10, 0]
-                  })
-                }
-              ]
-            }
+                    outputRange: [-10, 0],
+                  }),
+                },
+              ],
+            },
           ]}
         >
           <View style={[styles.timerBadge, { backgroundColor: '#FF3B30' }]}>
@@ -416,10 +442,14 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         </Animated.View>
       )}
 
-
       {/* Indicador de servicio no disponible */}
       {!isServiceAvailable && (
-        <View style={[styles.disabledIndicator, { backgroundColor: theme.colors.error }]}>
+        <View
+          style={[
+            styles.disabledIndicator,
+            { backgroundColor: theme.colors.error },
+          ]}
+        >
           <MaterialIcons name="cloud-off" size={12} color="white" />
         </View>
       )}
@@ -434,7 +464,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             styles.buttonContainer,
             {
               transform: [{ scale: scaleAnim }],
-            }
+            },
           ]}
         >
           {/* Brillo de fondo cuando graba */}
@@ -446,21 +476,21 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                   backgroundColor: '#FF3B30',
                   opacity: glowAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0.3, 0.6]
+                    outputRange: [0.3, 0.6],
                   }),
                   transform: [
                     {
                       scale: glowAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [1, 1.2]
-                      })
-                    }
-                  ]
-                }
+                        outputRange: [1, 1.2],
+                      }),
+                    },
+                  ],
+                },
               ]}
             />
           )}
-          
+
           <View
             style={[
               styles.button,

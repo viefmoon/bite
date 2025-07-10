@@ -87,6 +87,12 @@ const CategoriesScreen: React.FC = () => {
           : 'No hay categorías registradas. Presiona el botón + para crear la primera.',
       icon: 'folder-outline',
     },
+    errorConfig: {
+      title: 'Error al cargar categorías',
+      message: 'No se pudieron cargar las categorías. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetchCategories,
+    },
   });
 
   const commonMutationOptions = {
@@ -294,6 +300,8 @@ const CategoriesScreen: React.FC = () => {
     },
     determineFinalPhotoId: ImageUploadService.determinePhotoId,
     imagePickerSize: 150,
+    placeholderIcon: 'folder-outline',
+    placeholderText: 'Imagen de categoría',
   };
 
   return (
@@ -328,6 +336,7 @@ const CategoriesScreen: React.FC = () => {
         onFabPress={openAddModal}
         isModalOpen={modalVisible || detailModalVisible}
         showImagePlaceholder={true}
+        placeholderIcon="folder-outline"
         isDrawerOpen={isDrawerOpen} // Pasar estado del drawer
       />
 
@@ -363,6 +372,7 @@ const CategoriesScreen: React.FC = () => {
           onEdit={openEditModal as (item: any) => void}
           onDelete={handleDelete}
           isDeleting={deleteCategoryMutation.isPending}
+          showImage={true}
         />
 
         <ConfirmationModal

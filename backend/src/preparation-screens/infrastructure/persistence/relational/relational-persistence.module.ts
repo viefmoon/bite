@@ -5,11 +5,13 @@ import { PreparationScreensRelationalRepository } from './repositories/preparati
 import { PREPARATION_SCREEN_REPOSITORY } from '../../../../common/tokens';
 import { PreparationScreenMapper } from './mappers/preparation-screen.mapper';
 import { RelationalProductPersistenceModule } from '../../../../products/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalUserPersistenceModule } from '../../../../users/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PreparationScreenEntity]),
     forwardRef(() => RelationalProductPersistenceModule),
+    forwardRef(() => RelationalUserPersistenceModule),
   ],
   providers: [
     {

@@ -2,7 +2,6 @@ import { DataSource } from 'typeorm';
 import { RoleEntity } from '../../../roles/infrastructure/persistence/relational/entities/role.entity';
 import { RoleEnum } from '../../../roles/roles.enum';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
 
 dotenv.config();
 
@@ -20,7 +19,6 @@ async function insertMissingRoles() {
 
   try {
     await dataSource.initialize();
-    console.log('Connected to database');
 
     const roleRepository = dataSource.getRepository(RoleEntity);
 
@@ -38,27 +36,15 @@ async function insertMissingRoles() {
         const exists = await roleRepository.findOne({ where: { id: role.id } });
         if (!exists) {
           await roleRepository.save(role);
-          console.log(`✅ Role ${role.name} inserted successfully`);
         } else {
-          console.log(`ℹ️ Role ${role.name} already exists`);
         }
-      } catch (error) {
-        console.error(`❌ Error inserting role ${role.name}:`, error);
-      }
+      } catch {}
     }
 
-    const allRoles = await roleRepository.find();
-    console.log('\nAll roles in database:');
-    allRoles.forEach(role => {
-      console.log(`- ID: ${role.id}, Name: ${role.name}`);
-    });
-
     await dataSource.destroy();
-    console.log('\nDatabase connection closed');
-  } catch (error) {
-    console.error('Error:', error);
+  } catch {
     process.exit(1);
   }
 }
 
-insertMissingRoles();
+void insertMissingRoles();

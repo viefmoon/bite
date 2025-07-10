@@ -1,12 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersApiService } from '../services';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import type {
-  CreateUserDto,
-  UpdateUserDto,
-  User,
-  UsersQuery,
-} from '../types';
+import type { CreateUserDto, UpdateUserDto, UsersQuery } from '../types';
 
 const USERS_QUERY_KEY = 'users';
 
@@ -14,16 +9,16 @@ export function useGetUsers(params?: UsersQuery) {
   return useQuery({
     queryKey: [USERS_QUERY_KEY, params],
     queryFn: () => usersApiService.findAll(params),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
 export function useGetUser(id?: string) {
   return useQuery({
     queryKey: [USERS_QUERY_KEY, id],
-    queryFn: () => id ? usersApiService.findOne(id) : Promise.resolve(null),
+    queryFn: () => (id ? usersApiService.findOne(id) : Promise.resolve(null)),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -56,9 +51,11 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
       usersApiService.update(id, data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: [USERS_QUERY_KEY, variables.id],
+      });
       showSnackbar({
         message: 'Usuario actualizado exitosamente',
         type: 'success',
@@ -105,8 +102,10 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: ({ id, password }: { id: string; password: string }) =>
       usersApiService.resetPassword(id, password),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, variables.id] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [USERS_QUERY_KEY, variables.id],
+      });
       showSnackbar({
         message: 'Contraseña actualizada exitosamente',
         type: 'success',
@@ -128,9 +127,11 @@ export function useToggleUserActive() {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       usersApiService.toggleActive(id, isActive),
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: [USERS_QUERY_KEY, variables.id],
+      });
       showSnackbar({
         message: `Usuario ${variables.isActive ? 'activado' : 'desactivado'} exitosamente`,
         type: 'success',
@@ -138,7 +139,9 @@ export function useToggleUserActive() {
     },
     onError: (error: any) => {
       showSnackbar({
-        message: error.response?.data?.message || 'Error al cambiar estado del usuario',
+        message:
+          error.response?.data?.message ||
+          'Error al cambiar estado del usuario',
         type: 'error',
       });
     },

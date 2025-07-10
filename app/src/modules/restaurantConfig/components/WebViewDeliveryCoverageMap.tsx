@@ -1,15 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  Alert,
-  useWindowDimensions,
-} from 'react-native';
+import { View, StyleSheet, Alert, useWindowDimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
-import {
-  Surface,
-  IconButton,
-} from 'react-native-paper';
+import { Surface, IconButton } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
 
@@ -42,10 +34,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<DeliveryCoveragePoint[]>(
     () => {
-      console.log(
-        '[WebViewDeliveryCoverageMap] Initial polygon:',
-        initialPolygon,
-      );
       return initialPolygon || [];
     },
   );
@@ -353,10 +341,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
       switch (data.type) {
         case 'mapReady':
           setMapReady(true);
-          console.log(
-            '[WebViewDeliveryCoverageMap] Map is ready, initialPolygon:',
-            initialPolygon,
-          );
 
           // Enviar polígono inicial si existe
           if (initialPolygon && initialPolygon.length > 0) {
@@ -376,28 +360,15 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
           break;
         }
       }
-    } catch (e) {
-      console.error('Error handling WebView message:', e);
-    }
+    } catch (e) {}
   };
 
   // Enviar mensaje al WebView
   const sendMessageToWebView = (type: string, data: any) => {
-    console.log('[WebViewDeliveryCoverageMap] Sending message:', type, data);
-    console.log(
-      '[WebViewDeliveryCoverageMap] Map ready:',
-      mapReady,
-      'Ref exists:',
-      !!webViewRef.current,
-    );
-
     if (webViewRef.current) {
       const message = JSON.stringify({ type, ...data });
       webViewRef.current.postMessage(message);
     } else {
-      console.log(
-        '[WebViewDeliveryCoverageMap] Cannot send message - WebView ref missing',
-      );
     }
   };
 
@@ -485,7 +456,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         style={styles.map}
         onMessage={handleWebViewMessage}
         onLoad={() => {
-          console.log('[WebViewDeliveryCoverageMap] WebView loaded');
           // Inyectar código JavaScript después de cargar
           if (
             webViewRef.current &&
@@ -496,7 +466,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
               setTimeout(() => {
                 if (typeof setPolygon === 'function') {
                   setPolygon(${JSON.stringify(initialPolygon)});
-                  console.log('Polygon set via injected JS');
                 }
               }, 1500);
               true;
@@ -504,9 +473,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             webViewRef.current.injectJavaScript(jsCode);
           }
         }}
-        onError={(error) =>
-          console.error('[WebViewDeliveryCoverageMap] WebView error:', error)
-        }
+        onError={(error) => {}}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         startInLoadingState={true}

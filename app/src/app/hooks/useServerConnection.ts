@@ -20,121 +20,118 @@ export function useServerConnection(): ServerConnectionState {
     serverUrl: null as string | null,
     hasWifi: true,
   });
-  
+
   // Referencias para reconexión automática
   const lastKnownUrl = useRef<string | null>(null);
   const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
-  
+
   const isInitialMount = useRef(true);
   const isMounted = useRef(true);
 
   const updateState = useCallback((updates: Partial<typeof state>) => {
     if (isMounted.current) {
-      setState(prev => ({ ...prev, ...updates }));
+      setState((prev) => ({ ...prev, ...updates }));
     }
   }, []);
 
-  const checkConnection = useCallback(async (forceNew = false) => {
-    // Establecer que estamos buscando
-    updateState({ isSearching: true, error: null });
-    
-    try {
-      // Primero verificar el estado de la red
-      const netInfo = await NetInfo.fetch();
-      const isNetworkConnected = netInfo.isConnected && (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
-      
-      if (!isNetworkConnected) {
+  const checkConnection = useCallback(
+    async (forceNew = false) => {
+      // Establecer que estamos buscando
+      updateState({ isSearching: true, error: null });
+
+      try {
+        // Primero verificar el estado de la red
+        const netInfo = await NetInfo.fetch();
+        const isNetworkConnected =
+          netInfo.isConnected &&
+          (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
+
+        if (!isNetworkConnected) {
+          updateState({
+            isSearching: false,
+            isConnected: false,
+            serverUrl: null,
+            hasWifi: false,
+            error:
+              'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
+          });
+          return;
+        }
+
+        updateState({ hasWifi: true });
+
+        let url: string;
+
+        if (forceNew) {
+          url = await discoveryService.forceRediscovery();
+          await reinitializeApiClient(url);
+        } else {
+          url = await discoveryService.getApiUrl();
+          await getApiClient(url);
+        }
+
+        // Guardar la URL conocida para reconexión rápida
+        lastKnownUrl.current = url;
+
+        updateState({
+          isSearching: false,
+          isConnected: true,
+          serverUrl: url,
+          error: null,
+        });
+      } catch (err: any) {
         updateState({
           isSearching: false,
           isConnected: false,
           serverUrl: null,
-          hasWifi: false,
-          error: 'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor'
+          error: err.message || 'No se pudo conectar con el servidor',
         });
-        return;
       }
-      
-      updateState({ hasWifi: true });
-      
-      let url: string;
-      
-      if (forceNew) {
-        url = await discoveryService.forceRediscovery();
-        await reinitializeApiClient(url);
-      } else {
-        url = await discoveryService.getApiUrl();
-        await getApiClient(url);
-      }
-      
-      // Guardar la URL conocida para reconexión rápida
-      lastKnownUrl.current = url;
-      
-      updateState({
-        isSearching: false,
-        isConnected: true,
-        serverUrl: url,
-        error: null
-      });
-      
-    } catch (err: any) {
-      
-      updateState({
-        isSearching: false,
-        isConnected: false,
-        serverUrl: null,
-        error: err.message || 'No se pudo conectar con el servidor'
-      });
-    }
-  }, [updateState]);
+    },
+    [updateState],
+  );
 
   // Función para verificación rápida usando la última URL conocida
   const quickCheck = useCallback(async (): Promise<boolean> => {
     // Si no tenemos URL en memoria, intentar obtener la guardada
     if (!lastKnownUrl.current) {
-      console.log('[quickCheck] No hay URL en memoria, buscando en storage...');
       const savedUrl = await discoveryService.getLastKnownUrl();
       if (savedUrl) {
-        console.log('[quickCheck] URL recuperada del storage:', savedUrl);
         lastKnownUrl.current = savedUrl;
       } else {
-        console.log('[quickCheck] No hay URL guardada');
         return false;
       }
     }
-    
-    console.log('[quickCheck] Verificando servidor en:', lastKnownUrl.current);
-    
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 segundo timeout
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 segundo timeout
-      
       const response = await fetch(`${lastKnownUrl.current}api/v1/discovery`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         signal: controller.signal,
       });
-      
-      clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.type === 'cloudbite-api') {
-          console.log('[quickCheck] ✅ Servidor encontrado!');
           // Servidor encontrado, actualizar estado
           updateState({
             isSearching: false,
             isConnected: true,
             serverUrl: lastKnownUrl.current,
-            error: null
+            error: null,
           });
           return true;
         }
       }
-      console.log('[quickCheck] ❌ Respuesta no válida del servidor');
     } catch (error: any) {
-      console.log('[quickCheck] ❌ Error al verificar:', error.message);
+      // Error esperado, servidor no disponible
+    } finally {
+      clearTimeout(timeoutId);
     }
-    
+
     return false;
   }, [updateState]);
 
@@ -145,74 +142,66 @@ export function useServerConnection(): ServerConnectionState {
   // Montar y ejecutar la verificación inicial
   useEffect(() => {
     isMounted.current = true;
-    
+
     if (isInitialMount.current) {
       isInitialMount.current = false;
       checkConnection();
     }
-    
+
     return () => {
       isMounted.current = false;
     };
-  }, []);
+  }, [checkConnection]);
 
   // Escuchar cambios de red
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(async netState => {
-      const isNetworkConnected = netState.isConnected && (netState.type === 'wifi' || netState.type === 'ethernet');
-      
-      console.log('[NetInfo] Cambio de red detectado:', {
-        isConnected: netState.isConnected,
-        type: netState.type,
-        isNetworkConnected,
-        currentlyConnected: state.isConnected,
-        hasLastKnownUrl: !!lastKnownUrl.current
-      });
-      
+    const unsubscribe = NetInfo.addEventListener(async (netState) => {
+      const isNetworkConnected =
+        netState.isConnected === true &&
+        (netState.type === 'wifi' || netState.type === 'ethernet');
+
       updateState({ hasWifi: isNetworkConnected });
-      
+
       if (!isNetworkConnected && state.isConnected) {
         // Se perdió la conexión
-        console.log('[ServerConnection] WiFi perdido mientras estaba conectado');
         updateState({
           isConnected: false,
-          error: 'Se perdió la conexión WiFi'
+          error: 'Se perdió la conexión WiFi',
         });
-        
+
         // Cancelar cualquier intento de reconexión pendiente
         if (reconnectTimer.current) {
           clearTimeout(reconnectTimer.current);
           reconnectTimer.current = null;
         }
-      } else if (isNetworkConnected && !state.isConnected && lastKnownUrl.current) {
+      } else if (
+        isNetworkConnected &&
+        !state.isConnected &&
+        lastKnownUrl.current
+      ) {
         // Se recuperó la red y teníamos una conexión previa
-        console.log('[ServerConnection] WiFi recuperado, intentando reconexión rápida a:', lastKnownUrl.current);
-        
-        updateState({ 
+
+        updateState({
           isSearching: true,
-          error: 'Reconectando al servidor...'
+          error: 'Reconectando al servidor...',
         });
-        
+
         // Intentar reconexión rápida primero
-        const startTime = Date.now();
+        // const startTime = Date.now();
         const quickSuccess = await quickCheck();
-        const elapsed = Date.now() - startTime;
-        
-        console.log(`[ServerConnection] Verificación rápida completada en ${elapsed}ms, éxito: ${quickSuccess}`);
-        
+        // const elapsed = Date.now() - startTime;
+
         if (!quickSuccess) {
           // Si falla la reconexión rápida, programar un redescubrimiento completo
-          console.log('[ServerConnection] Reconexión rápida falló, programando discovery completo en 2s');
           reconnectTimer.current = setTimeout(() => {
             if (isMounted.current) {
-              console.log('[ServerConnection] Iniciando discovery completo después de fallo en reconexión rápida');
               checkConnection(false);
             }
           }, 2000); // Esperar 2 segundos antes de hacer discovery completo
         }
       }
     });
-    
+
     return () => {
       unsubscribe();
       if (reconnectTimer.current) {

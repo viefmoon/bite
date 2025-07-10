@@ -72,7 +72,13 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
     // Recargar para asegurar que las relaciones estén presentes en la respuesta
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: savedEntity.id },
-      relations: ['order', 'productModifiers', 'product', 'productVariant', 'selectedPizzaCustomizations'], // Cargar relaciones necesarias
+      relations: [
+        'order',
+        'productModifiers',
+        'product',
+        'productVariant',
+        'selectedPizzaCustomizations',
+      ], // Cargar relaciones necesarias
     });
 
     if (!reloadedEntity) {
@@ -91,19 +97,14 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
   }
 
   async update(orderItem: OrderItem): Promise<OrderItem> {
-    // Similar a save, asegurar que la relación 'order' esté presente si es necesario
-    // aunque 'update' generalmente no cambia las relaciones principales.
-    // Por simplicidad y dado que el error es en INSERT, dejamos update como está por ahora,
-    // Usar save para actualizar, ya que maneja inserción o actualización basada en ID
-    const entityToUpdate = this.orderItemMapper.toEntity(orderItem); // Usar instancia
+    const entityToUpdate = this.orderItemMapper.toEntity(orderItem);
     if (!entityToUpdate || !entityToUpdate.id) {
-      // Verificar entidad e ID
       throw new InternalServerErrorException(
         'Error mapping OrderItem domain to entity for update or ID missing',
       );
     }
 
-    // Verificar si la entidad existe antes de intentar guardarla (opcional pero bueno)
+    // Verificar si la entidad existe antes de intentar guardarla
     const exists = await this.orderItemRepository.existsBy({
       id: entityToUpdate.id,
     });
@@ -119,7 +120,13 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
     // Recargar para obtener el estado final con relaciones
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: updatedEntity.id },
-      relations: ['order', 'productModifiers', 'product', 'productVariant', 'selectedPizzaCustomizations'], // Cargar relaciones necesarias
+      relations: [
+        'order',
+        'productModifiers',
+        'product',
+        'productVariant',
+        'selectedPizzaCustomizations',
+      ], // Cargar relaciones necesarias
     });
 
     if (!reloadedEntity) {

@@ -25,7 +25,9 @@ export function PizzaProductsTab() {
   const theme = useAppTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'configured' | 'not_configured'>('all');
+  const [filter, setFilter] = useState<'all' | 'configured' | 'not_configured'>(
+    'all',
+  );
   const [configModalVisible, setConfigModalVisible] = useState(false);
   const [ingredientsModalVisible, setIngredientsModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -40,15 +42,15 @@ export function PizzaProductsTab() {
 
   const filteredProducts = useMemo(() => {
     if (!data) return [];
-    
-    let filtered = data.filter(product => 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+    let filtered = data.filter((product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     if (filter === 'configured') {
-      filtered = filtered.filter(product => product.pizzaConfiguration);
+      filtered = filtered.filter((product) => product.pizzaConfiguration);
     } else if (filter === 'not_configured') {
-      filtered = filtered.filter(product => !product.pizzaConfiguration);
+      filtered = filtered.filter((product) => !product.pizzaConfiguration);
     }
 
     return filtered;
@@ -57,8 +59,12 @@ export function PizzaProductsTab() {
   const renderProductItem = ({ item }: { item: Product }) => {
     const isConfigured = !!item.pizzaConfiguration;
     const customizations = item.pizzaCustomizations || [];
-    const flavorsCount = customizations.filter((c: any) => c.type === 'FLAVOR').length;
-    const ingredientsCount = customizations.filter((c: any) => c.type === 'INGREDIENT').length;
+    const flavorsCount = customizations.filter(
+      (c: any) => c.type === 'FLAVOR',
+    ).length;
+    const ingredientsCount = customizations.filter(
+      (c: any) => c.type === 'INGREDIENT',
+    ).length;
     const imageUrl = item.photo?.path ? getImageUrl(item.photo.path) : null;
     const variantsCount = item.variants?.length || 0;
 
@@ -76,16 +82,25 @@ export function PizzaProductsTab() {
               <Avatar.Icon
                 size={48}
                 icon="pizza"
-                style={[styles.productImage, { backgroundColor: theme.colors.primaryContainer }]}
+                style={[
+                  styles.productImage,
+                  { backgroundColor: theme.colors.primaryContainer },
+                ]}
               />
             )}
-            
+
             <View style={styles.productInfo}>
-              <Text variant="titleMedium" style={styles.productName} numberOfLines={1}>
+              <Text
+                variant="titleMedium"
+                style={styles.productName}
+                numberOfLines={1}
+              >
                 {item.name}
               </Text>
               <Text variant="bodySmall" style={styles.variantText}>
-                {variantsCount > 0 ? `${variantsCount} tamaños` : 'Sin variantes'}
+                {variantsCount > 0
+                  ? `${variantsCount} tamaños`
+                  : 'Sin variantes'}
               </Text>
             </View>
 
@@ -122,21 +137,23 @@ export function PizzaProductsTab() {
             style={[
               styles.statusChip,
               {
-                backgroundColor: isConfigured 
-                  ? theme.colors.primaryContainer 
-                  : theme.colors.errorContainer
-              }
+                backgroundColor: isConfigured
+                  ? theme.colors.primaryContainer
+                  : theme.colors.errorContainer,
+              },
             ]}
             textStyle={styles.chipText}
           >
             {isConfigured ? 'Configurada' : 'Sin configurar'}
           </Chip>
-          
+
           <View style={styles.countsContainer}>
             <Text variant="bodySmall" style={styles.countText}>
               {flavorsCount} sabores
             </Text>
-            <Text variant="bodySmall" style={styles.countDivider}>•</Text>
+            <Text variant="bodySmall" style={styles.countDivider}>
+              •
+            </Text>
             <Text variant="bodySmall" style={styles.countText}>
               {ingredientsCount} ingredientes
             </Text>
@@ -300,12 +317,16 @@ export function PizzaProductsTab() {
               onDismiss={() => setFilterMenuVisible(false)}
               anchor={
                 <IconButton
-                  icon={hasActiveFilter ? "filter-check" : "filter-variant"}
+                  icon={hasActiveFilter ? 'filter-check' : 'filter-variant'}
                   mode="contained-tonal"
                   size={24}
                   onPress={() => setFilterMenuVisible(true)}
                   style={styles.filterIconButton}
-                  iconColor={hasActiveFilter ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  iconColor={
+                    hasActiveFilter
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
                 />
               }
               anchorPosition="bottom"
@@ -354,12 +375,7 @@ export function PizzaProductsTab() {
                 }
               />
             </Menu>
-            {hasActiveFilter && (
-              <Badge
-                style={styles.filterBadge}
-                size={8}
-              />
-            )}
+            {hasActiveFilter && <Badge style={styles.filterBadge} size={8} />}
           </View>
         </View>
       </View>
@@ -380,11 +396,11 @@ export function PizzaProductsTab() {
           <EmptyState
             title="No hay pizzas"
             message={
-              filter === 'not_configured' 
-                ? "No hay pizzas sin configurar"
+              filter === 'not_configured'
+                ? 'No hay pizzas sin configurar'
                 : filter === 'configured'
-                ? "No hay pizzas configuradas"
-                : "No hay productos tipo pizza creados"
+                  ? 'No hay pizzas configuradas'
+                  : 'No hay productos tipo pizza creados'
             }
             icon="pizza"
           />

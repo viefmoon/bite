@@ -4,7 +4,6 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
-  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -37,6 +36,6 @@ export class PreparationScreenEntity {
   @OneToMany(() => ProductEntity, (product) => product.preparationScreen)
   products: ProductEntity[];
 
-  @ManyToMany(() => UserEntity, (user) => user.preparationScreens)
+  @OneToMany(() => UserEntity, (user) => user.preparationScreen)
   users?: UserEntity[];
 }

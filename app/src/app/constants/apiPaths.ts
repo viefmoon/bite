@@ -9,6 +9,7 @@ export const API_PATHS = {
   AUTH_EMAIL_LOGIN: '/api/v1/auth/email/login',
   AUTH_EMAIL_REGISTER: '/api/v1/auth/email/register',
   AUTH_ME: '/api/v1/auth/me',
+  AUTH_REFRESH: '/api/v1/auth/refresh',
 
   AREAS: '/api/v1/areas',
   TABLES: '/api/v1/tables',
@@ -31,7 +32,8 @@ export const API_PATHS = {
 
   AVAILABILITY_MENU: '/api/v1/availability/menu',
   AVAILABILITY_MODIFIER_GROUPS: '/api/v1/availability/modifier-groups',
-  AVAILABILITY_PIZZA_CUSTOMIZATIONS: '/api/v1/availability/pizza-customizations',
+  AVAILABILITY_PIZZA_CUSTOMIZATIONS:
+    '/api/v1/availability/pizza-customizations',
   AVAILABILITY_UPDATE: '/api/v1/availability/update',
   AVAILABILITY_BULK_UPDATE: '/api/v1/availability/bulk-update',
 
@@ -44,4 +46,9 @@ export const API_PATHS = {
 
   CUSTOMERS: '/api/v1/customers',
   ADDRESSES: '/api/v1/addresses',
+
+  KITCHEN_ORDERS: '/api/v1/kitchen/orders',
+  KITCHEN_MARK_PREPARED: '/api/v1/kitchen/order-items/:itemId/prepare',
+  KITCHEN_MARK_UNPREPARED: '/api/v1/kitchen/order-items/:itemId/unprepare',
+  KITCHEN_MY_SCREEN: '/api/v1/kitchen/my-screen',
 } as const;

@@ -1,7 +1,10 @@
 import React from 'react';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import { useAppTheme } from '@/app/styles/theme';
-import { CustomizationType, PizzaCustomization } from '../types/pizzaCustomization.types';
+import {
+  CustomizationType,
+  PizzaCustomization,
+} from '../types/pizzaCustomization.types';
 
 interface PizzaCustomizationDetailModalProps {
   visible: boolean;
@@ -52,7 +55,8 @@ export function PizzaCustomizationDetailModal({
         {
           field: 'type',
           label: 'Tipo',
-          render: (type) => type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente',
+          render: (type) =>
+            type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente',
         },
         {
           field: 'ingredients',
@@ -76,7 +80,7 @@ export function PizzaCustomizationDetailModal({
             if (!products || products.length === 0) {
               return 'No asociado a ningún producto';
             }
-            const productNames = products.map(p => p.name).join(', ');
+            const productNames = products.map((p) => p.name).join(', ');
             return `${products.length} producto${products.length > 1 ? 's' : ''}: ${productNames}`;
           },
         },

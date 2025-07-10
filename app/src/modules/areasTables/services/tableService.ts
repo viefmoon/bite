@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BackendErrorResponse } from '../../../app/types/api.types';
@@ -15,7 +15,7 @@ export const getTables = async (
   filterOptions: FindAllTablesDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Table[]> => {
-  const response = await apiClient.get<{
+  const response = await ApiClientWrapper.get<{
     items: Table[];
     total: number;
     page: number;
@@ -29,7 +29,6 @@ export const getTables = async (
   });
 
   if (!response.ok || !response.data) {
-    console.error('[tableService.getTables] Failed to fetch tables:', response);
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -39,7 +38,7 @@ export const getTables = async (
 };
 
 export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
-  const response = await apiClient.get<{
+  const response = await ApiClientWrapper.get<{
     items: Table[];
     total: number;
     page: number;
@@ -49,10 +48,6 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
   }>(`${API_PATHS.TABLES}/area/${areaId}`);
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[tableService.getTablesByAreaId] Failed to fetch tables for area ${areaId}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -62,13 +57,11 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
 };
 
 export const getTableById = async (id: string): Promise<Table> => {
-  const response = await apiClient.get<Table>(`${API_PATHS.TABLES}/${id}`);
+  const response = await ApiClientWrapper.get<Table>(
+    `${API_PATHS.TABLES}/${id}`,
+  );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[tableService.getTableById] Failed to fetch table ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -78,13 +71,9 @@ export const getTableById = async (id: string): Promise<Table> => {
 };
 
 export const createTable = async (data: CreateTableDto): Promise<Table> => {
-  const response = await apiClient.post<Table>(API_PATHS.TABLES, data);
+  const response = await ApiClientWrapper.post<Table>(API_PATHS.TABLES, data);
 
   if (!response.ok || !response.data) {
-    console.error(
-      '[tableService.createTable] Failed to create table:',
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -97,16 +86,12 @@ export const updateTable = async (
   id: string,
   data: UpdateTableDto,
 ): Promise<Table> => {
-  const response = await apiClient.patch<Table>(
+  const response = await ApiClientWrapper.patch<Table>(
     `${API_PATHS.TABLES}/${id}`,
     data,
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[tableService.updateTable] Failed to update table ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -116,13 +101,9 @@ export const updateTable = async (
 };
 
 export const deleteTable = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(`${API_PATHS.TABLES}/${id}`);
+  const response = await ApiClientWrapper.delete(`${API_PATHS.TABLES}/${id}`);
 
   if (!response.ok) {
-    console.error(
-      `[tableService.deleteTable] Failed to delete table ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,

@@ -61,10 +61,9 @@ export class OrderChangeLogService {
             },
           ]),
         );
-      } catch (error) {
+      } catch {
         // Manejar el caso donde UsersService podría fallar o no encontrar usuarios
-        console.error('Error fetching users for history enrichment:', error);
-        // Continuar sin enriquecimiento de usuario o manejar como se prefiera
+        // Continuar sin enriquecimiento de usuario
       }
     }
 
@@ -80,8 +79,15 @@ export class OrderChangeLogService {
       enrichedLog.changedByUser = user || null;
 
       // Formatear los cambios para mostrarlos de manera más clara
-      if (log.diff && log.operation === 'UPDATE') {
-        enrichedLog.formattedChanges = this.formatChanges(log.diff);
+      if (log.diff) {
+        // Si es el nuevo formato consolidado, pasarlo tal cual para que la app lo maneje
+        if (log.diff.order || log.diff.items || log.diff.summary) {
+          enrichedLog.diff = log.diff;
+          enrichedLog.formattedChanges = this.formatChanges(log.diff);
+        } else if (log.operation === 'UPDATE') {
+          // Formato legacy
+          enrichedLog.formattedChanges = this.formatChanges(log.diff);
+        }
       }
 
       return enrichedLog;
@@ -93,6 +99,44 @@ export class OrderChangeLogService {
   private formatChanges(diff: any): Record<string, any> {
     const formatted: Record<string, any> = {};
 
+    // Nuevo formato consolidado
+    if (diff && (diff.order || diff.items || diff.summary)) {
+      // Incluir resumen si existe
+      if (diff.summary) {
+        formatted['Resumen'] = diff.summary;
+      }
+
+      // Formatear cambios de la orden
+      if (diff.order) {
+        if (diff.order.fields) {
+          formatted['Cambios en la orden'] = this.formatOrderFields(
+            diff.order.fields,
+          );
+        }
+        if (diff.order.deliveryInfo) {
+          formatted['Información de entrega'] = this.formatDeliveryInfo(
+            diff.order.deliveryInfo,
+          );
+        }
+      }
+
+      // Formatear cambios en los items
+      if (diff.items) {
+        formatted['Cambios en productos'] = this.formatConsolidatedItemChanges(
+          diff.items,
+        );
+      }
+
+      return formatted;
+    }
+
+    // Formato legacy (compatibilidad hacia atrás)
+    return this.formatOrderChanges(diff);
+  }
+
+  private formatOrderChanges(diff: any): Record<string, any> {
+    const formatted: Record<string, any> = {};
+
     // Mapeo de nombres de campos a etiquetas en español
     const fieldLabels: Record<string, string> = {
       orderStatus: 'Estado de la orden',
@@ -101,11 +145,11 @@ export class OrderChangeLogService {
       subtotal: 'Subtotal',
       notes: 'Notas',
       tableId: 'Mesa',
-      customerName: 'Nombre del cliente',
-      phoneNumber: 'Teléfono',
-      deliveryAddress: 'Dirección de entrega',
+      customerId: 'Cliente',
+      deliveryInfo: 'Información de entrega',
       scheduledAt: 'Hora programada',
-      orderItems: 'Productos',
+      estimatedDeliveryTime: 'Tiempo estimado de entrega',
+      isFromWhatsApp: 'Origen WhatsApp',
     };
 
     // Mapeo de valores para hacerlos más legibles
@@ -133,6 +177,17 @@ export class OrderChangeLogService {
       subtotal: (value) => `$${value}`,
       scheduledAt: (value) =>
         value ? new Date(value).toLocaleString('es-MX') : 'No programada',
+      estimatedDeliveryTime: (value) =>
+        value ? new Date(value).toLocaleString('es-MX') : 'No especificado',
+      isFromWhatsApp: (value) => (value ? 'Sí' : 'No'),
+      deliveryInfo: (value) => {
+        if (!value || typeof value !== 'object') return value;
+        const parts: string[] = [];
+        if (value.recipientName) parts.push(`Cliente: ${value.recipientName}`);
+        if (value.recipientPhone) parts.push(`Tel: ${value.recipientPhone}`);
+        if (value.fullAddress) parts.push(`Dirección: ${value.fullAddress}`);
+        return parts.join(', ');
+      },
     };
 
     for (const [field, change] of Object.entries(diff)) {
@@ -147,20 +202,6 @@ export class OrderChangeLogService {
             anterior: formatter ? formatter(oldValue) : oldValue,
             nuevo: formatter ? formatter(newValue) : newValue,
           };
-        } else if (field === 'orderItems' && (change as any)._t === 'a') {
-          // Cambios en array de items
-          const itemChanges: any[] = [];
-          for (const [index, itemChange] of Object.entries(change)) {
-            if (index !== '_t' && itemChange) {
-              itemChanges.push({
-                tipo: 'Producto agregado',
-                detalles: this.formatOrderItemChange(itemChange),
-              });
-            }
-          }
-          if (itemChanges.length > 0) {
-            formatted[label] = itemChanges;
-          }
         }
       }
     }
@@ -168,11 +209,139 @@ export class OrderChangeLogService {
     return formatted;
   }
 
-  private formatOrderItemChange(itemChange: any): any {
-    // Formatear cambios específicos de order items
-    if (Array.isArray(itemChange)) {
-      return 'Producto modificado';
+  private formatConsolidatedItemChanges(items: any): any {
+    const formatted: any = {};
+
+    // Items agregados - Simplificado para la app
+    if (items.added && items.added.length > 0) {
+      formatted['Productos agregados'] = items.added.map(
+        (item: any) =>
+          item.productName + (item.variantName ? ` - ${item.variantName}` : ''),
+      );
     }
-    return 'Nuevo producto agregado';
+
+    // Items modificados - Simplificado mostrando antes y después
+    if (items.modified && items.modified.length > 0) {
+      formatted['Productos modificados'] = items.modified.map(
+        (change: any) => ({
+          antes:
+            change.before.productName +
+            (change.before.variantName
+              ? ` - ${change.before.variantName}`
+              : ''),
+          después:
+            change.after.productName +
+            (change.after.variantName ? ` - ${change.after.variantName}` : ''),
+        }),
+      );
+    }
+
+    // Items eliminados - Simplificado para la app
+    if (items.removed && items.removed.length > 0) {
+      formatted['Productos eliminados'] = items.removed.map(
+        (item: any) =>
+          item.productName + (item.variantName ? ` - ${item.variantName}` : ''),
+      );
+    }
+
+    return formatted;
+  }
+
+  private formatOrderFields(fields: any): any {
+    const formatted: any = {};
+
+    for (const [field, change] of Object.entries(fields)) {
+      if (Array.isArray(change) && change.length === 2) {
+        const [before, after] = change;
+        const label = this.getFieldLabel(field);
+        const formatter = this.getFieldFormatter(field);
+
+        formatted[label] = {
+          anterior: formatter(before),
+          nuevo: formatter(after),
+        };
+      }
+    }
+
+    return formatted;
+  }
+
+  private formatDeliveryInfo(deliveryDiff: any): any {
+    const formatted: any = {};
+
+    // Manejar cambios en campos individuales de deliveryInfo
+    for (const [field, change] of Object.entries(deliveryDiff)) {
+      if (Array.isArray(change) && change.length === 2) {
+        const [before, after] = change;
+        const label = this.getDeliveryFieldLabel(field);
+        formatted[label] = {
+          anterior: before || 'No especificado',
+          nuevo: after || 'No especificado',
+        };
+      }
+    }
+
+    return formatted;
+  }
+
+  private getFieldLabel(field: string): string {
+    const labels: Record<string, string> = {
+      orderStatus: 'Estado de la orden',
+      orderType: 'Tipo de orden',
+      notes: 'Notas',
+      tableId: 'Mesa',
+      customerId: 'Cliente',
+      scheduledAt: 'Hora programada',
+      estimatedDeliveryTime: 'Tiempo estimado de entrega',
+      isFromWhatsApp: 'Origen WhatsApp',
+    };
+    return labels[field] || field;
+  }
+
+  private getDeliveryFieldLabel(field: string): string {
+    const labels: Record<string, string> = {
+      recipientName: 'Nombre del destinatario',
+      recipientPhone: 'Teléfono del destinatario',
+      fullAddress: 'Dirección completa',
+      references: 'Referencias',
+      coordinates: 'Coordenadas',
+    };
+    return labels[field] || field;
+  }
+
+  private getFieldFormatter(field: string): (value: any) => string {
+    const formatters: Record<string, (value: any) => string> = {
+      orderStatus: (value) => this.formatOrderStatus(value),
+      orderType: (value) => this.formatOrderType(value),
+      scheduledAt: (value) =>
+        value ? new Date(value).toLocaleString('es-MX') : 'No programada',
+      estimatedDeliveryTime: (value) =>
+        value ? new Date(value).toLocaleString('es-MX') : 'No especificado',
+      isFromWhatsApp: (value) => (value ? 'Sí' : 'No'),
+    };
+    return (
+      formatters[field] || ((value) => value?.toString() || 'No especificado')
+    );
+  }
+
+  private formatOrderStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      PENDING: 'Pendiente',
+      IN_PROGRESS: 'En Progreso',
+      READY: 'Lista',
+      DELIVERED: 'Entregada',
+      COMPLETED: 'Completada',
+      CANCELLED: 'Cancelada',
+    };
+    return statusMap[status] || status;
+  }
+
+  private formatOrderType(type: string): string {
+    const typeMap: Record<string, string> = {
+      DINE_IN: 'Para Comer Aquí',
+      TAKE_AWAY: 'Para Llevar',
+      DELIVERY: 'Domicilio',
+    };
+    return typeMap[type] || type;
   }
 }

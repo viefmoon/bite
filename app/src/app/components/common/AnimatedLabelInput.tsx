@@ -161,11 +161,12 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
         inputRange: [0, 1],
         outputRange: ['transparent', theme.colors.background],
       }),
-      paddingHorizontal: animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 4],
-      }),
       maxWidth: '90%' as `${number}%`,
+    };
+
+    // Estilos estáticos que no deben ser animados
+    const staticLabelStyle = {
+      paddingHorizontal: isActive ? 4 : 0,
     };
 
     const handleContainerPress = () => {
@@ -191,7 +192,14 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
             containerStyle,
           ]}
         >
-          <Animated.Text style={[styles.label, labelStyle, animatedLabelStyle]}>
+          <Animated.Text
+            style={[
+              styles.label,
+              staticLabelStyle,
+              labelStyle,
+              animatedLabelStyle,
+            ]}
+          >
             {label}
           </Animated.Text>
           <View style={styles.inputContainer} pointerEvents="box-none">

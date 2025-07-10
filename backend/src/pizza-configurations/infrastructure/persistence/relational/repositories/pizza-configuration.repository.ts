@@ -71,12 +71,16 @@ export class PizzaConfigurationRelationalRepository
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+      throw new NotFoundException(
+        `Pizza configuration with id ${id} not found`,
+      );
     }
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+      throw new NotFoundException(
+        `Pizza configuration with id ${id} not found`,
+      );
     }
 
     return updated;
@@ -102,7 +106,9 @@ export class PizzaConfigurationRelationalRepository
     const result = await this.pizzaConfigurationRepository.delete({ id });
 
     if (result.affected === 0) {
-      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+      throw new NotFoundException(
+        `Pizza configuration with id ${id} not found`,
+      );
     }
   }
 

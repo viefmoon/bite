@@ -45,7 +45,9 @@ export class PizzaConfigurationsService {
   ): Promise<PizzaConfiguration> {
     const configuration = await this.pizzaConfigurationRepository.findById(id);
     if (!configuration) {
-      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+      throw new NotFoundException(
+        `Pizza configuration with id ${id} not found`,
+      );
     }
 
     Object.assign(configuration, updatePizzaConfigurationDto);
@@ -55,7 +57,9 @@ export class PizzaConfigurationsService {
   async remove(id: string): Promise<void> {
     const configuration = await this.pizzaConfigurationRepository.findById(id);
     if (!configuration) {
-      throw new NotFoundException(`Pizza configuration with id ${id} not found`);
+      throw new NotFoundException(
+        `Pizza configuration with id ${id} not found`,
+      );
     }
     await this.pizzaConfigurationRepository.delete(id);
   }

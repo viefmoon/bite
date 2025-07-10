@@ -25,24 +25,29 @@ import { useAppTheme } from '@/app/styles/theme';
 export const AvailabilityScreen: React.FC = () => {
   const theme = useAppTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'menu' | 'modifiers' | 'pizzaCustomizations'>('menu');
+  const [viewMode, setViewMode] = useState<
+    'menu' | 'modifiers' | 'pizzaCustomizations'
+  >('menu');
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
 
   const {
     data: menuData,
     isLoading: isLoadingMenu,
+    isError: isErrorMenu,
     refetch: refetchMenu,
   } = useMenuAvailability();
 
   const {
     data: modifiersData,
     isLoading: isLoadingModifiers,
+    isError: isErrorModifiers,
     refetch: refetchModifiers,
   } = useModifierGroupsAvailability();
 
   const {
     data: pizzaCustomizationsData,
     isLoading: isLoadingPizzaCustomizations,
+    isError: isErrorPizzaCustomizations,
     refetch: refetchPizzaCustomizations,
   } = usePizzaCustomizationsAvailability(searchQuery);
 
@@ -98,18 +103,26 @@ export const AvailabilityScreen: React.FC = () => {
       });
   }, [modifiersData, searchQuery]);
 
-  const isLoading = viewMode === 'menu' 
-    ? isLoadingMenu 
-    : viewMode === 'modifiers' 
-    ? isLoadingModifiers
-    : isLoadingPizzaCustomizations;
-    
+  const isLoading =
+    viewMode === 'menu'
+      ? isLoadingMenu
+      : viewMode === 'modifiers'
+        ? isLoadingModifiers
+        : isLoadingPizzaCustomizations;
+
+  const isError =
+    viewMode === 'menu'
+      ? isErrorMenu
+      : viewMode === 'modifiers'
+        ? isErrorModifiers
+        : isErrorPizzaCustomizations;
+
   const isEmpty =
     viewMode === 'menu'
       ? filteredMenuData.length === 0
       : viewMode === 'modifiers'
-      ? filteredModifiersData.length === 0
-      : !pizzaCustomizationsData || pizzaCustomizationsData.length === 0;
+        ? filteredModifiersData.length === 0
+        : !pizzaCustomizationsData || pizzaCustomizationsData.length === 0;
 
   return (
     <SafeAreaView
@@ -135,7 +148,13 @@ export const AvailabilityScreen: React.FC = () => {
               onDismiss={() => setFilterMenuVisible(false)}
               anchor={
                 <IconButton
-                  icon={viewMode === 'menu' ? 'food' : viewMode === 'modifiers' ? 'tune' : 'cheese'}
+                  icon={
+                    viewMode === 'menu'
+                      ? 'food'
+                      : viewMode === 'modifiers'
+                        ? 'tune'
+                        : 'cheese'
+                  }
                   mode="contained-tonal"
                   size={24}
                   onPress={() => setFilterMenuVisible(true)}
@@ -180,7 +199,9 @@ export const AvailabilityScreen: React.FC = () => {
                 }}
                 title="Ingredientes Pizza"
                 leadingIcon="cheese"
-                trailingIcon={viewMode === 'pizzaCustomizations' ? 'check' : undefined}
+                trailingIcon={
+                  viewMode === 'pizzaCustomizations' ? 'check' : undefined
+                }
                 titleStyle={
                   viewMode === 'pizzaCustomizations'
                     ? { color: theme.colors.primary, fontWeight: '600' }
@@ -202,9 +223,23 @@ export const AvailabilityScreen: React.FC = () => {
                 { color: theme.colors.onSurfaceVariant },
               ]}
             >
-              Cargando {viewMode === 'menu' ? 'categorías' : viewMode === 'modifiers' ? 'modificadores' : 'ingredientes'}...
+              Cargando{' '}
+              {viewMode === 'menu'
+                ? 'categorías'
+                : viewMode === 'modifiers'
+                  ? 'modificadores'
+                  : 'ingredientes'}
+              ...
             </Text>
           </View>
+        ) : isError ? (
+          <EmptyState
+            title="Error al cargar datos"
+            message="No se pudieron cargar los datos. Verifica tu conexión."
+            icon="alert-circle-outline"
+            actionLabel="Reintentar"
+            onAction={handleRefresh}
+          />
         ) : isEmpty ? (
           <EmptyState
             title="No se encontraron resultados"
@@ -262,9 +297,7 @@ export const AvailabilityScreen: React.FC = () => {
             data={pizzaCustomizationsData || []}
             keyExtractor={(item) => item.type}
             renderItem={({ item }) => (
-              <PizzaCustomizationAvailabilityItem
-                group={item}
-              />
+              <PizzaCustomizationAvailabilityItem group={item} />
             )}
             refreshControl={
               <RefreshControl

@@ -10,11 +10,11 @@ import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.sch
 import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
 
 const generateId = () => {
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15) +
-    Date.now().toString(36)
-  );
+  // Usar un timestamp como cadena + random sin conversión aritmética
+  const timestamp = Date.now().toString();
+  const random1 = Math.floor(Math.random() * 1000000).toString();
+  const random2 = Math.floor(Math.random() * 1000000).toString();
+  return `${timestamp}-${random1}-${random2}`;
 };
 
 export interface CartItemModifier {
@@ -145,17 +145,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     selectedPizzaCustomizations?: SelectedPizzaCustomization[],
     pizzaExtraCost: number = 0,
   ) => {
-    
     const variantToAdd = variantId
       ? product.variants?.find((v) => v.id === variantId)
       : undefined;
 
+    // Validar y sanitizar precios
+    const safeParsePrice = (price: any): number => {
+      const parsed = Number(price);
+      if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
+        console.error('[CartContext] Precio inválido:', price);
+        return 0;
+      }
+      // Limitar a 2 decimales y máximo razonable
+      return Math.min(Math.round(parsed * 100) / 100, 999999.99);
+    };
+
     const unitPrice = variantToAdd
-      ? Number(variantToAdd.price)
-      : Number(product.price) || 0;
+      ? safeParsePrice(variantToAdd.price)
+      : safeParsePrice(product.price);
 
     const modifiersPrice = modifiers.reduce(
-      (sum, mod) => sum + Number(mod.price || 0),
+      (sum, mod) => sum + safeParsePrice(mod.price || 0),
       0,
     );
 
@@ -166,7 +176,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         if (item.variantId !== variantId) return false;
         if (item.preparationNotes !== preparationNotes) return false;
         if (item.modifiers.length !== modifiers.length) return false;
-        
+
         // Comparar modifiers
         const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
           a.id.localeCompare(b.id),
@@ -184,29 +194,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             return false;
           }
         }
-        
+
         // Comparar pizza customizations
         const existingCustomizations = item.selectedPizzaCustomizations || [];
         const newCustomizations = selectedPizzaCustomizations || [];
-        
-        if (existingCustomizations.length !== newCustomizations.length) return false;
-        
-        const sortedExistingCustomizations = [...existingCustomizations].sort((a, b) =>
-          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-            `${b.pizzaCustomizationId}-${b.half}-${b.action}`
-          ),
+
+        if (existingCustomizations.length !== newCustomizations.length)
+          return false;
+
+        const sortedExistingCustomizations = [...existingCustomizations].sort(
+          (a, b) =>
+            `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+              `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+            ),
         );
         const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
           `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-            `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+            `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
           ),
         );
-        
+
         for (let i = 0; i < sortedExistingCustomizations.length; i++) {
           if (
-            sortedExistingCustomizations[i].pizzaCustomizationId !== sortedNewCustomizations[i].pizzaCustomizationId ||
-            sortedExistingCustomizations[i].half !== sortedNewCustomizations[i].half ||
-            sortedExistingCustomizations[i].action !== sortedNewCustomizations[i].action
+            sortedExistingCustomizations[i].pizzaCustomizationId !==
+              sortedNewCustomizations[i].pizzaCustomizationId ||
+            sortedExistingCustomizations[i].half !==
+              sortedNewCustomizations[i].half ||
+            sortedExistingCustomizations[i].action !==
+              sortedNewCustomizations[i].action
           ) {
             return false;
           }
@@ -221,7 +236,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const existingItem = updatedItems[existingItemIndex];
         const newQuantity = existingItem.quantity + quantity;
         const newTotalPrice =
-          (existingItem.unitPrice + modifiersPrice + pizzaExtraCost) * newQuantity;
+          (existingItem.unitPrice + modifiersPrice + pizzaExtraCost) *
+          newQuantity;
 
         updatedItems[existingItemIndex] = {
           ...existingItem,
@@ -239,7 +255,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           productName: product.name,
           quantity,
           unitPrice: unitPrice as number,
-          totalPrice: ((unitPrice as number) + modifiersPrice + pizzaExtraCost) * quantity,
+          totalPrice:
+            ((unitPrice as number) + modifiersPrice + pizzaExtraCost) *
+            quantity,
           modifiers,
           variantId,
           variantName: variantToAdd?.name,
@@ -260,10 +278,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateItemQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
+    // Validar y sanitizar cantidad
+    const safeQuantity = Math.round(quantity);
+    
+    if (!Number.isInteger(quantity) || safeQuantity !== quantity) {
+      console.warn('[CartContext] Cantidad debe ser un número entero:', quantity);
+    }
+    
+    if (safeQuantity <= 0 || isNaN(safeQuantity)) {
       removeItem(itemId);
       return;
     }
+    
+    // Límite máximo razonable
+    const MAX_QUANTITY = 9999;
+    const finalQuantity = Math.min(safeQuantity, MAX_QUANTITY);
 
     setItems((currentItems) =>
       currentItems.map((item) => {
@@ -273,10 +302,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             0,
           );
           const pizzaExtraCost = item.pizzaExtraCost || 0;
-          const newTotalPrice = (item.unitPrice + modifiersPrice + pizzaExtraCost) * quantity;
+          const newTotalPrice =
+            (item.unitPrice + modifiersPrice + pizzaExtraCost) * finalQuantity;
           return {
             ...item,
-            quantity,
+            quantity: finalQuantity,
             totalPrice: newTotalPrice,
           };
         }
@@ -305,7 +335,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           );
           const finalUnitPrice =
             unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice = (finalUnitPrice + modifiersPrice + pizzaExtraCost) * quantity;
+          const newTotalPrice =
+            (finalUnitPrice + modifiersPrice + pizzaExtraCost) * quantity;
           return {
             ...item,
             quantity,

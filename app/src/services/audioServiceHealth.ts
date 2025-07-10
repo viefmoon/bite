@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '@env';
+import { discoveryService } from '@/app/services/discoveryService';
 import { useAuthStore } from '@/app/store/authStore';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -28,9 +28,9 @@ class AudioServiceHealthChecker {
   private constructor() {
     // Iniciar verificación inmediata
     this.checkHealth();
-    
+
     // Escuchar cambios de conectividad
-    NetInfo.addEventListener(state => {
+    NetInfo.addEventListener((state) => {
       if (state.isConnected !== this.healthStatus.hasInternet) {
         this.checkHealth();
       }
@@ -46,19 +46,20 @@ class AudioServiceHealthChecker {
 
   async checkHealth(force: boolean = false): Promise<AudioServiceHealthStatus> {
     const now = Date.now();
-    
+
     // Evitar checks muy frecuentes
     if (!force && now - this.lastCheckTime < this.MIN_CHECK_INTERVAL) {
       return this.healthStatus;
     }
-    
+
     this.lastCheckTime = now;
-    
+
     try {
       // Primero verificar conexión a internet
       const netInfo = await NetInfo.fetch();
-      const hasInternet = netInfo.isConnected && netInfo.isInternetReachable !== false;
-      
+      const hasInternet =
+        netInfo.isConnected && netInfo.isInternetReachable !== false;
+
       if (!hasInternet) {
         this.updateStatus({
           isAvailable: false,
@@ -83,7 +84,8 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      const response = await axios.get(`${API_URL}/api/v1/audio-orders/health`, {
+      const apiUrl = await discoveryService.getApiUrl();
+      const response = await axios.get(`${apiUrl}api/v1/audio-orders/health`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -91,7 +93,7 @@ class AudioServiceHealthChecker {
       });
 
       const { available, status, message } = response.data;
-      
+
       this.updateStatus({
         isAvailable: available,
         hasInternet: true,
@@ -102,9 +104,8 @@ class AudioServiceHealthChecker {
     } catch (error) {
       // Solo log en modo debug, no en producción
       if (__DEV__) {
-        console.log('Audio service health check failed (this is expected if not implemented yet)');
       }
-      
+
       let errorMessage = 'Servicio de voz no disponible';
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNABORTED') {
@@ -115,7 +116,7 @@ class AudioServiceHealthChecker {
           errorMessage = 'Servicio de voz no configurado';
         }
       }
-      
+
       this.updateStatus({
         isAvailable: false,
         hasInternet: true,
@@ -124,7 +125,7 @@ class AudioServiceHealthChecker {
         lastChecked: new Date(),
       });
     }
-    
+
     return this.healthStatus;
   }
 
@@ -134,15 +135,15 @@ class AudioServiceHealthChecker {
   }
 
   private notifyListeners() {
-    this.listeners.forEach(listener => listener(this.healthStatus));
+    this.listeners.forEach((listener) => listener(this.healthStatus));
   }
 
   subscribe(listener: (status: AudioServiceHealthStatus) => void): () => void {
     this.listeners.push(listener);
-    
+
     // Notificar inmediatamente con el estado actual
     listener(this.healthStatus);
-    
+
     // Retornar función para desuscribirse
     return () => {
       const index = this.listeners.indexOf(listener);
@@ -156,7 +157,7 @@ class AudioServiceHealthChecker {
     if (this.checkInterval) {
       return;
     }
-    
+
     this.checkInterval = setInterval(() => {
       this.checkHealth();
     }, this.CHECK_INTERVAL);

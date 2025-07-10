@@ -3,11 +3,13 @@ import { RoleEntity } from '../../../../../roles/infrastructure/persistence/rela
 import { User } from '../../../../domain/user';
 import { UserEntity } from '../entities/user.entity';
 import { BaseMapper } from '../../../../../common/mappers/base.mapper';
+import { PreparationScreen } from '../../../../../preparation-screens/domain/preparation-screen';
 
 @Injectable()
 export class UserMapper extends BaseMapper<UserEntity, User> {
   override toDomain(entity: UserEntity): User | null {
     if (!entity) return null;
+
     const domain = new User();
     domain.id = entity.id;
     domain.email = entity.email;
@@ -15,12 +17,6 @@ export class UserMapper extends BaseMapper<UserEntity, User> {
     domain.password = entity.password;
     domain.firstName = entity.firstName;
     domain.lastName = entity.lastName;
-    if (entity.role) {
-      domain.role = {
-        id: entity.role.id,
-        name: entity.role.name ?? null,
-      };
-    }
     domain.isActive = entity.isActive;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
@@ -34,20 +30,32 @@ export class UserMapper extends BaseMapper<UserEntity, User> {
     domain.country = entity.country;
     domain.zipCode = entity.zipCode;
     domain.emergencyContact = entity.emergencyContact;
-    
-    if (entity.preparationScreens && entity.preparationScreens.length > 0) {
-      domain.preparationScreens = entity.preparationScreens.map(ps => ({
-        id: ps.id,
-        name: ps.name,
-        description: ps.description,
-        isActive: ps.isActive,
-        createdAt: ps.createdAt,
-        updatedAt: ps.updatedAt,
-        deletedAt: ps.deletedAt,
-        products: ps.products || null,
-      }));
+
+    if (entity.role) {
+      domain.role = {
+        id: entity.role.id,
+        name: entity.role.name ?? null,
+      };
     }
-    
+
+    if (entity.preparationScreen) {
+      // Crear instancia normal sin plainToInstance
+      const screen = new PreparationScreen();
+      screen.id = entity.preparationScreen.id;
+      screen.name = entity.preparationScreen.name;
+      screen.description = entity.preparationScreen.description;
+      screen.isActive = entity.preparationScreen.isActive;
+      screen.createdAt = entity.preparationScreen.createdAt;
+      screen.updatedAt = entity.preparationScreen.updatedAt;
+      screen.deletedAt = entity.preparationScreen.deletedAt;
+      screen.products = null;
+      screen.users = null;
+
+      domain.preparationScreen = screen;
+    } else {
+      domain.preparationScreen = null;
+    }
+
     return domain;
   }
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
 import { IconButton, Surface } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
 import { useServerConnection } from '../hooks/useServerConnection';
@@ -19,16 +19,17 @@ export function ConnectionIndicator() {
         message: 'Sin conexión WiFi',
       };
     }
-    
+
     if (isSearching) {
       return {
         icon: 'wifi-sync',
         color: theme.colors.warning || theme.colors.tertiary,
-        backgroundColor: theme.colors.warningContainer || theme.colors.tertiaryContainer,
+        backgroundColor:
+          theme.colors.warningContainer || theme.colors.tertiaryContainer,
         message: 'Reconectando...',
       };
     }
-    
+
     if (!isConnected) {
       return {
         icon: 'wifi-alert',
@@ -37,7 +38,7 @@ export function ConnectionIndicator() {
         message: error || 'Sin conexión al servidor',
       };
     }
-    
+
     return {
       icon: 'wifi',
       color: theme.colors.onSurfaceVariant,
@@ -56,35 +57,35 @@ export function ConnectionIndicator() {
     });
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      marginRight: 8,
-      borderRadius: 20,
-      overflow: 'hidden',
-    },
-    surface: {
-      borderRadius: 20,
-      backgroundColor: status.backgroundColor,
-    },
-    iconButton: {
-      margin: 0,
-    },
-  });
+  const containerStyle = useMemo(() => ({
+    marginRight: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
+  }), []);
+
+  const surfaceStyle = useMemo(() => ({
+    borderRadius: 20,
+    backgroundColor: status.backgroundColor,
+  }), [status.backgroundColor]);
+
+  const iconButtonStyle = useMemo(() => ({
+    margin: 0,
+  }), []);
 
   // Solo mostrar con fondo cuando hay problemas
   const showBackground = !hasWifi || !isConnected || isSearching;
 
   if (showBackground) {
     return (
-      <View style={styles.container}>
-        <Surface style={styles.surface} elevation={0}>
+      <View style={containerStyle}>
+        <Surface style={surfaceStyle} elevation={0}>
           <IconButton
             icon={status.icon}
             iconColor={status.color}
             size={24}
             animated={isSearching}
             onPress={handlePress}
-            style={styles.iconButton}
+            style={iconButtonStyle}
           />
         </Surface>
       </View>

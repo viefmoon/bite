@@ -9,11 +9,14 @@ import {
   PRODUCT_REPOSITORY,
   CATEGORY_REPOSITORY,
   SUBCATEGORY_REPOSITORY,
+  USER_REPOSITORY,
 } from '../common/tokens';
 import { Paginated } from '../common/types/paginated.type';
 import { ProductRepository } from '../products/infrastructure/persistence/product.repository';
 import { CategoryRepository } from '../categories/infrastructure/persistence/category.repository';
 import { SubcategoryRepository } from '../subcategories/infrastructure/persistence/subcategory.repository';
+import { UserRepository } from '../users/infrastructure/persistence/user.repository';
+import { UserAssignmentDto } from './dto/assign-users.dto';
 
 @Injectable()
 export class PreparationScreensService {
@@ -26,17 +29,48 @@ export class PreparationScreensService {
     private readonly categoryRepository: CategoryRepository,
     @Inject(SUBCATEGORY_REPOSITORY)
     private readonly subcategoryRepository: SubcategoryRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepository,
   ) {}
 
   async create(
     createDto: CreatePreparationScreenDto,
   ): Promise<PreparationScreen> {
+    // Verificar que el usuario existe y tiene rol de cocina
+    const user = await this.userRepository.findById(createDto.userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${createDto.userId} not found`);
+    }
+
+    // Verificar que el usuario tiene rol de cocina (roleId: 5)
+    if (!user.role || user.role.id !== 5) {
+      throw new NotFoundException('User must have kitchen role');
+    }
+
+    // Verificar que el usuario no esté ya asignado a otra pantalla
+    if (user.preparationScreen) {
+      throw new NotFoundException(
+        `User is already assigned to preparation screen: ${user.preparationScreen.name}`,
+      );
+    }
+
     const preparationScreen = new PreparationScreen();
     preparationScreen.name = createDto.name;
     preparationScreen.description = createDto.description || null;
     preparationScreen.isActive = createDto.isActive ?? true;
 
-    return this.preparationScreenRepository.create(preparationScreen);
+    // Crear la pantalla
+    const createdScreen =
+      await this.preparationScreenRepository.create(preparationScreen);
+
+    // Asignar el usuario a la pantalla
+    await this.userRepository.updatePreparationScreen(
+      createDto.userId,
+      createdScreen.id,
+    );
+
+    // Retornar la pantalla con el usuario asignado
+    return this.preparationScreenRepository.findOne(createdScreen.id);
   }
 
   async findAll(
@@ -69,6 +103,23 @@ export class PreparationScreensService {
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
 
+    // Si se proporciona userId, verificar que existe y tiene rol de cocina
+    if (updateDto.userId !== undefined) {
+      if (updateDto.userId) {
+        const user = await this.userRepository.findById(updateDto.userId);
+        if (!user) {
+          throw new NotFoundException(
+            `User with ID ${updateDto.userId} not found`,
+          );
+        }
+
+        // Verificar que el usuario tiene rol de cocina (roleId: 5)
+        if (!user.role || user.role.id !== 5) {
+          throw new NotFoundException('User must have kitchen role');
+        }
+      }
+    }
+
     const preparationScreen = new PreparationScreen();
     preparationScreen.id = id;
     preparationScreen.name = updateDto.name ?? existingScreen.name;
@@ -77,10 +128,32 @@ export class PreparationScreensService {
     preparationScreen.isActive = updateDto.isActive ?? existingScreen.isActive;
 
     // Actualizar la pantalla de preparación
-    const updatedScreen = await this.preparationScreenRepository.update(
-      id,
-      preparationScreen,
-    );
+    await this.preparationScreenRepository.update(id, preparationScreen);
+
+    // Si se proporciona userId, actualizar la asignación de usuario
+    if (updateDto.userId !== undefined) {
+      // Obtener usuarios actuales de la pantalla
+      const screenWithUsers =
+        await this.preparationScreenRepository.findOne(id);
+
+      // Desasociar usuarios actuales de esta pantalla
+      if (screenWithUsers.users && screenWithUsers.users.length > 0) {
+        for (const user of screenWithUsers.users) {
+          await this.userRepository.updatePreparationScreen(user.id, null);
+        }
+      }
+
+      // Asignar nuevo usuario si se proporciona
+      if (updateDto.userId) {
+        const user = await this.userRepository.findById(updateDto.userId);
+        if (user && user.preparationScreen) {
+          throw new NotFoundException(
+            `User is already assigned to preparation screen: ${user.preparationScreen.name}`,
+          );
+        }
+        await this.userRepository.updatePreparationScreen(updateDto.userId, id);
+      }
+    }
 
     // Si se proporcionan productIds, actualizar las asociaciones
     if (updateDto.productIds !== undefined) {
@@ -101,7 +174,7 @@ export class PreparationScreensService {
       return this.preparationScreenRepository.findOne(id);
     }
 
-    return updatedScreen;
+    return this.preparationScreenRepository.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
@@ -213,5 +286,41 @@ export class PreparationScreensService {
       screenName: screen.name,
       menu: menuWithAssociations,
     };
+  }
+
+  async getUsers(screenId: string): Promise<any> {
+    const screen = await this.preparationScreenRepository.findOne(screenId);
+    if (!screen) {
+      throw new NotFoundException(
+        `Preparation screen with ID ${screenId} not found`,
+      );
+    }
+
+    // Obtener usuarios asociados a esta pantalla
+    const users =
+      await this.preparationScreenRepository.getUsersByScreenId(screenId);
+
+    return users;
+  }
+
+  async assignUsers(
+    screenId: string,
+    userAssignments: UserAssignmentDto[],
+  ): Promise<PreparationScreen> {
+    const screen = await this.preparationScreenRepository.findOne(screenId);
+    if (!screen) {
+      throw new NotFoundException(
+        `Preparation screen with ID ${screenId} not found`,
+      );
+    }
+
+    // Asignar usuarios a la pantalla
+    await this.preparationScreenRepository.assignUsers(
+      screenId,
+      userAssignments,
+    );
+
+    // Retornar la pantalla actualizada
+    return this.preparationScreenRepository.findOne(screenId);
   }
 }

@@ -2,6 +2,7 @@ import { MD3LightTheme, MD3DarkTheme, useTheme } from 'react-native-paper';
 import type { MD3Typescale } from 'react-native-paper/lib/typescript/types';
 import { lightColors, darkColors } from './colors';
 import { typography } from './typography';
+import { BREAKPOINTS, DEVICE_TYPES, RESPONSIVE_DIMENSIONS } from './responsive';
 
 declare global {
   namespace ReactNativePaper {
@@ -26,6 +27,13 @@ const spacing = {
   l: 24,
   xl: 32,
   xxl: 40,
+};
+
+// Sistema responsive integrado con el tema
+const responsive = {
+  breakpoints: BREAKPOINTS,
+  deviceTypes: DEVICE_TYPES,
+  dimensions: RESPONSIVE_DIMENSIONS,
 };
 
 const typescale: MD3Typescale = {
@@ -59,6 +67,7 @@ export const lightTheme = {
   },
   fonts: typescale,
   spacing,
+  responsive,
   roundness: 8,
 };
 
@@ -70,6 +79,7 @@ export const darkTheme = {
   },
   fonts: typescale,
   spacing,
+  responsive,
   roundness: 8,
 };
 
@@ -80,12 +90,10 @@ export const useAppTheme = () => {
     const theme = useTheme();
     // Verificar que el tema sea un objeto válido
     if (!theme || typeof theme !== 'object') {
-      console.warn('Theme not available, using default light theme');
       return lightTheme;
     }
     return theme as AppTheme;
   } catch (error) {
-    console.warn('Error accessing theme, using default light theme:', error);
     return lightTheme;
   }
 };

@@ -180,8 +180,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       if (pendingAmount - parsedAmount <= 0) {
         onDismiss();
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleDeletePayment = async () => {
@@ -191,8 +190,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       await deletePaymentMutation.mutateAsync(paymentToDelete);
       setShowDeleteConfirm(false);
       setPaymentToDelete(null);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleFinalizeOrder = async () => {
@@ -207,8 +205,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         // Si no hay callback, solo cerrar el modal
         onDismiss();
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const getStatusColor = (status: string) => {

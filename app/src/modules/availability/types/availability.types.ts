@@ -49,7 +49,13 @@ export interface PizzaCustomizationGroupAvailability {
 }
 
 export interface AvailabilityUpdatePayload {
-  type: 'category' | 'subcategory' | 'product' | 'modifierGroup' | 'modifier' | 'pizzaCustomization';
+  type:
+    | 'category'
+    | 'subcategory'
+    | 'product'
+    | 'modifierGroup'
+    | 'modifier'
+    | 'pizzaCustomization';
   id: string;
   isActive: boolean;
   cascade?: boolean;

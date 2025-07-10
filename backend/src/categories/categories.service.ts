@@ -29,7 +29,6 @@ export class CategoriesService extends BaseCrudService<
   // Los métodos CRUD (create, findAll, findOne, update, remove) son heredados de BaseCrudService
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    console.log('[CategoriesService] Create called with:', createCategoryDto);
     const id = await this.customIdService.generateId(
       EntityPrefix.CATEGORY,
       'category',
@@ -45,11 +44,6 @@ export class CategoriesService extends BaseCrudService<
     id: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<Category> {
-    console.log('[CategoriesService] Update called with:', {
-      id,
-      updateCategoryDto,
-    });
-
     const result = await this.repo.update(id, updateCategoryDto);
     if (!result) {
       throw new NotFoundException(`Category with ID ${id} not found`);

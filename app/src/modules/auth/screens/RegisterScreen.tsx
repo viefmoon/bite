@@ -5,9 +5,11 @@ import { Surface, Text } from 'react-native-paper';
 
 import { RegisterForm } from '../components/RegisterForm';
 import { useAppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 
 export default function RegisterScreen() {
   const theme = useAppTheme();
+  const responsive = useResponsive();
 
   const styles = React.useMemo(
     () =>
@@ -18,18 +20,23 @@ export default function RegisterScreen() {
         },
         contentContainer: {
           flexGrow: 1,
-          padding: theme.spacing.l,
+          padding: responsive.spacing.l,
+          justifyContent: 'center',
         },
         surface: {
-          padding: theme.spacing.l,
-          borderRadius: theme.roundness,
+          padding: responsive.spacing.l,
+          borderRadius: theme.roundness * 2,
+          maxWidth: responsive.isTablet ? 600 : '100%',
+          alignSelf: 'center',
+          width: '100%',
         },
         title: {
-          marginBottom: theme.spacing.m,
+          marginBottom: responsive.spacing.m,
           textAlign: 'center',
+          fontSize: responsive.fontSize.xl,
         },
       }),
-    [theme],
+    [theme, responsive],
   );
 
   return (

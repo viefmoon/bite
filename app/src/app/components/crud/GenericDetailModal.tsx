@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,17 +6,12 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import {
-  Modal,
-  Portal,
-  Text,
-  Button,
-  Chip,
-  ActivityIndicator,
-} from 'react-native-paper';
+import { Text, Button, Chip, ActivityIndicator } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { getImageUrl } from '../../lib/imageUtils';
+import { ResponsiveModal } from '../responsive/ResponsiveModal';
+import { useResponsive } from '../../hooks/useResponsive';
 
 export interface DisplayFieldConfig<TItem> {
   field: keyof TItem;
@@ -53,59 +48,68 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
   fieldLabelStyle?: StyleProp<TextStyle>;
   fieldValueStyle?: StyleProp<TextStyle>;
   actionsContainerStyle?: StyleProp<ViewStyle>;
+  showImage?: boolean;
   children?: React.ReactNode;
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalSurface: {
-      padding: theme.spacing.l,
-      margin: theme.spacing.l,
+      padding: responsive.spacing.xl,
+      margin: responsive.spacing.m,
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.elevation.level2,
+      maxWidth: 500,
+      alignSelf: 'center',
+      width: '90%',
     },
     modalTitle: {
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.l,
       textAlign: 'center',
       fontWeight: '700',
+      fontSize: 24,
     },
     detailContent: {
       alignItems: 'center',
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.m,
     },
     detailImage: {
-      width: 180,
-      height: 180,
+      width: responsive.getResponsiveDimension(150, 200),
+      height: responsive.getResponsiveDimension(150, 200),
       borderRadius: theme.roundness * 1.5,
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.m,
       backgroundColor: theme.colors.surfaceDisabled,
     },
     detailDescription: {
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.m,
       textAlign: 'center',
       lineHeight: 22,
     },
     statusChipContainer: {
-      marginBottom: theme.spacing.s,
-      marginTop: theme.spacing.s,
+      marginBottom: responsive.spacing.m,
+      marginTop: responsive.spacing.m,
     },
     statusChip: {
-      paddingHorizontal: theme.spacing.s,
+      paddingHorizontal: responsive.spacing.s,
       height: 36,
     },
     fieldsContainer: {
       width: '100%',
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.l,
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-      padding: theme.spacing.m,
+      borderRadius: theme.roundness * 1.5,
+      padding: responsive.spacing.l,
     },
     fieldRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginBottom: theme.spacing.s,
-      paddingVertical: theme.spacing.xs,
+      alignItems: 'center',
+      marginBottom: responsive.spacing.m,
+      paddingVertical: responsive.spacing.s,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
     },
@@ -115,7 +119,7 @@ const getStyles = (theme: AppTheme) =>
     },
     fieldLabel: {
       fontWeight: '600',
-      marginRight: theme.spacing.s,
+      marginRight: responsive.spacing.s,
       color: theme.colors.onSurfaceVariant,
     },
     fieldValue: {
@@ -127,12 +131,13 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: theme.spacing.m,
-      marginTop: theme.spacing.xs,
+      gap: responsive.spacing.m,
+      marginTop: responsive.spacing.l,
+      marginBottom: responsive.spacing.m,
       width: '100%',
     },
     closeButton: {
-      marginTop: theme.spacing.l,
+      marginTop: responsive.spacing.l,
       alignSelf: 'center',
       borderRadius: theme.roundness,
       backgroundColor: theme.colors.surfaceVariant,
@@ -145,7 +150,7 @@ const getStyles = (theme: AppTheme) =>
     },
     actionButton: {
       borderRadius: theme.roundness,
-      paddingHorizontal: theme.spacing.m,
+      paddingHorizontal: responsive.spacing.m,
       flex: 1,
       maxWidth: 150,
     },
@@ -173,10 +178,36 @@ const GenericDetailModal = <TItem extends { id: string }>({
   fieldLabelStyle,
   fieldValueStyle,
   actionsContainerStyle,
+  showImage = false,
   children,
 }: GenericDetailModalProps<TItem>) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = useMemo(
+    () => getStyles(theme, responsive),
+    [theme, responsive],
+  );
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (item && imageField && item.hasOwnProperty(imageField)) {
+      const imageFieldValue = item[imageField];
+      if (
+        typeof imageFieldValue === 'object' &&
+        imageFieldValue !== null &&
+        'path' in imageFieldValue &&
+        typeof imageFieldValue.path === 'string'
+      ) {
+        getImageUrl(imageFieldValue.path).then((url) => {
+          setImageUrl(url ?? undefined);
+        });
+      } else if (typeof imageFieldValue === 'string') {
+        setImageUrl(imageFieldValue);
+      }
+    } else {
+      setImageUrl(undefined);
+    }
+  }, [item, imageField]);
 
   const handleEdit = () => {
     if (onEdit && item) {
@@ -200,21 +231,6 @@ const GenericDetailModal = <TItem extends { id: string }>({
     }
 
     const title = String(item[titleField] ?? 'Detalle');
-    let imageSource: string | undefined = undefined;
-    if (imageField && item.hasOwnProperty(imageField)) {
-      const imageFieldValue = item[imageField];
-      if (
-        typeof imageFieldValue === 'object' &&
-        imageFieldValue !== null &&
-        'path' in imageFieldValue &&
-        typeof imageFieldValue.path === 'string'
-      ) {
-        const url = getImageUrl(imageFieldValue.path);
-        imageSource = url ?? undefined;
-      } else if (typeof imageFieldValue === 'string') {
-        imageSource = imageFieldValue;
-      }
-    }
     const description =
       descriptionField && item.hasOwnProperty(descriptionField)
         ? String(item[descriptionField] ?? '')
@@ -252,10 +268,10 @@ const GenericDetailModal = <TItem extends { id: string }>({
           {title}
         </Text>
         <View style={styles.detailContent}>
-          {imageSource && (
+          {(imageUrl || showImage) && (
             <AutoImage
-              source={imageSource}
-              placeholder={require('../../../../assets/icon.png')}
+              source={imageUrl}
+              placeholderIcon="image-outline"
               style={[styles.detailImage, imageStyle]}
               contentFit="contain"
               transition={300}
@@ -352,16 +368,15 @@ const GenericDetailModal = <TItem extends { id: string }>({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[styles.modalSurface, modalStyle]}
-        dismissable={!isDeleting}
-      >
-        {renderContent()}
-      </Modal>
-    </Portal>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      contentContainerStyle={[styles.modalSurface, modalStyle]}
+      dismissable={!isDeleting}
+      scrollable={true}
+    >
+      {renderContent()}
+    </ResponsiveModal>
   );
 };
 

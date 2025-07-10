@@ -51,7 +51,6 @@ export type ModifiersStackScreenProps<T extends keyof ModifiersStackParamList> =
 
 export type AppDrawerParamList = {
   Welcome: undefined; // Mantener si existe una pantalla de bienvenida
-  KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
   MenuStack: NavigatorScreenParams<MenuStackParamList>; // Renombrado
   ModifiersStack: NavigatorScreenParams<ModifiersStackParamList>; // Renombrado
   PreparationScreensStack: NavigatorScreenParams<PreparationScreensStackParamList>; // Renombrado para consistencia
@@ -66,6 +65,7 @@ export type AppDrawerParamList = {
   CustomersStack: NavigatorScreenParams<CustomersStackParamList>; // Stack de clientes
   SyncStack: NavigatorScreenParams<SyncStackParamList>; // Stack de sincronización
   UsersStack: NavigatorScreenParams<UsersStackParamList>; // Stack de usuarios
+  KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
 };
 
 export type DrawerScreenProps<T extends keyof AppDrawerParamList> =

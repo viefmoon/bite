@@ -38,6 +38,8 @@ import { PizzaCustomizationsModule } from './pizza-customizations/pizza-customiz
 import { PizzaConfigurationsModule } from './pizza-configurations/pizza-configurations.module';
 import { SyncModule } from './sync/sync.module';
 import { AudioOrderProcessingModule } from './audio-order-processing/audio-order-processing.module';
+import { DiscoveryModule } from './discovery/discovery.module';
+import { KitchenModule } from './kitchen/kitchen.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -90,6 +92,8 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     PizzaConfigurationsModule,
     SyncModule,
     AudioOrderProcessingModule,
+    DiscoveryModule,
+    KitchenModule,
   ],
 })
 export class AppModule {}

@@ -8,7 +8,6 @@ const MAX_CACHE_AGE_DAYS = 7;
 async function ensureCacheDirExists() {
   const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
   if (!dirInfo.exists) {
-    console.log(`📊 [CACHÉ] Creando directorio de caché: ${CACHE_DIR}`);
     await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
   }
 }
@@ -24,9 +23,6 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
       // Incluir host + pathname para diferenciar entre diferentes servidores
       urlToHash = `${parsedUrl.host}${parsedUrl.pathname}`;
     } catch (e) {
-      console.warn(
-        `[CACHE] No se pudo parsear la URL para el hash: ${remoteUrl}`,
-      );
       // Si falla el parseo, usar la URL completa
       urlToHash = remoteUrl;
     }
@@ -50,7 +46,6 @@ interface ExistingFileInfo {
 }
 
 async function cleanCache() {
-  console.log('📊 [CACHÉ] Iniciando limpieza de caché...');
   await ensureCacheDirExists();
 
   try {
@@ -84,7 +79,14 @@ async function cleanCache() {
     );
 
     let totalSize = existingFileInfos.reduce((sum, file) => sum + file.size, 0);
-    existingFileInfos.sort((a, b) => a.modificationTime - b.modificationTime);
+    existingFileInfos.sort((a, b) => {
+      // Usar comparación segura sin aritmética directa
+      return a.modificationTime < b.modificationTime
+        ? -1
+        : a.modificationTime > b.modificationTime
+          ? 1
+          : 0;
+    });
 
     const now = Date.now();
     const maxAgeMillis = MAX_CACHE_AGE_DAYS * 24 * 60 * 60 * 1000;
@@ -93,9 +95,10 @@ async function cleanCache() {
     let filesDeletedCount = 0;
     let sizeDeleted = 0;
 
-    const filesToDeleteByAge = existingFileInfos.filter(
-      (file) => now - file.modificationTime * 1000 > maxAgeMillis,
-    );
+    const filesToDeleteByAge = existingFileInfos.filter((file) => {
+      const fileAgeMillis = now - Math.floor(file.modificationTime) * 1000;
+      return fileAgeMillis > maxAgeMillis;
+    });
     for (const file of filesToDeleteByAge) {
       await FileSystem.deleteAsync(file.uri, { idempotent: true });
       totalSize -= file.size;
@@ -104,8 +107,18 @@ async function cleanCache() {
     }
 
     const remainingFiles = existingFileInfos
-      .filter((file) => !(now - file.modificationTime * 1000 > maxAgeMillis))
-      .sort((a, b) => a.modificationTime - b.modificationTime);
+      .filter((file) => {
+        const fileAgeMillis = now - Math.floor(file.modificationTime) * 1000;
+        return fileAgeMillis <= maxAgeMillis;
+      })
+      .sort((a, b) => {
+        // Usar comparación segura sin aritmética directa
+        return a.modificationTime < b.modificationTime
+          ? -1
+          : a.modificationTime > b.modificationTime
+            ? 1
+            : 0;
+      });
 
     let currentIndex = 0;
     while (totalSize > maxSizeInBytes && currentIndex < remainingFiles.length) {
@@ -115,27 +128,14 @@ async function cleanCache() {
         totalSize -= fileToDelete.size;
         sizeDeleted += fileToDelete.size;
         filesDeletedCount++;
-      } catch (delError) {
-        console.error(
-          `❌ [CACHÉ] Error eliminando archivo ${fileToDelete.uri}:`,
-          delError,
-        );
-      }
+      } catch (delError) {}
       currentIndex++;
     }
 
     if (filesDeletedCount > 0) {
-      console.log(
-        `📊 [CACHÉ] Limpieza completada. ${filesDeletedCount} archivos eliminados (${(sizeDeleted / 1024 / 1024).toFixed(2)} MB). Tamaño actual: ${(totalSize / 1024 / 1024).toFixed(2)} MB.`,
-      );
     } else {
-      console.log(
-        `📊 [CACHÉ] Limpieza completada. No se eliminaron archivos. Tamaño actual: ${(totalSize / 1024 / 1024).toFixed(2)} MB.`,
-      );
     }
-  } catch (error) {
-    console.error('❌ [CACHÉ] Error durante la limpieza:', error);
-  }
+  } catch (error) {}
 }
 
 export async function getCachedImageUri(
@@ -164,7 +164,6 @@ export async function getCachedImageUri(
       );
       return downloadedUri;
     } catch (error) {
-      console.error(`❌ [CACHÉ] Error descargando imagen ${remoteUrl}:`, error);
       const partialFileInfo = await FileSystem.getInfoAsync(localUri);
       if (partialFileInfo.exists) {
         await FileSystem.deleteAsync(localUri, { idempotent: true });
@@ -175,12 +174,10 @@ export async function getCachedImageUri(
 }
 
 export async function initImageCache() {
-  console.log('🚀 [CACHÉ] Inicializando caché de imágenes...');
   await ensureCacheDirExists();
-  cleanCache().catch((error) =>
-    console.error('❌ [CACHÉ] Error en la limpieza inicial:', error),
-  );
-  console.log('✅ [CACHÉ] Caché inicializado.');
+  cleanCache().catch((error) => {
+    console.error('Error cleaning cache:', error);
+  });
 }
 
 export async function removeImageFromCache(remoteUrl: string) {
@@ -193,12 +190,8 @@ export async function removeImageFromCache(remoteUrl: string) {
 }
 
 export async function clearImageCache() {
-  console.log('⚠️ [CACHÉ] Limpiando todo el caché de imágenes...');
   try {
     await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
-    console.log('✅ [CACHÉ] Caché limpiado.');
     await ensureCacheDirExists();
-  } catch (error) {
-    console.error('❌ [CACHÉ] Error limpiando el caché:', error);
-  }
+  } catch (error) {}
 }

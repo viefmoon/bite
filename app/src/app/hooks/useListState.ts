@@ -42,7 +42,8 @@ export const useListState = ({
           icon: errorConfig?.icon || 'alert-circle',
           title: errorConfig?.title || 'Error al cargar los datos',
           message:
-            errorConfig?.message || 'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
+            errorConfig?.message ||
+            'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
           actionLabel: errorConfig?.actionLabel || 'Reintentar',
           onAction: errorConfig?.onAction || emptyConfig.onAction,
         });

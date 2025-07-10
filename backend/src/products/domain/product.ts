@@ -24,7 +24,7 @@ export class Product {
 
   subcategoryId: string;
 
-  preparationScreenId: string | null;
+  preparationScreenId: string;
 
   photoId: string | null;
 
@@ -38,7 +38,7 @@ export class Product {
 
   modifierGroups: ModifierGroup[];
 
-  preparationScreen: PreparationScreen | null;
+  preparationScreen: PreparationScreen;
 
   pizzaCustomizations?: PizzaCustomization[];
 

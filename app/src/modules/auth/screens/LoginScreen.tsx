@@ -7,7 +7,6 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -30,13 +29,13 @@ import { useAuthStore } from '../../../app/store/authStore';
 import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
 import { authService } from '../services/authService';
 import LoginForm from '../components/LoginForm';
-import {
-  runNetworkDiagnostics,
-  formatDiagnosticResult,
-} from '../../../app/utils/networkDiagnostics';
+import { ConnectionIndicator } from '../../../app/components/ConnectionIndicator';
+import { useResponsive } from '../../../app/hooks/useResponsive';
+import { ResponsiveView } from '../../../app/components/responsive';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
   const { showSnackbar } = useSnackbarStore();
@@ -51,8 +50,6 @@ const LoginScreen = () => {
   );
   const [initialRememberMe, setInitialRememberMe] = useState(false);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
-  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
-  const [showNetworkError, setShowNetworkError] = useState(false);
 
   type LoginMutationVariables = LoginFormInputs & { rememberMe: boolean };
 
@@ -76,7 +73,7 @@ const LoginScreen = () => {
           });
           return;
         }
-        
+
         await setTokens(data.token, data.refreshToken, data.user ?? null);
         const { emailOrUsername, password, rememberMe } = variables;
 
@@ -93,15 +90,11 @@ const LoginScreen = () => {
             STORAGE_KEYS.REMEMBER_ME_ENABLED,
             'true',
           );
-          console.log('Credenciales guardadas.');
         } else {
           await EncryptedStorage.removeItem(
             STORAGE_KEYS.REMEMBERED_CREDENTIALS,
           );
           await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
-          console.log(
-            "Preferencia 'Recordarme' desactivada, credenciales eliminadas.",
-          );
         }
 
         showSnackbar({
@@ -110,11 +103,6 @@ const LoginScreen = () => {
         });
         queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
       } catch (error: any) {
-        console.error(
-          'Error al procesar post-login o guardar credenciales:',
-          error,
-        );
-        
         // Si el error es por usuario inactivo, mostrar mensaje específico
         if (error.message === 'Usuario inactivo') {
           showSnackbar({
@@ -122,18 +110,13 @@ const LoginScreen = () => {
             type: 'error',
           });
         }
-        
+
         try {
           await EncryptedStorage.removeItem(
             STORAGE_KEYS.REMEMBERED_CREDENTIALS,
           );
           await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
-        } catch (cleanupError) {
-          console.error(
-            'Error al limpiar credenciales durante el manejo de error:',
-            cleanupError,
-          );
-        }
+        } catch (cleanupError) {}
         showSnackbar({
           message: 'Error procesando el inicio de sesión.',
           type: 'error',
@@ -147,19 +130,6 @@ const LoginScreen = () => {
         type: 'error',
         duration: 5000,
       });
-      console.error('Login failed:', error);
-      if (error instanceof ApiError) {
-        console.error('API Error Details:', {
-          code: error.code,
-          status: error.status,
-          details: error.details,
-        });
-
-        // Mostrar opción de diagnóstico en errores de red
-        if (error.code === 'NETWORK_ERROR' || error.status === 0) {
-          setShowNetworkError(true);
-        }
-      }
     },
   });
 
@@ -195,7 +165,6 @@ const LoginScreen = () => {
           setInitialPassword('');
         }
       } catch (error) {
-        console.error('Error al cargar credenciales recordadas:', error);
         setInitialRememberMe(false);
         setInitialEmailOrUsername('');
         setInitialPassword('');
@@ -204,12 +173,7 @@ const LoginScreen = () => {
             STORAGE_KEYS.REMEMBERED_CREDENTIALS,
           );
           await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
-        } catch (cleanupError) {
-          console.error(
-            'Error al limpiar credenciales durante manejo de error de carga:',
-            cleanupError,
-          );
-        }
+        } catch (cleanupError) {}
       } finally {
         setIsLoadingCredentials(false);
       }
@@ -220,33 +184,6 @@ const LoginScreen = () => {
 
   const toggleTheme = () => {
     setThemePreference(theme.dark ? 'light' : 'dark');
-  };
-
-  const handleRunDiagnostics = async () => {
-    setIsRunningDiagnostics(true);
-    try {
-      const result = await runNetworkDiagnostics();
-      const formattedResult = formatDiagnosticResult(result);
-
-      Alert.alert(
-        'Diagnóstico de Red',
-        formattedResult,
-        [
-          { text: 'Copiar', onPress: () => console.log('Copiar resultado') },
-          { text: 'Cerrar', style: 'cancel' },
-        ],
-        { cancelable: true },
-      );
-    } catch (error) {
-      console.error('Error ejecutando diagnóstico:', error);
-      showSnackbar({
-        message: 'Error al ejecutar el diagnóstico de red',
-        type: 'error',
-      });
-    } finally {
-      setIsRunningDiagnostics(false);
-      setShowNetworkError(false);
-    }
   };
 
   const styles = React.useMemo(
@@ -349,6 +286,16 @@ const LoginScreen = () => {
         >
           <View style={styles.container}>
             <View>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -responsive.spacing.s,
+                  right: -responsive.spacing.s,
+                  zIndex: 1,
+                }}
+              >
+                <ConnectionIndicator />
+              </View>
               <View style={styles.logoContainer}>
                 <Image
                   source={require('../../../assets/logo.png')}
@@ -371,26 +318,11 @@ const LoginScreen = () => {
                 />
               </Surface>
 
-              <TouchableRipple
-                onPress={() => console.log('Olvidé mi contraseña')}
-              >
+              <TouchableRipple onPress={() => {}}>
                 <Text style={styles.forgotPassword}>
                   ¿Olvidaste tu contraseña?
                 </Text>
               </TouchableRipple>
-
-              {showNetworkError && (
-                <Button
-                  mode="outlined"
-                  onPress={handleRunDiagnostics}
-                  loading={isRunningDiagnostics}
-                  disabled={isRunningDiagnostics}
-                  icon="wifi-alert"
-                  style={{ marginTop: 16 }}
-                >
-                  Diagnosticar problemas de red
-                </Button>
-              )}
             </View>
 
             <View>
@@ -405,7 +337,7 @@ const LoginScreen = () => {
               <View style={styles.bottomThemeToggleContainer}>
                 <IconButton
                   icon={theme.dark ? 'weather-night' : 'weather-sunny'}
-                  size={28}
+                  size={responsive.dimensions.iconSize.large}
                   onPress={toggleTheme}
                   iconColor={theme.colors.onSurfaceVariant}
                 />

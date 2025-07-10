@@ -21,11 +21,7 @@ import { useGetFullMenu } from '../hooks/useMenuQueries';
 import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries';
 import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
-import {
-  Product,
-  Category,
-  SubCategory,
-} from '../types/orders.types';
+import { Product, Category, SubCategory } from '../types/orders.types';
 import { Image } from 'expo-image';
 import { getImageUrl } from '@/app/lib/imageUtils';
 
@@ -38,10 +34,15 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { AudioRecorderWidget } from '@/components/AudioRecorderWidget';
 import { AudioOrderModal } from '@/components/AudioOrderModal';
-import { audioOrderService, type AIOrderItem } from '@/services/audioOrderService';
+import {
+  audioOrderService,
+  type AIOrderItem,
+} from '@/services/audioOrderService';
 
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface CartButtonHandle {
   animate: () => void;
@@ -50,6 +51,7 @@ interface CartButtonHandle {
 const CreateOrderScreen = () => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const {
     isCartEmpty,
@@ -86,11 +88,12 @@ const CreateOrderScreen = () => {
     (() => void) | null
   >(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const isProcessingOrderRef = useRef(false);
   const [selectedProductForDescription, setSelectedProductForDescription] =
     useState<Product | null>(null);
   const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
     useState(false);
-  
+
   // Estados para el widget de audio
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [audioOrderData, setAudioOrderData] = useState<any>(null);
@@ -98,6 +101,16 @@ const CreateOrderScreen = () => {
   const [audioError, setAudioError] = useState<string | undefined>();
 
   const { data: menu, isLoading } = useGetFullMenu();
+
+  // Calcular número de columnas para el grid
+  const numColumns = useMemo(() => {
+    const minItemWidth = 150; // Ancho mínimo de cada tarjeta
+    return responsive.getGridColumns(
+      minItemWidth,
+      responsive.spacing.xs * 2,
+      responsive.spacing.m,
+    );
+  }, [responsive]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -206,8 +219,8 @@ const CreateOrderScreen = () => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      // Don't do anything if cart is empty or modal is already showing
-      if (isCartEmpty || showExitConfirmationModal) {
+      // Don't do anything if cart is empty, modal is already showing, or we're processing an order
+      if (isCartEmpty || showExitConfirmationModal || isProcessingOrder) {
         return;
       }
 
@@ -221,7 +234,7 @@ const CreateOrderScreen = () => {
     });
 
     return unsubscribe;
-  }, [navigation, isCartEmpty, showExitConfirmationModal]);
+  }, [navigation, isCartEmpty, showExitConfirmationModal, isProcessingOrder]);
 
   const handleViewCart = useCallback(() => {
     showCart();
@@ -233,8 +246,9 @@ const CreateOrderScreen = () => {
 
   // Actualizar handleConfirmOrder para usar la mutación
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
-    if (isProcessingOrder) return; // Prevenir múltiples envíos
-
+    // Verificación atómica usando ref
+    if (isProcessingOrderRef.current) return;
+    isProcessingOrderRef.current = true;
     setIsProcessingOrder(true);
 
     try {
@@ -247,10 +261,12 @@ const CreateOrderScreen = () => {
         type: 'success',
       });
       hideCart();
-      clearCart(); // Limpiar carrito después de éxito
-      // Opcional: Navegar a otra pantalla, por ejemplo, la lista de órdenes
-      // navigation.navigate('Orders'); // Asegúrate de que 'Orders' exista en tu stack
-      navigation.goBack(); // O simplemente volver atrás
+      clearCart(); // Limpiar carrito ANTES de navegar
+
+      // Pequeño delay para asegurar que el estado se actualice antes de navegar
+      setTimeout(() => {
+        navigation.goBack();
+      }, 100);
     } catch (error) {
       // El manejo de errores con snackbar ya debería estar en el hook useCreateOrderMutation
       const message = getApiErrorMessage(error as Error);
@@ -260,6 +276,7 @@ const CreateOrderScreen = () => {
       });
     } finally {
       setIsProcessingOrder(false);
+      isProcessingOrderRef.current = false;
     }
   };
 
@@ -285,53 +302,61 @@ const CreateOrderScreen = () => {
   };
 
   // Handlers para el widget de audio
-  const handleAudioRecordingComplete = useCallback(async (audioUri: string, transcription: string) => {
-    setIsProcessingAudio(true);
-    setShowAudioModal(true);
-    setAudioError(undefined);
-    
-    try {
-      const response = await audioOrderService.processAudioOrder(audioUri, transcription);
-      
-      console.log('=== DEBUG CreateOrderScreen ===');
-      console.log('Response from audioOrderService:', JSON.stringify(response, null, 2));
-      console.log('response.data:', JSON.stringify(response.data, null, 2));
-      console.log('orderType from response:', response.data?.orderType);
-      console.log('===============================');
-      
-      if (response.success && response.data) {
-        setAudioOrderData(response.data);
-      } else {
-        setAudioError(response.error?.message || 'Error procesando la orden');
+  const handleAudioRecordingComplete = useCallback(
+    async (audioUri: string, transcription: string) => {
+      setIsProcessingAudio(true);
+      setShowAudioModal(true);
+      setAudioError(undefined);
+
+      try {
+        const response = await audioOrderService.processAudioOrder(
+          audioUri,
+          transcription,
+        );
+
+        if (response.success && response.data) {
+          setAudioOrderData(response.data);
+        } else {
+          setAudioError(response.error?.message || 'Error procesando la orden');
+        }
+      } catch (error) {
+        setAudioError('Error al procesar la orden por voz');
+      } finally {
+        setIsProcessingAudio(false);
       }
-    } catch (error) {
-      setAudioError('Error al procesar la orden por voz');
-    } finally {
-      setIsProcessingAudio(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const handleAudioError = useCallback((error: string) => {
-    showSnackbar({
-      message: error,
-      type: 'error',
-    });
-  }, [showSnackbar]);
+  const handleAudioError = useCallback(
+    (error: string) => {
+      showSnackbar({
+        message: error,
+        type: 'error',
+      });
+    },
+    [showSnackbar],
+  );
 
-  const handleConfirmAudioOrder = async (items: AIOrderItem[], deliveryInfo?: any, scheduledDelivery?: any, orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => {
+  const handleConfirmAudioOrder = async (
+    items: AIOrderItem[],
+    deliveryInfo?: any,
+    scheduledDelivery?: any,
+    orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN',
+  ) => {
     // Procesamos los items detectados por voz y los agregamos al carrito
     try {
       if (!menu) {
         throw new Error('El menú no está disponible');
       }
-      
+
       let addedCount = 0;
       let failedCount = 0;
-      
+
       // Procesar cada item detectado
       for (const item of items) {
         let foundProduct: Product | null = null;
-        
+
         // Buscar el producto en el menú
         outer: for (const category of menu) {
           for (const subcategory of category.subcategories || []) {
@@ -343,7 +368,7 @@ const CreateOrderScreen = () => {
             }
           }
         }
-        
+
         if (foundProduct) {
           // Preparar modificadores
           const selectedModifiers: CartItemModifier[] = [];
@@ -351,7 +376,9 @@ const CreateOrderScreen = () => {
             for (const modName of item.modifiers) {
               // Buscar el modificador en el producto
               for (const modGroup of foundProduct.modifierGroups || []) {
-                const modifier = modGroup.productModifiers?.find(m => m.name === modName);
+                const modifier = modGroup.productModifiers?.find(
+                  (m) => m.name === modName,
+                );
                 if (modifier) {
                   selectedModifiers.push({
                     id: modifier.id,
@@ -364,14 +391,14 @@ const CreateOrderScreen = () => {
               }
             }
           }
-          
+
           // Preparar personalizaciones de pizza
-          const pizzaCustomizations = item.pizzaCustomizations?.map(pc => ({
+          const pizzaCustomizations = item.pizzaCustomizations?.map((pc) => ({
             pizzaCustomizationId: pc.customizationId,
             half: pc.half as any,
             action: pc.action as any,
           }));
-          
+
           // Agregar al carrito
           handleAddItem(
             foundProduct,
@@ -380,15 +407,15 @@ const CreateOrderScreen = () => {
             selectedModifiers,
             undefined, // preparationNotes
             pizzaCustomizations,
-            0 // pizzaExtraCost (se calculará en el modal si es necesario)
+            0, // pizzaExtraCost (se calculará en el modal si es necesario)
           );
-          
+
           addedCount++;
         } else {
           failedCount++;
         }
       }
-      
+
       // Mostrar resultado
       if (addedCount > 0 && failedCount === 0) {
         showSnackbar({
@@ -406,30 +433,22 @@ const CreateOrderScreen = () => {
           type: 'error',
         });
       }
-      
+
       // Si hay información de entrega, guardarla en el contexto del carrito
       if (deliveryInfo && Object.keys(deliveryInfo).length > 0) {
         setDeliveryInfo(deliveryInfo);
-        console.log('Información de entrega guardada en el carrito:', deliveryInfo);
       }
-      
+
       // Si se detectó un tipo de orden, actualizarlo en el contexto del carrito
-      console.log('=== DEBUG handleConfirmAudioOrder ===');
-      console.log('orderType parameter:', orderType);
-      console.log('items:', items);
-      console.log('deliveryInfo:', deliveryInfo);
-      console.log('=====================================');
-      
+
       if (orderType) {
         setOrderType(orderType);
-        console.log('Setting orderType in cart context:', orderType);
       } else {
-        console.log('No orderType detected!');
       }
-      
+
       setShowAudioModal(false);
       setAudioOrderData(null);
-      
+
       // Animar el botón del carrito si se agregaron productos
       if (addedCount > 0) {
         cartButtonRef.current?.animate();
@@ -506,18 +525,18 @@ const CreateOrderScreen = () => {
           flex: 1,
         },
         gridContainer: {
-          padding: 12,
+          padding: responsive.spacing.m,
           paddingBottom: 60,
         },
         row: {
           justifyContent: 'flex-start',
         },
         cardItem: {
-          width: '48%',
-          marginHorizontal: '1%',
-          marginVertical: 4,
+          flex: 1,
+          marginHorizontal: responsive.spacing.xs,
+          marginVertical: responsive.spacing.xs,
           overflow: 'hidden',
-          borderRadius: 8,
+          borderRadius: theme.roundness,
           elevation: 2,
         },
         cardItemInactive: {
@@ -525,12 +544,12 @@ const CreateOrderScreen = () => {
         },
         itemImage: {
           width: '100%',
-          height: 120,
+          height: responsive.getResponsiveDimension(100, 140),
         },
         imagePlaceholder: {
           width: '100%',
-          height: 120,
-          backgroundColor: '#eeeeee',
+          height: responsive.getResponsiveDimension(100, 140),
+          backgroundColor: colors.surfaceVariant,
           justifyContent: 'center',
           alignItems: 'center',
         },
@@ -538,17 +557,17 @@ const CreateOrderScreen = () => {
           opacity: 0.6,
         },
         placeholderText: {
-          fontSize: 24,
+          fontSize: responsive.fontSize.xl,
           fontWeight: 'bold',
-          color: '#999',
+          color: colors.onSurfaceVariant,
         },
         cardContent: {
-          padding: 12,
+          padding: responsive.spacing.m,
         },
         cardTitle: {
-          fontSize: 16,
+          fontSize: responsive.fontSize.l,
           fontWeight: 'bold',
-          marginBottom: 4,
+          marginBottom: responsive.spacing.xs,
         },
         cardHeader: {
           flexDirection: 'row',
@@ -824,11 +843,12 @@ const CreateOrderScreen = () => {
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.gridContainer}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
+              numColumns={numColumns}
+              columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
               initialNumToRender={6}
               maxToRenderPerBatch={10}
               windowSize={5}
+              key={`grid-${numColumns}`} // Key para forzar re-render cuando cambian las columnas
             />
           ) : (
             <Text style={styles.noItemsText}>
@@ -881,7 +901,7 @@ const CreateOrderScreen = () => {
             error={audioError}
           />
         </Portal>
-        
+
         {/* Widget de grabación de audio */}
         {!isCartVisible && !selectedProduct && (
           <AudioRecorderWidget
@@ -896,46 +916,9 @@ const CreateOrderScreen = () => {
 };
 
 const CreateOrderScreenWithCart = () => {
-  const InnerComponent = () => {
-    const { isCartVisible, hideCart } = useCart();
-    const createOrderMutation = useCreateOrderMutation();
-    const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-    const navigation = useNavigation();
-    
-    const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
-      try {
-        const createdOrder = await createOrderMutation.mutateAsync(details);
-        showSnackbar({
-          message: `Orden #${createdOrder.dailyNumber} creada con éxito`,
-          type: 'success',
-        });
-        hideCart();
-        navigation.goBack();
-      } catch (error) {
-        showSnackbar({
-          message: getApiErrorMessage(error as any),
-          type: 'error',
-        });
-        throw error;
-      }
-    };
-    
-    return (
-      <>
-        <CreateOrderScreen />
-        <OrderCartDetail
-          visible={isCartVisible}
-          isEditMode={false}
-          onClose={hideCart}
-          onConfirmOrder={handleConfirmOrder}
-        />
-      </>
-    );
-  };
-  
   return (
     <CartProvider>
-      <InnerComponent />
+      <CreateOrderScreen />
     </CartProvider>
   );
 };

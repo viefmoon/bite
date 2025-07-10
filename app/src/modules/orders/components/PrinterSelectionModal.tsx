@@ -1,12 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, FlatList, ListRenderItemInfo } from 'react-native';
-import {
-  Modal,
-  Portal,
-  List,
-  Divider,
-  Appbar,
-} from 'react-native-paper';
+import { Modal, Portal, List, Divider, Appbar } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { usePrintersQuery } from '../../printers/hooks/usePrintersQueries';
 import type { ThermalPrinter } from '../../printers/types/printer.types';

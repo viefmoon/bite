@@ -182,31 +182,36 @@ const AddProductsToOrderScreen = () => {
         .map((m) => m.id)
         .sort()
         .join(',');
-      
+
       if (itemModifierIds !== newModifierIds) return false;
 
       // Comparar pizza customizations
       const existingCustomizations = item.selectedPizzaCustomizations || [];
       const newCustomizations = selectedPizzaCustomizations || [];
-      
-      if (existingCustomizations.length !== newCustomizations.length) return false;
-      
-      const sortedExistingCustomizations = [...existingCustomizations].sort((a, b) =>
-        `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-          `${b.pizzaCustomizationId}-${b.half}-${b.action}`
-        ),
+
+      if (existingCustomizations.length !== newCustomizations.length)
+        return false;
+
+      const sortedExistingCustomizations = [...existingCustomizations].sort(
+        (a, b) =>
+          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+            `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+          ),
       );
       const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
         `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-          `${b.pizzaCustomizationId}-${b.half}-${b.action}`
+          `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
         ),
       );
-      
+
       for (let i = 0; i < sortedExistingCustomizations.length; i++) {
         if (
-          sortedExistingCustomizations[i].pizzaCustomizationId !== sortedNewCustomizations[i].pizzaCustomizationId ||
-          sortedExistingCustomizations[i].half !== sortedNewCustomizations[i].half ||
-          sortedExistingCustomizations[i].action !== sortedNewCustomizations[i].action
+          sortedExistingCustomizations[i].pizzaCustomizationId !==
+            sortedNewCustomizations[i].pizzaCustomizationId ||
+          sortedExistingCustomizations[i].half !==
+            sortedNewCustomizations[i].half ||
+          sortedExistingCustomizations[i].action !==
+            sortedNewCustomizations[i].action
         ) {
           return false;
         }
@@ -241,7 +246,7 @@ const AddProductsToOrderScreen = () => {
     } else {
       // Si no existe, agregar nuevo item
       const newItem: CartItem = {
-        id: `temp-${Date.now()}-${Math.random()}`,
+        id: `temp-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
         productId: product.id,
         productName: product.name,
         quantity,
@@ -288,7 +293,8 @@ const AddProductsToOrderScreen = () => {
           const pizzaCost = pizzaExtraCost || 0;
           const finalUnitPrice =
             unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice = (finalUnitPrice + modifiersPrice + pizzaCost) * quantity;
+          const newTotalPrice =
+            (finalUnitPrice + modifiersPrice + pizzaCost) * quantity;
 
           return {
             ...item,

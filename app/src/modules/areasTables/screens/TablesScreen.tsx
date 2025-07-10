@@ -81,9 +81,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         await createTableMutation.mutateAsync(dataWithAreaId as CreateTableDto);
       }
       handleCloseModals();
-    } catch (error) {
-      console.error('Submit failed:', error);
-    }
+    } catch (error) {}
   };
 
   const listRenderConfig: RenderItemConfig<Table> = useMemo(
@@ -172,26 +170,13 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
       message: `No hay mesas registradas en ${areaName}. Presiona el botón + para crear la primera.`,
       icon: 'table-furniture',
     },
+    errorConfig: {
+      title: 'Error al cargar mesas',
+      message: 'No se pudieron cargar las mesas. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetchTables,
+    },
   });
-
-  if (isLoadingTables && !isRefetching) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator animating={true} size="large" />
-        <Text>Cargando mesas...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (isErrorTables) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <Text style={{ color: theme.colors.error }}>
-          Error al cargar las mesas.
-        </Text>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -211,7 +196,8 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         showFab={true}
         onFabPress={handleOpenCreateModal}
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={false}
+        showImagePlaceholder={true}
+        placeholderIcon="table-furniture"
         isDrawerOpen={isDrawerOpen}
       />
 
@@ -237,6 +223,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         }}
         onDelete={handleDeleteItem}
         isDeleting={isDeleting}
+        showImage={true}
       />
     </SafeAreaView>
   );

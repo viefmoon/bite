@@ -10,6 +10,7 @@ import { ProductModifierEntity } from '../../../../product-modifiers/infrastruct
 import { PizzaCustomizationEntity } from '../../../../pizza-customizations/infrastructure/persistence/relational/entities/pizza-customization.entity';
 import { PizzaConfigurationEntity } from '../../../../pizza-configurations/infrastructure/persistence/relational/entities/pizza-configuration.entity';
 import { CustomizationType } from '../../../../pizza-customizations/domain/enums/customization-type.enum';
+import { PreparationScreenEntity } from '../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 import {
   CustomIdService,
   EntityPrefix,
@@ -34,6 +35,8 @@ export class ProductSeedService {
     private pizzaCustomizationRepository: Repository<PizzaCustomizationEntity>,
     @InjectRepository(PizzaConfigurationEntity)
     private pizzaConfigurationRepository: Repository<PizzaConfigurationEntity>,
+    @InjectRepository(PreparationScreenEntity)
+    private preparationScreenRepository: Repository<PreparationScreenEntity>,
     private customIdService: CustomIdService,
   ) {}
 
@@ -484,6 +487,21 @@ export class ProductSeedService {
   }
 
   private async seedBeverageProducts() {
+    // Obtener las pantallas de preparación
+    const preparationScreens = await this.preparationScreenRepository.find({
+      where: { isActive: true },
+    });
+    
+    const barScreen = preparationScreens.find(screen => screen.name === 'Bar');
+    const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada si no se encuentra "Bar"
+    
+    if (!defaultScreen) {
+      console.error('No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.');
+      return;
+    }
+    
+    const beverageScreen = barScreen || defaultScreen;
+    
     // Productos de bebidas simples (sin variantes)
     const simpleBeverages = [
       // Aguas frescas
@@ -761,16 +779,17 @@ export class ProductSeedService {
             sortOrder: beverage.sortOrder,
             subcategory: subcategory,
             estimatedPrepTime: 5,
+            preparationScreenId: beverageScreen.id,
           }),
         );
       }
     }
 
     // Productos con variantes
-    await this.seedBeveragesWithVariants();
+    await this.seedBeveragesWithVariants(beverageScreen);
   }
 
-  private async seedBeveragesWithVariants() {
+  private async seedBeveragesWithVariants(beverageScreen: PreparationScreenEntity) {
     // Micheladas
     const micheladaSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-8' },
@@ -792,6 +811,7 @@ export class ProductSeedService {
           sortOrder: 5,
           subcategory: micheladaSubcategory,
           estimatedPrepTime: 5,
+          preparationScreenId: beverageScreen.id,
         }),
       );
 
@@ -839,6 +859,7 @@ export class ProductSeedService {
           sortOrder: 1,
           subcategory: frappeSubcategory,
           estimatedPrepTime: 10,
+          preparationScreenId: beverageScreen.id,
         }),
       );
 
@@ -875,23 +896,37 @@ export class ProductSeedService {
   }
 
   private async seedFoodProducts() {
+    // Obtener las pantallas de preparación
+    const preparationScreens = await this.preparationScreenRepository.find({
+      where: { isActive: true },
+    });
+    
+    const pizzaScreen = preparationScreens.find(screen => screen.name === 'Pizza');
+    const hamburguesasScreen = preparationScreens.find(screen => screen.name === 'Hamburguesas');
+    const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada
+    
+    if (!defaultScreen) {
+      console.error('No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.');
+      return;
+    }
+    
     // Hamburguesas con modificadores
-    await this.seedHamburgers();
+    await this.seedHamburgers(hamburguesasScreen || defaultScreen);
 
     // Alitas con variantes y modificadores
-    await this.seedAlitas();
+    await this.seedAlitas(hamburguesasScreen || defaultScreen);
 
     // Papas con variantes y modificadores
-    await this.seedPapas();
+    await this.seedPapas(hamburguesasScreen || defaultScreen);
 
     // Ensaladas con variantes y modificadores
-    await this.seedEnsaladas();
+    await this.seedEnsaladas(hamburguesasScreen || defaultScreen);
 
     // Otros productos de comida
-    await this.seedOtherFoodProducts();
+    await this.seedOtherFoodProducts(pizzaScreen || defaultScreen, hamburguesasScreen || defaultScreen);
   }
 
-  private async seedHamburgers() {
+  private async seedHamburgers(preparationScreen: PreparationScreenEntity) {
     const hamburguesaSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-3' },
     });
@@ -914,6 +949,7 @@ export class ProductSeedService {
           sortOrder: 1,
           subcategory: hamburguesaSubcategory,
           estimatedPrepTime: 15,
+          preparationScreenId: preparationScreen.id,
         }),
       );
 
@@ -1110,7 +1146,7 @@ export class ProductSeedService {
     await this.productRepository.save(hamburguesa);
   }
 
-  private async seedAlitas() {
+  private async seedAlitas(preparationScreen: PreparationScreenEntity) {
     const entradasSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-1' },
     });
@@ -1133,6 +1169,7 @@ export class ProductSeedService {
           sortOrder: 1,
           subcategory: entradasSubcategory,
           estimatedPrepTime: 15,
+          preparationScreenId: preparationScreen.id,
         }),
       );
 
@@ -1217,7 +1254,7 @@ export class ProductSeedService {
     }
   }
 
-  private async seedPapas() {
+  private async seedPapas(preparationScreen: PreparationScreenEntity) {
     const entradasSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-1' },
     });
@@ -1240,6 +1277,7 @@ export class ProductSeedService {
           sortOrder: 2,
           subcategory: entradasSubcategory,
           estimatedPrepTime: 10,
+          preparationScreenId: preparationScreen.id,
         }),
       );
 
@@ -1357,7 +1395,7 @@ export class ProductSeedService {
     }
   }
 
-  private async seedEnsaladas() {
+  private async seedEnsaladas(preparationScreen: PreparationScreenEntity) {
     const ensaladasSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-4' },
     });
@@ -1380,6 +1418,7 @@ export class ProductSeedService {
           sortOrder: 1,
           subcategory: ensaladasSubcategory,
           estimatedPrepTime: 8,
+          preparationScreenId: preparationScreen.id,
         }),
       );
 
@@ -1526,9 +1565,9 @@ export class ProductSeedService {
     }
   }
 
-  private async seedOtherFoodProducts() {
+  private async seedOtherFoodProducts(pizzaScreen: PreparationScreenEntity, hamburguesasScreen: PreparationScreenEntity) {
     // Pizzas
-    await this.seedPizzas();
+    await this.seedPizzas(pizzaScreen);
 
     // Dedos de queso
     const hamburguesaSubcategory = await this.subcategoryRepository.findOne({
@@ -1552,12 +1591,13 @@ export class ProductSeedService {
           sortOrder: 2,
           subcategory: hamburguesaSubcategory,
           estimatedPrepTime: 8,
+          preparationScreenId: hamburguesasScreen.id,
         }),
       );
     }
   }
 
-  private async seedPizzas() {
+  private async seedPizzas(preparationScreen: PreparationScreenEntity) {
     const pizzaSubcategory = await this.subcategoryRepository.findOne({
       where: { id: 'SUB-2' },
     });
@@ -1580,6 +1620,7 @@ export class ProductSeedService {
           sortOrder: 1,
           subcategory: pizzaSubcategory,
           estimatedPrepTime: 20,
+          preparationScreenId: preparationScreen.id,
         }),
       );
 
@@ -1657,6 +1698,7 @@ export class ProductSeedService {
           sortOrder: 2,
           subcategory: pizzaSubcategory,
           estimatedPrepTime: 10,
+          preparationScreenId: preparationScreen.id,
         }),
       );
     }

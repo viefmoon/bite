@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
@@ -15,7 +15,7 @@ type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 export const createSubcategory = async (
   data: CreateSubCategoryDto,
 ): Promise<SubCategory> => {
-  const response = await apiClient.post<SubCategory>(
+  const response = await ApiClientWrapper.post<SubCategory>(
     API_PATHS.SUBCATEGORIES,
     data,
   );
@@ -38,7 +38,7 @@ export const findAllSubcategories = async (
     {} as Record<string, any>,
   );
 
-  const response = await apiClient.get<{
+  const response = await ApiClientWrapper.get<{
     items: SubCategory[];
     total: number;
     page: number;
@@ -62,7 +62,7 @@ export const findAllSubcategories = async (
 };
 
 export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
-  const response = await apiClient.get<SubCategory>(
+  const response = await ApiClientWrapper.get<SubCategory>(
     `${API_PATHS.SUBCATEGORIES}/${id}`,
   );
   if (!response.ok || !response.data) {
@@ -75,7 +75,7 @@ export const updateSubcategory = async (
   id: string,
   data: UpdateSubCategoryDto,
 ): Promise<SubCategory> => {
-  const response = await apiClient.patch<SubCategory>(
+  const response = await ApiClientWrapper.patch<SubCategory>(
     `${API_PATHS.SUBCATEGORIES}/${id}`,
     data,
   );
@@ -86,7 +86,9 @@ export const updateSubcategory = async (
 };
 
 export const removeSubcategory = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(`${API_PATHS.SUBCATEGORIES}/${id}`);
+  const response = await ApiClientWrapper.delete(
+    `${API_PATHS.SUBCATEGORIES}/${id}`,
+  );
   if (!response.ok) {
     if (response.data) {
       // Hay un cuerpo de error definido por el backend

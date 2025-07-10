@@ -1,15 +1,16 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, Button, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
+import { discoveryService } from '@/app/services/discoveryService';
 
 import GenericList, {
   FilterOption,
 } from '../../../app/components/crud/GenericList';
-import GenericDetailModal, {
-  DisplayFieldConfig,
-} from '../../../app/components/crud/GenericDetailModal';
+import { DisplayFieldConfig } from '../../../app/components/crud/GenericDetailModal';
+import PreparationScreenDetailModalSimple from '../components/PreparationScreenDetailModalSimple';
+import PreparationScreenListItem from '../components/PreparationScreenListItem';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import PreparationScreenFormModal from '../components/PreparationScreenFormModal';
 import { ProductSelectionModal } from '../components/ProductSelectionModal';
@@ -162,9 +163,21 @@ const PreparationScreensScreen = () => {
     },
   );
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
+    // Si hay error de conexión, intentar redescubrir el servidor
+    if (
+      errorList &&
+      (errorList.message?.includes('conexión') ||
+        errorList.message?.includes('network'))
+    ) {
+      try {
+        await discoveryService.forceRediscovery();
+        // Dar tiempo para que se reinicialice el cliente
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      } catch (error) {}
+    }
     refetchList();
-  }, [refetchList]);
+  }, [refetchList, errorList]);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchTerm(query);
@@ -200,6 +213,33 @@ const PreparationScreensScreen = () => {
       activeLabel: 'Activa',
       inactiveLabel: 'Inactiva',
     },
+    renderDescription: (item: PreparationScreen) => {
+      const parts: string[] = [];
+
+      if (item.description) {
+        parts.push(item.description);
+      }
+
+      if (item.users && item.users.length > 0) {
+        const userNames = item.users
+          .map((user) => {
+            const fullName =
+              `${user.firstName || ''} ${user.lastName || ''}`.trim();
+            return fullName || user.username;
+          })
+          .join(', ');
+        parts.push(`Usuarios: ${userNames}`);
+      }
+
+      const text = parts.join(' • ');
+      if (!text) return null;
+
+      return (
+        <Text variant="bodyMedium" numberOfLines={2} ellipsizeMode="tail">
+          {text}
+        </Text>
+      );
+    },
   };
 
   const filterOptions: FilterOption<string>[] = [
@@ -209,6 +249,22 @@ const PreparationScreensScreen = () => {
   ];
 
   const detailFields: DisplayFieldConfig<PreparationScreen>[] = [
+    {
+      field: 'users',
+      label: 'Usuarios Asignados',
+      render: (users) => {
+        if (!users || !Array.isArray(users) || users.length === 0)
+          return 'Sin asignar';
+        const userNames = users
+          .map((user: any) => {
+            const fullName =
+              `${user.firstName || ''} ${user.lastName || ''}`.trim();
+            return fullName || user.username || 'Sin nombre';
+          })
+          .join(', ');
+        return userNames;
+      },
+    },
     {
       field: 'products',
       label: 'Productos Asociados',
@@ -252,7 +308,27 @@ const PreparationScreensScreen = () => {
         : 'No hay pantallas de preparación creadas. Presiona el botón + para crear la primera.',
       icon: 'monitor-dashboard',
     },
+    errorConfig: {
+      title: 'Error al cargar pantallas',
+      message: errorList?.message?.includes('encontrar el servidor')
+        ? 'No se pudo encontrar el servidor. Verifica que el servidor esté encendido y en la misma red.'
+        : 'No se pudieron cargar las pantallas de preparación. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      actionText: 'Reintentar',
+      onAction: handleRefresh,
+    },
   });
+
+  const renderItem = useCallback(
+    ({ item }: { item: PreparationScreen }) => (
+      <PreparationScreenListItem
+        item={item}
+        onPress={handleOpenDetailModal}
+        onManageProducts={handleOpenProductModal}
+      />
+    ),
+    [handleOpenDetailModal, handleOpenProductModal],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -290,16 +366,13 @@ const PreparationScreensScreen = () => {
             onPress={() => handleOpenProductModal(item)}
           />
         )}
+        renderItem={renderItem}
       />
 
-      <GenericDetailModal<PreparationScreen>
+      <PreparationScreenDetailModalSimple
         visible={isDetailModalVisible}
         onDismiss={handleCloseModals}
         item={selectedScreenData ?? selectedItem ?? null}
-        titleField="name"
-        descriptionField="description"
-        statusConfig={listRenderConfig.statusConfig}
-        fieldsToDisplay={detailFields}
         onEdit={() => {
           const itemToEdit = selectedScreenData ?? selectedItem;
           if (itemToEdit) {
@@ -307,10 +380,8 @@ const PreparationScreensScreen = () => {
           }
         }}
         onDelete={handleDeleteItem}
+        onManageProducts={handleOpenProductModal}
         isDeleting={isDeleting}
-        editButtonLabel="Editar"
-        deleteButtonLabel="Eliminar"
-        closeButtonLabel="Cerrar"
       />
 
       <PreparationScreenFormModal

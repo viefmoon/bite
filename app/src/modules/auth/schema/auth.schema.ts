@@ -44,6 +44,16 @@ export const userSchema = z.object({
       name: z.string(),
     })
     .optional(),
+  isActive: z.boolean().optional(),
+  preparationScreen: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      isActive: z.boolean(),
+    })
+    .nullable()
+    .optional(),
 });
 export type User = z.infer<typeof userSchema>;
 

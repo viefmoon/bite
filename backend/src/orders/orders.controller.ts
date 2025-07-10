@@ -24,6 +24,7 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { OrderItem } from './domain/order-item';
+import { OrderStatus } from './domain/enums/order-status.enum';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import {
   ApiBearerAuth,
@@ -201,6 +202,23 @@ export class OrdersController {
     return this.ordersService.recoverOrder(id);
   }
 
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Change order status' })
+  @ApiResponse({
+    status: 200,
+    description: 'The order status has been successfully changed.',
+    type: Order,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  changeOrderStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { status: OrderStatus },
+  ): Promise<Order> {
+    return this.ordersService.changeOrderStatus(id, body.status);
+  }
+
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get all orders for a specific user' })
   @ApiResponse({
@@ -343,7 +361,13 @@ export class OrdersController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @Roles(
+    RoleEnum.admin,
+    RoleEnum.manager,
+    RoleEnum.cashier,
+    RoleEnum.waiter,
+    RoleEnum.kitchen,
+  )
   async getOrderHistory(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -358,5 +382,141 @@ export class OrdersController {
       paginationOptions,
     );
     return infinityPagination(data, paginationOptions); // Pasar total si es necesario
+  }
+
+  // --- Kitchen Preparation Status Endpoints ---
+
+  @Patch(':id/start-preparation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Start order preparation',
+    description:
+      'Changes all pending items of an order to IN_PROGRESS status and updates order status',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Order preparation started successfully',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.kitchen)
+  async startOrderPreparation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    // Cambiar todos los items PENDING a IN_PROGRESS
+    await this.ordersService.changeOrderItemsStatus(
+      id,
+      userId,
+      'PENDING',
+      'IN_PROGRESS',
+    );
+
+    // Actualizar el estado de la orden a IN_PREPARATION
+    await this.ordersService.update(id, {
+      orderStatus: OrderStatus.IN_PREPARATION,
+    });
+  }
+
+  @Patch(':id/cancel-preparation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Cancel order preparation',
+    description:
+      'Returns order to previous state. If order is READY goes back to IN_PREPARATION (items keep their state). If order is IN_PREPARATION goes back to IN_PROGRESS (all items go to PENDING).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Order preparation cancelled successfully',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.kitchen)
+  async cancelOrderPreparation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    // Obtener el estado actual de la orden con sus items
+    const order = await this.ordersService.findOne(id);
+
+    if (order.orderStatus === OrderStatus.READY) {
+      // Si la orden está LISTA y se regresa a EN PREPARACIÓN:
+      // Los OrderItems mantienen su estado (READY)
+      // Solo cambiamos el estado de la orden
+      await this.ordersService.update(id, {
+        orderStatus: OrderStatus.IN_PREPARATION,
+      });
+    } else if (order.orderStatus === OrderStatus.IN_PREPARATION) {
+      // Si la orden está EN PREPARACIÓN y se regresa a EN PROGRESO:
+      // Todos los items deben regresar a PENDING
+
+      // Cambiar items IN_PROGRESS a PENDING
+      const hasInProgressItems = await this.ordersService.hasItemsWithStatus(
+        id,
+        'IN_PROGRESS',
+      );
+      if (hasInProgressItems) {
+        await this.ordersService.changeOrderItemsStatus(
+          id,
+          userId,
+          'IN_PROGRESS',
+          'PENDING',
+        );
+      }
+
+      // Cambiar items READY a PENDING
+      const hasReadyItems = await this.ordersService.hasItemsWithStatus(
+        id,
+        'READY',
+      );
+      if (hasReadyItems) {
+        await this.ordersService.changeOrderItemsStatus(
+          id,
+          userId,
+          'READY',
+          'PENDING',
+        );
+      }
+
+      // Cambiar el estado de la orden
+      await this.ordersService.update(id, {
+        orderStatus: OrderStatus.IN_PROGRESS,
+      });
+    } else if (order.orderStatus === OrderStatus.IN_PROGRESS) {
+      // La orden ya está en IN_PROGRESS, no hay nada que hacer
+      // Esto puede pasar si todos los items están READY pero la orden no fue marcada como READY
+    }
+  }
+
+  @Patch(':id/complete-preparation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Complete order preparation',
+    description:
+      'Changes all in-progress items of an order to READY status and updates order status',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Order preparation completed successfully',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.kitchen)
+  async completeOrderPreparation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    // Cambiar todos los items IN_PROGRESS a READY
+    await this.ordersService.changeOrderItemsStatus(
+      id,
+      userId,
+      'IN_PROGRESS',
+      'READY',
+    );
+
+    // Actualizar el estado de la orden a READY
+    await this.ordersService.update(id, {
+      orderStatus: OrderStatus.READY,
+    });
   }
 }

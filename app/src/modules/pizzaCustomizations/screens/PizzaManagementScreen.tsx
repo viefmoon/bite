@@ -8,10 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { PizzaCustomizationsStackParamList } from '../navigation/types';
 
 // Importar las tabs
-import { 
-  PizzaProductsTab, 
-  PizzaCustomizationsTab
-} from '../components';
+import { PizzaProductsTab, PizzaCustomizationsTab } from '../components';
 
 type NavigationProp = NativeStackNavigationProp<
   PizzaCustomizationsStackParamList,
@@ -118,35 +115,54 @@ export function PizzaManagementScreen() {
             style={[styles.tab, selectedTab === 'products' && styles.tabActive]}
             onPress={() => setSelectedTab('products')}
           >
-            <Icon 
-              source="pizza" 
-              size={20} 
-              color={selectedTab === 'products' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            <Icon
+              source="pizza"
+              size={20}
+              color={
+                selectedTab === 'products'
+                  ? theme.colors.primary
+                  : theme.colors.onSurfaceVariant
+              }
             />
-            <Text style={[styles.tabText, selectedTab === 'products' && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === 'products' && styles.tabTextActive,
+              ]}
+            >
               Productos
             </Text>
           </Pressable>
-          
+
           <Pressable
-            style={[styles.tab, selectedTab === 'customizations' && styles.tabActive]}
+            style={[
+              styles.tab,
+              selectedTab === 'customizations' && styles.tabActive,
+            ]}
             onPress={() => setSelectedTab('customizations')}
           >
-            <Icon 
-              source="cheese" 
-              size={20} 
-              color={selectedTab === 'customizations' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            <Icon
+              source="cheese"
+              size={20}
+              color={
+                selectedTab === 'customizations'
+                  ? theme.colors.primary
+                  : theme.colors.onSurfaceVariant
+              }
             />
-            <Text style={[styles.tabText, selectedTab === 'customizations' && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === 'customizations' && styles.tabTextActive,
+              ]}
+            >
               Ingredientes
             </Text>
           </Pressable>
         </View>
       </View>
 
-      <View style={styles.content}>
-        {renderContent()}
-      </View>
+      <View style={styles.content}>{renderContent()}</View>
 
       {selectedTab === 'customizations' && (
         <Portal>

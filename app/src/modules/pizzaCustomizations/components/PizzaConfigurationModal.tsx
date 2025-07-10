@@ -34,10 +34,10 @@ const configurationSchema = z.object({
 
 type ConfigurationFormData = z.infer<typeof configurationSchema>;
 
-export function PizzaConfigurationModal({ 
-  visible, 
-  onDismiss, 
-  product 
+export function PizzaConfigurationModal({
+  visible,
+  onDismiss,
+  product,
 }: PizzaConfigurationModalProps) {
   const theme = useAppTheme();
   const queryClient = useQueryClient();
@@ -78,7 +78,11 @@ export function PizzaConfigurationModal({
   // Cargar datos de configuración existente
   useEffect(() => {
     if (visible && product) {
-      if (configuration && configuration.extraToppingCost !== undefined && configuration.extraToppingCost !== null) {
+      if (
+        configuration &&
+        configuration.extraToppingCost !== undefined &&
+        configuration.extraToppingCost !== null
+      ) {
         const cost = Number(configuration.extraToppingCost);
         const toppings = Number(configuration.includedToppings) || 4;
         reset({
@@ -107,7 +111,7 @@ export function PizzaConfigurationModal({
   const saveMutation = useMutation({
     mutationFn: async (data: ConfigurationFormData) => {
       if (!product) throw new Error('No product selected');
-      
+
       if (configuration) {
         return await pizzaConfigurationsService.update(configuration.id, data);
       } else {
@@ -122,7 +126,9 @@ export function PizzaConfigurationModal({
         message: 'Configuración guardada exitosamente',
         type: 'success',
       });
-      queryClient.invalidateQueries({ queryKey: ['pizza-configuration', product?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['pizza-configuration', product?.id],
+      });
       queryClient.invalidateQueries({ queryKey: ['pizza-configurations'] });
       onDismiss();
     },
@@ -281,8 +287,8 @@ export function PizzaConfigurationModal({
           <View style={styles.section}>
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
-                ℹ️ Esta configuración determina cuántos toppings están incluidos en el precio base 
-                y cuánto se cobra por cada topping adicional.
+                ℹ️ Esta configuración determina cuántos toppings están incluidos
+                en el precio base y cuánto se cobra por cada topping adicional.
               </Text>
             </View>
 
@@ -317,7 +323,8 @@ export function PizzaConfigurationModal({
               </HelperText>
             )}
             <HelperText type="info" visible style={styles.helperText}>
-              Cantidad de toppings que el cliente puede elegir sin costo adicional
+              Cantidad de toppings que el cliente puede elegir sin costo
+              adicional
             </HelperText>
 
             <Controller
@@ -330,26 +337,28 @@ export function PizzaConfigurationModal({
                   onChangeText={(text) => {
                     // Permitir números y punto decimal
                     let cleanText = text.replace(/[^0-9.]/g, '');
-                    
+
                     // Evitar múltiples puntos decimales
                     const parts = cleanText.split('.');
                     if (parts.length > 2) {
                       cleanText = parts[0] + '.' + parts.slice(1).join('');
                     }
-                    
+
                     // Limitar a 2 decimales
                     if (parts.length === 2 && parts[1].length > 2) {
                       cleanText = parts[0] + '.' + parts[1].substring(0, 2);
                     }
-                    
+
                     // Actualizar el texto mostrado
                     setExtraCostText(cleanText);
-                    
+
                     // Convertir a número y actualizar el formulario
                     const numValue = parseFloat(cleanText);
                     if (!isNaN(numValue)) {
                       onChange(numValue);
-                      setValue('extraToppingCost', numValue, { shouldValidate: true });
+                      setValue('extraToppingCost', numValue, {
+                        shouldValidate: true,
+                      });
                     } else if (cleanText === '' || cleanText === '.') {
                       onChange(0);
                       setValue('extraToppingCost', 0, { shouldValidate: true });
@@ -361,7 +370,9 @@ export function PizzaConfigurationModal({
                     const numValue = parseFloat(extraCostText);
                     if (!isNaN(numValue)) {
                       setExtraCostText(numValue.toFixed(2));
-                      setValue('extraToppingCost', numValue, { shouldValidate: true });
+                      setValue('extraToppingCost', numValue, {
+                        shouldValidate: true,
+                      });
                     } else {
                       setExtraCostText('0.00');
                       setValue('extraToppingCost', 0, { shouldValidate: true });
@@ -377,7 +388,8 @@ export function PizzaConfigurationModal({
             />
             {errors.extraToppingCost && (
               <HelperText type="error" visible style={styles.helperText}>
-                {errors.extraToppingCost.message || 'Debe ser un número mayor o igual a 0'}
+                {errors.extraToppingCost.message ||
+                  'Debe ser un número mayor o igual a 0'}
               </HelperText>
             )}
             <HelperText type="info" visible style={styles.helperText}>
@@ -389,9 +401,9 @@ export function PizzaConfigurationModal({
                 Ejemplo de cálculo:
               </Text>
               <Text style={styles.exampleText}>
-                Si configuras 4 toppings incluidos y $20 por extra:{'\n'}
-                • Cliente elige 4 toppings: Sin costo adicional{'\n'}
-                • Cliente elige 6 toppings: +$40 (2 extras × $20)
+                Si configuras 4 toppings incluidos y $20 por extra:{'\n'}•
+                Cliente elige 4 toppings: Sin costo adicional{'\n'}• Cliente
+                elige 6 toppings: +$40 (2 extras × $20)
               </Text>
             </View>
           </View>
@@ -400,8 +412,8 @@ export function PizzaConfigurationModal({
         <Divider />
 
         <View style={styles.actions}>
-          <Button 
-            mode="outlined" 
+          <Button
+            mode="outlined"
             onPress={() => {
               if (isDirty) {
                 setShowConfirmation(true);
@@ -425,7 +437,7 @@ export function PizzaConfigurationModal({
           </Button>
         </View>
       </Modal>
-      
+
       <ConfirmationModal
         visible={showConfirmation}
         title="¿Salir sin guardar?"

@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
 } from 'class-validator';
 
@@ -52,4 +53,14 @@ export class CreatePreparationScreenDto {
   @IsArray()
   @IsString({ each: true })
   productIds?: string[];
+
+  @ApiProperty({
+    type: String,
+    example: 'b88a9f9a-8e8e-4b7d-8c5e-5d5f1f2a3b4c',
+    description: 'ID del usuario con rol de cocina asignado a esta pantalla',
+    required: true,
+  })
+  @IsNotEmpty({ message: 'El usuario es requerido' })
+  @IsUUID('4', { message: 'El ID del usuario debe ser un UUID válido' })
+  userId: string;
 }

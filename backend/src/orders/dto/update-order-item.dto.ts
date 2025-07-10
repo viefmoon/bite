@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { PreparationStatus } from '../domain/order-item';
 import { ProductModifierDto } from './product-modifier.dto';
+import { CreateSelectedPizzaCustomizationDto } from '../../selected-pizza-customizations/dto/create-selected-pizza-customization.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateOrderItemDto {
@@ -49,4 +50,15 @@ export class UpdateOrderItemDto {
   @ValidateNested({ each: true })
   @Type(() => ProductModifierDto)
   productModifiers?: ProductModifierDto[];
+
+  @ApiProperty({
+    type: [CreateSelectedPizzaCustomizationDto],
+    description: 'Lista de personalizaciones de pizza seleccionadas',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSelectedPizzaCustomizationDto)
+  selectedPizzaCustomizations?: CreateSelectedPizzaCustomizationDto[];
 }

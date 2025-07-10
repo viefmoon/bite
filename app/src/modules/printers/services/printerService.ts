@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
@@ -22,7 +22,7 @@ type PrinterFilterParams = Omit<
 const discoverPrinters = async (
   duration: number = 10000,
 ): Promise<DiscoveredPrinter[]> => {
-  const response = await apiClient.get<DiscoveredPrinter[]>(
+  const response = await ApiClientWrapper.get<DiscoveredPrinter[]>(
     `${API_PATHS.THERMAL_PRINTERS}/discover`,
     { duration },
   );
@@ -64,7 +64,7 @@ const findAllPrinters = async (
     hasPrevPage: boolean;
   };
 
-  const response = await apiClient.get<FindAllPrintersApiResponse>(
+  const response = await ApiClientWrapper.get<FindAllPrintersApiResponse>(
     API_PATHS.THERMAL_PRINTERS,
     queryParams,
   );
@@ -91,7 +91,7 @@ const findAllPrinters = async (
 };
 
 const findOnePrinter = async (id: string): Promise<ThermalPrinter> => {
-  const response = await apiClient.get<ThermalPrinter>(
+  const response = await ApiClientWrapper.get<ThermalPrinter>(
     `${API_PATHS.THERMAL_PRINTERS}/${id}`,
   );
   if (!response.ok || !response.data) {
@@ -106,7 +106,7 @@ const findOnePrinter = async (id: string): Promise<ThermalPrinter> => {
 const createPrinter = async (
   data: CreateThermalPrinterDto,
 ): Promise<ThermalPrinter> => {
-  const response = await apiClient.post<ThermalPrinter>(
+  const response = await ApiClientWrapper.post<ThermalPrinter>(
     API_PATHS.THERMAL_PRINTERS,
     data,
   );
@@ -123,7 +123,7 @@ const updatePrinter = async (
   id: string,
   data: UpdateThermalPrinterDto,
 ): Promise<ThermalPrinter> => {
-  const response = await apiClient.patch<ThermalPrinter>(
+  const response = await ApiClientWrapper.patch<ThermalPrinter>(
     `${API_PATHS.THERMAL_PRINTERS}/${id}`,
     data,
   );
@@ -137,7 +137,7 @@ const updatePrinter = async (
 };
 
 const deletePrinter = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(
+  const response = await ApiClientWrapper.delete(
     `${API_PATHS.THERMAL_PRINTERS}/${id}`,
   );
   if (!response.ok) {
@@ -149,7 +149,7 @@ const deletePrinter = async (id: string): Promise<void> => {
 };
 
 const pingPrinter = async (id: string): Promise<{ status: string }> => {
-  const response = await apiClient.get<{ status: string }>(
+  const response = await ApiClientWrapper.get<{ status: string }>(
     `${API_PATHS.THERMAL_PRINTERS}/${id}/ping`,
   );
 
@@ -158,10 +158,6 @@ const pingPrinter = async (id: string): Promise<{ status: string }> => {
     !response.data ||
     typeof response.data.status !== 'string'
   ) {
-    console.error(
-      `[printerService.pingPrinter] Failed to ping printer ${id}:`,
-      response,
-    );
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -173,14 +169,14 @@ const pingPrinter = async (id: string): Promise<{ status: string }> => {
 const testPrintDiscoveredPrinter = async (
   printer: DiscoveredPrinter,
 ): Promise<{ success: boolean; message?: string }> => {
-  const response = await apiClient.post<{ success: boolean; message?: string }>(
-    `${API_PATHS.THERMAL_PRINTERS}/test-print`,
-    {
-      ip: printer.ip,
-      port: printer.port,
-      connectionType: 'NETWORK',
-    },
-  );
+  const response = await ApiClientWrapper.post<{
+    success: boolean;
+    message?: string;
+  }>(`${API_PATHS.THERMAL_PRINTERS}/test-print`, {
+    ip: printer.ip,
+    port: printer.port,
+    connectionType: 'NETWORK',
+  });
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(

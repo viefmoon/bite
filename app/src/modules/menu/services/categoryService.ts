@@ -1,4 +1,4 @@
-import apiClient from '../../../app/services/apiClient';
+import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import type {
@@ -13,7 +13,7 @@ export const getCategories = async (params?: {
   page?: number;
   limit?: number;
 }): Promise<PaginatedResponse<Category>> => {
-  const response = await apiClient.get<{
+  const response = await ApiClientWrapper.get<{
     items: Category[];
     total: number;
     page: number;
@@ -37,7 +37,7 @@ export const getCategories = async (params?: {
 };
 
 export const getCategory = async (id: string): Promise<Category> => {
-  const response = await apiClient.get<Category>(
+  const response = await ApiClientWrapper.get<Category>(
     `${API_PATHS.CATEGORIES}/${id}`,
   );
 
@@ -50,7 +50,10 @@ export const getCategory = async (id: string): Promise<Category> => {
 export const createCategory = async (
   data: CreateCategoryDto,
 ): Promise<Category> => {
-  const response = await apiClient.post<Category>(API_PATHS.CATEGORIES, data);
+  const response = await ApiClientWrapper.post<Category>(
+    API_PATHS.CATEGORIES,
+    data,
+  );
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
@@ -62,9 +65,7 @@ export const updateCategory = async (
   id: string,
   data: UpdateCategoryDto,
 ): Promise<Category> => {
-  console.log('[categoryService] updateCategory called with:', { id, data });
-
-  const response = await apiClient.patch<Category>(
+  const response = await ApiClientWrapper.patch<Category>(
     `${API_PATHS.CATEGORIES}/${id}`,
     data,
   );
@@ -73,12 +74,13 @@ export const updateCategory = async (
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
   }
 
-  console.log('[categoryService] updateCategory response:', response.data);
   return response.data;
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(`${API_PATHS.CATEGORIES}/${id}`);
+  const response = await ApiClientWrapper.delete(
+    `${API_PATHS.CATEGORIES}/${id}`,
+  );
 
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status ?? 500);
@@ -86,7 +88,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
 };
 
 export async function getFullMenu(): Promise<Category[]> {
-  const response = await apiClient.get<Category[]>(
+  const response = await ApiClientWrapper.get<Category[]>(
     `${API_PATHS.CATEGORIES}/full-menu`,
   );
 

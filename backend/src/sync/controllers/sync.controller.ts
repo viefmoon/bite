@@ -48,9 +48,7 @@ export class SyncController {
     }
 
     // Ejecutar sincronización de forma asíncrona
-    this.localSyncService.triggerSync().catch((error) => {
-      console.error('Error durante la sincronización:', error);
-    });
+    this.localSyncService.triggerSync().catch(() => {});
 
     return {
       message: 'Sincronización iniciada',

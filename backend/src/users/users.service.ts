@@ -18,7 +18,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
 import { PreparationScreenRepository } from '../preparation-screens/infrastructure/persistence/preparation-screen.repository';
 import { PREPARATION_SCREEN_REPOSITORY } from '../common/tokens';
-import { In } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -271,7 +270,7 @@ export class UsersService {
     preparationScreenIds: string[],
   ): Promise<User | null> {
     const user = await this.usersRepository.findById(id);
-    
+
     if (!user) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -293,10 +292,9 @@ export class UsersService {
 
     // Verificar que todas las pantallas existen
     if (preparationScreenIds.length > 0) {
-      const screens = await this.preparationScreensRepository.findByIds(
-        preparationScreenIds,
-      );
-      
+      const screens =
+        await this.preparationScreensRepository.findByIds(preparationScreenIds);
+
       if (screens.length !== preparationScreenIds.length) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -308,9 +306,10 @@ export class UsersService {
     }
 
     // Actualizar las pantallas de preparación del usuario
-    return this.usersRepository.updatePreparationScreens(
-      id,
-      preparationScreenIds,
-    );
+    // Como ahora es una relación 1:N, solo podemos asignar una pantalla
+    // Tomar la primera pantalla si se proporciona más de una
+    const screenId =
+      preparationScreenIds.length > 0 ? preparationScreenIds[0] : null;
+    return this.usersRepository.updatePreparationScreen(id, screenId);
   }
 }

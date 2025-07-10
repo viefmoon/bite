@@ -13,9 +13,15 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '@/app/styles/theme';
-import { usePizzaCustomizationsList, useDeletePizzaCustomization } from '../hooks/usePizzaCustomizationsQueries';
+import {
+  usePizzaCustomizationsList,
+  useDeletePizzaCustomization,
+} from '../hooks/usePizzaCustomizationsQueries';
 import { PizzaCustomizationDetailModal } from './PizzaCustomizationDetailModal';
-import { CustomizationType, PizzaCustomization } from '../types/pizzaCustomization.types';
+import {
+  CustomizationType,
+  PizzaCustomization,
+} from '../types/pizzaCustomization.types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { PizzaCustomizationsStackParamList } from '../navigation/types';
 import EmptyState from '@/app/components/common/EmptyState';
@@ -31,12 +37,16 @@ export function PizzaCustomizationsTab() {
   const navigation = useNavigation<NavigationProp>();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>('all');
+  const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>(
+    'all',
+  );
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
-  const [selectedCustomization, setSelectedCustomization] = useState<PizzaCustomization | null>(null);
+  const [selectedCustomization, setSelectedCustomization] =
+    useState<PizzaCustomization | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-  const [customizationToDelete, setCustomizationToDelete] = useState<PizzaCustomization | null>(null);
+  const [customizationToDelete, setCustomizationToDelete] =
+    useState<PizzaCustomization | null>(null);
 
   const deleteMutation = useDeletePizzaCustomization();
 
@@ -75,50 +85,60 @@ export function PizzaCustomizationsTab() {
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity onPress={() => handleItemPress(item)}>
-      <Surface 
-        style={styles.cardWrapper} 
-        elevation={1}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <View style={styles.titleRow}>
-            <Text variant="titleMedium" style={styles.cardTitle} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Chip
-              mode="flat"
-              compact
-              icon={item.type === CustomizationType.FLAVOR ? 'pizza' : 'cheese'}
-              style={[
-                styles.typeChip,
-                {
-                  backgroundColor: item.type === CustomizationType.FLAVOR 
-                    ? theme.colors.errorContainer 
-                    : theme.colors.secondaryContainer
+      <Surface style={styles.cardWrapper} elevation={1}>
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <View style={styles.titleRow}>
+              <Text
+                variant="titleMedium"
+                style={styles.cardTitle}
+                numberOfLines={1}
+              >
+                {item.name}
+              </Text>
+              <Chip
+                mode="flat"
+                compact
+                icon={
+                  item.type === CustomizationType.FLAVOR ? 'pizza' : 'cheese'
                 }
-              ]}
-              textStyle={styles.chipText}
+                style={[
+                  styles.typeChip,
+                  {
+                    backgroundColor:
+                      item.type === CustomizationType.FLAVOR
+                        ? theme.colors.errorContainer
+                        : theme.colors.secondaryContainer,
+                  },
+                ]}
+                textStyle={styles.chipText}
+              >
+                {item.type === CustomizationType.FLAVOR
+                  ? 'Sabor'
+                  : 'Ingrediente'}
+              </Chip>
+            </View>
+            <View style={styles.statsContainer}>
+              <Text variant="bodySmall" style={styles.statText}>
+                Valor: {item.toppingValue || 0}
+              </Text>
+              <Text variant="bodySmall" style={styles.statText}>
+                • {item.products?.length || 0} pizzas
+              </Text>
+            </View>
+          </View>
+
+          {item.ingredients && (
+            <Text
+              variant="bodySmall"
+              style={styles.ingredientsText}
+              numberOfLines={1}
             >
-              {item.type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente'}
-            </Chip>
-          </View>
-          <View style={styles.statsContainer}>
-            <Text variant="bodySmall" style={styles.statText}>
-              Valor: {item.toppingValue || 0}
+              {item.ingredients}
             </Text>
-            <Text variant="bodySmall" style={styles.statText}>
-              • {item.products?.length || 0} pizzas
-            </Text>
-          </View>
+          )}
         </View>
-        
-        {item.ingredients && (
-          <Text variant="bodySmall" style={styles.ingredientsText} numberOfLines={1}>
-            {item.ingredients}
-          </Text>
-        )}
-      </View>
-    </Surface>
+      </Surface>
     </TouchableOpacity>
   );
 
@@ -249,12 +269,22 @@ export function PizzaCustomizationsTab() {
               onDismiss={() => setFilterMenuVisible(false)}
               anchor={
                 <IconButton
-                  icon={selectedType === 'all' ? 'filter-variant' : selectedType === CustomizationType.FLAVOR ? 'pizza' : 'cheese'}
+                  icon={
+                    selectedType === 'all'
+                      ? 'filter-variant'
+                      : selectedType === CustomizationType.FLAVOR
+                        ? 'pizza'
+                        : 'cheese'
+                  }
                   mode="contained-tonal"
                   size={24}
                   onPress={() => setFilterMenuVisible(true)}
                   style={styles.filterIconButton}
-                  iconColor={selectedType !== 'all' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  iconColor={
+                    selectedType !== 'all'
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
                 />
               }
               anchorPosition="bottom"
@@ -281,7 +311,11 @@ export function PizzaCustomizationsTab() {
                 }}
                 title="Sabores"
                 leadingIcon="pizza"
-                trailingIcon={selectedType === CustomizationType.FLAVOR ? 'check' : undefined}
+                trailingIcon={
+                  selectedType === CustomizationType.FLAVOR
+                    ? 'check'
+                    : undefined
+                }
                 titleStyle={
                   selectedType === CustomizationType.FLAVOR
                     ? { color: theme.colors.primary, fontWeight: '600' }
@@ -295,7 +329,11 @@ export function PizzaCustomizationsTab() {
                 }}
                 title="Ingredientes"
                 leadingIcon="cheese"
-                trailingIcon={selectedType === CustomizationType.INGREDIENT ? 'check' : undefined}
+                trailingIcon={
+                  selectedType === CustomizationType.INGREDIENT
+                    ? 'check'
+                    : undefined
+                }
                 titleStyle={
                   selectedType === CustomizationType.INGREDIENT
                     ? { color: theme.colors.primary, fontWeight: '600' }
@@ -303,12 +341,7 @@ export function PizzaCustomizationsTab() {
                 }
               />
             </Menu>
-            {hasActiveFilter && (
-              <Badge
-                style={styles.filterBadge}
-                size={8}
-              />
-            )}
+            {hasActiveFilter && <Badge style={styles.filterBadge} size={8} />}
           </View>
         </View>
       </View>
@@ -323,10 +356,10 @@ export function PizzaCustomizationsTab() {
               title="No hay personalizaciones"
               message={
                 selectedType === CustomizationType.FLAVOR
-                  ? "No hay sabores disponibles"
+                  ? 'No hay sabores disponibles'
                   : selectedType === CustomizationType.INGREDIENT
-                  ? "No hay ingredientes disponibles"
-                  : "No hay personalizaciones disponibles"
+                    ? 'No hay ingredientes disponibles'
+                    : 'No hay personalizaciones disponibles'
               }
               icon="cheese"
             />

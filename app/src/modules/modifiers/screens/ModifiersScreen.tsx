@@ -152,6 +152,12 @@ const ModifiersScreen = () => {
           : `No hay modificadores en "${groupName}". Presiona el botón + para crear el primero.`,
       icon: 'format-list-bulleted',
     },
+    errorConfig: {
+      title: 'Error al cargar modificadores',
+      message: 'No se pudieron cargar los modificadores. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetch,
+    },
   });
 
   if (!groupId) {
@@ -161,21 +167,6 @@ const ModifiersScreen = () => {
           Error: No se proporcionó ID del grupo.
         </Text>
         <Button onPress={() => navigation.goBack()}>Volver</Button>
-      </View>
-    );
-  }
-
-  if (isLoading && !isRefetching) {
-    return <ActivityIndicator animating={true} style={styles.centered} />;
-  }
-
-  if (isError) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>
-          Error al cargar modificadores: {getApiErrorMessage(error)}
-        </Text>
-        <Button onPress={() => refetch()}>Reintentar</Button>
       </View>
     );
   }
@@ -240,7 +231,8 @@ const ModifiersScreen = () => {
         onFabPress={handleOpenCreateModal}
         fabLabel="Añadir Modificador"
         isModalOpen={isFormModalVisible || isDetailModalVisible}
-        showImagePlaceholder={false}
+        showImagePlaceholder={true}
+        placeholderIcon="tune-variant"
         isDrawerOpen={isDrawerOpen}
       />
 
@@ -264,6 +256,7 @@ const ModifiersScreen = () => {
           onEdit={handleEditFromDetails}
           onDelete={handleDeleteItem}
           isDeleting={isDeleting}
+          showImage={true}
         />
       </Portal>
     </SafeAreaView>

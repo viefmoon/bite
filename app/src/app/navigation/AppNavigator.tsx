@@ -5,7 +5,7 @@ import {
 } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { AuthStack } from './AuthStack';
-import { AppDrawerNavigator } from './AppDrawerNavigator';
+import { ConditionalAppNavigator } from './ConditionalAppNavigator';
 import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
 
@@ -49,7 +49,7 @@ export function AppNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {isAuthenticated ? <AppDrawerNavigator /> : <AuthStack />}
+      {isAuthenticated ? <ConditionalAppNavigator /> : <AuthStack />}
     </NavigationContainer>
   );
 }

@@ -17,29 +17,35 @@ export const usersApiService = {
     if (params?.search) queryParams.append('search', params.search);
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-    
+
     if (params?.filters) {
       if (params.filters.isActive !== undefined) {
-        queryParams.append('filters[isActive]', params.filters.isActive.toString());
+        queryParams.append(
+          'filters[isActive]',
+          params.filters.isActive.toString(),
+        );
       }
-      if (params.filters.role !== undefined) {
-        queryParams.append('filters[role]', params.filters.role.toString());
+      if (params.filters.roles && params.filters.roles.length > 0) {
+        queryParams.append(
+          'filters[roles]',
+          JSON.stringify(params.filters.roles),
+        );
       }
     }
 
-    const response = await apiClient.get<UsersResponse>(
-      `/api/v1/users?${queryParams.toString()}`
+    const response = await apiClient.get(
+      `/api/v1/users?${queryParams.toString()}`,
     );
-    
+
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
-    
+
     return response.data;
   },
 
   async findOne(id: string): Promise<User> {
-    const response = await apiClient.get<User>(`/api/v1/users/${id}`);
+    const response = await apiClient.get(`/api/v1/users/${id}`);
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -47,7 +53,7 @@ export const usersApiService = {
   },
 
   async create(data: CreateUserDto): Promise<User> {
-    const response = await apiClient.post<User>('/api/v1/users', data);
+    const response = await apiClient.post('/api/v1/users', data);
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -55,7 +61,7 @@ export const usersApiService = {
   },
 
   async update(id: string, data: UpdateUserDto): Promise<User> {
-    const response = await apiClient.patch<User>(`/api/v1/users/${id}`, data);
+    const response = await apiClient.patch(`/api/v1/users/${id}`, data);
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -70,7 +76,7 @@ export const usersApiService = {
   },
 
   async resetPassword(id: string, newPassword: string): Promise<User> {
-    const response = await apiClient.patch<User>(`/api/v1/users/${id}`, {
+    const response = await apiClient.patch(`/api/v1/users/${id}`, {
       password: newPassword,
     });
     if (!response.ok || !response.data) {
@@ -80,7 +86,7 @@ export const usersApiService = {
   },
 
   async toggleActive(id: string, isActive: boolean): Promise<User> {
-    const response = await apiClient.patch<User>(`/api/v1/users/${id}`, {
+    const response = await apiClient.patch(`/api/v1/users/${id}`, {
       isActive,
     });
     if (!response.ok || !response.data) {

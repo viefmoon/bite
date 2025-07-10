@@ -18,6 +18,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { AppTheme } from '../../styles/theme';
+import { useResponsive } from '../../hooks/useResponsive';
 
 export interface FileObject {
   uri: string;
@@ -49,19 +50,36 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
   disabled = false,
 }) => {
   const theme = useTheme<AppTheme>();
+  const responsive = useResponsive();
   const [imageUri, setImageUri] = useState<string | null | undefined>(value);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     (async () => {
       try {
         const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
-        setHasPermission(status === 'granted');
+        if (isMounted) {
+          setHasPermission(status === 'granted');
+        }
       } catch {
-        setHasPermission(false);
+        if (isMounted) {
+          setHasPermission(false);
+        }
       }
     })();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  useEffect(() => {
+    setImageUri(value);
+    setImageLoadError(false);
+  }, [value]);
 
   const requestPermission = async (): Promise<boolean> => {
     if (hasPermission) return true;
@@ -135,10 +153,13 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     onImageRemoved?.();
   };
 
+  // Calcular tamaño responsive
+  const responsiveSize = responsive.getResponsiveDimension(size, size * 1.2);
+
   const styles = StyleSheet.create({
     container: {
-      width: size,
-      height: size,
+      width: responsiveSize,
+      height: responsiveSize,
       borderRadius: theme.roundness * 1.5,
       justifyContent: 'center',
       alignItems: 'center',
@@ -159,12 +180,13 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     placeholderContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.s,
+      padding: responsive.spacing.s,
     },
     placeholderText: {
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.spacing.xs,
       color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
+      fontSize: responsive.fontSize.s,
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -175,8 +197,8 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     },
     removeButton: {
       position: 'absolute',
-      top: 4,
-      right: 4,
+      top: responsive.spacing.xs,
+      right: responsive.spacing.xs,
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
   });
@@ -188,17 +210,17 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
         onPress={handlePickImage}
         disabled={isLoading || disabled}
       >
-        {imageUri ? (
+        {imageUri && !imageLoadError ? (
           <Image
             source={{ uri: imageUri }}
             style={styles.image}
             contentFit="cover"
-            placeholder={require('../../../../assets/icon.png')}
+            onError={() => setImageLoadError(true)}
           />
         ) : (
           <View style={styles.placeholderContainer}>
             <Avatar.Icon
-              size={size * 0.4}
+              size={responsiveSize * 0.4}
               icon={placeholderIcon}
               style={{ backgroundColor: 'transparent' }}
               color={theme.colors.onSurfaceVariant}
@@ -215,10 +237,10 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
           </View>
         )}
 
-        {imageUri && !isLoading && !disabled && (
+        {imageUri && !imageLoadError && !isLoading && !disabled && (
           <IconButton
             icon="close-circle"
-            size={24}
+            size={responsive.dimensions.iconSize.medium}
             iconColor={theme.colors.onErrorContainer}
             style={styles.removeButton}
             onPress={handleRemoveImage}

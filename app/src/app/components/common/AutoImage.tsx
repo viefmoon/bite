@@ -9,9 +9,11 @@ import {
   DimensionValue,
 } from 'react-native';
 import { Image, ImageProps as ExpoImageProps } from 'expo-image';
+import { Icon } from 'react-native-paper';
 import { getCachedImageUri } from '../../lib/imageCache';
 import { getImageUrl } from '../../lib/imageUtils';
 import { useAppTheme } from '../../styles/theme';
+import { useResponsive } from '../../hooks/useResponsive';
 
 export interface AutoImageProps
   extends Omit<ExpoImageProps, 'source' | 'style'> {
@@ -20,6 +22,7 @@ export interface AutoImageProps
   maxHeight?: number;
   useCache?: boolean;
   placeholder?: ExpoImageProps['placeholder'];
+  placeholderIcon?: string;
   contentFit?: ExpoImageProps['contentFit'];
   transition?: ExpoImageProps['transition'];
   style?: StyleProp<ViewStyle>;
@@ -42,11 +45,13 @@ export const AutoImage: React.FC<AutoImageProps> = ({
   useCache = true,
   style,
   placeholder,
+  placeholderIcon = 'image-off-outline',
   contentFit = 'cover',
   transition = 300,
   ...restExpoImageProps
 }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isLoadingUri, setIsLoadingUri] = useState(true);
 
@@ -65,12 +70,9 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     }
 
     const processSource = async () => {
-      const fullRemoteUrl = getImageUrl(originalSourceProp);
+      const fullRemoteUrl = await getImageUrl(originalSourceProp);
 
       if (!fullRemoteUrl) {
-        console.warn(
-          `[AutoImage] No se pudo construir la URL para: ${originalSourceProp}`,
-        );
         if (isMounted) setIsLoadingUri(false);
         return;
       }
@@ -95,10 +97,6 @@ export const AutoImage: React.FC<AutoImageProps> = ({
           setIsLoadingUri(false);
         }
       } catch (error) {
-        console.error(
-          `❌ [AutoImage] Error obteniendo imagen (${originalSourceProp}):`,
-          error,
-        );
         if (isMounted) {
           setProcessedUri(fullRemoteUrl);
           setIsLoadingUri(false);
@@ -137,7 +135,7 @@ export const AutoImage: React.FC<AutoImageProps> = ({
 
   return (
     <View style={containerStyle}>
-      {(isLoadingUri || !processedUri) && (
+      {isLoadingUri && originalSourceProp && (
         <ActivityIndicator
           style={styles.loadingIndicator}
           animating={true}
@@ -153,6 +151,17 @@ export const AutoImage: React.FC<AutoImageProps> = ({
           contentFit={contentFit}
           transition={transition}
           {...restExpoImageProps}
+        />
+      )}
+      {!isLoadingUri && !processedUri && (
+        <Icon
+          source={placeholderIcon}
+          size={
+            typeof width === 'number' && typeof height === 'number'
+              ? Math.min(width, height) * 0.4
+              : responsive.dimensions.iconSize.large
+          }
+          color={theme.colors.onSurfaceVariant}
         />
       )}
     </View>

@@ -9,10 +9,6 @@ export class UploadTimeoutMiddleware implements NestMiddleware {
       // Timeout de 5 minutos para uploads
       req.setTimeout(300000);
       res.setTimeout(300000);
-
-      console.log(
-        `[UploadMiddleware] Extended timeout for upload request: ${req.path}`,
-      );
     }
 
     next();

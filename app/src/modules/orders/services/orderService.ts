@@ -61,10 +61,6 @@ export const orderService = {
       !Array.isArray(response.data) ||
       response.data.length !== 2
     ) {
-      console.error(
-        '[orderService.getOrders] Failed to fetch orders:',
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -86,15 +82,7 @@ export const orderService = {
    */
   getOpenOrdersToday: async (): Promise<Order[]> => {
     const response = await apiClient.get<Order[]>(API_PATHS.ORDERS_OPEN_TODAY);
-
-    if (!response.ok || !response.data || !Array.isArray(response.data)) {
-      console.error(
-        '[orderService.getOpenOrdersToday] Failed to fetch open orders:',
-        response,
-      );
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
-    return response.data;
+    return handleApiResponse(response);
   },
   /**
    * Solicita la impresión del ticket de cocina para una orden específica en una impresora dada.
@@ -115,10 +103,6 @@ export const orderService = {
 
     // Asumimos que una respuesta OK (2xx) significa éxito, incluso si no hay cuerpo.
     if (!response.ok) {
-      console.error(
-        `[orderService.printOrderTicket] Failed for order ${orderId} on printer ${printerId}:`,
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     // No se retorna nada en caso de éxito
@@ -135,10 +119,6 @@ export const orderService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `[orderService.getOrderById] Failed to fetch order ${orderId}:`,
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     // TODO: Considerar validar la respuesta con Zod si es necesario
@@ -162,10 +142,6 @@ export const orderService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `[orderService.updateOrder] Failed to update order ${orderId}:`,
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     return response.data;
@@ -189,10 +165,6 @@ export const orderService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `[orderService.cancelOrder] Failed to cancel order ${orderId}:`,
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
     return response.data;

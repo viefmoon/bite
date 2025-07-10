@@ -8,6 +8,7 @@ import { ModifierGroupEntity } from '../../../../modifier-groups/infrastructure/
 import { ProductModifierEntity } from '../../../../product-modifiers/infrastructure/persistence/relational/entities/product-modifier.entity';
 import { PizzaCustomizationEntity } from '../../../../pizza-customizations/infrastructure/persistence/relational/entities/pizza-customization.entity';
 import { PizzaConfigurationEntity } from '../../../../pizza-configurations/infrastructure/persistence/relational/entities/pizza-configuration.entity';
+import { PreparationScreenEntity } from '../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 import { ProductSeedService } from './product-seed.service';
 import { CustomIdService } from '../../../../common/services/custom-id.service';
 
@@ -22,6 +23,7 @@ import { CustomIdService } from '../../../../common/services/custom-id.service';
       ProductModifierEntity,
       PizzaCustomizationEntity,
       PizzaConfigurationEntity,
+      PreparationScreenEntity,
     ]),
   ],
   providers: [ProductSeedService, CustomIdService],

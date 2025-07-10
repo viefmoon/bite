@@ -1,5 +1,11 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, StatusBar, Text } from 'react-native';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Text,
+  View,
+} from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MenuStackNavigator } from '../../modules/menu/navigation/MenuStackNavigator';
 import ModifiersStackNavigator from '../../modules/modifiers/navigation/ModifiersStackNavigator';
@@ -15,46 +21,77 @@ import { CustomersStackNavigator } from '../../modules/customers/navigation/Cust
 import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizations/navigation/PizzaCustomizationsStackNavigator';
 import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavigator';
 import { UsersStackNavigator } from '../../modules/users/navigation/UsersStackNavigator';
+import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
-import { Icon, Surface } from 'react-native-paper';
+import { Icon, Surface, Checkbox, Text as PaperText } from 'react-native-paper';
 import type { AppDrawerParamList } from './types';
+import { ConnectionIndicator } from '../components/ConnectionIndicator';
+import { useAuthStore } from '../store/authStore';
+import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
+import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
+import { OrderType } from '../../modules/kitchen/types/kitchen.types';
+import { useResponsive } from '../hooks/useResponsive';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 
 export function AppDrawerNavigator() {
   const theme = useAppTheme();
+  const responsive = useResponsive();
+  const user = useAuthStore((state) => state.user);
+  const { filters, setFilters } = useKitchenStore();
+  const kitchenScreenName =
+    user?.preparationScreen?.name || 'Pantalla de Preparación';
+
+  // Obtener el texto del filtro activo
+  const getFilterText = () => {
+    switch (filters.orderType) {
+      case OrderType.DINE_IN:
+        return ' • Mesa';
+      case OrderType.TAKE_AWAY:
+        return ' • Llevar';
+      case OrderType.DELIVERY:
+        return ' • Domicilio';
+      default:
+        return '';
+    }
+  };
+
+  // Ruta inicial por defecto (no-kitchen users)
+  const initialRouteName = 'OrdersStack';
 
   const styles = React.useMemo(
     () =>
       StyleSheet.create({
         drawerButtonContainer: {
-          width: 48,
-          height: 48,
+          width: responsive.dimensions.iconSize.large + responsive.spacing.m,
+          height: responsive.dimensions.iconSize.large + responsive.spacing.m,
           justifyContent: 'center',
           alignItems: 'center',
-          marginLeft: 8,
-          borderRadius: 24,
+          marginLeft: responsive.spacing.s,
+          borderRadius:
+            (responsive.dimensions.iconSize.large + responsive.spacing.m) / 2,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
-          height: 56,
+          height: responsive.dimensions.headerHeight,
           elevation: 2,
         },
         headerTitleStyle: {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
+          fontSize: responsive.fontSize.xl,
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
-          width: 320,
+          width: responsive.dimensions.drawerWidth,
           borderTopRightRadius: theme.roundness * 2,
           borderBottomRightRadius: theme.roundness * 2,
         },
       }),
-    [theme],
+    [theme, responsive],
   );
 
   return (
@@ -64,6 +101,7 @@ export function AppDrawerNavigator() {
         barStyle={theme.dark ? 'light-content' : 'dark-content'}
       />
       <Drawer.Navigator
+        initialRouteName={initialRouteName}
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={({ navigation }) => ({
           headerStyle: styles.headerStyle,
@@ -74,10 +112,13 @@ export function AppDrawerNavigator() {
           drawerInactiveTintColor: theme.colors.onSurfaceVariant,
           drawerLabelStyle: {
             ...theme.fonts.labelLarge,
+            fontSize: responsive.fontSize.m,
           },
           drawerItemStyle: {
-            marginVertical: theme.spacing.xs,
+            marginVertical: responsive.spacing.xs,
             borderRadius: theme.roundness * 2,
+            paddingVertical: responsive.spacing.xs,
+            paddingHorizontal: responsive.spacing.s,
           },
           headerShown: true,
           drawerType: 'front',
@@ -90,7 +131,11 @@ export function AppDrawerNavigator() {
               onPress={() => navigation.openDrawer()}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon source="menu" size={28} color={theme.colors.onPrimary} />
+              <Icon
+                source="menu"
+                size={responsive.dimensions.iconSize.large}
+                color={theme.colors.onPrimary}
+              />
             </TouchableOpacity>
           ),
           headerTitle: ({ children }) => {
@@ -138,7 +183,11 @@ export function AppDrawerNavigator() {
               case 'UsersStack':
                 title = 'Usuarios';
                 break;
-
+              case 'KitchenStack':
+                title =
+                  kitchenScreenName +
+                  (filters.orderType ? getFilterText() : '');
+                break;
               default:
                 title = children?.toString() || '';
             }
@@ -153,6 +202,11 @@ export function AppDrawerNavigator() {
               </Surface>
             );
           },
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ConnectionIndicator />
+            </View>
+          ),
         })}
       >
         <Drawer.Screen
@@ -160,8 +214,12 @@ export function AppDrawerNavigator() {
           component={OrdersStackNavigator}
           options={{
             title: 'Órdenes',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="clipboard-list-outline" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="clipboard-list-outline"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -170,8 +228,12 @@ export function AppDrawerNavigator() {
           component={ReceiptsStackNavigator}
           options={{
             title: 'Recibos',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="receipt" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="receipt"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -180,11 +242,11 @@ export function AppDrawerNavigator() {
           component={OrderFinalizationStackNavigator}
           options={{
             title: 'Finalización',
-            drawerIcon: ({ color, size }) => (
+            drawerIcon: ({ color }) => (
               <Icon
                 source="clipboard-check-outline"
                 color={color}
-                size={size}
+                size={responsive.dimensions.iconSize.medium}
               />
             ),
           }}
@@ -194,8 +256,12 @@ export function AppDrawerNavigator() {
           component={MenuStackNavigator}
           options={{
             title: 'Menú',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="menu" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="menu"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -204,8 +270,12 @@ export function AppDrawerNavigator() {
           component={AvailabilityStackNavigator}
           options={{
             title: 'Disponibilidad',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="eye-off-outline" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="eye-off-outline"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -214,8 +284,12 @@ export function AppDrawerNavigator() {
           component={ModifiersStackNavigator}
           options={{
             title: 'Modificadores',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="tune" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="tune"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -224,8 +298,12 @@ export function AppDrawerNavigator() {
           component={PizzaCustomizationsStackNavigator}
           options={{
             title: 'Gestión de Pizzas',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="pizza" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="pizza"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -234,8 +312,12 @@ export function AppDrawerNavigator() {
           component={PreparationScreensStackNavigator}
           options={{
             title: 'Pantallas Preparación',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="monitor-dashboard" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="monitor-dashboard"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -244,11 +326,11 @@ export function AppDrawerNavigator() {
           component={AreasTablesStackNavigator}
           options={{
             title: 'Áreas y Mesas',
-            drawerIcon: ({ color, size }) => (
+            drawerIcon: ({ color }) => (
               <Icon
                 source="map-marker-radius-outline"
                 color={color}
-                size={size}
+                size={responsive.dimensions.iconSize.medium}
               />
             ),
           }}
@@ -259,8 +341,12 @@ export function AppDrawerNavigator() {
           component={PrintersStackNavigator}
           options={{
             title: 'Impresoras',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="printer" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="printer"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -269,8 +355,12 @@ export function AppDrawerNavigator() {
           component={RestaurantConfigStackNavigator}
           options={{
             title: 'Configuración',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="cog-outline" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="cog-outline"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -279,8 +369,12 @@ export function AppDrawerNavigator() {
           component={CustomersStackNavigator}
           options={{
             title: 'Clientes',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="account-group-outline" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="account-group-outline"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -289,8 +383,12 @@ export function AppDrawerNavigator() {
           component={SyncStackNavigator}
           options={{
             title: 'Sincronización',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="sync" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="sync"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
             ),
           }}
         />
@@ -299,8 +397,74 @@ export function AppDrawerNavigator() {
           component={UsersStackNavigator}
           options={{
             title: 'Usuarios',
-            drawerIcon: ({ color, size }) => (
-              <Icon source="account-multiple" color={color} size={size} />
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="account-multiple"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="KitchenStack"
+          component={KitchenNavigator}
+          options={{
+            title: kitchenScreenName,
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="chef-hat"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
+            ),
+            headerRight: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* Checkbox para mostrar/ocultar ordenes listas */}
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginRight: 8,
+                    backgroundColor: filters.showPrepared
+                      ? 'rgba(255,255,255,0.2)'
+                      : 'transparent',
+                    borderRadius: 20,
+                  }}
+                  onPress={() =>
+                    setFilters({
+                      ...filters,
+                      showPrepared: !filters.showPrepared,
+                    })
+                  }
+                >
+                  <Checkbox
+                    status={filters.showPrepared ? 'checked' : 'unchecked'}
+                    onPress={() =>
+                      setFilters({
+                        ...filters,
+                        showPrepared: !filters.showPrepared,
+                      })
+                    }
+                    color={theme.colors.onPrimary}
+                    uncheckedColor={theme.colors.onPrimary}
+                  />
+                  <PaperText
+                    style={{
+                      color: theme.colors.onPrimary,
+                      fontSize: 14,
+                      marginLeft: 4,
+                      fontWeight: filters.showPrepared ? 'bold' : 'normal',
+                    }}
+                  >
+                    Mostrar Listas
+                  </PaperText>
+                </TouchableOpacity>
+                <KitchenFilterButton />
+                <ConnectionIndicator />
+              </View>
             ),
           }}
         />

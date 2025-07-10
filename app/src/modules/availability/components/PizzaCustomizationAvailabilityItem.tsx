@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { 
-  Surface, 
-  Text, 
-  Switch, 
+import {
+  Surface,
+  Text,
+  Switch,
   useTheme,
   Chip,
   IconButton,
-  Divider
+  Divider,
 } from 'react-native-paper';
 import { PizzaCustomizationGroupAvailability } from '../types/availability.types';
 import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';
@@ -17,7 +17,9 @@ interface PizzaCustomizationAvailabilityItemProps {
   group: PizzaCustomizationGroupAvailability;
 }
 
-export function PizzaCustomizationAvailabilityItem({ group }: PizzaCustomizationAvailabilityItemProps) {
+export function PizzaCustomizationAvailabilityItem({
+  group,
+}: PizzaCustomizationAvailabilityItemProps) {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
   const { mutate: updateAvailability } = useUpdateAvailability();
@@ -34,17 +36,17 @@ export function PizzaCustomizationAvailabilityItem({ group }: PizzaCustomization
         onSuccess: () => {
           showSnackbar(
             `${currentState ? 'Desactivado' : 'Activado'} correctamente`,
-            'success'
+            'success',
           );
         },
         onError: () => {
           showSnackbar('Error al actualizar disponibilidad', 'error');
         },
-      }
+      },
     );
   };
 
-  const activeCount = group.items.filter(item => item.isActive).length;
+  const activeCount = group.items.filter((item) => item.isActive).length;
   const totalCount = group.items.length;
   const allActive = activeCount === totalCount;
   const someActive = activeCount > 0 && activeCount < totalCount;
@@ -125,8 +127,8 @@ export function PizzaCustomizationAvailabilityItem({ group }: PizzaCustomization
   };
 
   const getTypeColor = () => {
-    return group.type === 'FLAVOR' 
-      ? theme.colors.errorContainer 
+    return group.type === 'FLAVOR'
+      ? theme.colors.errorContainer
       : theme.colors.secondaryContainer;
   };
 
@@ -140,10 +142,7 @@ export function PizzaCustomizationAvailabilityItem({ group }: PizzaCustomization
               mode="flat"
               compact
               icon={getTypeIcon()}
-              style={[
-                styles.typeChip,
-                { backgroundColor: getTypeColor() }
-              ]}
+              style={[styles.typeChip, { backgroundColor: getTypeColor() }]}
               textStyle={styles.chipText}
             >
               {totalCount}
@@ -170,10 +169,10 @@ export function PizzaCustomizationAvailabilityItem({ group }: PizzaCustomization
             <React.Fragment key={item.id}>
               <View style={styles.item}>
                 <View style={styles.itemContent}>
-                  <Text 
+                  <Text
                     style={[
                       styles.itemName,
-                      !item.isActive && styles.inactiveText
+                      !item.isActive && styles.inactiveText,
                     ]}
                   >
                     {item.name}

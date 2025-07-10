@@ -140,9 +140,7 @@ const SubcategoriesScreen: React.FC = () => {
         await createMutation.mutateAsync(finalData as SubCategoryFormInputs);
       }
       handleCloseModals();
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
+    } catch (error) {}
   };
 
   const listRenderConfig = {
@@ -207,6 +205,8 @@ const SubcategoriesScreen: React.FC = () => {
     },
     determineFinalPhotoId: ImageUploadService.determinePhotoId,
     imagePickerSize: 150,
+    placeholderIcon: 'folder-open-outline',
+    placeholderText: 'Imagen de subcategoría',
   };
 
   const renderSubcategoryActions = (item: SubCategory) => (
@@ -231,6 +231,12 @@ const SubcategoriesScreen: React.FC = () => {
       title: 'No hay subcategorías',
       message: `No hay subcategorías registradas para ${categoryName}. Presiona el botón + para crear la primera.`,
       icon: 'folder-outline',
+    },
+    errorConfig: {
+      title: 'Error al cargar subcategorías',
+      message: 'No se pudieron cargar las subcategorías. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetchList,
     },
   });
 
@@ -264,6 +270,7 @@ const SubcategoriesScreen: React.FC = () => {
         onFabPress={handleOpenCreateModal}
         isModalOpen={isDetailModalVisible || isFormModalVisible}
         showImagePlaceholder={true}
+        placeholderIcon="folder-open-outline"
         isDrawerOpen={isDrawerOpen}
       />
 
@@ -284,6 +291,7 @@ const SubcategoriesScreen: React.FC = () => {
           }}
           onDelete={handleDeleteItem}
           isDeleting={isDeleting}
+          showImage={true}
         />
 
         <GenericFormModal<

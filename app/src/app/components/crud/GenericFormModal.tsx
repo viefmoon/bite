@@ -14,8 +14,6 @@ import {
   ViewStyle,
 } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   TextInput,
   Button,
@@ -43,6 +41,8 @@ import {
   ImageUploadService,
   EntityWithOptionalPhoto,
 } from '../../lib/imageUploadService';
+import { ResponsiveModal } from '../responsive/ResponsiveModal';
+import { useResponsive } from '../../hooks/useResponsive';
 
 type FieldType =
   | 'text'
@@ -59,7 +59,7 @@ export interface FormFieldConfig<TFormData extends FieldValues> {
   placeholder?: string;
   required?: boolean;
   defaultValue?: any;
-  inputProps?: Partial<React.ComponentProps<typeof TextInput>>;
+  inputProps?: any;
   switchProps?: Partial<React.ComponentProps<typeof Switch>>;
   numberOfLines?: number;
   switchLabel?: string;
@@ -73,6 +73,8 @@ export interface ImagePickerConfig<TFormData extends FieldValues> {
     editingItem: EntityWithOptionalPhoto | undefined,
   ) => string | null | undefined;
   imagePickerSize?: number;
+  placeholderIcon?: string;
+  placeholderText?: string;
 }
 
 interface GenericFormModalProps<
@@ -142,7 +144,8 @@ const NumericInput: React.FC<NumericInputProps> = ({
   }, [value, inputValue]);
 
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = getStyles(theme, responsive);
 
   return (
     <TextInput
@@ -195,11 +198,14 @@ const getDefaultValueForType = (
   }
 };
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalSurface: {
       padding: 0,
-      margin: theme.spacing.l,
+      margin: responsive.spacing.l,
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
@@ -208,15 +214,15 @@ const getStyles = (theme: AppTheme) =>
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
+      paddingVertical: responsive.spacing.m,
+      paddingHorizontal: responsive.spacing.l,
     },
     formContainer: {
       maxHeight: '100%',
     },
     scrollViewContent: {
-      padding: theme.spacing.l,
-      paddingBottom: theme.spacing.xl,
+      padding: responsive.spacing.l,
+      paddingBottom: responsive.spacing.xl,
     },
     modalTitle: {
       color: theme.colors.onPrimary,
@@ -224,13 +230,13 @@ const getStyles = (theme: AppTheme) =>
       textAlign: 'center',
     },
     input: {
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing.m,
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
     },
     switchLabel: {
       color: theme.colors.onSurfaceVariant,
-      marginRight: theme.spacing.m,
+      marginRight: responsive.spacing.m,
       fontSize: 16,
       flexShrink: 1,
     },
@@ -238,27 +244,27 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-start',
-      marginBottom: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      marginBottom: responsive.spacing.m,
+      paddingVertical: responsive.spacing.s,
     },
     imagePickerContainer: {
       alignItems: 'center',
-      marginBottom: theme.spacing.l,
+      marginBottom: responsive.spacing.l,
     },
     modalActions: {
       flexDirection: 'row',
       justifyContent: 'center',
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
+      paddingVertical: responsive.spacing.m,
+      paddingHorizontal: responsive.spacing.l,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface,
-      gap: theme.spacing.m,
+      gap: responsive.spacing.m,
       minHeight: 60,
     },
     formButton: {
       borderRadius: theme.roundness,
-      paddingHorizontal: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing.xs,
       flex: 1,
       maxWidth: 200,
       minWidth: 140,
@@ -273,8 +279,8 @@ const getStyles = (theme: AppTheme) =>
       zIndex: 10,
     },
     helperText: {
-      marginTop: -theme.spacing.s,
-      marginBottom: theme.spacing.s,
+      marginTop: -responsive.spacing.s,
+      marginBottom: responsive.spacing.s,
     },
   });
 
@@ -299,7 +305,11 @@ const GenericFormModal = <
   onFileSelected,
 }: GenericFormModalProps<TFormData, TItem>) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = useMemo(
+    () => getStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [isInternalImageUploading, setIsInternalImageUploading] =
     useState(false);
   const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(
@@ -320,7 +330,7 @@ const GenericFormModal = <
     getValues,
     formState: { errors },
   }: UseFormReturn<TFormData> = useForm<TFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: useMemo((): DefaultValues<TFormData> => {
       const defaults = formFields.reduce(
         (acc: DefaultValues<TFormData>, field) => {
@@ -422,16 +432,12 @@ const GenericFormModal = <
         try {
           const uploadResult =
             await imagePickerConfig.onImageUpload(localSelectedFile);
-          console.log('[GenericFormModal] Upload result:', uploadResult);
           if (uploadResult?.id) {
             finalPhotoId = uploadResult.id;
-            console.log('[GenericFormModal] New photo ID:', finalPhotoId);
           } else {
             throw new Error('La subida de la imagen no devolvió un ID.');
           }
         } catch (error) {
-          console.error('Error subiendo imagen:', error);
-          console.error('[GenericFormModal] Error subiendo imagen:', error);
           Alert.alert(
             'Error',
             `No se pudo subir la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
@@ -446,14 +452,10 @@ const GenericFormModal = <
           imagePickerConfig.determineFinalPhotoId ??
           ImageUploadService.determinePhotoId;
         const entityForPhotoCheck = editingItem ?? undefined;
-        finalPhotoId = determineFn(formImageUri, entityForPhotoCheck);
+        finalPhotoId = await determineFn(formImageUri, entityForPhotoCheck);
       }
     }
 
-    console.log(
-      '[GenericFormModal] Calling onSubmit with finalPhotoId:',
-      finalPhotoId,
-    );
     await onSubmit(formData, finalPhotoId);
   };
 
@@ -562,101 +564,99 @@ const GenericFormModal = <
           </View>
         );
       default:
-        console.warn(`Tipo de campo no soportado: ${fieldConfig.type}`);
         return null;
     }
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[styles.modalSurface, modalStyle]}
-        dismissable={!isActuallySubmitting}
-      >
-        <View style={styles.formContainer}>
-          <View style={styles.modalHeader}>
-            <Text variant="titleLarge" style={styles.modalTitle}>
-              {modalTitle(isEditing)}
-            </Text>
-          </View>
-
-          <ScrollView
-            contentContainerStyle={[
-              styles.scrollViewContent,
-              formContainerStyle,
-            ]}
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title={modalTitle(isEditing)}
+      dismissable={!isActuallySubmitting}
+      scrollable={false}
+      style={modalStyle}
+      contentContainerStyle={styles.modalSurface}
+      footer={
+        <View style={styles.modalActions}>
+          <Button
+            mode="outlined"
+            onPress={onDismiss}
+            style={[styles.formButton, styles.cancelButton]}
+            disabled={isActuallySubmitting}
           >
-            {imagePickerConfig && (
-              <View style={styles.imagePickerContainer}>
-                <CustomImagePicker
-                  value={currentImageUri}
-                  onImageSelected={handleImageSelected}
-                  onImageRemoved={handleImageRemoved}
-                  isLoading={isInternalImageUploading}
-                  disabled={isParentSubmitting}
-                  size={imagePickerConfig.imagePickerSize ?? 180}
-                />
-                {(
-                  errors[imagePickerConfig.imageUriField] as
-                    | FieldError
-                    | undefined
-                )?.message && (
-                  <HelperText
-                    type="error"
-                    visible={!!errors[imagePickerConfig.imageUriField]}
-                    style={styles.helperText}
-                  >
-                    {
-                      (
-                        errors[imagePickerConfig.imageUriField] as
-                          | FieldError
-                          | undefined
-                      )?.message
-                    }
-                  </HelperText>
-                )}
-              </View>
-            )}
-
-            {formFields.map(renderFormField)}
-          </ScrollView>
-
-          {isActuallySubmitting && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator
-                animating={true}
-                size="large"
-                color={theme.colors.primary}
+            {cancelButtonLabel}
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => {
+              handleSubmit(processSubmit)();
+            }}
+            loading={isActuallySubmitting}
+            disabled={isActuallySubmitting}
+            style={styles.formButton}
+          >
+            {submitButtonLabel(isEditing)}
+          </Button>
+        </View>
+      }
+    >
+      <View style={[styles.formContainer, formContainerStyle]}>
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {imagePickerConfig && (
+            <View style={styles.imagePickerContainer}>
+              <CustomImagePicker
+                value={currentImageUri}
+                onImageSelected={handleImageSelected}
+                onImageRemoved={handleImageRemoved}
+                isLoading={isInternalImageUploading}
+                disabled={isParentSubmitting}
+                size={
+                  imagePickerConfig.imagePickerSize ??
+                  responsive.getResponsiveDimension(150, 200)
+                }
+                placeholderIcon={imagePickerConfig.placeholderIcon}
+                placeholderText={imagePickerConfig.placeholderText}
               />
+              {(
+                errors[imagePickerConfig.imageUriField] as
+                  | FieldError
+                  | undefined
+              )?.message && (
+                <HelperText
+                  type="error"
+                  visible={!!errors[imagePickerConfig.imageUriField]}
+                  style={styles.helperText}
+                >
+                  {
+                    (
+                      errors[imagePickerConfig.imageUriField] as
+                        | FieldError
+                        | undefined
+                    )?.message
+                  }
+                </HelperText>
+              )}
             </View>
           )}
 
-          <View style={styles.modalActions}>
-            <Button
-              mode="outlined"
-              onPress={onDismiss}
-              style={[styles.formButton, styles.cancelButton]}
-              disabled={isActuallySubmitting}
-            >
-              {cancelButtonLabel}
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => {
-                handleSubmit(processSubmit)();
-              }}
-              loading={isActuallySubmitting}
-              disabled={isActuallySubmitting}
-              style={styles.formButton}
-            >
-              {submitButtonLabel(isEditing)}
-            </Button>
+          {formFields.map(renderFormField)}
+        </ScrollView>
+
+        {isActuallySubmitting && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator
+              animating={true}
+              size="large"
+              color={theme.colors.primary}
+            />
           </View>
-        </View>
-      </Modal>
-    </Portal>
+        )}
+      </View>
+    </ResponsiveModal>
   );
 };
 

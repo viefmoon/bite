@@ -205,6 +205,12 @@ function ProductsScreen(): React.ReactElement {
         : `No hay productos en "${subCategoryName}". Presiona el botón + para crear el primero.`,
       icon: 'package-variant',
     },
+    errorConfig: {
+      title: 'Error al cargar productos',
+      message: 'No se pudieron cargar los productos. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetch,
+    },
   });
 
   React.useLayoutEffect(() => {
@@ -236,6 +242,7 @@ function ProductsScreen(): React.ReactElement {
         enableSort={false}
         contentContainerStyle={styles.contentContainer}
         showImagePlaceholder={true}
+        placeholderIcon="food-outline"
         isDrawerOpen={isDrawerOpen}
       />
 

@@ -16,11 +16,9 @@ import {
   Button,
   ActivityIndicator,
   Dialog,
-  Paragraph,
   Surface,
   Chip,
   Icon,
-  IconButton,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -68,9 +66,9 @@ const RestaurantConfigScreen: React.FC = () => {
   // Función para verificar si hay cambios sin guardar
   const hasChanges = React.useCallback(() => {
     if (!config) return false;
-    
+
     // Comparación simple de campos individuales
-    const simpleFieldsChanged = 
+    const simpleFieldsChanged =
       formData.restaurantName !== config.restaurantName ||
       formData.phoneMain !== config.phoneMain ||
       formData.phoneSecondary !== config.phoneSecondary ||
@@ -86,10 +84,12 @@ const RestaurantConfigScreen: React.FC = () => {
       formData.openingGracePeriod !== config.openingGracePeriod ||
       formData.closingGracePeriod !== config.closingGracePeriod ||
       formData.timeZone !== config.timeZone;
-    
+
     // Comparar área de cobertura
-    const deliveryAreaChanged = JSON.stringify(formData.deliveryCoverageArea) !== JSON.stringify(config.deliveryCoverageArea);
-    
+    const deliveryAreaChanged =
+      JSON.stringify(formData.deliveryCoverageArea) !==
+      JSON.stringify(config.deliveryCoverageArea);
+
     return simpleFieldsChanged || deliveryAreaChanged || businessHoursModified;
   }, [config, formData, businessHoursModified]);
 
@@ -138,14 +138,15 @@ const RestaurantConfigScreen: React.FC = () => {
   React.useEffect(() => {
     if (config) {
       // Si no hay businessHours, inicializar con valores por defecto
-      const initialBusinessHours = config.businessHours && config.businessHours.length > 0 
-        ? config.businessHours
-        : [0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => ({
-            dayOfWeek,
-            openingTime: '09:00',
-            closingTime: '22:00',
-            isClosed: false,
-          }));
+      const initialBusinessHours =
+        config.businessHours && config.businessHours.length > 0
+          ? config.businessHours
+          : [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+              dayOfWeek,
+              openingTime: '09:00',
+              closingTime: '22:00',
+              isClosed: false,
+            }));
 
       setFormData({
         // Información básica
@@ -230,14 +231,15 @@ const RestaurantConfigScreen: React.FC = () => {
   const resetForm = () => {
     if (config) {
       // Usar la misma lógica de inicialización que en useEffect
-      const initialBusinessHours = config.businessHours && config.businessHours.length > 0 
-        ? config.businessHours
-        : [0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => ({
-            dayOfWeek,
-            openingTime: '09:00',
-            closingTime: '22:00',
-            isClosed: false,
-          }));
+      const initialBusinessHours =
+        config.businessHours && config.businessHours.length > 0
+          ? config.businessHours
+          : [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+              dayOfWeek,
+              openingTime: '09:00',
+              closingTime: '22:00',
+              isClosed: false,
+            }));
 
       setFormData({
         restaurantName: config.restaurantName,
@@ -324,7 +326,7 @@ const RestaurantConfigScreen: React.FC = () => {
             keyboardType="phone-pad"
             left={<TextInput.Icon icon="phone" />}
           />
-          
+
           <TextInput
             label="Teléfono secundario"
             value={formData.phoneSecondary || ''}
@@ -668,7 +670,7 @@ const RestaurantConfigScreen: React.FC = () => {
             businessHours={formData.businessHours || []}
             isEditing={isEditing}
             onChange={(hours: CreateBusinessHoursDto[]) => {
-              setFormData(prev => ({ ...prev, businessHours: hours }));
+              setFormData((prev) => ({ ...prev, businessHours: hours }));
               setBusinessHoursModified(true);
             }}
           />
@@ -702,40 +704,67 @@ const RestaurantConfigScreen: React.FC = () => {
             style={[styles.tab, activeTab === 'basic' && styles.tabActive]}
             onPress={() => handleTabChange('basic')}
           >
-            <Icon 
-              source="store" 
-              size={20} 
-              color={activeTab === 'basic' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            <Icon
+              source="store"
+              size={20}
+              color={
+                activeTab === 'basic'
+                  ? theme.colors.primary
+                  : theme.colors.onSurfaceVariant
+              }
             />
-            <Text style={[styles.tabText, activeTab === 'basic' && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'basic' && styles.tabTextActive,
+              ]}
+            >
               Información
             </Text>
           </Pressable>
-          
+
           <Pressable
             style={[styles.tab, activeTab === 'operation' && styles.tabActive]}
             onPress={() => handleTabChange('operation')}
           >
-            <Icon 
-              source="cog" 
-              size={20} 
-              color={activeTab === 'operation' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            <Icon
+              source="cog"
+              size={20}
+              color={
+                activeTab === 'operation'
+                  ? theme.colors.primary
+                  : theme.colors.onSurfaceVariant
+              }
             />
-            <Text style={[styles.tabText, activeTab === 'operation' && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'operation' && styles.tabTextActive,
+              ]}
+            >
               Operación
             </Text>
           </Pressable>
-          
+
           <Pressable
             style={[styles.tab, activeTab === 'schedule' && styles.tabActive]}
             onPress={() => handleTabChange('schedule')}
           >
-            <Icon 
-              source="calendar" 
-              size={20} 
-              color={activeTab === 'schedule' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            <Icon
+              source="calendar"
+              size={20}
+              color={
+                activeTab === 'schedule'
+                  ? theme.colors.primary
+                  : theme.colors.onSurfaceVariant
+              }
             />
-            <Text style={[styles.tabText, activeTab === 'schedule' && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'schedule' && styles.tabTextActive,
+              ]}
+            >
               Horarios
             </Text>
           </Pressable>
@@ -857,8 +886,8 @@ const RestaurantConfigScreen: React.FC = () => {
                     setFormData({ ...formData, deliveryCoverageArea: polygon })
                   }
                   restaurantLocation={{
-                    latitude: config?.latitude || 20.5425,
-                    longitude: config?.longitude || -102.7935,
+                    latitude: 20.5425,
+                    longitude: -102.7935,
                   }}
                 />
               </View>
@@ -938,8 +967,8 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     deliveryContent: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.m,
+      paddingTop: theme.spacing.m,
     },
     loadingContainer: {
       flex: 1,
@@ -1014,8 +1043,8 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       gap: theme.spacing.m,
     },
     deliveryInfo: {
-      paddingHorizontal: theme.spacing.md,
-      marginBottom: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     // Input styles
     input: {
@@ -1148,8 +1177,8 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     deliveryContainer: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.m,
+      paddingTop: theme.spacing.m,
     },
     deliveryActions: {
       position: 'absolute',
@@ -1166,8 +1195,8 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       right: 0,
     },
     mapSection: {
-      paddingHorizontal: theme.spacing.md,
-      paddingBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.m,
+      paddingBottom: theme.spacing.m,
     },
     // Estilos para el botón de área de cobertura
     deliveryButtonContainer: {
@@ -1233,15 +1262,6 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     deliveryDialogButton: {
       minWidth: 120,
       borderRadius: 12,
-    },
-    editButton: {
-      backgroundColor: theme.colors.primary,
-    },
-    cancelButton: {
-      borderColor: theme.colors.outline,
-    },
-    saveButton: {
-      backgroundColor: theme.colors.primary,
     },
     deliveryButtonContent: {
       paddingVertical: theme.spacing.s,

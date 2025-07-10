@@ -80,20 +80,23 @@ export class AvailabilityService {
       isActive: undefined,
     });
 
-    const groupedByType = customizationsResult.items.reduce((acc, customization) => {
-      const type = customization.type;
-      if (!acc[type]) {
-        acc[type] = [];
-      }
-      acc[type].push({
-        id: customization.id,
-        name: customization.name,
-        type: customization.type,
-        isActive: customization.isActive ?? true,
-        sortOrder: customization.sortOrder,
-      });
-      return acc;
-    }, {} as Record<string, any[]>);
+    const groupedByType = customizationsResult.items.reduce(
+      (acc, customization) => {
+        const type = customization.type;
+        if (!acc[type]) {
+          acc[type] = [];
+        }
+        acc[type].push({
+          id: customization.id,
+          name: customization.name,
+          type: customization.type,
+          isActive: customization.isActive ?? true,
+          sortOrder: customization.sortOrder,
+        });
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
 
     return Object.entries(groupedByType).map(([type, items]) => ({
       type,

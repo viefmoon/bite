@@ -89,18 +89,18 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @Column({ name: 'preparation_screen_id', nullable: true, type: 'uuid' })
-  preparationScreenId: string | null;
+  @Column({ name: 'preparation_screen_id', nullable: false, type: 'uuid' })
+  preparationScreenId: string;
 
   @ManyToOne(
     () => PreparationScreenEntity,
     (preparationScreen) => preparationScreen.products,
     {
-      nullable: true, // La relación ya permite nulos en la BD
+      nullable: false,
     },
   )
   @JoinColumn({ name: 'preparation_screen_id' })
-  preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
+  preparationScreen: PreparationScreenEntity;
 
   @ManyToMany(
     () => PizzaCustomizationEntity,

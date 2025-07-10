@@ -29,8 +29,14 @@ import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import type { PizzaCustomization, PizzaConfiguration } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
-import { PizzaHalf, CustomizationAction } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import type {
+  PizzaCustomization,
+  PizzaConfiguration,
+} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import {
+  PizzaHalf,
+  CustomizationAction,
+} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 import PizzaCustomizationSectionV2 from './PizzaCustomizationSectionV2';
 
 interface ProductCustomizationModalProps {
@@ -104,25 +110,33 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
-  
+
   // Estados para pizzas
-  const [pizzaCustomizations, setPizzaCustomizations] = useState<PizzaCustomization[]>([]);
-  const [pizzaConfiguration, setPizzaConfiguration] = useState<PizzaConfiguration | null>(null);
-  const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] = useState<SelectedPizzaCustomization[]>([]);
+  const [pizzaCustomizations, setPizzaCustomizations] = useState<
+    PizzaCustomization[]
+  >([]);
+  const [pizzaConfiguration, setPizzaConfiguration] =
+    useState<PizzaConfiguration | null>(null);
+  const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
+    useState<SelectedPizzaCustomization[]>([]);
 
   // Función para calcular el precio extra de las pizzas
   const calculatePizzaExtraCost = useCallback(() => {
     if (!product.isPizza || !pizzaConfiguration) return 0;
-    
+
     let totalToppingValue = 0;
-    
+
     // Solo contar customizaciones con action = ADD
-    const addedCustomizations = selectedPizzaCustomizations.filter(c => c.action === CustomizationAction.ADD);
-    
+    const addedCustomizations = selectedPizzaCustomizations.filter(
+      (c) => c.action === CustomizationAction.ADD,
+    );
+
     for (const selected of addedCustomizations) {
-      const customization = pizzaCustomizations.find(c => c.id === selected.pizzaCustomizationId);
+      const customization = pizzaCustomizations.find(
+        (c) => c.id === selected.pizzaCustomizationId,
+      );
       if (!customization) continue;
-      
+
       if (selected.half === PizzaHalf.FULL) {
         // Pizza completa suma el toppingValue completo
         totalToppingValue += customization.toppingValue;
@@ -131,15 +145,21 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
         totalToppingValue += customization.toppingValue / 2;
       }
     }
-    
+
     // Solo cobrar por toppings que excedan los incluidos
     if (totalToppingValue > pizzaConfiguration.includedToppings) {
-      const extraToppings = totalToppingValue - pizzaConfiguration.includedToppings;
+      const extraToppings =
+        totalToppingValue - pizzaConfiguration.includedToppings;
       return extraToppings * Number(pizzaConfiguration.extraToppingCost);
     }
-    
+
     return 0;
-  }, [product.isPizza, pizzaConfiguration, selectedPizzaCustomizations, pizzaCustomizations]);
+  }, [
+    product.isPizza,
+    pizzaConfiguration,
+    selectedPizzaCustomizations,
+    pizzaCustomizations,
+  ]);
 
   // Función para verificar si hay cambios
   const checkForChanges = useCallback(() => {
@@ -253,7 +273,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
   // Usar datos de pizza que ya vienen con el producto
   useEffect(() => {
     if (!product || !visible) return;
-    
+
     // Si es una pizza, usar los datos que ya vienen con el producto
     if (product.isPizza) {
       if (product.pizzaConfiguration) {
@@ -262,7 +282,7 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
       if (product.pizzaCustomizations) {
         setPizzaCustomizations(product.pizzaCustomizations);
       }
-      
+
       // Si estamos editando, cargar las personalizaciones seleccionadas
       if (editingItem && editingItem.selectedPizzaCustomizations) {
         setSelectedPizzaCustomizations(editingItem.selectedPizzaCustomizations);
@@ -509,7 +529,11 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
           <View style={styles.appBarSpacer} />
         </Appbar.Header>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={true}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={true}
+        >
           {product.hasVariants &&
             product.variants &&
             Array.isArray(product.variants) &&
@@ -912,8 +936,8 @@ const ProductCustomizationModal: React.FC<ProductCustomizationModalProps> = ({
             // Podrías agregar lógica de disabled si es necesario
             // disabled={!isValidSelection()}
           >
-            {editingItem 
-              ? `Actualizar Item - $${totalPrice.toFixed(2)}` 
+            {editingItem
+              ? `Actualizar Item - $${totalPrice.toFixed(2)}`
               : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
           </Button>
         </View>

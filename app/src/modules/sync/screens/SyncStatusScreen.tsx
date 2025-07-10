@@ -20,7 +20,7 @@ import { syncService } from '../services/syncService';
 import { SyncStatus, SyncType } from '../types/sync.types';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
-import { API_URL } from '@env';
+import { discoveryService } from '@/app/services/discoveryService';
 
 export const SyncStatusScreen: React.FC = () => {
   const theme = useAppTheme();
@@ -28,6 +28,7 @@ export const SyncStatusScreen: React.FC = () => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [apiUrl, setApiUrl] = useState<string>('');
 
   // Query para obtener el estado de sincronización
   const {
@@ -65,6 +66,14 @@ export const SyncStatusScreen: React.FC = () => {
     await refetch();
     setIsRefreshing(false);
   };
+
+  // Obtener la URL del API al cargar el componente
+  React.useEffect(() => {
+    discoveryService
+      .getApiUrl()
+      .then((url) => setApiUrl(url))
+      .catch(() => setApiUrl('URL no configurada'));
+  }, []);
 
   const getStatusColor = (status: SyncStatus) => {
     switch (status) {
@@ -297,7 +306,7 @@ export const SyncStatusScreen: React.FC = () => {
           </View>
           <View style={[styles.serverInfo, { marginTop: 4 }]}>
             <Text variant="bodySmall" style={styles.serverUrl}>
-              {API_URL || 'URL no configurada'}
+              {apiUrl || 'URL no configurada'}
             </Text>
           </View>
 

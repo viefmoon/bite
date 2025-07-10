@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Switch, Chip, IconButton, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   BusinessHours,
@@ -134,6 +134,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         timeString,
       );
     }
+    setCurrentPickerConfig(null);
   };
 
   const handleTimeCancel = () => {
@@ -316,15 +317,20 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         })}
       </View>
 
-      <DateTimePickerModal
-        isVisible={showTimePicker}
+      <DateTimePickerSafe
+        visible={showTimePicker}
         mode="time"
+        value={currentPickerConfig?.currentDate || new Date()}
         onConfirm={handleTimeConfirm}
         onCancel={handleTimeCancel}
-        date={currentPickerConfig?.currentDate || new Date()}
-        locale="es_ES"
-        is24Hour={true}
-        display="spinner"
+        minuteInterval={5}
+        title={
+          currentPickerConfig?.type === 'opening'
+            ? `${DAYS_OF_WEEK[currentPickerConfig.dayIndex || 0]} - Apertura`
+            : currentPickerConfig?.type === 'closing'
+              ? `${DAYS_OF_WEEK[currentPickerConfig.dayIndex || 0]} - Cierre`
+              : 'Seleccionar Hora'
+        }
       />
     </>
   );

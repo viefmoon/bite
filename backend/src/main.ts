@@ -96,12 +96,5 @@ async function bootstrap() {
       }
     }
   }
-
-  console.log('\n🚀 Server is running!');
-  console.log('📍 Local:    http://localhost:' + port);
-  addresses.forEach((address) => {
-    console.log(`📍 Network:  http://${address}:${port}`);
-  });
-  console.log('📚 Swagger:  http://localhost:' + port + '/docs\n');
 }
 void bootstrap();

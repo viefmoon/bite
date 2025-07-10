@@ -5,8 +5,6 @@ import {
   Entity,
   Index,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -76,19 +74,12 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @ManyToMany(() => PreparationScreenEntity, { eager: false })
-  @JoinTable({
-    name: 'user_preparation_screens',
-    joinColumn: {
-      name: 'user_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'preparation_screen_id',
-      referencedColumnName: 'id',
-    },
-  })
-  preparationScreens?: PreparationScreenEntity[];
+  @ManyToOne(
+    () => PreparationScreenEntity,
+    (preparationScreen) => preparationScreen.users,
+    { eager: false, nullable: true },
+  )
+  preparationScreen?: PreparationScreenEntity | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

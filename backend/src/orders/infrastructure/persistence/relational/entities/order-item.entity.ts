@@ -19,6 +19,7 @@ import { PreparationStatus } from '../../../../domain/order-item';
 import { AdjustmentEntity } from '../../../../../adjustments/infrastructure/persistence/relational/entities/adjustment.entity';
 import { SelectedPizzaCustomizationEntity } from '../../../../../selected-pizza-customizations/infrastructure/persistence/relational/entities/selected-pizza-customization.entity';
 import { ProductModifierEntity } from '../../../../../product-modifiers/infrastructure/persistence/relational/entities/product-modifier.entity';
+import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Entity({
   name: 'order_item',
@@ -54,6 +55,16 @@ export class OrderItemEntity extends EntityRelationalHelper {
 
   @Column({ type: 'varchar', nullable: true })
   preparationNotes: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  preparedAt: Date | null;
+
+  @Column({ name: 'prepared_by_id', type: 'uuid', nullable: true })
+  preparedById: string | null;
+
+  @ManyToOne(() => UserEntity, { nullable: true })
+  @JoinColumn({ name: 'prepared_by_id' })
+  preparedBy: UserEntity | null;
 
   @ManyToOne(() => OrderEntity, (order) => order.orderItems, {
     eager: true,
@@ -100,7 +111,7 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @OneToMany(
     () => SelectedPizzaCustomizationEntity,
     (selectedCustomization) => selectedCustomization.orderItem,
-    { cascade: true }
+    { cascade: true },
   )
   selectedPizzaCustomizations: SelectedPizzaCustomizationEntity[];
 

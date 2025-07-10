@@ -16,6 +16,7 @@ import { CreatePreparationScreenDto } from './dto/create-preparation-screen.dto'
 import { UpdatePreparationScreenDto } from './dto/update-preparation-screen.dto';
 import { FindAllPreparationScreensDto } from './dto/find-all-preparation-screens.dto';
 import { AssociateProductsDto } from './dto/associate-products.dto';
+import { AssignUsersDto } from './dto/assign-users.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -127,5 +128,32 @@ export class PreparationScreensController {
       id,
       associateProductsDto.productIds,
     );
+  }
+
+  @Get(':id/users')
+  @ApiOperation({
+    summary: 'Obtener usuarios asignados a una pantalla de preparación',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async getUsers(@Param('id') id: string) {
+    return this.preparationScreensService.getUsers(id);
+  }
+
+  @Post(':id/users')
+  @ApiOperation({
+    summary: 'Asignar usuarios a una pantalla de preparación',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async assignUsers(
+    @Param('id') id: string,
+    @Body() assignUsersDto: AssignUsersDto,
+  ) {
+    return this.preparationScreensService.assignUsers(id, assignUsersDto.users);
   }
 }

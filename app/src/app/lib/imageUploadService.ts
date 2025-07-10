@@ -83,13 +83,13 @@ export class ImageUploadService {
    *   - `undefined`: No hay cambios en la foto O se va a subir una nueva. El DTO NO debe incluir `photoId`.
    *   - `null`: Se debe eliminar la foto existente en el backend. El DTO DEBE incluir `photoId: null`.
    */
-  static determinePhotoId(
+  static async determinePhotoId(
     formImageUri: string | null | undefined,
     existingEntity?: EntityWithOptionalPhoto,
-  ): undefined | null {
+  ): Promise<undefined | null> {
     const existingPhotoPath = existingEntity?.photo?.path;
     const existingPhotoFullUrl = existingPhotoPath
-      ? getImageUrl(existingPhotoPath)
+      ? await getImageUrl(existingPhotoPath)
       : null;
 
     if (formImageUri && formImageUri.startsWith('file://')) {

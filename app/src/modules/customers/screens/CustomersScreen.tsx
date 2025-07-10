@@ -174,6 +174,12 @@ function CustomersScreen(): React.ReactElement {
           : 'No hay clientes registrados. Presiona el botón + para crear el primero.',
       icon: 'account-group-outline',
     },
+    errorConfig: {
+      title: 'Error al cargar clientes',
+      message: 'No se pudieron cargar los clientes. Verifica tu conexión.',
+      icon: 'alert-circle-outline',
+      onRetry: refetch,
+    },
   });
 
   // Mapear los clientes para combinar firstName y lastName
@@ -262,7 +268,8 @@ function CustomersScreen(): React.ReactElement {
           ListEmptyComponent={ListEmptyComponent}
           isDrawerOpen={isDrawerOpen}
           enableSearch={true}
-          showImagePlaceholder={false}
+          showImagePlaceholder={true}
+          placeholderIcon="account-group-outline"
         />
       </View>
 
@@ -298,6 +305,7 @@ function CustomersScreen(): React.ReactElement {
           onEdit={handleOpenEditModal}
           onDelete={handleDelete}
           isDeleting={false}
+          showImage={true}
           fieldsToDisplay={[
             {
               field: 'isBanned' as keyof Customer,

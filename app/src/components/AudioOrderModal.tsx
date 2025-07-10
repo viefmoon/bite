@@ -5,8 +5,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
-  TouchableWithoutFeedback,
-  Keyboard,
   TouchableOpacity,
   Animated,
 } from 'react-native';
@@ -26,10 +24,17 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { useGetFullMenu } from '@/modules/orders/hooks/useMenuQueries';
-import type { AIOrderItem, DeliveryInfoData, ScheduledDeliveryData } from '@/services/audioOrderService';
+import type {
+  AIOrderItem,
+  DeliveryInfoData,
+  ScheduledDeliveryData,
+} from '@/services/audioOrderService';
 import ProductCustomizationModal from '@/modules/orders/components/ProductCustomizationModal';
 import type { FullMenuProduct as Product } from '@/modules/orders/types/orders.types';
-import type { CartItem, CartItemModifier } from '@/modules/orders/context/CartContext';
+import type {
+  CartItem,
+  CartItemModifier,
+} from '@/modules/orders/context/CartContext';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -37,7 +42,12 @@ import { Swipeable } from 'react-native-gesture-handler';
 interface AudioOrderModalProps {
   visible: boolean;
   onDismiss: () => void;
-  onConfirm: (items: AIOrderItem[], deliveryInfo?: DeliveryInfoData, scheduledDelivery?: ScheduledDeliveryData, orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => void;
+  onConfirm: (
+    items: AIOrderItem[],
+    deliveryInfo?: DeliveryInfoData,
+    scheduledDelivery?: ScheduledDeliveryData,
+    orderType?: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN',
+  ) => void;
   isProcessing: boolean;
   orderData?: {
     orderItems?: AIOrderItem[];
@@ -64,15 +74,16 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const theme = useAppTheme();
   const { colors, fonts } = theme;
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [editableDeliveryInfo, setEditableDeliveryInfo] = useState<DeliveryInfoData>({});
+  const [editableDeliveryInfo, setEditableDeliveryInfo] =
+    useState<DeliveryInfoData>({});
   const [editableItems, setEditableItems] = useState<AIOrderItem[]>([]);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
-  
+
   const { data: menu } = useGetFullMenu();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   // Sincronizar la información cuando cambie orderData
   useEffect(() => {
     if (orderData?.deliveryInfo) {
@@ -84,7 +95,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   }, [orderData?.deliveryInfo, orderData?.orderItems]);
 
   const toggleItemExpansion = (itemId: string) => {
-    setExpandedItems(prev => {
+    setExpandedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -96,30 +107,36 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   };
 
   const handleConfirm = () => {
-    console.log('=== DEBUG AudioOrderModal handleConfirm ===');
-    console.log('orderData:', orderData);
-    console.log('orderData.orderType:', orderData?.orderType);
-    console.log('editableItems:', editableItems);
-    console.log('==========================================');
-    
     if (editableItems && editableItems.length > 0) {
       // Validar información de entrega si hay datos
-      if (editableDeliveryInfo && Object.keys(editableDeliveryInfo).length > 0) {
-        if (editableDeliveryInfo.recipientName && !editableDeliveryInfo.recipientName.trim()) {
+      if (
+        editableDeliveryInfo &&
+        Object.keys(editableDeliveryInfo).length > 0
+      ) {
+        if (
+          editableDeliveryInfo.recipientName &&
+          !editableDeliveryInfo.recipientName.trim()
+        ) {
           showSnackbar({
             message: 'Por favor ingresa el nombre del destinatario',
             type: 'error',
           });
           return;
         }
-        if (editableDeliveryInfo.recipientPhone && !editableDeliveryInfo.recipientPhone.trim()) {
+        if (
+          editableDeliveryInfo.recipientPhone &&
+          !editableDeliveryInfo.recipientPhone.trim()
+        ) {
           showSnackbar({
             message: 'Por favor ingresa el teléfono',
             type: 'error',
           });
           return;
         }
-        if (editableDeliveryInfo.fullAddress && !editableDeliveryInfo.fullAddress.trim()) {
+        if (
+          editableDeliveryInfo.fullAddress &&
+          !editableDeliveryInfo.fullAddress.trim()
+        ) {
           showSnackbar({
             message: 'Por favor ingresa la dirección',
             type: 'error',
@@ -127,222 +144,260 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           return;
         }
       }
-      
-      console.log('Calling onConfirm with orderType:', orderData?.orderType);
+
       onConfirm(
         editableItems,
         editableDeliveryInfo,
         orderData?.scheduledDelivery,
-        orderData?.orderType
+        orderData?.orderType,
       );
     }
   };
-  
+
   // Función para actualizar la cantidad de un item
-  const updateItemQuantity = useCallback((itemId: string, index: number, newQuantity: number) => {
-    if (newQuantity < 1) {
-      return; // No permitir cantidad menor a 1 con los botones
-    }
-    
-    setEditableItems(prev => prev.map((item, i) => {
-      if (i === index) {
-        return { ...item, quantity: newQuantity };
+  const updateItemQuantity = useCallback(
+    (itemId: string, index: number, newQuantity: number) => {
+      if (newQuantity < 1) {
+        return; // No permitir cantidad menor a 1 con los botones
       }
-      return item;
-    }));
-  }, []);
-  
+
+      setEditableItems((prev) =>
+        prev.map((item, i) => {
+          if (i === index) {
+            return { ...item, quantity: newQuantity };
+          }
+          return item;
+        }),
+      );
+    },
+    [],
+  );
+
   // Función para eliminar un item
-  const removeItem = useCallback((index: number) => {
-    setEditableItems(prev => prev.filter((_, i) => i !== index));
-    showSnackbar({
-      message: 'Producto eliminado',
-      type: 'info',
-    });
-  }, [showSnackbar]);
-  
-  // Función para manejar la edición de un item
-  const handleEditItem = useCallback((item: AIOrderItem, index: number) => {
-    if (!menu) {
+  const removeItem = useCallback(
+    (index: number) => {
+      setEditableItems((prev) => prev.filter((_, i) => i !== index));
       showSnackbar({
-        message: 'El menú no está disponible',
-        type: 'error',
+        message: 'Producto eliminado',
+        type: 'info',
       });
-      return;
-    }
-    
-    // Buscar el producto en el menú
-    let foundProduct: Product | null = null;
-    outer: for (const category of menu) {
-      for (const subcategory of category.subcategories || []) {
-        for (const product of subcategory.products || []) {
-          if (product.id === item.productId) {
-            foundProduct = product;
-            break outer;
+    },
+    [showSnackbar],
+  );
+
+  // Función para manejar la edición de un item
+  const handleEditItem = useCallback(
+    (item: AIOrderItem, index: number) => {
+      if (!menu) {
+        showSnackbar({
+          message: 'El menú no está disponible',
+          type: 'error',
+        });
+        return;
+      }
+
+      // Buscar el producto en el menú
+      let foundProduct: Product | null = null;
+      outer: for (const category of menu) {
+        for (const subcategory of category.subcategories || []) {
+          for (const product of subcategory.products || []) {
+            if (product.id === item.productId) {
+              foundProduct = product;
+              break outer;
+            }
           }
         }
       }
-    }
-    
-    if (!foundProduct) {
-      showSnackbar({
-        message: 'Producto no encontrado en el menú',
-        type: 'error',
-      });
-      return;
-    }
-    
-    // Convertir AIOrderItem a CartItem para el modal
-    const cartItem: CartItem = {
-      id: `${item.productId}-${index}`,
-      productId: item.productId,
-      productName: foundProduct.name,
-      quantity: item.quantity,
-      unitPrice: foundProduct.variants?.find(v => v.id === item.variantId)?.price || foundProduct.price || 0,
-      totalPrice: 0, // Se calculará en el modal
-      modifiers: item.modifiers?.map(modName => {
-        // Buscar el modificador en el producto
-        for (const modGroup of foundProduct.modifierGroups || []) {
-          const modifier = modGroup.productModifiers?.find(m => m.name === modName);
-          if (modifier) {
+
+      if (!foundProduct) {
+        showSnackbar({
+          message: 'Producto no encontrado en el menú',
+          type: 'error',
+        });
+        return;
+      }
+
+      // Convertir AIOrderItem a CartItem para el modal
+      const cartItem: CartItem = {
+        id: `${item.productId}-${index}`,
+        productId: item.productId,
+        productName: foundProduct.name,
+        quantity: item.quantity,
+        unitPrice:
+          foundProduct.variants?.find((v) => v.id === item.variantId)?.price ||
+          foundProduct.price ||
+          0,
+        totalPrice: 0, // Se calculará en el modal
+        modifiers:
+          item.modifiers?.map((modName) => {
+            // Buscar el modificador en el producto
+            for (const modGroup of foundProduct.modifierGroups || []) {
+              const modifier = modGroup.productModifiers?.find(
+                (m) => m.name === modName,
+              );
+              if (modifier) {
+                return {
+                  id: modifier.id,
+                  modifierGroupId: modGroup.id,
+                  name: modifier.name,
+                  price: modifier.price || 0,
+                };
+              }
+            }
             return {
-              id: modifier.id,
-              modifierGroupId: modGroup.id,
-              name: modifier.name,
-              price: modifier.price || 0,
+              id: modName,
+              modifierGroupId: '',
+              name: modName,
+              price: 0,
+            };
+          }) || [],
+        variantId: item.variantId,
+        variantName: foundProduct.variants?.find((v) => v.id === item.variantId)
+          ?.name,
+        selectedPizzaCustomizations: item.pizzaCustomizations?.map((pc) => ({
+          pizzaCustomizationId: pc.customizationId,
+          half: pc.half as any,
+          action: pc.action as any,
+        })),
+      };
+
+      setEditingItem(cartItem);
+      setEditingProduct(foundProduct);
+      setShowCustomizationModal(true);
+    },
+    [menu, showSnackbar],
+  );
+
+  // Función para manejar la actualización desde el modal
+  const handleUpdateEditedItem = useCallback(
+    (
+      itemId: string,
+      quantity: number,
+      modifiers: CartItemModifier[],
+      preparationNotes?: string,
+      variantId?: string,
+      variantName?: string,
+      unitPrice?: number,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
+    ) => {
+      const index = parseInt(itemId.split('-').pop() || '0');
+
+      setEditableItems((prev) =>
+        prev.map((item, i) => {
+          if (i === index) {
+            return {
+              ...item,
+              quantity,
+              variantId,
+              modifiers: modifiers.map((m) => m.name),
+              pizzaCustomizations: selectedPizzaCustomizations?.map((pc) => ({
+                customizationId: pc.pizzaCustomizationId,
+                half: pc.half,
+                action: pc.action,
+              })),
             };
           }
-        }
-        return {
-          id: modName,
-          modifierGroupId: '',
-          name: modName,
-          price: 0,
-        };
-      }) || [],
-      variantId: item.variantId,
-      variantName: foundProduct.variants?.find(v => v.id === item.variantId)?.name,
-      selectedPizzaCustomizations: item.pizzaCustomizations?.map(pc => ({
-        pizzaCustomizationId: pc.customizationId,
-        half: pc.half as any,
-        action: pc.action as any,
-      })),
-    };
-    
-    setEditingItem(cartItem);
-    setEditingProduct(foundProduct);
-    setShowCustomizationModal(true);
-  }, [menu, showSnackbar]);
-  
-  // Función para manejar la actualización desde el modal
-  const handleUpdateEditedItem = useCallback((
-    itemId: string,
-    quantity: number,
-    modifiers: CartItemModifier[],
-    preparationNotes?: string,
-    variantId?: string,
-    variantName?: string,
-    unitPrice?: number,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost?: number,
-  ) => {
-    const index = parseInt(itemId.split('-').pop() || '0');
-    
-    setEditableItems(prev => prev.map((item, i) => {
-      if (i === index) {
-        return {
-          ...item,
-          quantity,
-          variantId,
-          modifiers: modifiers.map(m => m.name),
-          pizzaCustomizations: selectedPizzaCustomizations?.map(pc => ({
-            customizationId: pc.pizzaCustomizationId,
-            half: pc.half,
-            action: pc.action,
-          })),
-        };
-      }
-      return item;
-    }));
-    
-    setShowCustomizationModal(false);
-    setEditingItem(null);
-    setEditingProduct(null);
-    
-    showSnackbar({
-      message: 'Producto actualizado',
-      type: 'success',
-    });
-  }, [showSnackbar]);
-  
+          return item;
+        }),
+      );
+
+      setShowCustomizationModal(false);
+      setEditingItem(null);
+      setEditingProduct(null);
+
+      showSnackbar({
+        message: 'Producto actualizado',
+        type: 'success',
+      });
+    },
+    [showSnackbar],
+  );
+
   // Función para obtener el nombre del producto desde el menú
   const getProductDetails = (productId: string, variantId?: string) => {
-    if (!menu) return { productName: `Producto ${productId.slice(-4)}`, variantName: undefined };
-    
+    if (!menu)
+      return {
+        productName: `Producto ${productId.slice(-4)}`,
+        variantName: undefined,
+      };
+
     for (const category of menu) {
       for (const subcategory of category.subcategories || []) {
         for (const product of subcategory.products || []) {
           if (product.id === productId) {
-            const variant = variantId ? product.variants?.find(v => v.id === variantId) : undefined;
+            const variant = variantId
+              ? product.variants?.find((v) => v.id === variantId)
+              : undefined;
             return {
               productName: product.name,
-              variantName: variant?.name
+              variantName: variant?.name,
             };
           }
         }
       }
     }
-    return { productName: `Producto ${productId.slice(-4)}`, variantName: undefined };
+    return {
+      productName: `Producto ${productId.slice(-4)}`,
+      variantName: undefined,
+    };
   };
-  
+
   // Función para formatear personalizaciones de pizza
   const formatPizzaCustomizations = (customizations?: any[]) => {
     if (!customizations || customizations.length === 0) return '';
-    
-    const groupedByHalf = customizations.reduce((acc, curr) => {
-      const half = curr.half || 'FULL';
-      if (!acc[half]) {
-        acc[half] = { ingredients: [] };
-      }
-      
-      let name = curr.customizationName;
-      if (!name && menu) {
-        // Buscar el nombre en el menú
-        outer: for (const category of menu) {
-          for (const subcategory of category.subcategories || []) {
-            for (const product of subcategory.products || []) {
-              if (product.pizzaCustomizations) {
-                const customization = product.pizzaCustomizations.find(
-                  pc => pc.id === curr.customizationId
-                );
-                if (customization) {
-                  name = customization.name;
-                  break outer;
+
+    const groupedByHalf = customizations.reduce(
+      (acc, curr) => {
+        const half = curr.half || 'FULL';
+        if (!acc[half]) {
+          acc[half] = { ingredients: [] };
+        }
+
+        let name = curr.customizationName;
+        if (!name && menu) {
+          // Buscar el nombre en el menú
+          outer: for (const category of menu) {
+            for (const subcategory of category.subcategories || []) {
+              for (const product of subcategory.products || []) {
+                if (product.pizzaCustomizations) {
+                  const customization = product.pizzaCustomizations.find(
+                    (pc) => pc.id === curr.customizationId,
+                  );
+                  if (customization) {
+                    name = customization.name;
+                    break outer;
+                  }
                 }
               }
             }
           }
         }
-      }
-      
-      if (!name) {
-        name = curr.customizationId.slice(-4);
-      }
-      
-      const prefix = curr.action === 'ADD' ? '+ ' : '- ';
-      acc[half].ingredients.push(prefix + name);
-      
-      return acc;
-    }, {} as Record<string, { ingredients: string[] }>);
-    
+
+        if (!name) {
+          name = curr.customizationId.slice(-4);
+        }
+
+        const prefix = curr.action === 'ADD' ? '+ ' : '- ';
+        acc[half].ingredients.push(prefix + name);
+
+        return acc;
+      },
+      {} as Record<string, { ingredients: string[] }>,
+    );
+
     if (groupedByHalf.FULL) {
       return groupedByHalf.FULL.ingredients.join(', ');
     } else if (groupedByHalf.HALF_1 || groupedByHalf.HALF_2) {
-      const half1 = groupedByHalf.HALF_1 ? `Mitad 1: ${groupedByHalf.HALF_1.ingredients.join(', ')}` : '';
-      const half2 = groupedByHalf.HALF_2 ? `Mitad 2: ${groupedByHalf.HALF_2.ingredients.join(', ')}` : '';
+      const half1 = groupedByHalf.HALF_1
+        ? `Mitad 1: ${groupedByHalf.HALF_1.ingredients.join(', ')}`
+        : '';
+      const half2 = groupedByHalf.HALF_2
+        ? `Mitad 2: ${groupedByHalf.HALF_2.ingredients.join(', ')}`
+        : '';
       return [half1, half2].filter(Boolean).join(' / ');
     }
-    
+
     return '';
   };
 
@@ -350,7 +405,9 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     <View style={styles.processingContainer}>
       <ActivityIndicator size="large" color={colors.primary} />
       <Text style={styles.processingText}>Procesando tu orden por voz...</Text>
-      <Text style={styles.processingSubtext}>Esto puede tomar unos segundos</Text>
+      <Text style={styles.processingSubtext}>
+        Esto puede tomar unos segundos
+      </Text>
     </View>
   );
 
@@ -370,22 +427,36 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const renderOrderSummary = () => {
     if (!orderData) return null;
 
-    const { orderItems = [], deliveryInfo, scheduledDelivery, orderType, warnings } = orderData;
-    
-    console.log('=== DEBUG AudioOrderModal renderOrderSummary ===');
-    console.log('orderType from orderData:', orderType);
-    console.log('Full orderData:', orderData);
-    console.log('===============================================');
+    const {
+      orderItems = [],
+      deliveryInfo,
+      scheduledDelivery,
+      orderType,
+      warnings,
+    } = orderData;
 
     return (
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header con tiempo de procesamiento - REMOVIDO */}
 
         {/* Advertencias */}
         {warnings && (
-          <Surface style={[styles.warningContainer, { backgroundColor: colors.tertiaryContainer }]}>
+          <Surface
+            style={[
+              styles.warningContainer,
+              { backgroundColor: colors.tertiaryContainer },
+            ]}
+          >
             <MaterialIcons name="warning" size={20} color={colors.tertiary} />
-            <Text style={[styles.warningText, { color: colors.onTertiaryContainer }]}>
+            <Text
+              style={[
+                styles.warningText,
+                { color: colors.onTertiaryContainer },
+              ]}
+            >
               {warnings}
             </Text>
           </Surface>
@@ -393,19 +464,32 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
         {/* Items de la orden */}
         <Card style={styles.sectionCard}>
-          <Card.Title 
+          <Card.Title
             title="Productos"
-            left={(props) => <MaterialIcons {...props} name="restaurant-menu" size={24} />}
+            left={(props) => (
+              <MaterialIcons {...props} name="restaurant-menu" size={24} />
+            )}
             right={undefined}
           />
           <Card.Content>
             {editableItems.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <MaterialIcons name="mic-off" size={48} color={colors.onSurfaceVariant} />
-                <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
+                <MaterialIcons
+                  name="mic-off"
+                  size={48}
+                  color={colors.onSurfaceVariant}
+                />
+                <Text
+                  style={[styles.emptyText, { color: colors.onSurfaceVariant }]}
+                >
                   No se detectaron productos
                 </Text>
-                <Text style={[styles.emptySubtext, { color: colors.onSurfaceVariant }]}>
+                <Text
+                  style={[
+                    styles.emptySubtext,
+                    { color: colors.onSurfaceVariant },
+                  ]}
+                >
                   Intenta dictar tu orden nuevamente
                 </Text>
               </View>
@@ -414,9 +498,14 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 {editableItems.map((item, index) => {
                   const itemKey = `${item.productId}-${index}`;
                   const isExpanded = expandedItems.has(itemKey);
-                  const { productName, variantName } = getProductDetails(item.productId, item.variantId);
-                  const pizzaCustomizationsText = formatPizzaCustomizations(item.pizzaCustomizations);
-                  
+                  const { productName, variantName } = getProductDetails(
+                    item.productId,
+                    item.variantId,
+                  );
+                  const pizzaCustomizationsText = formatPizzaCustomizations(
+                    item.pizzaCustomizations,
+                  );
+
                   // Función para renderizar acciones de deslizar
                   const renderRightActions = (progress: any, dragX: any) => {
                     const translateX = dragX.interpolate({
@@ -469,7 +558,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                       </Animated.View>
                     );
                   };
-                  
+
                   return (
                     <View key={itemKey}>
                       <Swipeable
@@ -491,66 +580,85 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                           activeOpacity={0.7}
                         >
                           <List.Item
-                          title={() => (
-                            <View style={styles.itemTextContainer}>
-                              <View>
-                                <Text style={styles.itemTitleText}>
-                                  {`${item.quantity}x ${productName}${variantName ? ` (${variantName})` : ''}`}
-                                </Text>
-                              </View>
-                              <View>
-                                {/* Renderizar personalizaciones de pizza */}
-                                {pizzaCustomizationsText && (
-                                  <Text style={styles.itemDescription}>
-                                    {pizzaCustomizationsText}
-                                  </Text>
-                                )}
-                                
-                                {/* Renderizar modificadores */}
-                                {item.modifiers && item.modifiers.length > 0 && item.modifiers.map((mod, idx) => (
-                                  <Text key={idx} style={styles.itemDescription}>
-                                    • {mod}
-                                  </Text>
-                                ))}
-                              </View>
-                            </View>
-                          )}
-                          right={() => (
-                            <View style={styles.itemActionsContainer}>
-                              <View style={styles.quantityActions}>
-                                <IconButton
-                                  icon="minus-circle-outline"
-                                  size={20}
-                                  onPress={() => updateItemQuantity(item.productId, index, item.quantity - 1)}
-                                  style={styles.quantityButton}
-                                  disabled={item.quantity <= 1}
-                                />
-                                <View style={styles.quantityTextContainer}>
-                                  <Text style={styles.quantityText}>
-                                    {item.quantity}
+                            title={() => (
+                              <View style={styles.itemTextContainer}>
+                                <View>
+                                  <Text style={styles.itemTitleText}>
+                                    {`${item.quantity}x ${variantName || productName}`}
                                   </Text>
                                 </View>
+                                <View>
+                                  {/* Renderizar personalizaciones de pizza */}
+                                  {pizzaCustomizationsText && (
+                                    <Text style={styles.itemDescription}>
+                                      {pizzaCustomizationsText}
+                                    </Text>
+                                  )}
+
+                                  {/* Renderizar modificadores */}
+                                  {item.modifiers &&
+                                    item.modifiers.length > 0 &&
+                                    item.modifiers.map((mod, idx) => (
+                                      <Text
+                                        key={idx}
+                                        style={styles.itemDescription}
+                                      >
+                                        • {mod}
+                                      </Text>
+                                    ))}
+                                </View>
+                              </View>
+                            )}
+                            right={() => (
+                              <View style={styles.itemActionsContainer}>
+                                <View style={styles.quantityActions}>
+                                  <IconButton
+                                    icon="minus-circle-outline"
+                                    size={20}
+                                    onPress={() =>
+                                      updateItemQuantity(
+                                        item.productId,
+                                        index,
+                                        item.quantity - 1,
+                                      )
+                                    }
+                                    style={styles.quantityButton}
+                                    disabled={item.quantity <= 1}
+                                  />
+                                  <View style={styles.quantityTextContainer}>
+                                    <Text style={styles.quantityText}>
+                                      {item.quantity}
+                                    </Text>
+                                  </View>
+                                  <IconButton
+                                    icon="plus-circle-outline"
+                                    size={20}
+                                    onPress={() =>
+                                      updateItemQuantity(
+                                        item.productId,
+                                        index,
+                                        item.quantity + 1,
+                                      )
+                                    }
+                                    style={styles.quantityButton}
+                                  />
+                                </View>
                                 <IconButton
-                                  icon="plus-circle-outline"
-                                  size={20}
-                                  onPress={() => updateItemQuantity(item.productId, index, item.quantity + 1)}
-                                  style={styles.quantityButton}
+                                  icon="pencil"
+                                  size={18}
+                                  onPress={() => handleEditItem(item, index)}
+                                  style={styles.editButton}
                                 />
                               </View>
-                              <IconButton
-                                icon="pencil"
-                                size={18}
-                                onPress={() => handleEditItem(item, index)}
-                                style={styles.editButton}
-                              />
-                            </View>
-                          )}
+                            )}
                             style={styles.listItem}
                           />
                         </TouchableOpacity>
                       </Swipeable>
-                      
-                      {index < editableItems.length - 1 && <Divider style={styles.itemDivider} />}
+
+                      {index < editableItems.length - 1 && (
+                        <Divider style={styles.itemDivider} />
+                      )}
                     </View>
                   );
                 })}
@@ -562,37 +670,54 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         {/* Información de entrega */}
         {deliveryInfo && Object.keys(deliveryInfo).length > 0 && (
           <Card style={styles.sectionCard}>
-            <Card.Title 
+            <Card.Title
               title="Información de Entrega"
-              left={(props) => <MaterialIcons {...props} name="local-shipping" size={24} />}
+              left={(props) => (
+                <MaterialIcons {...props} name="local-shipping" size={24} />
+              )}
             />
             <Card.Content>
               <View style={styles.deliveryInfoContainer}>
                 <TextInput
                   label="Nombre del destinatario"
                   value={editableDeliveryInfo.recipientName || ''}
-                  onChangeText={(text) => setEditableDeliveryInfo(prev => ({ ...prev, recipientName: text }))}
+                  onChangeText={(text) =>
+                    setEditableDeliveryInfo((prev) => ({
+                      ...prev,
+                      recipientName: text,
+                    }))
+                  }
                   mode="outlined"
                   left={<TextInput.Icon icon="account" />}
                   style={styles.textInput}
                   dense
                 />
-                
+
                 <TextInput
                   label="Teléfono"
                   value={editableDeliveryInfo.recipientPhone || ''}
-                  onChangeText={(text) => setEditableDeliveryInfo(prev => ({ ...prev, recipientPhone: text }))}
+                  onChangeText={(text) =>
+                    setEditableDeliveryInfo((prev) => ({
+                      ...prev,
+                      recipientPhone: text,
+                    }))
+                  }
                   mode="outlined"
                   left={<TextInput.Icon icon="phone" />}
                   style={styles.textInput}
                   keyboardType="phone-pad"
                   dense
                 />
-                
+
                 <TextInput
                   label="Dirección"
                   value={editableDeliveryInfo.fullAddress || ''}
-                  onChangeText={(text) => setEditableDeliveryInfo(prev => ({ ...prev, fullAddress: text }))}
+                  onChangeText={(text) =>
+                    setEditableDeliveryInfo((prev) => ({
+                      ...prev,
+                      fullAddress: text,
+                    }))
+                  }
                   mode="outlined"
                   left={<TextInput.Icon icon="map-marker" />}
                   style={styles.textInput}
@@ -608,9 +733,11 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         {/* Hora programada */}
         {scheduledDelivery?.time && (
           <Card style={styles.sectionCard}>
-            <Card.Title 
+            <Card.Title
               title="Entrega Programada"
-              left={(props) => <MaterialIcons {...props} name="schedule" size={24} />}
+              left={(props) => (
+                <MaterialIcons {...props} name="schedule" size={24} />
+              )}
             />
             <Card.Content>
               <Text style={styles.scheduledTime}>{scheduledDelivery.time}</Text>
@@ -621,18 +748,33 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         {/* Tipo de orden */}
         {orderType && (
           <Card style={styles.sectionCard}>
-            <Card.Title 
+            <Card.Title
               title="Tipo de Orden"
-              left={(props) => <MaterialIcons {...props} name="restaurant" size={24} />}
+              left={(props) => (
+                <MaterialIcons {...props} name="restaurant" size={24} />
+              )}
             />
             <Card.Content>
               <View style={styles.orderTypeContainer}>
-                <Chip 
-                  icon={orderType === 'DELIVERY' ? 'moped' : orderType === 'TAKE_AWAY' ? 'shopping-bag' : 'restaurant'}
-                  style={[styles.orderTypeChip, { backgroundColor: colors.primaryContainer }]}
+                <Chip
+                  icon={
+                    orderType === 'DELIVERY'
+                      ? 'moped'
+                      : orderType === 'TAKE_AWAY'
+                        ? 'shopping-bag'
+                        : 'restaurant'
+                  }
+                  style={[
+                    styles.orderTypeChip,
+                    { backgroundColor: colors.primaryContainer },
+                  ]}
                   textStyle={{ color: colors.onPrimaryContainer }}
                 >
-                  {orderType === 'DELIVERY' ? 'Entrega a domicilio' : orderType === 'TAKE_AWAY' ? 'Para llevar' : 'Para comer aquí'}
+                  {orderType === 'DELIVERY'
+                    ? 'Entrega a domicilio'
+                    : orderType === 'TAKE_AWAY'
+                      ? 'Para llevar'
+                      : 'Para comer aquí'}
                 </Chip>
               </View>
             </Card.Content>
@@ -647,10 +789,15 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={[styles.modalContainer, { width: modalWidth, backgroundColor: colors.surface }]}
+        contentContainerStyle={[
+          styles.modalContainer,
+          { width: modalWidth, backgroundColor: colors.surface },
+        ]}
       >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.onSurface }]}>Agregar a tu orden 🛒</Text>
+          <Text style={[styles.title, { color: colors.onSurface }]}>
+            Agregar a tu orden 🛒
+          </Text>
           <IconButton
             icon="close"
             size={24}
@@ -671,15 +818,15 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             <View style={styles.footer}>
               {editableItems && editableItems.length > 0 ? (
                 <>
-                  <Button 
-                    mode="outlined" 
+                  <Button
+                    mode="outlined"
                     onPress={onDismiss}
                     style={styles.footerButton}
                   >
                     Cancelar
                   </Button>
-                  <Button 
-                    mode="contained" 
+                  <Button
+                    mode="contained"
                     onPress={handleConfirm}
                     style={styles.footerButton}
                     icon="plus"
@@ -688,8 +835,8 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                   </Button>
                 </>
               ) : (
-                <Button 
-                  mode="contained" 
+                <Button
+                  mode="contained"
                   onPress={onDismiss}
                   style={[styles.footerButton, { flex: 1 }]}
                 >
@@ -700,7 +847,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </>
         )}
       </Modal>
-      
+
       {/* Modal de personalización de producto */}
       {showCustomizationModal && editingProduct && editingItem && (
         <ProductCustomizationModal

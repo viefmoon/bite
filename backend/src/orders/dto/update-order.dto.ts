@@ -100,6 +100,16 @@ export class UpdateOrderDto {
   notes?: string;
 
   @ApiProperty({
+    type: String,
+    example: 'CUST-1',
+    description: 'ID del cliente',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
+
+  @ApiProperty({
     type: [OrderItemInputDto],
     description: 'Items de la orden',
     required: false,

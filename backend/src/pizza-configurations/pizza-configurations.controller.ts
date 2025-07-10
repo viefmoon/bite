@@ -49,7 +49,9 @@ export class PizzaConfigurationsController {
     status: 404,
     description: 'Pizza configuration not found',
   })
-  findByProductId(@Param('productId') productId: string): Promise<PizzaConfiguration | null> {
+  findByProductId(
+    @Param('productId') productId: string,
+  ): Promise<PizzaConfiguration | null> {
     return this.pizzaConfigurationsService.findByProductId(productId);
   }
 
@@ -64,7 +66,10 @@ export class PizzaConfigurationsController {
     @Param('id') id: string,
     @Body() updatePizzaConfigurationDto: UpdatePizzaConfigurationDto,
   ): Promise<PizzaConfiguration> {
-    return this.pizzaConfigurationsService.update(id, updatePizzaConfigurationDto);
+    return this.pizzaConfigurationsService.update(
+      id,
+      updatePizzaConfigurationDto,
+    );
   }
 
   @Delete(':id')

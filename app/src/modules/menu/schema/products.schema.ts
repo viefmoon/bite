@@ -58,7 +58,7 @@ const productBaseSchema = z.object({
     .number()
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
-  preparationScreenId: z.string().optional().nullable(),
+  preparationScreenId: z.string().min(1, 'La pantalla de preparación es requerida'),
   sortOrder: z.number().optional().default(0),
   variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
   variantsToDelete: z.array(z.string()).optional(), // Para manejar eliminación en edición

@@ -70,7 +70,10 @@ export class AudioOrderProcessingController {
       properties: {
         status: { type: 'string', example: 'ok' },
         available: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Audio processing service is available' },
+        message: {
+          type: 'string',
+          example: 'Audio processing service is available',
+        },
         timestamp: { type: 'string', example: '2024-01-20T12:00:00Z' },
       },
     },
@@ -83,7 +86,10 @@ export class AudioOrderProcessingController {
       properties: {
         status: { type: 'string', example: 'error' },
         available: { type: 'boolean', example: false },
-        message: { type: 'string', example: 'Cannot connect to audio processing service' },
+        message: {
+          type: 'string',
+          example: 'Cannot connect to audio processing service',
+        },
         timestamp: { type: 'string', example: '2024-01-20T12:00:00Z' },
       },
     },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Portal,
   Modal,
@@ -12,7 +12,6 @@ import {
   IconButton,
   Chip,
   Avatar,
-  SegmentedButtons,
   Divider,
   Icon,
 } from 'react-native-paper';
@@ -21,26 +20,32 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useCreateUser, useUpdateUser } from '../hooks';
-import type { User, RoleEnum } from '../types';
+import type { User } from '../types';
 
 const createUserSchema = z.object({
-  username: z.string()
+  username: z
+    .string()
     .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
     .max(20, 'El nombre de usuario no puede exceder 20 caracteres')
     .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guión bajo'),
-  email: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
-  password: z.string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  firstName: z.string()
+  email: z
+    .union([z.string().email('Email inválido'), z.literal('')])
+    .optional(),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  firstName: z
+    .string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(50, 'El nombre no puede exceder 50 caracteres'),
-  lastName: z.string()
+  lastName: z
+    .string()
     .min(2, 'El apellido debe tener al menos 2 caracteres')
     .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phoneNumber: z.union([
-    z.string().regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido'),
-    z.literal('')
-  ]).optional(),
+  phoneNumber: z
+    .union([
+      z.string().regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido'),
+      z.literal(''),
+    ])
+    .optional(),
   gender: z.enum(['male', 'female', 'other']).nullable().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -52,13 +57,17 @@ const createUserSchema = z.object({
 });
 
 const updateUserSchema = createUserSchema.omit({ password: true }).extend({
-  password: z.union([
-    z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-    z.literal('')
-  ]).optional(),
+  password: z
+    .union([
+      z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+      z.literal(''),
+    ])
+    .optional(),
 });
 
-type UserFormInputs = z.infer<typeof createUserSchema>;
+type CreateUserFormInputs = z.infer<typeof createUserSchema>;
+type UpdateUserFormInputs = z.infer<typeof updateUserSchema>;
+type UserFormInputs = CreateUserFormInputs | UpdateUserFormInputs;
 
 interface UserFormModalProps {
   visible: boolean;
@@ -74,7 +83,7 @@ export function UserFormModal({
   const theme = useAppTheme();
   const styles = getStyles(theme);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const createUserMutation = useCreateUser();
   const updateUserMutation = useUpdateUser();
 
@@ -83,9 +92,8 @@ export function UserFormModal({
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm<UserFormInputs>({
-    resolver: zodResolver(user ? updateUserSchema : createUserSchema),
+    resolver: zodResolver(user ? updateUserSchema : createUserSchema) as any,
     defaultValues: {
       username: '',
       email: '',
@@ -103,7 +111,6 @@ export function UserFormModal({
       isActive: true,
     },
   });
-
 
   useEffect(() => {
     if (user) {
@@ -166,15 +173,20 @@ export function UserFormModal({
       if (user) {
         // For update, remove password if empty and remove username (can't be changed)
         const { username, password, ...updateData } = cleanData;
-        const finalUpdateData = password ? { ...updateData, password } : updateData;
-        
-        await updateUserMutation.mutateAsync({ id: user.id, data: finalUpdateData });
+        const finalUpdateData = password
+          ? { ...updateData, password }
+          : updateData;
+
+        await updateUserMutation.mutateAsync({
+          id: user.id,
+          data: finalUpdateData as any,
+        });
       } else {
         // For create, password is required
         if (!data.password) {
           return; // Should be caught by validation
         }
-        await createUserMutation.mutateAsync(cleanData);
+        await createUserMutation.mutateAsync(cleanData as any);
       }
       onDismiss();
     } catch (error) {
@@ -182,12 +194,28 @@ export function UserFormModal({
     }
   };
 
-  const isSubmitting = createUserMutation.isPending || updateUserMutation.isPending;
+  const isSubmitting =
+    createUserMutation.isPending || updateUserMutation.isPending;
 
   const genderOptions = [
-    { value: 'male', label: 'Masculino', icon: 'gender-male', color: '#3498db' },
-    { value: 'female', label: 'Femenino', icon: 'gender-female', color: '#e74c3c' },
-    { value: 'other', label: 'Otro', icon: 'gender-transgender', color: '#9b59b6' },
+    {
+      value: 'male',
+      label: 'Masculino',
+      icon: 'gender-male',
+      color: '#3498db',
+    },
+    {
+      value: 'female',
+      label: 'Femenino',
+      icon: 'gender-female',
+      color: '#e74c3c',
+    },
+    {
+      value: 'other',
+      label: 'Otro',
+      icon: 'gender-transgender',
+      color: '#9b59b6',
+    },
   ];
 
   return (
@@ -216,10 +244,7 @@ export function UserFormModal({
               />
               <View style={styles.headerTextContainer}>
                 <Text
-                  style={[
-                    styles.modalTitle,
-                    { color: theme.colors.onPrimary },
-                  ]}
+                  style={[styles.modalTitle, { color: theme.colors.onPrimary }]}
                   variant="titleMedium"
                 >
                   {user ? 'Editar Usuario' : 'Nuevo Usuario'}
@@ -325,7 +350,11 @@ export function UserFormModal({
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={styles.inputContainer}>
                     <TextInput
-                      label={user ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña"}
+                      label={
+                        user
+                          ? 'Nueva contraseña (dejar vacío para no cambiar)'
+                          : 'Contraseña'
+                      }
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -336,7 +365,7 @@ export function UserFormModal({
                       left={<TextInput.Icon icon="lock" />}
                       right={
                         <TextInput.Icon
-                          icon={showPassword ? "eye-off" : "eye"}
+                          icon={showPassword ? 'eye-off' : 'eye'}
                           onPress={() => setShowPassword(!showPassword)}
                         />
                       }
@@ -368,15 +397,49 @@ export function UserFormModal({
                         Rol del usuario
                       </Text>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: theme.spacing.s }}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={{ marginTop: theme.spacing.s }}
+                    >
                       <View style={styles.rolesContainer}>
                         {[
-                          { value: 1, label: 'Admin', icon: 'shield-account', description: 'Acceso completo' },
-                          { value: 2, label: 'Gerente', icon: 'account-tie', description: 'Gestión general' },
-                          { value: 3, label: 'Cajero', icon: 'cash-register', description: 'Ventas' },
-                          { value: 4, label: 'Mesero', icon: 'room-service', description: 'Órdenes' },
-                          { value: 5, label: 'Cocina', icon: 'chef-hat', description: 'Preparación' },
-                          { value: 6, label: 'Repartidor', icon: 'moped', description: 'Entregas' },
+                          {
+                            value: 1,
+                            label: 'Admin',
+                            icon: 'shield-account',
+                            description: 'Acceso completo',
+                          },
+                          {
+                            value: 2,
+                            label: 'Gerente',
+                            icon: 'account-tie',
+                            description: 'Gestión general',
+                          },
+                          {
+                            value: 3,
+                            label: 'Cajero',
+                            icon: 'cash-register',
+                            description: 'Ventas',
+                          },
+                          {
+                            value: 4,
+                            label: 'Mesero',
+                            icon: 'room-service',
+                            description: 'Órdenes',
+                          },
+                          {
+                            value: 5,
+                            label: 'Cocina',
+                            icon: 'chef-hat',
+                            description: 'Preparación',
+                          },
+                          {
+                            value: 6,
+                            label: 'Repartidor',
+                            icon: 'moped',
+                            description: 'Entregas',
+                          },
                         ].map((role) => (
                           <Surface
                             key={role.value}
@@ -402,7 +465,8 @@ export function UserFormModal({
                               <Text
                                 style={[
                                   styles.roleLabel,
-                                  value === role.value && styles.roleLabelActive,
+                                  value === role.value &&
+                                    styles.roleLabelActive,
                                 ]}
                                 variant="labelMedium"
                               >
@@ -518,7 +582,12 @@ export function UserFormModal({
                         Género
                       </Text>
                     </View>
-                    <View style={[styles.genderContainer, { marginTop: theme.spacing.s }]}>
+                    <View
+                      style={[
+                        styles.genderContainer,
+                        { marginTop: theme.spacing.s },
+                      ]}
+                    >
                       {genderOptions.map((option) => (
                         <TouchableOpacity
                           key={option.value}
@@ -528,14 +597,19 @@ export function UserFormModal({
                           <Surface
                             style={[
                               styles.genderOption,
-                              value === option.value && styles.genderOptionActive,
+                              value === option.value &&
+                                styles.genderOptionActive,
                             ]}
                             elevation={value === option.value ? 3 : 1}
                           >
-                            <View style={[
-                              styles.genderIconContainer,
-                              value === option.value && { backgroundColor: option.color + '20' }
-                            ]}>
+                            <View
+                              style={[
+                                styles.genderIconContainer,
+                                value === option.value && {
+                                  backgroundColor: option.color + '20',
+                                },
+                              ]}
+                            >
                               <Icon
                                 source={option.icon}
                                 size={20}
@@ -549,7 +623,8 @@ export function UserFormModal({
                             <Text
                               style={[
                                 styles.genderLabel,
-                                value === option.value && styles.genderLabelActive,
+                                value === option.value &&
+                                  styles.genderLabelActive,
                               ]}
                               variant="labelMedium"
                             >
@@ -773,7 +848,7 @@ export function UserFormModal({
             </Button>
             <Button
               mode="contained"
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit as any)}
               disabled={isSubmitting}
               loading={isSubmitting}
               style={[styles.button, styles.confirmButton]}

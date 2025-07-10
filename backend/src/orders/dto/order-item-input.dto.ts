@@ -20,6 +20,16 @@ import { ProductModifierDto } from './product-modifier.dto';
 export class OrderItemInputDto {
   @ApiProperty({
     type: String,
+    example: 'ORDERITEM-1',
+    description: 'ID del order item (opcional, para actualizaciones)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiProperty({
+    type: String,
     example: 'PROD-1',
     description: 'ID del producto',
   })

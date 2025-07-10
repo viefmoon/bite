@@ -10,6 +10,7 @@ import { PreparationScreenRepository } from '../../preparation-screen.repository
 import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { PreparationScreenMapper } from '../mappers/preparation-screen.mapper';
 import { Paginated } from '../../../../../common/types/paginated.type';
+import { UserAssignmentDto } from '../../../../dto/assign-users.dto';
 
 @Injectable()
 export class PreparationScreensRelationalRepository
@@ -41,14 +42,18 @@ export class PreparationScreensRelationalRepository
   async findOne(id: string): Promise<PreparationScreen> {
     const entity = await this.preparationScreenRepository.findOne({
       where: { id },
-      relations: ['products'],
+      relations: ['products', 'users', 'users.role'],
     });
 
-    const domainResult = entity
-      ? this.preparationScreenMapper.toDomain(entity)
-      : null;
-    if (!domainResult) {
+    if (!entity) {
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
+    }
+
+    const domainResult = this.preparationScreenMapper.toDomain(entity);
+    if (!domainResult) {
+      throw new InternalServerErrorException(
+        'Error mapping preparation screen entity to domain',
+      );
     }
     return domainResult;
   }
@@ -65,6 +70,8 @@ export class PreparationScreensRelationalRepository
     const queryBuilder = this.preparationScreenRepository
       .createQueryBuilder('preparationScreen')
       .leftJoinAndSelect('preparationScreen.products', 'products')
+      .leftJoinAndSelect('preparationScreen.users', 'users')
+      .leftJoinAndSelect('users.role', 'role')
       .skip(skip)
       .take(limit)
       .orderBy('preparationScreen.name', 'ASC');
@@ -138,5 +145,43 @@ export class PreparationScreensRelationalRepository
       .filter((item): item is PreparationScreen => item !== null);
 
     return domainResults;
+  }
+
+  // Métodos simplificados ya que ahora la relación se maneja desde User
+  async getUsersByScreenId(screenId: string): Promise<any[]> {
+    const screen = await this.preparationScreenRepository.findOne({
+      where: { id: screenId },
+      relations: ['users', 'users.role'],
+    });
+
+    if (!screen) return [];
+
+    return (
+      screen.users?.map((user) => ({
+        userId: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+      })) || []
+    );
+  }
+
+  async assignUsers(
+    screenId: string,
+    userAssignments: UserAssignmentDto[],
+  ): Promise<void> {
+    // Este método ya no se usa, la asignación se hace desde UserRepository
+    throw new Error('Use UserRepository.updatePreparationScreen instead');
+  }
+
+  async getUsers(screenId: string): Promise<any[]> {
+    return this.getUsersByScreenId(screenId);
+  }
+
+  async removeUsers(screenId: string, userIds: string[]): Promise<void> {
+    // Este método ya no se usa, la desasignación se hace desde UserRepository
+    throw new Error('Use UserRepository.updatePreparationScreen instead');
   }
 }

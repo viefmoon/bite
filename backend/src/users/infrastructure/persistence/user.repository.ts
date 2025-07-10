@@ -33,9 +33,9 @@ export abstract class UserRepository {
   ): Promise<User | null>;
 
   abstract remove(id: User['id']): Promise<void>;
-  
-  abstract updatePreparationScreens(
+
+  abstract updatePreparationScreen(
     id: User['id'],
-    preparationScreenIds: string[],
+    preparationScreenId: string | null,
   ): Promise<User | null>;
 }

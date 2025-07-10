@@ -1,5 +1,4 @@
-import { API_URL } from '@env';
-import apiClient from '../app/services/apiClient';
+import ApiClientWrapper from '../app/services/apiClientWrapper';
 import * as FileSystem from 'expo-file-system';
 
 export interface AIOrderItem {
@@ -53,7 +52,7 @@ class AudioOrderService {
 
   async processAudioOrder(
     audioUri: string,
-    transcription: string
+    transcription: string,
   ): Promise<AudioOrderResponse> {
     try {
       // Convertir audio a base64
@@ -69,21 +68,18 @@ class AudioOrderService {
       };
 
       // Enviar al backend que se comunicará con el servidor remoto
-      const response = await apiClient.post('/api/audio-orders/process', payload);
-      
+      const response = await ApiClientWrapper.post(
+        '/api/audio-orders/process',
+        payload,
+      );
+
       // Verificar que tengamos una respuesta válida
       if (!response || !response.data) {
         throw new Error('No se recibió respuesta del servidor');
       }
-      
+
       const responseData = response.data as any;
-      
-      console.log('=== DEBUG audioOrderService ===');
-      console.log('Response from backend:', JSON.stringify(responseData, null, 2));
-      console.log('extractedData:', JSON.stringify(responseData.extractedData, null, 2));
-      console.log('orderType:', responseData.extractedData?.orderType);
-      console.log('==============================');
-      
+
       // Adaptar la respuesta del backend al formato esperado
       if (responseData.success) {
         return {
@@ -94,11 +90,15 @@ class AudioOrderService {
             scheduledDelivery: {},
             orderType: undefined,
             warnings: undefined,
-            processingTime: 0
-          }
+            processingTime: 0,
+          },
         };
       } else {
-        throw new Error(responseData.error?.message || responseData.message || 'Error procesando audio');
+        throw new Error(
+          responseData.error?.message ||
+            responseData.message ||
+            'Error procesando audio',
+        );
       }
     } catch (error: any) {
       return {
@@ -108,8 +108,8 @@ class AudioOrderService {
           message: this.getErrorMessage(error),
           type: 'error',
           timestamp: new Date().toISOString(),
-          requestId: 'local-' + Date.now()
-        }
+          requestId: 'local-' + Date.now(),
+        },
       };
     }
   }
@@ -117,7 +117,7 @@ class AudioOrderService {
   getErrorMessage(error: any): string {
     if (error.response?.data?.error) {
       const apiError = error.response.data.error;
-      
+
       switch (apiError.code) {
         case 'BL015':
           return 'El archivo de audio es muy grande. Máximo 10MB.';
@@ -131,24 +131,27 @@ class AudioOrderService {
           return apiError.message || 'Error desconocido';
       }
     }
-    
+
     return error.message || 'Error al procesar la orden por voz';
   }
 
   // Método para validar antes de enviar
-  validateBeforeSending(audioFileSize: number, transcription: string): string[] {
+  validateBeforeSending(
+    audioFileSize: number,
+    transcription: string,
+  ): string[] {
     const errors: string[] = [];
-    
+
     // Validar tamaño (50MB máximo para audio de hasta 5 minutos)
     if (audioFileSize > 50 * 1024 * 1024) {
       errors.push('El archivo de audio es muy grande (máximo 50MB)');
     }
-    
+
     // Validar transcripción
     if (!transcription || transcription.trim().length < 5) {
       errors.push('La transcripción está vacía o es muy corta');
     }
-    
+
     return errors;
   }
 }

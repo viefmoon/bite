@@ -8,27 +8,43 @@ import { ApiResponse } from 'apisauce';
 export class ApiClientWrapper {
   static async get<T>(url: string, params?: any): Promise<ApiResponse<T>> {
     const client = await getApiClient();
-    return client.get<T>(url, params);
+    return client.get(url, params) as Promise<ApiResponse<T>>;
   }
 
-  static async post<T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+  static async post<T>(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<ApiResponse<T>> {
     const client = await getApiClient();
-    return client.post<T>(url, data, config);
+    return client.post(url, data, config) as Promise<ApiResponse<T>>;
   }
 
-  static async put<T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+  static async put<T>(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<ApiResponse<T>> {
     const client = await getApiClient();
-    return client.put<T>(url, data, config);
+    return client.put(url, data, config) as Promise<ApiResponse<T>>;
   }
 
-  static async patch<T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+  static async patch<T>(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<ApiResponse<T>> {
     const client = await getApiClient();
-    return client.patch<T>(url, data, config);
+    return client.patch(url, data, config) as Promise<ApiResponse<T>>;
   }
 
-  static async delete<T>(url: string, params?: any, config?: any): Promise<ApiResponse<T>> {
+  static async delete<T>(
+    url: string,
+    params?: any,
+    config?: any,
+  ): Promise<ApiResponse<T>> {
     const client = await getApiClient();
-    return client.delete<T>(url, params, config);
+    return client.delete(url, params, config) as Promise<ApiResponse<T>>;
   }
 
   static async reinitialize(): Promise<void> {

@@ -25,6 +25,11 @@ export interface User {
   } | null;
   isActive: boolean;
   role?: Role;
+  preparationScreen?: {
+    id: string;
+    name: string;
+    description?: string | null;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,7 +102,7 @@ export interface UsersQuery {
   limit?: number;
   filters?: {
     isActive?: boolean;
-    role?: number;
+    roles?: { id: number }[];
   };
   search?: string;
   sortBy?: string;

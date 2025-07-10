@@ -7,14 +7,11 @@ import {
   Surface,
   IconButton,
   Chip,
-  Avatar,
-  Divider,
   Button,
   Dialog,
   TextInput,
   HelperText,
   Icon,
-  List,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResetPassword, useDeleteUser } from '../hooks';
@@ -35,13 +32,13 @@ export function UserDetailModal({
 }: UserDetailModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  
+
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+
   const resetPasswordMutation = useResetPassword();
   const deleteUserMutation = useDeleteUser();
 
@@ -52,7 +49,7 @@ export function UserDetailModal({
     if (newPassword.length < 6) {
       return;
     }
-    
+
     try {
       await resetPasswordMutation.mutateAsync({
         id: user.id,
@@ -77,40 +74,54 @@ export function UserDetailModal({
 
   const getGenderLabel = (gender?: string | null) => {
     switch (gender) {
-      case 'male': return 'Masculino';
-      case 'female': return 'Femenino';
-      case 'other': return 'Otro';
-      default: return 'No especificado';
+      case 'male':
+        return 'Masculino';
+      case 'female':
+        return 'Femenino';
+      case 'other':
+        return 'Otro';
+      default:
+        return 'No especificado';
     }
   };
 
   const getRoleInfo = (roleId?: number) => {
     switch (roleId) {
       case 1:
-        return { label: 'Administrador', icon: 'shield-account', color: theme.colors.error };
+        return {
+          label: 'Administrador',
+          icon: 'shield-account',
+          color: theme.colors.error,
+        };
       case 2:
-        return { label: 'Gerente', icon: 'account-tie', color: theme.colors.primary };
+        return {
+          label: 'Gerente',
+          icon: 'account-tie',
+          color: theme.colors.primary,
+        };
       case 3:
-        return { label: 'Cajero', icon: 'cash-register', color: theme.colors.tertiary };
+        return {
+          label: 'Cajero',
+          icon: 'cash-register',
+          color: theme.colors.tertiary,
+        };
       case 4:
-        return { label: 'Mesero', icon: 'room-service', color: theme.colors.secondary };
+        return {
+          label: 'Mesero',
+          icon: 'room-service',
+          color: theme.colors.secondary,
+        };
       case 5:
         return { label: 'Cocina', icon: 'chef-hat', color: '#FF6B6B' };
       case 6:
         return { label: 'Repartidor', icon: 'moped', color: '#4ECDC4' };
       default:
-        return { label: 'Sin rol', icon: 'account', color: theme.colors.onSurfaceVariant };
+        return {
+          label: 'Sin rol',
+          icon: 'account',
+          color: theme.colors.onSurfaceVariant,
+        };
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-MX', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (
@@ -123,29 +134,47 @@ export function UserDetailModal({
         >
           <Surface style={styles.modalContent} elevation={5}>
             {/* Header */}
-            <View style={[styles.headerContainer, { backgroundColor: theme.colors.elevation.level2 }]}>
+            <View
+              style={[
+                styles.headerContainer,
+                { backgroundColor: theme.colors.elevation.level2 },
+              ]}
+            >
               <View style={styles.headerContent}>
                 <View style={styles.headerNameRow}>
-                  <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]} variant="titleMedium">
-                    {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: theme.colors.onSurface },
+                    ]}
+                    variant="titleMedium"
+                  >
+                    {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+                      user.username}
                   </Text>
                   <Chip
                     mode="flat"
                     icon={getRoleInfo(user.role?.id).icon}
                     style={[
                       styles.headerRoleChip,
-                      { backgroundColor: theme.colors.surface }
+                      { backgroundColor: theme.colors.surface },
                     ]}
                     textStyle={[
                       styles.headerRoleChipText,
-                      { color: getRoleInfo(user.role?.id).color }
+                      { color: getRoleInfo(user.role?.id).color },
                     ]}
                     compact
                   >
                     {getRoleInfo(user.role?.id).label}
                   </Chip>
                 </View>
-                <Text style={[styles.modalSubtitle, { color: theme.colors.onSurfaceVariant }]} variant="bodySmall">
+                <Text
+                  style={[
+                    styles.modalSubtitle,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                  variant="bodySmall"
+                >
                   {user.username}
                 </Text>
               </View>
@@ -157,29 +186,44 @@ export function UserDetailModal({
               />
             </View>
 
-            <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.contentContainer}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Contact Information */}
               <Surface style={styles.infoSection} elevation={1}>
                 <View style={styles.sectionHeader}>
-                  <Icon source="contacts" size={20} color={theme.colors.primary} />
+                  <Icon
+                    source="contacts"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Información de Contacto
                   </Text>
                 </View>
-                
+
                 <View style={styles.compactRow}>
                   <Icon source="email" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Email</Text>
-                    <Text style={styles.compactValue} variant="bodySmall">{user.email || 'No especificado'}</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Email
+                    </Text>
+                    <Text style={styles.compactValue} variant="bodySmall">
+                      {user.email || 'No especificado'}
+                    </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.compactRow}>
                   <Icon source="phone" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Teléfono</Text>
-                    <Text style={styles.compactValue} variant="bodySmall">{user.phoneNumber || 'No especificado'}</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Teléfono
+                    </Text>
+                    <Text style={styles.compactValue} variant="bodySmall">
+                      {user.phoneNumber || 'No especificado'}
+                    </Text>
                   </View>
                 </View>
               </Surface>
@@ -187,16 +231,26 @@ export function UserDetailModal({
               {/* Personal Information */}
               <Surface style={styles.infoSection} elevation={1}>
                 <View style={styles.sectionHeader}>
-                  <Icon source="account-details" size={20} color={theme.colors.primary} />
+                  <Icon
+                    source="account-details"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Información Personal
                   </Text>
                 </View>
-                
+
                 <View style={styles.compactRow}>
-                  <Icon source="account" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="account"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Nombre completo</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Nombre completo
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {`${user.firstName || 'No especificado'} ${user.lastName || 'No especificado'}`}
                     </Text>
@@ -204,56 +258,114 @@ export function UserDetailModal({
                 </View>
 
                 <View style={styles.compactRow}>
-                  <Icon source="gender-transgender" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="gender-transgender"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Género</Text>
-                    <Text style={styles.compactValue} variant="bodySmall">{getGenderLabel(user.gender)}</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.compactRow}>
-                  <Icon source="cake-variant" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Fecha de nacimiento</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Género
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
-                      {user.birthDate ? new Date(user.birthDate).toLocaleDateString('es-MX', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      }) : 'No especificado'}
+                      {getGenderLabel(user.gender)}
                     </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.compactRow}>
-                  <Icon source={user.isActive ? "check-circle-outline" : "close-circle-outline"} 
-                    size={18} 
-                    color={user.isActive ? theme.colors.primary : theme.colors.error} 
+                  <Icon
+                    source="cake-variant"
+                    size={18}
+                    color={theme.colors.primary}
                   />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Estado de la cuenta</Text>
-                    <Text style={[styles.compactValue, { 
-                      color: user.isActive ? theme.colors.primary : theme.colors.error 
-                    }]} variant="bodySmall">
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Fecha de nacimiento
+                    </Text>
+                    <Text style={styles.compactValue} variant="bodySmall">
+                      {user.birthDate
+                        ? new Date(user.birthDate).toLocaleDateString('es-MX', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
+                        : 'No especificado'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.compactRow}>
+                  <Icon
+                    source={
+                      user.isActive
+                        ? 'check-circle-outline'
+                        : 'close-circle-outline'
+                    }
+                    size={18}
+                    color={
+                      user.isActive ? theme.colors.primary : theme.colors.error
+                    }
+                  />
+                  <View style={styles.compactContent}>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Estado de la cuenta
+                    </Text>
+                    <Text
+                      style={[
+                        styles.compactValue,
+                        {
+                          color: user.isActive
+                            ? theme.colors.primary
+                            : theme.colors.error,
+                        },
+                      ]}
+                      variant="bodySmall"
+                    >
                       {user.isActive ? 'Activa' : 'Inactiva'}
                     </Text>
                   </View>
                 </View>
+
+                {/* Preparation Screen for Kitchen Role */}
+                {user.role?.id === 5 && (
+                  <View style={styles.compactRow}>
+                    <Icon
+                      source="monitor"
+                      size={18}
+                      color={theme.colors.primary}
+                    />
+                    <View style={styles.compactContent}>
+                      <Text style={styles.compactLabel} variant="labelSmall">
+                        Pantalla de Preparación
+                      </Text>
+                      <Text style={styles.compactValue} variant="bodySmall">
+                        {user.preparationScreen?.name || 'No asignada'}
+                      </Text>
+                    </View>
+                  </View>
+                )}
               </Surface>
 
               {/* Address Information */}
               <Surface style={styles.infoSection} elevation={1}>
                 <View style={styles.sectionHeader}>
-                  <Icon source="map-marker" size={20} color={theme.colors.primary} />
+                  <Icon
+                    source="map-marker"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Dirección
                   </Text>
                 </View>
-                
+
                 <View style={styles.compactRow}>
                   <Icon source="home" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Dirección</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Dirección
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.address || 'No especificado'}
                     </Text>
@@ -263,7 +375,9 @@ export function UserDetailModal({
                 <View style={styles.compactRow}>
                   <Icon source="city" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Ciudad</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Ciudad
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.city || 'No especificado'}
                     </Text>
@@ -273,7 +387,9 @@ export function UserDetailModal({
                 <View style={styles.compactRow}>
                   <Icon source="map" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Estado/Provincia</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Estado/Provincia
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.state || 'No especificado'}
                     </Text>
@@ -283,7 +399,9 @@ export function UserDetailModal({
                 <View style={styles.compactRow}>
                   <Icon source="earth" size={18} color={theme.colors.primary} />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">País</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      País
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.country || 'No especificado'}
                     </Text>
@@ -291,9 +409,15 @@ export function UserDetailModal({
                 </View>
 
                 <View style={styles.compactRow}>
-                  <Icon source="mailbox" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="mailbox"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Código Postal</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Código Postal
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.zipCode || 'No especificado'}
                     </Text>
@@ -304,16 +428,26 @@ export function UserDetailModal({
               {/* Emergency Contact */}
               <Surface style={styles.infoSection} elevation={1}>
                 <View style={styles.sectionHeader}>
-                  <Icon source="alert-circle" size={20} color={theme.colors.error} />
+                  <Icon
+                    source="alert-circle"
+                    size={20}
+                    color={theme.colors.error}
+                  />
                   <Text style={styles.sectionTitle} variant="titleMedium">
                     Contacto de Emergencia
                   </Text>
                 </View>
-                
+
                 <View style={styles.compactRow}>
-                  <Icon source="account-alert" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="account-alert"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Nombre</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Nombre
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.emergencyContact?.name || 'No especificado'}
                     </Text>
@@ -321,9 +455,15 @@ export function UserDetailModal({
                 </View>
 
                 <View style={styles.compactRow}>
-                  <Icon source="phone-alert" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="phone-alert"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Teléfono</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Teléfono
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.emergencyContact?.phone || 'No especificado'}
                     </Text>
@@ -331,9 +471,15 @@ export function UserDetailModal({
                 </View>
 
                 <View style={styles.compactRow}>
-                  <Icon source="account-multiple" size={18} color={theme.colors.primary} />
+                  <Icon
+                    source="account-multiple"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
                   <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">Relación</Text>
+                    <Text style={styles.compactLabel} variant="labelSmall">
+                      Relación
+                    </Text>
                     <Text style={styles.compactValue} variant="bodySmall">
                       {user.emergencyContact?.relationship || 'No especificado'}
                     </Text>
@@ -351,7 +497,7 @@ export function UserDetailModal({
                 >
                   Editar Usuario
                 </Button>
-                
+
                 <Button
                   mode="contained-tonal"
                   onPress={() => setShowPasswordDialog(true)}
@@ -361,7 +507,7 @@ export function UserDetailModal({
                 >
                   Cambiar Contraseña
                 </Button>
-                
+
                 <Button
                   mode="outlined"
                   onPress={() => setShowDeleteDialog(true)}
@@ -389,10 +535,13 @@ export function UserDetailModal({
         >
           <Dialog.Title>Cambiar Contraseña</Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={{ marginBottom: theme.spacing.m }}>
+            <Text
+              variant="bodyMedium"
+              style={{ marginBottom: theme.spacing.m }}
+            >
               Ingresa la nueva contraseña para el usuario {user.username}
             </Text>
-            
+
             <TextInput
               label="Nueva contraseña"
               value={newPassword}
@@ -402,7 +551,7 @@ export function UserDetailModal({
               style={{ marginBottom: theme.spacing.s }}
               right={
                 <TextInput.Icon
-                  icon={showPassword ? "eye-off" : "eye"}
+                  icon={showPassword ? 'eye-off' : 'eye'}
                   onPress={() => setShowPassword(!showPassword)}
                 />
               }
@@ -412,7 +561,7 @@ export function UserDetailModal({
                 La contraseña debe tener al menos 6 caracteres
               </HelperText>
             )}
-            
+
             <TextInput
               label="Confirmar contraseña"
               value={confirmPassword}
@@ -479,9 +628,7 @@ export function UserDetailModal({
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowDeleteDialog(false)}>
-              Cancelar
-            </Button>
+            <Button onPress={() => setShowDeleteDialog(false)}>Cancelar</Button>
             <Button
               onPress={handleDeleteUser}
               loading={deleteUserMutation.isPending}

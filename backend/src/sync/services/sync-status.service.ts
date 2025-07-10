@@ -122,11 +122,9 @@ export class SyncStatusService {
     const syncEnabled =
       this.configService.get<boolean>('sync.enabled', { infer: true }) || false;
     const cloudApiUrl =
-      this.configService.get<string>('sync.cloudApiUrl', { infer: true }) ||
-      '';
+      this.configService.get<string>('sync.cloudApiUrl', { infer: true }) || '';
     const cloudApiKey =
-      this.configService.get<string>('sync.cloudApiKey', { infer: true }) ||
-      '';
+      this.configService.get<string>('sync.cloudApiKey', { infer: true }) || '';
 
     const isConfigured = syncEnabled && !!cloudApiUrl && !!cloudApiKey;
 

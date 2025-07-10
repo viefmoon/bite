@@ -27,18 +27,22 @@ interface AssociatePizzaToppingsModalProps {
   product: Product | null;
 }
 
-export function AssociatePizzaToppingsModal({ 
-  visible, 
-  onDismiss, 
-  product 
+export function AssociatePizzaToppingsModal({
+  visible,
+  onDismiss,
+  product,
 }: AssociatePizzaToppingsModalProps) {
   const theme = useAppTheme();
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const [selectedToppings, setSelectedToppings] = useState<Set<string>>(new Set());
+  const [selectedToppings, setSelectedToppings] = useState<Set<string>>(
+    new Set(),
+  );
   const [hasChanges, setHasChanges] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'flavors' | 'ingredients'>('all');
+  const [filterType, setFilterType] = useState<
+    'all' | 'flavors' | 'ingredients'
+  >('all');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Query para obtener todos los toppings (sabores e ingredientes)
@@ -56,34 +60,35 @@ export function AssociatePizzaToppingsModal({
   });
 
   // Query para obtener los toppings asociados al producto
-  const { data: associatedToppings, isLoading: isLoadingAssociated } = useQuery({
-    queryKey: ['product-pizza-toppings', product?.id],
-    queryFn: async () => {
-      if (!product?.id) return [];
-      const result = await productsService.getPizzaCustomizations(product.id);
-      return result || [];
+  const { data: associatedToppings, isLoading: isLoadingAssociated } = useQuery(
+    {
+      queryKey: ['product-pizza-toppings', product?.id],
+      queryFn: async () => {
+        if (!product?.id) return [];
+        const result = await productsService.getPizzaCustomizations(product.id);
+        return result || [];
+      },
+      enabled: !!product?.id && visible,
     },
-    enabled: !!product?.id && visible,
-  });
+  );
 
   // Inicializar selecciones cuando se cargan los datos
   useEffect(() => {
     if (associatedToppings && visible && product) {
-      const associatedIds = new Set(associatedToppings.map(t => t.id));
+      const associatedIds = new Set(associatedToppings.map((t) => t.id));
       setSelectedToppings(associatedIds);
       setHasChanges(false);
     }
   }, [associatedToppings, visible, product]);
 
-
   // Mutation para actualizar asociaciones
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!product) throw new Error('No hay producto seleccionado');
-      
+
       await productsService.updatePizzaCustomizations(
         product.id,
-        Array.from(selectedToppings)
+        Array.from(selectedToppings),
       );
     },
     onSuccess: () => {
@@ -91,7 +96,9 @@ export function AssociatePizzaToppingsModal({
         message: 'Sabores e ingredientes actualizados exitosamente',
         type: 'success',
       });
-      queryClient.invalidateQueries({ queryKey: ['product-pizza-toppings', product?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['product-pizza-toppings', product?.id],
+      });
       queryClient.invalidateQueries({ queryKey: ['pizza-products'] });
       queryClient.invalidateQueries({ queryKey: ['pizza-configurations'] });
       setHasChanges(false);
@@ -106,7 +113,7 @@ export function AssociatePizzaToppingsModal({
   });
 
   const toggleTopping = (toppingId: string) => {
-    setSelectedToppings(prev => {
+    setSelectedToppings((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(toppingId)) {
         newSet.delete(toppingId);
@@ -120,23 +127,32 @@ export function AssociatePizzaToppingsModal({
 
   const toggleAll = () => {
     if (!allToppings) return;
-    
+
     if (selectedToppings.size === allToppings.length) {
       setSelectedToppings(new Set());
     } else {
-      setSelectedToppings(new Set(allToppings.map(t => t.id)));
+      setSelectedToppings(new Set(allToppings.map((t) => t.id)));
     }
     setHasChanges(true);
   };
 
   const filteredToppings = useMemo(() => {
     if (!allToppings || !Array.isArray(allToppings)) {
-      return { flavors: [], ingredients: [], displayFlavors: [], displayIngredients: [] };
+      return {
+        flavors: [],
+        ingredients: [],
+        displayFlavors: [],
+        displayIngredients: [],
+      };
     }
-    
-    const flavors = allToppings.filter(t => t.type === CustomizationType.FLAVOR);
-    const ingredients = allToppings.filter(t => t.type === CustomizationType.INGREDIENT);
-    
+
+    const flavors = allToppings.filter(
+      (t) => t.type === CustomizationType.FLAVOR,
+    );
+    const ingredients = allToppings.filter(
+      (t) => t.type === CustomizationType.INGREDIENT,
+    );
+
     return {
       flavors,
       ingredients,
@@ -363,11 +379,11 @@ export function AssociatePizzaToppingsModal({
               onPress={() => setFilterType('all')}
               style={[
                 styles.filterChip,
-                filterType === 'all' && styles.filterChipActive
+                filterType === 'all' && styles.filterChipActive,
               ]}
               textStyle={[
                 styles.filterChipText,
-                filterType === 'all' && styles.filterChipTextActive
+                filterType === 'all' && styles.filterChipTextActive,
               ]}
               icon="format-list-bulleted"
               compact
@@ -379,11 +395,11 @@ export function AssociatePizzaToppingsModal({
               onPress={() => setFilterType('flavors')}
               style={[
                 styles.filterChip,
-                filterType === 'flavors' && styles.filterChipActive
+                filterType === 'flavors' && styles.filterChipActive,
               ]}
               textStyle={[
                 styles.filterChipText,
-                filterType === 'flavors' && styles.filterChipTextActive
+                filterType === 'flavors' && styles.filterChipTextActive,
               ]}
               icon="pizza"
               compact
@@ -395,11 +411,11 @@ export function AssociatePizzaToppingsModal({
               onPress={() => setFilterType('ingredients')}
               style={[
                 styles.filterChip,
-                filterType === 'ingredients' && styles.filterChipActive
+                filterType === 'ingredients' && styles.filterChipActive,
               ]}
               textStyle={[
                 styles.filterChipText,
-                filterType === 'ingredients' && styles.filterChipTextActive
+                filterType === 'ingredients' && styles.filterChipTextActive,
               ]}
               icon="food-variant"
               compact
@@ -415,27 +431,33 @@ export function AssociatePizzaToppingsModal({
               <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : (
-            <ScrollView 
+            <ScrollView
               contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}>
-            <View style={styles.selectAllContainer}>
-              <Button
-                mode="contained-tonal"
-                onPress={toggleAll}
-                style={styles.selectAllButton}
-                icon={selectedToppings.size === allToppings?.length ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                contentStyle={styles.selectAllContent}
-              >
-                {selectedToppings.size === allToppings?.length 
-                  ? 'Quitar selección' 
-                  : 'Seleccionar todo'}
-              </Button>
-              <Text style={styles.selectionCount}>
-                {selectedToppings.size} de {allToppings?.length || 0} seleccionados
-              </Text>
-            </View>
+              showsVerticalScrollIndicator={true}
+            >
+              <View style={styles.selectAllContainer}>
+                <Button
+                  mode="contained-tonal"
+                  onPress={toggleAll}
+                  style={styles.selectAllButton}
+                  icon={
+                    selectedToppings.size === allToppings?.length
+                      ? 'checkbox-marked'
+                      : 'checkbox-blank-outline'
+                  }
+                  contentStyle={styles.selectAllContent}
+                >
+                  {selectedToppings.size === allToppings?.length
+                    ? 'Quitar selección'
+                    : 'Seleccionar todo'}
+                </Button>
+                <Text style={styles.selectionCount}>
+                  {selectedToppings.size} de {allToppings?.length || 0}{' '}
+                  seleccionados
+                </Text>
+              </View>
 
-            {filteredToppings.displayFlavors.length > 0 && (
+              {filteredToppings.displayFlavors.length > 0 && (
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>
                     Sabores ({filteredToppings.displayFlavors.length})
@@ -443,24 +465,28 @@ export function AssociatePizzaToppingsModal({
                   {filteredToppings.displayFlavors.map((flavor) => (
                     <View key={flavor.id} style={styles.toppingItem}>
                       <Checkbox.Item
-                          label={flavor.name}
-                          status={selectedToppings.has(flavor.id) ? 'checked' : 'unchecked'}
-                          onPress={() => toggleTopping(flavor.id)}
-                          labelStyle={styles.checkboxLabel}
-                          style={styles.checkbox}
-                          position="leading"
-                        />
-                        {flavor.ingredients && (
-                          <Text style={styles.ingredientsText}>
-                            {flavor.ingredients}
-                          </Text>
-                        )}
+                        label={flavor.name}
+                        status={
+                          selectedToppings.has(flavor.id)
+                            ? 'checked'
+                            : 'unchecked'
+                        }
+                        onPress={() => toggleTopping(flavor.id)}
+                        labelStyle={styles.checkboxLabel}
+                        style={styles.checkbox}
+                        position="leading"
+                      />
+                      {flavor.ingredients && (
+                        <Text style={styles.ingredientsText}>
+                          {flavor.ingredients}
+                        </Text>
+                      )}
                     </View>
                   ))}
                 </View>
               )}
 
-            {filteredToppings.displayIngredients.length > 0 && (
+              {filteredToppings.displayIngredients.length > 0 && (
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>
                     Ingredientes ({filteredToppings.displayIngredients.length})
@@ -469,7 +495,11 @@ export function AssociatePizzaToppingsModal({
                     <View key={ingredient.id} style={styles.toppingItem}>
                       <Checkbox.Item
                         label={ingredient.name}
-                        status={selectedToppings.has(ingredient.id) ? 'checked' : 'unchecked'}
+                        status={
+                          selectedToppings.has(ingredient.id)
+                            ? 'checked'
+                            : 'unchecked'
+                        }
                         onPress={() => toggleTopping(ingredient.id)}
                         labelStyle={styles.checkboxLabel}
                         style={styles.checkbox}
@@ -480,14 +510,14 @@ export function AssociatePizzaToppingsModal({
                 </View>
               )}
 
-            {filteredToppings.displayFlavors.length === 0 && 
-             filteredToppings.displayIngredients.length === 0 && (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyText}>
-                    No hay sabores ni ingredientes disponibles
-                  </Text>
-                </View>
-              )}
+              {filteredToppings.displayFlavors.length === 0 &&
+                filteredToppings.displayIngredients.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>
+                      No hay sabores ni ingredientes disponibles
+                    </Text>
+                  </View>
+                )}
             </ScrollView>
           )}
         </View>
@@ -496,8 +526,8 @@ export function AssociatePizzaToppingsModal({
 
         <View>
           <View style={styles.actions}>
-            <Button 
-              mode="outlined" 
+            <Button
+              mode="outlined"
               onPress={() => {
                 if (hasChanges) {
                   setShowConfirmation(true);
@@ -523,7 +553,7 @@ export function AssociatePizzaToppingsModal({
           </View>
         </View>
       </Modal>
-      
+
       <ConfirmationModal
         visible={showConfirmation}
         title="¿Salir sin guardar?"

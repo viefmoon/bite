@@ -6,22 +6,26 @@ import { OrderItemEntity } from './entities/order-item.entity';
 import { TicketImpressionEntity } from './entities/ticket-impression.entity';
 import { OrderHistoryEntity } from './entities/order-history.entity';
 import { DeliveryInfoEntity } from './entities/delivery-info.entity';
+import { OrderPreparationScreenStatusEntity } from './entities/order-preparation-screen-status.entity';
 import { OrdersRelationalRepository } from './repositories/order.repository';
 import { DailyOrderCounterRelationalRepository } from './repositories/daily-order-counter.repository';
 import { OrderItemRelationalRepository } from './repositories/order-item.repository';
 import { TicketImpressionRelationalRepository } from './repositories/ticket-impression-relational.repository';
 import { OrderHistoryRelationalRepository } from './repositories/order-history.repository';
+import { OrderPreparationScreenStatusRelationalRepository } from './repositories/order-preparation-screen-status.repository';
 import { OrderMapper } from './mappers/order.mapper';
 import { DailyOrderCounterMapper } from './mappers/daily-order-counter.mapper';
 import { OrderItemMapper } from './mappers/order-item.mapper';
 import { TicketImpressionMapper } from './mappers/ticket-impression.mapper';
 import { DeliveryInfoMapper } from './mappers/delivery-info.mapper';
+import { OrderPreparationScreenStatusMapper } from './mappers/order-preparation-screen-status.mapper';
 import {
   ORDER_REPOSITORY,
   DAILY_ORDER_COUNTER_REPOSITORY,
   ORDER_ITEM_REPOSITORY,
   TICKET_IMPRESSION_REPOSITORY,
   ORDER_HISTORY_REPOSITORY,
+  ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
 } from '../../../../common/tokens';
 import { RelationalUserPersistenceModule } from '../../../../users/infrastructure/persistence/relational/relational-persistence.module';
 import { RelationalTablePersistenceModule } from '../../../../tables/infrastructure/persistence/relational/relational-persistence.module';
@@ -40,6 +44,7 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
       TicketImpressionEntity,
       OrderHistoryEntity,
       DeliveryInfoEntity,
+      OrderPreparationScreenStatusEntity,
     ]),
     RelationalUserPersistenceModule,
     RelationalTablePersistenceModule,
@@ -70,11 +75,16 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
       provide: ORDER_HISTORY_REPOSITORY,
       useClass: OrderHistoryRelationalRepository,
     },
+    {
+      provide: ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
+      useClass: OrderPreparationScreenStatusRelationalRepository,
+    },
     OrderMapper,
     DailyOrderCounterMapper,
     OrderItemMapper,
     TicketImpressionMapper,
     DeliveryInfoMapper,
+    OrderPreparationScreenStatusMapper,
   ],
   exports: [
     ORDER_REPOSITORY,
@@ -82,11 +92,13 @@ import { AdjustmentsRelationalPersistenceModule } from '../../../../adjustments/
     ORDER_ITEM_REPOSITORY,
     TICKET_IMPRESSION_REPOSITORY,
     ORDER_HISTORY_REPOSITORY,
+    ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
     OrderMapper,
     DailyOrderCounterMapper,
     OrderItemMapper,
     TicketImpressionMapper,
     DeliveryInfoMapper,
+    OrderPreparationScreenStatusMapper,
   ],
 })
 export class RelationalOrderPersistenceModule {}

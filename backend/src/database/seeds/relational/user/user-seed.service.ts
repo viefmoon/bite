@@ -14,6 +14,11 @@ export class UserSeedService {
   ) {}
 
   async run() {
+    // Default password for all seed users
+    const salt = await bcrypt.genSalt();
+    const defaultPassword = await bcrypt.hash('secret', salt);
+
+    // Admin user
     const countAdmin = await this.repository.count({
       where: {
         role: {
@@ -23,16 +28,13 @@ export class UserSeedService {
     });
 
     if (!countAdmin) {
-      const salt = await bcrypt.genSalt();
-      const password = await bcrypt.hash('secret', salt);
-
       await this.repository.save(
         this.repository.create({
-          firstName: 'Super',
-          lastName: 'Admin',
+          firstName: 'Carlos',
+          lastName: 'Administrador',
           email: 'admin@example.com',
           username: 'admin',
-          password,
+          password: defaultPassword,
           role: {
             id: RoleEnum.admin,
             name: 'Admin',
@@ -42,6 +44,7 @@ export class UserSeedService {
       );
     }
 
+    // Manager user
     const countManager = await this.repository.count({
       where: {
         role: {
@@ -51,19 +54,153 @@ export class UserSeedService {
     });
 
     if (!countManager) {
-      const salt = await bcrypt.genSalt();
-      const password = await bcrypt.hash('secret', salt);
-
       await this.repository.save(
         this.repository.create({
-          firstName: 'John',
-          lastName: 'Manager',
+          firstName: 'María',
+          lastName: 'Gerente',
           email: 'manager@example.com',
           username: 'manager',
-          password,
+          password: defaultPassword,
           role: {
             id: RoleEnum.manager,
             name: 'Manager',
+          },
+          isActive: true,
+        }),
+      );
+    }
+
+    // Cashier user
+    const countCashier = await this.repository.count({
+      where: {
+        role: {
+          id: RoleEnum.cashier,
+        },
+      },
+    });
+
+    if (!countCashier) {
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Ana',
+          lastName: 'Cajera',
+          email: 'cashier@example.com',
+          username: 'cashier',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.cashier,
+            name: 'Cashier',
+          },
+          isActive: true,
+        }),
+      );
+    }
+
+    // Waiter user
+    const countWaiter = await this.repository.count({
+      where: {
+        role: {
+          id: RoleEnum.waiter,
+        },
+      },
+    });
+
+    if (!countWaiter) {
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Luis',
+          lastName: 'Mesero',
+          email: 'waiter@example.com',
+          username: 'waiter',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.waiter,
+            name: 'Waiter',
+          },
+          isActive: true,
+        }),
+      );
+    }
+
+    // Kitchen users (3 different users)
+    const countKitchen = await this.repository.count({
+      where: {
+        role: {
+          id: RoleEnum.kitchen,
+        },
+      },
+    });
+
+    if (!countKitchen) {
+      // Kitchen user 1
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Pedro',
+          lastName: 'Cocinero',
+          email: 'kitchen1@example.com',
+          username: 'kitchen1',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.kitchen,
+            name: 'Kitchen',
+          },
+          isActive: true,
+        }),
+      );
+
+      // Kitchen user 2
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Rosa',
+          lastName: 'Chef',
+          email: 'kitchen2@example.com',
+          username: 'kitchen2',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.kitchen,
+            name: 'Kitchen',
+          },
+          isActive: true,
+        }),
+      );
+
+      // Kitchen user 3
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Miguel',
+          lastName: 'Parrillero',
+          email: 'kitchen3@example.com',
+          username: 'kitchen3',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.kitchen,
+            name: 'Kitchen',
+          },
+          isActive: true,
+        }),
+      );
+    }
+
+    // Delivery user
+    const countDelivery = await this.repository.count({
+      where: {
+        role: {
+          id: RoleEnum.delivery,
+        },
+      },
+    });
+
+    if (!countDelivery) {
+      await this.repository.save(
+        this.repository.create({
+          firstName: 'Juan',
+          lastName: 'Repartidor',
+          email: 'delivery@example.com',
+          username: 'delivery',
+          password: defaultPassword,
+          role: {
+            id: RoleEnum.delivery,
+            name: 'Delivery',
           },
           isActive: true,
         }),

@@ -37,7 +37,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Verificar si el usuario está activo antes de guardar los tokens
       if (user && 'isActive' in user && !user.isActive) {
-        console.error('[AuthStore] Usuario inactivo, no se guardarán las credenciales');
         throw new Error('Usuario inactivo');
       }
 
@@ -55,7 +54,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
       });
     } catch (error) {
-      console.error('Error guardando tokens y user info:', error);
       throw error; // Re-lanzar el error para que el login lo maneje
     }
   },
@@ -65,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       set({ accessToken, isAuthenticated: true });
     } catch (error) {
-      console.error('Error guardando access token:', error);
+      console.error('[AuthStore] Error al guardar access token:', error);
     }
   },
 
@@ -74,7 +72,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       set({ refreshToken });
     } catch (error) {
-      console.error('Error guardando refresh token:', error);
+      console.error('[AuthStore] Error al guardar refresh token:', error);
     }
   },
 
@@ -83,7 +81,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (user) {
         // Si el usuario se actualiza y está inactivo, cerrar sesión
         if ('isActive' in user && !user.isActive) {
-          console.log('[AuthStore] Usuario actualizado a inactivo, cerrando sesión...');
           await useAuthStore.getState().logout();
           return;
         }
@@ -93,7 +90,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user });
     } catch (error) {
-      console.error('Error guardando user info:', error);
+      console.error('[AuthStore] Error al guardar información del usuario:', error);
     }
   },
 
@@ -108,9 +105,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         isAuthenticated: false,
       });
-      console.log('Sesión cerrada.');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('[AuthStore] Error durante logout:', error);
     }
   },
 }));
@@ -125,10 +121,6 @@ export const initializeAuthStore = async () => {
       try {
         user = JSON.parse(userInfoString);
       } catch (parseError) {
-        console.error(
-          'Error parsing user info from EncryptedStorage:',
-          parseError,
-        );
         await EncryptedStorage.removeItem(USER_INFO_KEY);
       }
     }
@@ -136,7 +128,6 @@ export const initializeAuthStore = async () => {
     if (accessToken && refreshToken) {
       // Verificar si el usuario está activo antes de restaurar la sesión
       if (user && 'isActive' in user && !user.isActive) {
-        console.log('Usuario inactivo detectado, limpiando sesión...');
         await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
         await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
         await EncryptedStorage.removeItem(USER_INFO_KEY);
@@ -158,13 +149,10 @@ export const initializeAuthStore = async () => {
       });
 
       // Verificamos si el token es válido con el backend actual
-      console.log('Verificando validez del token almacenado...');
       const isTokenValid = await authService.verifyToken();
 
       if (isTokenValid) {
-        console.log('Token válido, manteniendo sesión activa.');
       } else {
-        console.log('Token inválido o backend diferente, limpiando sesión...');
         // Si el token no es válido, limpiamos todo
         await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
         await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -183,10 +171,8 @@ export const initializeAuthStore = async () => {
         user: null,
         isAuthenticated: false,
       });
-
     }
   } catch (error) {
-    console.error('Error inicializando auth store:', error);
     useAuthStore.setState({
       accessToken: null,
       refreshToken: null,
