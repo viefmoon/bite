@@ -100,7 +100,7 @@ export const useCreatePrinterMutation = (): UseMutationResult<
     },
     onError: (error) => {
       showSnackbar({
-        message: `Error al crear impresora: ${getApiErrorMessage(error)}`,
+        message: getApiErrorMessage(error),
         type: 'error',
       });
     },
@@ -139,7 +139,7 @@ export const useUpdatePrinterMutation = (): UseMutationResult<
     },
     onError: (error, variables) => {
       showSnackbar({
-        message: `Error al actualizar impresora: ${getApiErrorMessage(error)}`,
+        message: getApiErrorMessage(error),
         type: 'error',
       });
     },

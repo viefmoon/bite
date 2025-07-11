@@ -1,5 +1,6 @@
 import ApiClientWrapper from '../../../app/services/apiClientWrapper';
 import { ApiError } from '../../../app/lib/errors';
+import { handleApiError } from '../../../app/lib/apiResponseHelper';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
   DiscoveredPrinter,
@@ -28,10 +29,7 @@ const discoverPrinters = async (
   );
 
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
 
   return response.data;
@@ -75,10 +73,7 @@ const findAllPrinters = async (
     typeof response.data !== 'object' ||
     !Array.isArray(response.data.items)
   ) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status ?? 500,
-    );
+    handleApiError(response);
   }
 
   return {
@@ -95,10 +90,7 @@ const findOnePrinter = async (id: string): Promise<ThermalPrinter> => {
     `${API_PATHS.THERMAL_PRINTERS}/${id}`,
   );
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };
@@ -111,10 +103,7 @@ const createPrinter = async (
     data,
   );
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };
@@ -128,10 +117,7 @@ const updatePrinter = async (
     data,
   );
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };
@@ -141,10 +127,7 @@ const deletePrinter = async (id: string): Promise<void> => {
     `${API_PATHS.THERMAL_PRINTERS}/${id}`,
   );
   if (!response.ok) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
 };
 
@@ -158,10 +141,7 @@ const pingPrinter = async (id: string): Promise<{ status: string }> => {
     !response.data ||
     typeof response.data.status !== 'string'
   ) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };
@@ -179,10 +159,7 @@ const testPrintDiscoveredPrinter = async (
   });
 
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };
@@ -212,10 +189,7 @@ const testPrintPrinter = async (
   }>(`${API_PATHS.THERMAL_PRINTERS}/test-print`, printerInfo);
 
   if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
+    handleApiError(response);
   }
   return response.data;
 };

@@ -262,12 +262,6 @@ function configureInterceptors() {
         originalRequest.url?.includes('/auth/me') ||
         originalRequest._retry
       ) {
-        // Log temporal para depuración
-        if (error.response?.status === 409) {
-          console.log('=== INTERCEPTOR 409 ERROR ===');
-          console.log('error.response.data:', error.response.data);
-          console.log('error.response.status:', error.response.status);
-        }
         const apiError = ApiError.fromAxiosError(error);
         return Promise.reject(apiError);
       }
