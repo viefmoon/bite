@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  ValidateIf,
 } from 'class-validator';
 
 export class UpdateCategoryDto {
@@ -41,9 +42,10 @@ export class UpdateCategoryDto {
     nullable: true,
     required: false,
   })
-  @IsUUID()
   @IsOptional()
-  photoId?: string;
+  @ValidateIf((o) => o.photoId !== null)
+  @IsUUID()
+  photoId?: string | null;
 
   @ApiProperty({
     type: Number,

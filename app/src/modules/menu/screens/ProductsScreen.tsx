@@ -122,7 +122,7 @@ function ProductsScreen(): React.ReactElement {
       const mutationData = {
         ...dataToSend,
         modifierGroupIds: dataToSend.modifierGroupIds ?? [],
-        ...(photoId !== undefined && { photoId: photoId }),
+        ...(photoId !== undefined && { photoId }),
       };
 
       try {
@@ -178,6 +178,7 @@ function ProductsScreen(): React.ReactElement {
       _displayDescription: string;
     }),
     imageField: 'photo' as keyof Product,
+    sortOrderField: 'sortOrder' as keyof Product,
     statusConfig: {
       field: 'isActive' as keyof Product,
       activeValue: true,

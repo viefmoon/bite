@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 import { TransformDefault } from '../../utils/transformers/transform-default.decorator';
 
@@ -49,9 +50,10 @@ export class CreateSubcategoryDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     nullable: true,
   })
-  @IsString()
   @IsOptional()
-  photoId?: string;
+  @ValidateIf((o) => o.photoId !== null)
+  @IsString()
+  photoId?: string | null;
 
   @ApiProperty({
     type: Number,

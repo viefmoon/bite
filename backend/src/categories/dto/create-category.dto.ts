@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  ValidateIf,
 } from 'class-validator';
 import { TransformDefault } from '../../utils/transformers/transform-default.decorator';
 
@@ -42,9 +43,10 @@ export class CreateCategoryDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     nullable: true,
   })
-  @IsUUID()
   @IsOptional()
-  photoId?: string;
+  @ValidateIf((o) => o.photoId !== null)
+  @IsUUID()
+  photoId?: string | null;
 
   @ApiProperty({
     type: Number,

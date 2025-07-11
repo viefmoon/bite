@@ -450,13 +450,6 @@ export class OrdersService {
       updateOrderDto.customerId !== existingOrder.customerId
     )
       updatePayload.customerId = updateOrderDto.customerId;
-    if (
-      updateOrderDto.estimatedDeliveryTime !== undefined &&
-      new Date(updateOrderDto.estimatedDeliveryTime).getTime() !==
-        new Date(existingOrder.estimatedDeliveryTime || 0).getTime()
-    )
-      updatePayload.estimatedDeliveryTime =
-        updateOrderDto.estimatedDeliveryTime;
 
     // Manejar actualización de deliveryInfo
     if (updateOrderDto.deliveryInfo !== undefined) {

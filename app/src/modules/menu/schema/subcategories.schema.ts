@@ -8,7 +8,7 @@ export const createSubCategoryDtoSchema = z.object({
   description: z.string().optional().nullable(),
   isActive: z.boolean().optional().default(true),
   categoryId: z.string().min(1, 'Debe seleccionar una categoría válida'),
-  photoId: z.string().optional().nullable(),
+  photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(),
   imageUri: z
     .union([
       z.string().url(),

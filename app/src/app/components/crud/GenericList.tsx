@@ -154,6 +154,8 @@ const getStyles = (
       paddingVertical: responsive.spacing.s,
       paddingHorizontal: responsive.spacing.xs,
       minHeight: responsive.isTablet ? 64 : 56,
+      flexWrap: 'wrap',
+      alignItems: 'flex-start',
     },
     listItemImage: {
       width: responsive.isTablet ? 44 : 40,
@@ -360,11 +362,7 @@ const GenericList = <TItem extends { id: string }>({
           item[renderConfig.descriptionField] || '',
         );
         if (rawDescription && rawDescription.toLowerCase() !== 'null') {
-          const maxLength = renderConfig.descriptionMaxLength ?? 50;
-          description =
-            rawDescription.length > maxLength
-              ? `${rawDescription.substring(0, maxLength)}...`
-              : rawDescription;
+          description = rawDescription;
         }
       }
 
@@ -476,7 +474,6 @@ const GenericList = <TItem extends { id: string }>({
                 <Text
                   variant="bodyLarge"
                   style={styles.title}
-                  numberOfLines={1}
                 >
                   {title}
                 </Text>
@@ -520,8 +517,6 @@ const GenericList = <TItem extends { id: string }>({
                   <Text
                     variant="bodySmall"
                     style={styles.description}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
                   >
                     {combinedText}
                   </Text>

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class UpdateSubcategoryDto {
   @ApiProperty({
@@ -45,9 +45,10 @@ export class UpdateSubcategoryDto {
     nullable: true,
     required: false,
   })
-  @IsString()
   @IsOptional()
-  photoId?: string;
+  @ValidateIf((o) => o.photoId !== null)
+  @IsString()
+  photoId?: string | null;
 
   @ApiProperty({
     type: Number,

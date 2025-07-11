@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Portal, IconButton } from 'react-native-paper';
 import {
@@ -65,6 +65,18 @@ const SubcategoriesScreen: React.FC = () => {
 
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
 
+  // Estado para manejar los valores iniciales del formulario
+  const [formInitialValues, setFormInitialValues] = useState<
+    SubCategoryFormInputs | UpdateSubCategoryFormInputs
+  >({
+    name: '',
+    description: '',
+    isActive: true,
+    categoryId: categoryId,
+    sortOrder: 0,
+    imageUri: null,
+  });
+
   const queryParams = useMemo((): FindAllSubcategoriesDto => {
     let isActive: boolean | undefined;
     if (statusFilter === 'active') isActive = true;
@@ -110,6 +122,37 @@ const SubcategoriesScreen: React.FC = () => {
     refetchList();
   }, [refetchList]);
 
+  // Efecto para cargar valores iniciales incluyendo la imagen
+  useEffect(() => {
+    const loadInitialValues = async () => {
+      if (editingItem) {
+        let imageUrl = null;
+        if (editingItem.photo?.path) {
+          imageUrl = await getImageUrl(editingItem.photo.path);
+        }
+        setFormInitialValues({
+          name: editingItem.name,
+          description: editingItem.description ?? '',
+          isActive: editingItem.isActive,
+          categoryId: editingItem.categoryId,
+          sortOrder: editingItem.sortOrder ?? 0,
+          imageUri: imageUrl,
+        });
+      } else {
+        setFormInitialValues({
+          name: '',
+          description: '',
+          isActive: true,
+          categoryId: categoryId,
+          sortOrder: 0,
+          imageUri: null,
+        });
+      }
+    };
+
+    loadInitialValues();
+  }, [editingItem, categoryId]);
+
   useFocusEffect(
     useCallback(() => {
       refetchList();
@@ -147,6 +190,7 @@ const SubcategoriesScreen: React.FC = () => {
     titleField: 'name' as keyof SubCategory,
     descriptionField: 'description' as keyof SubCategory,
     imageField: 'photo' as keyof SubCategory,
+    sortOrderField: 'sortOrder' as keyof SubCategory,
     statusConfig: {
       field: 'isActive' as keyof SubCategory,
       activeValue: true,
@@ -155,10 +199,39 @@ const SubcategoriesScreen: React.FC = () => {
     },
   };
 
+  const formatDate = (value: string | Date) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const detailFieldsToDisplay: Array<{
     field: keyof SubCategory;
     label: string;
-  }> = [];
+    render?: (value: any) => string;
+  }> = [
+    {
+      field: 'sortOrder',
+      label: 'Orden de visualización',
+      render: (value) => value ?? '0',
+    },
+    {
+      field: 'createdAt',
+      label: 'Fecha de creación',
+      render: formatDate,
+    },
+    {
+      field: 'updatedAt',
+      label: 'Última actualización',
+      render: formatDate,
+    },
+  ];
 
   const filterOptions: FilterOption<StatusFilter>[] = [
     { value: 'all', label: 'Todas' },
@@ -194,7 +267,6 @@ const SubcategoriesScreen: React.FC = () => {
   const imagePickerConfig: ImagePickerConfig<
     SubCategoryFormInputs | UpdateSubCategoryFormInputs
   > = {
-    // Eliminado segundo tipo genérico
     imageUriField: 'imageUri',
     onImageUpload: async (file: FileObject) => {
       const result = await ImageUploadService.uploadImage(file);
@@ -308,27 +380,7 @@ const SubcategoriesScreen: React.FC = () => {
           } // Corregido nombre de schema
           formFields={formFields}
           imagePickerConfig={imagePickerConfig}
-          initialValues={
-            editingItem
-              ? {
-                  name: editingItem.name,
-                  description: editingItem.description ?? '',
-                  isActive: editingItem.isActive,
-                  categoryId: editingItem.categoryId,
-                  sortOrder: editingItem.sortOrder ?? 0,
-                  imageUri: editingItem.photo?.path
-                    ? getImageUrl(editingItem.photo.path)
-                    : null,
-                }
-              : {
-                  name: '',
-                  description: '',
-                  isActive: true,
-                  categoryId: categoryId,
-                  sortOrder: 0,
-                  imageUri: null,
-                }
-          }
+          initialValues={formInitialValues}
           editingItem={editingItem}
           isSubmitting={createMutation.isPending || updateMutation.isPending}
           modalTitle={(editing) =>
@@ -345,9 +397,6 @@ const createStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    listStyle: {
-      flex: 1,
     },
     listContentContainer: {
       paddingBottom: 80,

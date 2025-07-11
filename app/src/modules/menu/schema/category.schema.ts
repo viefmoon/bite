@@ -6,7 +6,7 @@ export const createCategoryDtoSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean().optional().default(true),
-  photoId: z.string().optional().nullable(),
+  photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(),
   sortOrder: z.number().optional().default(0),
 });
 
@@ -14,7 +14,7 @@ export const updateCategoryDtoSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').optional(),
   description: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
-  photoId: z.string().optional().nullable(),
+  photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(),
   sortOrder: z.number().optional(),
 });
 

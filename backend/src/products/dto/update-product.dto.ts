@@ -150,6 +150,7 @@ export class UpdateProductDto {
     required: false,
   })
   @IsOptional()
+  @ValidateIf((o) => o.photoId !== null)
   @IsString()
   photoId?: string | null;
 

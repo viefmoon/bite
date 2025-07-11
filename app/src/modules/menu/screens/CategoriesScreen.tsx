@@ -271,6 +271,7 @@ const CategoriesScreen: React.FC = () => {
     descriptionField: 'description' as keyof Category,
     descriptionMaxLength: 60,
     imageField: 'photo' as keyof Category,
+    sortOrderField: 'sortOrder' as keyof Category,
     statusConfig: {
       field: 'isActive' as keyof Category,
       activeValue: true,
@@ -402,6 +403,8 @@ const CategoriesScreen: React.FC = () => {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
                 });
               },
             },
@@ -415,6 +418,8 @@ const CategoriesScreen: React.FC = () => {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
                 });
               },
             },

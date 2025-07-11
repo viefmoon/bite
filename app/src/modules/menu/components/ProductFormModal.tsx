@@ -287,7 +287,7 @@ function ProductFormModal({
         setIsInternalImageUploading(false);
       }
     } else {
-      finalPhotoId = ImageUploadService.determinePhotoId(
+      finalPhotoId = await ImageUploadService.determinePhotoId(
         currentImageUri,
         initialData ?? undefined,
       );
@@ -645,12 +645,21 @@ function ProductFormModal({
                           }
                           onPress={() => setPreparationScreenMenuVisible(true)}
                           right={
-                            <TextInput.Icon
-                              icon="chevron-down"
-                              onPress={() =>
-                                setPreparationScreenMenuVisible(true)
-                              }
-                            />
+                            value ? (
+                              <TextInput.Icon
+                                icon="close"
+                                onPress={() => {
+                                  onChange(null);
+                                }}
+                              />
+                            ) : (
+                              <TextInput.Icon
+                                icon="chevron-down"
+                                onPress={() =>
+                                  setPreparationScreenMenuVisible(true)
+                                }
+                              />
+                            )
                           }
                           editable={false}
                           error={!!errors.preparationScreenId}

@@ -135,8 +135,9 @@ export class CreateProductDto {
     nullable: true,
   })
   @IsOptional()
+  @ValidateIf((o) => o.photoId !== null)
   @IsString()
-  photoId?: string;
+  photoId?: string | null;
 
   @ApiProperty({
     type: Number,
