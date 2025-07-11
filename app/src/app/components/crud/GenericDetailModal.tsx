@@ -65,9 +65,9 @@ const getStyles = (
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.elevation.level2,
-      maxWidth: responsive.isTablet ? 800 : 500,
+      maxWidth: responsive.isTablet ? 600 : 400,
       alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '95%',
+      width: '90%',
     },
     modalTitle: {
       marginBottom: responsive.isTablet
@@ -102,6 +102,8 @@ const getStyles = (
       lineHeight: responsive.isTablet ? 26 : 20,
       fontSize: responsive.isTablet ? 16 : 14,
       paddingHorizontal: responsive.spacing.s,
+      flexWrap: 'wrap',
+      width: '100%',
     },
     statusChipContainer: {
       marginBottom: responsive.spacing.s,
@@ -126,11 +128,12 @@ const getStyles = (
     fieldRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       marginBottom: responsive.spacing.s,
       paddingVertical: responsive.spacing.xs,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
+      flexWrap: 'wrap',
     },
     lastFieldRow: {
       marginBottom: 0,
@@ -141,12 +144,16 @@ const getStyles = (
       marginRight: responsive.spacing.s,
       color: theme.colors.onSurfaceVariant,
       fontSize: responsive.isTablet ? 16 : 14,
+      flexBasis: '35%',
+      minWidth: 100,
     },
     fieldValue: {
-      flexShrink: 1,
+      flex: 1,
       textAlign: 'right',
       color: theme.colors.onSurface,
       fontSize: responsive.isTablet ? 16 : 14,
+      flexWrap: 'wrap',
+      maxWidth: '65%',
     },
     detailActions: {
       flexDirection: 'row',
@@ -316,7 +323,11 @@ function GenericDetailModal<TItem extends { id: string }>({
           )}
           {statusChip}
           {description && (
-            <Text style={[styles.detailDescription, descriptionStyle]}>
+            <Text 
+              style={[styles.detailDescription, descriptionStyle]}
+              numberOfLines={4}
+              ellipsizeMode="tail"
+            >
               {description}
             </Text>
           )}
@@ -338,11 +349,29 @@ function GenericDetailModal<TItem extends { id: string }>({
                     {label}
                   </Text>
                   {render ? (
-                    <Text style={[styles.fieldValue, fieldValueStyle]}>
-                      {render(value, item)}
-                    </Text>
+                    (() => {
+                      const rendered = render(value, item);
+                      // Si el render devuelve un string o número, lo envolvemos en Text
+                      if (typeof rendered === 'string' || typeof rendered === 'number') {
+                        return (
+                          <Text 
+                            style={[styles.fieldValue, fieldValueStyle]}
+                            numberOfLines={3}
+                            ellipsizeMode="tail"
+                          >
+                            {rendered}
+                          </Text>
+                        );
+                      }
+                      // Si ya es un elemento React, lo devolvemos tal cual
+                      return rendered;
+                    })()
                   ) : (
-                    <Text style={[styles.fieldValue, fieldValueStyle]}>
+                    <Text 
+                      style={[styles.fieldValue, fieldValueStyle]}
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                    >
                       {typeof value === 'boolean'
                         ? value
                           ? 'Sí'
