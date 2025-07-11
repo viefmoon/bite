@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
@@ -12,13 +12,16 @@ import {
   Chip,
   Avatar,
   IconButton,
+  Icon,
+  ActivityIndicator,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { Address, CreateAddressDto } from '../types/customer.types';
 import { addressSchema, AddressFormInputs } from '../schema/customer.schema';
-import LocationPicker from './LocationPicker';
+import { WebView } from 'react-native-webview';
+import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
 
 interface AddressFormModalProps {
   visible: boolean;
@@ -38,7 +41,10 @@ export default function AddressFormModal({
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [isMapLoading, setIsMapLoading] = useState(true);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+  const webViewRef = useRef<WebView>(null);
 
   const {
     control,
@@ -53,11 +59,12 @@ export default function AddressFormModal({
       name: '',
       street: '',
       number: '',
-      complement: '',
+      interiorNumber: '',
       neighborhood: '',
       city: '',
       state: '',
       zipCode: '',
+      country: 'México',
       deliveryInstructions: '',
       isDefault: false,
     },
@@ -65,7 +72,6 @@ export default function AddressFormModal({
 
   const latitude = watch('latitude');
   const longitude = watch('longitude');
-  const geocodedAddress = watch('geocodedAddress');
 
   useEffect(() => {
     if (editingItem) {
@@ -73,15 +79,15 @@ export default function AddressFormModal({
         name: editingItem.name,
         street: editingItem.street,
         number: editingItem.number,
-        complement: editingItem.complement || '',
+        interiorNumber: editingItem.interiorNumber || '',
         neighborhood: editingItem.neighborhood,
         city: editingItem.city,
         state: editingItem.state,
         zipCode: editingItem.zipCode,
+        country: editingItem.country || 'México',
         deliveryInstructions: editingItem.deliveryInstructions || '',
         latitude: editingItem.latitude,
         longitude: editingItem.longitude,
-        geocodedAddress: editingItem.geocodedAddress || '',
         isDefault: editingItem.isDefault,
       });
     } else {
@@ -89,52 +95,275 @@ export default function AddressFormModal({
         name: '',
         street: '',
         number: '',
-        complement: '',
+        interiorNumber: '',
         neighborhood: '',
         city: '',
         state: '',
         zipCode: '',
+        country: 'México',
         deliveryInstructions: '',
         isDefault: false,
       });
     }
   }, [editingItem, reset]);
 
-  const handleLocationConfirm = (location: {
-    latitude: number;
-    longitude: number;
-    geocodedAddress?: string;
-  }) => {
-    setValue('latitude', location.latitude);
-    setValue('longitude', location.longitude);
-    if (location.geocodedAddress) {
-      setValue('geocodedAddress', location.geocodedAddress);
+  // HTML del mapa con Google Maps API - Memoizado para evitar recrearlo en cada render
+  const mapHtml = React.useMemo(() => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    setShowLocationPicker(false);
-  };
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    let map;
+    let marker;
+    let currentLocation = null;
 
-  const handleFormSubmit = async (data: AddressFormInputs) => {
+    function initMap() {
+      // Inicializar el mapa
+      const initialLocation = ${
+        latitude && longitude
+          ? `{ lat: ${latitude}, lng: ${longitude} }`
+          : 'null'
+      };
+      
+      // Configurar centro del mapa
+      const mapCenter = initialLocation || { lat: ${GOOGLE_MAPS_CONFIG.defaultCenter.lat}, lng: ${GOOGLE_MAPS_CONFIG.defaultCenter.lng} };
+      
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: mapCenter,
+        zoom: initialLocation ? ${GOOGLE_MAPS_CONFIG.locationZoom} : ${GOOGLE_MAPS_CONFIG.defaultZoom},
+        ...${JSON.stringify(GOOGLE_MAPS_CONFIG.mapOptions)},
+        gestureHandling: ${isMapFullscreen ? "'greedy'" : "'cooperative'"}, // Greedy en pantalla completa, cooperative en el modal
+      });
+
+      // Solo crear marcador si hay ubicación inicial
+      if (initialLocation) {
+        marker = new google.maps.Marker({
+          position: initialLocation,
+          map: map,
+          draggable: true,
+          animation: google.maps.Animation.DROP,
+          title: "Ubicación de la dirección"
+        });
+        
+        currentLocation = initialLocation;
+        
+        // Actualizar ubicación cuando se arrastra el marcador
+        marker.addListener('dragend', function() {
+          currentLocation = {
+            lat: marker.getPosition().lat(),
+            lng: marker.getPosition().lng()
+          };
+          sendMessage('locationUpdated', {
+            latitude: currentLocation.lat,
+            longitude: currentLocation.lng
+          });
+        });
+      }
+
+      // Actualizar ubicación al hacer click en el mapa
+      map.addListener('click', function(event) {
+        if (!marker) {
+          // Crear marcador si no existe
+          marker = new google.maps.Marker({
+            position: event.latLng,
+            map: map,
+            draggable: true,
+            animation: google.maps.Animation.DROP,
+            title: "Ubicación de la dirección"
+          });
+          
+          // Agregar listener para arrastrar
+          marker.addListener('dragend', function() {
+            currentLocation = {
+              lat: marker.getPosition().lat(),
+              lng: marker.getPosition().lng()
+            };
+            sendMessage('locationUpdated', {
+              latitude: currentLocation.lat,
+              longitude: currentLocation.lng
+            });
+          });
+        } else {
+          // Mover marcador existente
+          marker.setPosition(event.latLng);
+        }
+        
+        currentLocation = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        sendMessage('locationUpdated', {
+          latitude: currentLocation.lat,
+          longitude: currentLocation.lng
+        });
+      });
+
+      // Escuchar mensajes desde React Native
+      window.addEventListener('message', handleMessage);
+      
+      // Notificar que el mapa está listo
+      sendMessage('mapReady', {});
+    }
+
+    function handleMessage(event) {
+      try {
+        const data = JSON.parse(event.data);
+        
+        switch(data.type) {
+          case 'setLocation':
+            setLocation(data.latitude, data.longitude);
+            break;
+          case 'centerOnLocation':
+            centerOnLocation();
+            break;
+        }
+      } catch (e) {
+        // Error handling message
+      }
+    }
+
+    function setLocation(lat, lng) {
+      const position = new google.maps.LatLng(lat, lng);
+      
+      if (!marker) {
+        // Crear marcador si no existe
+        marker = new google.maps.Marker({
+          position: position,
+          map: map,
+          draggable: true,
+          animation: google.maps.Animation.DROP,
+          title: "Ubicación de la dirección"
+        });
+        
+        // Agregar listener para arrastrar
+        marker.addListener('dragend', function() {
+          currentLocation = {
+            lat: marker.getPosition().lat(),
+            lng: marker.getPosition().lng()
+          };
+          sendMessage('locationUpdated', {
+            latitude: currentLocation.lat,
+            longitude: currentLocation.lng
+          });
+        });
+      } else {
+        marker.setPosition(position);
+      }
+      
+      map.setCenter(position);
+      currentLocation = { lat, lng };
+    }
+
+    function centerOnLocation() {
+      if (currentLocation) {
+        map.setCenter(currentLocation);
+        map.setZoom(16);
+      }
+    }
+
+    function sendMessage(type, data) {
+      try {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: type,
+            ...data
+          }));
+        }
+      } catch (e) {
+        // Error sending message
+      }
+    }
+  </script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.apiKey}&callback=initMap">
+  </script>
+</body>
+</html>
+  `, [latitude, longitude, isMapFullscreen]);
+
+  // Manejar mensajes del WebView
+  const handleWebViewMessage = React.useCallback((event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+
+      switch (data.type) {
+        case 'mapReady':
+          setMapReady(true);
+          setIsMapLoading(false);
+          break;
+        case 'locationUpdated':
+          setValue('latitude', data.latitude);
+          setValue('longitude', data.longitude);
+          break;
+      }
+    } catch (e) {
+      // Silently handle parsing errors
+    }
+  }, [setValue]);
+
+  // Enviar mensaje al WebView
+  const sendMessageToWebView = React.useCallback((type: string, data: any) => {
+    if (webViewRef.current) {
+      const message = JSON.stringify({ type, ...data });
+      webViewRef.current.postMessage(message);
+    }
+  }, []);
+
+  // Actualizar la ubicación en el mapa cuando cambie
+  useEffect(() => {
+    if (mapReady && latitude !== undefined && longitude !== undefined) {
+      sendMessageToWebView('setLocation', {
+        latitude,
+        longitude,
+      });
+    }
+  }, [latitude, longitude, mapReady]);
+
+  // Resetear estados cuando el componente se monta
+  useEffect(() => {
+    if (visible) {
+      setIsMapLoading(true);
+      setMapReady(false);
+    }
+  }, [visible]);
+
+  const handleFormSubmit = React.useCallback(async (data: AddressFormInputs) => {
     await onSubmit(data);
-  };
+  }, [onSubmit]);
 
-  const buildDisplayAddress = () => {
-    const parts = [];
-    const streetValue = watch('street');
-    const numberValue = watch('number');
-    const neighborhoodValue = watch('neighborhood');
-    const cityValue = watch('city');
-    const stateValue = watch('state');
+  const hasValidCoordinates = React.useMemo(() => {
+    return (
+      latitude !== undefined && 
+      longitude !== undefined && 
+      !isNaN(Number(latitude)) && 
+      !isNaN(Number(longitude)) &&
+      Number(latitude) !== 0 &&
+      Number(longitude) !== 0
+    );
+  }, [latitude, longitude]);
 
-    if (streetValue && numberValue) {
-      parts.push(`${streetValue} ${numberValue}`);
-    }
-    if (neighborhoodValue) parts.push(neighborhoodValue);
-    if (cityValue && stateValue) {
-      parts.push(`${cityValue}, ${stateValue}`);
-    }
-
-    return parts.join(', ');
-  };
 
   return (
     <>
@@ -153,7 +382,7 @@ export default function AddressFormModal({
             >
               <View style={styles.headerLeft}>
                 <Avatar.Icon
-                  size={32}
+                  size={28}
                   icon={editingItem ? 'map-marker-radius' : 'map-marker-plus'}
                   style={[
                     styles.headerIcon,
@@ -187,6 +416,31 @@ export default function AddressFormModal({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
+              {/* Switch de dirección predeterminada al inicio */}
+              <Controller
+                control={control}
+                name="isDefault"
+                render={({ field: { onChange, value } }) => (
+                  <Surface style={[styles.switchContainer, { marginBottom: theme.spacing.m }]} elevation={1}>
+                    <View style={styles.switchContent}>
+                      <View style={styles.switchTextContainer}>
+                        <Text style={styles.switchLabel} variant="bodyLarge">
+                          Dirección predeterminada
+                        </Text>
+                        <Text style={styles.switchDescription} variant="bodySmall">
+                          Esta será la dirección principal para los pedidos
+                        </Text>
+                      </View>
+                      <Switch
+                        value={value}
+                        onValueChange={onChange}
+                        color={theme.colors.primary}
+                      />
+                    </View>
+                  </Surface>
+                )}
+              />
+
               <View style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle} variant="titleMedium">
@@ -283,7 +537,7 @@ export default function AddressFormModal({
                   <View style={styles.halfInput}>
                     <Controller
                       control={control}
-                      name="complement"
+                      name="interiorNumber"
                       render={({ field: { onChange, onBlur, value } }) => (
                         <View style={styles.inputContainer}>
                           <TextInput
@@ -412,6 +666,31 @@ export default function AddressFormModal({
                     />
                   </View>
                 </View>
+
+                <Controller
+                  control={control}
+                  name="country"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        label="País"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={!!errors.country}
+                        mode="outlined"
+                        placeholder="México"
+                        left={<TextInput.Icon icon="earth" />}
+                        outlineStyle={styles.inputOutline}
+                      />
+                      {errors.country && (
+                        <HelperText type="error" visible={!!errors.country}>
+                          {errors.country.message}
+                        </HelperText>
+                      )}
+                    </View>
+                  )}
+                />
               </View>
 
               <View style={styles.sectionContainer}>
@@ -450,78 +729,121 @@ export default function AddressFormModal({
                   )}
                 />
 
-                {/* Sección de Ubicación */}
-                <View style={styles.locationSection}>
-                  {latitude && longitude ? (
-                    <Surface style={styles.locationCard} elevation={1}>
-                      <View style={styles.locationCardContent}>
-                        <IconButton
-                          icon="map-marker"
-                          size={20}
-                          iconColor={theme.colors.primary}
-                        />
-                        <View style={styles.locationInfo}>
-                          <Text
-                            variant="bodyMedium"
-                            style={styles.coordinatesText}
-                          >
-                            {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                          </Text>
-                          {geocodedAddress && (
-                            <Text
-                              variant="bodySmall"
-                              style={styles.geocodedText}
-                            >
-                              {geocodedAddress}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    </Surface>
-                  ) : (
-                    <Surface style={styles.emptyLocationCard} elevation={0}>
-                      <Text variant="bodyMedium" style={styles.noLocationText}>
-                        No se ha seleccionado ubicación
+                {/* Sección de Ubicación con Mapa Integrado */}
+                <View style={styles.locationWrapper}>
+                  <View style={styles.locationHeader}>
+                    <Text style={styles.locationLabel} variant="bodyMedium">
+                      Ubicación en el mapa
+                    </Text>
+                    {hasValidCoordinates && (
+                      <Button
+                        mode="text"
+                        onPress={() => {
+                          setValue('latitude', undefined);
+                          setValue('longitude', undefined);
+                        }}
+                        icon="close"
+                        compact
+                        style={styles.clearLocationBtn}
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                  </View>
+                  
+                  <Surface style={styles.mapContainer} elevation={1}>
+                    <View style={styles.mapInstructions}>
+                      <Icon 
+                        source="gesture-two-double-tap" 
+                        size={20} 
+                        color={theme.colors.primary}
+                      />
+                      <Text style={styles.mapInstructionText} variant="bodySmall">
+                        Usa dos dedos para mover el mapa • Toca para marcar ubicación
                       </Text>
-                    </Surface>
-                  )}
+                    </View>
+                    
+                    <View style={styles.mapView}>
+                      <WebView
+                        ref={webViewRef}
+                        source={{ html: mapHtml }}
+                        style={styles.map}
+                        onMessage={handleWebViewMessage}
+                        onError={(error) => {}}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
+                        startInLoadingState={true}
+                        mixedContentMode="compatibility"
+                        allowsInlineMediaPlayback={true}
+                        originWhitelist={['*']}
+                        scalesPageToFit={false}
+                        bounces={false}
+                        scrollEnabled={false}
+                        nestedScrollEnabled={false}
+                      />
 
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowLocationPicker(true)}
-                    icon="map-marker-plus"
-                    style={styles.locationButton}
-                  >
-                    {latitude && longitude
-                      ? 'Cambiar ubicación'
-                      : 'Seleccionar ubicación'}
-                  </Button>
+                      {/* Indicador de carga */}
+                      {isMapLoading && (
+                        <View style={styles.mapLoadingContainer}>
+                          <Surface style={styles.mapLoadingCard} elevation={3}>
+                            <ActivityIndicator size="large" color={theme.colors.primary} />
+                            <Text style={styles.mapLoadingText}>Cargando mapa...</Text>
+                          </Surface>
+                        </View>
+                      )}
+
+                      {/* Botones flotantes */}
+                      {mapReady && (
+                        <>
+                          {/* Botón de expandir */}
+                          <View style={styles.expandButtonContainer}>
+                            <IconButton
+                              icon={isMapFullscreen ? "fullscreen-exit" : "fullscreen"}
+                              mode="contained"
+                              containerColor={theme.colors.secondaryContainer}
+                              iconColor={theme.colors.onSecondaryContainer}
+                              size={20}
+                              onPress={() => setIsMapFullscreen(!isMapFullscreen)}
+                              style={styles.floatingButton}
+                            />
+                          </View>
+                          
+                          {/* Botón de centrar */}
+                          {hasValidCoordinates && (
+                            <View style={styles.centerButtonContainer}>
+                              <IconButton
+                                icon="crosshairs-gps"
+                                mode="contained"
+                                containerColor={theme.colors.primaryContainer}
+                                iconColor={theme.colors.onPrimaryContainer}
+                                size={20}
+                                onPress={() => sendMessageToWebView('centerOnLocation', {})}
+                                style={styles.floatingButton}
+                              />
+                            </View>
+                          )}
+                        </>
+                      )}
+                    </View>
+
+                    {/* Mostrar coordenadas */}
+                    {hasValidCoordinates && (
+                      <View style={styles.coordinatesContainer}>
+                        <Text variant="labelSmall" style={styles.coordinatesLabel}>
+                          Coordenadas:
+                        </Text>
+                        <Text variant="bodySmall" style={styles.coordinatesText}>
+                          {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                        </Text>
+                      </View>
+                    )}
+                  </Surface>
                 </View>
 
-                <Controller
-                  control={control}
-                  name="isDefault"
-                  render={({ field: { onChange, value } }) => (
-                    <Surface style={styles.switchContainer} elevation={1}>
-                      <View style={styles.switchContent}>
-                        <View style={styles.switchTextContainer}>
-                          <Text style={styles.switchLabel} variant="bodyLarge">
-                            Dirección predeterminada
-                          </Text>
-                        </View>
-                        <Switch
-                          value={value}
-                          onValueChange={onChange}
-                          color={theme.colors.primary}
-                        />
-                      </View>
-                    </Surface>
-                  )}
-                />
               </View>
 
               {/* Espacio adicional para el teclado */}
-              <View style={{ height: 20 }} />
+              <View style={{ height: 10 }} />
             </ScrollView>
 
             <Surface style={styles.buttonContainer} elevation={2}>
@@ -548,15 +870,52 @@ export default function AddressFormModal({
         </Modal>
       </Portal>
 
-      <LocationPicker
-        visible={showLocationPicker}
-        onDismiss={() => setShowLocationPicker(false)}
-        onConfirm={handleLocationConfirm}
-        initialLocation={
-          latitude && longitude ? { latitude, longitude } : undefined
-        }
-        address={buildDisplayAddress()}
-      />
+      {/* Modal de mapa en pantalla completa */}
+      <Portal>
+        <Modal
+          visible={isMapFullscreen}
+          onDismiss={() => setIsMapFullscreen(false)}
+          contentContainerStyle={styles.fullscreenModalContainer}
+        >
+          <Surface style={styles.fullscreenModalContent} elevation={5}>
+            <View style={styles.fullscreenHeader}>
+              <Text variant="titleMedium" style={styles.fullscreenTitle}>
+                Seleccionar ubicación
+              </Text>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={() => setIsMapFullscreen(false)}
+              />
+            </View>
+            
+            <View style={styles.fullscreenMapContainer}>
+              <WebView
+                source={{ html: mapHtml }}
+                style={styles.map}
+                onMessage={handleWebViewMessage}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                startInLoadingState={false}
+                mixedContentMode="compatibility"
+                allowsInlineMediaPlayback={true}
+                originWhitelist={['*']}
+                scalesPageToFit={false}
+              />
+              
+              {hasValidCoordinates && (
+                <View style={styles.fullscreenCoordinates}>
+                  <Surface style={styles.coordinatesBadge} elevation={2}>
+                    <Text variant="bodySmall">
+                      {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                    </Text>
+                  </Surface>
+                </View>
+              )}
+            </View>
+          </Surface>
+        </Modal>
+      </Portal>
     </>
   );
 }
@@ -564,19 +923,22 @@ export default function AddressFormModal({
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     modalContainer: {
-      margin: 20,
+      margin: 10,
+      justifyContent: 'center',
     },
     modalContent: {
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
-      maxHeight: '90%',
+      maxHeight: '95%',
+      minHeight: '80%',
+      overflow: 'hidden',
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingVertical: theme.spacing.xs,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -595,23 +957,23 @@ const getStyles = (theme: AppTheme) =>
       fontWeight: '700',
     },
     formContainer: {
-      maxHeight: 400,
+      flex: 1,
       paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.s,
+      paddingTop: theme.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 15,
+      fontSize: 14,
     },
     requiredChip: {
       backgroundColor: theme.colors.errorContainer,
@@ -628,7 +990,7 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 11,
     },
     inputContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
@@ -640,47 +1002,104 @@ const getStyles = (theme: AppTheme) =>
     halfInput: {
       flex: 1,
     },
-    locationSection: {
-      marginTop: theme.spacing.s,
+    locationWrapper: {
+      marginTop: theme.spacing.m,
     },
-    locationCard: {
-      borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
+    locationHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: theme.spacing.s,
     },
-    locationCardContent: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
+    locationLabel: {
+      fontWeight: '500',
+      color: theme.colors.onSurface,
     },
-    locationInfo: {
+    clearLocationBtn: {
+      marginRight: -theme.spacing.s,
+    },
+    mapContainer: {
+      borderRadius: theme.roundness * 2,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.surface,
+    },
+    mapInstructions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.s,
+      backgroundColor: theme.colors.primaryContainer,
+      gap: theme.spacing.s,
+    },
+    mapInstructionText: {
       flex: 1,
-      marginLeft: theme.spacing.xs,
+      color: theme.colors.onPrimaryContainer,
+    },
+    mapView: {
+      height: 300,
+      position: 'relative',
+    },
+    map: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    mapLoadingContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    mapLoadingCard: {
+      padding: theme.spacing.xl,
+      borderRadius: 16,
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    mapLoadingText: {
+      marginTop: theme.spacing.m,
+      fontSize: 14,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
+    },
+    expandButtonContainer: {
+      position: 'absolute',
+      top: theme.spacing.s,
+      right: theme.spacing.s,
+    },
+    centerButtonContainer: {
+      position: 'absolute',
+      bottom: theme.spacing.s,
+      right: theme.spacing.s,
+    },
+    floatingButton: {
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    coordinatesContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.s,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+      gap: theme.spacing.xs,
+    },
+    coordinatesLabel: {
+      color: theme.colors.onSurfaceVariant,
     },
     coordinatesText: {
       fontWeight: '500',
       color: theme.colors.onSurface,
-    },
-    geocodedText: {
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
-    },
-    emptyLocationCard: {
-      padding: theme.spacing.l,
-      borderRadius: theme.roundness * 2,
-      backgroundColor: theme.colors.surfaceVariant,
-      alignItems: 'center',
-      marginBottom: theme.spacing.s,
-    },
-    noLocationText: {
-      color: theme.colors.onSurfaceVariant,
-    },
-    locationButton: {
-      marginTop: theme.spacing.xs,
+      fontFamily: 'monospace',
     },
     switchContainer: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
-      marginTop: theme.spacing.s,
+      padding: theme.spacing.xs,
+      marginTop: theme.spacing.xs,
     },
     switchContent: {
       flexDirection: 'row',
@@ -694,6 +1113,11 @@ const getStyles = (theme: AppTheme) =>
     switchLabel: {
       color: theme.colors.onSurface,
       fontWeight: '500',
+    },
+    switchDescription: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: 2,
+      fontSize: 12,
     },
     buttonContainer: {
       flexDirection: 'row',
@@ -711,4 +1135,39 @@ const getStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.secondaryContainer,
     },
     confirmButton: {},
+    fullscreenModalContainer: {
+      flex: 1,
+      margin: 0,
+    },
+    fullscreenModalContent: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    fullscreenHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingLeft: theme.spacing.m,
+      paddingRight: theme.spacing.s,
+      paddingVertical: theme.spacing.s,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    fullscreenTitle: {
+      fontWeight: '600',
+    },
+    fullscreenMapContainer: {
+      flex: 1,
+      position: 'relative',
+    },
+    fullscreenCoordinates: {
+      position: 'absolute',
+      bottom: theme.spacing.m,
+      left: theme.spacing.m,
+    },
+    coordinatesBadge: {
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness * 2,
+      backgroundColor: theme.colors.surface,
+    },
   });

@@ -9,15 +9,15 @@ export interface Address {
   name: string;
   street: string;
   number: string;
-  complement?: string;
+  interiorNumber?: string;
   neighborhood: string;
   city: string;
   state: string;
   zipCode: string;
+  country: string;
   deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
-  geocodedAddress?: string;
   isDefault: boolean;
   customerId: string;
   createdAt: Date;
@@ -84,15 +84,15 @@ export interface CreateAddressDto {
   name: string;
   street: string;
   number: string;
-  complement?: string;
+  interiorNumber?: string;
   neighborhood: string;
   city: string;
   state: string;
   zipCode: string;
+  country: string;
   deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
-  geocodedAddress?: string;
   isDefault?: boolean;
 }
 
@@ -100,15 +100,15 @@ export interface UpdateAddressDto {
   name?: string;
   street?: string;
   number?: string;
-  complement?: string;
+  interiorNumber?: string;
   neighborhood?: string;
   city?: string;
   state?: string;
   zipCode?: string;
+  country?: string;
   deliveryInstructions?: string;
   latitude?: number;
   longitude?: number;
-  geocodedAddress?: string;
   isDefault?: boolean;
 }
 

@@ -4,14 +4,13 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   IsDateString,
   IsBoolean,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { CreateAddressDto } from './create-address.dto';
 
 export class CreateCustomerDto {
@@ -41,7 +40,8 @@ export class CreateCustomerDto {
     description: 'Número de WhatsApp del cliente (obligatorio)',
   })
   @IsNotEmpty({ message: 'El número de WhatsApp es obligatorio' })
-  @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
+  @IsString()
+  @MaxLength(20, { message: 'El número de teléfono es demasiado largo' })
   whatsappPhoneNumber: string;
 
   @ApiPropertyOptional({
@@ -49,6 +49,7 @@ export class CreateCustomerDto {
     example: 'juan.perez@example.com',
     description: 'Correo electrónico del cliente (opcional, debe ser único)',
   })
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(255)
@@ -59,6 +60,7 @@ export class CreateCustomerDto {
     example: '1990-01-15',
     description: 'Fecha de nacimiento del cliente',
   })
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
   @IsDateString()
   birthDate?: string;

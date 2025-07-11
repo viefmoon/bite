@@ -2,13 +2,13 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   IsDateString,
   IsBoolean,
   IsArray,
   MaxLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateCustomerDto {
   @ApiPropertyOptional({
@@ -37,7 +37,8 @@ export class UpdateCustomerDto {
     description: 'Número de WhatsApp del cliente',
   })
   @IsOptional()
-  @IsPhoneNumber(undefined, { message: 'El número de WhatsApp no es válido' })
+  @IsString()
+  @MaxLength(20, { message: 'El número de teléfono es demasiado largo' })
   whatsappPhoneNumber?: string;
 
   @ApiPropertyOptional({
@@ -45,6 +46,7 @@ export class UpdateCustomerDto {
     example: 'juan.perez@example.com',
     description: 'Correo electrónico del cliente (debe ser único)',
   })
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(255)
@@ -55,6 +57,7 @@ export class UpdateCustomerDto {
     example: '1990-01-15',
     description: 'Fecha de nacimiento del cliente',
   })
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
   @IsDateString()
   birthDate?: string | null;

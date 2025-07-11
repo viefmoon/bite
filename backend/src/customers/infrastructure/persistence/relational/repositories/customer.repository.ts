@@ -99,7 +99,29 @@ export class CustomerRelationalRepository
   // El método 'save' se elimina. Las operaciones de guardado se manejan
   // a través de los métodos heredados create y update de BaseRelationalRepository.
 
-  // Los métodos create, findById, findAll (sin paginación), update, remove son heredados de BaseRelationalRepository
+  // Sobrescribir findAll para incluir las direcciones
+  override async findAll(filter?: FindAllCustomersDto): Promise<Customer[]> {
+    const where = this.buildWhere(filter);
+    const entities = await this.ormRepo.find({ 
+      where,
+      relations: ['addresses']
+    });
+    
+    return entities
+      .map((e) => this.mapper.toDomain(e))
+      .filter((d): d is Customer => d !== null);
+  }
+
+  // Sobrescribir findById para incluir las direcciones
+  override async findById(id: Customer['id']): Promise<NullableType<Customer>> {
+    const found = await this.ormRepo.findOne({
+      where: { id } as FindOptionsWhere<CustomerEntity>,
+      relations: ['addresses']
+    });
+    return found ? this.mapper.toDomain(found) : null;
+  }
+
+  // Los métodos create, update, remove son heredados de BaseRelationalRepository
   // No es necesario re-implementarlos aquí a menos que se necesite lógica adicional específica.
 
   // Método específico para obtener clientes baneados

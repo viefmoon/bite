@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Portal } from 'react-native-paper';
+import { Portal, Text, Chip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import debounce from 'lodash.debounce';
@@ -67,15 +67,26 @@ function CustomersScreen(): React.ReactElement {
   };
 
   const queryFilters = useMemo(
-    () => ({
-      firstName: debouncedSearchQuery || undefined,
-      lastName: debouncedSearchQuery || undefined,
-      isActive:
-        statusFilter === 'all' || statusFilter === 'banned'
-          ? undefined
-          : statusFilter === 'active',
-      isBanned: statusFilter === 'banned' ? true : undefined,
-    }),
+    () => {
+      const filters: any = {};
+      
+      // Solo agregar búsqueda si hay texto
+      if (debouncedSearchQuery) {
+        filters.firstName = debouncedSearchQuery;
+        filters.lastName = debouncedSearchQuery;
+      }
+      
+      // Manejar filtros de estado
+      if (statusFilter === 'active') {
+        filters.isActive = true;
+      } else if (statusFilter === 'inactive') {
+        filters.isActive = false;
+      } else if (statusFilter === 'banned') {
+        filters.isBanned = true;
+      }
+      
+      return filters;
+    },
     [debouncedSearchQuery, statusFilter],
   );
 
@@ -192,11 +203,8 @@ function CustomersScreen(): React.ReactElement {
       customers?.map((customer) => ({
         ...customer,
         fullName: `${customer.firstName} ${customer.lastName}`.trim(),
-        displayStatus: customer.isBanned
-          ? 'banned'
-          : customer.isActive
-            ? 'active'
-            : 'inactive',
+        displayTitle: `${customer.firstName} ${customer.lastName} - ${customer.whatsappPhoneNumber}`.trim(),
+        displayStatus: customer.isActive ? 'active' : 'inactive',
         whatsappInfo:
           customer.whatsappMessageCount > 0
             ? `💬 ${customer.whatsappMessageCount}`
@@ -251,15 +259,30 @@ function CustomersScreen(): React.ReactElement {
           onRefresh={refetch}
           onItemPress={handleItemPress}
           renderConfig={{
-            titleField: 'fullName' as keyof Customer,
-            descriptionField: 'email' as keyof Customer,
-            imageField: undefined,
+            titleField: 'displayTitle' as keyof Customer,
             statusConfig: {
-              field: 'isActive' as keyof Customer,
-              activeValue: true,
+              field: 'displayStatus' as keyof Customer,
+              activeValue: 'active',
               activeLabel: 'Activo',
               inactiveLabel: 'Inactivo',
             },
+            renderDescription: (item: any) => (
+              <View>
+                {item.email && (
+                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                    {item.email}
+                  </Text>
+                )}
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                    {item.isBanned ? '⛔ Baneado' : '✅ No baneado'}
+                  </Text>
+                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                    • 📍 {item.addresses?.length || 0} direcciones
+                  </Text>
+                </View>
+              </View>
+            ),
           }}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
@@ -272,7 +295,7 @@ function CustomersScreen(): React.ReactElement {
           ListEmptyComponent={ListEmptyComponent}
           isDrawerOpen={isDrawerOpen}
           enableSearch={true}
-          showImagePlaceholder={true}
+          showImagePlaceholder={false}
           placeholderIcon="account-group-outline"
         />
       </View>
@@ -309,7 +332,7 @@ function CustomersScreen(): React.ReactElement {
           onEdit={handleOpenEditModal}
           onDelete={handleDelete}
           isDeleting={false}
-          showImage={true}
+          showImage={false}
           fieldsToDisplay={[
             {
               field: 'isBanned' as keyof Customer,
@@ -338,6 +361,17 @@ function CustomersScreen(): React.ReactElement {
                 value
                   ? new Date(value as string).toLocaleDateString()
                   : 'No registrada',
+            },
+            {
+              field: 'addresses' as keyof Customer,
+              label: 'Direcciones',
+              render: (value) => {
+                const addresses = value as any[];
+                const count = addresses?.length || 0;
+                if (count === 0) return '❌ Sin direcciones';
+                if (count === 1) return '📍 1 dirección';
+                return `📍 ${count} direcciones ${count > 3 ? '✨' : ''}`;
+              },
             },
             {
               field: 'totalOrders' as keyof Customer,

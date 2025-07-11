@@ -40,7 +40,8 @@ export class AddressRelationalRepository
     const where: FindOptionsWhere<AddressEntity> = {};
 
     if (filter?.customerId) {
-      where.customerId = filter.customerId;
+      // Usar la relación en lugar del campo virtual
+      where.customer = { id: filter.customerId } as any;
     }
     if (filter?.isDefault !== undefined) {
       where.isDefault = filter.isDefault;
@@ -55,6 +56,43 @@ export class AddressRelationalRepository
     // Añadir más filtros si es necesario (street, state, etc.)
 
     return Object.keys(where).length > 0 ? where : undefined;
+  }
+
+  // Sobrescribir el método update para manejar correctamente la relación con customer
+  override async update(
+    id: Address['id'],
+    payload: UpdateAddressDto,
+  ): Promise<Address | null> {
+    // Primero obtener la entidad existente para mantener el customerId
+    const existing = await this.ormRepo.findOne({
+      where: { id } as FindOptionsWhere<AddressEntity>,
+      relations: ['customer'],
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    // Crear el objeto de actualización manteniendo el customer
+    const updateData = Object.keys(payload).reduce(
+      (acc, key) => {
+        const value = payload[key];
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as any,
+    );
+
+    // Asegurar que el customer_id se mantenga
+    updateData.customer = existing.customer;
+
+    // Actualizar usando save en lugar de update para manejar correctamente las relaciones
+    const merged = this.ormRepo.merge(existing, updateData);
+    const saved = await this.ormRepo.save(merged);
+
+    return this.mapper.toDomain(saved);
   }
 
   // Los métodos findByCustomerId, save y removeMany se eliminan.

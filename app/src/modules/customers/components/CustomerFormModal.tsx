@@ -22,10 +22,11 @@ import {
   CustomerFormInputs,
   customerFormSchema,
 } from '../schema/customer.schema';
-import { DatePickerModal } from 'react-native-paper-dates';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
+import InlineDatePicker from '@/app/components/common/InlineDatePicker';
+import PhoneNumberInput from '@/app/components/common/PhoneNumberInput';
 import { useGetAddressesByCustomer } from '../hooks/useCustomersQueries';
 import AddressFormModal from './AddressFormModal';
 import { addressesService } from '../services/addressesService';
@@ -48,11 +49,14 @@ export default function CustomerFormModal({
 }: CustomerFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+  const [dateOnChange, setDateOnChange] = useState<
+    ((value: string) => void) | null
+  >(null);
   const { showSnackbar } = useSnackbarStore();
 
   // Query para obtener direcciones del cliente
@@ -111,22 +115,6 @@ export default function CustomerFormModal({
 
   const isBanned = watch('isBanned');
 
-  const formatPhoneNumber = (text: string) => {
-    // Eliminar todos los caracteres no numéricos
-    const cleaned = text.replace(/\D/g, '');
-
-    // Formatear según la longitud
-    if (cleaned.length <= 2) {
-      return cleaned;
-    } else if (cleaned.length <= 6) {
-      return `${cleaned.slice(0, 2)} ${cleaned.slice(2)}`;
-    } else if (cleaned.length <= 10) {
-      return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 6)} ${cleaned.slice(6)}`;
-    } else {
-      return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 6)} ${cleaned.slice(6, 10)}`;
-    }
-  };
-
   const handleAddressSubmit = async (data: any) => {
     try {
       setIsSubmittingAddress(true);
@@ -148,7 +136,16 @@ export default function CustomerFormModal({
   };
 
   const handleFormSubmit = async (data: CustomerFormInputs) => {
-    await onSubmit(data);
+    // Limpiar campos vacíos antes de enviar
+    const cleanedData = {
+      ...data,
+      email: data.email || undefined,
+      birthDate: data.birthDate || undefined,
+      banReason: data.banReason || undefined,
+    };
+    
+    // El número ya viene completo desde nuestro componente
+    await onSubmit(cleanedData);
   };
 
   return (
@@ -286,32 +283,15 @@ export default function CustomerFormModal({
                 <Controller
                   control={control}
                   name="whatsappPhoneNumber"
-                  render={({ field: { onChange, onBlur, value } }) => (
+                  render={({ field: { onChange, value } }) => (
                     <View style={styles.inputContainer}>
-                      <TextInput
-                        label="WhatsApp"
-                        value={formatPhoneNumber(value || '')}
-                        onChangeText={(text) => {
-                          const cleaned = text.replace(/\D/g, '');
-                          onChange(cleaned);
-                        }}
-                        onBlur={onBlur}
+                      <PhoneNumberInput
+                        value={value || ''}
+                        onChange={onChange}
                         error={!!errors.whatsappPhoneNumber}
-                        mode="outlined"
-                        placeholder="55 1234 5678"
-                        keyboardType="phone-pad"
-                        maxLength={13}
-                        left={<TextInput.Icon icon="phone" />}
-                        outlineStyle={styles.inputOutline}
+                        helperText={errors.whatsappPhoneNumber?.message}
+                        placeholder="Teléfono"
                       />
-                      {errors.whatsappPhoneNumber && (
-                        <HelperText
-                          type="error"
-                          visible={!!errors.whatsappPhoneNumber}
-                        >
-                          {errors.whatsappPhoneNumber.message}
-                        </HelperText>
-                      )}
                     </View>
                   )}
                 />
@@ -359,6 +339,7 @@ export default function CustomerFormModal({
                         }
                         onPress={() => {
                           setTempDate(value ? new Date(value) : undefined);
+                          setDateOnChange(() => onChange);
                           setShowDatePicker(true);
                         }}
                         error={!!errors.birthDate}
@@ -368,25 +349,6 @@ export default function CustomerFormModal({
                           {errors.birthDate.message}
                         </HelperText>
                       )}
-                      <DatePickerModal
-                        visible={showDatePicker}
-                        mode="single"
-                        onDismiss={() => setShowDatePicker(false)}
-                        date={tempDate}
-                        onConfirm={(params) => {
-                          if (params.date) {
-                            onChange(params.date.toISOString().split('T')[0]);
-                            setTempDate(params.date);
-                          }
-                          setShowDatePicker(false);
-                        }}
-                        validRange={{
-                          endDate: new Date(),
-                        }}
-                        locale="es"
-                        saveLabel="Confirmar"
-                        label="Seleccionar fecha"
-                      />
                     </View>
                   )}
                 />
@@ -660,8 +622,8 @@ export default function CustomerFormModal({
                                   variant="bodyMedium"
                                 >
                                   {address.street} {address.number}
-                                  {address.complement &&
-                                    `, ${address.complement}`}
+                                  {address.interiorNumber &&
+                                    `, ${address.interiorNumber}`}
                                 </Text>
                                 <Text
                                   style={styles.addressDetails}
@@ -721,7 +683,7 @@ export default function CustomerFormModal({
               )}
 
               {/* Espacio adicional para el teclado */}
-              <View style={{ height: 20 }} />
+              <View style={{ height: 10 }} />
             </ScrollView>
 
             <Surface style={styles.buttonContainer} elevation={2}>
@@ -762,6 +724,23 @@ export default function CustomerFormModal({
           customerId={editingItem.id}
         />
       )}
+
+      {/* Date Picker */}
+      <InlineDatePicker
+        visible={showDatePicker}
+        onDismiss={() => setShowDatePicker(false)}
+        date={tempDate}
+        onConfirm={(date) => {
+          if (dateOnChange) {
+            dateOnChange(date.toISOString().split('T')[0]);
+          }
+          setShowDatePicker(false);
+        }}
+        label="Fecha de nacimiento"
+        validRange={{
+          endDate: new Date(),
+        }}
+      />
     </>
   );
 }
@@ -769,21 +748,22 @@ export default function CustomerFormModal({
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     modalContainer: {
-      margin: 20,
+      margin: 10,
+      justifyContent: 'center',
     },
     modalContent: {
-      borderRadius: theme.roundness * 3,
+      borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
-      maxHeight: '90%',
+      maxHeight: '95%',
+      minHeight: '80%',
+      overflow: 'hidden',
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
-      borderTopLeftRadius: theme.roundness * 3,
-      borderTopRightRadius: theme.roundness * 3,
+      paddingVertical: theme.spacing.xs,
     },
     headerLeft: {
       flexDirection: 'row',
@@ -800,23 +780,23 @@ const getStyles = (theme: AppTheme) =>
       fontWeight: '700',
     },
     formContainer: {
-      maxHeight: 400,
+      flex: 1,
       paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.s,
+      paddingTop: theme.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 15,
+      fontSize: 14,
     },
     requiredChip: {
       backgroundColor: theme.colors.errorContainer,
@@ -833,14 +813,14 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 11,
     },
     inputContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
     },
     switchContainer: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
+      padding: theme.spacing.xs,
     },
     switchContent: {
       flexDirection: 'row',
@@ -950,6 +930,8 @@ const getStyles = (theme: AppTheme) =>
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       gap: theme.spacing.s,
+      borderBottomLeftRadius: theme.roundness * 2,
+      borderBottomRightRadius: theme.roundness * 2,
     },
     button: {
       flex: 1,
@@ -964,8 +946,8 @@ const getStyles = (theme: AppTheme) =>
     },
     addressCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
-      marginBottom: theme.spacing.s,
+      padding: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     addressContent: {
       flexDirection: 'row',

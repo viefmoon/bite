@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsDateString,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { PaginationParams } from '../../utils/types/pagination-params'; // Asumiendo que tienes un DTO base para paginación
 
 export class FindAllCustomersDto extends PaginationParams {
@@ -50,6 +51,11 @@ export class FindAllCustomersDto extends PaginationParams {
     example: true,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   isActive?: boolean;
 
@@ -66,6 +72,11 @@ export class FindAllCustomersDto extends PaginationParams {
     example: false,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   isBanned?: boolean;
 }

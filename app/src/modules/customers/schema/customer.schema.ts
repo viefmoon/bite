@@ -5,15 +5,15 @@ export const addressSchema = z.object({
   name: z.string().min(1, 'El nombre de la dirección es requerido').max(100),
   street: z.string().min(1, 'La calle es requerida'),
   number: z.string().min(1, 'El número es requerido'),
-  complement: z.string().optional(),
+  interiorNumber: z.string().optional(),
   neighborhood: z.string().min(1, 'La colonia es requerida'),
   city: z.string().min(1, 'La ciudad es requerida'),
   state: z.string().min(1, 'El estado es requerido'),
   zipCode: z.string().regex(/^\d{5}$/, 'El código postal debe tener 5 dígitos'),
+  country: z.string().min(1, 'El país es requerido').default('México'),
   deliveryInstructions: z.string().optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
-  geocodedAddress: z.string().optional(),
   isDefault: z.boolean().optional(),
 });
 

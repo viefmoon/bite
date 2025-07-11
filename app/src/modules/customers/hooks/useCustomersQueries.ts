@@ -5,7 +5,10 @@ import {
   UpdateCustomerDto,
   FindAllCustomersQuery,
   ChatMessage,
+  Address,
 } from '../types/customer.types';
+import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 // Keys para React Query
 export const customerKeys = {
@@ -160,8 +163,13 @@ export function useGetAddressesByCustomer(
   return useQuery({
     queryKey: customerKeys.addresses(customerId),
     queryFn: async () => {
-      const customer = await customersService.findOne(customerId);
-      return customer.addresses || [];
+      const response = await apiClient.get<Address[]>(
+        `${API_PATHS.CUSTOMERS}/${customerId}/addresses`
+      );
+      if (!response.ok || !response.data) {
+        return [];
+      }
+      return response.data;
     },
     enabled: options?.enabled ?? true,
   });

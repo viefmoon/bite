@@ -10,12 +10,18 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
+import { AddressesService } from './addresses.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FindAllCustomersDto } from './dto/find-all-customers.dto';
 import { BanCustomerDto } from './dto/ban-customer.dto';
+import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
+import { FindAllAddressesDto } from './dto/find-all-addresses.dto';
+import { Address } from './domain/address';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -32,7 +38,10 @@ import { Customer } from './domain/customer';
 @ApiTags('Customers')
 @Controller({ path: 'customers', version: '1' })
 export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+  constructor(
+    private readonly customersService: CustomersService,
+    private readonly addressesService: AddressesService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new customer' })
@@ -212,5 +221,89 @@ export class CustomersController {
   @HttpCode(HttpStatus.OK)
   getBannedCustomers(): Promise<Customer[]> {
     return this.customersService.getBannedCustomers();
+  }
+
+  // Address endpoints
+
+  @Post(':id/addresses')
+  @ApiOperation({ summary: 'Add an address to a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.CREATED)
+  async addAddress(
+    @Param('id') customerId: string,
+    @Body() createAddressDto: CreateAddressDto,
+  ): Promise<Address> {
+    // Asignar el customerId al DTO
+    const addressData = { 
+      ...createAddressDto, 
+      customerId
+    };
+    return this.addressesService.create(addressData);
+  }
+
+  @Get(':id/addresses')
+  @ApiOperation({ summary: 'Get all addresses for a customer' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @HttpCode(HttpStatus.OK)
+  async getCustomerAddresses(@Param('id') customerId: string): Promise<Address[]> {
+    try {
+      // Verificar que el cliente existe primero
+      await this.customersService.findOne(customerId);
+      
+      // Crear un DTO explícito para evitar problemas de tipos
+      const filter: FindAllAddressesDto = { customerId };
+      return this.addressesService.findAll(filter);
+    } catch (error) {
+      console.error('Error getting customer addresses:', error);
+      throw error;
+    }
+  }
+
+  @Patch(':id/addresses/:addressId')
+  @ApiOperation({ summary: 'Update a customer address' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiParam({ name: 'addressId', description: 'Address ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async updateAddress(
+    @Param('id') customerId: string,
+    @Param('addressId') addressId: string,
+    @Body() updateAddressDto: UpdateAddressDto,
+  ): Promise<Address> {
+    // Verificar que la dirección pertenece al cliente
+    const address = await this.addressesService.findOne(addressId);
+    if (address.customerId !== customerId) {
+      throw new NotFoundException('Address not found for this customer');
+    }
+    const updatedAddress = await this.addressesService.update(addressId, updateAddressDto);
+    if (!updatedAddress) {
+      throw new NotFoundException('Address not found');
+    }
+    return updatedAddress;
+  }
+
+  @Delete(':id/addresses/:addressId')
+  @ApiOperation({ summary: 'Delete a customer address' })
+  @ApiParam({ name: 'id', description: 'Customer ID' })
+  @ApiParam({ name: 'addressId', description: 'Address ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteAddress(
+    @Param('id') customerId: string,
+    @Param('addressId') addressId: string,
+  ): Promise<void> {
+    // Verificar que la dirección pertenece al cliente
+    const address = await this.addressesService.findOne(addressId);
+    if (address.customerId !== customerId) {
+      throw new NotFoundException('Address not found for this customer');
+    }
+    await this.addressesService.remove(addressId);
   }
 }

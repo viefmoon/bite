@@ -10,6 +10,7 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -68,11 +69,16 @@ export class AddressesController {
     @Param('id') id: string,
     @Body() updateAddressDto: UpdateAddressDto,
   ): Promise<Address> {
-    const result = await this.addressesService.update(id, updateAddressDto);
-    if (!result) {
-      throw new Error('Failed to update address');
+    try {
+      const result = await this.addressesService.update(id, updateAddressDto);
+      if (!result) {
+        throw new NotFoundException('Address not found');
+      }
+      return result;
+    } catch (error) {
+      console.error('Error updating address:', error);
+      throw error;
     }
-    return result;
   }
 
   @Delete(':id')
