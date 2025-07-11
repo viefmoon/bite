@@ -323,7 +323,7 @@ function GenericDetailModal<TItem extends { id: string }>({
           )}
           {statusChip}
           {description && (
-            <Text 
+            <Text
               style={[styles.detailDescription, descriptionStyle]}
               numberOfLines={4}
               ellipsizeMode="tail"
@@ -349,13 +349,22 @@ function GenericDetailModal<TItem extends { id: string }>({
                     {label}
                   </Text>
                   {render ? (
-                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
+                      }}
+                    >
                       {(() => {
                         const rendered = render(value, item);
                         // Si el render devuelve un string o número, lo envolvemos en Text
-                        if (typeof rendered === 'string' || typeof rendered === 'number') {
+                        if (
+                          typeof rendered === 'string' ||
+                          typeof rendered === 'number'
+                        ) {
                           return (
-                            <Text 
+                            <Text
                               style={[styles.fieldValue, fieldValueStyle]}
                               numberOfLines={3}
                               ellipsizeMode="tail"
@@ -369,7 +378,7 @@ function GenericDetailModal<TItem extends { id: string }>({
                       })()}
                     </View>
                   ) : (
-                    <Text 
+                    <Text
                       style={[styles.fieldValue, fieldValueStyle]}
                       numberOfLines={3}
                       ellipsizeMode="tail"

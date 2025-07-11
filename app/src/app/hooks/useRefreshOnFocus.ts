@@ -12,7 +12,7 @@ export function useRefreshOnFocus(
   options?: {
     enabled?: boolean;
     refetchOnMount?: boolean;
-  }
+  },
 ) {
   const queryClient = useQueryClient();
   const { enabled = true, refetchOnMount = true } = options || {};
@@ -24,9 +24,11 @@ export function useRefreshOnFocus(
 
       // Invalidar todas las queries especificadas
       queryKeys.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] });
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+        });
       });
-    }, [enabled, queryKeys, queryClient])
+    }, [enabled, queryKeys, queryClient]),
   );
 
   // También invalidar al montar si está habilitado
@@ -34,16 +36,20 @@ export function useRefreshOnFocus(
     if (!enabled || !refetchOnMount) return;
 
     queryKeys.forEach((queryKey) => {
-      queryClient.invalidateQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] });
+      queryClient.invalidateQueries({
+        queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+      });
     });
   }, []);
 
   return {
     refetch: () => {
       queryKeys.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] });
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+        });
       });
-    }
+    },
   };
 }
 
@@ -51,26 +57,29 @@ export function useRefreshOnFocus(
  * Hook que refresca todas las queries de un módulo cuando la pantalla recibe foco
  * @param modulePrefix - Prefijo del módulo (ej: 'products', 'orders', etc)
  */
-export function useRefreshModuleOnFocus(modulePrefix: string, options?: {
-  enabled?: boolean;
-}) {
+export function useRefreshModuleOnFocus(
+  modulePrefix: string,
+  options?: {
+    enabled?: boolean;
+  },
+) {
   const queryClient = useQueryClient();
   const { enabled = true } = options || {};
 
   useFocusEffect(
     useCallback(() => {
       if (!enabled) return;
-      
+
       // Invalidar todas las queries que empiecen con el prefijo del módulo
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
           if (Array.isArray(queryKey) && queryKey.length > 0) {
             return queryKey[0] === modulePrefix;
           }
           return false;
-        }
+        },
       });
-    }, [enabled, modulePrefix, queryClient])
+    }, [enabled, modulePrefix, queryClient]),
   );
 }

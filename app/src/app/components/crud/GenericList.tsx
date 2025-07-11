@@ -361,7 +361,8 @@ const GenericList = <TItem extends { id: string }>({
       ) {
         const fieldValue = item[renderConfig.descriptionField];
         if (renderConfig.descriptionFormatter) {
-          const formattedDescription = renderConfig.descriptionFormatter(fieldValue);
+          const formattedDescription =
+            renderConfig.descriptionFormatter(fieldValue);
           if (formattedDescription) {
             description = formattedDescription;
           }
