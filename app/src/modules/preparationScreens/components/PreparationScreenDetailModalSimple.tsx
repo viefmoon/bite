@@ -7,15 +7,12 @@ import {
   Button,
   Chip,
   ActivityIndicator,
-  Card,
   IconButton,
   Divider,
-  List,
-  Avatar,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { PreparationScreen } from '../schema/preparationScreen.schema';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { PreparationScreen } from '../schema/preparationScreen.schema';
 
 interface PreparationScreenDetailModalProps {
   visible: boolean;
@@ -238,15 +235,24 @@ const PreparationScreenDetailModal: React.FC<
               )}
             </View>
           </View>
-          <Chip
-            mode="flat"
-            compact
-            style={styles.statusChip}
-            textStyle={{ fontSize: 12 }}
-            selected={isActive}
-          >
-            {isActive ? 'Activa' : 'Inactiva'}
-          </Chip>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Chip
+              mode="flat"
+              compact
+              style={styles.statusChip}
+              textStyle={{ fontSize: 12 }}
+              selected={isActive}
+            >
+              {isActive ? 'Activa' : 'Inactiva'}
+            </Chip>
+            <IconButton
+              icon="close"
+              size={24}
+              onPress={onDismiss}
+              disabled={isDeleting}
+              style={{ marginLeft: theme.spacing.xs }}
+            />
+          </View>
         </View>
 
         {/* Contenido scrollable */}

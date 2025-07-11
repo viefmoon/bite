@@ -2,15 +2,13 @@ import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import {
   Text,
-  Card,
   Chip,
   IconButton,
   Surface,
-  Avatar,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { PreparationScreen } from '../schema/preparationScreen.schema';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { PreparationScreen } from '../schema/preparationScreen.schema';
 
 interface PreparationScreenListItemProps {
   item: PreparationScreen;

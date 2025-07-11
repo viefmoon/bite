@@ -46,6 +46,7 @@ interface MenuData {
   screenId: string;
   screenName: string;
   menu: Category[];
+  screenAssignments?: Record<string, string>; // Mapeo de productId a nombre de pantalla
 }
 
 interface ProductSelectionModalProps {
@@ -76,6 +77,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const [expandedSubcategories, setExpandedSubcategories] = useState<
     Set<string>
   >(new Set());
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [conflictingProducts, setConflictingProducts] = useState<
+    Array<{ id: string; name: string; currentScreen: string }>
+  >([]);
 
   // Inicializar productos seleccionados
   useEffect(() => {
@@ -93,6 +98,17 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       setSelectedProducts(associatedProducts);
     }
   }, [menuData]);
+  
+  // Crear mapeo de productos a nombres de pantalla para el mensaje de conflicto
+  const getScreenNameForProduct = (productId: string): string => {
+    // Primero intentar obtener el nombre desde screenAssignments
+    if (menuData?.screenAssignments && menuData.screenAssignments[productId]) {
+      return menuData.screenAssignments[productId];
+    }
+    
+    // Si no está disponible, usar un nombre genérico
+    return 'otra pantalla de preparación';
+  };
 
   // Filtrar menú basado en búsqueda
   const filteredMenu = useMemo(() => {
@@ -211,7 +227,46 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   };
 
   const handleSave = () => {
+    // Verificar si hay productos seleccionados que ya están asignados a otras pantallas
+    const conflicts: Array<{ id: string; name: string; currentScreen: string }> = [];
+    
+    if (menuData) {
+      menuData.menu.forEach((category) => {
+        category.subcategories.forEach((subcategory) => {
+          subcategory.products.forEach((product) => {
+            if (
+              selectedProducts.has(product.id) &&
+              product.currentPreparationScreenId &&
+              product.currentPreparationScreenId !== screenId
+            ) {
+              // Buscar el nombre de la pantalla actual del producto
+              const screenName = getScreenNameForProduct(product.id);
+              conflicts.push({
+                id: product.id,
+                name: product.name,
+                currentScreen: screenName,
+              });
+            }
+          });
+        });
+      });
+    }
+    
+    if (conflicts.length > 0) {
+      setConflictingProducts(conflicts);
+      setShowConfirmDialog(true);
+    } else {
+      onSave(Array.from(selectedProducts));
+    }
+  };
+  
+  const handleConfirmSave = () => {
+    setShowConfirmDialog(false);
     onSave(Array.from(selectedProducts));
+  };
+  
+  const handleCancelSave = () => {
+    setShowConfirmDialog(false);
   };
 
   return (
@@ -378,7 +433,234 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
           </Button>
         </View>
       </Modal>
-    </Portal>
+      
+      {/* Modal de confirmación personalizado */}
+      <Portal>
+        <Modal
+          visible={showConfirmDialog}
+          onDismiss={handleCancelSave}
+          contentContainerStyle={{
+            backgroundColor: theme.colors.surface,
+            margin: 20,
+            borderRadius: 16,
+            maxHeight: '75%',
+            elevation: 8,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: 20,
+              paddingBottom: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.surfaceVariant,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: theme.colors.errorContainer,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: 12,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="alert"
+                size={24}
+                color={theme.colors.error}
+              />
+            </View>
+            <Text variant="headlineSmall" style={{ flex: 1 }}>
+              Reasignar Productos
+            </Text>
+          </View>
+
+          {/* Subtitle */}
+          <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+            <Text
+              variant="bodyLarge"
+              style={{
+                color: theme.colors.onSurfaceVariant,
+              }}
+            >
+              {conflictingProducts.length === 1
+                ? 'El siguiente producto será reasignado:'
+                : `Los siguientes ${conflictingProducts.length} productos serán reasignados:`}
+            </Text>
+          </View>
+
+          {/* Scrollable Product List */}
+          <ScrollView
+            style={{
+              maxHeight: 250,
+              marginTop: 16,
+              marginHorizontal: 20,
+            }}
+            showsVerticalScrollIndicator={true}
+          >
+            {conflictingProducts.map((product, index) => (
+              <View
+                key={product.id}
+                style={{
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  backgroundColor: theme.colors.surfaceVariant,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                  borderLeftWidth: 4,
+                  borderLeftColor: theme.colors.error,
+                }}
+              >
+                <Text
+                  variant="bodyLarge"
+                  style={{
+                    fontWeight: '600',
+                    color: theme.colors.onSurface,
+                    marginBottom: 8,
+                  }}
+                >
+                  {product.name}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: theme.colors.surface,
+                    padding: 8,
+                    borderRadius: 8,
+                  }}
+                >
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.onSurfaceVariant,
+                        marginBottom: 2,
+                      }}
+                    >
+                      Desde
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={{
+                        color: theme.colors.error,
+                        fontWeight: '500',
+                      }}
+                    >
+                      {product.currentScreen}
+                    </Text>
+                  </View>
+                  
+                  <MaterialCommunityIcons
+                    name="arrow-right"
+                    size={20}
+                    color={theme.colors.primary}
+                    style={{ marginHorizontal: 8 }}
+                  />
+                  
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.onSurfaceVariant,
+                        marginBottom: 2,
+                      }}
+                    >
+                      Hacia
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={{
+                        color: theme.colors.primary,
+                        fontWeight: '500',
+                      }}
+                    >
+                      {menuData?.screenName || 'Esta pantalla'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Info Box */}
+          <View
+            style={{
+              margin: 20,
+              marginTop: 16,
+              marginBottom: 0,
+              padding: 16,
+              backgroundColor: theme.colors.secondaryContainer,
+              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <MaterialCommunityIcons
+              name="information"
+              size={20}
+              color={theme.colors.onSecondaryContainer}
+              style={{ marginRight: 12 }}
+            />
+            <Text
+              variant="bodySmall"
+              style={{
+                color: theme.colors.onSecondaryContainer,
+                flex: 1,
+              }}
+            >
+              Los productos serán removidos automáticamente de sus pantallas
+              actuales al confirmar.
+            </Text>
+          </View>
+
+          {/* Actions */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
+              paddingTop: 16,
+              gap: 16,
+              borderTopWidth: 1,
+              borderTopColor: theme.colors.surfaceVariant,
+              marginTop: 16,
+            }}
+          >
+            <Button
+              onPress={handleCancelSave}
+              mode="outlined"
+              style={{ 
+                flex: 1,
+                maxWidth: 150,
+                borderColor: theme.colors.outline,
+              }}
+              contentStyle={{ paddingVertical: 4 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onPress={handleConfirmSave}
+              mode="contained"
+              buttonColor={theme.colors.error}
+              icon="check-circle"
+              style={{ 
+                flex: 1,
+                maxWidth: 150,
+              }}
+              contentStyle={{ paddingVertical: 4 }}
+            >
+              Reasignar
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
   );
 };
 

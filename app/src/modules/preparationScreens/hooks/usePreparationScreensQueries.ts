@@ -170,7 +170,6 @@ export const useUpdatePreparationScreen = () => {
         });
       }
     },
-    // onSuccess eliminado
   });
 };
 
@@ -237,7 +236,6 @@ export const useDeletePreparationScreen = () => {
         });
       }
     },
-    // onSuccess eliminado
   });
 };
 

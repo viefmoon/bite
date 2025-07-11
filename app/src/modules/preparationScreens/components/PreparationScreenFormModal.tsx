@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
   Portal,
@@ -11,7 +11,6 @@ import {
   Surface,
   List,
   Divider,
-  IconButton,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +27,7 @@ import {
 import {
   useCreatePreparationScreen,
   useUpdatePreparationScreen,
+  useGetPreparationScreens,
 } from '../hooks/usePreparationScreensQueries';
 
 interface PreparationScreenFormModalProps {
@@ -58,14 +58,50 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
     },
   });
 
-  // Todos los usuarios, ordenados con los de cocina primero
-  const allUsers = (usersData?.data || []).sort((a, b) => {
-    const aIsKitchen = a.role?.id === RoleEnum.KITCHEN;
-    const bIsKitchen = b.role?.id === RoleEnum.KITCHEN;
-    if (aIsKitchen && !bIsKitchen) return -1;
-    if (!aIsKitchen && bIsKitchen) return 1;
-    return 0;
-  });
+  // Obtener todas las pantallas de preparación para verificar usuarios asignados
+  const { data: screensData } = useGetPreparationScreens(
+    {},
+    { page: 1, limit: 100 } // Obtener todas las pantallas
+  );
+
+  // Crear mapa de usuarios asignados a pantallas
+  const userAssignments = React.useMemo(() => {
+    if (!screensData?.data) return new Map<string, string>();
+    
+    const assignments = new Map<string, string>();
+    screensData.data.forEach((screen) => {
+      // Excluir la pantalla actual al editar
+      if (editingItem && screen.id === editingItem.id) return;
+      
+      if (screen.users && screen.users.length > 0) {
+        screen.users.forEach((user) => {
+          assignments.set(user.id, screen.name);
+        });
+      }
+    });
+    return assignments;
+  }, [screensData, editingItem]);
+
+  // Todos los usuarios, ordenados con los de cocina primero y disponibles al inicio
+  const allUsers = React.useMemo(() => {
+    if (!usersData?.data) return [];
+    
+    return usersData.data.sort((a, b) => {
+      // Primero ordenar por disponibilidad
+      const aAssigned = userAssignments.has(a.id);
+      const bAssigned = userAssignments.has(b.id);
+      if (!aAssigned && bAssigned) return -1;
+      if (aAssigned && !bAssigned) return 1;
+      
+      // Luego por rol de cocina
+      const aIsKitchen = a.role?.id === RoleEnum.KITCHEN;
+      const bIsKitchen = b.role?.id === RoleEnum.KITCHEN;
+      if (aIsKitchen && !bIsKitchen) return -1;
+      if (!aIsKitchen && bIsKitchen) return 1;
+      
+      return 0;
+    });
+  }, [usersData, userAssignments]);
 
   // Hooks de mutación
   const createScreen = useCreatePreparationScreen();
@@ -102,7 +138,7 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
         userId:
           editingItem.users && editingItem.users.length > 0
             ? editingItem.users[0].id
-            : undefined,
+            : '', // Siempre string vacío para activar validación
       });
       setSelectedUser(
         editingItem.users && editingItem.users.length > 0
@@ -133,7 +169,11 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
       }
       onSubmitSuccess?.();
       onDismiss();
-    } catch (error) {}
+    } catch (error: any) {
+      // No mostrar snackbar aquí porque el hook ya lo hace
+      // Solo hacer log para debugging
+      console.error('Error en PreparationScreenFormModal:', error);
+    }
   };
 
   // Manejo de selección de usuario
@@ -392,28 +432,39 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                     user.username;
                   const isKitchenUser = user.role?.id === RoleEnum.KITCHEN;
                   const roleLabel = getRoleLabel(user.role?.id);
+                  const assignedScreen = userAssignments.get(user.id);
+                  const isAssigned = !!assignedScreen;
+                  const isSelectable = isKitchenUser && !isAssigned;
 
                   return (
                     <List.Item
                       key={user.id}
                       title={displayName}
-                      description={`${user.username !== displayName ? user.username + ' • ' : ''}${roleLabel}`}
+                      description={
+                        isAssigned
+                          ? `Asignado a: ${assignedScreen}`
+                          : `${user.username !== displayName ? user.username + ' • ' : ''}${roleLabel}`
+                      }
                       onPress={
-                        isKitchenUser ? () => handleUserSelect(user) : undefined
+                        isSelectable ? () => handleUserSelect(user) : undefined
                       }
                       left={(props) => (
                         <List.Icon
                           {...props}
                           icon={getIconForRole(user.role?.id)}
+                          color={isAssigned ? theme.colors.outline : props.color}
                         />
                       )}
                       style={[
                         styles.dropdownItem,
-                        !isKitchenUser && styles.disabledDropdownItem,
+                        !isSelectable && styles.disabledDropdownItem,
                       ]}
-                      disabled={!isKitchenUser}
-                      titleStyle={!isKitchenUser && styles.disabledText}
-                      descriptionStyle={!isKitchenUser && styles.disabledText}
+                      disabled={!isSelectable}
+                      titleStyle={!isSelectable && styles.disabledText}
+                      descriptionStyle={[
+                        !isSelectable && styles.disabledText,
+                        isAssigned && { color: theme.colors.error }
+                      ]}
                     />
                   );
                 })

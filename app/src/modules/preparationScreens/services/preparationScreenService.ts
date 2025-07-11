@@ -98,6 +98,12 @@ export const createPreparationScreen = async (
   );
 
   if (!response.ok || !response.data) {
+    // Si hay un ApiError original del interceptor, usarlo directamente
+    if ((response as any).apiError instanceof ApiError) {
+      throw (response as any).apiError;
+    }
+    
+    // Si no, crear uno nuevo desde la respuesta
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,

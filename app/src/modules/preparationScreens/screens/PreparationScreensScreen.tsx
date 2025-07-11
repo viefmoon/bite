@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, Button, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -8,7 +8,6 @@ import { discoveryService } from '@/app/services/discoveryService';
 import GenericList, {
   FilterOption,
 } from '../../../app/components/crud/GenericList';
-import { DisplayFieldConfig } from '../../../app/components/crud/GenericDetailModal';
 import PreparationScreenDetailModalSimple from '../components/PreparationScreenDetailModalSimple';
 import PreparationScreenListItem from '../components/PreparationScreenListItem';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
@@ -34,28 +33,6 @@ const getStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    emptyListContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.l,
-      marginTop: 50,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    errorText: {
-      color: theme.colors.error,
-      marginBottom: 10,
-      textAlign: 'center',
-    },
-    fieldValue: {
-      flexShrink: 1,
-      textAlign: 'right',
-      color: theme.colors.onSurface,
     },
   });
 
@@ -104,6 +81,27 @@ const PreparationScreensScreen = () => {
     useGetMenuWithAssociations(productModalScreenId, {
       enabled: !!productModalScreenId && isProductModalVisible,
     });
+  
+  // Enriquecer menuData con información de pantallas
+  const enrichedMenuData = React.useMemo(() => {
+    if (!menuData || !screensData?.data) return menuData;
+    
+    // Crear un mapa de productId a nombre de pantalla
+    const screenAssignments: Record<string, string> = {};
+    
+    screensData.data.forEach((screen) => {
+      if (screen.products) {
+        screen.products.forEach((product) => {
+          screenAssignments[product.id] = screen.name;
+        });
+      }
+    });
+    
+    return {
+      ...menuData,
+      screenAssignments,
+    };
+  }, [menuData, screensData]);
 
   const handleOpenProductModal = useCallback((screen: PreparationScreen) => {
     setProductModalScreenId(screen.id);
@@ -174,7 +172,10 @@ const PreparationScreensScreen = () => {
         await discoveryService.forceRediscovery();
         // Dar tiempo para que se reinicialice el cliente
         await new Promise((resolve) => setTimeout(resolve, 500));
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error al redescubrir el servidor:', error);
+        // No es crítico, el usuario puede intentar manualmente
+      }
     }
     refetchList();
   }, [refetchList, errorList]);
@@ -246,53 +247,6 @@ const PreparationScreensScreen = () => {
     { value: '', label: 'Todas' },
     { value: 'true', label: 'Activas' },
     { value: 'false', label: 'Inactivas' },
-  ];
-
-  const detailFields: DisplayFieldConfig<PreparationScreen>[] = [
-    {
-      field: 'users',
-      label: 'Usuarios Asignados',
-      render: (users) => {
-        if (!users || !Array.isArray(users) || users.length === 0)
-          return 'Sin asignar';
-        const userNames = users
-          .map((user: any) => {
-            const fullName =
-              `${user.firstName || ''} ${user.lastName || ''}`.trim();
-            return fullName || user.username || 'Sin nombre';
-          })
-          .join(', ');
-        return userNames;
-      },
-    },
-    {
-      field: 'products',
-      label: 'Productos Asociados',
-      render: (products, item) => {
-        const productCount = Array.isArray(products) ? products.length : 0;
-        return (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Text style={[styles.fieldValue, { flex: 1 }]}>
-              {productCount > 0 ? `${productCount} productos` : 'Ninguno'}
-            </Text>
-            <Button
-              mode="outlined"
-              compact
-              onPress={() => item && handleOpenProductModal(item)}
-              icon="link"
-            >
-              Gestionar
-            </Button>
-          </View>
-        );
-      },
-    },
   ];
 
   const { ListEmptyComponent } = useListState({
@@ -396,7 +350,7 @@ const PreparationScreensScreen = () => {
         onDismiss={handleCloseProductModal}
         onSave={handleSaveProducts}
         screenId={productModalScreenId || ''}
-        menuData={menuData}
+        menuData={enrichedMenuData}
         loading={isLoadingMenu}
       />
     </SafeAreaView>
