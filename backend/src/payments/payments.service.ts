@@ -1,15 +1,11 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PaymentRepository } from './infrastructure/persistence/payment.repository';
 import { Payment } from './domain/payment';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CreatePrepaymentDto } from './dto/create-prepayment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
+import { v4 as uuidv4 } from 'uuid';
 import { PaymentStatus } from './domain/enums/payment-status.enum';
 import { PaymentMethod } from './domain/enums/payment-method.enum';
 import { PAYMENT_REPOSITORY } from '../common/tokens';
@@ -22,12 +18,8 @@ export class PaymentsService {
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
-    // Validar que el monto sea positivo
-    if (createPaymentDto.amount <= 0) {
-      throw new BadRequestException('El monto del pago debe ser mayor a cero');
-    }
-
     const payment = new Payment();
+    payment.id = uuidv4();
     payment.orderId = createPaymentDto.orderId;
     payment.paymentMethod = createPaymentDto.paymentMethod;
     payment.amount = createPaymentDto.amount;
@@ -83,11 +75,6 @@ export class PaymentsService {
   ): Promise<Payment> {
     const existingPayment = await this.findOne(id);
 
-    // Validar el monto si se está actualizando
-    if (updatePaymentDto.amount !== undefined && updatePaymentDto.amount <= 0) {
-      throw new BadRequestException('El monto del pago debe ser mayor a cero');
-    }
-
     const updatedPayment = new Payment();
     updatedPayment.id = id;
     updatedPayment.orderId = existingPayment.orderId;
@@ -111,14 +98,8 @@ export class PaymentsService {
   async createPrepayment(
     createPrepaymentDto: CreatePrepaymentDto,
   ): Promise<Payment> {
-    // Validar que el monto sea positivo
-    if (createPrepaymentDto.amount <= 0) {
-      throw new BadRequestException(
-        'El monto del prepago debe ser mayor a cero',
-      );
-    }
-
     const payment = new Payment();
+    payment.id = uuidv4();
     payment.orderId = null; // Sin orden asociada inicialmente
     payment.paymentMethod = createPrepaymentDto.paymentMethod;
     payment.amount = createPrepaymentDto.amount;

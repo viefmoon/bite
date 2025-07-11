@@ -35,14 +35,19 @@ import {
 import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ChangeCalculatorModal from './ChangeCalculatorModal';
+import { prepaymentService } from '@/modules/payments/services/prepaymentService';
 
 interface PaymentModalProps {
   visible: boolean;
   onDismiss: () => void;
-  orderId: string;
+  orderId?: string; // Opcional para modo pre-pago
   orderTotal: number;
   orderNumber?: number;
   onOrderCompleted?: () => void; // Callback cuando se completa la orden
+  mode?: 'payment' | 'prepayment'; // Modo del modal
+  onPrepaymentCreated?: (prepaymentId: string, amount: number, method: PaymentMethod) => void; // Callback para pre-pago
+  existingPrepaymentId?: string; // ID del pre-pago existente para edición
+  onPrepaymentDeleted?: () => void; // Callback para eliminar pre-pago
 }
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -67,6 +72,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderTotal,
   orderNumber,
   onOrderCompleted,
+  mode = 'payment',
+  onPrepaymentCreated,
+  existingPrepaymentId,
+  onPrepaymentDeleted,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -83,10 +92,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
+  const [isCreatingPrepayment, setIsCreatingPrepayment] = useState(false);
+  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
 
-  // Queries y mutations
+  // Queries y mutations (solo para modo payment)
   const { data: payments = [], isLoading: isLoadingPayments } =
-    useGetPaymentsByOrderIdQuery(orderId);
+    useGetPaymentsByOrderIdQuery(orderId || '', {
+      enabled: mode === 'payment' && !!orderId,
+    });
   const createPaymentMutation = useCreatePaymentMutation();
   // const updatePaymentMutation = useUpdatePaymentMutation(); // No se usa actualmente
   const deletePaymentMutation = useDeletePaymentMutation();
@@ -94,10 +107,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Calcular totales
   const totalPaid = useMemo(() => {
+    if (mode === 'prepayment') {
+      return 0; // En modo pre-pago, no hay pagos previos
+    }
     return (payments || [])
       .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
       .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
-  }, [payments]);
+  }, [payments, mode]);
 
   const pendingAmount = orderTotal - totalPaid;
   const isFullyPaid = pendingAmount <= 0;
@@ -105,11 +121,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   // Resetear formulario cuando se abre el modal
   useEffect(() => {
     if (visible) {
-      setAmount(pendingAmount > 0 ? pendingAmount.toFixed(2) : '');
+      if (mode === 'prepayment') {
+        setAmount(orderTotal.toFixed(2));
+      } else {
+        setAmount(pendingAmount > 0 ? pendingAmount.toFixed(2) : '');
+      }
       setShowChangeCalculator(false);
       setSelectedMethod(PaymentMethodEnum.CASH);
     }
-  }, [visible, pendingAmount]);
+  }, [visible, pendingAmount, orderTotal, mode]);
 
   // Manejar el teclado
   useEffect(() => {
@@ -166,21 +186,41 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     const parsedAmount = parseFloat(amount);
 
     try {
-      await createPaymentMutation.mutateAsync({
-        orderId,
-        paymentMethod: selectedMethod,
-        amount: parsedAmount,
-      });
-
-      // Resetear formulario
-      setAmount('');
-      setShowChangeCalculator(false);
-
-      // Si ya está totalmente pagado, cerrar el modal
-      if (pendingAmount - parsedAmount <= 0) {
+      if (mode === 'prepayment') {
+        // Crear pre-pago
+        setIsCreatingPrepayment(true);
+        const prepayment = await prepaymentService.createPrepayment({
+          paymentMethod: selectedMethod,
+          amount: parsedAmount,
+        });
+        
+        // Notificar al componente padre
+        onPrepaymentCreated?.(prepayment.id, parsedAmount, selectedMethod);
+        
+        // Cerrar el modal
         onDismiss();
+      } else {
+        // Crear pago normal
+        await createPaymentMutation.mutateAsync({
+          orderId: orderId!,
+          paymentMethod: selectedMethod,
+          amount: parsedAmount,
+        });
+
+        // Resetear formulario
+        setAmount('');
+        setShowChangeCalculator(false);
+
+        // Si ya está totalmente pagado, cerrar el modal
+        if (pendingAmount - parsedAmount <= 0) {
+          onDismiss();
+        }
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error processing payment:', error);
+    } finally {
+      setIsCreatingPrepayment(false);
+    }
   };
 
   const handleDeletePayment = async () => {
@@ -242,6 +282,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
+  const handleDeletePrepayment = async () => {
+    if (!existingPrepaymentId) return;
+
+    try {
+      setIsCreatingPrepayment(true);
+      await prepaymentService.deletePrepayment(existingPrepaymentId);
+      onPrepaymentDeleted?.();
+      setShowDeletePrepaymentConfirm(false);
+      onDismiss();
+    } catch (error) {
+      console.error('Error eliminando pre-pago:', error);
+    } finally {
+      setIsCreatingPrepayment(false);
+    }
+  };
+
   return (
     <Portal>
       <Modal
@@ -254,9 +310,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerTextContainer}>
-                <Text style={styles.title}>Pagos</Text>
-                {orderNumber && (
+                <Text style={styles.title}>
+                  {mode === 'prepayment' ? 'Registrar Pago' : 'Pagos'}
+                </Text>
+                {orderNumber && mode !== 'prepayment' && (
                   <Text style={styles.orderNumber}>Orden #{orderNumber}</Text>
+                )}
+                {mode === 'prepayment' && (
+                  <Text style={styles.orderNumber}>Pago anticipado</Text>
                 )}
               </View>
               <IconButton icon="close" size={24} onPress={onDismiss} />
@@ -284,37 +345,43 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     ${orderTotal.toFixed(2)}
                   </Text>
                 </View>
-                <View style={styles.summaryDividerVertical} />
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Pagado</Text>
-                  <Text style={[styles.summaryAmount, { color: '#4CAF50' }]}>
-                    ${totalPaid.toFixed(2)}
-                  </Text>
-                </View>
-                <View style={styles.summaryDividerVertical} />
-                <View style={styles.summaryItem}>
-                  <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>
-                    Pendiente
-                  </Text>
-                  <Text
-                    style={[
-                      styles.summaryAmount,
-                      {
-                        fontWeight: 'bold',
-                        color:
-                          pendingAmount > 0 ? theme.colors.error : '#4CAF50',
-                      },
-                    ]}
-                  >
-                    ${pendingAmount.toFixed(2)}
-                  </Text>
-                </View>
+                {mode !== 'prepayment' && (
+                  <>
+                    <View style={styles.summaryDividerVertical} />
+                    <View style={styles.summaryItem}>
+                      <Text style={styles.summaryLabel}>Pagado</Text>
+                      <Text style={[styles.summaryAmount, { color: '#4CAF50' }]}>
+                        ${totalPaid.toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.summaryDividerVertical} />
+                    <View style={styles.summaryItem}>
+                      <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>
+                        Pendiente
+                      </Text>
+                      <Text
+                        style={[
+                          styles.summaryAmount,
+                          {
+                            fontWeight: 'bold',
+                            color:
+                              pendingAmount > 0 ? theme.colors.error : '#4CAF50',
+                          },
+                        ]}
+                      >
+                        ${pendingAmount.toFixed(2)}
+                      </Text>
+                    </View>
+                  </>
+                )}
               </View>
 
-              {/* Lista de pagos existentes */}
-              {isLoadingPayments ? (
-                <ActivityIndicator style={styles.loader} />
-              ) : (payments || []).length > 0 ? (
+              {/* Lista de pagos existentes - Solo mostrar en modo payment */}
+              {mode === 'payment' && (
+                <>
+                  {isLoadingPayments ? (
+                    <ActivityIndicator style={styles.loader} />
+                  ) : (payments || []).length > 0 ? (
                 <View style={styles.paymentsSection}>
                   <Text style={styles.sectionTitle}>Pagos registrados</Text>
                   {(payments || []).map((payment) => (
@@ -372,16 +439,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   ))}
                 </View>
               ) : null}
+                </>
+              )}
 
               {/* Formulario para nuevo pago */}
-              {!isFullyPaid && (
+              {(mode === 'prepayment' || !isFullyPaid) && (
                 <View style={styles.formSection}>
-                  <Text style={styles.sectionTitle}>Registrar nuevo pago</Text>
+                  <Text style={styles.sectionTitle}>
+                    {mode === 'prepayment' ? 'Configurar pago' : 'Registrar nuevo pago'}
+                  </Text>
 
                   {/* Métodos de pago */}
                   <View style={styles.methodsContainer}>
                     {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-                      const isDisabled = disabledMethods.includes(
+                      const isDisabled = _disabledMethods.includes(
                         value as PaymentMethod,
                       );
                       return (
@@ -466,36 +537,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     >
                       Ingrese un monto válido
                     </HelperText>
-
-                    {/* Botones de monto rápido */}
-                    {pendingAmount > 100 && (
-                      <View style={styles.quickAmounts}>
-                        <Button
-                          mode="outlined"
-                          onPress={() => setAmount('100.00')}
-                          compact
-                          style={styles.quickAmountButton}
-                        >
-                          $100
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          onPress={() => setAmount('200.00')}
-                          compact
-                          style={styles.quickAmountButton}
-                        >
-                          $200
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          onPress={() => setAmount('500.00')}
-                          compact
-                          style={styles.quickAmountButton}
-                        >
-                          $500
-                        </Button>
-                      </View>
-                    )}
                   </View>
                 </View>
               )}
@@ -511,7 +552,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               >
                 Cerrar
               </Button>
-              {!isFullyPaid && (
+              {mode === 'prepayment' && existingPrepaymentId && (
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowDeletePrepaymentConfirm(true)}
+                  style={[styles.footerButton, { borderColor: theme.colors.error }]}
+                  contentStyle={styles.footerButtonContent}
+                  textColor={theme.colors.error}
+                  icon="delete"
+                >
+                  Eliminar
+                </Button>
+              )}
+              {(mode === 'prepayment' || !isFullyPaid) && (
                 <Button
                   mode="contained"
                   onPress={handleSubmit}
@@ -519,16 +572,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     !amount ||
                     isNaN(parseFloat(amount)) ||
                     parseFloat(amount) <= 0 ||
-                    createPaymentMutation.isPending
+                    createPaymentMutation.isPending ||
+                    isCreatingPrepayment
                   }
-                  loading={createPaymentMutation.isPending}
+                  loading={createPaymentMutation.isPending || isCreatingPrepayment}
                   style={styles.footerButton}
                   contentStyle={styles.footerButtonContent}
                 >
-                  Registrar Pago
+                  {mode === 'prepayment' ? 'Registrar Pre-pago' : 'Registrar Pago'}
                 </Button>
               )}
-              {isFullyPaid && (
+              {isFullyPaid && mode !== 'prepayment' && (
                 <Button
                   mode="contained"
                   onPress={() => setShowFinalizeConfirm(true)}
@@ -589,6 +643,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         confirmText="Sí, finalizar"
         cancelText="No, cancelar"
         confirmButtonColor="#10B981"
+      />
+
+      {/* Modal de confirmación para eliminar pre-pago */}
+      <ConfirmationModal
+        visible={showDeletePrepaymentConfirm}
+        onDismiss={() => setShowDeletePrepaymentConfirm(false)}
+        onCancel={() => setShowDeletePrepaymentConfirm(false)}
+        onConfirm={handleDeletePrepayment}
+        title="Eliminar pago"
+        message="¿Está seguro de que desea eliminar este pago registrado? Esta acción no se puede deshacer."
+        confirmText="Sí, eliminar"
+        cancelText="Cancelar"
+        confirmButtonColor={theme.colors.error}
       />
     </Portal>
   );
@@ -817,15 +884,6 @@ const createStyles = (theme: AppTheme) =>
       fontSize: 13,
       lineHeight: 20,
       textAlignVertical: 'center',
-    },
-    quickAmounts: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.s,
-      marginTop: theme.spacing.xs,
-    },
-    quickAmountButton: {
-      borderColor: theme.colors.primary,
     },
     footer: {
       flexDirection: 'row',

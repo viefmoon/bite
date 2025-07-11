@@ -6,7 +6,15 @@ import React, {
   useEffect,
 } from 'react';
 import { StyleSheet, View, FlatList } from 'react-native';
-import { Text, Portal, ActivityIndicator, Appbar } from 'react-native-paper';
+import {
+  Text,
+  Portal,
+  ActivityIndicator,
+  Card,
+  Title,
+  Appbar,
+  IconButton,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useNavigation,
@@ -15,16 +23,17 @@ import {
 } from '@react-navigation/native';
 import { useGetFullMenu } from '../hooks/useMenuQueries';
 import { Product, Category, SubCategory } from '../types/orders.types';
+import { Image } from 'expo-image';
+import { getImageUrl } from '@/app/lib/imageUtils';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
-import MenuItemCard from '../components/MenuItemCard';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import CartButton from '../components/CartButton';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
 import { CartItem, CartItemModifier } from '../context/CartContext';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import { useResponsive } from '@/app/hooks/useResponsive';
 
 // Props de navegación
 type AddProductsRouteProps = {
@@ -42,7 +51,6 @@ interface CartButtonHandle {
 const AddProductsToOrderScreen = () => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
-  const responsive = useResponsive();
   const navigation = useNavigation();
   const route =
     useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
@@ -91,31 +99,6 @@ const AddProductsToOrderScreen = () => {
     const existingItemsCount = existingOrderItemsCount || 0;
     return newItemsCount + existingItemsCount;
   }, [selectedProducts, existingOrderItemsCount]);
-
-  // Estado para mantener numColumns estable
-  const [numColumns, setNumColumns] = useState(2); // Por defecto 2 columnas
-
-  // Calcular número de columnas para el grid basado en el ancho de pantalla
-  useEffect(() => {
-    let newColumns;
-
-    if (responsive.width < 400) {
-      newColumns = 2; // Pantallas muy pequeñas
-    } else if (responsive.width < 600) {
-      newColumns = 3; // Pantallas medianas
-    } else if (responsive.width < 900) {
-      newColumns = 4; // Pantallas grandes
-    } else if (responsive.width < 1200) {
-      newColumns = 5; // Tablets
-    } else {
-      newColumns = 6; // Tablets grandes o landscape
-    }
-
-    // Solo actualizar si realmente cambió
-    if (newColumns !== numColumns) {
-      setNumColumns(newColumns);
-    }
-  }, [responsive.width, numColumns]);
 
   // Mostrar mensaje si hay productos existentes al entrar
   useEffect(() => {
@@ -509,11 +492,64 @@ const AddProductsToOrderScreen = () => {
           flex: 1,
         },
         gridContainer: {
-          padding: responsive.spacing.m,
+          padding: 12,
           paddingBottom: 60,
         },
         row: {
           justifyContent: 'flex-start',
+        },
+        cardItem: {
+          width: '48%',
+          marginHorizontal: '1%',
+          marginVertical: 4,
+          overflow: 'hidden',
+          borderRadius: 8,
+          elevation: 2,
+        },
+        cardItemInactive: {
+          opacity: 0.5,
+        },
+        itemImage: {
+          width: '100%',
+          height: 120,
+        },
+        imageInactive: {
+          opacity: 0.6,
+        },
+        imagePlaceholder: {
+          width: '100%',
+          height: 120,
+          backgroundColor: '#eeeeee',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        placeholderText: {
+          fontSize: 24,
+          fontWeight: 'bold',
+          color: '#999',
+        },
+        cardContent: {
+          padding: 12,
+        },
+        cardTitle: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          marginBottom: 4,
+        },
+        cardHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        },
+        infoButton: {
+          margin: -8,
+          marginTop: -12,
+          marginRight: -12,
+        },
+        priceText: {
+          color: '#2e7d32',
+          fontWeight: 'bold',
+          marginTop: 4,
         },
         noItemsText: {
           textAlign: 'center',
@@ -540,12 +576,42 @@ const AddProductsToOrderScreen = () => {
         spacer: {
           width: 48,
         },
+        inactiveBadge: {
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          backgroundColor: colors.errorContainer,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 4,
+        },
+        inactiveBadgeText: {
+          fontSize: 12,
+          color: colors.onErrorContainer,
+          fontWeight: '600',
+        },
       }),
-    [colors, fonts, responsive],
+    [colors, fonts],
   );
 
+  const blurhash =
+    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
+
   const renderItem = ({ item }: { item: Category | SubCategory | Product }) => {
+    const imageUrl = (() => {
+      const photoPath = item.photo?.path || item.photo;
+      return photoPath ? getImageUrl(photoPath) : null;
+    })();
+    const isActive = item.isActive !== false;
+    
+    // Verificar si es un producto sin pantalla de preparación
+    const isProductWithoutScreen = navigationLevel === 'products' && 
+      'preparationScreenId' in item && 
+      !item.preparationScreenId;
+
     const handlePress = () => {
+      if (!isActive || isProductWithoutScreen) return;
+
       if (navigationLevel === 'categories') {
         handleCategorySelect(item.id);
       } else if (navigationLevel === 'subcategories') {
@@ -559,6 +625,7 @@ const AddProductsToOrderScreen = () => {
       if (
         navigationLevel === 'products' &&
         'price' in item &&
+        isActive &&
         'description' in item &&
         (item as Product).description &&
         (item as Product).description.trim() !== ''
@@ -567,21 +634,94 @@ const AddProductsToOrderScreen = () => {
       }
     };
 
+    const renderPrice = () => {
+      if (
+        navigationLevel === 'products' &&
+        'price' in item &&
+        'hasVariants' in item
+      ) {
+        const productItem = item as Product;
+        if (
+          !productItem.hasVariants &&
+          productItem.price !== null &&
+          productItem.price !== undefined
+        ) {
+          return (
+            <Text style={styles.priceText}>
+              ${Number(productItem.price).toFixed(2)}
+            </Text>
+          );
+        }
+      }
+      return null;
+    };
+
     return (
-      <View style={{ flex: 1 / numColumns, padding: responsive.spacing.xs }}>
-        <MenuItemCard
-          item={item}
-          onPress={handlePress}
-          onLongPress={handleLongPress}
-          onInfoPress={
-            navigationLevel === 'products' && 'description' in item
-              ? () => handleShowProductDescription(item as Product)
-              : undefined
-          }
-          navigationLevel={navigationLevel}
-          showPrice={true}
-        />
-      </View>
+      <Card
+        style={[
+          styles.cardItem, 
+          (!isActive || isProductWithoutScreen) && styles.cardItemInactive
+        ]}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        disabled={!isActive || isProductWithoutScreen}
+      >
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={[
+              styles.itemImage, 
+              (!isActive || isProductWithoutScreen) && styles.imageInactive
+            ]}
+            contentFit="cover"
+            placeholder={blurhash}
+            transition={300}
+          />
+        ) : (
+          <View
+            style={[
+              styles.imagePlaceholder, 
+              (!isActive || isProductWithoutScreen) && styles.imageInactive
+            ]}
+          >
+            <Text style={styles.placeholderText}>
+              {navigationLevel === 'categories'
+                ? '🍴'
+                : navigationLevel === 'subcategories'
+                  ? '🍽️'
+                  : '🥘'}
+            </Text>
+          </View>
+        )}
+        <Card.Content style={styles.cardContent}>
+          {navigationLevel === 'products' &&
+          'price' in item &&
+          (item as Product).description ? (
+            <View style={styles.cardHeader}>
+              <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
+              <IconButton
+                icon="information-outline"
+                size={20}
+                onPress={() => handleShowProductDescription(item as Product)}
+                style={styles.infoButton}
+              />
+            </View>
+          ) : (
+            <Title style={styles.cardTitle}>{item.name}</Title>
+          )}
+          {renderPrice()}
+        </Card.Content>
+        {!isActive && (
+          <View style={styles.inactiveBadge}>
+            <Text style={styles.inactiveBadgeText}>No disponible</Text>
+          </View>
+        )}
+        {isProductWithoutScreen && (
+          <View style={styles.inactiveBadge}>
+            <Text style={styles.inactiveBadgeText}>SIN PANTALLA</Text>
+          </View>
+        )}
+      </Card>
     );
   };
 
@@ -633,18 +773,17 @@ const AddProductsToOrderScreen = () => {
               data={currentData}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
-              numColumns={numColumns}
+              numColumns={2}
               contentContainerStyle={styles.gridContainer}
-              columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
+              columnWrapperStyle={styles.row}
               showsVerticalScrollIndicator={false}
-              key={`${navigationLevel}-${numColumns}`} // Key única por nivel y columnas
             />
           )}
         </View>
 
         {/* Modal de personalización de producto */}
-        {selectedProduct && (
-          <Portal>
+        <Portal>
+          {selectedProduct && (
             <ProductCustomizationModal
               visible={true}
               product={selectedProduct}
@@ -677,19 +816,17 @@ const AddProductsToOrderScreen = () => {
                 setSelectedProduct(null);
               }}
             />
-          </Portal>
-        )}
+          )}
 
-        {/* Modal de descripción del producto */}
-        {selectedProductForDescription && (
-          <Portal>
+          {/* Modal de descripción del producto */}
+          {selectedProductForDescription && (
             <SimpleProductDescriptionModal
               visible={isDescriptionModalVisible}
               product={selectedProductForDescription}
               onDismiss={handleCloseDescriptionModal}
             />
-          </Portal>
-        )}
+          )}
+        </Portal>
       </View>
     </SafeAreaView>
   );

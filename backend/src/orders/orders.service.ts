@@ -196,7 +196,10 @@ export class OrdersService {
       } catch (error) {
         // Si falla la asociación del pago, registrar el error pero continuar
         // Ya que la orden ya fue creada exitosamente
-        // TODO: Implementar logger de NestJS aquí
+        console.error(
+          `Error asociando pre-pago ${createOrderDto.prepaymentId} a orden ${order.id}:`,
+          error,
+        );
       }
     }
 

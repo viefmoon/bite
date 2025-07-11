@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity';
@@ -20,7 +21,7 @@ export class PaymentEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'order_id', type: 'uuid', nullable: true })
+  @RelationId((payment: PaymentEntity) => payment.order)
   orderId: string | null;
 
   @Column({
