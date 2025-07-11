@@ -32,6 +32,7 @@ import {
 } from '../hooks/usePrintersQueries';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic'; // Importar hook CRUD
 import { useDrawerStatus } from '@react-navigation/drawer';
+import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -73,6 +74,9 @@ const PrintersScreen: React.FC = () => {
   const { mutateAsync: deletePrinter } = useDeletePrinterMutation();
   const pingPrinterMutation = usePingPrinterMutation(); // Instanciar la mutación de ping
   const testPrintMutation = useTestPrintPrinter(); // Instanciar la mutación de test print
+
+  // Refrescar impresoras cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('thermalPrinters');
 
   const {
     isFormModalVisible,

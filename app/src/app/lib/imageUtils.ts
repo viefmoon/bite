@@ -1,9 +1,4 @@
-import { discoveryService } from '@/app/services/discoveryService';
-
-// Cache para la URL del API
-let cachedApiUrl: string | null = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hora
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
 /**
  * Construye la URL completa de una imagen a partir de su ruta relativa o absoluta.
@@ -20,16 +15,16 @@ export const getImageUrl = async (
   }
 
   try {
-    // Verificar si necesitamos actualizar el cache
-    const now = Date.now();
-    if (!cachedApiUrl || now - cacheTimestamp > CACHE_DURATION) {
-      cachedApiUrl = await discoveryService.getApiUrl();
-      cacheTimestamp = now;
+    // Obtener la URL del servicio de conexión sin provocar discovery
+    const connectionState = serverConnectionService.getState();
+    if (!connectionState.serverUrl || !connectionState.isConnected) {
+      return null;
     }
 
-    const normalizedApiUrl = cachedApiUrl.endsWith('/')
-      ? cachedApiUrl.slice(0, -1)
-      : cachedApiUrl;
+    const apiUrl = connectionState.serverUrl;
+    const normalizedApiUrl = apiUrl.endsWith('/')
+      ? apiUrl.slice(0, -1)
+      : apiUrl;
     const normalizedPath = imagePath.replace(/\\/g, '/');
 
     if (normalizedPath.startsWith('http')) {

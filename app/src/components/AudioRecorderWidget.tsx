@@ -68,14 +68,13 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       setIsServiceAvailable(status.isAvailable);
     });
 
-    // Iniciar verificación periódica
+    // Iniciar verificación periódica solo cuando este componente está montado
     audioServiceHealth.startPeriodicCheck();
-
-    // Verificar inmediatamente
-    audioServiceHealth.checkHealth();
 
     return () => {
       unsubscribe();
+      // IMPORTANTE: Detener verificaciones periódicas cuando el componente se desmonte
+      audioServiceHealth.stopPeriodicCheck();
     };
   }, []);
 

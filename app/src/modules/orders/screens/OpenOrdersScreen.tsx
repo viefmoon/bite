@@ -157,6 +157,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
 
+  // No necesitamos useRefreshModuleOnFocus aquí porque el hook useGetOpenOrdersQuery
+  // ya tiene configurado refetchInterval, refetchOnMount y refetchOnWindowFocus
+
   // Filtrar órdenes por tipo
   const filteredOrders = React.useMemo(() => {
     if (!ordersData) return [];

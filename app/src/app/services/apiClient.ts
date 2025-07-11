@@ -262,6 +262,12 @@ function configureInterceptors() {
         originalRequest.url?.includes('/auth/me') ||
         originalRequest._retry
       ) {
+        // Log temporal para depuración
+        if (error.response?.status === 409) {
+          console.log('=== INTERCEPTOR 409 ERROR ===');
+          console.log('error.response.data:', error.response.data);
+          console.log('error.response.status:', error.response.status);
+        }
         const apiError = ApiError.fromAxiosError(error);
         return Promise.reject(apiError);
       }
@@ -305,13 +311,16 @@ function configureInterceptors() {
 // Función para agregar transforms al cliente
 function addResponseTransforms(client: any) {
   client.addResponseTransform((response: any) => {
-    // Si hay un problema de red, mostrar snackbar aquí también
-    if (
+
+    // Solo mostrar snackbar para errores de red reales (no errores HTTP)
+    const isNetworkError = 
       response.problem === 'NETWORK_ERROR' ||
       response.problem === 'TIMEOUT_ERROR' ||
-      response.problem === 'CONNECTION_ERROR' ||
-      (!response.ok && !response.status)
-    ) {
+      response.problem === 'CONNECTION_ERROR';
+    
+    const isHttpError = response.status && response.status >= 400;
+    
+    if (isNetworkError && !isHttpError) {
       const showSnackbar = useSnackbarStore.getState().showSnackbar;
 
       let errorMessage = 'Sin conexión al servidor';

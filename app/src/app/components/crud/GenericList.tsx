@@ -41,6 +41,7 @@ interface StatusConfig<TItem> {
 export interface RenderItemConfig<TItem> {
   titleField: keyof TItem;
   descriptionField?: keyof TItem;
+  descriptionFormatter?: (value: any) => string | undefined;
   descriptionMaxLength?: number;
   priceField?: keyof TItem;
   sortOrderField?: keyof TItem;
@@ -358,11 +359,17 @@ const GenericList = <TItem extends { id: string }>({
         renderConfig.descriptionField &&
         item.hasOwnProperty(renderConfig.descriptionField)
       ) {
-        const rawDescription = String(
-          item[renderConfig.descriptionField] || '',
-        );
-        if (rawDescription && rawDescription.toLowerCase() !== 'null') {
-          description = rawDescription;
+        const fieldValue = item[renderConfig.descriptionField];
+        if (renderConfig.descriptionFormatter) {
+          const formattedDescription = renderConfig.descriptionFormatter(fieldValue);
+          if (formattedDescription) {
+            description = formattedDescription;
+          }
+        } else {
+          const rawDescription = String(fieldValue || '');
+          if (rawDescription && rawDescription.toLowerCase() !== 'null') {
+            description = rawDescription;
+          }
         }
       }
 

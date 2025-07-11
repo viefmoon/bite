@@ -435,8 +435,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       </Modal>
       
       {/* Modal de confirmación personalizado */}
-      <Portal>
-        <Modal
+      <Modal
           visible={showConfirmDialog}
           onDismiss={handleCancelSave}
           contentContainerStyle={{
@@ -660,7 +659,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </Button>
           </View>
         </Modal>
-      </Portal>
+    </Portal>
   );
 };
 

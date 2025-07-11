@@ -93,6 +93,7 @@ const errorCodeMessages: { [key in ApiErrorCode | string]?: string } = {
   PRINTER_NOT_FOUND: 'La impresora no fue encontrada.',
   PRINTER_OFFLINE: 'La impresora no está disponible.',
   PRINT_FAILED: 'Error al imprimir. Verifica la conexión de la impresora.',
+  THERMAL_PRINTER_DUPLICATE_FIELD: 'Ya existe una impresora con ese nombre.',
 
   // Códigos específicos del backend - Categorías
   CATEGORY_NOT_FOUND: 'La categoría no fue encontrada.',
@@ -113,7 +114,20 @@ export function getApiErrorMessage(error: unknown): string {
   const defaultMessage = 'Ocurrió un error inesperado.';
 
   if (error instanceof ApiError) {
-    // Primero intentamos con el código específico
+    // Si tenemos un mensaje específico del backend y no es un mensaje genérico,
+    // usarlo siempre, independientemente del código
+    if (
+      error.originalMessage &&
+      error.originalMessage !== 'Error desconocido de la API.' &&
+      error.originalMessage !== 'Not Found' &&
+      error.originalMessage !== 'Internal Server Error' &&
+      error.originalMessage !== 'Ocurrió un error inesperado al procesar tu solicitud.' &&
+      !error.originalMessage.includes('<!DOCTYPE') // Evitar HTML de errores
+    ) {
+      return error.originalMessage;
+    }
+
+    // Si no, intentamos con el código específico
     let message = errorCodeMessages[error.code];
 
     // Si no hay mensaje para el código, intentamos con el código de estado
@@ -121,13 +135,9 @@ export function getApiErrorMessage(error: unknown): string {
       message = errorCodeMessages[`status_${error.status}`];
     }
 
-    // Si aún no hay mensaje y tenemos un mensaje original del backend, lo usamos
-    if (
-      !message &&
-      error.originalMessage &&
-      error.code !== ERROR_CODES.UNKNOWN_API_ERROR
-    ) {
-      message = error.originalMessage;
+    // Si encontramos un mensaje genérico pero tenemos detalles específicos, usar los detalles
+    if (message === errorCodeMessages[`status_409`] && error.details?.message) {
+      return error.details.message;
     }
 
     return message || defaultMessage;

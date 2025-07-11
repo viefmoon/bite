@@ -1,6 +1,6 @@
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
-import { discoveryService } from '@/app/services/discoveryService';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
 interface NetworkDiagnosticResult {
   timestamp: Date;
@@ -26,13 +26,9 @@ interface NetworkDiagnosticResult {
 }
 
 export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> {
-  // Obtener la URL del API dinámicamente
-  let apiUrl = '';
-  try {
-    apiUrl = await discoveryService.getApiUrl();
-  } catch (error) {
-    console.log('[NetworkDiagnostics] Error obteniendo URL del API:', error);
-  }
+  // Obtener la URL del servicio de conexión sin provocar discovery
+  const connectionState = serverConnectionService.getState();
+  const apiUrl = connectionState.serverUrl || '';
 
   const result: NetworkDiagnosticResult = {
     timestamp: new Date(),

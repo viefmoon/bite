@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Text,
-  View,
-} from 'react-native';
+import { StyleSheet, StatusBar, TouchableOpacity, View, Text } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MenuStackNavigator } from '../../modules/menu/navigation/MenuStackNavigator';
 import ModifiersStackNavigator from '../../modules/modifiers/navigation/ModifiersStackNavigator';
@@ -27,12 +21,12 @@ import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
 import { Icon, Surface, Checkbox, Text as PaperText } from 'react-native-paper';
 import type { AppDrawerParamList } from './types';
+import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
 import { useAuthStore } from '../store/authStore';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
 import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
 import { OrderType } from '../../modules/kitchen/types/kitchen.types';
-import { useResponsive } from '../hooks/useResponsive';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 
@@ -41,8 +35,7 @@ export function AppDrawerNavigator() {
   const responsive = useResponsive();
   const user = useAuthStore((state) => state.user);
   const { filters, setFilters } = useKitchenStore();
-  const kitchenScreenName =
-    user?.preparationScreen?.name || 'Pantalla de Preparación';
+  const kitchenScreenName = user?.preparationScreen?.name || 'Pantalla de Preparación';
 
   // Obtener el texto del filtro activo
   const getFilterText = () => {
@@ -184,9 +177,7 @@ export function AppDrawerNavigator() {
                 title = 'Usuarios';
                 break;
               case 'KitchenStack':
-                title =
-                  kitchenScreenName +
-                  (filters.orderType ? getFilterText() : '');
+                title = kitchenScreenName + (filters.orderType ? getFilterText() : '');
                 break;
               default:
                 title = children?.toString() || '';

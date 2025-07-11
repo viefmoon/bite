@@ -23,6 +23,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { FileObject } from '@/app/components/common/CustomImagePicker';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 type ProductsScreenRouteProp = RouteProp<MenuStackParamList, 'Products'>;
 
@@ -80,6 +81,10 @@ function ProductsScreen(): React.ReactElement {
     refetch,
     isFetching,
   } = useProductsQuery(queryFilters, {});
+
+  // Refrescar productos cuando la pantalla recibe foco
+  // Usar el módulo completo para evitar loops con filtros dinámicos
+  useRefreshModuleOnFocus('products');
 
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation();

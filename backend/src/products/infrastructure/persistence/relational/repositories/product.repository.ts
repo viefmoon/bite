@@ -268,6 +268,7 @@ export class ProductRelationalRepository implements ProductRepository {
         'subcategory',
         'pizzaCustomizations',
         'pizzaConfiguration',
+        'variants',
       ],
       order: {
         sortOrder: 'ASC',

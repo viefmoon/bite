@@ -27,13 +27,13 @@ import {
   UpdateRestaurantConfigDto,
   CreateBusinessHoursDto,
 } from '../types/restaurantConfig.types';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRefreshOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 type TabType = 'basic' | 'operation' | 'schedule';
 
@@ -62,6 +62,9 @@ const RestaurantConfigScreen: React.FC = () => {
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
   const [isNavigatingAway, setIsNavigatingAway] = useState(false);
   const [businessHoursModified, setBusinessHoursModified] = useState(false);
+
+  // Refrescar configuración cuando la pantalla recibe foco
+  useRefreshOnFocus([['restaurantConfig']]);
 
   // Función para verificar si hay cambios sin guardar
   const hasChanges = React.useCallback(() => {

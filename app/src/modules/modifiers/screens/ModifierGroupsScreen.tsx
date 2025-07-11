@@ -27,6 +27,7 @@ import GenericDetailModal, {
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { PaginatedResponse } from '@/app/types/api.types';
 import { useListState } from '@/app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 type NavigationProps = {
   navigate: (screen: string, params?: any) => void;
@@ -79,6 +80,9 @@ const ModifierGroupsScreen = () => {
     queryFn: () => modifierGroupService.findAll(queryParams),
   });
 
+  // Refrescar todos los modificadores cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('modifierGroups');
+
   const modifierGroups = paginatedData?.data || [];
 
   const {
@@ -123,15 +127,42 @@ const ModifierGroupsScreen = () => {
   const listRenderConfig: RenderItemConfig<ModifierGroup> = {
     titleField: 'name',
     descriptionField: 'description',
+    sortOrderField: 'sortOrder',
     statusConfig: {
       field: 'isActive',
       activeValue: true,
       activeLabel: 'Activo',
       inactiveLabel: 'Inactivo',
     },
+    renderDescription: (item) => {
+      const parts = [];
+      
+      // Agregar orden de visualización
+      if (item.sortOrder !== undefined && item.sortOrder !== null) {
+        parts.push(`Orden: ${item.sortOrder}`);
+      }
+      
+      // Agregar si es requerido
+      parts.push(`Requerido: ${item.isRequired ? 'Sí' : 'No'}`);
+      
+      // Agregar si permite múltiples
+      parts.push(`Múltiples: ${item.allowMultipleSelections ? 'Sí' : 'No'}`);
+      
+      // Agregar descripción si existe
+      if (item.description) {
+        parts.push(item.description);
+      }
+      
+      return (
+        <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+          {parts.join(' • ')}
+        </Text>
+      );
+    },
   };
 
   const detailFields: DisplayFieldConfig<ModifierGroup>[] = [
+    { field: 'sortOrder', label: 'Orden de Visualización' },
     { field: 'minSelections', label: 'Mín. Selecciones' },
     { field: 'maxSelections', label: 'Máx. Selecciones' },
     {

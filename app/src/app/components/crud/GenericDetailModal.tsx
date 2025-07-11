@@ -349,23 +349,25 @@ function GenericDetailModal<TItem extends { id: string }>({
                     {label}
                   </Text>
                   {render ? (
-                    (() => {
-                      const rendered = render(value, item);
-                      // Si el render devuelve un string o número, lo envolvemos en Text
-                      if (typeof rendered === 'string' || typeof rendered === 'number') {
-                        return (
-                          <Text 
-                            style={[styles.fieldValue, fieldValueStyle]}
-                            numberOfLines={3}
-                            ellipsizeMode="tail"
-                          >
-                            {rendered}
-                          </Text>
-                        );
-                      }
-                      // Si ya es un elemento React, lo devolvemos tal cual
-                      return rendered;
-                    })()
+                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                      {(() => {
+                        const rendered = render(value, item);
+                        // Si el render devuelve un string o número, lo envolvemos en Text
+                        if (typeof rendered === 'string' || typeof rendered === 'number') {
+                          return (
+                            <Text 
+                              style={[styles.fieldValue, fieldValueStyle]}
+                              numberOfLines={3}
+                              ellipsizeMode="tail"
+                            >
+                              {rendered}
+                            </Text>
+                          );
+                        }
+                        // Si ya es un elemento React, lo devolvemos tal cual
+                        return rendered;
+                      })()}
+                    </View>
                   ) : (
                     <Text 
                       style={[styles.fieldValue, fieldValueStyle]}

@@ -31,6 +31,7 @@ import {
   UpdateCategoryDto,
   categoryFormSchema,
 } from '../schema/category.schema';
+import { useRefreshOnFocus, useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 type RootStackParamList = {
   Categories: undefined;
@@ -74,6 +75,10 @@ const CategoriesScreen: React.FC = () => {
           activeFilter === 'all' ? undefined : activeFilter === 'active',
       }),
   });
+
+  // Refrescar categorías cuando la pantalla recibe foco
+  // Usar el módulo completo para evitar loops con filtros dinámicos
+  useRefreshModuleOnFocus('categories');
 
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingCategories,

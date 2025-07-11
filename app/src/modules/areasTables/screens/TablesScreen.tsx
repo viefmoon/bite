@@ -84,6 +84,8 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const listRenderConfig: RenderItemConfig<Table> = useMemo(
     () => ({
       titleField: 'name',
+      descriptionField: 'capacity',
+      descriptionFormatter: (capacity) => capacity ? `Capacidad: ${capacity} ${capacity === 1 ? 'persona' : 'personas'}` : undefined,
       descriptionMaxLength: 30,
       statusConfig: {
         field: 'isActive',

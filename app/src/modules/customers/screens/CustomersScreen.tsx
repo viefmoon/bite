@@ -22,6 +22,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
 import { formatCurrency } from '@/app/lib/formatters';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 function CustomersScreen(): React.ReactElement {
   const theme = useAppTheme();
@@ -89,6 +90,9 @@ function CustomersScreen(): React.ReactElement {
   const createMutation = useCreateCustomer();
   const updateMutation = useUpdateCustomer();
   const { mutateAsync: deleteCustomer } = useDeleteCustomer();
+
+  // Refrescar clientes cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('customers');
 
   const {
     isFormModalVisible,

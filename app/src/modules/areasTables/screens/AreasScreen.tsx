@@ -22,6 +22,7 @@ import { AreasListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
@@ -49,6 +50,9 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const createAreaMutation = useCreateArea();
   const updateAreaMutation = useUpdateArea();
   const { mutateAsync: deleteArea } = useDeleteArea();
+
+  // Refrescar áreas cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('areas');
 
   const {
     isFormModalVisible,

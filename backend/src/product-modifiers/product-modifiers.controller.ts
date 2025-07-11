@@ -9,7 +9,6 @@ import {
   Query,
   HttpStatus,
   HttpCode,
-  ParseUUIDPipe,
   ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -70,7 +69,7 @@ export class ProductModifiersController {
     status: HttpStatus.NOT_FOUND,
     description: 'Product modifier not found',
   })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ProductModifier> {
+  findOne(@Param('id') id: string): Promise<ProductModifier> {
     return this.productModifiersService.findOne(id);
   }
 
@@ -105,7 +104,7 @@ export class ProductModifiersController {
     description: 'Product modifier not found',
   })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateProductModifierDto: UpdateProductModifierDto,
   ): Promise<ProductModifier> {
     return this.productModifiersService.update(id, updateProductModifierDto);
@@ -122,7 +121,7 @@ export class ProductModifiersController {
     status: HttpStatus.NOT_FOUND,
     description: 'Product modifier not found',
   })
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(@Param('id') id: string): Promise<void> {
     return this.productModifiersService.remove(id);
   }
 }

@@ -9,6 +9,7 @@ import { ConditionalAppNavigator } from './ConditionalAppNavigator';
 import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
 import { reconnectionSnackbarService } from '@/services/reconnectionSnackbarService';
+import { serverConnectionService } from '../services/serverConnectionService';
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -17,14 +18,24 @@ export function AppNavigator() {
   useEffect(() => {
     initImageCache();
 
-    // Iniciar el servicio de snackbars de reconexión cuando el usuario esté autenticado
+    // Iniciar servicios cuando el usuario esté autenticado
     if (isAuthenticated) {
+      // Inicializar el servicio de conexión UNA SOLA VEZ
+      serverConnectionService.initialize().catch((error) => {
+        console.error('[AppNavigator] Error inicializando servicio de conexión:', error);
+      });
+      
       reconnectionSnackbarService.start();
     } else {
+      // Limpiar servicios cuando se cierre sesión
+      serverConnectionService.cleanup();
       reconnectionSnackbarService.stop();
     }
 
     return () => {
+      if (!isAuthenticated) {
+        serverConnectionService.cleanup();
+      }
       reconnectionSnackbarService.stop();
     };
   }, [isAuthenticated]);

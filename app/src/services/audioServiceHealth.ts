@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { discoveryService } from '@/app/services/discoveryService';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 import { useAuthStore } from '@/app/store/authStore';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -24,17 +24,12 @@ class AudioServiceHealthChecker {
   private lastCheckTime: number = 0;
   private readonly CHECK_INTERVAL = 30000; // 30 segundos
   private readonly MIN_CHECK_INTERVAL = 5000; // 5 segundos mínimo entre checks
+  private isActive: boolean = false;
+  private networkListener: (() => void) | null = null;
 
   private constructor() {
-    // Iniciar verificación inmediata
-    this.checkHealth();
-
-    // Escuchar cambios de conectividad
-    NetInfo.addEventListener((state) => {
-      if (state.isConnected !== this.healthStatus.hasInternet) {
-        this.checkHealth();
-      }
-    });
+    // NO iniciar verificación automática
+    // Solo escuchar cambios de conectividad cuando el servicio esté activo
   }
 
   static getInstance(): AudioServiceHealthChecker {
@@ -84,7 +79,20 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      const apiUrl = await discoveryService.getApiUrl();
+      // Obtener la URL del servicio de conexión sin provocar discovery
+      const connectionState = serverConnectionService.getState();
+      if (!connectionState.serverUrl || !connectionState.isConnected) {
+        this.updateStatus({
+          isAvailable: false,
+          hasInternet: true,
+          serviceStatus: 'error',
+          message: 'Servidor no conectado',
+          lastChecked: new Date(),
+        });
+        return this.healthStatus;
+      }
+
+      const apiUrl = connectionState.serverUrl;
       const response = await axios.get(`${apiUrl}api/v1/audio-orders/health`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -154,20 +162,57 @@ class AudioServiceHealthChecker {
   }
 
   startPeriodicCheck() {
-    if (this.checkInterval) {
+    if (this.checkInterval || !this.listeners.length) {
       return;
     }
 
+    // Activar el servicio
+    this.isActive = true;
+
+    // Configurar listener de red si no existe
+    if (!this.networkListener) {
+      this.networkListener = NetInfo.addEventListener((state) => {
+        if (this.isActive && state.isConnected !== this.healthStatus.hasInternet) {
+          this.checkHealth();
+        }
+      });
+    }
+
+    // Hacer verificación inicial
+    this.checkHealth();
+
+    // Configurar verificaciones periódicas
     this.checkInterval = setInterval(() => {
-      this.checkHealth();
+      if (this.isActive) {
+        this.checkHealth();
+      }
     }, this.CHECK_INTERVAL);
   }
 
   stopPeriodicCheck() {
+    // Desactivar el servicio
+    this.isActive = false;
+
+    // Limpiar intervalo
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
+
+    // Limpiar listener de red
+    if (this.networkListener) {
+      this.networkListener();
+      this.networkListener = null;
+    }
+
+    // Resetear estado
+    this.updateStatus({
+      isAvailable: false,
+      hasInternet: false,
+      serviceStatus: 'checking',
+      message: undefined,
+      lastChecked: new Date(),
+    });
   }
 
   getStatus(): AudioServiceHealthStatus {
