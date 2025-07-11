@@ -10,7 +10,7 @@ import {
   Divider,
 } from 'react-native-paper';
 import { PizzaCustomizationGroupAvailability } from '../types/availability.types';
-import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';
+import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 interface PizzaCustomizationAvailabilityItemProps {
@@ -21,29 +21,16 @@ export function PizzaCustomizationAvailabilityItem({
   group,
 }: PizzaCustomizationAvailabilityItemProps) {
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(true);
-  const { mutate: updateAvailability } = useUpdateAvailability();
+  const [expanded, setExpanded] = useState(false);
+  const updateAvailability = useOptimisticAvailability();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const handleToggle = (id: string, currentState: boolean) => {
-    updateAvailability(
-      {
-        type: 'pizzaCustomization',
-        id,
-        isActive: !currentState,
-      },
-      {
-        onSuccess: () => {
-          showSnackbar(
-            `${currentState ? 'Desactivado' : 'Activado'} correctamente`,
-            'success',
-          );
-        },
-        onError: () => {
-          showSnackbar('Error al actualizar disponibilidad', 'error');
-        },
-      },
-    );
+    updateAvailability.mutate({
+      type: 'pizzaCustomization',
+      id,
+      isActive: !currentState,
+    });
   };
 
   const activeCount = group.items.filter((item) => item.isActive).length;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Surface, Text, IconButton, Switch } from 'react-native-paper';
 import { ModifierGroupAvailability } from '../types/availability.types';
-import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';
+import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface ModifierGroupAvailabilityItemProps {
@@ -15,25 +15,23 @@ export const ModifierGroupAvailabilityItem: React.FC<
 > = ({ modifierGroup, onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
-  const updateAvailability = useUpdateAvailability();
+  const updateAvailability = useOptimisticAvailability();
 
-  const handleGroupToggle = async (value: boolean) => {
-    await updateAvailability.mutateAsync({
+  const handleGroupToggle = (value: boolean) => {
+    updateAvailability.mutate({
       type: 'modifierGroup',
       id: modifierGroup.id,
       isActive: value,
       cascade: true,
     });
-    onRefresh?.();
   };
 
-  const handleModifierToggle = async (modifierId: string, value: boolean) => {
-    await updateAvailability.mutateAsync({
+  const handleModifierToggle = (modifierId: string, value: boolean) => {
+    updateAvailability.mutate({
       type: 'modifier',
       id: modifierId,
       isActive: value,
     });
-    onRefresh?.();
   };
 
   const unavailableCount = modifierGroup.modifiers.filter(

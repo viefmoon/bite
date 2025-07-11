@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Surface, Text, IconButton, Switch, Divider } from 'react-native-paper';
 import { CategoryAvailability } from '../types/availability.types';
-import { useUpdateAvailability } from '../hooks/useAvailabilityQueries';
+import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface CategoryAvailabilityItemProps {
@@ -15,38 +15,35 @@ export const CategoryAvailabilityItem: React.FC<
 > = ({ category, onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
-  const updateAvailability = useUpdateAvailability();
+  const updateAvailability = useOptimisticAvailability();
 
-  const handleCategoryToggle = async (value: boolean) => {
-    await updateAvailability.mutateAsync({
+  const handleCategoryToggle = (value: boolean) => {
+    updateAvailability.mutate({
       type: 'category',
       id: category.id,
       isActive: value,
       cascade: true,
     });
-    onRefresh?.();
   };
 
-  const handleSubcategoryToggle = async (
+  const handleSubcategoryToggle = (
     subcategoryId: string,
     value: boolean,
   ) => {
-    await updateAvailability.mutateAsync({
+    updateAvailability.mutate({
       type: 'subcategory',
       id: subcategoryId,
       isActive: value,
       cascade: true,
     });
-    onRefresh?.();
   };
 
-  const handleProductToggle = async (productId: string, value: boolean) => {
-    await updateAvailability.mutateAsync({
+  const handleProductToggle = (productId: string, value: boolean) => {
+    updateAvailability.mutate({
       type: 'product',
       id: productId,
       isActive: value,
     });
-    onRefresh?.();
   };
 
   const unavailableCount = category.subcategories.reduce((acc, sub) => {
