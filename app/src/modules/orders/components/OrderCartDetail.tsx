@@ -96,6 +96,9 @@ export interface OrderDetailsForBackend {
   total: number;
   items: OrderItemDtoForBackend[];
   tableId?: string;
+  isTemporaryTable?: boolean;
+  temporaryTableName?: string;
+  temporaryTableAreaId?: string;
   scheduledAt?: Date;
   deliveryInfo: DeliveryInfo;
   notes?: string;
@@ -223,6 +226,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [editDeliveryInfo, setEditDeliveryInfo] = useState<DeliveryInfo>({});
   const [editOrderNotes, setEditOrderNotes] = useState<string>('');
   const [editAdjustments, setEditAdjustments] = useState<OrderAdjustment[]>([]);
+  const [editIsTemporaryTable, setEditIsTemporaryTable] =
+    useState<boolean>(false);
+  const [editTemporaryTableName, setEditTemporaryTableName] =
+    useState<string>('');
 
   // Siempre llamar al hook, pero usar sus valores solo si no estamos en modo edición
   const cartContext = useCart();
@@ -255,6 +262,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setCartSelectedTableId = !isEditMode
     ? cartContext?.setSelectedTableId || (() => {})
     : () => {};
+  const cartIsTemporaryTable = !isEditMode
+    ? cartContext?.isTemporaryTable || false
+    : false;
+  const setCartIsTemporaryTable = !isEditMode
+    ? cartContext?.setIsTemporaryTable || (() => {})
+    : () => {};
+  const cartTemporaryTableName = !isEditMode
+    ? cartContext?.temporaryTableName || ''
+    : '';
+  const setCartTemporaryTableName = !isEditMode
+    ? cartContext?.setTemporaryTableName || (() => {})
+    : () => {};
   const cartScheduledTime = !isEditMode
     ? cartContext?.scheduledTime || null
     : null;
@@ -273,6 +292,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const selectedTableId = isEditMode
     ? editSelectedTableId
     : cartSelectedTableId;
+  const isTemporaryTable = isEditMode
+    ? editIsTemporaryTable
+    : cartIsTemporaryTable;
+  const temporaryTableName = isEditMode
+    ? editTemporaryTableName
+    : cartTemporaryTableName;
   const scheduledTime = isEditMode ? editScheduledTime : cartScheduledTime;
   const deliveryInfo = isEditMode ? editDeliveryInfo : cartDeliveryInfo;
   const orderNotes = isEditMode ? editOrderNotes : cartOrderNotes;
@@ -285,6 +310,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setSelectedTableId = isEditMode
     ? setEditSelectedTableId
     : setCartSelectedTableId;
+  const setIsTemporaryTable = isEditMode
+    ? setEditIsTemporaryTable
+    : setCartIsTemporaryTable;
+  const setTemporaryTableName = isEditMode
+    ? setEditTemporaryTableName
+    : setCartTemporaryTableName;
   const setScheduledTime = isEditMode
     ? setEditScheduledTime
     : setCartScheduledTime;
@@ -502,6 +533,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   >('CASH');
   const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
+  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
 
   // Estado original de la orden para detectar cambios
   const [originalOrderState, setOriginalOrderState] = useState<{
@@ -588,6 +620,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Si hay una mesa, necesitamos encontrar el área
     if (orderData.tableId && orderData.table) {
       setEditSelectedAreaId(orderData.table.areaId);
+      // Verificar si es una mesa temporal
+      if (orderData.table.isTemporary) {
+        setEditIsTemporaryTable(true);
+        setEditTemporaryTableName(orderData.table.name || '');
+      } else {
+        setEditIsTemporaryTable(false);
+        setEditTemporaryTableName('');
+      }
+    } else {
+      setEditIsTemporaryTable(false);
+      setEditTemporaryTableName('');
     }
 
     // Mapa para agrupar items idénticos
@@ -1111,9 +1154,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         setAreaError('Debe seleccionar un área');
         isValid = false;
       }
-      if (!selectedTableId) {
-        setTableError('Debe seleccionar una mesa');
-        isValid = false;
+      if (isTemporaryTable) {
+        // Validar mesa temporal
+        if (!temporaryTableName || temporaryTableName.trim() === '') {
+          setTableError('Debe ingresar un nombre para la mesa temporal');
+          isValid = false;
+        }
+      } else {
+        // Validar mesa existente
+        if (!selectedTableId) {
+          setTableError('Debe seleccionar una mesa');
+          isValid = false;
+        }
       }
     } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
       // Usar Enum
@@ -1206,14 +1258,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       total,
       items: itemsForBackend,
       tableId:
-        orderType === OrderTypeEnum.DINE_IN
+        orderType === OrderTypeEnum.DINE_IN && !isTemporaryTable
           ? (selectedTableId ?? undefined)
           : undefined, // Usar Enum
+      isTemporaryTable:
+        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
+          ? true
+          : undefined,
+      temporaryTableName:
+        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
+          ? temporaryTableName
+          : undefined,
+      temporaryTableAreaId:
+        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
+          ? selectedAreaId || undefined
+          : undefined,
       scheduledAt: scheduledTime ? scheduledTime : undefined,
       deliveryInfo: {
         recipientName:
-          orderType === OrderTypeEnum.TAKE_AWAY ||
-          orderType === OrderTypeEnum.DELIVERY
+          orderType === OrderTypeEnum.TAKE_AWAY
             ? deliveryInfo.recipientName
             : undefined,
         recipientPhone:
@@ -1316,19 +1379,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     amount: number,
     method: 'CASH' | 'CARD' | 'TRANSFER',
   ) => {
-    // Si hay un pre-pago existente, eliminarlo primero
-    if (prepaymentId && prepaymentId !== prepaymentIdCreated) {
-      try {
-        await prepaymentService.deletePrepayment(prepaymentId);
-      } catch (error) {
-        console.error('Error eliminando pre-pago anterior:', error);
-        showSnackbar({
-          message: 'Error al actualizar el pago',
-          type: 'error',
-        });
-        return;
-      }
-    }
+    const isUpdate = prepaymentId === prepaymentIdCreated;
 
     setPrepaymentId(prepaymentIdCreated);
     setPaymentAmount(amount.toFixed(2));
@@ -1336,11 +1387,53 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setShowPrepaymentModal(false);
 
     showSnackbar({
-      message: prepaymentId
+      message: isUpdate
         ? 'Pago actualizado correctamente'
         : 'Pago registrado correctamente',
       type: 'success',
     });
+  };
+
+  const handleDeletePrepayment = () => {
+    if (!prepaymentId) return;
+
+    setShowDeletePrepaymentConfirm(true);
+  };
+
+  const confirmDeletePrepayment = async () => {
+    if (!prepaymentId) return;
+
+    try {
+      await prepaymentService.deletePrepayment(prepaymentId);
+      setPrepaymentId(null);
+      setPaymentAmount('');
+      setPaymentMethod(null);
+
+      showSnackbar({
+        message: 'Prepago eliminado correctamente',
+        type: 'success',
+      });
+    } catch (error: any) {
+      let errorMessage = 'Error al eliminar el prepago';
+
+      // Manejar específicamente el error 404
+      if (error?.response?.status === 404) {
+        errorMessage = 'El prepago ya no existe o fue eliminado previamente';
+        // Limpiar el estado local si el prepago ya no existe
+        setPrepaymentId(null);
+        setPaymentAmount('');
+        setPaymentMethod(null);
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      showSnackbar({
+        message: errorMessage,
+        type: 'error',
+      });
+    } finally {
+      setShowDeletePrepaymentConfirm(false);
+    }
   };
 
   const handlePrepaymentDeleted = () => {
@@ -1713,27 +1806,41 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   anchor={
                     <AnimatedLabelSelector
                       label="Mesa *"
-                      value={selectedTableName}
+                      value={isTemporaryTable ? '(Usando mesa temporal)' : selectedTableName}
                       onPress={() => setTableMenuVisible(true)}
                       isLoading={isLoadingTables}
                       error={!!tableError || !!errorTables}
                       disabled={
-                        !selectedAreaId || isLoadingTables || isLoadingAreas
+                        !selectedAreaId || isLoadingTables || isLoadingAreas || isTemporaryTable
                       }
                     />
                   }
                 >
-                  {tablesData?.map((table: Table) => (
-                    <Menu.Item
-                      key={table.id}
-                      onPress={() => {
-                        setSelectedTableId(table.id);
-                        setTableMenuVisible(false);
-                        setTableError(null);
-                      }}
-                      title={table.name}
-                    />
-                  ))}
+                  {tablesData?.map((table: Table) => {
+                    // En modo edición, permitir seleccionar la mesa actual aunque esté ocupada
+                    const isCurrentTable = isEditMode && orderData?.tableId === table.id;
+                    const canSelect = table.isAvailable || isCurrentTable;
+
+                    return (
+                      <Menu.Item
+                        key={table.id}
+                        onPress={() => {
+                          if (canSelect) {
+                            setSelectedTableId(table.id);
+                            setTableMenuVisible(false);
+                            setTableError(null);
+                          }
+                        }}
+                        title={`${table.name}${!table.isAvailable && !isCurrentTable ? ' (Ocupada)' : ''}`}
+                        disabled={!canSelect}
+                        titleStyle={
+                          !canSelect
+                            ? { color: theme.colors.error }
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
                   {selectedAreaId &&
                     tablesData?.length === 0 &&
                     !isLoadingTables &&
@@ -1742,7 +1849,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item title="Error al cargar mesas" disabled />
                   )}
                 </Menu>
-                {tableError && !errorTables && (
+                {tableError && !errorTables && !isTemporaryTable && (
                   <HelperText
                     type="error"
                     visible={true}
@@ -1761,6 +1868,70 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   </HelperText>
                 )}
               </View>
+            </View>
+
+            {/* Opción de mesa temporal */}
+            <View style={[styles.sectionCompact, styles.fieldContainer]}>
+              <TouchableOpacity
+                onPress={() => {
+                  setIsTemporaryTable(!isTemporaryTable);
+                  if (!isTemporaryTable) {
+                    // Si activamos mesa temporal, limpiar la selección de mesa
+                    setSelectedTableId(null);
+                    setTableError(null);
+                  } else {
+                    // Si desactivamos mesa temporal, limpiar el nombre
+                    setTemporaryTableName('');
+                  }
+                }}
+                style={styles.checkboxContainer}
+              >
+                <Checkbox.Android
+                  status={isTemporaryTable ? 'checked' : 'unchecked'}
+                  onPress={() => {
+                    setIsTemporaryTable(!isTemporaryTable);
+                    if (!isTemporaryTable) {
+                      // Si activamos mesa temporal, limpiar la selección de mesa
+                      setSelectedTableId(null);
+                      setTableError(null);
+                    } else {
+                      // Si desactivamos mesa temporal, limpiar el nombre
+                      setTemporaryTableName('');
+                    }
+                  }}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.checkboxLabel}>Crear mesa temporal</Text>
+              </TouchableOpacity>
+
+              {/* Campo para nombre de mesa temporal */}
+              {isTemporaryTable && (
+                <View style={styles.temporaryTableInputContainer}>
+                  <SpeechRecognitionInput
+                    key="temporary-table-name"
+                    label="Nombre de la Mesa Temporal *"
+                    value={temporaryTableName}
+                    onChangeText={(text) => {
+                      setTemporaryTableName(text);
+                      if (tableError) setTableError(null);
+                    }}
+                    error={!!tableError && isTemporaryTable}
+                    speechLang="es-MX"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    placeholder="Ej: Mesa Terraza 1"
+                  />
+                  {tableError && isTemporaryTable && (
+                    <HelperText
+                      type="error"
+                      visible={true}
+                      style={styles.helperTextFix}
+                    >
+                      {tableError}
+                    </HelperText>
+                  )}
+                </View>
+              )}
             </View>
 
             {/* 3. Notas */}
@@ -1879,23 +2050,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       case OrderTypeEnum.DELIVERY: // Usar Enum
         return (
           <>
-            {/* 1. Nombre Cliente */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key={`customer-name-input-delivery-${orderType}`}
-                label="Nombre del Cliente (Opcional)"
-                value={deliveryInfo.recipientName || ''}
-                onChangeText={(text) => {
-                  setDeliveryInfo({ ...deliveryInfo, recipientName: text });
-                  if (recipientNameError) setRecipientNameError(null);
-                }}
-                speechLang="es-MX"
-                autoCapitalize="words"
-                autoCorrect={false}
-              />
-            </View>
-
-            {/* 2. Dirección */}
+            {/* 1. Dirección */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
                 key="address-input-delivery"
@@ -1921,7 +2076,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               )}
             </View>
 
-            {/* 3. Teléfono */}
+            {/* 2. Teléfono */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
                 key={`phone-input-delivery-${orderType}`} // Key única y específica
@@ -1962,7 +2117,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               </View>
             </View>
 
-            {/* 4. Notas */}
+            {/* 3. Notas */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <SpeechRecognitionInput
                 key="notes-input-delivery" // Key única y específica
@@ -1974,7 +2129,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               />
             </View>
 
-            {/* 5. Programar Hora */}
+            {/* 4. Programar Hora */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
               <AnimatedLabelSelector
                 label="Programar Hora Entrega (Opcional)"
@@ -2015,11 +2170,55 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         <Modal
           visible={visible}
           onDismiss={onClose}
-          contentContainerStyle={styles.modalContent}
+          contentContainerStyle={styles.errorModalContent}
         >
-          <View style={[styles.container, styles.errorContainer]}>
-            <Text style={styles.errorText}>Error al cargar la orden</Text>
-            <Button onPress={onClose}>Cerrar</Button>
+          <View style={styles.errorModalContainer}>
+            {/* Icono de error */}
+            <View
+              style={[
+                styles.errorIconContainer,
+                { backgroundColor: theme.colors.errorContainer },
+              ]}
+            >
+              <IconButton
+                icon="alert-circle-outline"
+                size={48}
+                iconColor={theme.colors.error}
+                style={{ margin: 0 }}
+              />
+            </View>
+
+            {/* Título del error */}
+            <Text
+              style={[
+                styles.errorModalTitle,
+                { color: theme.colors.onSurface },
+              ]}
+            >
+              No se pudo cargar la orden
+            </Text>
+
+            {/* Mensaje descriptivo */}
+            <Text
+              style={[
+                styles.errorModalMessage,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              Ha ocurrido un error al intentar cargar los datos de la orden. Por
+              favor, intenta nuevamente más tarde.
+            </Text>
+
+            {/* Botón de cerrar */}
+            <Button
+              mode="contained"
+              onPress={onClose}
+              style={styles.errorModalButton}
+              contentStyle={styles.errorModalButtonContent}
+              labelStyle={styles.errorModalButtonLabel}
+            >
+              Entendido
+            </Button>
           </View>
         </Modal>
       </Portal>
@@ -2649,20 +2848,49 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             {/* Mostrar desglose de pago cuando hay pre-pago registrado */}
             {!isEditMode && prepaymentId && (
               <>
-                <View style={styles.totalsContainer}>
-                  <Text style={styles.totalsText}>Pagado:</Text>
-                  <View style={styles.paymentValueContainer}>
+                <View style={styles.prepaymentSection}>
+                  <View style={styles.prepaymentHeader}>
+                    <Text style={styles.prepaymentTitle}>
+                      Prepago registrado
+                    </Text>
+                    <View style={styles.prepaymentActions}>
+                      <IconButton
+                        icon="pencil"
+                        size={28}
+                        iconColor={theme.colors.primary}
+                        onPress={() => setShowPrepaymentModal(true)}
+                        style={styles.prepaymentIconButton}
+                      />
+                      <IconButton
+                        icon="delete"
+                        size={28}
+                        iconColor={theme.colors.error}
+                        onPress={handleDeletePrepayment}
+                        style={styles.prepaymentIconButton}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.totalsContainer}>
+                    <Text style={styles.totalsText}>Monto pagado:</Text>
                     <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
                       ${parseFloat(paymentAmount || '0').toFixed(2)}
                     </Text>
-                    <IconButton
-                      icon="pencil"
-                      size={16}
-                      iconColor={theme.colors.primary}
-                      onPress={() => setShowPrepaymentModal(true)}
-                      style={styles.editPaymentButton}
-                    />
                   </View>
+                  {/* Mostrar advertencia si el prepago excede el total */}
+                  {parseFloat(paymentAmount || '0') > total && (
+                    <View style={styles.prepaymentWarning}>
+                      <IconButton
+                        icon="alert-circle"
+                        size={16}
+                        iconColor={theme.colors.error}
+                        style={{ margin: 0 }}
+                      />
+                      <Text style={styles.prepaymentWarningText}>
+                        El prepago excede el total de la orden. Edite el pago
+                        antes de continuar.
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.totalsContainer}>
                   <Text style={[styles.totalsText, { fontWeight: '600' }]}>
@@ -2742,7 +2970,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 isConfirming || // Deshabilitar mientras se procesa
                 items.length === 0 ||
                 (orderType === OrderTypeEnum.DINE_IN &&
-                  (!selectedAreaId || !selectedTableId)) || // Usar Enum
+                  (!selectedAreaId ||
+                    (isTemporaryTable
+                      ? !temporaryTableName || temporaryTableName.trim() === ''
+                      : !selectedTableId))) || // Usar Enum
                 (orderType === OrderTypeEnum.TAKE_AWAY &&
                   (!deliveryInfo.recipientName ||
                     deliveryInfo.recipientName.trim() === '')) || // Usar Enum
@@ -2968,6 +3199,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onPrepaymentCreated={handlePrepaymentCreated}
             existingPrepaymentId={prepaymentId || undefined}
             onPrepaymentDeleted={handlePrepaymentDeleted}
+          />
+
+          {/* Modal de confirmación para eliminar prepago */}
+          <ConfirmationModal
+            visible={showDeletePrepaymentConfirm}
+            onDismiss={() => setShowDeletePrepaymentConfirm(false)}
+            title="¿Eliminar prepago?"
+            message="¿Estás seguro de que deseas eliminar este prepago? Esta acción no se puede deshacer."
+            confirmText="Eliminar"
+            cancelText="Cancelar"
+            onConfirm={confirmDeletePrepayment}
+            onCancel={() => setShowDeletePrepaymentConfirm(false)}
           />
         </GestureHandlerRootView>
       </Modal>
@@ -3361,6 +3604,110 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginLeft: theme.spacing.xs,
       width: 28,
       height: 28,
+    },
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
+    },
+    checkboxLabel: {
+      fontSize: 16,
+      marginLeft: theme.spacing.xs,
+      color: theme.colors.onSurface,
+    },
+    temporaryTableInputContainer: {
+      marginTop: theme.spacing.xs,
+      marginBottom: theme.spacing.s,
+    },
+    prepaymentSection: {
+      marginBottom: theme.spacing.s,
+      paddingHorizontal: theme.spacing.xs,
+    },
+    prepaymentHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    prepaymentTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    prepaymentActions: {
+      flexDirection: 'row',
+      gap: theme.spacing.xs,
+    },
+    prepaymentIconButton: {
+      margin: 0,
+    },
+    prepaymentWarning: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.errorContainer,
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+      marginTop: theme.spacing.xs,
+      marginBottom: theme.spacing.xs,
+    },
+    prepaymentWarningText: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.colors.onErrorContainer,
+      marginLeft: theme.spacing.xs,
+    },
+    errorModalContent: {
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.m,
+    },
+    errorModalContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.roundness * 3,
+      padding: theme.spacing.xl,
+      alignItems: 'center',
+      width: '90%',
+      maxWidth: 400,
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    errorIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: theme.spacing.m,
+    },
+    errorModalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: theme.spacing.s,
+      textAlign: 'center',
+    },
+    errorModalMessage: {
+      fontSize: 16,
+      textAlign: 'center',
+      marginBottom: theme.spacing.l,
+      lineHeight: 22,
+    },
+    errorModalButton: {
+      marginTop: theme.spacing.m,
+      minWidth: 120,
+    },
+    errorModalButtonContent: {
+      paddingHorizontal: theme.spacing.l,
+    },
+    errorModalButtonLabel: {
+      fontSize: 16,
     },
   });
 export default OrderCartDetail;
