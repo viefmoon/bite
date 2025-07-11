@@ -5,7 +5,6 @@ import {
   Text,
   IconButton,
   Chip,
-  Button,
   ActivityIndicator,
   Menu,
   Searchbar,
@@ -99,7 +98,7 @@ export function PizzaProductsTab() {
               </Text>
               <Text variant="bodySmall" style={styles.variantText}>
                 {variantsCount > 0
-                  ? `${variantsCount} tamaños`
+                  ? `${variantsCount} variantes`
                   : 'Sin variantes'}
               </Text>
             </View>

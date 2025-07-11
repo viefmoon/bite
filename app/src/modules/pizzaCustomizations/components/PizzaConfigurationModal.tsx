@@ -280,7 +280,7 @@ export function PizzaConfigurationModal({
               {product.name}
             </Text>
             <Text variant="bodySmall">
-              {product.variants?.length || 0} tamaños disponibles
+              {product.variants?.length || 0} variantes disponibles
             </Text>
           </View>
 

@@ -1685,7 +1685,7 @@ export class ProductSeedService {
         this.pizzaConfigurationRepository.create({
           product: pizza,
           includedToppings: 4,
-          extraToppingCost: 20,
+          extraToppingCost: 10,
         }),
       );
 

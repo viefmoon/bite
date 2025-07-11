@@ -39,6 +39,47 @@ export function PizzaCustomizationDetailModal({
     }
   };
 
+  // Configurar campos dinámicamente según el tipo
+  const fieldsToDisplay = [
+    {
+      field: 'type',
+      label: 'Tipo',
+      render: (type) =>
+        type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente',
+    },
+    // Solo mostrar ingredientes si es tipo FLAVOR
+    ...(customization.type === CustomizationType.FLAVOR
+      ? [
+          {
+            field: 'ingredients',
+            label: 'Ingredientes',
+            render: (ingredients) => ingredients || 'Sin ingredientes',
+          },
+        ]
+      : []),
+    {
+      field: 'toppingValue',
+      label: 'Valor de topping',
+      render: (value) => value?.toString() || '0',
+    },
+    {
+      field: 'sortOrder',
+      label: 'Orden de visualización',
+      render: (value) => value?.toString() || '0',
+    },
+    {
+      field: 'products',
+      label: 'Asociado a productos',
+      render: (products) => {
+        if (!products || products.length === 0) {
+          return 'No asociado a ningún producto';
+        }
+        const productNames = products.map((p) => p.name).join(', ');
+        return `${products.length} producto${products.length > 1 ? 's' : ''}: ${productNames}`;
+      },
+    },
+  ];
+
   return (
     <GenericDetailModal
       visible={visible}
@@ -51,40 +92,7 @@ export function PizzaCustomizationDetailModal({
         activeLabel: 'Activo',
         inactiveLabel: 'Inactivo',
       }}
-      fieldsToDisplay={[
-        {
-          field: 'type',
-          label: 'Tipo',
-          render: (type) =>
-            type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente',
-        },
-        {
-          field: 'ingredients',
-          label: 'Ingredientes',
-          render: (ingredients) => ingredients || 'Sin ingredientes',
-        },
-        {
-          field: 'toppingValue',
-          label: 'Valor de topping',
-          render: (value) => value?.toString() || '0',
-        },
-        {
-          field: 'sortOrder',
-          label: 'Orden de visualización',
-          render: (value) => value?.toString() || '0',
-        },
-        {
-          field: 'products',
-          label: 'Asociado a productos',
-          render: (products) => {
-            if (!products || products.length === 0) {
-              return 'No asociado a ningún producto';
-            }
-            const productNames = products.map((p) => p.name).join(', ');
-            return `${products.length} producto${products.length > 1 ? 's' : ''}: ${productNames}`;
-          },
-        },
-      ]}
+      fieldsToDisplay={fieldsToDisplay}
       onEdit={onEdit ? handleEdit : undefined}
       onDelete={onDelete ? handleDelete : undefined}
       isDeleting={isDeleting}

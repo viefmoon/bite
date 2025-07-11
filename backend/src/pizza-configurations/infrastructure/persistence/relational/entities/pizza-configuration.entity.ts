@@ -25,7 +25,7 @@ export class PizzaConfigurationEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
-  @Column({ name: 'included_toppings', type: 'int', default: 4 })
+  @Column({ name: 'included_toppings', type: 'int', default: 0 })
   includedToppings: number;
 
   @Column({

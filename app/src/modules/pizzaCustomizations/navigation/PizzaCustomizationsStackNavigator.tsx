@@ -1,7 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PizzaManagementScreen } from '../screens/PizzaManagementScreen';
-import { PizzaConfigurationsScreen } from '../screens/PizzaConfigurationsScreen';
 import type { PizzaCustomizationsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<PizzaCustomizationsStackParamList>();
@@ -16,10 +15,6 @@ export function PizzaCustomizationsStackNavigator() {
       <Stack.Screen
         name="PizzaCustomizationsList"
         component={PizzaManagementScreen}
-      />
-      <Stack.Screen
-        name="PizzaConfigurations"
-        component={PizzaConfigurationsScreen}
       />
     </Stack.Navigator>
   );

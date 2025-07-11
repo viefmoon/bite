@@ -3,7 +3,7 @@ import { pizzaCustomizationsService } from '../services/pizzaCustomizationsServi
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { FindAllPizzaCustomizationsQuery } from '../schema/pizzaCustomization.schema';
 
-export const PIZZA_CUSTOMIZATIONS_QUERY_KEYS = {
+const PIZZA_CUSTOMIZATIONS_QUERY_KEYS = {
   all: ['pizzaCustomizations'] as const,
   lists: () => [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.all, 'list'] as const,
   list: (params?: FindAllPizzaCustomizationsQuery) =>
@@ -114,27 +114,6 @@ export function useDeletePizzaCustomization() {
           error instanceof Error
             ? error.message
             : 'Error al eliminar personalización',
-        type: 'error',
-      });
-    },
-  });
-}
-
-export function useUpdatePizzaCustomizationsSortOrder() {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: pizzaCustomizationsService.updateSortOrder,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(),
-      });
-    },
-    onError: (error) => {
-      showSnackbar({
-        message:
-          error instanceof Error ? error.message : 'Error al actualizar orden',
         type: 'error',
       });
     },

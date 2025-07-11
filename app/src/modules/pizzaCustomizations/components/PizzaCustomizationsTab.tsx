@@ -11,30 +11,22 @@ import {
   Surface,
 } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
-import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '@/app/styles/theme';
 import {
   usePizzaCustomizationsList,
   useDeletePizzaCustomization,
 } from '../hooks/usePizzaCustomizationsQueries';
 import { PizzaCustomizationDetailModal } from './PizzaCustomizationDetailModal';
+import { PizzaCustomizationFormModal } from './PizzaCustomizationFormModal';
 import {
   CustomizationType,
   PizzaCustomization,
 } from '../types/pizzaCustomization.types';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { PizzaCustomizationsStackParamList } from '../navigation/types';
 import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
-type NavigationProp = NativeStackNavigationProp<
-  PizzaCustomizationsStackParamList,
-  'PizzaCustomizationsList'
->;
-
 export function PizzaCustomizationsTab() {
   const theme = useAppTheme();
-  const navigation = useNavigation<NavigationProp>();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>(
@@ -47,6 +39,8 @@ export function PizzaCustomizationsTab() {
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [customizationToDelete, setCustomizationToDelete] =
     useState<PizzaCustomization | null>(null);
+  const [formModalVisible, setFormModalVisible] = useState(false);
+  const [editingCustomizationId, setEditingCustomizationId] = useState<string | undefined>();
 
   const deleteMutation = useDeletePizzaCustomization();
 
@@ -66,7 +60,8 @@ export function PizzaCustomizationsTab() {
 
   const handleEdit = (customization: PizzaCustomization) => {
     setDetailModalVisible(false);
-    navigation.navigate('PizzaCustomizationForm', { id: customization.id });
+    setEditingCustomizationId(customization.id);
+    setFormModalVisible(true);
   };
 
   const handleDelete = (customization: PizzaCustomization) => {
@@ -85,17 +80,36 @@ export function PizzaCustomizationsTab() {
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity onPress={() => handleItemPress(item)}>
-      <Surface style={styles.cardWrapper} elevation={1}>
+      <Surface 
+        style={[
+          styles.cardWrapper,
+          !item.isActive && styles.cardWrapperInactive
+        ]} 
+        elevation={1}
+      >
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <View style={styles.titleRow}>
-              <Text
-                variant="titleMedium"
-                style={styles.cardTitle}
-                numberOfLines={1}
-              >
-                {item.name}
-              </Text>
+              <View style={styles.titleContainer}>
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.cardTitle,
+                    !item.isActive && styles.textInactive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+                {!item.isActive && (
+                  <Badge 
+                    style={styles.inactiveBadge}
+                    size={16}
+                  >
+                    Inactivo
+                  </Badge>
+                )}
+              </View>
               <Chip
                 mode="flat"
                 compact
@@ -110,6 +124,7 @@ export function PizzaCustomizationsTab() {
                         ? theme.colors.errorContainer
                         : theme.colors.secondaryContainer,
                   },
+                  !item.isActive && styles.chipInactive
                 ]}
                 textStyle={styles.chipText}
               >
@@ -119,10 +134,28 @@ export function PizzaCustomizationsTab() {
               </Chip>
             </View>
             <View style={styles.statsContainer}>
-              <Text variant="bodySmall" style={styles.statText}>
-                Valor: {item.toppingValue || 0}
+              <View 
+                style={[
+                  styles.statusIndicator,
+                  item.isActive ? styles.statusActive : styles.statusInactive
+                ]}
+              />
+              <Text variant="bodySmall" style={[
+                styles.statText,
+                !item.isActive && styles.textInactive
+              ]}>
+                Orden: {item.sortOrder || 0}
               </Text>
-              <Text variant="bodySmall" style={styles.statText}>
+              <Text variant="bodySmall" style={[
+                styles.statText,
+                !item.isActive && styles.textInactive
+              ]}>
+                • Valor: {item.toppingValue || 0}
+              </Text>
+              <Text variant="bodySmall" style={[
+                styles.statText,
+                !item.isActive && styles.textInactive
+              ]}>
                 • {item.products?.length || 0} pizzas
               </Text>
             </View>
@@ -131,7 +164,10 @@ export function PizzaCustomizationsTab() {
           {item.ingredients && (
             <Text
               variant="bodySmall"
-              style={styles.ingredientsText}
+              style={[
+                styles.ingredientsText,
+                !item.isActive && styles.textInactive
+              ]}
               numberOfLines={1}
             >
               {item.ingredients}
@@ -191,6 +227,9 @@ export function PizzaCustomizationsTab() {
       borderRadius: theme.roundness * 2,
       overflow: 'hidden',
     },
+    cardWrapperInactive: {
+      opacity: 0.7,
+    },
     cardContent: {
       padding: theme.spacing.s,
       paddingHorizontal: theme.spacing.m,
@@ -204,14 +243,31 @@ export function PizzaCustomizationsTab() {
       justifyContent: 'space-between',
       gap: theme.spacing.s,
     },
-    cardTitle: {
+    titleContainer: {
       flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    cardTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
       fontSize: 16,
     },
+    textInactive: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    inactiveBadge: {
+      backgroundColor: theme.colors.errorContainer,
+      color: theme.colors.onErrorContainer,
+      fontSize: 10,
+      fontWeight: '600',
+    },
     typeChip: {
       height: 24,
+    },
+    chipInactive: {
+      opacity: 0.6,
     },
     chipText: {
       fontSize: 11,
@@ -223,6 +279,17 @@ export function PizzaCustomizationsTab() {
       alignItems: 'center',
       gap: theme.spacing.s,
       marginTop: theme.spacing.xs,
+    },
+    statusIndicator: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    statusActive: {
+      backgroundColor: theme.colors.primary,
+    },
+    statusInactive: {
+      backgroundColor: theme.colors.error,
     },
     statText: {
       fontSize: 12,
@@ -398,6 +465,18 @@ export function PizzaCustomizationsTab() {
         onDismiss={() => {
           setDeleteConfirmVisible(false);
           setCustomizationToDelete(null);
+        }}
+      />
+
+      <PizzaCustomizationFormModal
+        visible={formModalVisible}
+        onDismiss={() => {
+          setFormModalVisible(false);
+          setEditingCustomizationId(undefined);
+        }}
+        customizationId={editingCustomizationId}
+        onSuccess={() => {
+          refetch();
         }}
       />
     </View>

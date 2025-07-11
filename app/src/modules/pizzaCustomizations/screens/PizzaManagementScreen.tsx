@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Portal, FAB, Text, Icon } from 'react-native-paper';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { FAB, Text, Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/app/styles/theme';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { PizzaCustomizationsStackParamList } from '../navigation/types';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 // Importar las tabs
-import { PizzaProductsTab, PizzaCustomizationsTab } from '../components';
-
-type NavigationProp = NativeStackNavigationProp<
-  PizzaCustomizationsStackParamList,
-  'PizzaCustomizationsList'
->;
+import { PizzaProductsTab, PizzaCustomizationsTab, PizzaCustomizationFormModal } from '../components';
 
 export function PizzaManagementScreen() {
   const theme = useAppTheme();
-  const navigation = useNavigation<NavigationProp>();
   const [selectedTab, setSelectedTab] = useState('products');
-  const [fabOpen, setFabOpen] = useState(false);
+  const [formModalVisible, setFormModalVisible] = useState(false);
+
+  // Refrescar datos de pizzas cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('pizza-products');
+  useRefreshModuleOnFocus('pizza-customizations');
 
   const styles = StyleSheet.create({
     container: {
@@ -68,9 +64,7 @@ export function PizzaManagementScreen() {
       margin: 16,
       right: 0,
       bottom: 0,
-    },
-    fabGroup: {
-      paddingBottom: 0,
+      backgroundColor: theme.colors.primary,
     },
   });
 
@@ -86,26 +80,6 @@ export function PizzaManagementScreen() {
     }
   };
 
-  // Acciones del FAB según la tab activa
-  const getFabActions = () => {
-    switch (selectedTab) {
-      case 'products':
-        return [];
-      case 'customizations':
-        return [
-          {
-            icon: 'plus',
-            label: 'Nueva Personalización',
-            onPress: () => {
-              navigation.navigate('PizzaCustomizationDetail', {});
-              setFabOpen(false);
-            },
-          },
-        ];
-      default:
-        return [];
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -165,18 +139,21 @@ export function PizzaManagementScreen() {
       <View style={styles.content}>{renderContent()}</View>
 
       {selectedTab === 'customizations' && (
-        <Portal>
-          <FAB.Group
-            open={fabOpen}
-            visible
-            icon={fabOpen ? 'close' : 'plus'}
-            actions={getFabActions()}
-            onStateChange={({ open }) => setFabOpen(open)}
-            style={styles.fabGroup}
-            fabStyle={styles.fab}
-          />
-        </Portal>
+        <FAB
+          icon="plus"
+          style={styles.fab}
+          onPress={() => setFormModalVisible(true)}
+          color={theme.colors.onPrimary}
+        />
       )}
+
+      <PizzaCustomizationFormModal
+        visible={formModalVisible}
+        onDismiss={() => setFormModalVisible(false)}
+        onSuccess={() => {
+          // La tab se actualizará automáticamente cuando reciba el foco
+        }}
+      />
     </SafeAreaView>
   );
 }
