@@ -30,6 +30,7 @@ import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import CartButton from '../components/CartButton';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
 import { CartItem, CartItemModifier } from '../context/CartContext';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
@@ -50,6 +51,7 @@ interface CartButtonHandle {
 const AddProductsToOrderScreen = () => {
   const theme = useAppTheme();
   const { colors, fonts } = theme;
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const route =
     useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
@@ -491,7 +493,7 @@ const AddProductsToOrderScreen = () => {
           flex: 1,
         },
         gridContainer: {
-          padding: 12,
+          padding: responsive.spacing.m,
           paddingBottom: 60,
         },
         row: {
@@ -510,18 +512,20 @@ const AddProductsToOrderScreen = () => {
         },
         itemImage: {
           width: '100%',
-          height: 120,
+          height: responsive.getResponsiveDimension(120, 160),
         },
         imageInactive: {
           opacity: 0.6,
         },
         cardContent: {
-          padding: 12,
+          paddingHorizontal: responsive.spacing.s,
+          paddingVertical: responsive.spacing.xs,
         },
         cardTitle: {
-          fontSize: 16,
-          fontWeight: 'bold',
-          marginBottom: 4,
+          fontSize: responsive.fontSize.m,
+          fontWeight: '600',
+          lineHeight: responsive.fontSize.m * 1.2,
+          marginBottom: responsive.spacing.xs,
         },
         cardHeader: {
           flexDirection: 'row',
@@ -534,9 +538,10 @@ const AddProductsToOrderScreen = () => {
           marginRight: -12,
         },
         priceText: {
-          color: '#2e7d32',
-          fontWeight: 'bold',
-          marginTop: 4,
+          color: theme.colors.primary,
+          fontWeight: '600',
+          fontSize: responsive.fontSize.s,
+          marginTop: 2,
         },
         noItemsText: {
           textAlign: 'center',

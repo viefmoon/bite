@@ -123,11 +123,14 @@ export class OrdersService {
 
     // Crear la información de entrega solo si tiene datos reales
     let deliveryInfo: DeliveryInfo | null = null;
-    
+
     // Verificar si deliveryInfo tiene algún campo con valor
-    const hasDeliveryData = createOrderDto.deliveryInfo && Object.entries(createOrderDto.deliveryInfo)
-      .some(([key, value]) => value !== undefined && value !== null && value !== '');
-    
+    const hasDeliveryData =
+      createOrderDto.deliveryInfo &&
+      Object.entries(createOrderDto.deliveryInfo).some(
+        ([key, value]) => value !== undefined && value !== null && value !== '',
+      );
+
     if (hasDeliveryData) {
       deliveryInfo = {
         id: uuidv4(),
@@ -161,7 +164,7 @@ export class OrdersService {
           `La mesa ${table.name} no está disponible`,
         );
       }
-      
+
       await this.tablesService.update(tableId, { isAvailable: false });
     }
 
@@ -340,8 +343,10 @@ export class OrdersService {
       ) {
         // Liberar mesa anterior si existía
         if (existingOrder.tableId) {
-          const oldTable = await this.tablesService.findOne(existingOrder.tableId);
-          
+          const oldTable = await this.tablesService.findOne(
+            existingOrder.tableId,
+          );
+
           if (oldTable.isTemporary) {
             // Eliminar mesa temporal
             await this.tablesService.remove(existingOrder.tableId);
@@ -356,13 +361,15 @@ export class OrdersService {
         // Ocupar nueva mesa si se especificó
         if (updateOrderDto.tableId) {
           // Verificar que la mesa esté disponible
-          const newTable = await this.tablesService.findOne(updateOrderDto.tableId);
+          const newTable = await this.tablesService.findOne(
+            updateOrderDto.tableId,
+          );
           if (!newTable.isAvailable) {
             throw new BadRequestException(
               `La mesa ${newTable.name} no está disponible`,
             );
           }
-          
+
           await this.tablesService.update(updateOrderDto.tableId, {
             isAvailable: false,
           });
@@ -389,7 +396,7 @@ export class OrdersService {
       ) {
         // Verificar si es una mesa temporal
         const table = await this.tablesService.findOne(existingOrder.tableId);
-        
+
         if (table.isTemporary) {
           // Eliminar mesa temporal
           await this.tablesService.remove(existingOrder.tableId);
@@ -406,7 +413,7 @@ export class OrdersService {
       updateOrderDto.orderType !== existingOrder.orderType
     ) {
       updatePayload.orderType = updateOrderDto.orderType;
-      
+
       // Si se cambia de DINE_IN a otro tipo, liberar la mesa
       if (
         existingOrder.orderType === OrderType.DINE_IN &&
@@ -417,7 +424,7 @@ export class OrdersService {
       ) {
         // Verificar si es mesa temporal
         const table = await this.tablesService.findOne(existingOrder.tableId);
-        
+
         if (table.isTemporary) {
           // Eliminar mesa temporal
           await this.tablesService.remove(existingOrder.tableId);
@@ -979,7 +986,7 @@ export class OrdersService {
       if (order.tableId) {
         // Verificar si es una mesa temporal
         const table = await this.tablesService.findOne(order.tableId);
-        
+
         if (table.isTemporary) {
           // Eliminar mesa temporal
           await this.tablesService.remove(order.tableId);
@@ -1037,7 +1044,7 @@ export class OrdersService {
     ) {
       // Verificar si es una mesa temporal
       const table = await this.tablesService.findOne(order.tableId);
-      
+
       if (table.isTemporary) {
         // Eliminar mesa temporal
         await this.tablesService.remove(order.tableId);

@@ -61,6 +61,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             fontSize: responsive.fontSize.m,
             fontWeight: '600',
             lineHeight: responsive.fontSize.m * 1.2,
+            marginBottom: responsive.spacing.xs,
           },
           cardHeader: {
             flexDirection: 'row',
@@ -91,6 +92,18 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             fontSize: 12,
             color: colors.onErrorContainer,
             fontWeight: '600',
+          },
+          warningMessage: {
+            backgroundColor: colors.warningContainer || colors.errorContainer,
+            paddingHorizontal: responsive.spacing.s,
+            paddingVertical: responsive.spacing.xs,
+            marginTop: responsive.spacing.xs,
+          },
+          warningMessageText: {
+            fontSize: responsive.fontSize.xs,
+            color: colors.onWarningContainer || colors.onErrorContainer,
+            textAlign: 'center',
+            lineHeight: responsive.fontSize.xs * 1.3,
           },
         }),
       [colors, fonts, theme, responsive],
@@ -144,7 +157,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
     // Obtener el texto del badge
     const getBadgeText = () => {
       if (!isActive) return 'INACTIVO';
-      if (isProductWithoutScreen) return 'SIN PANTALLA';
+      if (isProductWithoutScreen) return 'NO DISPONIBLE';
       return null;
     };
 
@@ -191,6 +204,14 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             <Text style={styles.priceText}>
               ${Number((item as Product).price).toFixed(2)}
             </Text>
+          )}
+
+          {isProductWithoutScreen && (
+            <View style={styles.warningMessage}>
+              <Text style={styles.warningMessageText}>
+                Sin pantalla de preparación
+              </Text>
+            </View>
           )}
         </View>
       </Card>

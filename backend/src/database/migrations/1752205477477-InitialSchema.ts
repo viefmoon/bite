@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialSchema1752171547800 implements MigrationInterface {
-  name = 'InitialSchema1752171547800';
+export class InitialSchema1752205477477 implements MigrationInterface {
+  name = 'InitialSchema1752205477477';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -56,7 +56,7 @@ export class InitialSchema1752171547800 implements MigrationInterface {
       `CREATE TYPE "public"."payment_paymentstatus_enum" AS ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "payment" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "order_id" uuid, "paymentMethod" "public"."payment_paymentmethod_enum" NOT NULL DEFAULT 'CASH', "amount" numeric(10,2) NOT NULL, "paymentStatus" "public"."payment_paymentstatus_enum" NOT NULL DEFAULT 'PENDING', "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_fcaec7df5adf9cac408c686b2ab" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "payment" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "paymentMethod" "public"."payment_paymentmethod_enum" NOT NULL DEFAULT 'CASH', "amount" numeric(10,2) NOT NULL, "paymentStatus" "public"."payment_paymentstatus_enum" NOT NULL DEFAULT 'PENDING', "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "order_id" uuid, CONSTRAINT "PK_fcaec7df5adf9cac408c686b2ab" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TYPE "public"."ticket_impression_tickettype_enum" AS ENUM('KITCHEN', 'BAR', 'BILLING', 'CUSTOMER_COPY', 'GENERAL')`,
@@ -146,15 +146,6 @@ export class InitialSchema1752171547800 implements MigrationInterface {
       `CREATE INDEX "IDX_f0e1b4ecdca13b177e2e3a0613" ON "user" ("lastName") `,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."sync_log_synctype_enum" AS ENUM('MENU', 'CONFIG', 'ORDERS', 'CUSTOMERS', 'FULL')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."sync_log_status_enum" AS ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PARTIAL')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "sync_log" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "syncType" "public"."sync_log_synctype_enum" NOT NULL, "status" "public"."sync_log_status_enum" NOT NULL DEFAULT 'PENDING', "itemsSynced" integer NOT NULL DEFAULT '0', "itemsFailed" integer NOT NULL DEFAULT '0', "errors" jsonb, "startedAt" TIMESTAMP WITH TIME ZONE NOT NULL, "completedAt" TIMESTAMP WITH TIME ZONE, "duration" integer, "metadata" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_5a1c2f181ab99c0757868c7d0fc" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
       `CREATE TYPE "public"."thermal_printer_connectiontype_enum" AS ENUM('NETWORK', 'USB', 'SERIAL', 'BLUETOOTH')`,
     );
     await queryRunner.query(
@@ -167,16 +158,25 @@ export class InitialSchema1752171547800 implements MigrationInterface {
       `CREATE INDEX "IDX_7f20d400228dc58a946e3b4ecb" ON "thermal_printer" ("macAddress") `,
     );
     await queryRunner.query(
+      `CREATE TYPE "public"."sync_log_synctype_enum" AS ENUM('MENU', 'CONFIG', 'ORDERS', 'CUSTOMERS', 'FULL')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."sync_log_status_enum" AS ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PARTIAL')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "sync_log" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "syncType" "public"."sync_log_synctype_enum" NOT NULL, "status" "public"."sync_log_status_enum" NOT NULL DEFAULT 'PENDING', "itemsSynced" integer NOT NULL DEFAULT '0', "itemsFailed" integer NOT NULL DEFAULT '0', "errors" jsonb, "startedAt" TIMESTAMP WITH TIME ZONE NOT NULL, "completedAt" TIMESTAMP WITH TIME ZONE, "duration" integer, "metadata" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_5a1c2f181ab99c0757868c7d0fc" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
       `CREATE TABLE "session" ("id" SERIAL NOT NULL, "hash" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "userId" uuid, CONSTRAINT "PK_f55da76ac1c3ac420f444d2ff11" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_3d2f174ef04fb312fdebd0ddc5" ON "session" ("userId") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "restaurant_config" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "restaurantName" character varying(200) NOT NULL DEFAULT 'Restaurant', "phoneMain" character varying(20), "phoneSecondary" character varying(20), "address" text, "city" character varying(100), "state" character varying(100), "postalCode" character varying(20), "country" character varying(100), "acceptingOrders" boolean NOT NULL DEFAULT true, "estimatedPickupTime" integer NOT NULL DEFAULT '20', "estimatedDeliveryTime" integer NOT NULL DEFAULT '40', "estimatedDineInTime" integer NOT NULL DEFAULT '25', "openingGracePeriod" integer NOT NULL DEFAULT '30', "closingGracePeriod" integer NOT NULL DEFAULT '30', "timeZone" character varying(50) NOT NULL DEFAULT 'America/Mexico_City', "deliveryCoverageArea" jsonb, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7507a8162b2370c15747a6e546d" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "business_hours" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "dayOfWeek" integer NOT NULL, "openingTime" TIME, "closingTime" TIME, "isClosed" boolean NOT NULL DEFAULT false, "restaurant_config_id" uuid NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_35ab61b36059d2fe8461fd1c11d" UNIQUE ("restaurant_config_id", "dayOfWeek"), CONSTRAINT "PK_560a76077605005da835fe505a5" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "business_hours" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "dayOfWeek" integer NOT NULL, "openingTime" TIME, "closingTime" TIME, "isClosed" boolean NOT NULL DEFAULT false, "restaurant_config_id" uuid NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_35ab61b36059d2fe8461fd1c11d" UNIQUE ("restaurant_config_id", "dayOfWeek"), CONSTRAINT "PK_560a76077605005da835fe505a5" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "restaurant_config" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "restaurantName" character varying(200) NOT NULL DEFAULT 'Restaurant', "phoneMain" character varying(20), "phoneSecondary" character varying(20), "address" text, "city" character varying(100), "state" character varying(100), "postalCode" character varying(20), "country" character varying(100), "acceptingOrders" boolean NOT NULL DEFAULT true, "estimatedPickupTime" integer NOT NULL DEFAULT '20', "estimatedDeliveryTime" integer NOT NULL DEFAULT '40', "estimatedDineInTime" integer NOT NULL DEFAULT '25', "openingGracePeriod" integer NOT NULL DEFAULT '30', "closingGracePeriod" integer NOT NULL DEFAULT '30', "timeZone" character varying(50) NOT NULL DEFAULT 'America/Mexico_City', "deliveryCoverageArea" jsonb, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7507a8162b2370c15747a6e546d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "order_history" ("id" SERIAL NOT NULL, "order_id" uuid NOT NULL, "operation" character varying(10) NOT NULL, "changed_by" uuid NOT NULL, "changed_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "diff" jsonb, "snapshot" jsonb NOT NULL, CONSTRAINT "PK_cc71513680d03ecb01b96655b0c" PRIMARY KEY ("id"))`,
@@ -491,12 +491,15 @@ export class InitialSchema1752171547800 implements MigrationInterface {
       `DROP INDEX "public"."IDX_a2937c330238ea84f26c912104"`,
     );
     await queryRunner.query(`DROP TABLE "order_history"`);
-    await queryRunner.query(`DROP TABLE "business_hours"`);
     await queryRunner.query(`DROP TABLE "restaurant_config"`);
+    await queryRunner.query(`DROP TABLE "business_hours"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_3d2f174ef04fb312fdebd0ddc5"`,
     );
     await queryRunner.query(`DROP TABLE "session"`);
+    await queryRunner.query(`DROP TABLE "sync_log"`);
+    await queryRunner.query(`DROP TYPE "public"."sync_log_status_enum"`);
+    await queryRunner.query(`DROP TYPE "public"."sync_log_synctype_enum"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_7f20d400228dc58a946e3b4ecb"`,
     );
@@ -507,9 +510,6 @@ export class InitialSchema1752171547800 implements MigrationInterface {
     await queryRunner.query(
       `DROP TYPE "public"."thermal_printer_connectiontype_enum"`,
     );
-    await queryRunner.query(`DROP TABLE "sync_log"`);
-    await queryRunner.query(`DROP TYPE "public"."sync_log_status_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."sync_log_synctype_enum"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_f0e1b4ecdca13b177e2e3a0613"`,
     );

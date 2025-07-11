@@ -128,5 +128,4 @@ export class UpdateOrderDto {
   @ValidateNested()
   @Type(() => DeliveryInfoDto)
   deliveryInfo?: DeliveryInfoDto;
-
 }

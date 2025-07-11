@@ -6,6 +6,7 @@ import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema
 import type { Product } from '@/app/schemas/domain/product.schema'; // Asumiendo que se creará
 import type { SubCategory } from '@/app/schemas/domain/subcategory.schema'; // Asumiendo que se creará
 import type { Category } from '@/app/schemas/domain/category.schema';
+import type { PreparationScreen } from '@/app/schemas/domain/preparation-screen.schema';
 import {
   orderStatusSchema, // Importar el schema Zod
   orderTypeSchema, // Importar el schema Zod

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { photoSchema } from './photo.schema';
 import { productVariantSchema } from './product-variant.schema';
 import { modifierGroupSchema } from './modifier-group.schema';
+import { preparationScreenSchema } from './preparation-screen.schema';
 
 /**
  * Esquema Zod para validar un objeto Product completo.
@@ -30,6 +31,7 @@ export const productSchema = z.object({
     .min(1, 'El tiempo debe ser al menos 1 minuto')
     .optional(),
   preparationScreenId: z.string().optional().nullable(),
+  preparationScreen: preparationScreenSchema.optional().nullable(),
   variants: z.array(productVariantSchema).optional(),
   modifierGroups: z.array(modifierGroupSchema).optional(),
   pizzaCustomizations: z.array(z.any()).optional(),

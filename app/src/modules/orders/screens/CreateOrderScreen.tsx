@@ -552,8 +552,8 @@ const CreateOrderScreen = () => {
           padding: responsive.spacing.m,
         },
         cardTitle: {
-          fontSize: responsive.fontSize.l,
-          fontWeight: 'bold',
+          fontSize: responsive.fontSize.m,
+          fontWeight: '600',
           marginBottom: responsive.spacing.xs,
         },
         cardHeader: {
