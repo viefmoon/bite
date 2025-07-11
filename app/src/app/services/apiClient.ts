@@ -305,15 +305,14 @@ function configureInterceptors() {
 // Función para agregar transforms al cliente
 function addResponseTransforms(client: any) {
   client.addResponseTransform((response: any) => {
-
     // Solo mostrar snackbar para errores de red reales (no errores HTTP)
-    const isNetworkError = 
+    const isNetworkError =
       response.problem === 'NETWORK_ERROR' ||
       response.problem === 'TIMEOUT_ERROR' ||
       response.problem === 'CONNECTION_ERROR';
-    
+
     const isHttpError = response.status && response.status >= 400;
-    
+
     if (isNetworkError && !isHttpError) {
       const showSnackbar = useSnackbarStore.getState().showSnackbar;
 

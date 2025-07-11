@@ -22,9 +22,12 @@ export function AppNavigator() {
     if (isAuthenticated) {
       // Inicializar el servicio de conexión UNA SOLA VEZ
       serverConnectionService.initialize().catch((error) => {
-        console.error('[AppNavigator] Error inicializando servicio de conexión:', error);
+        console.error(
+          '[AppNavigator] Error inicializando servicio de conexión:',
+          error,
+        );
       });
-      
+
       reconnectionSnackbarService.start();
     } else {
       // Limpiar servicios cuando se cierre sesión

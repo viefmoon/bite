@@ -10,7 +10,11 @@ const BASE_RETRY_DELAY = 1000; // 1 segundo
 // Logging utility para operaciones de cache (solo errores y operaciones críticas)
 const logCacheOperation = (operation: string, details: any) => {
   // Solo loggear errores y operaciones de limpieza
-  if (operation.includes('ERROR') || operation.includes('FAILED') || operation === 'CACHE_CLEANED') {
+  if (
+    operation.includes('ERROR') ||
+    operation.includes('FAILED') ||
+    operation === 'CACHE_CLEANED'
+  ) {
     console.log(`[ImageCache] ${operation}:`, details);
   }
 };
@@ -269,7 +273,7 @@ export async function getCachedImageUri(
 
 export async function initImageCache() {
   await ensureCacheDirExists();
-  
+
   cleanCache().catch((error) => {
     logCacheOperation('CACHE_CLEAN_ERROR', { error: error.message });
   });

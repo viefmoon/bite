@@ -85,7 +85,10 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     () => ({
       titleField: 'name',
       descriptionField: 'capacity',
-      descriptionFormatter: (capacity) => capacity ? `Capacidad: ${capacity} ${capacity === 1 ? 'persona' : 'personas'}` : undefined,
+      descriptionFormatter: (capacity) =>
+        capacity
+          ? `Capacidad: ${capacity} ${capacity === 1 ? 'persona' : 'personas'}`
+          : undefined,
       descriptionMaxLength: 30,
       statusConfig: {
         field: 'isActive',

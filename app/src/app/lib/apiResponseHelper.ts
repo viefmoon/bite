@@ -12,7 +12,7 @@ export function handleApiError(response: ApiResponse<any>): never {
   if ((response as any).apiError instanceof ApiError) {
     throw (response as any).apiError;
   }
-  
+
   // Si no, crear uno nuevo (fallback)
   throw ApiError.fromApiResponse(
     response.data as BackendErrorResponse | undefined,

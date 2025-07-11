@@ -61,18 +61,18 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   // Obtener todas las pantallas de preparación para verificar usuarios asignados
   const { data: screensData } = useGetPreparationScreens(
     {},
-    { page: 1, limit: 100 } // Obtener todas las pantallas
+    { page: 1, limit: 100 }, // Obtener todas las pantallas
   );
 
   // Crear mapa de usuarios asignados a pantallas
   const userAssignments = React.useMemo(() => {
     if (!screensData?.data) return new Map<string, string>();
-    
+
     const assignments = new Map<string, string>();
     screensData.data.forEach((screen) => {
       // Excluir la pantalla actual al editar
       if (editingItem && screen.id === editingItem.id) return;
-      
+
       if (screen.users && screen.users.length > 0) {
         screen.users.forEach((user) => {
           assignments.set(user.id, screen.name);
@@ -85,20 +85,20 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   // Todos los usuarios, ordenados con los de cocina primero y disponibles al inicio
   const allUsers = React.useMemo(() => {
     if (!usersData?.data) return [];
-    
+
     return usersData.data.sort((a, b) => {
       // Primero ordenar por disponibilidad
       const aAssigned = userAssignments.has(a.id);
       const bAssigned = userAssignments.has(b.id);
       if (!aAssigned && bAssigned) return -1;
       if (aAssigned && !bAssigned) return 1;
-      
+
       // Luego por rol de cocina
       const aIsKitchen = a.role?.id === RoleEnum.KITCHEN;
       const bIsKitchen = b.role?.id === RoleEnum.KITCHEN;
       if (aIsKitchen && !bIsKitchen) return -1;
       if (!aIsKitchen && bIsKitchen) return 1;
-      
+
       return 0;
     });
   }, [usersData, userAssignments]);
@@ -452,7 +452,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                         <List.Icon
                           {...props}
                           icon={getIconForRole(user.role?.id)}
-                          color={isAssigned ? theme.colors.outline : props.color}
+                          color={
+                            isAssigned ? theme.colors.outline : props.color
+                          }
                         />
                       )}
                       style={[
@@ -463,7 +465,7 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                       titleStyle={!isSelectable && styles.disabledText}
                       descriptionStyle={[
                         !isSelectable && styles.disabledText,
-                        isAssigned && { color: theme.colors.error }
+                        isAssigned && { color: theme.colors.error },
                       ]}
                     />
                   );

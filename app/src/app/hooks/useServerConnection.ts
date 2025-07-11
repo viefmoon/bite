@@ -3,7 +3,7 @@ import { serverConnectionService } from '../services/serverConnectionService';
 
 /**
  * Hook para monitorear la conexión con el servidor
- * 
+ *
  * Este hook simplemente se suscribe al servicio singleton de conexión
  * sin realizar ninguna inicialización. La inicialización se hace
  * una sola vez al inicio de la aplicación.

@@ -1,5 +1,11 @@
 import React from 'react';
-import { StyleSheet, StatusBar, TouchableOpacity, View, Text } from 'react-native';
+import {
+  StyleSheet,
+  StatusBar,
+  TouchableOpacity,
+  View,
+  Text,
+} from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MenuStackNavigator } from '../../modules/menu/navigation/MenuStackNavigator';
 import ModifiersStackNavigator from '../../modules/modifiers/navigation/ModifiersStackNavigator';
@@ -35,7 +41,8 @@ export function AppDrawerNavigator() {
   const responsive = useResponsive();
   const user = useAuthStore((state) => state.user);
   const { filters, setFilters } = useKitchenStore();
-  const kitchenScreenName = user?.preparationScreen?.name || 'Pantalla de Preparación';
+  const kitchenScreenName =
+    user?.preparationScreen?.name || 'Pantalla de Preparación';
 
   // Obtener el texto del filtro activo
   const getFilterText = () => {
@@ -177,7 +184,9 @@ export function AppDrawerNavigator() {
                 title = 'Usuarios';
                 break;
               case 'KitchenStack':
-                title = kitchenScreenName + (filters.orderType ? getFilterText() : '');
+                title =
+                  kitchenScreenName +
+                  (filters.orderType ? getFilterText() : '');
                 break;
               default:
                 title = children?.toString() || '';

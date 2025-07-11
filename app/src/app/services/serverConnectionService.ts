@@ -43,7 +43,6 @@ class ServerConnectionService {
       return this.initPromise;
     }
 
-    
     this.initPromise = this._initialize();
     await this.initPromise;
     this.initialized = true;
@@ -56,10 +55,10 @@ class ServerConnectionService {
 
     // Configurar listeners de red
     this.setupNetworkListener();
-    
+
     // Configurar listener de salud
     this.setupHealthListener();
-    
+
     // Configurar listener de reconexión
     this.setupReconnectListener();
   }
@@ -72,20 +71,20 @@ class ServerConnectionService {
       this.netInfoUnsubscribe();
       this.netInfoUnsubscribe = null;
     }
-    
+
     if (this.healthUnsubscribe) {
       this.healthUnsubscribe();
       this.healthUnsubscribe = null;
     }
-    
+
     if (this.reconnectUnsubscribe) {
       this.reconnectUnsubscribe();
       this.reconnectUnsubscribe = null;
     }
-    
+
     healthMonitoringService.stopMonitoring();
     autoReconnectService.stopAutoReconnect();
-    
+
     this.initialized = false;
     this.listeners = [];
   }
@@ -95,10 +94,10 @@ class ServerConnectionService {
    */
   subscribe(listener: (state: ServerConnectionState) => void): () => void {
     this.listeners.push(listener);
-    
+
     // Notificar inmediatamente el estado actual
     listener(this.state);
-    
+
     // Retornar función para desuscribirse
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
@@ -129,7 +128,6 @@ class ServerConnectionService {
   }
 
   private async checkConnection(forceNew = false) {
-    
     // Establecer que estamos buscando
     this.updateState({ isSearching: true, error: null });
 
@@ -146,7 +144,8 @@ class ServerConnectionService {
           isConnected: false,
           serverUrl: null,
           hasWifi: false,
-          error: 'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
+          error:
+            'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
         });
         return;
       }
@@ -268,36 +267,38 @@ class ServerConnectionService {
   }
 
   private setupHealthListener() {
-    this.healthUnsubscribe = healthMonitoringService.subscribe((healthState) => {
-      const wasHealthy = this.state.isHealthy;
-      const isNowHealthy = healthState.isAvailable;
+    this.healthUnsubscribe = healthMonitoringService.subscribe(
+      (healthState) => {
+        const wasHealthy = this.state.isHealthy;
+        const isNowHealthy = healthState.isAvailable;
 
-      this.updateState({
-        isHealthy: isNowHealthy,
-        // Si el health check falla, actualizar el error si no hay otro error
-        error:
-          !isNowHealthy && !this.state.error
-            ? healthState.message || 'Servidor no responde'
-            : this.state.error,
-      });
-
-      // Si teníamos conexión pero el servidor deja de responder
-      if (this.state.isConnected && wasHealthy && !isNowHealthy) {
-        // Marcar como desconectado
         this.updateState({
-          isConnected: false,
-          serverUrl: null,
-          error: 'Se perdió la conexión con el servidor',
+          isHealthy: isNowHealthy,
+          // Si el health check falla, actualizar el error si no hay otro error
+          error:
+            !isNowHealthy && !this.state.error
+              ? healthState.message || 'Servidor no responde'
+              : this.state.error,
         });
 
-        // Iniciar reconexión automática si no está ya en progreso
-        if (!autoReconnectService.getState().isReconnecting) {
-          setTimeout(() => {
-            autoReconnectService.startAutoReconnect();
-          }, 1000); // Esperar 1 segundo antes de iniciar reconexión
+        // Si teníamos conexión pero el servidor deja de responder
+        if (this.state.isConnected && wasHealthy && !isNowHealthy) {
+          // Marcar como desconectado
+          this.updateState({
+            isConnected: false,
+            serverUrl: null,
+            error: 'Se perdió la conexión con el servidor',
+          });
+
+          // Iniciar reconexión automática si no está ya en progreso
+          if (!autoReconnectService.getState().isReconnecting) {
+            setTimeout(() => {
+              autoReconnectService.startAutoReconnect();
+            }, 1000); // Esperar 1 segundo antes de iniciar reconexión
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   private setupReconnectListener() {

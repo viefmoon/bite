@@ -121,7 +121,8 @@ export function getApiErrorMessage(error: unknown): string {
       error.originalMessage !== 'Error desconocido de la API.' &&
       error.originalMessage !== 'Not Found' &&
       error.originalMessage !== 'Internal Server Error' &&
-      error.originalMessage !== 'Ocurrió un error inesperado al procesar tu solicitud.' &&
+      error.originalMessage !==
+        'Ocurrió un error inesperado al procesar tu solicitud.' &&
       !error.originalMessage.includes('<!DOCTYPE') // Evitar HTML de errores
     ) {
       return error.originalMessage;
