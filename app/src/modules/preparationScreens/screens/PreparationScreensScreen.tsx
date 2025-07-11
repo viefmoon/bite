@@ -81,14 +81,14 @@ const PreparationScreensScreen = () => {
     useGetMenuWithAssociations(productModalScreenId, {
       enabled: !!productModalScreenId && isProductModalVisible,
     });
-  
+
   // Enriquecer menuData con información de pantallas
   const enrichedMenuData = React.useMemo(() => {
     if (!menuData || !screensData?.data) return menuData;
-    
+
     // Crear un mapa de productId a nombre de pantalla
     const screenAssignments: Record<string, string> = {};
-    
+
     screensData.data.forEach((screen) => {
       if (screen.products) {
         screen.products.forEach((product) => {
@@ -96,7 +96,7 @@ const PreparationScreensScreen = () => {
         });
       }
     });
-    
+
     return {
       ...menuData,
       screenAssignments,

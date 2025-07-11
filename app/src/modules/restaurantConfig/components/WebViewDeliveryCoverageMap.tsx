@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, useWindowDimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { Surface, IconButton } from 'react-native-paper';
+import { Surface, IconButton, ActivityIndicator, Text } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
 
@@ -32,6 +32,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
 
   const [mapReady, setMapReady] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPolygon, setCurrentPolygon] = useState<DeliveryCoveragePoint[]>(
     () => {
       return initialPolygon || [];
@@ -116,13 +117,11 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             break;
         }
       } catch (e) {
-        console.error('Error handling message:', e);
+        // Error handling message
       }
     }
 
     function setPolygon(coordinates) {
-      console.log('setPolygon called with:', coordinates);
-      
       // Limpiar polígono anterior
       if (polygon) {
         polygon.setMap(null);
@@ -138,7 +137,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         lng: coord.lng || coord.longitude
       }));
       
-      console.log('Converted polygonPath:', polygonPath);
       
       if (polygonPath.length >= 3) {
         // Crear polígono
@@ -154,17 +152,17 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         });
         
         polygon.setMap(map);
-        console.log('Polygon created and added to map');
         
         // Centrar en el polígono
         setTimeout(() => {
           centerOnPolygon();
+          // Notificar que el polígono se ha dibujado
+          sendMessage('polygonSet', {});
         }, 100);
       }
     }
 
     function setEditMode(editing) {
-      console.log('setEditMode called with:', editing);
       isEditing = editing;
       
       if (isEditing) {
@@ -176,7 +174,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         
         // Mostrar marcadores inmediatamente
         updateMarkers();
-        console.log('Edit mode enabled, markers updated');
       } else {
         // Deshabilitar clicks
         google.maps.event.clearListeners(map, 'click');
@@ -184,7 +181,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         // Ocultar marcadores
         markers.forEach(marker => marker.setMap(null));
         markers = [];
-        console.log('Edit mode disabled, markers removed');
       }
     }
 
@@ -264,14 +260,12 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         
         // Click para eliminar
         marker.addListener('click', function() {
-          if (polygonPath.length > 3) {
-            polygonPath.splice(index, 1);
-            updatePolygon();
-            updateMarkers();
-            sendMessage('polygonUpdated', {
-              coordinates: polygonPath
-            });
-          }
+          polygonPath.splice(index, 1);
+          updatePolygon();
+          updateMarkers();
+          sendMessage('polygonUpdated', {
+            coordinates: polygonPath
+          });
         });
         
         markers.push(marker);
@@ -279,7 +273,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
     }
 
     function centerOnPolygon() {
-      console.log('centerOnPolygon called, polygonPath length:', polygonPath.length);
       if (polygonPath.length > 0) {
         const bounds = new google.maps.LatLngBounds();
         polygonPath.forEach(point => {
@@ -318,11 +311,9 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             type: type,
             ...data
           }));
-        } else {
-          console.error('ReactNativeWebView not available');
         }
       } catch (e) {
-        console.error('Error sending message:', e);
+        // Error sending message
       }
     }
   </script>
@@ -349,7 +340,14 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
                 coordinates: initialPolygon,
               });
             }, 1000);
+          } else {
+            // Si no hay polígono inicial, ocultar el loading
+            setIsLoading(false);
           }
+          break;
+        case 'polygonSet':
+          // El polígono se ha dibujado en el mapa
+          setIsLoading(false);
           break;
         case 'polygonUpdated': {
           const newPolygon = data.coordinates;
@@ -368,7 +366,6 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
     if (webViewRef.current) {
       const message = JSON.stringify({ type, ...data });
       webViewRef.current.postMessage(message);
-    } else {
     }
   };
 
@@ -388,6 +385,12 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
       sendMessageToWebView('setPolygon', { coordinates: initialPolygon });
     }
   }, [initialPolygon, mapReady]);
+
+  // Resetear estados cuando el componente se monta
+  useEffect(() => {
+    setIsLoading(true);
+    setMapReady(false);
+  }, []);
 
   const toggleDrawing = () => {
     if (isDrawing && currentPolygon.length < 3) {
@@ -482,6 +485,16 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
         originWhitelist={['*']}
       />
 
+      {/* Indicador de carga */}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <Surface style={styles.loadingCard} elevation={3}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Cargando mapa...</Text>
+          </Surface>
+        </View>
+      )}
+
       {/* Controles flotantes */}
       {isEditing && (
         <View style={styles.controls}>
@@ -506,6 +519,15 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
                 iconColor={theme.colors.onTertiaryContainer}
                 size={24}
                 onPress={centerOnPolygon}
+                disabled={currentPolygon.length === 0}
+              />
+              <IconButton
+                icon="delete"
+                mode="contained"
+                containerColor={theme.colors.errorContainer}
+                iconColor={theme.colors.onErrorContainer}
+                size={24}
+                onPress={clearPolygon}
                 disabled={currentPolygon.length === 0}
               />
             </View>
@@ -575,6 +597,28 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
+    },
+    loadingContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    loadingCard: {
+      padding: theme.spacing.xl,
+      borderRadius: 16,
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    loadingText: {
+      marginTop: theme.spacing.m,
+      fontSize: 16,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
     },
   });
 

@@ -6,7 +6,11 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 // Importar las tabs
-import { PizzaProductsTab, PizzaCustomizationsTab, PizzaCustomizationFormModal } from '../components';
+import {
+  PizzaProductsTab,
+  PizzaCustomizationsTab,
+  PizzaCustomizationFormModal,
+} from '../components';
 
 export function PizzaManagementScreen() {
   const theme = useAppTheme();
@@ -79,7 +83,6 @@ export function PizzaManagementScreen() {
         return null;
     }
   };
-
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>

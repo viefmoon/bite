@@ -533,7 +533,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   >('CASH');
   const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
-  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
+  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] =
+    useState(false);
 
   // Estado original de la orden para detectar cambios
   const [originalOrderState, setOriginalOrderState] = useState<{
@@ -1811,14 +1812,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       isLoading={isLoadingTables}
                       error={!!tableError || !!errorTables}
                       disabled={
-                        !selectedAreaId || isLoadingTables || isLoadingAreas || isTemporaryTable
+                        !selectedAreaId ||
+                        isLoadingTables ||
+                        isLoadingAreas ||
+                        isTemporaryTable
                       }
                     />
                   }
                 >
                   {tablesData?.map((table: Table) => {
                     // En modo edición, permitir seleccionar la mesa actual aunque esté ocupada
-                    const isCurrentTable = isEditMode && orderData?.tableId === table.id;
+                    const isCurrentTable =
+                      isEditMode && orderData?.tableId === table.id;
                     const canSelect = table.isAvailable || isCurrentTable;
 
                     return (
@@ -1834,9 +1839,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         title={`${table.name}${!table.isAvailable && !isCurrentTable ? ' (Ocupada)' : ''}`}
                         disabled={!canSelect}
                         titleStyle={
-                          !canSelect
-                            ? { color: theme.colors.error }
-                            : undefined
+                          !canSelect ? { color: theme.colors.error } : undefined
                         }
                       />
                     );
@@ -3022,6 +3025,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     ? 'Seleccionar Hora de Recolección'
                     : 'Seleccionar Hora'
               }
+              allowManualInput={true} // Habilita entrada manual en Android
             />
           </Portal>
 

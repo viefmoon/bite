@@ -40,7 +40,9 @@ export function PizzaCustomizationsTab() {
   const [customizationToDelete, setCustomizationToDelete] =
     useState<PizzaCustomization | null>(null);
   const [formModalVisible, setFormModalVisible] = useState(false);
-  const [editingCustomizationId, setEditingCustomizationId] = useState<string | undefined>();
+  const [editingCustomizationId, setEditingCustomizationId] = useState<
+    string | undefined
+  >();
 
   const deleteMutation = useDeletePizzaCustomization();
 
@@ -80,11 +82,11 @@ export function PizzaCustomizationsTab() {
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity onPress={() => handleItemPress(item)}>
-      <Surface 
+      <Surface
         style={[
           styles.cardWrapper,
-          !item.isActive && styles.cardWrapperInactive
-        ]} 
+          !item.isActive && styles.cardWrapperInactive,
+        ]}
         elevation={1}
       >
         <View style={styles.cardContent}>
@@ -95,17 +97,14 @@ export function PizzaCustomizationsTab() {
                   variant="titleMedium"
                   style={[
                     styles.cardTitle,
-                    !item.isActive && styles.textInactive
+                    !item.isActive && styles.textInactive,
                   ]}
                   numberOfLines={1}
                 >
                   {item.name}
                 </Text>
                 {!item.isActive && (
-                  <Badge 
-                    style={styles.inactiveBadge}
-                    size={16}
-                  >
+                  <Badge style={styles.inactiveBadge} size={16}>
                     Inactivo
                   </Badge>
                 )}
@@ -124,7 +123,7 @@ export function PizzaCustomizationsTab() {
                         ? theme.colors.errorContainer
                         : theme.colors.secondaryContainer,
                   },
-                  !item.isActive && styles.chipInactive
+                  !item.isActive && styles.chipInactive,
                 ]}
                 textStyle={styles.chipText}
               >
@@ -134,28 +133,28 @@ export function PizzaCustomizationsTab() {
               </Chip>
             </View>
             <View style={styles.statsContainer}>
-              <View 
+              <View
                 style={[
                   styles.statusIndicator,
-                  item.isActive ? styles.statusActive : styles.statusInactive
+                  item.isActive ? styles.statusActive : styles.statusInactive,
                 ]}
               />
-              <Text variant="bodySmall" style={[
-                styles.statText,
-                !item.isActive && styles.textInactive
-              ]}>
+              <Text
+                variant="bodySmall"
+                style={[styles.statText, !item.isActive && styles.textInactive]}
+              >
                 Orden: {item.sortOrder || 0}
               </Text>
-              <Text variant="bodySmall" style={[
-                styles.statText,
-                !item.isActive && styles.textInactive
-              ]}>
+              <Text
+                variant="bodySmall"
+                style={[styles.statText, !item.isActive && styles.textInactive]}
+              >
                 • Valor: {item.toppingValue || 0}
               </Text>
-              <Text variant="bodySmall" style={[
-                styles.statText,
-                !item.isActive && styles.textInactive
-              ]}>
+              <Text
+                variant="bodySmall"
+                style={[styles.statText, !item.isActive && styles.textInactive]}
+              >
                 • {item.products?.length || 0} pizzas
               </Text>
             </View>
@@ -166,7 +165,7 @@ export function PizzaCustomizationsTab() {
               variant="bodySmall"
               style={[
                 styles.ingredientsText,
-                !item.isActive && styles.textInactive
+                !item.isActive && styles.textInactive,
               ]}
               numberOfLines={1}
             >

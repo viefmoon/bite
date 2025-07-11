@@ -111,7 +111,8 @@ export function PizzaCustomizationFormModal({
       // Asegurar que los ingredientes estén vacíos para tipo INGREDIENT
       const submissionData = {
         ...data,
-        ingredients: data.type === CustomizationType.INGREDIENT ? '' : data.ingredients,
+        ingredients:
+          data.type === CustomizationType.INGREDIENT ? '' : data.ingredients,
       };
 
       if (isEditMode && customizationId) {
@@ -254,11 +255,11 @@ export function PizzaCustomizationFormModal({
           <Surface style={styles.modalContent} elevation={5}>
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text 
-                variant="bodyLarge" 
-                style={{ 
-                  marginTop: theme.spacing.m, 
-                  color: theme.colors.onSurfaceVariant 
+              <Text
+                variant="bodyLarge"
+                style={{
+                  marginTop: theme.spacing.m,
+                  color: theme.colors.onSurfaceVariant,
                 }}
               >
                 Cargando personalización...
@@ -342,9 +343,10 @@ export function PizzaCustomizationFormModal({
                           label: 'Sabor',
                           icon: 'pizza',
                           style: {
-                            backgroundColor: value === CustomizationType.FLAVOR 
-                              ? theme.colors.primaryContainer 
-                              : 'transparent',
+                            backgroundColor:
+                              value === CustomizationType.FLAVOR
+                                ? theme.colors.primaryContainer
+                                : 'transparent',
                           },
                         },
                         {
@@ -352,9 +354,10 @@ export function PizzaCustomizationFormModal({
                           label: 'Ingrediente',
                           icon: 'cheese',
                           style: {
-                            backgroundColor: value === CustomizationType.INGREDIENT 
-                              ? theme.colors.primaryContainer 
-                              : 'transparent',
+                            backgroundColor:
+                              value === CustomizationType.INGREDIENT
+                                ? theme.colors.primaryContainer
+                                : 'transparent',
                           },
                         },
                       ]}
@@ -479,7 +482,11 @@ export function PizzaCustomizationFormModal({
               <Button
                 mode="contained-tonal"
                 onPress={onDismiss}
-                disabled={isSubmitting || createMutation.isPending || updateMutation.isPending}
+                disabled={
+                  isSubmitting ||
+                  createMutation.isPending ||
+                  updateMutation.isPending
+                }
                 style={styles.button}
                 contentStyle={styles.buttonContent}
                 labelStyle={{ fontSize: 16, fontWeight: '600' }}
@@ -489,9 +496,20 @@ export function PizzaCustomizationFormModal({
               <Button
                 mode="contained"
                 onPress={handleSubmit(onSubmit)}
-                loading={isSubmitting || createMutation.isPending || updateMutation.isPending}
-                disabled={isSubmitting || createMutation.isPending || updateMutation.isPending}
-                style={[styles.button, { backgroundColor: theme.colors.primary }]}
+                loading={
+                  isSubmitting ||
+                  createMutation.isPending ||
+                  updateMutation.isPending
+                }
+                disabled={
+                  isSubmitting ||
+                  createMutation.isPending ||
+                  updateMutation.isPending
+                }
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.colors.primary },
+                ]}
                 contentStyle={styles.buttonContent}
                 labelStyle={{ fontSize: 16, fontWeight: '600' }}
                 icon={isEditMode ? 'check' : 'plus'}

@@ -172,7 +172,10 @@ class AudioServiceHealthChecker {
     // Configurar listener de red si no existe
     if (!this.networkListener) {
       this.networkListener = NetInfo.addEventListener((state) => {
-        if (this.isActive && state.isConnected !== this.healthStatus.hasInternet) {
+        if (
+          this.isActive &&
+          state.isConnected !== this.healthStatus.hasInternet
+        ) {
           this.checkHealth();
         }
       });

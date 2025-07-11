@@ -31,7 +31,10 @@ import {
   UpdateCategoryDto,
   categoryFormSchema,
 } from '../schema/category.schema';
-import { useRefreshOnFocus, useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
+import {
+  useRefreshOnFocus,
+  useRefreshModuleOnFocus,
+} from '../../../app/hooks/useRefreshOnFocus';
 
 type RootStackParamList = {
   Categories: undefined;

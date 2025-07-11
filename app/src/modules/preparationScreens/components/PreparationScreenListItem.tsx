@@ -1,11 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import {
-  Text,
-  Chip,
-  IconButton,
-  Surface,
-} from 'react-native-paper';
+import { Text, Chip, IconButton, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { PreparationScreen } from '../schema/preparationScreen.schema';

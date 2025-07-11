@@ -136,23 +136,23 @@ const ModifierGroupsScreen = () => {
     },
     renderDescription: (item) => {
       const parts = [];
-      
+
       // Agregar orden de visualización
       if (item.sortOrder !== undefined && item.sortOrder !== null) {
         parts.push(`Orden: ${item.sortOrder}`);
       }
-      
+
       // Agregar si es requerido
       parts.push(`Requerido: ${item.isRequired ? 'Sí' : 'No'}`);
-      
+
       // Agregar si permite múltiples
       parts.push(`Múltiples: ${item.allowMultipleSelections ? 'Sí' : 'No'}`);
-      
+
       // Agregar descripción si existe
       if (item.description) {
         parts.push(item.description);
       }
-      
+
       return (
         <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
           {parts.join(' • ')}
