@@ -27,6 +27,8 @@ export const AppDataSource = new DataSource({
     max: process.env.DATABASE_MAX_CONNECTIONS
       ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10)
       : 100,
+    // Configurar timezone para que PostgreSQL maneje fechas en UTC
+    timezone: 'UTC',
     ssl:
       process.env.DATABASE_SSL_ENABLED === 'true'
         ? {

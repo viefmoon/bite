@@ -1,7 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, useWindowDimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { Surface, IconButton, ActivityIndicator, Text } from 'react-native-paper';
+import {
+  Surface,
+  IconButton,
+  ActivityIndicator,
+  Text,
+} from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
 

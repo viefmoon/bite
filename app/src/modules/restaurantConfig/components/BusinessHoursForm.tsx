@@ -48,10 +48,66 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         openingTime: '09:00',
         closingTime: '22:00',
         isClosed: false,
+        closesNextDay: false,
       }));
     }
-    return businessHours;
+
+    // Asegurar que closesNextDay esté calculado para cada horario
+    return businessHours.map((hour) => {
+      if (hour.openingTime && hour.closingTime && !hour.isClosed) {
+        const [openHour, openMin] = hour.openingTime.split(':').map(Number);
+        const [closeHour, closeMin] = hour.closingTime.split(':').map(Number);
+
+        const closesNextDay =
+          closeHour < openHour ||
+          (closeHour === openHour && closeMin < openMin);
+
+        return { ...hour, closesNextDay };
+      }
+      return { ...hour, closesNextDay: false };
+    });
   }, [businessHours]);
+
+  // Función para detectar conflictos de horarios
+  const checkScheduleConflict = (dayIndex: number): string | null => {
+    const currentDay = initializedHours.find((h) => h.dayOfWeek === dayIndex);
+    if (!currentDay || currentDay.isClosed || !currentDay.openingTime) {
+      return null;
+    }
+
+    // Verificar si el día anterior cierra después de medianoche
+    const previousDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+    const previousDay = initializedHours.find(
+      (h) => h.dayOfWeek === previousDayIndex,
+    );
+
+    if (
+      !previousDay ||
+      previousDay.isClosed ||
+      !previousDay.closesNextDay ||
+      !previousDay.closingTime
+    ) {
+      return null;
+    }
+
+    // Comparar horarios
+    const [currentOpenHour, currentOpenMin] = currentDay.openingTime
+      .split(':')
+      .map(Number);
+    const [prevCloseHour, prevCloseMin] = previousDay.closingTime
+      .split(':')
+      .map(Number);
+
+    const currentOpenMinutes = currentOpenHour * 60 + currentOpenMin;
+    const prevCloseMinutes = prevCloseHour * 60 + prevCloseMin;
+
+    // Si el día actual abre antes o exactamente cuando cierre el día anterior
+    if (currentOpenMinutes <= prevCloseMinutes) {
+      return `Conflicto: ${DAYS_OF_WEEK[previousDayIndex]} cierra a las ${previousDay.closingTime}. Debe haber al menos 1 minuto de diferencia`;
+    }
+
+    return null;
+  };
 
   const handleTimeChange = (
     dayIndex: number,
@@ -69,6 +125,21 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
       } else {
         updatedHours[hourIndex].closingTime = time;
       }
+
+      // Detectar automáticamente si cierra al día siguiente
+      const hour = updatedHours[hourIndex];
+      if (hour.openingTime && hour.closingTime) {
+        const [openHour, openMin] = hour.openingTime.split(':').map(Number);
+        const [closeHour, closeMin] = hour.closingTime.split(':').map(Number);
+
+        // Si la hora de cierre es menor que la de apertura, cierra al día siguiente
+        hour.closesNextDay =
+          closeHour < openHour ||
+          (closeHour === openHour && closeMin < openMin);
+      } else {
+        hour.closesNextDay = false;
+      }
+
       onChange(updatedHours as CreateBusinessHoursDto[]);
     }
   };
@@ -142,22 +213,6 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
     setCurrentPickerConfig(null);
   };
 
-  const copyHoursToAllDays = (dayIndex: number) => {
-    if (!onChange || !isEditing) return;
-
-    const sourceHour = initializedHours.find((h) => h.dayOfWeek === dayIndex);
-    if (!sourceHour) return;
-
-    const updatedHours = initializedHours.map((hour) => ({
-      ...hour,
-      openingTime: sourceHour.openingTime,
-      closingTime: sourceHour.closingTime,
-      isClosed: sourceHour.isClosed,
-    }));
-
-    onChange(updatedHours as CreateBusinessHoursDto[]);
-  };
-
   return (
     <>
       <View style={styles.container}>
@@ -176,20 +231,6 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
               <View style={styles.dayHeader}>
                 <Text style={styles.dayName}>{day}</Text>
                 <View style={styles.dayActions}>
-                  {isEditing &&
-                    index === 1 && ( // Solo mostrar en Lunes
-                      <IconButton
-                        icon="content-copy"
-                        size={18}
-                        onPress={() => {
-                          if (onChange) {
-                            copyHoursToAllDays(index);
-                          }
-                        }}
-                        iconColor={theme.colors.primary}
-                        style={styles.copyButton}
-                      />
-                    )}
                   <Switch
                     value={!dayHours.isClosed}
                     onValueChange={(value) => {
@@ -297,6 +338,15 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                             '--:--'}
                         </Text>
                       </View>
+                      {dayHours.closesNextDay && (
+                        <View style={styles.nextDayBadge}>
+                          <MaterialCommunityIcons
+                            name="moon-waning-crescent"
+                            size={12}
+                            color={theme.colors.onPrimaryContainer}
+                          />
+                        </View>
+                      )}
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -312,6 +362,24 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                   </Chip>
                 </View>
               )}
+
+              {/* Mostrar advertencia de conflicto */}
+              {(() => {
+                const conflict = checkScheduleConflict(index);
+                if (conflict && !dayHours.isClosed) {
+                  return (
+                    <View style={styles.conflictWarning}>
+                      <MaterialCommunityIcons
+                        name="alert-circle"
+                        size={16}
+                        color={theme.colors.error}
+                      />
+                      <Text style={styles.conflictText}>{conflict}</Text>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
             </Card>
           );
         })}
@@ -323,7 +391,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         value={currentPickerConfig?.currentDate || new Date()}
         onConfirm={handleTimeConfirm}
         onCancel={handleTimeCancel}
-        minuteInterval={5}
+        minuteInterval={1}
         title={
           currentPickerConfig?.type === 'opening'
             ? `${DAYS_OF_WEEK[currentPickerConfig.dayIndex || 0]} - Apertura`
@@ -331,6 +399,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
               ? `${DAYS_OF_WEEK[currentPickerConfig.dayIndex || 0]} - Cierre`
               : 'Seleccionar Hora'
         }
+        allowManualInput={true}
       />
     </>
   );
@@ -377,6 +446,7 @@ const createStyles = (theme: AppTheme) =>
       padding: theme.spacing.m,
       borderWidth: 1,
       borderColor: theme.colors.outline,
+      overflow: 'visible',
     },
     timeButtonDisabled: {
       backgroundColor: theme.colors.surface,
@@ -386,6 +456,7 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.s,
+      position: 'relative',
     },
     timeTextContainer: {
       flex: 1,
@@ -420,6 +491,34 @@ const createStyles = (theme: AppTheme) =>
     closedChipText: {
       fontSize: 12,
       color: theme.colors.onErrorContainer,
+    },
+    nextDayBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 10,
+      width: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: theme.colors.surface,
+    },
+    conflictWarning: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.errorContainer,
+      padding: theme.spacing.s,
+      marginTop: theme.spacing.s,
+      borderRadius: 8,
+      gap: theme.spacing.xs,
+    },
+    conflictText: {
+      flex: 1,
+      fontSize: 12,
+      color: theme.colors.onErrorContainer,
+      lineHeight: 16,
     },
   });
 

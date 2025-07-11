@@ -33,6 +33,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         // based on https://node-postgres.com/apis/pool
         // max connection pool size
         max: this.configService.get('database.maxConnections', { infer: true }),
+        // Configurar timezone para que PostgreSQL maneje fechas en UTC
+        timezone: 'UTC',
         ssl: this.configService.get('database.sslEnabled', { infer: true })
           ? {
               rejectUnauthorized: this.configService.get(

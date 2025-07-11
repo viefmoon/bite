@@ -28,6 +28,7 @@ import {
   CreateBusinessHoursDto,
 } from '../types/restaurantConfig.types';
 import BusinessHoursForm from '../components/BusinessHoursForm';
+import TimeZoneSelector from '../components/TimeZoneSelector';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
@@ -62,9 +63,56 @@ const RestaurantConfigScreen: React.FC = () => {
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
   const [isNavigatingAway, setIsNavigatingAway] = useState(false);
   const [businessHoursModified, setBusinessHoursModified] = useState(false);
+  const [originalDeliveryArea, setOriginalDeliveryArea] = useState<any>(null);
+  const [showAreaValidationModal, setShowAreaValidationModal] = useState(false);
+  const [showScheduleConflictModal, setShowScheduleConflictModal] =
+    useState(false);
 
   // Refrescar configuración cuando la pantalla recibe foco
   useRefreshOnFocus([['restaurantConfig']]);
+
+  // Función para validar conflictos de horarios
+  const hasScheduleConflicts = React.useCallback(() => {
+    if (!formData.businessHours) return false;
+
+    for (let i = 0; i < formData.businessHours.length; i++) {
+      const currentDay = formData.businessHours[i];
+      if (currentDay.isClosed || !currentDay.openingTime) continue;
+
+      // Verificar si el día anterior cierra después de medianoche
+      const previousDayIndex = i === 0 ? 6 : i - 1;
+      const previousDay = formData.businessHours.find(
+        (h) => h.dayOfWeek === previousDayIndex,
+      );
+
+      if (
+        !previousDay ||
+        previousDay.isClosed ||
+        !previousDay.closesNextDay ||
+        !previousDay.closingTime
+      ) {
+        continue;
+      }
+
+      // Comparar horarios
+      const [currentOpenHour, currentOpenMin] = currentDay.openingTime
+        .split(':')
+        .map(Number);
+      const [prevCloseHour, prevCloseMin] = previousDay.closingTime
+        .split(':')
+        .map(Number);
+
+      const currentOpenMinutes = currentOpenHour * 60 + currentOpenMin;
+      const prevCloseMinutes = prevCloseHour * 60 + prevCloseMin;
+
+      // Si el día actual abre antes o exactamente cuando cierre el día anterior
+      if (currentOpenMinutes <= prevCloseMinutes) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [formData.businessHours]);
 
   // Función para verificar si hay cambios sin guardar
   const hasChanges = React.useCallback(() => {
@@ -139,11 +187,21 @@ const RestaurantConfigScreen: React.FC = () => {
   );
 
   React.useEffect(() => {
-    if (config) {
+    if (config && !isEditing) {
+      // Solo actualizar formData si no estamos editando
       // Si no hay businessHours, inicializar con valores por defecto
       const initialBusinessHours =
         config.businessHours && config.businessHours.length > 0
-          ? config.businessHours
+          ? config.businessHours.map((hour) => ({
+              ...hour,
+              // Normalizar el formato de tiempo a HH:MM
+              openingTime: hour.openingTime
+                ? hour.openingTime.substring(0, 5)
+                : null,
+              closingTime: hour.closingTime
+                ? hour.closingTime.substring(0, 5)
+                : null,
+            }))
           : [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
               dayOfWeek,
               openingTime: '09:00',
@@ -168,16 +226,22 @@ const RestaurantConfigScreen: React.FC = () => {
         estimatedDineInTime: config.estimatedDineInTime,
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
-        timeZone: config.timeZone,
+        timeZone: config.timeZone || 'America/Mexico_City',
         // Configuración de delivery
         deliveryCoverageArea: config.deliveryCoverageArea,
         // Horarios
         businessHours: initialBusinessHours,
       });
     }
-  }, [config]);
+  }, [config, isEditing]);
 
   const handleSubmit = async () => {
+    // Validar conflictos de horarios antes de guardar
+    if (hasScheduleConflicts()) {
+      setShowScheduleConflictModal(true);
+      return;
+    }
+
     try {
       // Formatear los datos antes de enviarlos
       const dataToSubmit = {
@@ -236,7 +300,16 @@ const RestaurantConfigScreen: React.FC = () => {
       // Usar la misma lógica de inicialización que en useEffect
       const initialBusinessHours =
         config.businessHours && config.businessHours.length > 0
-          ? config.businessHours
+          ? config.businessHours.map((hour) => ({
+              ...hour,
+              // Normalizar el formato de tiempo a HH:MM
+              openingTime: hour.openingTime
+                ? hour.openingTime.substring(0, 5)
+                : null,
+              closingTime: hour.closingTime
+                ? hour.closingTime.substring(0, 5)
+                : null,
+            }))
           : [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
               dayOfWeek,
               openingTime: '09:00',
@@ -259,7 +332,7 @@ const RestaurantConfigScreen: React.FC = () => {
         estimatedDineInTime: config.estimatedDineInTime,
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
-        timeZone: config.timeZone,
+        timeZone: config.timeZone || 'America/Mexico_City',
         deliveryCoverageArea: config.deliveryCoverageArea,
         businessHours: initialBusinessHours,
       });
@@ -639,17 +712,12 @@ const RestaurantConfigScreen: React.FC = () => {
         </View>
 
         <View style={styles.sectionContent}>
-          <TextInput
-            label="Zona horaria"
-            value={formData.timeZone || ''}
-            onChangeText={(text) =>
-              setFormData({ ...formData, timeZone: text })
-            }
-            mode="outlined"
+          <TimeZoneSelector
+            value={formData.timeZone || 'America/Mexico_City'}
+            onChange={(timezone) => {
+              setFormData({ ...formData, timeZone: timezone });
+            }}
             disabled={!isEditing}
-            style={styles.input}
-            outlineStyle={styles.inputOutline}
-            left={<TextInput.Icon icon="map-clock" />}
           />
         </View>
       </Surface>
@@ -819,7 +887,7 @@ const RestaurantConfigScreen: React.FC = () => {
               mode="contained"
               onPress={handleSubmit}
               loading={updateConfigMutation.isPending}
-              disabled={updateConfigMutation.isPending || !hasChanges()}
+              disabled={updateConfigMutation.isPending}
               style={styles.saveButton}
               contentStyle={styles.buttonContent}
               icon="check"
@@ -845,6 +913,7 @@ const RestaurantConfigScreen: React.FC = () => {
                 {new Date(config.updatedAt).toLocaleString('es-MX', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
+                  timeZone: config.timeZone || 'America/Mexico_City',
                 })}
               </Text>
             </View>
@@ -873,6 +942,12 @@ const RestaurantConfigScreen: React.FC = () => {
           visible={showDeliveryModal}
           onDismiss={() => {
             if (!updateDeliveryAreaMutation.isPending) {
+              if (isEditingDelivery) {
+                setFormData({
+                  ...formData,
+                  deliveryCoverageArea: originalDeliveryArea,
+                });
+              }
               setShowDeliveryModal(false);
               setIsEditingDelivery(false);
             }
@@ -883,6 +958,7 @@ const RestaurantConfigScreen: React.FC = () => {
             <Surface style={styles.deliveryMapWrapper} elevation={1}>
               <View style={styles.deliveryMapContainer}>
                 <WebViewDeliveryCoverageMap
+                  key={`coverage-map-${isEditingDelivery}`}
                   initialPolygon={formData.deliveryCoverageArea}
                   isEditing={isEditingDelivery}
                   onChange={(polygon) =>
@@ -903,17 +979,20 @@ const RestaurantConfigScreen: React.FC = () => {
                   <Button
                     onPress={() => setShowDeliveryModal(false)}
                     mode="outlined"
-                    style={[styles.deliveryDialogButton, styles.cancelButton]}
+                    style={styles.deliveryDialogButton}
                     contentStyle={styles.deliveryButtonContent}
                     labelStyle={styles.cancelButtonLabel}
                   >
                     Cerrar
                   </Button>
                   <Button
-                    onPress={() => setIsEditingDelivery(true)}
+                    onPress={() => {
+                      setOriginalDeliveryArea(formData.deliveryCoverageArea);
+                      setIsEditingDelivery(true);
+                    }}
                     icon="pencil"
                     mode="contained"
-                    style={[styles.deliveryDialogButton, styles.editButton]}
+                    style={styles.deliveryDialogButton}
                     contentStyle={styles.deliveryButtonContent}
                     labelStyle={styles.deliveryButtonLabel}
                   >
@@ -923,9 +1002,15 @@ const RestaurantConfigScreen: React.FC = () => {
               ) : (
                 <>
                   <Button
-                    onPress={() => setIsEditingDelivery(false)}
+                    onPress={() => {
+                      setFormData({
+                        ...formData,
+                        deliveryCoverageArea: originalDeliveryArea,
+                      });
+                      setIsEditingDelivery(false);
+                    }}
                     mode="outlined"
-                    style={[styles.deliveryDialogButton, styles.cancelButton]}
+                    style={styles.deliveryDialogButton}
                     contentStyle={styles.deliveryButtonContent}
                     labelStyle={styles.cancelButtonLabel}
                     disabled={updateDeliveryAreaMutation.isPending}
@@ -934,6 +1019,15 @@ const RestaurantConfigScreen: React.FC = () => {
                   </Button>
                   <Button
                     onPress={async () => {
+                      // Validar que haya al menos 3 puntos
+                      if (
+                        !formData.deliveryCoverageArea ||
+                        formData.deliveryCoverageArea.length < 3
+                      ) {
+                        setShowAreaValidationModal(true);
+                        return;
+                      }
+
                       setIsEditingDelivery(false);
                       // Guardar el área de cobertura inmediatamente
                       await handleSaveDeliveryArea();
@@ -941,7 +1035,7 @@ const RestaurantConfigScreen: React.FC = () => {
                     }}
                     mode="contained"
                     icon="check"
-                    style={[styles.deliveryDialogButton, styles.saveButton]}
+                    style={styles.deliveryDialogButton}
                     contentStyle={styles.deliveryButtonContent}
                     labelStyle={styles.deliveryButtonLabel}
                     loading={updateDeliveryAreaMutation.isPending}
@@ -953,6 +1047,92 @@ const RestaurantConfigScreen: React.FC = () => {
               )}
             </View>
           </View>
+        </Dialog>
+      </Portal>
+
+      {/* Modal de validación de área */}
+      <Portal>
+        <Dialog
+          visible={showAreaValidationModal}
+          onDismiss={() => setShowAreaValidationModal(false)}
+          style={styles.validationDialog}
+        >
+          <View style={styles.validationIconContainer}>
+            <Surface style={styles.validationIconWrapper} elevation={0}>
+              <MaterialCommunityIcons
+                name="map-marker-alert"
+                size={36}
+                color={theme.colors.error}
+              />
+            </Surface>
+          </View>
+          <Dialog.Title style={styles.validationTitle}>
+            Área incompleta
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={styles.validationMessage}>
+              Se requieren al menos 3 puntos para definir un área de cobertura
+              válida.
+            </Text>
+            <Text style={styles.validationHint}>
+              Haz clic en el mapa para agregar más puntos o usa el botón de
+              dibujar.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.validationActions}>
+            <Button
+              onPress={() => setShowAreaValidationModal(false)}
+              mode="contained"
+              style={styles.validationButton}
+              contentStyle={styles.validationButtonContent}
+              labelStyle={styles.validationButtonLabel}
+            >
+              Entendido
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Modal de conflicto de horarios */}
+      <Portal>
+        <Dialog
+          visible={showScheduleConflictModal}
+          onDismiss={() => setShowScheduleConflictModal(false)}
+          style={styles.validationDialog}
+        >
+          <View style={styles.validationIconContainer}>
+            <Surface style={styles.validationIconWrapper} elevation={0}>
+              <MaterialCommunityIcons
+                name="clock-alert"
+                size={36}
+                color={theme.colors.error}
+              />
+            </Surface>
+          </View>
+          <Dialog.Title style={styles.validationTitle}>
+            Conflicto de horarios
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={styles.validationMessage}>
+              Hay conflictos en los horarios de operación. Un día no puede abrir
+              antes o al mismo tiempo que cierre el día anterior.
+            </Text>
+            <Text style={styles.validationHint}>
+              Debe haber al menos 1 minuto de diferencia entre el cierre y la
+              siguiente apertura. Revisa los horarios marcados con advertencia.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.validationActions}>
+            <Button
+              onPress={() => setShowScheduleConflictModal(false)}
+              mode="contained"
+              style={styles.validationButton}
+              contentStyle={styles.validationButtonContent}
+              labelStyle={styles.validationButtonLabel}
+            >
+              Revisar horarios
+            </Button>
+          </Dialog.Actions>
         </Dialog>
       </Portal>
     </SafeAreaView>
@@ -1232,8 +1412,15 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       width: width * 0.95,
       maxHeight: height * 0.9,
       alignSelf: 'center',
-      borderRadius: 16,
+      borderRadius: 20,
       backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
     },
     deliveryDialogContent: {
       paddingHorizontal: theme.spacing.m,
@@ -1258,12 +1445,12 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     deliveryDialogButtonsContainer: {
       flexDirection: 'row',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       alignItems: 'center',
       gap: theme.spacing.m,
     },
     deliveryDialogButton: {
-      minWidth: 120,
+      flex: 1,
       borderRadius: 12,
     },
     deliveryButtonContent: {
@@ -1277,6 +1464,68 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       fontSize: 16,
       fontWeight: '500',
       color: theme.colors.onSurface,
+    },
+    // Estilos para el modal de validación
+    validationDialog: {
+      borderRadius: 24,
+      backgroundColor: theme.colors.surface,
+      maxWidth: 340,
+      width: '85%',
+      alignSelf: 'center',
+      paddingVertical: 0,
+    },
+    validationIconContainer: {
+      alignItems: 'center',
+      marginTop: theme.spacing.m,
+      marginBottom: theme.spacing.s,
+    },
+    validationIconWrapper: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.colors.errorContainer,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    validationTitle: {
+      textAlign: 'center',
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      marginBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.m,
+    },
+    validationMessage: {
+      textAlign: 'center',
+      fontSize: 15,
+      color: theme.colors.onSurface,
+      marginBottom: theme.spacing.s,
+      lineHeight: 21,
+      paddingHorizontal: theme.spacing.s,
+    },
+    validationHint: {
+      textAlign: 'center',
+      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+      lineHeight: 18,
+      paddingHorizontal: theme.spacing.s,
+    },
+    validationActions: {
+      paddingBottom: theme.spacing.m,
+      paddingHorizontal: theme.spacing.m,
+      paddingTop: theme.spacing.xs,
+    },
+    validationButton: {
+      borderRadius: 12,
+      minWidth: 120,
+    },
+    validationButtonContent: {
+      paddingVertical: theme.spacing.s,
+    },
+    validationButtonLabel: {
+      fontSize: 16,
+      fontWeight: '600',
     },
   });
 

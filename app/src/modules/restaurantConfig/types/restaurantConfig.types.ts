@@ -8,6 +8,7 @@ export interface BusinessHours {
   dayOfWeek: number; // 0 = Domingo, 1 = Lunes, ... 6 = Sábado
   openingTime: string | null; // HH:mm
   closingTime: string | null; // HH:mm
+  closesNextDay?: boolean; // true si cierra después de medianoche
   isClosed: boolean;
   restaurantConfigId: string;
   createdAt: string;
@@ -76,6 +77,7 @@ export interface CreateBusinessHoursDto {
   dayOfWeek: number;
   openingTime?: string | null;
   closingTime?: string | null;
+  closesNextDay?: boolean;
   isClosed?: boolean;
   restaurantConfigId?: string;
 }
@@ -83,5 +85,6 @@ export interface CreateBusinessHoursDto {
 export interface UpdateBusinessHoursDto {
   openingTime?: string | null;
   closingTime?: string | null;
+  closesNextDay?: boolean;
   isClosed?: boolean;
 }

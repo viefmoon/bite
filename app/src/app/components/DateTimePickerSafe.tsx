@@ -13,6 +13,7 @@ interface DateTimePickerSafeProps {
   maximumDate?: Date;
   minuteInterval?: number;
   title?: string;
+  allowManualInput?: boolean; // Permite habilitar entrada manual en Android
 }
 
 export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
@@ -25,6 +26,7 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
   maximumDate,
   minuteInterval = 1,
   title,
+  allowManualInput = false,
 }) => {
   const [tempDate, setTempDate] = useState<Date>(() => {
     if (value) return new Date(value);
@@ -127,6 +129,11 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
           minimumDate={minimumDate}
           maximumDate={maximumDate}
           minuteInterval={minuteInterval as any}
+          {...(allowManualInput && Platform.OS === 'android' && mode === 'time'
+            ? {
+                display: 'clock' as any,
+              }
+            : {})}
         />
       )}
     </>

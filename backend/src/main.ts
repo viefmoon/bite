@@ -1,4 +1,7 @@
 import 'dotenv/config';
+
+// Configurar el proceso para usar UTC
+process.env.TZ = 'UTC';
 import {
   ClassSerializerInterceptor,
   ValidationPipe,
