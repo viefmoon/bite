@@ -228,31 +228,23 @@ const CategoriesScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadInitialValues = async () => {
-      if (editingCategory) {
-        let imageUrl = null;
-        if (editingCategory.photo?.path) {
-          imageUrl = await getImageUrl(editingCategory.photo.path);
-        }
-        setFormInitialValues({
-          name: editingCategory.name,
-          description: editingCategory.description ?? null,
-          isActive: editingCategory.isActive,
-          sortOrder: editingCategory.sortOrder ?? 0,
-          imageUri: imageUrl,
-        });
-      } else {
-        setFormInitialValues({
-          name: '',
-          description: null,
-          isActive: true,
-          sortOrder: 0,
-          imageUri: null,
-        });
-      }
-    };
-
-    loadInitialValues();
+    if (editingCategory) {
+      setFormInitialValues({
+        name: editingCategory.name,
+        description: editingCategory.description ?? null,
+        isActive: editingCategory.isActive,
+        sortOrder: editingCategory.sortOrder ?? 0,
+        imageUri: editingCategory.photo?.path || null,
+      });
+    } else {
+      setFormInitialValues({
+        name: '',
+        description: null,
+        isActive: true,
+        sortOrder: 0,
+        imageUri: null,
+      });
+    }
   }, [editingCategory]);
 
   const selectedCategoryMapped = useMemo(() => {

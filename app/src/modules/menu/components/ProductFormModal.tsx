@@ -144,12 +144,6 @@ function ProductFormModal({
               ? parseFloat(String(initialPrice))
               : null;
 
-          // Only set imageUri if there's actually a photo path
-          let imageUri = null;
-          if (initialData.photo?.path) {
-            imageUri = await getImageUrl(initialData.photo.path);
-          }
-
           reset({
             name: initialData.name,
             description: initialData.description || null,
@@ -164,7 +158,7 @@ function ProductFormModal({
             sortOrder: initialData.sortOrder ?? 0,
             variants: initialData.variants || [],
             variantsToDelete: [],
-            imageUri: imageUri,
+            imageUri: initialData.photo?.path || null,
             modifierGroupIds: [],
           });
           setLocalSelectedFile(null);

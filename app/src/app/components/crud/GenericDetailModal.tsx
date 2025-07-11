@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,7 +10,6 @@ import {
 import { Text, Button, Chip, ActivityIndicator } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
-import { getImageUrl } from '../../lib/imageUtils';
 import { AdaptiveModal } from '../common/AdaptiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
 
@@ -230,9 +229,7 @@ function GenericDetailModal<TItem extends { id: string }>({
     () => getStyles(theme, responsive),
     [theme, responsive],
   );
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
+  const imageSource = useMemo(() => {
     if (item && imageField && item.hasOwnProperty(imageField)) {
       const imageFieldValue = item[imageField];
       if (
@@ -241,15 +238,12 @@ function GenericDetailModal<TItem extends { id: string }>({
         'path' in imageFieldValue &&
         typeof imageFieldValue.path === 'string'
       ) {
-        getImageUrl(imageFieldValue.path).then((url) => {
-          setImageUrl(url ?? undefined);
-        });
+        return imageFieldValue.path;
       } else if (typeof imageFieldValue === 'string') {
-        setImageUrl(imageFieldValue);
+        return imageFieldValue;
       }
-    } else {
-      setImageUrl(undefined);
     }
+    return null;
   }, [item, imageField]);
 
   const handleEdit = () => {
@@ -313,7 +307,7 @@ function GenericDetailModal<TItem extends { id: string }>({
         <View style={styles.detailContent}>
           {showImage && (
             <AutoImage
-              source={imageUrl}
+              source={imageSource}
               placeholderIcon="image-outline"
               style={[styles.detailImage, imageStyle]}
               contentFit="contain"
@@ -369,7 +363,7 @@ function GenericDetailModal<TItem extends { id: string }>({
 
   const renderFooter = () => {
     if (!item) return null;
-    
+
     return (
       <View style={styles.footerContainer}>
         {(onEdit || onDelete) && (
@@ -409,7 +403,7 @@ function GenericDetailModal<TItem extends { id: string }>({
             )}
           </View>
         )}
-        
+
         <Button
           mode="contained-tonal"
           onPress={onDismiss}

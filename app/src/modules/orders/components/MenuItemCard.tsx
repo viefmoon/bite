@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Title, Text, IconButton } from 'react-native-paper';
-import { Image } from 'expo-image';
-import { getImageUrl } from '@/app/lib/imageUtils';
+import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import type { Product, Category, SubCategory } from '../types/orders.types';
@@ -53,18 +52,6 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
           },
           imageInactive: {
             opacity: 0.6,
-          },
-          imagePlaceholder: {
-            width: '100%',
-            height: responsive.getResponsiveDimension(120, 160),
-            backgroundColor: colors.surfaceVariant,
-            justifyContent: 'center',
-            alignItems: 'center',
-          },
-          placeholderText: {
-            fontSize: responsive.fontSize.xl,
-            fontWeight: 'bold',
-            color: colors.onSurfaceVariant,
           },
           cardContent: {
             paddingHorizontal: responsive.spacing.s,
@@ -122,7 +109,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
     const isDisabled = disabled || !isActive || isProductWithoutScreen;
 
     // Obtener la URL de la imagen
-    const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
+    const imageSource = item.photo ? item.photo.path : null;
 
     // Determinar si mostrar el precio
     const shouldShowPrice = () => {
@@ -170,26 +157,14 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
         onLongPress={isDisabled ? undefined : onLongPress}
         disabled={isDisabled}
       >
-        {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={[styles.itemImage, isDisabled && styles.imageInactive]}
-            contentFit="cover"
-            placeholder={blurhash}
-            transition={300}
-          />
-        ) : (
-          <View
-            style={[
-              styles.imagePlaceholder,
-              isDisabled && styles.imageInactive,
-            ]}
-          >
-            <Text style={styles.placeholderText}>
-              {item.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
+        <AutoImage
+          source={imageSource}
+          style={[styles.itemImage, isDisabled && styles.imageInactive]}
+          contentFit="cover"
+          placeholder={blurhash}
+          transition={300}
+          placeholderIcon="image-outline"
+        />
 
         {badgeText && (
           <View style={styles.inactiveBadge}>

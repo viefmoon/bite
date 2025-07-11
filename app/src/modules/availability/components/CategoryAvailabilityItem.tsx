@@ -26,10 +26,7 @@ export const CategoryAvailabilityItem: React.FC<
     });
   };
 
-  const handleSubcategoryToggle = (
-    subcategoryId: string,
-    value: boolean,
-  ) => {
+  const handleSubcategoryToggle = (subcategoryId: string, value: boolean) => {
     updateAvailability.mutate({
       type: 'subcategory',
       id: subcategoryId,

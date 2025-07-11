@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 // Importar desde el servicio de categorías correcto
 import { getFullMenu } from '@/modules/menu/services/categoryService';
 // Importar el tipo de menú completo con relaciones anidadas
 import type { FullMenuCategory } from '@/modules/orders/types/orders.types';
 import { ApiError } from '@/app/lib/errors';
+import { prefetchMenuImages } from '@/app/lib/imageCache';
 
 // Define una clave única para esta query
 const queryKey = ['fullMenu'];
@@ -12,9 +14,10 @@ const queryKey = ['fullMenu'];
  * Hook personalizado para obtener el menú completo usando React Query.
  * Gestiona el fetching, caching, estado de carga y errores.
  * Incluye polling para mantener precios y disponibilidad actualizados.
+ * Con prefetching automático de imágenes.
  */
 export function useGetFullMenu() {
-  return useQuery<FullMenuCategory[], ApiError>({
+  const query = useQuery<FullMenuCategory[], ApiError>({
     queryKey: queryKey,
     queryFn: getFullMenu,
     refetchInterval: 10000, // Actualizar cada 10 segundos
@@ -27,4 +30,18 @@ export function useGetFullMenu() {
     // No mostrar loading en refetch para mantener la UI estable
     notifyOnChangeProps: ['data', 'error'],
   });
+
+  // Prefetch de imágenes cuando se cargan los datos del menú
+  useEffect(() => {
+    if (query.data && query.data.length > 0) {
+      // Prefetch en background sin bloquear la UI
+      prefetchMenuImages(query.data, {
+        maxConcurrent: 3, // Limitar concurrencia para no saturar la red
+      }).catch(() => {
+        // Silenciar errores de prefetch para no afectar la UX
+      });
+    }
+  }, [query.data]);
+
+  return query;
 }

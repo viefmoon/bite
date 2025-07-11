@@ -89,157 +89,157 @@ export const OrderCard = React.memo<OrderCardProps>(
           activeOpacity={0.7}
         >
           <Card.Content style={styles.cardContent}>
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <View style={styles.orderInfo}>
-                <View style={styles.orderNumberRow}>
-                  <Text
-                    style={[
-                      styles.orderNumber,
-                      { color: theme.colors.onSurface },
-                    ]}
-                  >
-                    Orden #{order.dailyNumber}
-                  </Text>
-                  <Chip
-                    icon={getOrderTypeIcon()}
-                    style={[
-                      styles.typeChip,
-                      { backgroundColor: theme.colors.secondaryContainer },
-                    ]}
-                    textStyle={[
-                      styles.chipText,
-                      { color: theme.colors.onSecondaryContainer },
-                    ]}
-                    compact={true}
-                    mode="flat"
-                  >
-                    {getOrderTypeLabel()}
-                  </Chip>
-                  <Chip
-                    style={[
-                      styles.statusChip,
-                      { backgroundColor: getStatusColor() + '20' },
-                    ]}
-                    textStyle={[styles.chipText, { color: getStatusColor() }]}
-                    compact={true}
-                    mode="flat"
-                  >
-                    {getStatusLabel()}
-                  </Chip>
-                  {order.isFromWhatsApp && (
-                    <Chip
-                      icon="whatsapp"
+            <View style={styles.header}>
+              <View style={styles.headerLeft}>
+                <View style={styles.orderInfo}>
+                  <View style={styles.orderNumberRow}>
+                    <Text
                       style={[
-                        styles.whatsappChip,
-                        { backgroundColor: '#25D366' + '20' },
+                        styles.orderNumber,
+                        { color: theme.colors.onSurface },
                       ]}
-                      textStyle={[styles.chipText, { color: '#25D366' }]}
+                    >
+                      Orden #{order.dailyNumber}
+                    </Text>
+                    <Chip
+                      icon={getOrderTypeIcon()}
+                      style={[
+                        styles.typeChip,
+                        { backgroundColor: theme.colors.secondaryContainer },
+                      ]}
+                      textStyle={[
+                        styles.chipText,
+                        { color: theme.colors.onSecondaryContainer },
+                      ]}
                       compact={true}
                       mode="flat"
                     >
-                      WhatsApp
+                      {getOrderTypeLabel()}
                     </Chip>
-                  )}
+                    <Chip
+                      style={[
+                        styles.statusChip,
+                        { backgroundColor: getStatusColor() + '20' },
+                      ]}
+                      textStyle={[styles.chipText, { color: getStatusColor() }]}
+                      compact={true}
+                      mode="flat"
+                    >
+                      {getStatusLabel()}
+                    </Chip>
+                    {order.isFromWhatsApp && (
+                      <Chip
+                        icon="whatsapp"
+                        style={[
+                          styles.whatsappChip,
+                          { backgroundColor: '#25D366' + '20' },
+                        ]}
+                        textStyle={[styles.chipText, { color: '#25D366' }]}
+                        compact={true}
+                        mode="flat"
+                      >
+                        WhatsApp
+                      </Chip>
+                    )}
+                  </View>
+                </View>
+              </View>
+              <View style={styles.headerRight}>
+                <Text style={[styles.time, { color: theme.colors.primary }]}>
+                  {new Date(order.createdAt).toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+                <View style={styles.priceAndCheckbox}>
+                  <Text style={[styles.total, { color: theme.colors.primary }]}>
+                    $
+                    {typeof order.total === 'string'
+                      ? parseFloat(order.total).toFixed(2)
+                      : order.total.toFixed(2)}
+                  </Text>
+                  <Checkbox
+                    status={isSelected ? 'checked' : 'unchecked'}
+                    onPress={() => onToggleSelection(order.id)}
+                    color={theme.colors.primary}
+                    style={styles.checkbox}
+                  />
                 </View>
               </View>
             </View>
-            <View style={styles.headerRight}>
-              <Text style={[styles.time, { color: theme.colors.primary }]}>
-                {new Date(order.createdAt).toLocaleTimeString('es-ES', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-              <View style={styles.priceAndCheckbox}>
-                <Text style={[styles.total, { color: theme.colors.primary }]}>
-                  $
-                  {typeof order.total === 'string'
-                    ? parseFloat(order.total).toFixed(2)
-                    : order.total.toFixed(2)}
-                </Text>
-                <Checkbox
-                  status={isSelected ? 'checked' : 'unchecked'}
-                  onPress={() => onToggleSelection(order.id)}
-                  color={theme.colors.primary}
-                  style={styles.checkbox}
-                />
-              </View>
-            </View>
-          </View>
 
-          <View style={styles.details}>
-            <View style={styles.detailsContent}>
-              {order.deliveryInfo?.recipientName && (
-                <Text
-                  style={[
-                    styles.customerName,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {order.deliveryInfo.recipientName}{' '}
-                  {order.deliveryInfo.recipientPhone &&
-                    `• ${order.deliveryInfo.recipientPhone}`}
-                </Text>
-              )}
-
-              {order.orderType === 'DINE_IN' && order.table && (
-                <Text
-                  style={[
-                    styles.tableInfo,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                  numberOfLines={1}
-                >
-                  Mesa {order.table.number}{' '}
-                  {order.table.area?.name && `- ${order.table.area.name}`}
-                </Text>
-              )}
-
-              {order.orderType === 'DELIVERY' &&
-                order.deliveryInfo?.fullAddress && (
+            <View style={styles.details}>
+              <View style={styles.detailsContent}>
+                {order.deliveryInfo?.recipientName && (
                   <Text
                     style={[
-                      styles.address,
+                      styles.customerName,
                       { color: theme.colors.onSurfaceVariant },
                     ]}
                     numberOfLines={1}
-                    ellipsizeMode="tail"
                   >
-                    {order.deliveryInfo.fullAddress}
+                    {order.deliveryInfo.recipientName}{' '}
+                    {order.deliveryInfo.recipientPhone &&
+                      `• ${order.deliveryInfo.recipientPhone}`}
                   </Text>
                 )}
 
-              <View style={styles.itemsInfo}>
-                <Text
-                  style={[
-                    styles.itemsCount,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                >
-                  {order.orderItems.reduce(
-                    (sum, item) => sum + item.quantity,
-                    0,
-                  )}{' '}
-                  {order.orderItems.reduce(
-                    (sum, item) => sum + item.quantity,
-                    0,
-                  ) === 1
-                    ? 'artículo'
-                    : 'artículos'}
-                </Text>
-              </View>
-            </View>
+                {order.orderType === 'DINE_IN' && order.table && (
+                  <Text
+                    style={[
+                      styles.tableInfo,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    Mesa {order.table.number}{' '}
+                    {order.table.area?.name && `- ${order.table.area.name}`}
+                  </Text>
+                )}
 
-            <IconButton
-              icon="format-list-bulleted"
-              size={18}
-              onPress={() => onShowDetails(order)}
-              style={styles.detailsButton}
-              iconColor={theme.colors.primary}
-            />
-          </View>
+                {order.orderType === 'DELIVERY' &&
+                  order.deliveryInfo?.fullAddress && (
+                    <Text
+                      style={[
+                        styles.address,
+                        { color: theme.colors.onSurfaceVariant },
+                      ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {order.deliveryInfo.fullAddress}
+                    </Text>
+                  )}
+
+                <View style={styles.itemsInfo}>
+                  <Text
+                    style={[
+                      styles.itemsCount,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    {order.orderItems.reduce(
+                      (sum, item) => sum + item.quantity,
+                      0,
+                    )}{' '}
+                    {order.orderItems.reduce(
+                      (sum, item) => sum + item.quantity,
+                      0,
+                    ) === 1
+                      ? 'artículo'
+                      : 'artículos'}
+                  </Text>
+                </View>
+              </View>
+
+              <IconButton
+                icon="format-list-bulleted"
+                size={18}
+                onPress={() => onShowDetails(order)}
+                style={styles.detailsButton}
+                iconColor={theme.colors.primary}
+              />
+            </View>
           </Card.Content>
         </TouchableOpacity>
       </Card>

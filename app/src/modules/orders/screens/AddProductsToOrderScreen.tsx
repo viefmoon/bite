@@ -23,8 +23,7 @@ import {
 } from '@react-navigation/native';
 import { useGetFullMenu } from '../hooks/useMenuQueries';
 import { Product, Category, SubCategory } from '../types/orders.types';
-import { Image } from 'expo-image';
-import { getImageUrl } from '@/app/lib/imageUtils';
+import { AutoImage } from '@/app/components/common/AutoImage';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
@@ -516,18 +515,6 @@ const AddProductsToOrderScreen = () => {
         imageInactive: {
           opacity: 0.6,
         },
-        imagePlaceholder: {
-          width: '100%',
-          height: 120,
-          backgroundColor: '#eeeeee',
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        placeholderText: {
-          fontSize: 24,
-          fontWeight: 'bold',
-          color: '#999',
-        },
         cardContent: {
           padding: 12,
         },
@@ -598,15 +585,16 @@ const AddProductsToOrderScreen = () => {
     '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   const renderItem = ({ item }: { item: Category | SubCategory | Product }) => {
-    const imageUrl = (() => {
+    const imageSource = (() => {
       const photoPath = item.photo?.path || item.photo;
-      return photoPath ? getImageUrl(photoPath) : null;
+      return photoPath || null;
     })();
     const isActive = item.isActive !== false;
-    
+
     // Verificar si es un producto sin pantalla de preparación
-    const isProductWithoutScreen = navigationLevel === 'products' && 
-      'preparationScreenId' in item && 
+    const isProductWithoutScreen =
+      navigationLevel === 'products' &&
+      'preparationScreenId' in item &&
       !item.preparationScreenId;
 
     const handlePress = () => {
@@ -659,40 +647,24 @@ const AddProductsToOrderScreen = () => {
     return (
       <Card
         style={[
-          styles.cardItem, 
-          (!isActive || isProductWithoutScreen) && styles.cardItemInactive
+          styles.cardItem,
+          (!isActive || isProductWithoutScreen) && styles.cardItemInactive,
         ]}
         onPress={handlePress}
         onLongPress={handleLongPress}
         disabled={!isActive || isProductWithoutScreen}
       >
-        {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={[
-              styles.itemImage, 
-              (!isActive || isProductWithoutScreen) && styles.imageInactive
-            ]}
-            contentFit="cover"
-            placeholder={blurhash}
-            transition={300}
-          />
-        ) : (
-          <View
-            style={[
-              styles.imagePlaceholder, 
-              (!isActive || isProductWithoutScreen) && styles.imageInactive
-            ]}
-          >
-            <Text style={styles.placeholderText}>
-              {navigationLevel === 'categories'
-                ? '🍴'
-                : navigationLevel === 'subcategories'
-                  ? '🍽️'
-                  : '🥘'}
-            </Text>
-          </View>
-        )}
+        <AutoImage
+          source={imageSource}
+          style={[
+            styles.itemImage,
+            (!isActive || isProductWithoutScreen) && styles.imageInactive,
+          ]}
+          contentFit="cover"
+          placeholder={blurhash}
+          transition={300}
+          placeholderIcon="image-outline"
+        />
         <Card.Content style={styles.cardContent}>
           {navigationLevel === 'products' &&
           'price' in item &&

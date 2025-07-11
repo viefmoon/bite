@@ -45,7 +45,11 @@ interface PaymentModalProps {
   orderNumber?: number;
   onOrderCompleted?: () => void; // Callback cuando se completa la orden
   mode?: 'payment' | 'prepayment'; // Modo del modal
-  onPrepaymentCreated?: (prepaymentId: string, amount: number, method: PaymentMethod) => void; // Callback para pre-pago
+  onPrepaymentCreated?: (
+    prepaymentId: string,
+    amount: number,
+    method: PaymentMethod,
+  ) => void; // Callback para pre-pago
   existingPrepaymentId?: string; // ID del pre-pago existente para edición
   onPrepaymentDeleted?: () => void; // Callback para eliminar pre-pago
 }
@@ -93,7 +97,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
   const [isCreatingPrepayment, setIsCreatingPrepayment] = useState(false);
-  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
+  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] =
+    useState(false);
 
   // Queries y mutations (solo para modo payment)
   const { data: payments = [], isLoading: isLoadingPayments } =
@@ -193,10 +198,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           paymentMethod: selectedMethod,
           amount: parsedAmount,
         });
-        
+
         // Notificar al componente padre
         onPrepaymentCreated?.(prepayment.id, parsedAmount, selectedMethod);
-        
+
         // Cerrar el modal
         onDismiss();
       } else {
@@ -350,13 +355,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     <View style={styles.summaryDividerVertical} />
                     <View style={styles.summaryItem}>
                       <Text style={styles.summaryLabel}>Pagado</Text>
-                      <Text style={[styles.summaryAmount, { color: '#4CAF50' }]}>
+                      <Text
+                        style={[styles.summaryAmount, { color: '#4CAF50' }]}
+                      >
                         ${totalPaid.toFixed(2)}
                       </Text>
                     </View>
                     <View style={styles.summaryDividerVertical} />
                     <View style={styles.summaryItem}>
-                      <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>
+                      <Text
+                        style={[styles.summaryLabel, { fontWeight: 'bold' }]}
+                      >
                         Pendiente
                       </Text>
                       <Text
@@ -365,7 +374,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           {
                             fontWeight: 'bold',
                             color:
-                              pendingAmount > 0 ? theme.colors.error : '#4CAF50',
+                              pendingAmount > 0
+                                ? theme.colors.error
+                                : '#4CAF50',
                           },
                         ]}
                       >
@@ -382,63 +393,63 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   {isLoadingPayments ? (
                     <ActivityIndicator style={styles.loader} />
                   ) : (payments || []).length > 0 ? (
-                <View style={styles.paymentsSection}>
-                  <Text style={styles.sectionTitle}>Pagos registrados</Text>
-                  {(payments || []).map((payment) => (
-                    <View key={payment.id} style={styles.paymentItem}>
-                      <View style={styles.paymentLeftInfo}>
-                        <View style={styles.paymentMethodRow}>
-                          <Text style={styles.paymentMethodCompact}>
-                            {paymentMethodLabels[payment.paymentMethod]}
-                          </Text>
+                    <View style={styles.paymentsSection}>
+                      <Text style={styles.sectionTitle}>Pagos registrados</Text>
+                      {(payments || []).map((payment) => (
+                        <View key={payment.id} style={styles.paymentItem}>
+                          <View style={styles.paymentLeftInfo}>
+                            <View style={styles.paymentMethodRow}>
+                              <Text style={styles.paymentMethodCompact}>
+                                {paymentMethodLabels[payment.paymentMethod]}
+                              </Text>
+                            </View>
+                            <Text style={styles.paymentDateCompact}>
+                              {new Date(payment.createdAt).toLocaleTimeString(
+                                'es-MX',
+                                {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                },
+                              )}
+                            </Text>
+                          </View>
+
+                          <View style={styles.paymentRightInfo}>
+                            <Text style={styles.paymentAmountCompact}>
+                              ${(Number(payment.amount) || 0).toFixed(2)}
+                            </Text>
+
+                            <Chip
+                              mode="flat"
+                              style={[
+                                styles.statusChipCompact,
+                                {
+                                  backgroundColor: getStatusColor(
+                                    payment.paymentStatus,
+                                  ),
+                                },
+                              ]}
+                              textStyle={styles.statusChipTextCompact}
+                            >
+                              {getStatusText(payment.paymentStatus)}
+                            </Chip>
+
+                            <IconButton
+                              icon="delete"
+                              size={20}
+                              iconColor={theme.colors.error}
+                              onPress={() => {
+                                setPaymentToDelete(payment.id);
+                                setShowDeleteConfirm(true);
+                              }}
+                              disabled={deletePaymentMutation.isPending}
+                              style={styles.deleteIconButton}
+                            />
+                          </View>
                         </View>
-                        <Text style={styles.paymentDateCompact}>
-                          {new Date(payment.createdAt).toLocaleTimeString(
-                            'es-MX',
-                            {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          )}
-                        </Text>
-                      </View>
-
-                      <View style={styles.paymentRightInfo}>
-                        <Text style={styles.paymentAmountCompact}>
-                          ${(Number(payment.amount) || 0).toFixed(2)}
-                        </Text>
-
-                        <Chip
-                          mode="flat"
-                          style={[
-                            styles.statusChipCompact,
-                            {
-                              backgroundColor: getStatusColor(
-                                payment.paymentStatus,
-                              ),
-                            },
-                          ]}
-                          textStyle={styles.statusChipTextCompact}
-                        >
-                          {getStatusText(payment.paymentStatus)}
-                        </Chip>
-
-                        <IconButton
-                          icon="delete"
-                          size={20}
-                          iconColor={theme.colors.error}
-                          onPress={() => {
-                            setPaymentToDelete(payment.id);
-                            setShowDeleteConfirm(true);
-                          }}
-                          disabled={deletePaymentMutation.isPending}
-                          style={styles.deleteIconButton}
-                        />
-                      </View>
+                      ))}
                     </View>
-                  ))}
-                </View>
-              ) : null}
+                  ) : null}
                 </>
               )}
 
@@ -446,7 +457,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               {(mode === 'prepayment' || !isFullyPaid) && (
                 <View style={styles.formSection}>
                   <Text style={styles.sectionTitle}>
-                    {mode === 'prepayment' ? 'Configurar pago' : 'Registrar nuevo pago'}
+                    {mode === 'prepayment'
+                      ? 'Configurar pago'
+                      : 'Registrar nuevo pago'}
                   </Text>
 
                   {/* Métodos de pago */}
@@ -556,7 +569,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <Button
                   mode="outlined"
                   onPress={() => setShowDeletePrepaymentConfirm(true)}
-                  style={[styles.footerButton, { borderColor: theme.colors.error }]}
+                  style={[
+                    styles.footerButton,
+                    { borderColor: theme.colors.error },
+                  ]}
                   contentStyle={styles.footerButtonContent}
                   textColor={theme.colors.error}
                   icon="delete"
@@ -575,11 +591,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     createPaymentMutation.isPending ||
                     isCreatingPrepayment
                   }
-                  loading={createPaymentMutation.isPending || isCreatingPrepayment}
+                  loading={
+                    createPaymentMutation.isPending || isCreatingPrepayment
+                  }
                   style={styles.footerButton}
                   contentStyle={styles.footerButtonContent}
                 >
-                  {mode === 'prepayment' ? 'Registrar Pre-pago' : 'Registrar Pago'}
+                  {mode === 'prepayment'
+                    ? 'Registrar Pre-pago'
+                    : 'Registrar Pago'}
                 </Button>
               )}
               {isFullyPaid && mode !== 'prepayment' && (

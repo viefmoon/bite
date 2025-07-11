@@ -471,10 +471,7 @@ const GenericList = <TItem extends { id: string }>({
               renderConfig.renderTitle ? (
                 renderConfig.renderTitle(item)
               ) : (
-                <Text
-                  variant="bodyLarge"
-                  style={styles.title}
-                >
+                <Text variant="bodyLarge" style={styles.title}>
                   {title}
                 </Text>
               )
@@ -514,10 +511,7 @@ const GenericList = <TItem extends { id: string }>({
 
               if (combinedText.trim()) {
                 return (
-                  <Text
-                    variant="bodySmall"
-                    style={styles.description}
-                  >
+                  <Text variant="bodySmall" style={styles.description}>
                     {combinedText}
                   </Text>
                 );

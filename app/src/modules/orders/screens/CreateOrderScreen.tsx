@@ -22,8 +22,7 @@ import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries'
 import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
 import { Product, Category, SubCategory } from '../types/orders.types';
-import { Image } from 'expo-image';
-import { getImageUrl } from '@/app/lib/imageUtils';
+import { AutoImage } from '@/app/components/common/AutoImage';
 
 import OrderCartDetail from '../components/OrderCartDetail';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
@@ -546,20 +545,8 @@ const CreateOrderScreen = () => {
           width: '100%',
           height: responsive.getResponsiveDimension(100, 140),
         },
-        imagePlaceholder: {
-          width: '100%',
-          height: responsive.getResponsiveDimension(100, 140),
-          backgroundColor: colors.surfaceVariant,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
         imageInactive: {
           opacity: 0.6,
-        },
-        placeholderText: {
-          fontSize: responsive.fontSize.xl,
-          fontWeight: 'bold',
-          color: colors.onSurfaceVariant,
         },
         cardContent: {
           padding: responsive.spacing.m,
@@ -696,12 +683,13 @@ const CreateOrderScreen = () => {
     }: {
       item: Category | SubCategory | Product;
     }) => {
-      const imageUrl = item.photo ? getImageUrl(item.photo.path) : null;
+      const imageSource = item.photo ? item.photo.path : null;
       const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
-      
+
       // Verificar si es un producto sin pantalla de preparación
-      const isProductWithoutScreen = navigationLevel === 'products' && 
-        'preparationScreenId' in item && 
+      const isProductWithoutScreen =
+        navigationLevel === 'products' &&
+        'preparationScreenId' in item &&
         !item.preparationScreenId;
 
       const handlePress = () => {
@@ -742,35 +730,23 @@ const CreateOrderScreen = () => {
       return (
         <Card
           style={[
-            styles.cardItem, 
-            (!isActive || isProductWithoutScreen) && styles.cardItemInactive
+            styles.cardItem,
+            (!isActive || isProductWithoutScreen) && styles.cardItemInactive,
           ]}
           onPress={handlePress}
           disabled={!isActive || isProductWithoutScreen}
         >
-          {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              style={[
-                styles.itemImage, 
-                (!isActive || isProductWithoutScreen) && styles.imageInactive
-              ]}
-              contentFit="cover"
-              placeholder={blurhash}
-              transition={300}
-            />
-          ) : (
-            <View
-              style={[
-                styles.imagePlaceholder,
-                (!isActive || isProductWithoutScreen) && styles.imageInactive,
-              ]}
-            >
-              <Text style={styles.placeholderText}>
-                {item.name.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
+          <AutoImage
+            source={imageSource}
+            style={[
+              styles.itemImage,
+              (!isActive || isProductWithoutScreen) && styles.imageInactive,
+            ]}
+            contentFit="cover"
+            placeholder={blurhash}
+            transition={300}
+            placeholderIcon="image-outline"
+          />
           {!isActive && (
             <View style={styles.inactiveBadge}>
               <Text style={styles.inactiveBadgeText}>INACTIVO</Text>

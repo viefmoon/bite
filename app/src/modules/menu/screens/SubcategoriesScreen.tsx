@@ -124,33 +124,25 @@ const SubcategoriesScreen: React.FC = () => {
 
   // Efecto para cargar valores iniciales incluyendo la imagen
   useEffect(() => {
-    const loadInitialValues = async () => {
-      if (editingItem) {
-        let imageUrl = null;
-        if (editingItem.photo?.path) {
-          imageUrl = await getImageUrl(editingItem.photo.path);
-        }
-        setFormInitialValues({
-          name: editingItem.name,
-          description: editingItem.description ?? '',
-          isActive: editingItem.isActive,
-          categoryId: editingItem.categoryId,
-          sortOrder: editingItem.sortOrder ?? 0,
-          imageUri: imageUrl,
-        });
-      } else {
-        setFormInitialValues({
-          name: '',
-          description: '',
-          isActive: true,
-          categoryId: categoryId,
-          sortOrder: 0,
-          imageUri: null,
-        });
-      }
-    };
-
-    loadInitialValues();
+    if (editingItem) {
+      setFormInitialValues({
+        name: editingItem.name,
+        description: editingItem.description ?? '',
+        isActive: editingItem.isActive,
+        categoryId: editingItem.categoryId,
+        sortOrder: editingItem.sortOrder ?? 0,
+        imageUri: editingItem.photo?.path || null,
+      });
+    } else {
+      setFormInitialValues({
+        name: '',
+        description: '',
+        isActive: true,
+        categoryId: categoryId,
+        sortOrder: 0,
+        imageUri: null,
+      });
+    }
   }, [editingItem, categoryId]);
 
   useFocusEffect(

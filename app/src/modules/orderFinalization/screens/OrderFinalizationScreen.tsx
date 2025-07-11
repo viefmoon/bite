@@ -54,7 +54,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   // Filtrar órdenes según el filtro seleccionado
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
-    
+
     return orders.filter((order) => {
       if (filter === 'takeout')
         return order.orderType === 'TAKEOUT' || order.orderType === 'DELIVERY';
@@ -75,7 +75,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   const handleToggleOrderSelection = useCallback(
     (orderId: string) => {
       if (!orders || !Array.isArray(orders)) return;
-      
+
       const order = orders.find((o) => o.id === orderId);
       if (!order) return;
 
@@ -234,16 +234,36 @@ export const OrderFinalizationScreen: React.FC = () => {
           <Dialog.Title>Finalizar Órdenes</Dialog.Title>
           <Dialog.Content>
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 16, marginBottom: 8, color: theme.colors.onSurface }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  color: theme.colors.onSurface,
+                }}
+              >
                 ¿Finalizar {selectionState.selectedOrders.size}{' '}
-                {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}?
+                {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}
+                ?
               </Text>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.primary }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: theme.colors.primary,
+                }}
+              >
                 Total: ${(selectionState.totalAmount || 0).toFixed(2)}
               </Text>
             </View>
 
-            <Text style={{ marginBottom: 12, fontWeight: '600', fontSize: 16, color: theme.colors.onSurface }}>
+            <Text
+              style={{
+                marginBottom: 12,
+                fontWeight: '600',
+                fontSize: 16,
+                color: theme.colors.onSurface,
+              }}
+            >
               Método de pago:
             </Text>
             <RadioButton.Group
@@ -258,12 +278,19 @@ export const OrderFinalizationScreen: React.FC = () => {
                   paddingHorizontal: 8,
                   marginBottom: 8,
                   borderRadius: 8,
-                  backgroundColor: paymentMethod === 'cash' ? theme.colors.primaryContainer : 'transparent',
+                  backgroundColor:
+                    paymentMethod === 'cash'
+                      ? theme.colors.primaryContainer
+                      : 'transparent',
                 }}
                 onPress={() => setPaymentMethod('cash')}
               >
                 <RadioButton value="cash" />
-                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>💵 Efectivo</Text>
+                <Text
+                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
+                >
+                  💵 Efectivo
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{
@@ -273,12 +300,19 @@ export const OrderFinalizationScreen: React.FC = () => {
                   paddingHorizontal: 8,
                   marginBottom: 8,
                   borderRadius: 8,
-                  backgroundColor: paymentMethod === 'card' ? theme.colors.primaryContainer : 'transparent',
+                  backgroundColor:
+                    paymentMethod === 'card'
+                      ? theme.colors.primaryContainer
+                      : 'transparent',
                 }}
                 onPress={() => setPaymentMethod('card')}
               >
                 <RadioButton value="card" />
-                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>💳 Tarjeta</Text>
+                <Text
+                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
+                >
+                  💳 Tarjeta
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{
@@ -288,12 +322,19 @@ export const OrderFinalizationScreen: React.FC = () => {
                   paddingHorizontal: 8,
                   marginBottom: 16,
                   borderRadius: 8,
-                  backgroundColor: paymentMethod === 'transfer' ? theme.colors.primaryContainer : 'transparent',
+                  backgroundColor:
+                    paymentMethod === 'transfer'
+                      ? theme.colors.primaryContainer
+                      : 'transparent',
                 }}
                 onPress={() => setPaymentMethod('transfer')}
               >
                 <RadioButton value="transfer" />
-                <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}>📱 Transferencia</Text>
+                <Text
+                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
+                >
+                  📱 Transferencia
+                </Text>
               </TouchableOpacity>
             </RadioButton.Group>
 

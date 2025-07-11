@@ -451,7 +451,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   const { user } = useAuthStore(); // Obtener usuario autenticado
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
-  
+
   // Verificar si el usuario puede registrar pagos (admin, manager, cashier)
   const canRegisterPayments = useMemo(() => {
     if (!user?.role?.id) return false;
@@ -497,7 +497,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     useState<OrderAdjustment | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<
+    'CASH' | 'CARD' | 'TRANSFER'
+  >('CASH');
   const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
 
@@ -1294,7 +1296,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   };
 
-
   const selectedAreaName = useMemo(
     () => areasData?.find((a: any) => a.id === selectedAreaId)?.name,
     [areasData, selectedAreaId],
@@ -1310,7 +1311,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   const hideTimePicker = () => setTimePickerVisible(false);
 
-  const handlePrepaymentCreated = async (prepaymentIdCreated: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => {
+  const handlePrepaymentCreated = async (
+    prepaymentIdCreated: string,
+    amount: number,
+    method: 'CASH' | 'CARD' | 'TRANSFER',
+  ) => {
     // Si hay un pre-pago existente, eliminarlo primero
     if (prepaymentId && prepaymentId !== prepaymentIdCreated) {
       try {
@@ -1329,9 +1334,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setPaymentAmount(amount.toFixed(2));
     setPaymentMethod(method);
     setShowPrepaymentModal(false);
-    
+
     showSnackbar({
-      message: prepaymentId ? 'Pago actualizado correctamente' : 'Pago registrado correctamente',
+      message: prepaymentId
+        ? 'Pago actualizado correctamente'
+        : 'Pago registrado correctamente',
       type: 'success',
     });
   };
@@ -1341,7 +1348,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setPaymentAmount('');
     setPaymentMethod('CASH');
     setShowPrepaymentModal(false);
-    
+
     showSnackbar({
       message: 'Pago eliminado correctamente',
       type: 'success',
@@ -2658,12 +2665,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   </View>
                 </View>
                 <View style={styles.totalsContainer}>
-                  <Text style={[styles.totalsText, { fontWeight: '600' }]}>Restante:</Text>
-                  <Text style={[styles.totalsValue, { 
-                    fontWeight: 'bold',
-                    color: (total - parseFloat(paymentAmount || '0')) <= 0 ? '#4CAF50' : theme.colors.error 
-                  }]}>
-                    ${Math.max(0, total - parseFloat(paymentAmount || '0')).toFixed(2)}
+                  <Text style={[styles.totalsText, { fontWeight: '600' }]}>
+                    Restante:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.totalsValue,
+                      {
+                        fontWeight: 'bold',
+                        color:
+                          total - parseFloat(paymentAmount || '0') <= 0
+                            ? '#4CAF50'
+                            : theme.colors.error,
+                      },
+                    ]}
+                  >
+                    $
+                    {Math.max(
+                      0,
+                      total - parseFloat(paymentAmount || '0'),
+                    ).toFixed(2)}
                   </Text>
                 </View>
               </>
@@ -2697,7 +2718,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 </View>
               </>
             )}
-
           </ScrollView>
 
           {/* Botón de pago - solo mostrar si es creación y el usuario tiene permisos y no hay pre-pago */}
@@ -2949,7 +2969,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             existingPrepaymentId={prepaymentId || undefined}
             onPrepaymentDeleted={handlePrepaymentDeleted}
           />
-
         </GestureHandlerRootView>
       </Modal>
     </Portal>
