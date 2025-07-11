@@ -1806,7 +1806,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   anchor={
                     <AnimatedLabelSelector
                       label="Mesa *"
-                      value={isTemporaryTable ? '(Usando mesa temporal)' : selectedTableName}
+                      value={selectedTableName}
                       onPress={() => setTableMenuVisible(true)}
                       isLoading={isLoadingTables}
                       error={!!tableError || !!errorTables}
