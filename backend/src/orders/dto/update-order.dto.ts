@@ -129,13 +129,4 @@ export class UpdateOrderDto {
   @Type(() => DeliveryInfoDto)
   deliveryInfo?: DeliveryInfoDto;
 
-  @ApiProperty({
-    type: Date,
-    example: '2023-01-01T15:30:00.000Z',
-    description: 'Tiempo estimado de entrega para la orden',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  estimatedDeliveryTime?: Date;
 }
