@@ -9,6 +9,7 @@ import {
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
+import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
 
 interface DeliveryCoverageMapProps {
   initialPolygon?: DeliveryCoveragePoint[] | null;
@@ -29,6 +30,8 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   const theme = useAppTheme();
   const { width, height } = useWindowDimensions();
   const webViewRef = useRef<WebView>(null);
+  const { config: mapsConfig, loading: isLoadingApiKey } = useGoogleMapsConfig();
+  const apiKey = mapsConfig?.apiKey;
 
   const styles = React.useMemo(
     () => createStyles(theme, width, height),
@@ -45,7 +48,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   );
 
   // HTML del mapa con Google Maps API
-  const mapHtml = `
+  const mapHtml = apiKey ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -323,11 +326,11 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
     }
   </script>
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyBYpMTaB42iRspFTEEtZ_fexZV0qhmRZvU'}&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap">
   </script>
 </body>
 </html>
-  `;
+  ` : '';
 
   // Manejar mensajes del WebView
   const handleWebViewMessage = (event: any) => {
@@ -455,6 +458,18 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
       webViewRef.current.injectJavaScript(jsCode);
     }
   };
+
+  // Si estamos cargando la API key o no tenemos HTML, mostrar loading
+  if (isLoadingApiKey || !mapHtml) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Surface style={styles.loadingCard} elevation={3}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Cargando configuración del mapa...</Text>
+        </Surface>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

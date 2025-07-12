@@ -22,6 +22,7 @@ import { Address, CreateAddressDto } from '../types/customer.types';
 import { addressSchema, AddressFormInputs } from '../schema/customer.schema';
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
+import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
 
 interface AddressFormModalProps {
   visible: boolean;
@@ -41,6 +42,8 @@ export default function AddressFormModal({
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
+  const { config: mapsConfig, loading: isLoadingApiKey } = useGoogleMapsConfig();
+  const apiKey = mapsConfig?.apiKey;
   const [mapReady, setMapReady] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
@@ -109,7 +112,7 @@ export default function AddressFormModal({
 
   // HTML del mapa con Google Maps API - Memoizado para evitar recrearlo en cada render
   const mapHtml = React.useMemo(
-    () => `
+    () => apiKey ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -298,12 +301,12 @@ export default function AddressFormModal({
     }
   </script>
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.apiKey}&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap">
   </script>
 </body>
 </html>
-  `,
-    [latitude, longitude, isMapFullscreen],
+  ` : '',
+    [latitude, longitude, isMapFullscreen, apiKey],
   );
 
   // Manejar mensajes del WebView
@@ -785,23 +788,30 @@ export default function AddressFormModal({
                     </View>
 
                     <View style={styles.mapView}>
-                      <WebView
-                        ref={webViewRef}
-                        source={{ html: mapHtml }}
-                        style={styles.map}
-                        onMessage={handleWebViewMessage}
-                        onError={(error) => {}}
-                        javaScriptEnabled={true}
-                        domStorageEnabled={true}
-                        startInLoadingState={true}
-                        mixedContentMode="compatibility"
-                        allowsInlineMediaPlayback={true}
-                        originWhitelist={['*']}
-                        scalesPageToFit={false}
-                        bounces={false}
-                        scrollEnabled={false}
-                        nestedScrollEnabled={false}
-                      />
+                      {isLoadingApiKey || !mapHtml ? (
+                        <View style={[styles.map, styles.mapLoadingContainer]}>
+                          <ActivityIndicator size="large" color={theme.colors.primary} />
+                          <Text style={styles.mapLoadingText}>Cargando mapa...</Text>
+                        </View>
+                      ) : (
+                        <WebView
+                          ref={webViewRef}
+                          source={{ html: mapHtml }}
+                          style={styles.map}
+                          onMessage={handleWebViewMessage}
+                          onError={(error) => {}}
+                          javaScriptEnabled={true}
+                          domStorageEnabled={true}
+                          startInLoadingState={true}
+                          mixedContentMode="compatibility"
+                          allowsInlineMediaPlayback={true}
+                          originWhitelist={['*']}
+                          scalesPageToFit={false}
+                          bounces={false}
+                          scrollEnabled={false}
+                          nestedScrollEnabled={false}
+                        />
+                      )}
 
                       {/* Indicador de carga */}
                       {isMapLoading && (
@@ -823,21 +833,15 @@ export default function AddressFormModal({
                         <>
                           {/* Botón de expandir */}
                           <View style={styles.expandButtonContainer}>
-                            <IconButton
-                              icon={
-                                isMapFullscreen
-                                  ? 'fullscreen-exit'
-                                  : 'fullscreen'
-                              }
+                            <Button
                               mode="contained"
-                              containerColor={theme.colors.secondaryContainer}
-                              iconColor={theme.colors.onSecondaryContainer}
-                              size={20}
-                              onPress={() =>
-                                setIsMapFullscreen(!isMapFullscreen)
-                              }
-                              style={styles.floatingButton}
-                            />
+                              icon={isMapFullscreen ? 'fullscreen-exit' : 'fullscreen'}
+                              onPress={() => setIsMapFullscreen(!isMapFullscreen)}
+                              style={styles.expandButton}
+                              labelStyle={styles.expandButtonLabel}
+                            >
+                              {isMapFullscreen ? 'Cerrar' : 'Expandir mapa'}
+                            </Button>
                           </View>
 
                           {/* Botón de centrar */}
@@ -919,13 +923,14 @@ export default function AddressFormModal({
         >
           <Surface style={styles.fullscreenModalContent} elevation={5}>
             <View style={styles.fullscreenHeader}>
-              <Text variant="titleMedium" style={styles.fullscreenTitle}>
-                Seleccionar ubicación
+              <Text variant="titleLarge" style={styles.fullscreenTitle}>
+                Ubicación
               </Text>
               <IconButton
                 icon="close"
-                size={24}
+                size={28}
                 onPress={() => setIsMapFullscreen(false)}
+                style={styles.fullscreenCloseButton}
               />
             </View>
 
@@ -945,10 +950,10 @@ export default function AddressFormModal({
 
               {hasValidCoordinates && (
                 <View style={styles.fullscreenCoordinates}>
-                  <Surface style={styles.coordinatesBadge} elevation={2}>
-                    <Text variant="bodySmall">
-                      {Number(latitude).toFixed(6)},{' '}
-                      {Number(longitude).toFixed(6)}
+                  <Surface style={styles.coordinatesBadge} elevation={3}>
+                    <Icon source="map-marker" size={20} color={theme.colors.primary} />
+                    <Text variant="bodyLarge" style={styles.coordinatesText}>
+                      {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
                     </Text>
                   </Surface>
                 </View>
@@ -1108,6 +1113,18 @@ const getStyles = (theme: AppTheme) =>
       position: 'absolute',
       top: theme.spacing.s,
       right: theme.spacing.s,
+      zIndex: 10,
+    },
+    expandButton: {
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    expandButtonLabel: {
+      fontSize: 14,
+      fontWeight: '600',
     },
     centerButtonContainer: {
       position: 'absolute',
@@ -1188,14 +1205,20 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingLeft: theme.spacing.m,
+      paddingLeft: theme.spacing.l,
       paddingRight: theme.spacing.s,
       paddingVertical: theme.spacing.s,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
+      height: 56,
     },
     fullscreenTitle: {
       fontWeight: '600',
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    fullscreenCloseButton: {
+      margin: 0,
     },
     fullscreenMapContainer: {
       flex: 1,
@@ -1207,8 +1230,17 @@ const getStyles = (theme: AppTheme) =>
       left: theme.spacing.m,
     },
     coordinatesBadge: {
-      padding: theme.spacing.s,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
+      gap: theme.spacing.s,
+    },
+    coordinatesText: {
+      fontFamily: 'monospace',
+      color: theme.colors.onSurface,
+      fontWeight: '500',
     },
   });

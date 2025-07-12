@@ -42,6 +42,7 @@ import { DiscoveryModule } from './discovery/discovery.module';
 import { KitchenModule } from './kitchen/kitchen.module';
 import { HealthModule } from './health/health.module';
 import { ShiftsModule } from './shifts/shifts.module';
+import { AppConfigModule } from './app-config/app-config.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -98,6 +99,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     KitchenModule,
     HealthModule,
     ShiftsModule,
+    AppConfigModule,
   ],
 })
 export class AppModule {}
