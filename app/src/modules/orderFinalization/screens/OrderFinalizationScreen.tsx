@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Pressable } from 'react-native';
 import {
   Surface,
   Text,
@@ -11,6 +11,7 @@ import {
   TextInput,
   RadioButton,
   IconButton,
+  Icon,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
@@ -170,28 +171,54 @@ export const OrderFinalizationScreen: React.FC = () => {
     >
       <Surface style={styles.header}>
         <View style={styles.headerContent}>
-          <SegmentedButtons
-            value={filter}
-            onValueChange={setFilter as any}
-            buttons={[
-              { value: 'delivery', label: 'Delivery', icon: 'moped' },
-              {
-                value: 'take_away',
-                label: 'Para llevar',
-                icon: 'bag-personal',
-              },
-              {
-                value: 'dine_in',
-                label: 'Mesa',
-                icon: 'silverware-fork-knife',
-              },
-            ]}
-            style={styles.segmentedButtons}
-          />
+          <View style={styles.filterContainer}>
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'delivery' && styles.filterButtonActive,
+                { backgroundColor: filter === 'delivery' ? theme.colors.primaryContainer : theme.colors.surface },
+              ]}
+              onPress={() => setFilter('delivery')}
+            >
+              <Icon
+                source="moped"
+                size={32}
+                color={filter === 'delivery' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              />
+            </Pressable>
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'take_away' && styles.filterButtonActive,
+                { backgroundColor: filter === 'take_away' ? theme.colors.primaryContainer : theme.colors.surface },
+              ]}
+              onPress={() => setFilter('take_away')}
+            >
+              <Icon
+                source="bag-personal"
+                size={32}
+                color={filter === 'take_away' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              />
+            </Pressable>
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'dine_in' && styles.filterButtonActive,
+                { backgroundColor: filter === 'dine_in' ? theme.colors.primaryContainer : theme.colors.surface },
+              ]}
+              onPress={() => setFilter('dine_in')}
+            >
+              <Icon
+                source="silverware-fork-knife"
+                size={32}
+                color={filter === 'dine_in' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              />
+            </Pressable>
+          </View>
           <IconButton
             icon="refresh"
             mode="contained-tonal"
-            size={24}
+            size={28}
             onPress={() => refetch()}
             loading={isLoading}
             style={styles.refreshButton}
@@ -399,9 +426,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  segmentedButtons: {
+  filterContainer: {
     flex: 1,
-    height: 48,
+    flexDirection: 'row',
+    gap: 2,
+  },
+  filterButton: {
+    flex: 1,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+    elevation: 1,
+  },
+  filterButtonActive: {
+    elevation: 3,
   },
   refreshButton: {
     margin: 0,
