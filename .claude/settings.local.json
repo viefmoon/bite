@@ -8,7 +8,9 @@
       "Bash(npx env-cmd ts-node:*)",
       "Bash(node:*)",
       "Bash(npx typeorm migration:run:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(cat:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

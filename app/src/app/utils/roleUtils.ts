@@ -56,8 +56,6 @@ export const canOpenShift = (user: User | null): boolean => {
   return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER]);
 };
 
-// Alias para compatibilidad - mantener por ahora
-export const canOpenDay = canOpenShift;
 
 export const canRegisterPayments = (user: User | null): boolean => {
   return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.CASHIER]);

@@ -17,5 +17,5 @@ export abstract class ShiftRepository {
 
   abstract update(id: string, payload: Partial<Shift>): Promise<Shift | null>;
 
-  abstract getNextBusinessDayNumber(): Promise<number>;
+  abstract getNextGlobalShiftNumber(): Promise<number>;
 }

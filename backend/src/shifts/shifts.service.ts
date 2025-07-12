@@ -34,7 +34,7 @@ export class ShiftsService {
   /**
    * Abre un nuevo turno
    */
-  async openDay(dto: OpenShiftDto, user: User): Promise<Shift> {
+  async openShift(dto: OpenShiftDto, user: User): Promise<Shift> {
     // Verificar si ya hay un turno abierto (solo puede haber uno a la vez)
     const currentOpen = await this.shiftRepository.findCurrent();
     if (currentOpen) {
@@ -69,7 +69,7 @@ export class ShiftsService {
 
     // Obtener el siguiente número global de turno
     const globalShiftNumber =
-      await this.shiftRepository.getNextBusinessDayNumber();
+      await this.shiftRepository.getNextGlobalShiftNumber();
 
     // Crear el nuevo turno
     const shift = new Shift();
@@ -99,7 +99,7 @@ export class ShiftsService {
   /**
    * Cierra el turno actual
    */
-  async closeDay(dto: CloseShiftDto, user: User): Promise<Shift> {
+  async closeShift(dto: CloseShiftDto, user: User): Promise<Shift> {
     // Obtener el turno actual
     const currentShift = await this.shiftRepository.findCurrent();
     if (!currentShift) {
@@ -116,16 +116,16 @@ export class ShiftsService {
 
     if (openOrders.length > 0) {
       throw new BadRequestException(
-        `No se puede cerrar el día. Hay ${openOrders.length} órdenes abiertas que deben ser completadas o canceladas.`,
+        `No se puede cerrar el turno. Hay ${openOrders.length} órdenes abiertas que deben ser completadas o canceladas.`,
       );
     }
 
     // Calcular totales del turno
-    const dayStart = currentShift.openedAt;
-    const dayEnd = new Date();
+    const shiftStart = currentShift.openedAt;
+    const shiftEnd = new Date();
 
     // Obtener todas las órdenes del turno
-    const orders = await this.orderRepository.findByDateRange(dayStart, dayEnd);
+    const orders = await this.orderRepository.findByDateRange(shiftStart, shiftEnd);
     const completedOrders = orders.filter(
       (order) => order.orderStatus === OrderStatus.COMPLETED,
     );
@@ -138,8 +138,8 @@ export class ShiftsService {
 
     // Calcular ventas en efectivo para el cuadre de caja
     const cashPayments = await this.paymentRepository.findByDateRange(
-      dayStart,
-      dayEnd,
+      shiftStart,
+      shiftEnd,
     );
     const cashSales = cashPayments
       .filter(
@@ -155,7 +155,7 @@ export class ShiftsService {
 
     // Actualizar el turno
     const updatedShift = await this.shiftRepository.update(currentShift.id, {
-      closedAt: dayEnd,
+      closedAt: shiftEnd,
       closedBy: user,
       finalCash: dto.finalCash,
       totalSales: totalSales,
@@ -199,42 +199,42 @@ export class ShiftsService {
   /**
    * Obtiene el resumen del turno actual o por ID
    */
-  async getDaySummary(id?: string): Promise<Shift> {
-    let day: Shift | null;
+  async getShiftSummary(id?: string): Promise<Shift> {
+    let shift: Shift | null;
 
     if (id) {
-      day = await this.shiftRepository.findById(id);
+      shift = await this.shiftRepository.findById(id);
     } else {
-      day = await this.shiftRepository.findCurrent();
+      shift = await this.shiftRepository.findCurrent();
     }
 
-    if (!day) {
+    if (!shift) {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    // Si el día está cerrado, ya tiene todos los totales calculados
-    if (day.isClosed()) {
-      return day;
+    // Si el turno está cerrado, ya tiene todos los totales calculados
+    if (shift.isClosed()) {
+      return shift;
     }
 
     // Si está abierto, calcular totales en tiempo real
-    const dayStart = day.openedAt;
-    const dayEnd = new Date();
+    const shiftStart = shift.openedAt;
+    const shiftEnd = new Date();
 
-    // Obtener órdenes del día
-    const orders = await this.orderRepository.findByDateRange(dayStart, dayEnd);
+    // Obtener órdenes del turno
+    const orders = await this.orderRepository.findByDateRange(shiftStart, shiftEnd);
     const completedOrders = orders.filter(
       (order) => order.orderStatus === OrderStatus.COMPLETED,
     );
 
     // Calcular total de ventas
-    day.totalSales = completedOrders.reduce(
+    shift.totalSales = completedOrders.reduce(
       (sum, order) => sum + Number(order.total),
       0,
     );
-    day.totalOrders = completedOrders.length;
+    shift.totalOrders = completedOrders.length;
 
-    return day;
+    return shift;
   }
 
   /**
@@ -242,12 +242,12 @@ export class ShiftsService {
    */
   async getHistory(limit: number = 30, offset: number = 0): Promise<Shift[]> {
     // Por ahora devolvemos todos ordenados por fecha
-    const allDays = await this.shiftRepository.findByStatus(ShiftStatus.CLOSED);
-    return allDays.slice(offset, offset + limit);
+    const allShifts = await this.shiftRepository.findByStatus(ShiftStatus.CLOSED);
+    return allShifts.slice(offset, offset + limit);
   }
 
   /**
-   * Calcula el efectivo esperado para el día actual
+   * Calcula el efectivo esperado para el turno actual
    */
   async calculateExpectedCash(): Promise<number> {
     const currentShift = await this.getCurrentShift();
@@ -255,13 +255,13 @@ export class ShiftsService {
       throw new NotFoundException('No hay un turno abierto');
     }
 
-    const dayStart = currentShift.openedAt;
-    const dayEnd = new Date();
+    const shiftStart = currentShift.openedAt;
+    const shiftEnd = new Date();
 
-    // Obtener pagos en efectivo del día
+    // Obtener pagos en efectivo del turno
     const cashPayments = await this.paymentRepository.findByDateRange(
-      dayStart,
-      dayEnd,
+      shiftStart,
+      shiftEnd,
     );
     const cashSales = cashPayments
       .filter(

@@ -4,7 +4,7 @@ import { Icon, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
 import { shiftsService, type Shift } from '@/services/shifts';
 import { useAuthStore } from '../store/authStore';
-import { canOpenDay } from '../utils/roleUtils';
+import { canOpenShift } from '../utils/roleUtils';
 import { OpenShiftModal } from '@/modules/orders/components/OpenShiftModal';
 import { ShiftStatusModal } from '@/modules/orders/components/ShiftStatusModal';
 import { CloseShiftModal } from '@/modules/orders/components/CloseShiftModal';
@@ -18,7 +18,7 @@ export const ShiftIndicator: React.FC = () => {
   const [openShiftModalVisible, setOpenShiftModalVisible] = useState(false);
   const [closeShiftModalVisible, setCloseShiftModalVisible] = useState(false);
   
-  const userCanOpenShift = canOpenDay(user);
+  const userCanOpenShift = canOpenShift(user);
   const isShiftOpen = shift && shift.status === 'OPEN';
 
   const loadShift = async () => {

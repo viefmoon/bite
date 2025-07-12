@@ -84,12 +84,12 @@ export class ShiftRelationalRepository extends ShiftRepository {
     return updated;
   }
 
-  async getNextBusinessDayNumber(): Promise<number> {
-    const lastDays = await this.shiftRepository.find({
+  async getNextGlobalShiftNumber(): Promise<number> {
+    const lastShifts = await this.shiftRepository.find({
       order: { globalShiftNumber: 'DESC' },
       take: 1,
     });
-    const lastDay = lastDays[0];
-    return lastDay ? lastDay.globalShiftNumber + 1 : 1;
+    const lastShift = lastShifts[0];
+    return lastShift ? lastShift.globalShiftNumber + 1 : 1;
   }
 }

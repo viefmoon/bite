@@ -55,11 +55,11 @@ export class ShiftsController {
   })
   @Roles(RoleEnum.admin, RoleEnum.manager)
   @HttpCode(HttpStatus.CREATED)
-  async openDay(
+  async openShift(
     @Body() dto: OpenShiftDto,
     @CurrentUser() user: User,
   ): Promise<ShiftSummaryDto> {
-    const shift = await this.shiftsService.openDay(dto, user);
+    const shift = await this.shiftsService.openShift(dto, user);
     return this.mapToSummaryDto(shift);
   }
 
@@ -83,11 +83,11 @@ export class ShiftsController {
     description: 'Hay órdenes abiertas que deben ser completadas',
   })
   @Roles(RoleEnum.admin, RoleEnum.manager)
-  async closeDay(
+  async closeShift(
     @Body() dto: CloseShiftDto,
     @CurrentUser() user: User,
   ): Promise<ShiftSummaryDto> {
-    const shift = await this.shiftsService.closeDay(dto, user);
+    const shift = await this.shiftsService.closeShift(dto, user);
     return this.mapToSummaryDto(shift);
   }
 
@@ -103,14 +103,14 @@ export class ShiftsController {
     type: ShiftSummaryDto,
   })
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  async getCurrentDay(): Promise<ShiftSummaryDto | null> {
+  async getCurrentShift(): Promise<ShiftSummaryDto | null> {
     const currentShift = await this.shiftsService.getCurrentShift();
     if (!currentShift) {
       return null;
     }
 
     // Si está abierto, obtener el resumen con totales en tiempo real
-    const summary = await this.shiftsService.getDaySummary();
+    const summary = await this.shiftsService.getShiftSummary();
     const dto = this.mapToSummaryDto(summary);
 
     // Si está abierto, calcular el efectivo esperado
@@ -151,8 +151,8 @@ export class ShiftsController {
     @Query('limit', new DefaultValuePipe(30), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ): Promise<ShiftSummaryDto[]> {
-    const days = await this.shiftsService.getHistory(limit, offset);
-    return days.map((day) => this.mapToSummaryDto(day));
+    const shifts = await this.shiftsService.getHistory(limit, offset);
+    return shifts.map((shift) => this.mapToSummaryDto(shift));
   }
 
   @Get(':id')
@@ -173,38 +173,38 @@ export class ShiftsController {
   async getById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ShiftSummaryDto> {
-    const day = await this.shiftsService.getDaySummary(id);
-    return this.mapToSummaryDto(day);
+    const shift = await this.shiftsService.getShiftSummary(id);
+    return this.mapToSummaryDto(shift);
   }
 
-  private mapToSummaryDto(day: Shift): ShiftSummaryDto {
+  private mapToSummaryDto(shift: Shift): ShiftSummaryDto {
     return {
-      id: day.id,
-      date: day.date,
-      globalShiftNumber: day.globalShiftNumber,
-      shiftNumber: day.shiftNumber,
-      status: day.status,
-      openedAt: day.openedAt,
-      closedAt: day.closedAt,
+      id: shift.id,
+      date: shift.date,
+      globalShiftNumber: shift.globalShiftNumber,
+      shiftNumber: shift.shiftNumber,
+      status: shift.status,
+      openedAt: shift.openedAt,
+      closedAt: shift.closedAt,
       openedBy: {
-        id: day.openedBy.id,
-        firstName: day.openedBy.firstName || '',
-        lastName: day.openedBy.lastName || '',
+        id: shift.openedBy.id,
+        firstName: shift.openedBy.firstName || '',
+        lastName: shift.openedBy.lastName || '',
       },
-      closedBy: day.closedBy
+      closedBy: shift.closedBy
         ? {
-            id: day.closedBy.id,
-            firstName: day.closedBy.firstName || '',
-            lastName: day.closedBy.lastName || '',
+            id: shift.closedBy.id,
+            firstName: shift.closedBy.firstName || '',
+            lastName: shift.closedBy.lastName || '',
           }
         : null,
-      initialCash: day.initialCash,
-      finalCash: day.finalCash,
-      totalSales: day.totalSales,
-      totalOrders: day.totalOrders,
-      cashDifference: day.cashDifference,
-      notes: day.notes,
-      closeNotes: day.closeNotes,
+      initialCash: shift.initialCash,
+      finalCash: shift.finalCash,
+      totalSales: shift.totalSales,
+      totalOrders: shift.totalOrders,
+      cashDifference: shift.cashDifference,
+      notes: shift.notes,
+      closeNotes: shift.closeNotes,
     };
   }
 }

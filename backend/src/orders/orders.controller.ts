@@ -96,10 +96,10 @@ export class OrdersController {
   }
 
   @Get('open-today')
-  @ApiOperation({ summary: 'Obtener las órdenes abiertas del día actual' })
+  @ApiOperation({ summary: 'Obtener las órdenes abiertas del turno actual' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de órdenes abiertas del día actual.',
+    description: 'Lista de órdenes abiertas del turno actual.',
     type: [Order],
   })
   @ApiBearerAuth()
