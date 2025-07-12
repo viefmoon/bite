@@ -4,7 +4,7 @@ export interface OrderForFinalization {
   id: string;
   shiftOrderNumber: number;
   deliveryInfo: DeliveryInfo;
-  orderType: 'TAKEOUT' | 'DELIVERY' | 'DINE_IN';
+  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
   orderStatus:
     | 'PENDING'
     | 'IN_PROGRESS'
@@ -67,4 +67,4 @@ export interface FinalizeOrdersPayload {
   notes?: string;
 }
 
-export type OrderFinalizationFilter = 'takeout' | 'dine_in';
+export type OrderFinalizationFilter = 'delivery' | 'take_away' | 'dine_in';

@@ -29,7 +29,7 @@ import { useAppTheme } from '@/app/styles/theme';
 
 export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
-  const [filter, setFilter] = useState<OrderFinalizationFilter>('takeout');
+  const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
     selectedOrders: new Set(),
     totalAmount: 0,
@@ -56,9 +56,16 @@ export const OrderFinalizationScreen: React.FC = () => {
     if (!orders || !Array.isArray(orders)) return [];
 
     return orders.filter((order) => {
-      if (filter === 'takeout')
-        return order.orderType === 'TAKEOUT' || order.orderType === 'DELIVERY';
-      return order.orderType === 'DINE_IN';
+      switch (filter) {
+        case 'delivery':
+          return order.orderType === 'DELIVERY';
+        case 'take_away':
+          return order.orderType === 'TAKE_AWAY';
+        case 'dine_in':
+          return order.orderType === 'DINE_IN';
+        default:
+          return false;
+      }
     });
   }, [orders, filter]);
 
@@ -161,13 +168,14 @@ export const OrderFinalizationScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={['top']}
     >
-      <Surface style={styles.header} elevation={2}>
+      <Surface style={styles.header} elevation={1}>
         <View style={styles.headerContent}>
           <SegmentedButtons
             value={filter}
             onValueChange={setFilter as any}
             buttons={[
-              { value: 'takeout', label: 'Para llevar', icon: 'bag-personal' },
+              { value: 'delivery', label: 'Delivery', icon: 'moped' },
+              { value: 'take_away', label: 'Para llevar', icon: 'bag-personal' },
               {
                 value: 'dine_in',
                 label: 'Mesa',
@@ -175,11 +183,12 @@ export const OrderFinalizationScreen: React.FC = () => {
               },
             ]}
             style={styles.segmentedButtons}
+            density="small"
           />
           <IconButton
             icon="refresh"
             mode="contained-tonal"
-            size={28}
+            size={24}
             onPress={() => refetch()}
             loading={isLoading}
             style={styles.refreshButton}
@@ -379,8 +388,6 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: 'row',
