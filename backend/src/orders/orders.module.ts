@@ -18,6 +18,7 @@ import { CustomersModule } from '../customers/customers.module';
 import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.service';
 import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
 import { ShiftsModule } from '../shifts/shifts.module';
+import { ThermalPrintersModule } from '../thermal-printers/thermal-printers.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ShiftsModule } from '../shifts/shifts.module';
     CustomersModule,
     RestaurantConfigModule,
     forwardRef(() => ShiftsModule),
+    forwardRef(() => ThermalPrintersModule),
   ],
   controllers: [OrdersController, TicketImpressionsController],
   providers: [
