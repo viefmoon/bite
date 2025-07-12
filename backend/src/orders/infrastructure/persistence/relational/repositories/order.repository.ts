@@ -2,7 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
-import { Between, FindOptionsWhere, Repository, In } from 'typeorm';
+import { Between, FindOptionsWhere, Repository, In, Not } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { Order } from '../../../../domain/order';
@@ -441,9 +441,20 @@ export class OrdersRelationalRepository implements OrderRepository {
       .filter((order): order is Order => order !== null);
   }
   async findOrdersForFinalization(): Promise<Order[]> {
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      // Si no hay turno activo, retornar array vacío
+      return [];
+    }
+
     const entities = await this.ordersRepository.find({
-      // Obtener todas las órdenes sin importar el estado
-      // para permitir finalización de cualquier orden
+      where: {
+        // Filtrar solo órdenes del turno actual
+        shiftId: currentShift.id,
+        // Excluir órdenes con estado completado o cancelado
+        orderStatus: Not(In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])),
+      },
       relations: [
         'user',
         'table',
