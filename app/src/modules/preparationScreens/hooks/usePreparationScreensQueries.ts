@@ -87,7 +87,7 @@ export const useCreatePreparationScreen = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error('Error creating preparation screen:', error);
+      
     },
   });
 };
@@ -208,7 +208,6 @@ export const useDeletePreparationScreen = () => {
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error deleting preparation screen ${deletedId}:`, error);
 
       // Revertir caché de detalle si hubo error
       if (context?.previousDetail) {
@@ -308,7 +307,7 @@ export const useAssociateProducts = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error('Error associating products:', error);
+      
     },
   });
 };

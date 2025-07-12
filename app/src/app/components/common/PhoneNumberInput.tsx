@@ -16,7 +16,7 @@ const COUNTRIES: Country[] = [
   // Países con prefijos de 4 dígitos
   { code: 'DO', name: 'Rep. Dominicana', prefix: '+1809', flag: '🇩🇴' },
   { code: 'PR', name: 'Puerto Rico', prefix: '+1787', flag: '🇵🇷' },
-  
+
   // Países con prefijos de 3 dígitos
   { code: 'EC', name: 'Ecuador', prefix: '+593', flag: '🇪🇨' },
   { code: 'BO', name: 'Bolivia', prefix: '+591', flag: '🇧🇴' },
@@ -28,7 +28,7 @@ const COUNTRIES: Country[] = [
   { code: 'NI', name: 'Nicaragua', prefix: '+505', flag: '🇳🇮' },
   { code: 'CR', name: 'Costa Rica', prefix: '+506', flag: '🇨🇷' },
   { code: 'PA', name: 'Panamá', prefix: '+507', flag: '🇵🇦' },
-  
+
   // Países con prefijos de 2 dígitos
   { code: 'MX', name: 'México', prefix: '+52', flag: '🇲🇽' },
   { code: 'AR', name: 'Argentina', prefix: '+54', flag: '🇦🇷' },
@@ -39,7 +39,7 @@ const COUNTRIES: Country[] = [
   { code: 'VE', name: 'Venezuela', prefix: '+58', flag: '🇻🇪' },
   { code: 'CU', name: 'Cuba', prefix: '+53', flag: '🇨🇺' },
   { code: 'ES', name: 'España', prefix: '+34', flag: '🇪🇸' },
-  
+
   // Países con prefijo de 1 dígito (al final)
   { code: 'US', name: 'Estados Unidos', prefix: '+1', flag: '🇺🇸' },
   { code: 'CA', name: 'Canadá', prefix: '+1', flag: '🇨🇦' },
@@ -71,8 +71,10 @@ export default function PhoneNumberInput({
   useEffect(() => {
     if (value && value.startsWith('+')) {
       // Ordenar países por longitud de prefijo (más largos primero) para evitar coincidencias erróneas
-      const sortedCountries = [...COUNTRIES].sort((a, b) => b.prefix.length - a.prefix.length);
-      
+      const sortedCountries = [...COUNTRIES].sort(
+        (a, b) => b.prefix.length - a.prefix.length,
+      );
+
       // Encontrar el país por el prefijo
       const country = sortedCountries.find((c) => value.startsWith(c.prefix));
       if (country) {
@@ -128,7 +130,7 @@ export default function PhoneNumberInput({
           }
           contentStyle={styles.menuContent}
         >
-          <ScrollView 
+          <ScrollView
             style={styles.menuScrollView}
             showsVerticalScrollIndicator={true}
             nestedScrollEnabled={true}

@@ -56,13 +56,17 @@ export const canOpenShift = (user: User | null): boolean => {
   return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER]);
 };
 
-
 export const canRegisterPayments = (user: User | null): boolean => {
   return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.CASHIER]);
 };
 
 export const canManageOrders = (user: User | null): boolean => {
-  return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.WAITER, RoleEnum.CASHIER]);
+  return hasAnyRole(user, [
+    RoleEnum.ADMIN,
+    RoleEnum.MANAGER,
+    RoleEnum.WAITER,
+    RoleEnum.CASHIER,
+  ]);
 };
 
 export const canAccessKitchen = (user: User | null): boolean => {
@@ -74,12 +78,12 @@ export const canAccessKitchen = (user: User | null): boolean => {
  */
 export const getRoleName = (user: User | null): string => {
   if (!user?.role) return 'Sin rol';
-  
+
   // Usar el nombre del rol si está disponible
   if (user.role.name) {
     return user.role.name;
   }
-  
+
   // Fallback basado en el ID
   switch (user.role.id) {
     case RoleEnum.ADMIN:

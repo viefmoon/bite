@@ -81,7 +81,6 @@ function VariantFormModal({
     }
   }, [visible, initialData, reset]);
 
-  // Sincronizar el valor del precio con el estado del input
   useEffect(() => {
     setPriceInputValue(
       priceValue !== undefined && priceValue !== null ? String(priceValue) : '',
@@ -140,25 +139,17 @@ function VariantFormModal({
                     label="Precio *"
                     value={priceInputValue}
                     onChangeText={(text) => {
-                      // Reemplazar comas por puntos
                       const formattedText = text.replace(/,/g, '.');
-
-                      // Validar que solo tenga números y como máximo un punto decimal
                       if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                        // Actualizar el estado local directamente sin conversión
                         setPriceInputValue(formattedText);
-
-                        // Actualizar el valor del formulario solo si es un número válido o vacío
                         if (formattedText === '') {
-                          field.onChange(undefined); // Usar undefined si está vacío
+                          field.onChange(undefined);
                         } else if (formattedText !== '.') {
-                          // Solo actualizar el valor numérico si no es solo un punto
                           const numericValue = parseFloat(formattedText);
                           if (!isNaN(numericValue)) {
                             field.onChange(numericValue);
                           }
                         }
-                        // Si es solo ".", no actualizamos el valor numérico todavía
                       }
                     }}
                     onBlur={field.onBlur}

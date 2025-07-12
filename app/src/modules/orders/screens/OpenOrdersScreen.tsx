@@ -127,12 +127,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [isPrinterModalVisible, setIsPrinterModalVisible] = useState(false);
   const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
   const printKitchenTicketMutation = usePrintKitchenTicketMutation();
-  
+
   // Estado para turno
   const user = useAuthStore((state) => state.user);
   const [shift, setShift] = useState<Shift | null>(null);
   const [shiftLoading, setShiftLoading] = useState(true);
-  
+
   // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
   const userCanOpenShift = canOpenShift(user);
 
@@ -168,7 +168,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
-  
+
   // Cargar estado del turno
   const loadShift = async () => {
     try {
@@ -181,7 +181,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       setShiftLoading(false);
     }
   };
-  
+
   useEffect(() => {
     loadShift();
   }, []);
@@ -611,7 +611,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               isEditMode={true}
               orderId={editingOrderId}
               orderNumber={
-                ordersData?.find((o) => o.id === editingOrderId)?.shiftOrderNumber
+                ordersData?.find((o) => o.id === editingOrderId)
+                  ?.shiftOrderNumber
               }
               orderDate={
                 ordersData?.find((o) => o.id === editingOrderId)?.createdAt

@@ -69,12 +69,12 @@ const CreateOrderScreen = () => {
     setDeliveryInfo,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   // Estado para turno
   const user = useAuthStore((state) => state.user);
   const [shift, setShift] = useState<Shift | null>(null);
   const [shiftLoading, setShiftLoading] = useState(true);
-  
+
   // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
   const userCanOpenShift = canOpenShift(user);
 
@@ -845,7 +845,10 @@ const CreateOrderScreen = () => {
     // Verificar turno antes de renderizar
     if (!shiftLoading && (!shift || shift.status !== 'OPEN')) {
       return (
-        <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+        <SafeAreaView
+          style={styles.safeArea}
+          edges={['left', 'right', 'bottom']}
+        >
           <Appbar.Header style={styles.appBar} elevated>
             <Appbar.BackAction onPress={() => navigation.goBack()} />
             <Appbar.Content

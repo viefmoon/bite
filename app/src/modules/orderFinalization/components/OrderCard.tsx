@@ -41,7 +41,10 @@ export const OrderCard = React.memo<OrderCardProps>(
         ? order.table.name
         : `Mesa ${order.table.name || order.table.number || 'N/A'}`;
       orderTitle += ` • ${order.table.area?.name || 'Sin área'} • ${tableDisplay}`;
-    } else if (order.orderType === 'TAKEOUT' || order.orderType === 'TAKE_AWAY') {
+    } else if (
+      order.orderType === 'TAKEOUT' ||
+      order.orderType === 'TAKE_AWAY'
+    ) {
       if (order.deliveryInfo?.recipientName) {
         orderTitle += ` • ${order.deliveryInfo.recipientName}`;
       }
@@ -91,10 +94,11 @@ export const OrderCard = React.memo<OrderCardProps>(
       // Si hay pagos, verificar el estado
       if (order.payments && order.payments.length > 0) {
         const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
-        const totalAmount = typeof order.total === 'string' 
-          ? parseFloat(order.total) 
-          : order.total;
-        
+        const totalAmount =
+          typeof order.total === 'string'
+            ? parseFloat(order.total)
+            : order.total;
+
         if (totalPaid >= totalAmount) {
           return 'paid';
         } else if (totalPaid > 0) {
@@ -124,16 +128,49 @@ export const OrderCard = React.memo<OrderCardProps>(
           <View style={styles.mainContainer}>
             {/* Left Side - Title and Time */}
             <View style={styles.leftContainer}>
-              <Text style={[styles.orderNumber, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurface }]} numberOfLines={2}>
+              <Text
+                style={[
+                  styles.orderNumber,
+                  {
+                    color: isSelected
+                      ? theme.colors.onPrimaryContainer
+                      : theme.colors.onSurface,
+                  },
+                ]}
+                numberOfLines={2}
+              >
                 {orderTitle}
-                <Text style={[styles.orderPrice, { color: theme.colors.primary }]}> • ${order.total}</Text>
+                <Text
+                  style={[styles.orderPrice, { color: theme.colors.primary }]}
+                >
+                  {' '}
+                  • ${order.total}
+                </Text>
               </Text>
               <View style={styles.timeAndPaymentRow}>
-                <Text style={[styles.orderTime, { color: isSelected ? theme.colors.primary : theme.colors.primary }]}>
+                <Text
+                  style={[
+                    styles.orderTime,
+                    {
+                      color: isSelected
+                        ? theme.colors.primary
+                        : theme.colors.primary,
+                    },
+                  ]}
+                >
                   {format(new Date(order.createdAt), 'p', { locale: es })}
                 </Text>
                 {order.estimatedDeliveryTime && (
-                  <Text style={[styles.estimatedTime, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant }]}>
+                  <Text
+                    style={[
+                      styles.estimatedTime,
+                      {
+                        color: isSelected
+                          ? theme.colors.onPrimaryContainer
+                          : theme.colors.onSurfaceVariant,
+                      },
+                    ]}
+                  >
                     ⏱️{' '}
                     {format(new Date(order.estimatedDeliveryTime), 'p', {
                       locale: es,
@@ -224,7 +261,17 @@ export const OrderCard = React.memo<OrderCardProps>(
 
           {/* Notes if any */}
           {order.notes ? (
-            <Text style={[styles.notes, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+            <Text
+              style={[
+                styles.notes,
+                {
+                  color: isSelected
+                    ? theme.colors.onPrimaryContainer
+                    : theme.colors.onSurfaceVariant,
+                },
+              ]}
+              numberOfLines={2}
+            >
               📝 {order.notes}
             </Text>
           ) : null}

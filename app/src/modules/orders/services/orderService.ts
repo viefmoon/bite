@@ -81,7 +81,9 @@ export const orderService = {
    * @throws {ApiError} Si la petición falla.
    */
   getOpenOrdersCurrentShift: async (): Promise<Order[]> => {
-    const response = await apiClient.get<Order[]>(API_PATHS.ORDERS_OPEN_CURRENT_SHIFT);
+    const response = await apiClient.get<Order[]>(
+      API_PATHS.ORDERS_OPEN_CURRENT_SHIFT,
+    );
     return handleApiResponse(response);
   },
   /**

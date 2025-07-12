@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useDrawerStatus } from '@react-navigation/drawer'; // Importar hook
+import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Portal, IconButton } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -50,8 +50,8 @@ const CategoriesScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const navigation = useNavigation<CategoriesScreenNavigationProp>();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const drawerStatus = useDrawerStatus(); // Obtener estado del drawer
-  const isDrawerOpen = drawerStatus === 'open'; // Determinar si está abierto
+  const drawerStatus = useDrawerStatus();
+  const isDrawerOpen = drawerStatus === 'open';
 
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -80,7 +80,7 @@ const CategoriesScreen: React.FC = () => {
   });
 
   // Refrescar categorías cuando la pantalla recibe foco
-  // Usar el módulo completo para evitar loops con filtros dinámicos
+ 
   useRefreshModuleOnFocus('categories');
 
   const { ListEmptyComponent } = useListState({
@@ -215,7 +215,7 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-    // Los datos ya vienen ordenados por sortOrder desde el backend
+   
     return categoriesResponse?.data ?? [];
   }, [categoriesResponse?.data]);
 

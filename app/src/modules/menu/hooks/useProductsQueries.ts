@@ -14,8 +14,8 @@ import {
 } from '../schema/products.schema';
 import { PaginatedResponse } from '@/app/types/api.types';
 import { ApiError } from '@/app/lib/errors';
-import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar store de Snackbar
-import { getApiErrorMessage } from '@/app/lib/errorMapping'; // Importar mapeo de errores
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 const productKeys = {
   all: ['products'] as const,

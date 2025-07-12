@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput as RNTextInput, 
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput as RNTextInput,
   Platform,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from 'react-native';
 import {
   Modal,
@@ -39,7 +39,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   const [initialCash, setInitialCash] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,11 +48,11 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
   const handleInitialCashChange = (text: string) => {
     // Permitir solo números y un punto decimal
     const cleaned = text.replace(/[^0-9.]/g, '');
-    
+
     // Prevenir múltiples puntos decimales
     const parts = cleaned.split('.');
     if (parts.length > 2) return;
-    
+
     // Limitar a 2 decimales
     if (parts[1] && parts[1].length > 2) {
       setInitialCash(parts[0] + '.' + parts[1].substring(0, 2));
@@ -88,7 +88,8 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
       onShiftOpened();
       onDismiss();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Error al abrir el turno';
+      const errorMessage =
+        error.response?.data?.message || 'Error al abrir el turno';
       setError(errorMessage);
       showSnackbar({ message: errorMessage, type: 'error' });
     } finally {
@@ -106,7 +107,9 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
   };
 
   const today = new Date();
-  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", {
+    locale: es,
+  });
 
   return (
     <Portal>
@@ -120,7 +123,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollViewContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -128,99 +131,108 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
             <Surface style={styles.modal} elevation={3}>
               {/* Header */}
               <View style={styles.header}>
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons
-                  name="store-check"
-                  size={48}
-                  color={theme.colors.primary}
-                />
-              </View>
-              <Text variant="headlineMedium" style={styles.title}>
-                Apertura de Turno
-              </Text>
-              <Text variant="bodyLarge" style={styles.date}>
-                {todayFormatted}
-              </Text>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            {/* Content */}
-            <View style={styles.content}>
-              <View style={styles.infoCard}>
-                <MaterialCommunityIcons
-                  name="information"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text variant="bodyMedium" style={styles.infoText}>
-                  Registra el monto inicial para comenzar las operaciones del turno.
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons
+                    name="store-check"
+                    size={48}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <Text variant="headlineMedium" style={styles.title}>
+                  Apertura de Turno
+                </Text>
+                <Text variant="bodyLarge" style={styles.date}>
+                  {todayFormatted}
                 </Text>
               </View>
 
-              <View style={styles.inputSection}>
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Información de Apertura
-                </Text>
-                
-                <TextInput
-                  label="Monto inicial en caja"
-                  value={initialCash}
-                  onChangeText={handleInitialCashChange}
-                  keyboardType="decimal-pad"
-                  mode="outlined"
-                  left={<TextInput.Affix text="$" />}
-                  style={styles.input}
-                  disabled={loading}
-                  error={!!error}
-                  placeholder="0.00"
-                  outlineColor={error ? theme.colors.error : theme.colors.outline}
-                  activeOutlineColor={error ? theme.colors.error : theme.colors.primary}
-                />
+              <Divider style={styles.divider} />
 
-                <HelperText type="error" visible={!!error} style={styles.errorText}>
-                  {error}
-                </HelperText>
+              {/* Content */}
+              <View style={styles.content}>
+                <View style={styles.infoCard}>
+                  <MaterialCommunityIcons
+                    name="information"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text variant="bodyMedium" style={styles.infoText}>
+                    Registra el monto inicial para comenzar las operaciones del
+                    turno.
+                  </Text>
+                </View>
 
-                <SpeechRecognitionInput
-                  key="notes-input-shift"
-                  label="Notas adicionales (opcional)"
-                  value={notes}
-                  onChangeText={setNotes}
-                  multiline
-                  speechLang="es-MX"
-                  placeholder="Ej: Estado de la caja, observaciones..."
-                  autoCapitalize="sentences"
-                  autoCorrect={false}
-                  disabled={loading}
-                />
+                <View style={styles.inputSection}>
+                  <Text variant="titleMedium" style={styles.sectionTitle}>
+                    Información de Apertura
+                  </Text>
+
+                  <TextInput
+                    label="Monto inicial en caja"
+                    value={initialCash}
+                    onChangeText={handleInitialCashChange}
+                    keyboardType="decimal-pad"
+                    mode="outlined"
+                    left={<TextInput.Affix text="$" />}
+                    style={styles.input}
+                    disabled={loading}
+                    error={!!error}
+                    placeholder="0.00"
+                    outlineColor={
+                      error ? theme.colors.error : theme.colors.outline
+                    }
+                    activeOutlineColor={
+                      error ? theme.colors.error : theme.colors.primary
+                    }
+                  />
+
+                  <HelperText
+                    type="error"
+                    visible={!!error}
+                    style={styles.errorText}
+                  >
+                    {error}
+                  </HelperText>
+
+                  <SpeechRecognitionInput
+                    key="notes-input-shift"
+                    label="Notas adicionales (opcional)"
+                    value={notes}
+                    onChangeText={setNotes}
+                    multiline
+                    speechLang="es-MX"
+                    placeholder="Ej: Estado de la caja, observaciones..."
+                    autoCapitalize="sentences"
+                    autoCorrect={false}
+                    disabled={loading}
+                  />
+                </View>
               </View>
-            </View>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Button
-                mode="text"
-                onPress={handleDismiss}
-                style={[styles.button, styles.cancelButton]}
-                labelStyle={styles.cancelButtonText}
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                mode="contained"
-                onPress={handleOpenShift}
-                style={[styles.button, styles.confirmButton]}
-                contentStyle={styles.confirmButtonContent}
-                labelStyle={styles.confirmButtonText}
-                loading={loading}
-                disabled={loading}
-                icon="play-circle"
-              >
-                Abrir Turno
-              </Button>
-            </View>
+              {/* Footer */}
+              <View style={styles.footer}>
+                <Button
+                  mode="text"
+                  onPress={handleDismiss}
+                  style={[styles.button, styles.cancelButton]}
+                  labelStyle={styles.cancelButtonText}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleOpenShift}
+                  style={[styles.button, styles.confirmButton]}
+                  contentStyle={styles.confirmButtonContent}
+                  labelStyle={styles.confirmButtonText}
+                  loading={loading}
+                  disabled={loading}
+                  icon="play-circle"
+                >
+                  Abrir Turno
+                </Button>
+              </View>
             </Surface>
           </ScrollView>
         </KeyboardAvoidingView>

@@ -83,7 +83,7 @@ function ProductsScreen(): React.ReactElement {
   } = useProductsQuery(queryFilters, {});
 
   // Refrescar productos cuando la pantalla recibe foco
-  // Usar el módulo completo para evitar loops con filtros dinámicos
+ 
   useRefreshModuleOnFocus('products');
 
   const createMutation = useCreateProductMutation();
@@ -104,7 +104,7 @@ function ProductsScreen(): React.ReactElement {
 
   const products = useMemo(() => {
     return (productsResponse?.data ?? []).map((p: Product) => ({
-      // Añadido tipo explícito
+     
       ...p,
       _displayDescription: p.hasVariants
         ? `${p.variants?.length || 0} variante(s)`

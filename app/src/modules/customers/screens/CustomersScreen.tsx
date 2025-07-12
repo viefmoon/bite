@@ -66,29 +66,26 @@ function CustomersScreen(): React.ReactElement {
     }
   };
 
-  const queryFilters = useMemo(
-    () => {
-      const filters: any = {};
-      
-      // Solo agregar búsqueda si hay texto
-      if (debouncedSearchQuery) {
-        filters.firstName = debouncedSearchQuery;
-        filters.lastName = debouncedSearchQuery;
-      }
-      
-      // Manejar filtros de estado
-      if (statusFilter === 'active') {
-        filters.isActive = true;
-      } else if (statusFilter === 'inactive') {
-        filters.isActive = false;
-      } else if (statusFilter === 'banned') {
-        filters.isBanned = true;
-      }
-      
-      return filters;
-    },
-    [debouncedSearchQuery, statusFilter],
-  );
+  const queryFilters = useMemo(() => {
+    const filters: any = {};
+
+    // Solo agregar búsqueda si hay texto
+    if (debouncedSearchQuery) {
+      filters.firstName = debouncedSearchQuery;
+      filters.lastName = debouncedSearchQuery;
+    }
+
+    // Manejar filtros de estado
+    if (statusFilter === 'active') {
+      filters.isActive = true;
+    } else if (statusFilter === 'inactive') {
+      filters.isActive = false;
+    } else if (statusFilter === 'banned') {
+      filters.isBanned = true;
+    }
+
+    return filters;
+  }, [debouncedSearchQuery, statusFilter]);
 
   const {
     data: customers,
@@ -203,7 +200,8 @@ function CustomersScreen(): React.ReactElement {
       customers?.map((customer) => ({
         ...customer,
         fullName: `${customer.firstName} ${customer.lastName}`.trim(),
-        displayTitle: `${customer.firstName} ${customer.lastName} - ${customer.whatsappPhoneNumber}`.trim(),
+        displayTitle:
+          `${customer.firstName} ${customer.lastName} - ${customer.whatsappPhoneNumber}`.trim(),
         displayStatus: customer.isActive ? 'active' : 'inactive',
         whatsappInfo:
           customer.whatsappMessageCount > 0

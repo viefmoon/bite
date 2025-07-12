@@ -1,6 +1,13 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Banner, Text, Button, ActivityIndicator, Surface, Card } from 'react-native-paper';
+import {
+  Banner,
+  Text,
+  Button,
+  ActivityIndicator,
+  Surface,
+  Card,
+} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
@@ -42,17 +49,17 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
               color={theme.colors.primary}
             />
           </View>
-          
+
           <Text variant="headlineSmall" style={styles.closedTitle}>
             {canOpenShift ? '¡Bienvenido!' : 'Turno Cerrado'}
           </Text>
-          
+
           <Text variant="bodyLarge" style={styles.closedDescription}>
             {canOpenShift
               ? 'Para comenzar a operar, necesitas abrir el turno.'
               : 'El restaurante aún no ha abierto operaciones.'}
           </Text>
-          
+
           {canOpenShift && (
             <View style={styles.adminInfo}>
               <MaterialCommunityIcons
@@ -65,7 +72,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
               </Text>
             </View>
           )}
-          
+
           {canOpenShift && (
             <Button
               mode="contained"
@@ -77,7 +84,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
               Abrir Turno
             </Button>
           )}
-          
+
           {!canOpenShift && (
             <View style={styles.contactInfo}>
               <MaterialCommunityIcons
@@ -117,7 +124,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.statusInfoGrid}>
           <View style={styles.infoCard}>
             <MaterialCommunityIcons
@@ -132,7 +139,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
               #{shift.globalShiftNumber}
             </Text>
           </View>
-          
+
           <View style={styles.infoCard}>
             <MaterialCommunityIcons
               name="calendar-today"
@@ -146,7 +153,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
               #{shift.shiftNumber}
             </Text>
           </View>
-          
+
           <View style={styles.infoCard}>
             <MaterialCommunityIcons
               name="account-clock"
@@ -163,7 +170,7 @@ export const ShiftStatusBanner: React.FC<ShiftStatusBannerProps> = ({
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.openedByInfo}>
           <MaterialCommunityIcons
             name="account-circle"

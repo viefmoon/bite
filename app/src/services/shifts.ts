@@ -65,11 +65,15 @@ class ShiftsService {
    */
   async openShift(data: OpenShiftDto): Promise<Shift> {
     const response = await apiClient.post('/api/v1/shifts/open', data);
-    
+
     if (!response.ok) {
-      throw response.data || response.originalError || new Error('Error al abrir el turno');
+      throw (
+        response.data ||
+        response.originalError ||
+        new Error('Error al abrir el turno')
+      );
     }
-    
+
     return response.data;
   }
 
@@ -78,11 +82,15 @@ class ShiftsService {
    */
   async closeShift(data: CloseShiftDto): Promise<Shift> {
     const response = await apiClient.post('/api/v1/shifts/close', data);
-    
+
     if (!response.ok) {
-      throw response.data || response.originalError || new Error('Error al cerrar el turno');
+      throw (
+        response.data ||
+        response.originalError ||
+        new Error('Error al cerrar el turno')
+      );
     }
-    
+
     return response.data;
   }
 
@@ -91,7 +99,7 @@ class ShiftsService {
    */
   async getHistory(limit = 30, offset = 0): Promise<Shift[]> {
     const response = await apiClient.get('/api/v1/shifts/history', {
-      params: { limit, offset }
+      params: { limit, offset },
     });
     return response.data;
   }

@@ -10,7 +10,19 @@
       "Bash(npx typeorm migration:run:*)",
       "Bash(npx ts-node:*)",
       "Bash(cat:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(rm:*)",
+      "Bash(del fileService.ts)",
+      "Bash(ls:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(npx sharp-cli:*)",
+      "Bash(npx eas build:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  StyleSheet,
+  ScrollView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from 'react-native';
 import {
   Modal,
@@ -41,7 +41,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   const [finalCash, setFinalCash] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,11 +50,11 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   const handleFinalCashChange = (text: string) => {
     // Permitir solo números y un punto decimal
     const cleaned = text.replace(/[^0-9.]/g, '');
-    
+
     // Prevenir múltiples puntos decimales
     const parts = cleaned.split('.');
     if (parts.length > 2) return;
-    
+
     // Limitar a 2 decimales
     if (parts[1] && parts[1].length > 2) {
       setFinalCash(parts[0] + '.' + parts[1].substring(0, 2));
@@ -91,13 +91,13 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
       onDismiss();
     } catch (error: any) {
       let errorMessage = 'Error al cerrar el turno';
-      
+
       if (error?.message) {
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      
+
       setError(errorMessage);
       showSnackbar({ message: errorMessage, type: 'error' });
     } finally {
@@ -134,7 +134,9 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
   const difference = calculateDifference();
   const today = new Date();
-  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", {
+    locale: es,
+  });
 
   return (
     <Portal>
@@ -148,7 +150,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollViewContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -181,28 +183,50 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
                       <Text variant="titleMedium" style={styles.sectionTitle}>
                         Resumen del Turno #{shift.globalShiftNumber}
                       </Text>
-                      
+
                       <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Abierto a las:</Text>
-                        <Text variant="bodyMedium" style={styles.value}>{formatTime(shift.openedAt)}</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Abierto a las:
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.value}>
+                          {formatTime(shift.openedAt)}
+                        </Text>
                       </View>
-                      
+
                       <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Efectivo inicial:</Text>
-                        <Text variant="bodyMedium" style={styles.value}>{formatCurrency(shift.initialCash)}</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Efectivo inicial:
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.value}>
+                          {formatCurrency(shift.initialCash)}
+                        </Text>
                       </View>
 
                       {shift.totalSales !== null && (
                         <View style={styles.summaryRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Ventas del turno:</Text>
-                          <Text variant="bodyMedium" style={[styles.value, styles.highlight]}>{formatCurrency(shift.totalSales)}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Ventas del turno:
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={[styles.value, styles.highlight]}
+                          >
+                            {formatCurrency(shift.totalSales)}
+                          </Text>
                         </View>
                       )}
 
                       {shift.expectedCash !== null && (
                         <View style={styles.summaryRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Efectivo esperado:</Text>
-                          <Text variant="bodyMedium" style={[styles.value, styles.highlight]}>{formatCurrency(shift.expectedCash)}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Efectivo esperado:
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={[styles.value, styles.highlight]}
+                          >
+                            {formatCurrency(shift.expectedCash)}
+                          </Text>
                         </View>
                       )}
                     </Card.Content>
@@ -213,7 +237,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
                     <Text variant="titleMedium" style={styles.sectionTitle}>
                       Información de Cierre
                     </Text>
-                    
+
                     <TextInput
                       label="Efectivo final en caja"
                       value={finalCash}
@@ -225,25 +249,47 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
                       disabled={loading}
                       error={!!error}
                       placeholder="0.00"
-                      outlineColor={error ? theme.colors.error : theme.colors.outline}
-                      activeOutlineColor={error ? theme.colors.error : theme.colors.primary}
+                      outlineColor={
+                        error ? theme.colors.error : theme.colors.outline
+                      }
+                      activeOutlineColor={
+                        error ? theme.colors.error : theme.colors.primary
+                      }
                     />
 
                     {difference !== null && (
-                      <View style={[styles.differenceContainer, difference < 0 ? styles.negativeDifference : styles.positiveDifference]}>
+                      <View
+                        style={[
+                          styles.differenceContainer,
+                          difference < 0
+                            ? styles.negativeDifference
+                            : styles.positiveDifference,
+                        ]}
+                      >
                         <MaterialCommunityIcons
-                          name={difference >= 0 ? "trending-up" : "trending-down"}
+                          name={
+                            difference >= 0 ? 'trending-up' : 'trending-down'
+                          }
                           size={20}
-                          color={difference >= 0 ? "#4CAF50" : "#FF5722"}
+                          color={difference >= 0 ? '#4CAF50' : '#FF5722'}
                         />
-                        <Text style={[styles.differenceText, { color: difference >= 0 ? "#4CAF50" : "#FF5722" }]}>
-                          {difference >= 0 ? "Sobrante: " : "Faltante: "}
+                        <Text
+                          style={[
+                            styles.differenceText,
+                            { color: difference >= 0 ? '#4CAF50' : '#FF5722' },
+                          ]}
+                        >
+                          {difference >= 0 ? 'Sobrante: ' : 'Faltante: '}
                           {formatCurrency(Math.abs(difference))}
                         </Text>
                       </View>
                     )}
 
-                    <HelperText type="error" visible={!!error} style={styles.errorText}>
+                    <HelperText
+                      type="error"
+                      visible={!!error}
+                      style={styles.errorText}
+                    >
                       {error}
                     </HelperText>
 

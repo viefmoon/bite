@@ -48,7 +48,7 @@ export const useFindOneSubcategory = (
   id: string | undefined,
   enabled: boolean = true,
 ): UseQueryResult<SubCategory, ApiError> => {
-  const queryKey = subcategoryKeys.detail(id!); // Use non-null assertion as it's enabled conditionally
+  const queryKey = subcategoryKeys.detail(id!);
   return useQuery<SubCategory, ApiError>({
     queryKey: queryKey,
     queryFn: () => subcategoriesService.findOneSubcategory(id!),
@@ -56,7 +56,6 @@ export const useFindOneSubcategory = (
   });
 };
 
-// Contexto solo para el detalle
 type UpdateSubcategoryContext = {
   previousDetail?: SubCategory;
 };
@@ -83,7 +82,6 @@ export const useCreateSubcategory = (): UseMutationResult<
     onError: (error) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      console.error('Error creating subcategory:', error);
     },
   });
 };
@@ -132,7 +130,6 @@ export const useUpdateSubcategory = (): UseMutationResult<
     onError: (error, variables, context) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      console.error(`Error updating subcategory ${variables.id}:`, error);
 
       if (context?.previousDetail) {
         queryClient.setQueryData(
@@ -161,7 +158,7 @@ export const useUpdateSubcategory = (): UseMutationResult<
 export const useRemoveSubcategory = (): UseMutationResult<
   void,
   ApiError,
-  string, // ID
+  string,
   { previousDetail?: SubCategory }
 > => {
   const queryClient = useQueryClient();
@@ -190,7 +187,6 @@ export const useRemoveSubcategory = (): UseMutationResult<
     onError: (error, deletedId, context) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      console.error(`Error deleting subcategory ${deletedId}:`, error);
 
       if (context?.previousDetail) {
         queryClient.setQueryData(

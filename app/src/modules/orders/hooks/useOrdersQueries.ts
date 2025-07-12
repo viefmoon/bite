@@ -21,7 +21,8 @@ const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
   list: (filters: FindAllOrdersDto) => [...orderKeys.lists(), filters] as const,
-  openCurrentShift: () => [...orderKeys.all, 'list', 'open-current-shift'] as const, // Clave para órdenes abiertas del turno actual
+  openCurrentShift: () =>
+    [...orderKeys.all, 'list', 'open-current-shift'] as const, // Clave para órdenes abiertas del turno actual
   details: () => [...orderKeys.all, 'detail'] as const,
   // detail: (id: string) => [...orderKeys.details(), id] as const, // Ejemplo
 };

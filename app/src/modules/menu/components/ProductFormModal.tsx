@@ -177,7 +177,7 @@ function ProductFormModal({
   const priceValue = watch('price');
   const selectedPreparationScreenId = watch('preparationScreenId');
 
-  // Sincronizar el valor del precio con el estado del input
+ 
   useEffect(() => {
     setPriceInputValue(
       priceValue !== null && priceValue !== undefined
@@ -187,9 +187,9 @@ function ProductFormModal({
   }, [priceValue]);
 
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
-    useModifierGroupsQuery({ isActive: true }); // Solo grupos activos
+    useModifierGroupsQuery({ isActive: true });
 
-  // Query para obtener las pantallas de preparación
+ 
   const { data: preparationScreensResponse } = useGetPreparationScreens(
     {},
     { page: 1, limit: 50 },
@@ -198,7 +198,7 @@ function ProductFormModal({
 
   const allModifierGroups = modifierGroupsResponse?.data || [];
 
-  // Cargar los modificadores de cada grupo
+ 
   useEffect(() => {
     const loadModifiers = async () => {
       const modifiersMap: Record<string, any[]> = {};
@@ -257,7 +257,7 @@ function ProductFormModal({
 
     let finalPhotoId: string | null | undefined = undefined;
 
-    // 1. Determinar el photoId final
+   
     if (localSelectedFile) {
       setIsInternalImageUploading(true);
       try {
@@ -286,15 +286,15 @@ function ProductFormModal({
         initialData ?? undefined,
       );
     }
-    // 2. Preparar los datos finales
+   
     const finalData = {
       ...formData,
       price: hasVariants ? null : formData.price,
       variants: hasVariants ? formData.variants : [],
     };
-    // imageUri se maneja en ProductsScreen antes de la mutación
+   
 
-    // 3. Llamar al onSubmit del padre
+   
     await onSubmit(finalData, finalPhotoId, localSelectedFile);
     setLocalSelectedFile(null);
   };
@@ -313,15 +313,11 @@ function ProductFormModal({
 
       const dataToUpdate = {
         ...variantData,
-        price: isNaN(priceAsNumber) ? 0 : priceAsNumber, // Asegurar que el precio sea un número
+        price: isNaN(priceAsNumber) ? 0 : priceAsNumber,
         ...(originalVariantId && { id: originalVariantId }),
       };
 
-      // Crear un nuevo objeto sin 'id' si no había uno original, usando desestructuración
-      const finalDataToUpdate =
-        !originalVariantId && 'id' in dataToUpdate
-          ? (({ id, ...rest }) => rest)(dataToUpdate) // Correcto: crea un nuevo objeto sin 'id'
-          : dataToUpdate;
+      const finalDataToUpdate = !originalVariantId && 'id' in dataToUpdate ? (({ id, ...rest }) => rest)(dataToUpdate) : dataToUpdate;
 
       updateVariant(editingVariantIndex, finalDataToUpdate as ProductVariant);
     } else {
@@ -471,9 +467,7 @@ function ProductFormModal({
                           const formattedText = text.replace(/,/g, '.');
 
                           if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                            setPriceInputValue(formattedText); // Actualizar estado local
-
-                            // Actualizar valor del formulario (number | null)
+                            setPriceInputValue(formattedText);
                             if (formattedText === '') {
                               field.onChange(null);
                             } else if (formattedText !== '.') {

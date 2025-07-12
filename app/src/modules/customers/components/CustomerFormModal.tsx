@@ -143,7 +143,7 @@ export default function CustomerFormModal({
       birthDate: data.birthDate || undefined,
       banReason: data.banReason || undefined,
     };
-    
+
     // El número ya viene completo desde nuestro componente
     await onSubmit(cleanedData);
   };

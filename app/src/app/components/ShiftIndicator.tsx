@@ -17,7 +17,7 @@ export const ShiftIndicator: React.FC = () => {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [openShiftModalVisible, setOpenShiftModalVisible] = useState(false);
   const [closeShiftModalVisible, setCloseShiftModalVisible] = useState(false);
-  
+
   const userCanOpenShift = canOpenShift(user);
   const isShiftOpen = shift && shift.status === 'OPEN';
 
@@ -67,10 +67,10 @@ export const ShiftIndicator: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.container,
-          { 
-            backgroundColor: loading 
-              ? 'rgba(255, 255, 255, 0.2)' 
-              : isShiftOpen 
+          {
+            backgroundColor: loading
+              ? 'rgba(255, 255, 255, 0.2)'
+              : isShiftOpen
                 ? '#2E7D32' // Verde oscuro sólido
                 : '#F57C00', // Naranja oscuro sólido
             borderWidth: 2,
@@ -78,18 +78,14 @@ export const ShiftIndicator: React.FC = () => {
               ? 'rgba(255, 255, 255, 0.3)'
               : isShiftOpen
                 ? '#4CAF50' // Verde más claro para el borde
-                : '#FF9800' // Naranja más claro para el borde
-          }
+                : '#FF9800', // Naranja más claro para el borde
+          },
         ]}
         onPress={handlePress}
         disabled={loading}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Icon
-          source={getIconName()}
-          size={22}
-          color={getIconColor()}
-        />
+        <Icon source={getIconName()} size={22} color={getIconColor()} />
         <Text style={[styles.statusText, { color: getIconColor() }]}>
           {loading ? 'Cargando' : isShiftOpen ? 'ABIERTO' : 'CERRADO'}
         </Text>

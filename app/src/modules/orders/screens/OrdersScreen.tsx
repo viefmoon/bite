@@ -13,7 +13,7 @@ function OrdersScreen() {
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const navigation =
     useNavigation<NativeStackNavigationProp<OrdersStackParamList>>();
-  
+
   const [shift, setShift] = useState<Shift | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +62,7 @@ function OrdersScreen() {
           >
             Crear Orden
           </Button>
-          
+
           {/* Botón Órdenes Abiertas */}
           <Button
             mode="contained"

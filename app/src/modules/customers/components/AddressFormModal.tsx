@@ -108,7 +108,8 @@ export default function AddressFormModal({
   }, [editingItem, reset]);
 
   // HTML del mapa con Google Maps API - Memoizado para evitar recrearlo en cada render
-  const mapHtml = React.useMemo(() => `
+  const mapHtml = React.useMemo(
+    () => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -301,27 +302,32 @@ export default function AddressFormModal({
   </script>
 </body>
 </html>
-  `, [latitude, longitude, isMapFullscreen]);
+  `,
+    [latitude, longitude, isMapFullscreen],
+  );
 
   // Manejar mensajes del WebView
-  const handleWebViewMessage = React.useCallback((event: any) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
+  const handleWebViewMessage = React.useCallback(
+    (event: any) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data);
 
-      switch (data.type) {
-        case 'mapReady':
-          setMapReady(true);
-          setIsMapLoading(false);
-          break;
-        case 'locationUpdated':
-          setValue('latitude', data.latitude);
-          setValue('longitude', data.longitude);
-          break;
+        switch (data.type) {
+          case 'mapReady':
+            setMapReady(true);
+            setIsMapLoading(false);
+            break;
+          case 'locationUpdated':
+            setValue('latitude', data.latitude);
+            setValue('longitude', data.longitude);
+            break;
+        }
+      } catch (e) {
+        // Silently handle parsing errors
       }
-    } catch (e) {
-      // Silently handle parsing errors
-    }
-  }, [setValue]);
+    },
+    [setValue],
+  );
 
   // Enviar mensaje al WebView
   const sendMessageToWebView = React.useCallback((type: string, data: any) => {
@@ -349,21 +355,23 @@ export default function AddressFormModal({
     }
   }, [visible]);
 
-  const handleFormSubmit = React.useCallback(async (data: AddressFormInputs) => {
-    await onSubmit(data);
-  }, [onSubmit]);
+  const handleFormSubmit = React.useCallback(
+    async (data: AddressFormInputs) => {
+      await onSubmit(data);
+    },
+    [onSubmit],
+  );
 
   const hasValidCoordinates = React.useMemo(() => {
     return (
-      latitude !== undefined && 
-      longitude !== undefined && 
-      !isNaN(Number(latitude)) && 
+      latitude !== undefined &&
+      longitude !== undefined &&
+      !isNaN(Number(latitude)) &&
       !isNaN(Number(longitude)) &&
       Number(latitude) !== 0 &&
       Number(longitude) !== 0
     );
   }, [latitude, longitude]);
-
 
   return (
     <>
@@ -421,13 +429,22 @@ export default function AddressFormModal({
                 control={control}
                 name="isDefault"
                 render={({ field: { onChange, value } }) => (
-                  <Surface style={[styles.switchContainer, { marginBottom: theme.spacing.m }]} elevation={1}>
+                  <Surface
+                    style={[
+                      styles.switchContainer,
+                      { marginBottom: theme.spacing.m },
+                    ]}
+                    elevation={1}
+                  >
                     <View style={styles.switchContent}>
                       <View style={styles.switchTextContainer}>
                         <Text style={styles.switchLabel} variant="bodyLarge">
                           Dirección predeterminada
                         </Text>
-                        <Text style={styles.switchDescription} variant="bodySmall">
+                        <Text
+                          style={styles.switchDescription}
+                          variant="bodySmall"
+                        >
                           Esta será la dirección principal para los pedidos
                         </Text>
                       </View>
@@ -750,19 +767,23 @@ export default function AddressFormModal({
                       </Button>
                     )}
                   </View>
-                  
+
                   <Surface style={styles.mapContainer} elevation={1}>
                     <View style={styles.mapInstructions}>
-                      <Icon 
-                        source="gesture-two-double-tap" 
-                        size={20} 
+                      <Icon
+                        source="gesture-two-double-tap"
+                        size={20}
                         color={theme.colors.primary}
                       />
-                      <Text style={styles.mapInstructionText} variant="bodySmall">
-                        Usa dos dedos para mover el mapa • Toca para marcar ubicación
+                      <Text
+                        style={styles.mapInstructionText}
+                        variant="bodySmall"
+                      >
+                        Usa dos dedos para mover el mapa • Toca para marcar
+                        ubicación
                       </Text>
                     </View>
-                    
+
                     <View style={styles.mapView}>
                       <WebView
                         ref={webViewRef}
@@ -786,8 +807,13 @@ export default function AddressFormModal({
                       {isMapLoading && (
                         <View style={styles.mapLoadingContainer}>
                           <Surface style={styles.mapLoadingCard} elevation={3}>
-                            <ActivityIndicator size="large" color={theme.colors.primary} />
-                            <Text style={styles.mapLoadingText}>Cargando mapa...</Text>
+                            <ActivityIndicator
+                              size="large"
+                              color={theme.colors.primary}
+                            />
+                            <Text style={styles.mapLoadingText}>
+                              Cargando mapa...
+                            </Text>
                           </Surface>
                         </View>
                       )}
@@ -798,16 +824,22 @@ export default function AddressFormModal({
                           {/* Botón de expandir */}
                           <View style={styles.expandButtonContainer}>
                             <IconButton
-                              icon={isMapFullscreen ? "fullscreen-exit" : "fullscreen"}
+                              icon={
+                                isMapFullscreen
+                                  ? 'fullscreen-exit'
+                                  : 'fullscreen'
+                              }
                               mode="contained"
                               containerColor={theme.colors.secondaryContainer}
                               iconColor={theme.colors.onSecondaryContainer}
                               size={20}
-                              onPress={() => setIsMapFullscreen(!isMapFullscreen)}
+                              onPress={() =>
+                                setIsMapFullscreen(!isMapFullscreen)
+                              }
                               style={styles.floatingButton}
                             />
                           </View>
-                          
+
                           {/* Botón de centrar */}
                           {hasValidCoordinates && (
                             <View style={styles.centerButtonContainer}>
@@ -817,7 +849,9 @@ export default function AddressFormModal({
                                 containerColor={theme.colors.primaryContainer}
                                 iconColor={theme.colors.onPrimaryContainer}
                                 size={20}
-                                onPress={() => sendMessageToWebView('centerOnLocation', {})}
+                                onPress={() =>
+                                  sendMessageToWebView('centerOnLocation', {})
+                                }
                                 style={styles.floatingButton}
                               />
                             </View>
@@ -829,17 +863,23 @@ export default function AddressFormModal({
                     {/* Mostrar coordenadas */}
                     {hasValidCoordinates && (
                       <View style={styles.coordinatesContainer}>
-                        <Text variant="labelSmall" style={styles.coordinatesLabel}>
+                        <Text
+                          variant="labelSmall"
+                          style={styles.coordinatesLabel}
+                        >
                           Coordenadas:
                         </Text>
-                        <Text variant="bodySmall" style={styles.coordinatesText}>
-                          {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                        <Text
+                          variant="bodySmall"
+                          style={styles.coordinatesText}
+                        >
+                          {Number(latitude).toFixed(6)},{' '}
+                          {Number(longitude).toFixed(6)}
                         </Text>
                       </View>
                     )}
                   </Surface>
                 </View>
-
               </View>
 
               {/* Espacio adicional para el teclado */}
@@ -888,7 +928,7 @@ export default function AddressFormModal({
                 onPress={() => setIsMapFullscreen(false)}
               />
             </View>
-            
+
             <View style={styles.fullscreenMapContainer}>
               <WebView
                 source={{ html: mapHtml }}
@@ -902,12 +942,13 @@ export default function AddressFormModal({
                 originWhitelist={['*']}
                 scalesPageToFit={false}
               />
-              
+
               {hasValidCoordinates && (
                 <View style={styles.fullscreenCoordinates}>
                   <Surface style={styles.coordinatesBadge} elevation={2}>
                     <Text variant="bodySmall">
-                      {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                      {Number(latitude).toFixed(6)},{' '}
+                      {Number(longitude).toFixed(6)}
                     </Text>
                   </Surface>
                 </View>

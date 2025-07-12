@@ -369,7 +369,7 @@ const SubcategoriesScreen: React.FC = () => {
             editingItem
               ? updateSubCategoryDtoSchema
               : createSubCategoryDtoSchema
-          } // Corregido nombre de schema
+          }
           formFields={formFields}
           imagePickerConfig={imagePickerConfig}
           initialValues={formInitialValues}

@@ -40,7 +40,9 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
 
   const isShiftOpen = shift && shift.status === 'OPEN';
   const today = new Date();
-  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", {
+    locale: es,
+  });
 
   const handleOpenShift = () => {
     onDismiss();
@@ -71,7 +73,7 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
             <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <MaterialCommunityIcons
-                  name={isShiftOpen ? "store-check" : "store-alert"}
+                  name={isShiftOpen ? 'store-check' : 'store-alert'}
                   size={48}
                   color={isShiftOpen ? '#4CAF50' : '#FF9800'}
                 />
@@ -86,7 +88,7 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
                 mode="outlined"
                 style={[
                   styles.statusChip,
-                  { borderColor: isShiftOpen ? '#4CAF50' : '#FF9800' }
+                  { borderColor: isShiftOpen ? '#4CAF50' : '#FF9800' },
                 ]}
                 textStyle={{ color: isShiftOpen ? '#4CAF50' : '#FF9800' }}
               >
@@ -106,54 +108,90 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
                       <Text variant="titleMedium" style={styles.sectionTitle}>
                         Información del Turno
                       </Text>
-                      
+
                       <View style={styles.infoRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Turno #:</Text>
-                        <Text variant="bodyMedium" style={styles.value}>{shift.globalShiftNumber}</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Turno #:
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.value}>
+                          {shift.globalShiftNumber}
+                        </Text>
                       </View>
-                      
+
                       <View style={styles.infoRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Abierto a las:</Text>
-                        <Text variant="bodyMedium" style={styles.value}>{formatTime(shift.openedAt)}</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Abierto a las:
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.value}>
+                          {formatTime(shift.openedAt)}
+                        </Text>
                       </View>
-                      
+
                       <View style={styles.infoRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Abierto por:</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Abierto por:
+                        </Text>
                         <Text variant="bodyMedium" style={styles.value}>
                           {shift.openedBy.firstName} {shift.openedBy.lastName}
                         </Text>
                       </View>
-                      
+
                       <View style={styles.infoRow}>
-                        <Text variant="bodyMedium" style={styles.label}>Efectivo inicial:</Text>
-                        <Text variant="bodyMedium" style={styles.value}>{formatCurrency(shift.initialCash)}</Text>
+                        <Text variant="bodyMedium" style={styles.label}>
+                          Efectivo inicial:
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.value}>
+                          {formatCurrency(shift.initialCash)}
+                        </Text>
                       </View>
 
                       {shift.totalSales !== null && (
                         <View style={styles.infoRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Ventas del turno:</Text>
-                          <Text variant="bodyMedium" style={[styles.value, styles.highlight]}>{formatCurrency(shift.totalSales)}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Ventas del turno:
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={[styles.value, styles.highlight]}
+                          >
+                            {formatCurrency(shift.totalSales)}
+                          </Text>
                         </View>
                       )}
 
                       {shift.totalOrders !== null && (
                         <View style={styles.infoRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Órdenes:</Text>
-                          <Text variant="bodyMedium" style={styles.value}>{shift.totalOrders}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Órdenes:
+                          </Text>
+                          <Text variant="bodyMedium" style={styles.value}>
+                            {shift.totalOrders}
+                          </Text>
                         </View>
                       )}
 
                       {shift.expectedCash !== null && (
                         <View style={styles.infoRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Efectivo esperado:</Text>
-                          <Text variant="bodyMedium" style={[styles.value, styles.highlight]}>{formatCurrency(shift.expectedCash)}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Efectivo esperado:
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={[styles.value, styles.highlight]}
+                          >
+                            {formatCurrency(shift.expectedCash)}
+                          </Text>
                         </View>
                       )}
 
                       {shift.notes && (
                         <View style={styles.notesSection}>
-                          <Text variant="bodyMedium" style={styles.label}>Notas:</Text>
-                          <Text variant="bodySmall" style={styles.notes}>{shift.notes}</Text>
+                          <Text variant="bodyMedium" style={styles.label}>
+                            Notas:
+                          </Text>
+                          <Text variant="bodySmall" style={styles.notes}>
+                            {shift.notes}
+                          </Text>
                         </View>
                       )}
                     </Card.Content>
@@ -169,10 +207,9 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
                       color={theme.colors.primary}
                     />
                     <Text variant="bodyMedium" style={styles.closedText}>
-                      {canOpenShift 
+                      {canOpenShift
                         ? 'El turno está cerrado. Para comenzar las operaciones, abre el turno.'
-                        : 'El turno está cerrado. Contacta a un administrador para abrirlo.'
-                      }
+                        : 'El turno está cerrado. Contacta a un administrador para abrirlo.'}
                     </Text>
                   </View>
                 </>
@@ -189,7 +226,7 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
               >
                 Cerrar
               </Button>
-              
+
               {!isShiftOpen && canOpenShift && (
                 <Button
                   mode="contained"

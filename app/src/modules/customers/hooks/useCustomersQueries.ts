@@ -164,7 +164,7 @@ export function useGetAddressesByCustomer(
     queryKey: customerKeys.addresses(customerId),
     queryFn: async () => {
       const response = await apiClient.get<Address[]>(
-        `${API_PATHS.CUSTOMERS}/${customerId}/addresses`
+        `${API_PATHS.CUSTOMERS}/${customerId}/addresses`,
       );
       if (!response.ok || !response.data) {
         return [];
