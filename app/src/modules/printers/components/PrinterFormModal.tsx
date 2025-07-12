@@ -26,6 +26,7 @@ import {
   useUpdatePrinterMutation,
 } from '../hooks/usePrintersQueries';
 import AnimatedLabelInput from '../../../app/components/common/AnimatedLabelInput';
+import PrinterAdvancedConfig from './PrinterAdvancedConfig';
 
 interface PrinterFormModalProps {
   visible: boolean;
@@ -155,6 +156,13 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
       path: undefined,
       isActive: true,
       macAddress: undefined,
+      isDefaultPrinter: false,
+      autoDeliveryPrint: false,
+      autoPickupPrint: false,
+      paperWidth: 80,
+      charactersPerLine: 48,
+      cutPaper: true,
+      feedLines: 3,
     };
     // Aplicar valores iniciales si se está editando
     if (isEditing && editingItem) {
@@ -166,6 +174,13 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
         path: editingItem.path ?? undefined,
         isActive: editingItem.isActive,
         macAddress: editingItem.macAddress ?? undefined,
+        isDefaultPrinter: editingItem.isDefaultPrinter ?? false,
+        autoDeliveryPrint: editingItem.autoDeliveryPrint ?? false,
+        autoPickupPrint: editingItem.autoPickupPrint ?? false,
+        paperWidth: editingItem.paperWidth ?? 80,
+        charactersPerLine: editingItem.charactersPerLine ?? 48,
+        cutPaper: editingItem.cutPaper ?? true,
+        feedLines: editingItem.feedLines ?? 3,
       };
     }
     // Aplicar valores desde descubrimiento si se está creando y existen
@@ -469,6 +484,65 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
                 {errors.isActive.message}
               </HelperText>
             )}
+
+            {/* Configuración de Impresión Automática */}
+            <View style={styles.switchComponentContainer}>
+              <Text variant="bodyLarge" style={styles.switchLabel}>
+                Impresora Predeterminada
+              </Text>
+              <Controller
+                name="isDefaultPrinter"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </View>
+
+            <View style={styles.switchComponentContainer}>
+              <Text variant="bodyLarge" style={styles.switchLabel}>
+                Imprimir Automáticamente Domicilio
+              </Text>
+              <Controller
+                name="autoDeliveryPrint"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </View>
+
+            <View style={styles.switchComponentContainer}>
+              <Text variant="bodyLarge" style={styles.switchLabel}>
+                Imprimir Automáticamente Para Llevar
+              </Text>
+              <Controller
+                name="autoPickupPrint"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </View>
+
+            {/* Configuración avanzada */}
+            <PrinterAdvancedConfig
+              control={control}
+              errors={errors}
+              isSubmitting={isSubmitting}
+            />
           </ScrollView>
 
           {isSubmitting && (

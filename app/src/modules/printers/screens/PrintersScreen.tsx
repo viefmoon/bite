@@ -1,23 +1,18 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Portal,
   ActivityIndicator,
   IconButton,
-  FAB, // <-- Importar FAB
-  Button,
+  FAB,
+  Text,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import PrinterDiscoveryModal from '../components/PrinterDiscoveryModal';
-import PrinterFormModal from '../components/PrinterFormModal'; // Importar el nuevo modal
-import GenericList, {
-  RenderItemConfig,
-  FilterOption,
-} from '../../../app/components/crud/GenericList'; // Importar GenericList
-import GenericDetailModal, {
-  DisplayFieldConfig,
-} from '../../../app/components/crud/GenericDetailModal'; // Importar GenericDetailModal
+import PrinterFormModal from '../components/PrinterFormModal';
+import PrinterListItem from '../components/PrinterListItem';
+import PrinterDetailModal from '../components/PrinterDetailModal';
 import {
   DiscoveredPrinter,
   ThermalPrinter,
@@ -137,33 +132,57 @@ const PrintersScreen: React.FC = () => {
     handleOpenCreateModal(); // Abrir modal de formulario con datos pre-rellenados
   };
 
-  // Configuración para GenericList
-  const listRenderConfig: RenderItemConfig<ThermalPrinter> = {
-    titleField: 'name',
-    descriptionField: 'ipAddress', // Usar este campo, GenericList lo mostrará
-    // descriptionRender eliminado, GenericList debería manejar la lógica de descripción básica o se ajusta GenericList
-    statusConfig: {
-      field: 'isActive',
-      activeValue: true,
-      activeLabel: 'Activa',
-      inactiveLabel: 'Inactiva',
+  // Función para renderizar cada impresora
+  const renderPrinter = useCallback(
+    ({ item }: { item: ThermalPrinter }) => {
+      const isPingingThis = pingingPrinterId === item.id;
+      const canPing = item.connectionType === 'NETWORK';
+
+      return (
+        <PrinterListItem
+          printer={item}
+          onPress={() => handleOpenDetailModal(item)}
+          renderActions={
+            <View style={styles.itemActionsContainer}>
+              {isPingingThis ? (
+                <ActivityIndicator size={32} style={styles.pingIndicator} />
+              ) : (
+                <IconButton
+                  icon="radar"
+                  size={32}
+                  onPress={() => handlePingPrinter(item.id)}
+                  disabled={!canPing || pingPrinterMutation.isPending}
+                  iconColor={
+                    canPing
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceDisabled
+                  }
+                  style={styles.actionButton}
+                />
+              )}
+            </View>
+          }
+        />
+      );
     },
-  };
+    [
+      pingingPrinterId,
+      pingPrinterMutation.isPending,
+      handlePingPrinter,
+      handleOpenDetailModal,
+      theme.colors,
+      styles,
+    ],
+  );
 
-  // Configuración para GenericDetailModal
-  const detailFields: DisplayFieldConfig<ThermalPrinter>[] = [
-    { field: 'connectionType', label: 'Tipo Conexión' },
-    { field: 'ipAddress', label: 'Dirección IP' },
-    { field: 'port', label: 'Puerto' },
-    { field: 'path', label: 'Ruta/ID' },
-    { field: 'macAddress', label: 'MAC Address' },
-  ];
-
-  const filterOptions: FilterOption<StatusFilter>[] = [
-    { value: 'all', label: 'Todas' },
-    { value: 'active', label: 'Activas' },
-    { value: 'inactive', label: 'Inactivas' },
-  ];
+  // Filtrar datos según el estado seleccionado
+  const filteredData = useMemo(() => {
+    if (!printersResponse?.data) return [];
+    if (statusFilter === 'all') return printersResponse.data;
+    return printersResponse.data.filter(
+      (printer) => printer.isActive === (statusFilter === 'active'),
+    );
+  }, [printersResponse?.data, statusFilter]);
 
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingList,
@@ -211,63 +230,34 @@ const PrintersScreen: React.FC = () => {
     [pingPrinterMutation],
   );
 
-  const renderItemActions = useCallback(
-    (item: ThermalPrinter) => {
-      const isPingingThis = pingingPrinterId === item.id;
-      const canPing = item.connectionType === 'NETWORK';
-
+  // Función para renderizar cuando no hay datos
+  const renderEmptyList = () => {
+    if (isLoadingList) {
       return (
-        <View style={styles.itemActionsContainer}>
-          {isPingingThis ? (
-            <ActivityIndicator size={24} style={styles.pingIndicator} />
-          ) : (
-            <IconButton
-              icon="access-point-network" // Icono para ping
-              size={24}
-              onPress={() => handlePingPrinter(item.id)}
-              disabled={!canPing || pingPrinterMutation.isPending} // Deshabilitar si no es NETWORK o si hay un ping en curso
-              iconColor={
-                canPing ? theme.colors.primary : theme.colors.onSurfaceDisabled
-              } // Usar color para deshabilitado
-              style={styles.actionButton}
-            />
-          )}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       );
-    },
-    [
-      pingingPrinterId,
-      pingPrinterMutation.isPending,
-      handlePingPrinter,
-      theme.colors,
-      styles,
-    ],
-  );
-  // --- Fin Funcionalidad de Ping ---
+    }
+
+    return ListEmptyComponent;
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Eliminar la View de headerButtons */}
 
-      <GenericList<ThermalPrinter>
-        items={printersResponse?.data ?? []}
-        renderConfig={listRenderConfig}
-        onItemPress={handleOpenDetailModal} // Abrir detalle al presionar
+      <FlatList
+        data={filteredData}
+        renderItem={renderPrinter}
+        keyExtractor={(item) => item.id}
         onRefresh={refetchList}
-        isRefreshing={isFetchingList && !isLoadingList}
-        ListEmptyComponent={ListEmptyComponent}
-        isLoading={isLoadingList && !isFetchingList}
-        // filterValue={statusFilter}
-        // onFilterChange={handleFilterChange} // Usar el wrapper
-        // filterOptions={filterOptions}
-        // showFab ya no es necesario aquí, se maneja con FAB.Group
-        isModalOpen={
-          isFormModalVisible || isDetailModalVisible || isDiscoveryModalVisible
-        }
-        showImagePlaceholder={false}
-        isDrawerOpen={isDrawerOpen}
-        contentContainerStyle={styles.listPadding} // Añadir padding inferior
-        renderItemActions={renderItemActions} // <-- Pasar la función para renderizar acciones
+        refreshing={isFetchingList && !isLoadingList}
+        ListEmptyComponent={renderEmptyList()}
+        contentContainerStyle={[
+          styles.listPadding,
+          filteredData.length === 0 && styles.emptyListContainer,
+        ]}
       />
 
       <Portal>
@@ -287,37 +277,17 @@ const PrintersScreen: React.FC = () => {
             !editingItem ? (discoveredPrinterData ?? undefined) : undefined
           }
         />
-        {/* Modal de Detalle */}
-        <GenericDetailModal<ThermalPrinter>
+        {/* Modal de Detalle Personalizado */}
+        <PrinterDetailModal
           visible={isDetailModalVisible}
           onDismiss={handleCloseModals}
-          item={selectedItem}
-          titleField="name"
-          statusConfig={listRenderConfig.statusConfig}
-          fieldsToDisplay={detailFields}
+          printer={selectedItem}
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
           onDelete={() => selectedItem && handleDeleteItem(selectedItem.id)}
+          onTestPrint={() => selectedItem && handleTestPrint(selectedItem.id)}
           isDeleting={isDeleting}
-          showImage={false}
-        >
-          {/* Botón de ticket de prueba */}
-          {selectedItem && (
-            <View style={styles.testPrintContainer}>
-              <Button
-                icon="printer-check"
-                mode="outlined"
-                onPress={() => handleTestPrint(selectedItem.id)}
-                loading={testPrintingPrinterId === selectedItem.id}
-                disabled={
-                  testPrintingPrinterId === selectedItem.id || isDeleting
-                }
-                style={styles.testPrintButton}
-              >
-                Imprimir Ticket de Prueba
-              </Button>
-            </View>
-          )}
-        </GenericDetailModal>
+          isTestPrinting={testPrintingPrinterId === selectedItem?.id}
+        />
         {/* Añadir FAB.Group dentro del Portal */}
         <FAB.Group
           open={fabOpen}
@@ -371,18 +341,17 @@ const createStyles = (theme: AppTheme) =>
     // Eliminar estilos de headerButtons
     listPadding: {
       paddingBottom: 80, // Espacio para que el FAB no tape el último item
+      paddingTop: theme.spacing.s,
     },
-    emptyListContent: {
+    emptyListContainer: {
+      flex: 1,
+      minHeight: 400,
+    },
+    loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
-      minHeight: 200, // Asegurar altura mínima
-    },
-    emptyListText: {
-      color: theme.colors.onSurfaceVariant,
-      fontStyle: 'italic',
-      textAlign: 'center',
+      padding: theme.spacing.xl,
     },
     itemActionsContainer: {
       // Contenedor para los botones de acción de cada item
@@ -394,29 +363,25 @@ const createStyles = (theme: AppTheme) =>
       // Estilo base para botones de acción en la lista
       margin: 0,
       padding: 0,
-      width: 40, // Ancho fijo para alinear
-      height: 40, // Alto fijo para alinear
+      width: 52, // Ancho más grande para el icono más grande
+      height: 52, // Alto más grande para el icono más grande
+      borderRadius: 26, // Redondeado perfecto (la mitad de width/height)
+      backgroundColor: theme.colors.surfaceVariant, // Fondo para hacerlo más atractivo
+      elevation: 2, // Sombra sutil para darle profundidad
     },
     pingIndicator: {
       // Estilo para el indicador de carga del ping
-      width: 40, // Mismo ancho que el botón para mantener alineación
-      height: 40, // Mismo alto
+      width: 52, // Mismo ancho que el botón para mantener alineación
+      height: 52, // Mismo alto
       justifyContent: 'center',
       alignItems: 'center',
+      borderRadius: 26, // Redondeado perfecto
+      backgroundColor: theme.colors.primaryContainer, // Fondo de color primario
+      elevation: 2, // Sombra sutil
     },
     errorText: {
       color: theme.colors.error,
       textAlign: 'center',
-    },
-    testPrintContainer: {
-      marginTop: theme.spacing.m,
-      marginBottom: theme.spacing.s,
-      paddingHorizontal: theme.spacing.s,
-      width: '100%',
-    },
-    testPrintButton: {
-      borderColor: theme.colors.primary,
-      borderWidth: 1,
     },
   });
 
