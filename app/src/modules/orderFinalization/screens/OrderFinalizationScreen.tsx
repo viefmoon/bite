@@ -168,14 +168,18 @@ export const OrderFinalizationScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={['top']}
     >
-      <Surface style={styles.header} elevation={1}>
+      <Surface style={styles.header}>
         <View style={styles.headerContent}>
           <SegmentedButtons
             value={filter}
             onValueChange={setFilter as any}
             buttons={[
               { value: 'delivery', label: 'Delivery', icon: 'moped' },
-              { value: 'take_away', label: 'Para llevar', icon: 'bag-personal' },
+              {
+                value: 'take_away',
+                label: 'Para llevar',
+                icon: 'bag-personal',
+              },
               {
                 value: 'dine_in',
                 label: 'Mesa',
@@ -183,7 +187,6 @@ export const OrderFinalizationScreen: React.FC = () => {
               },
             ]}
             style={styles.segmentedButtons}
-            density="small"
           />
           <IconButton
             icon="refresh"
@@ -387,7 +390,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
+    backgroundColor: 'transparent',
+    elevation: 0,
   },
   headerContent: {
     flexDirection: 'row',
@@ -396,6 +401,7 @@ const styles = StyleSheet.create({
   },
   segmentedButtons: {
     flex: 1,
+    height: 48,
   },
   refreshButton: {
     margin: 0,
