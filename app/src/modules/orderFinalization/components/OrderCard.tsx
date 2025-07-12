@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Text, Checkbox, Chip, IconButton } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Card, Text, Checkbox, Chip } from 'react-native-paper';
 import { OrderForFinalization } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface OrderCardProps {
   order: OrderForFinalization;
@@ -11,237 +13,222 @@ interface OrderCardProps {
   onShowDetails: (order: OrderForFinalization) => void;
 }
 
+// Helper para formatear el tipo de orden corto (copiado de OpenOrdersScreen)
+const formatOrderTypeShort = (type: string): string => {
+  switch (type) {
+    case 'DINE_IN':
+      return '🍽️ Local';
+    case 'TAKEOUT':
+    case 'TAKE_AWAY':
+      return '🥡 Llevar';
+    case 'DELIVERY':
+      return '🚚 Envío';
+    default:
+      return type;
+  }
+};
+
 export const OrderCard = React.memo<OrderCardProps>(
   ({ order, isSelected, onToggleSelection, onShowDetails }) => {
     const theme = useAppTheme();
 
-    const getOrderTypeIcon = () => {
-      switch (order.orderType) {
-        case 'TAKEOUT':
-          return 'bag-personal-outline';
-        case 'DELIVERY':
-          return 'truck-delivery';
-        case 'DINE_IN':
-          return 'silverware-fork-knife';
-        default:
-          return 'receipt';
-      }
-    };
+    // Construir el título EXACTAMENTE como en OpenOrdersScreen
+    let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
-    const getOrderTypeLabel = () => {
-      switch (order.orderType) {
-        case 'TAKEOUT':
-          return 'Para llevar';
-        case 'DELIVERY':
-          return 'Domicilio';
-        case 'DINE_IN':
-          return 'Mesa';
-        default:
-          return 'Orden';
+    if (order.orderType === 'DINE_IN' && order.table) {
+      // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
+      const tableDisplay = order.table.isTemporary
+        ? order.table.name
+        : `Mesa ${order.table.name || order.table.number || 'N/A'}`;
+      orderTitle += ` • ${order.table.area?.name || 'Sin área'} • ${tableDisplay}`;
+    } else if (order.orderType === 'TAKEOUT' || order.orderType === 'TAKE_AWAY') {
+      if (order.deliveryInfo?.recipientName) {
+        orderTitle += ` • ${order.deliveryInfo.recipientName}`;
       }
-    };
+      if (order.deliveryInfo?.recipientPhone) {
+        orderTitle += ` • ${order.deliveryInfo.recipientPhone}`;
+      }
+    } else if (order.orderType === 'DELIVERY') {
+      if (order.deliveryInfo?.fullAddress) {
+        orderTitle += ` • ${order.deliveryInfo.fullAddress}`;
+      }
+      if (order.deliveryInfo?.recipientPhone) {
+        orderTitle += ` • ${order.deliveryInfo.recipientPhone}`;
+      }
+    }
 
-    const getStatusColor = () => {
-      switch (order.orderStatus) {
-        case 'READY':
-          return theme.colors.primary;
-        case 'DELIVERED':
-          return theme.colors.secondary;
-        case 'IN_PROGRESS':
-          return theme.colors.tertiary;
+    const getStatusColor = (status: string) => {
+      switch (status) {
         case 'PENDING':
-          return theme.colors.outline;
+          return '#FFA000'; // Orange
+        case 'IN_PROGRESS':
+          return theme.colors.primary;
+        case 'READY':
+          return '#4CAF50'; // Green
+        case 'DELIVERED':
+          return theme.colors.tertiary;
         default:
-          return theme.colors.outline;
+          return theme.colors.onSurfaceVariant;
       }
     };
 
-    const getStatusLabel = () => {
-      switch (order.orderStatus) {
+    const formatOrderStatus = (status: string) => {
+      switch (status) {
+        case 'PENDING':
+          return 'Pendiente';
+        case 'IN_PROGRESS':
+          return 'En preparación';
         case 'READY':
           return 'Listo';
         case 'DELIVERED':
           return 'Entregado';
-        case 'IN_PROGRESS':
-          return 'En preparación';
-        case 'PENDING':
-          return 'Pendiente';
         default:
-          return 'Desconocido';
+          return status;
       }
+    };
+
+    const getPaymentStatus = () => {
+      // Si hay pagos, verificar el estado
+      if (order.payments && order.payments.length > 0) {
+        const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
+        const totalAmount = typeof order.total === 'string' 
+          ? parseFloat(order.total) 
+          : order.total;
+        
+        if (totalPaid >= totalAmount) {
+          return 'paid';
+        } else if (totalPaid > 0) {
+          return 'partial';
+        }
+      }
+      return 'pending';
     };
 
     return (
       <Card
         style={[
-          styles.container,
+          styles.orderCard,
           {
             backgroundColor: isSelected
               ? theme.colors.primaryContainer
               : theme.colors.surface,
             borderColor: isSelected ? theme.colors.primary : 'transparent',
+            borderWidth: isSelected ? 2 : 0,
           },
         ]}
-        elevation={isSelected ? 2 : 1}
+        mode="elevated"
+        onPress={() => onShowDetails(order)}
       >
-        <TouchableOpacity
-          onPress={() => onToggleSelection(order.id)}
-          activeOpacity={0.7}
-        >
-          <Card.Content style={styles.cardContent}>
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <View style={styles.orderInfo}>
-                  <View style={styles.orderNumberRow}>
-                    <Text
-                      style={[
-                        styles.orderNumber,
-                        { color: theme.colors.onSurface },
-                      ]}
-                    >
-                      Orden #{order.dailyNumber}
-                    </Text>
-                    <Chip
-                      icon={getOrderTypeIcon()}
-                      style={[
-                        styles.typeChip,
-                        { backgroundColor: theme.colors.secondaryContainer },
-                      ]}
-                      textStyle={[
-                        styles.chipText,
-                        { color: theme.colors.onSecondaryContainer },
-                      ]}
-                      compact={true}
-                      mode="flat"
-                    >
-                      {getOrderTypeLabel()}
-                    </Chip>
-                    <Chip
-                      style={[
-                        styles.statusChip,
-                        { backgroundColor: getStatusColor() + '20' },
-                      ]}
-                      textStyle={[styles.chipText, { color: getStatusColor() }]}
-                      compact={true}
-                      mode="flat"
-                    >
-                      {getStatusLabel()}
-                    </Chip>
-                    {order.isFromWhatsApp && (
-                      <Chip
-                        icon="whatsapp"
-                        style={[
-                          styles.whatsappChip,
-                          { backgroundColor: '#25D366' + '20' },
-                        ]}
-                        textStyle={[styles.chipText, { color: '#25D366' }]}
-                        compact={true}
-                        mode="flat"
-                      >
-                        WhatsApp
-                      </Chip>
-                    )}
-                  </View>
-                </View>
-              </View>
-              <View style={styles.headerRight}>
-                <Text style={[styles.time, { color: theme.colors.primary }]}>
-                  {new Date(order.createdAt).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+        <Card.Content style={styles.cardContent}>
+          {/* Main Container */}
+          <View style={styles.mainContainer}>
+            {/* Left Side - Title and Time */}
+            <View style={styles.leftContainer}>
+              <Text style={[styles.orderNumber, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurface }]} numberOfLines={2}>
+                {orderTitle}
+                <Text style={[styles.orderPrice, { color: theme.colors.primary }]}> • ${order.total}</Text>
+              </Text>
+              <View style={styles.timeAndPaymentRow}>
+                <Text style={[styles.orderTime, { color: isSelected ? theme.colors.primary : theme.colors.primary }]}>
+                  {format(new Date(order.createdAt), 'p', { locale: es })}
                 </Text>
-                <View style={styles.priceAndCheckbox}>
-                  <Text style={[styles.total, { color: theme.colors.primary }]}>
-                    $
-                    {typeof order.total === 'string'
-                      ? parseFloat(order.total).toFixed(2)
-                      : order.total.toFixed(2)}
+                {order.estimatedDeliveryTime && (
+                  <Text style={[styles.estimatedTime, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant }]}>
+                    ⏱️{' '}
+                    {format(new Date(order.estimatedDeliveryTime), 'p', {
+                      locale: es,
+                    })}
                   </Text>
-                  <Checkbox
-                    status={isSelected ? 'checked' : 'unchecked'}
-                    onPress={() => onToggleSelection(order.id)}
-                    color={theme.colors.primary}
-                    style={styles.checkbox}
-                  />
-                </View>
+                )}
+                {(() => {
+                  const paymentStatus = getPaymentStatus();
+                  if (paymentStatus === 'paid') {
+                    return (
+                      <View
+                        style={[
+                          styles.paymentBadge,
+                          { backgroundColor: '#10B981' },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentBadgeText,
+                            { color: '#FFFFFF' },
+                          ]}
+                        >
+                          💵 Pagado
+                        </Text>
+                      </View>
+                    );
+                  } else if (paymentStatus === 'partial') {
+                    return (
+                      <View
+                        style={[
+                          styles.paymentBadge,
+                          { backgroundColor: '#F59E0B' },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentBadgeText,
+                            { color: '#FFFFFF' },
+                          ]}
+                        >
+                          💵 Parcial
+                        </Text>
+                      </View>
+                    );
+                  } else {
+                    return (
+                      <View
+                        style={[
+                          styles.paymentBadge,
+                          { backgroundColor: '#EF4444' },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentBadgeText,
+                            { color: '#FFFFFF' },
+                          ]}
+                        >
+                          💵 Pendiente
+                        </Text>
+                      </View>
+                    );
+                  }
+                })()}
               </View>
             </View>
 
-            <View style={styles.details}>
-              <View style={styles.detailsContent}>
-                {order.deliveryInfo?.recipientName && (
-                  <Text
-                    style={[
-                      styles.customerName,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {order.deliveryInfo.recipientName}{' '}
-                    {order.deliveryInfo.recipientPhone &&
-                      `• ${order.deliveryInfo.recipientPhone}`}
-                  </Text>
-                )}
-
-                {order.orderType === 'DINE_IN' && order.table && (
-                  <Text
-                    style={[
-                      styles.tableInfo,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Mesa {order.table.number}{' '}
-                    {order.table.area?.name && `- ${order.table.area.name}`}
-                  </Text>
-                )}
-
-                {order.orderType === 'DELIVERY' &&
-                  order.deliveryInfo?.fullAddress && (
-                    <Text
-                      style={[
-                        styles.address,
-                        { color: theme.colors.onSurfaceVariant },
-                      ]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {order.deliveryInfo.fullAddress}
-                    </Text>
-                  )}
-
-                <View style={styles.itemsInfo}>
-                  <Text
-                    style={[
-                      styles.itemsCount,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    {order.orderItems.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0,
-                    )}{' '}
-                    {order.orderItems.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0,
-                    ) === 1
-                      ? 'artículo'
-                      : 'artículos'}
-                  </Text>
-                </View>
-              </View>
-
-              <IconButton
-                icon="format-list-bulleted"
-                size={18}
-                onPress={() => onShowDetails(order)}
-                style={styles.detailsButton}
-                iconColor={theme.colors.primary}
+            {/* Right Side - Status and Checkbox */}
+            <View style={styles.rightContainer}>
+              <Chip
+                mode="flat"
+                style={[
+                  styles.statusChip,
+                  { backgroundColor: getStatusColor(order.orderStatus) },
+                ]}
+                textStyle={styles.statusChipText}
+              >
+                {formatOrderStatus(order.orderStatus)}
+              </Chip>
+              <Checkbox
+                status={isSelected ? 'checked' : 'unchecked'}
+                onPress={() => onToggleSelection(order.id)}
+                color={theme.colors.primary}
+                style={styles.checkbox}
               />
             </View>
-          </Card.Content>
-        </TouchableOpacity>
+          </View>
+
+          {/* Notes if any */}
+          {order.notes ? (
+            <Text style={[styles.notes, { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+              📝 {order.notes}
+            </Text>
+          ) : null}
+        </Card.Content>
       </Card>
     );
   },
@@ -250,114 +237,76 @@ export const OrderCard = React.memo<OrderCardProps>(
 OrderCard.displayName = 'OrderCard';
 
 const styles = StyleSheet.create({
-  container: {
+  orderCard: {
     marginBottom: 8,
-    borderWidth: 1.5,
   },
   cardContent: {
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
-  header: {
+  mainContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  leftContainer: {
     flex: 1,
+    paddingRight: 8,
   },
-  orderInfo: {
-    flex: 1,
-  },
-  orderNumberRow: {
-    flexDirection: 'row',
+  rightContainer: {
     alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
   },
   orderNumber: {
     fontSize: 16,
     fontWeight: 'bold',
     lineHeight: 22,
+    marginBottom: 4,
   },
-  typeChip: {
-    height: 28,
-    minHeight: 28,
-    marginVertical: 0,
-    minWidth: 65,
-    paddingHorizontal: 6,
+  orderPrice: {
+    fontWeight: '700',
   },
   statusChip: {
     height: 28,
     minHeight: 28,
-    marginVertical: 0,
-    minWidth: 65,
-    paddingHorizontal: 6,
+    marginBottom: 4,
   },
-  whatsappChip: {
-    height: 28,
-    minHeight: 28,
-    marginVertical: 0,
-    minWidth: 65,
-    paddingHorizontal: 6,
-  },
-  chipText: {
+  statusChipText: {
     fontSize: 12,
     fontWeight: '600',
+    color: 'white',
     lineHeight: 16,
   },
-  headerRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    minHeight: 50,
+  orderTime: {
+    fontSize: 16,
+    fontWeight: '600',
   },
-  priceAndCheckbox: {
+  estimatedTime: {
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  timeAndPaymentRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
+  },
+  paymentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 14,
   },
   checkbox: {
     margin: 0,
   },
-  total: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  detailsContent: {
-    flex: 1,
-  },
-  detailsButton: {
-    margin: 0,
-    marginLeft: 8,
-  },
-  customerName: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  tableInfo: {
-    fontSize: 11,
-  },
-  address: {
-    fontSize: 10,
-  },
-  itemsInfo: {
-    marginTop: 2,
-  },
-  itemsCount: {
-    fontSize: 10,
+  notes: {
+    fontSize: 12,
+    marginTop: 4,
     fontStyle: 'italic',
-  },
-  time: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'right',
   },
 });
