@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { PaymentEntity } from '../entities/payment.entity';
 import { PaymentRepository } from '../../payment.repository';
 import { Payment } from '../../../../domain/payment';
@@ -35,6 +35,18 @@ export class RelationalPaymentRepository implements PaymentRepository {
   async findByOrderId(orderId: string): Promise<Payment[]> {
     const paymentEntities = await this.paymentRepository.find({
       where: { order: { id: orderId } },
+      relations: ['order'],
+    });
+    return paymentEntities
+      .map((entity) => this.paymentMapper.toDomain(entity))
+      .filter((item): item is Payment => item !== null);
+  }
+
+  async findByDateRange(startDate: Date, endDate: Date): Promise<Payment[]> {
+    const paymentEntities = await this.paymentRepository.find({
+      where: {
+        createdAt: Between(startDate, endDate),
+      },
       relations: ['order'],
     });
     return paymentEntities
