@@ -17,7 +17,7 @@ import { useRoute } from '@react-navigation/native';
 import { shiftsService, type Shift } from '../../../services/shifts';
 import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
 import { useAuthStore } from '../../../app/store/authStore';
-import { canOpenDay } from '../../../app/utils/roleUtils';
+import { canOpenShift } from '../../../app/utils/roleUtils';
 import {
   useGetOpenOrdersQuery,
   usePrintKitchenTicketMutation,
@@ -134,7 +134,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [shiftLoading, setShiftLoading] = useState(true);
   
   // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
-  const userCanOpenShift = canOpenDay(user);
+  const userCanOpenShift = canOpenShift(user);
 
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);

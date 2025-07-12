@@ -9,7 +9,7 @@ export class Shift {
   id: string;
   date: Date; // Fecha del turno (sin hora)
   globalShiftNumber: number; // Número consecutivo global de turnos
-  shiftNumber: number; // Número de turno del día (1, 2, 3, etc.)
+  shiftNumber: number; // Número de turno de la fecha (1, 2, 3, etc.)
   openedAt: Date;
   closedAt: Date | null;
   openedBy: User;

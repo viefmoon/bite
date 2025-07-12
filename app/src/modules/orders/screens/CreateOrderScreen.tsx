@@ -40,7 +40,7 @@ import {
 import { shiftsService, type Shift } from '@/services/shifts';
 import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
 import { useAuthStore } from '@/app/store/authStore';
-import { canOpenDay } from '@/app/utils/roleUtils';
+import { canOpenShift } from '@/app/utils/roleUtils';
 
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
@@ -76,7 +76,7 @@ const CreateOrderScreen = () => {
   const [shiftLoading, setShiftLoading] = useState(true);
   
   // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
-  const userCanOpenShift = canOpenDay(user);
+  const userCanOpenShift = canOpenShift(user);
 
   const createOrderMutation = useCreateOrderMutation();
 

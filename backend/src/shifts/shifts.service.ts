@@ -180,13 +180,6 @@ export class ShiftsService {
     return this.shiftRepository.findCurrent();
   }
 
-  /**
-   * Alias para compatibilidad con API
-   * @deprecated Use getCurrentShift() instead
-   */
-  async getCurrentDay(): Promise<Shift | null> {
-    return this.getCurrentShift();
-  }
 
   /**
    * Verifica si hay un turno abierto

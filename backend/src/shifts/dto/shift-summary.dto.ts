@@ -21,7 +21,7 @@ export class ShiftSummaryDto {
   globalShiftNumber: number;
 
   @ApiProperty({
-    description: 'Número de turno del día',
+    description: 'Número de turno de la fecha',
     example: 1,
   })
   shiftNumber: number;

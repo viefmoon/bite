@@ -345,7 +345,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
                 id: remoteOrder.id,
                 customer,
                 shiftOrderNumber,
-                // dailyOrderCounterId campo obsoleto, se mantiene para compatibilidad
                 isFromWhatsApp: true,
                 orderStatus: OrderStatus.PENDING,
                 orderType: remoteOrder.orderType || OrderType.DELIVERY,

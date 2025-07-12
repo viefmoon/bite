@@ -64,7 +64,6 @@ export interface FullMenuCategory extends Category {
 export interface FindAllOrdersDto {
   userId?: string;
   tableId?: string;
-  dailyOrderCounterId?: string;
   orderStatus?: OrderStatus | OrderStatus[]; // Permitir un array de estados
   orderType?: OrderType;
   startDate?: string; // Usar string para fechas en DTOs
