@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx env-cmd ts-node:*)",
+      "Bash(node:*)",
+      "Bash(npx typeorm migration:run:*)",
+      "Bash(npx ts-node:*)"
+    ],
+    "deny": []
+  }
+}
