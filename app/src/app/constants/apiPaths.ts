@@ -51,4 +51,12 @@ export const API_PATHS = {
   KITCHEN_MARK_PREPARED: '/api/v1/kitchen/order-items/:itemId/prepare',
   KITCHEN_MARK_UNPREPARED: '/api/v1/kitchen/order-items/:itemId/unprepare',
   KITCHEN_MY_SCREEN: '/api/v1/kitchen/my-screen',
+
+  SHIFTS: '/api/v1/shifts',
+  SHIFTS_OPEN: '/api/v1/shifts/open',
+  SHIFTS_CLOSE: '/api/v1/shifts/close',
+  SHIFTS_CURRENT: '/api/v1/shifts/current',
+  SHIFTS_HISTORY: '/api/v1/shifts/history',
+  SHIFTS_DETAIL: '/api/v1/shifts/:id',
+  ORDERS_BY_SHIFT: '/api/v1/orders/shift/:shiftId',
 } as const;

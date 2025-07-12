@@ -40,7 +40,7 @@ import CustomImagePicker, {
 } from '@/app/components/common/CustomImagePicker';
 import { ImageUploadService } from '@/app/lib/imageUploadService';
 import { getImageUrl } from '@/app/lib/imageUtils';
-import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQueries';
+import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
 import { Menu } from 'react-native-paper';
@@ -177,7 +177,6 @@ function ProductFormModal({
   const priceValue = watch('price');
   const selectedPreparationScreenId = watch('preparationScreenId');
 
- 
   useEffect(() => {
     setPriceInputValue(
       priceValue !== null && priceValue !== undefined
@@ -189,7 +188,6 @@ function ProductFormModal({
   const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true });
 
- 
   const { data: preparationScreensResponse } = useGetPreparationScreens(
     {},
     { page: 1, limit: 50 },
@@ -198,7 +196,6 @@ function ProductFormModal({
 
   const allModifierGroups = modifierGroupsResponse?.data || [];
 
- 
   useEffect(() => {
     const loadModifiers = async () => {
       const modifiersMap: Record<string, any[]> = {};
@@ -257,7 +254,6 @@ function ProductFormModal({
 
     let finalPhotoId: string | null | undefined = undefined;
 
-   
     if (localSelectedFile) {
       setIsInternalImageUploading(true);
       try {
@@ -286,15 +282,13 @@ function ProductFormModal({
         initialData ?? undefined,
       );
     }
-   
+
     const finalData = {
       ...formData,
       price: hasVariants ? null : formData.price,
       variants: hasVariants ? formData.variants : [],
     };
-   
 
-   
     await onSubmit(finalData, finalPhotoId, localSelectedFile);
     setLocalSelectedFile(null);
   };
@@ -317,7 +311,10 @@ function ProductFormModal({
         ...(originalVariantId && { id: originalVariantId }),
       };
 
-      const finalDataToUpdate = !originalVariantId && 'id' in dataToUpdate ? (({ id, ...rest }) => rest)(dataToUpdate) : dataToUpdate;
+      const finalDataToUpdate =
+        !originalVariantId && 'id' in dataToUpdate
+          ? (({ id, ...rest }) => rest)(dataToUpdate)
+          : dataToUpdate;
 
       updateVariant(editingVariantIndex, finalDataToUpdate as ProductVariant);
     } else {

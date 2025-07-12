@@ -172,7 +172,6 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
     } catch (error: any) {
       // No mostrar snackbar aquí porque el hook ya lo hace
       // Solo hacer log para debugging
-      
     }
   };
 

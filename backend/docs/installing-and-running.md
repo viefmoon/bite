@@ -35,32 +35,8 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
 1. Run additional container:
 
    ```bash
-docker compose up -d postgres adminer maildev
+   docker compose up -d postgres adminer maildev
    ```
-
-  //borrar todo
-  # 1. Detener y eliminar TODO (contenedores, volúmenes e imágenes)
-  docker-compose down --volumes --rmi all
-
-  # 2. Eliminar el volumen de la base de datos manualmente (por si 
-  acaso)
-  docker volume rm backend_postgres || true
-
-  # 3. Limpiar cualquier contenedor o volumen huérfano
-  docker system prune -a --volumes -f
-
-  # 4. Iniciar solo PostgreSQL con una base de datos completamente 
-  nueva
-  docker-compose up -d postgres adminer maildev
-
-  # 5. Esperar que PostgreSQL esté listo
-  sleep 5
-
-  # 6. Ahora generar la migración
-  npm run migration:generate -- src/database/migrations/InitialSchema
-
-
-  sudo lsof -ti:3000 | xargs kill -9
 
 1. Install dependency
 
@@ -83,6 +59,16 @@ docker compose up -d postgres adminer maildev
    ```bash
    npm run migration:run
    ```
+
+   > **Nota para usuarios de Windows**: Si necesitas generar nuevas migraciones y encuentras el error `/usr/bin/bash: Files\Git\bin\bash.exe: No such file or directory`, esto se debe a que `env-cmd` tiene problemas con las rutas de Git Bash que contienen espacios. En lugar de usar:
+   > ```bash
+   > npm run migration:generate -- src/database/migrations/MigrationName
+   > ```
+   > Usa este comando alternativo:
+   > ```bash
+   > npx typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts src/database/migrations/MigrationName
+   > ```
+   > Este comando evita el problema con env-cmd y funciona correctamente en Windows.
 
 1. Run seeds
 
@@ -148,5 +134,3 @@ If you want quick run your app, you can use following commands:
 Previous: [Introduction](introduction.md)
 
 Next: [Architecture](architecture.md)
-
-npx eslint --fix src/categories/**/\*.ts src/subcategories/**/\*.ts

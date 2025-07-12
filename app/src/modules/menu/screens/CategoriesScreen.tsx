@@ -80,7 +80,7 @@ const CategoriesScreen: React.FC = () => {
   });
 
   // Refrescar categorías cuando la pantalla recibe foco
- 
+
   useRefreshModuleOnFocus('categories');
 
   const { ListEmptyComponent } = useListState({
@@ -215,7 +215,6 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-   
     return categoriesResponse?.data ?? [];
   }, [categoriesResponse?.data]);
 

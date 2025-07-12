@@ -22,6 +22,7 @@ import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizat
 import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavigator';
 import { UsersStackNavigator } from '../../modules/users/navigation/UsersStackNavigator';
 import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
+import { ShiftAuditStackNavigator } from '../../modules/shiftAudit/navigation/ShiftAuditStackNavigator';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -188,6 +189,9 @@ export function AppDrawerNavigator() {
                 title =
                   kitchenScreenName +
                   (filters.orderType ? getFilterText() : '');
+                break;
+              case 'ShiftAuditStack':
+                title = 'Historial de Turnos';
                 break;
               default:
                 title = children?.toString() || '';
@@ -402,6 +406,20 @@ export function AppDrawerNavigator() {
             drawerIcon: ({ color }) => (
               <Icon
                 source="account-multiple"
+                color={color}
+                size={responsive.dimensions.iconSize.medium}
+              />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="ShiftAuditStack"
+          component={ShiftAuditStackNavigator}
+          options={{
+            title: 'Historial de Turnos',
+            drawerIcon: ({ color }) => (
+              <Icon
+                source="history"
                 color={color}
                 size={responsive.dimensions.iconSize.medium}
               />

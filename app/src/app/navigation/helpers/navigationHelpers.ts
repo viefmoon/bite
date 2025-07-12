@@ -17,6 +17,7 @@ export const ALL_DRAWER_ROUTES: DrawerSection[] = [
   'CustomersStack',
   'SyncStack',
   'UsersStack',
+  'ShiftAuditStack',
   'KitchenStack',
 ];
 
@@ -36,6 +37,7 @@ export const ROUTE_INITIAL_SCREENS: Record<DrawerSection, string> = {
   CustomersStack: 'Customers',
   SyncStack: 'SyncStatus',
   UsersStack: 'UsersList',
+  ShiftAuditStack: 'ShiftsList',
   KitchenStack: 'KitchenOrders',
 };
 

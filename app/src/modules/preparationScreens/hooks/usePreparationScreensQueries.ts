@@ -87,7 +87,6 @@ export const useCreatePreparationScreen = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      
     },
   });
 };
@@ -307,7 +306,6 @@ export const useAssociateProducts = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      
     },
   });
 };

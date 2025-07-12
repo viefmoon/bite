@@ -14,6 +14,7 @@ import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCusto
 import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStackNavigator';
 import type { UsersStackParamList } from '../../modules/users/navigation/UsersStackNavigator';
 import type { KitchenStackParamList } from '../../modules/kitchen/navigation/KitchenNavigator';
+import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigation/types';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -66,10 +67,13 @@ export type AppDrawerParamList = {
   SyncStack: NavigatorScreenParams<SyncStackParamList>; // Stack de sincronización
   UsersStack: NavigatorScreenParams<UsersStackParamList>; // Stack de usuarios
   KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
+  ShiftAuditStack: NavigatorScreenParams<ShiftAuditStackParamList>; // Stack de auditoría de turnos
 };
 
 export type DrawerScreenProps<T extends keyof AppDrawerParamList> =
   NavigationDrawerScreenProps<AppDrawerParamList, T>;
+
+export type DrawerNavigatorParamList = AppDrawerParamList;
 
 declare global {
   namespace ReactNavigation {
@@ -89,6 +93,7 @@ declare global {
         PizzaCustomizationsStackParamList,
         CustomersStackParamList,
         SyncStackParamList,
-        UsersStackParamList {}
+        UsersStackParamList,
+        ShiftAuditStackParamList {}
   }
 }

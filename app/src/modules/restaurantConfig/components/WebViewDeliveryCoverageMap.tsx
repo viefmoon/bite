@@ -30,7 +30,8 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   const theme = useAppTheme();
   const { width, height } = useWindowDimensions();
   const webViewRef = useRef<WebView>(null);
-  const { config: mapsConfig, loading: isLoadingApiKey } = useGoogleMapsConfig();
+  const { config: mapsConfig, loading: isLoadingApiKey } =
+    useGoogleMapsConfig();
   const apiKey = mapsConfig?.apiKey;
 
   const styles = React.useMemo(
@@ -48,7 +49,8 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   );
 
   // HTML del mapa con Google Maps API
-  const mapHtml = apiKey ? `
+  const mapHtml = apiKey
+    ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -330,7 +332,8 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   </script>
 </body>
 </html>
-  ` : '';
+  `
+    : '';
 
   // Manejar mensajes del WebView
   const handleWebViewMessage = (event: any) => {
@@ -465,7 +468,9 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
       <View style={[styles.container, styles.loadingContainer]}>
         <Surface style={styles.loadingCard} elevation={3}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Cargando configuración del mapa...</Text>
+          <Text style={styles.loadingText}>
+            Cargando configuración del mapa...
+          </Text>
         </Surface>
       </View>
     );

@@ -42,7 +42,8 @@ export default function AddressFormModal({
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  const { config: mapsConfig, loading: isLoadingApiKey } = useGoogleMapsConfig();
+  const { config: mapsConfig, loading: isLoadingApiKey } =
+    useGoogleMapsConfig();
   const apiKey = mapsConfig?.apiKey;
   const [mapReady, setMapReady] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
@@ -112,7 +113,9 @@ export default function AddressFormModal({
 
   // HTML del mapa con Google Maps API - Memoizado para evitar recrearlo en cada render
   const mapHtml = React.useMemo(
-    () => apiKey ? `
+    () =>
+      apiKey
+        ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -305,7 +308,8 @@ export default function AddressFormModal({
   </script>
 </body>
 </html>
-  ` : '',
+  `
+        : '',
     [latitude, longitude, isMapFullscreen, apiKey],
   );
 
@@ -790,8 +794,13 @@ export default function AddressFormModal({
                     <View style={styles.mapView}>
                       {isLoadingApiKey || !mapHtml ? (
                         <View style={[styles.map, styles.mapLoadingContainer]}>
-                          <ActivityIndicator size="large" color={theme.colors.primary} />
-                          <Text style={styles.mapLoadingText}>Cargando mapa...</Text>
+                          <ActivityIndicator
+                            size="large"
+                            color={theme.colors.primary}
+                          />
+                          <Text style={styles.mapLoadingText}>
+                            Cargando mapa...
+                          </Text>
                         </View>
                       ) : (
                         <WebView
@@ -835,8 +844,14 @@ export default function AddressFormModal({
                           <View style={styles.expandButtonContainer}>
                             <Button
                               mode="contained"
-                              icon={isMapFullscreen ? 'fullscreen-exit' : 'fullscreen'}
-                              onPress={() => setIsMapFullscreen(!isMapFullscreen)}
+                              icon={
+                                isMapFullscreen
+                                  ? 'fullscreen-exit'
+                                  : 'fullscreen'
+                              }
+                              onPress={() =>
+                                setIsMapFullscreen(!isMapFullscreen)
+                              }
                               style={styles.expandButton}
                               labelStyle={styles.expandButtonLabel}
                             >
@@ -951,9 +966,14 @@ export default function AddressFormModal({
               {hasValidCoordinates && (
                 <View style={styles.fullscreenCoordinates}>
                   <Surface style={styles.coordinatesBadge} elevation={3}>
-                    <Icon source="map-marker" size={20} color={theme.colors.primary} />
+                    <Icon
+                      source="map-marker"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
                     <Text variant="bodyLarge" style={styles.coordinatesText}>
-                      {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                      {Number(latitude).toFixed(6)},{' '}
+                      {Number(longitude).toFixed(6)}
                     </Text>
                   </Surface>
                 </View>

@@ -15,7 +15,8 @@ export type DrawerSection =
   | 'CustomersStack'
   | 'SyncStack'
   | 'UsersStack'
-  | 'KitchenStack';
+  | 'KitchenStack'
+  | 'ShiftAuditStack';
 
 // Definir permisos por rol
 export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
@@ -35,6 +36,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'CustomersStack',
     'SyncStack',
     'UsersStack',
+    'ShiftAuditStack',
   ],
 
   // Manager - Acceso completo excepto usuarios
@@ -52,6 +54,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'RestaurantConfigStack',
     'CustomersStack',
     'SyncStack',
+    'ShiftAuditStack',
   ],
 
   // Cashier - Ventas, clientes y configuración básica
@@ -159,6 +162,11 @@ export const DRAWER_SECTIONS = {
     title: 'Administración',
     items: [
       { route: 'UsersStack', label: 'Usuarios', icon: 'account-multiple' },
+      {
+        route: 'ShiftAuditStack',
+        label: 'Historial de Turnos',
+        icon: 'history',
+      },
     ],
   },
 } as const;

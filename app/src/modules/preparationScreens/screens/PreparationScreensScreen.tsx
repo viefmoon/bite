@@ -173,7 +173,6 @@ const PreparationScreensScreen = () => {
         // Dar tiempo para que se reinicialice el cliente
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        
         // No es crítico, el usuario puede intentar manualmente
       }
     }
