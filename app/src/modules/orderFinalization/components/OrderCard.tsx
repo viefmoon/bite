@@ -33,7 +33,7 @@ export const OrderCard = React.memo<OrderCardProps>(
     const theme = useAppTheme();
 
     // Construir el título EXACTAMENTE como en OpenOrdersScreen
-    let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
+    let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
     if (order.orderType === 'DINE_IN' && order.table) {
       // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"

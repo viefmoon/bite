@@ -1,7 +1,6 @@
 import { User } from '../../users/domain/user';
 import { Table } from '../../tables/domain/table';
 import { Customer } from '../../customers/domain/customer';
-import { DailyOrderCounter } from './daily-order-counter';
 import { OrderStatus } from './enums/order-status.enum';
 import { OrderType } from './enums/order-type.enum';
 import { Payment } from '../../payments/domain/payment';
@@ -16,9 +15,9 @@ export class Order {
 
   tableId: string | null;
 
-  dailyNumber: number;
+  shiftOrderNumber: number;
 
-  dailyOrderCounterId: string;
+  shiftId: string;
 
   scheduledAt: Date | null;
 
@@ -33,8 +32,6 @@ export class Order {
   user: User | null;
 
   table: Table | null;
-
-  dailyOrderCounter: DailyOrderCounter;
 
   orderItems: OrderItem[];
   payments: Payment[] | null;

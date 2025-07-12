@@ -17,6 +17,7 @@ import { CommonModule } from '../common/common.module';
 import { CustomersModule } from '../customers/customers.module';
 import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.service';
 import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
+import { ShiftsModule } from '../shifts/shifts.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.m
     forwardRef(() => ProductModifiersModule),
     CustomersModule,
     RestaurantConfigModule,
+    forwardRef(() => ShiftsModule),
   ],
   controllers: [OrdersController, TicketImpressionsController],
   providers: [

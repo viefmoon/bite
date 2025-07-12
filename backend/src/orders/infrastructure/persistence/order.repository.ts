@@ -9,6 +9,7 @@ export abstract class OrderRepository {
   abstract create(data: {
     userId: string | null;
     tableId: string | null;
+    shiftId?: string | null;
     scheduledAt?: Date | null;
     orderStatus: string;
     orderType: string;
@@ -32,11 +33,11 @@ export abstract class OrderRepository {
   abstract findById(id: Order['id']): Promise<NullableType<Order>>;
   abstract findByUserId(userId: Order['userId']): Promise<Order[]>;
   abstract findByTableId(tableId: Order['tableId']): Promise<Order[]>;
-  abstract findByDailyOrderCounterId(
-    dailyOrderCounterId: Order['dailyOrderCounterId'],
-  ): Promise<Order[]>;
+  abstract findByShiftId(shiftId: Order['shiftId']): Promise<Order[]>;
   abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
   abstract findOrdersForFinalization(): Promise<Order[]>;
+  abstract findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
+  abstract findByStatus(statuses: string[]): Promise<Order[]>;
 
   abstract update(
     id: Order['id'],

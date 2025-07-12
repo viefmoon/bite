@@ -423,7 +423,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                         { color: theme.colors.surface },
                       ]}
                     >
-                      #{order.dailyNumber}
+                      #{order.shiftOrderNumber}
                     </Text>
                     <View
                       style={[
@@ -543,7 +543,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                 <Text
                   style={[styles.orderNumber, { color: theme.colors.surface }]}
                 >
-                  #{order.dailyNumber}
+                  #{order.shiftOrderNumber}
                 </Text>
                 <View
                   style={[
@@ -754,7 +754,7 @@ export const OrderCard = React.memo<OrderCardProps>(
           visible={showHistory}
           onDismiss={() => setShowHistory(false)}
           orderId={order.id}
-          orderNumber={order.dailyNumber}
+          orderNumber={order.shiftOrderNumber}
           orderData={order}
         />
       </Surface>

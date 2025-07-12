@@ -18,7 +18,7 @@ export const API_PATHS = {
   MODIFIER_GROUPS: '/api/v1/modifier-groups',
 
   ORDERS: '/api/v1/orders',
-  ORDERS_OPEN_TODAY: '/api/v1/orders/open-today',
+  ORDERS_OPEN_CURRENT_SHIFT: '/api/v1/orders/open-current-shift',
   ORDERS_FOR_FINALIZATION: '/api/v1/orders/for-finalization',
   ORDERS_FINALIZE_MULTIPLE: '/api/v1/orders/finalize-multiple',
   ORDERS_DETAIL: '/api/v1/orders/:orderId/detail',

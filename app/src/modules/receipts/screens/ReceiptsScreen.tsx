@@ -166,7 +166,7 @@ export const ReceiptsScreen: React.FC = () => {
   // Renderizar item de recibo
   const renderReceiptItem = ({ item }: { item: Order }) => {
     // Construir el título según el tipo de orden
-    let orderTitle = `#${item.dailyNumber} • ${formatOrderTypeShort(item.orderType)}`;
+    let orderTitle = `#${item.shiftOrderNumber} • ${formatOrderTypeShort(item.orderType)}`;
 
     if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
       // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
@@ -453,7 +453,7 @@ export const ReceiptsScreen: React.FC = () => {
           setOrderToRecover(null);
         }}
         onConfirm={handleConfirmRecover}
-        orderNumber={orderToRecover?.dailyNumber?.toString()}
+        orderNumber={orderToRecover?.shiftOrderNumber?.toString()}
         isLoading={recoverOrderMutation.isPending}
       />
 

@@ -48,6 +48,7 @@ import ProductCustomizationModal from './ProductCustomizationModal';
 import type { FullMenuProduct as Product } from '../types/orders.types';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
 import type { Table } from '@/modules/areasTables/types/areasTables.types';
+import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import { useCart, CartItem, CartItemModifier } from '../context/CartContext'; // Importar CartItem y CartItemModifier
 import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
 import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
@@ -483,11 +484,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const { user } = useAuthStore(); // Obtener usuario autenticado
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
 
-  // Verificar si el usuario puede registrar pagos (admin, manager, cashier)
+  // Verificar si el usuario puede registrar pagos usando la utilidad centralizada
   const canRegisterPayments = useMemo(() => {
-    if (!user?.role?.id) return false;
-    // RoleEnum: admin = 1, manager = 2, cashier = 3
-    return [1, 2, 3].includes(user.role.id);
+    return checkCanRegisterPayments(user);
   }, [user]);
 
   // Estados locales solo para UI (errores, visibilidad de menús/modales)

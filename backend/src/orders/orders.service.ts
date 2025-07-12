@@ -43,6 +43,7 @@ import {
 } from './domain/order-preparation-screen-status';
 import { PaymentsService } from '../payments/payments.service';
 import { TablesService } from '../tables/tables.service';
+import { ShiftsService } from '../shifts/shifts.service';
 
 @Injectable()
 export class OrdersService {
@@ -63,9 +64,18 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly paymentsService: PaymentsService,
     private readonly tablesService: TablesService,
+    private readonly shiftsService: ShiftsService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    // Validar que haya un turno abierto
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift || !currentShift.isOpen()) {
+      throw new BadRequestException(
+        'No se pueden crear órdenes. No hay un turno abierto. Por favor, solicite a un administrador o gerente que abra el turno.',
+      );
+    }
+
     // Validar si el cliente está baneado
     if (createOrderDto.customerId) {
       const isBanned = await this.customersService.isCustomerBanned(
@@ -143,6 +153,7 @@ export class OrdersService {
     const order = await this.orderRepository.create({
       userId: createOrderDto.userId || null,
       tableId: tableId || null, // Usar el tableId que puede ser de una mesa temporal
+      shiftId: currentShift.id, // Asociar la orden al turno actual
       scheduledAt: createOrderDto.scheduledAt || null,
       orderType: createOrderDto.orderType,
       orderStatus: OrderStatus.IN_PROGRESS, // Estado inicial cuando se crea una orden
@@ -628,15 +639,30 @@ export class OrdersService {
     return this.orderRepository.findByTableId(tableId);
   }
 
-  async findByDailyOrderCounterId(
-    dailyOrderCounterId: string,
-  ): Promise<Order[]> {
-    return this.orderRepository.findByDailyOrderCounterId(dailyOrderCounterId);
+  async findByShiftId(shiftId: string): Promise<Order[]> {
+    return this.orderRepository.findByShiftId(shiftId);
   }
 
   async findOpenOrders(): Promise<Order[]> {
-    const today = new Date();
-    return this.orderRepository.findOpenOrdersByDate(today);
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      // Si no hay turno abierto, devolver array vacío
+      return [];
+    }
+
+    // Buscar órdenes abiertas dentro del rango del turno
+    const openOrders = await this.orderRepository.findByDateRange(
+      currentShift.openedAt,
+      new Date(), // Hasta ahora
+    );
+
+    // Filtrar solo las órdenes que no están completadas o canceladas
+    return openOrders.filter(
+      (order) =>
+        order.orderStatus !== OrderStatus.COMPLETED &&
+        order.orderStatus !== OrderStatus.CANCELLED,
+    );
   }
 
   // OrderItem methods

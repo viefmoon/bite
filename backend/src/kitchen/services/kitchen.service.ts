@@ -182,7 +182,7 @@ export class KitchenService {
   ): KitchenOrderDto {
     const dto = new KitchenOrderDto();
     dto.id = order.id;
-    dto.dailyNumber = order.dailyNumber;
+    dto.shiftOrderNumber = order.shiftOrderNumber;
     dto.orderType = order.orderType;
     dto.orderStatus = order.orderStatus;
     dto.createdAt = order.createdAt;

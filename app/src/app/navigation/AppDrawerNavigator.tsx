@@ -29,6 +29,7 @@ import { Icon, Surface, Checkbox, Text as PaperText } from 'react-native-paper';
 import type { AppDrawerParamList } from './types';
 import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
+import { ShiftIndicator } from '../components/ShiftIndicator';
 import { useAuthStore } from '../store/authStore';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
 import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
@@ -204,6 +205,7 @@ export function AppDrawerNavigator() {
           },
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ShiftIndicator />
               <ConnectionIndicator />
             </View>
           ),
@@ -463,6 +465,7 @@ export function AppDrawerNavigator() {
                   </PaperText>
                 </TouchableOpacity>
                 <KitchenFilterButton />
+                <ShiftIndicator />
                 <ConnectionIndicator />
               </View>
             ),

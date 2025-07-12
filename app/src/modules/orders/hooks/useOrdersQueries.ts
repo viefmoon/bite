@@ -21,7 +21,7 @@ const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
   list: (filters: FindAllOrdersDto) => [...orderKeys.lists(), filters] as const,
-  openToday: () => [...orderKeys.all, 'list', 'open-today'] as const, // Nueva clave para órdenes abiertas del día
+  openCurrentShift: () => [...orderKeys.all, 'list', 'open-current-shift'] as const, // Clave para órdenes abiertas del turno actual
   details: () => [...orderKeys.all, 'detail'] as const,
   // detail: (id: string) => [...orderKeys.details(), id] as const, // Ejemplo
 };
@@ -62,7 +62,7 @@ export const useUpdateOrderMutation = () => {
     onSuccess: (updatedOrder, variables) => {
       // Invalidar queries relevantes para refrescar datos
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() }); // Invalida todas las listas
-      queryClient.invalidateQueries({ queryKey: orderKeys.openToday() }); // Invalida la lista de órdenes abiertas
+      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() }); // Invalida la lista de órdenes abiertas del turno actual
       // IMPORTANTE: Invalidar también el detalle específico de la orden
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), variables.orderId],
@@ -72,7 +72,7 @@ export const useUpdateOrderMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
 
       showSnackbar({
-        message: `Orden #${updatedOrder.dailyNumber} actualizada`,
+        message: `Orden #${updatedOrder.shiftOrderNumber} actualizada`,
         type: 'success',
       });
     },
@@ -99,7 +99,7 @@ export const useCancelOrderMutation = () => {
     onSuccess: (cancelledOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() });
       // Invalidar también el detalle específico
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), orderId],
@@ -108,7 +108,7 @@ export const useCancelOrderMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
 
       showSnackbar({
-        message: `Orden #${cancelledOrder.dailyNumber} cancelada`,
+        message: `Orden #${cancelledOrder.shiftOrderNumber} cancelada`,
         type: 'info',
       });
     },
@@ -136,14 +136,14 @@ export const useCompleteOrderMutation = () => {
     onSuccess: (completedOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openToday() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() });
       // Invalidar también el detalle específico
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), orderId],
       });
 
       showSnackbar({
-        message: `Orden #${completedOrder.dailyNumber} finalizada exitosamente`,
+        message: `Orden #${completedOrder.shiftOrderNumber} finalizada exitosamente`,
         type: 'success',
       });
     },
@@ -214,11 +214,11 @@ export const useGetOpenOrdersQuery = (options?: {
   enabled?: boolean;
 }): UseQueryResult<Order[], ApiError> => {
   // Devuelve Order[] directamente
-  const queryKey = orderKeys.openToday(); // Usar la nueva clave específica
+  const queryKey = orderKeys.openCurrentShift(); // Usar la clave específica del turno actual
 
   return useQuery<Order[], ApiError>({
     queryKey: queryKey,
-    queryFn: () => orderService.getOpenOrdersToday(), // Llamar a la nueva función del servicio
+    queryFn: () => orderService.getOpenOrdersCurrentShift(), // Llamar a la función del servicio del turno actual
     enabled: options?.enabled ?? true,
     refetchInterval: 10000, // Actualizar cada 10 segundos
     refetchIntervalInBackground: false, // No actualizar cuando la app está en background

@@ -29,13 +29,13 @@ export class FindAllOrdersDto {
   tableId?: string;
 
   @ApiProperty({
-    description: 'Filter orders by daily order counter ID',
-    example: 'COUNTER-1',
+    description: 'Filter orders by shift ID',
+    example: 'SHIFT-1',
     required: false,
   })
   @IsOptional()
   @IsString()
-  dailyOrderCounterId?: string;
+  shiftId?: string;
 
   @ApiProperty({
     description: 'Filter orders by status',

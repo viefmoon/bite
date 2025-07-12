@@ -14,6 +14,10 @@ import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useRoute } from '@react-navigation/native';
+import { shiftsService, type Shift } from '../../../services/shifts';
+import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
+import { useAuthStore } from '../../../app/store/authStore';
+import { canOpenDay } from '../../../app/utils/roleUtils';
 import {
   useGetOpenOrdersQuery,
   usePrintKitchenTicketMutation,
@@ -123,6 +127,14 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [isPrinterModalVisible, setIsPrinterModalVisible] = useState(false);
   const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
   const printKitchenTicketMutation = usePrintKitchenTicketMutation();
+  
+  // Estado para turno
+  const user = useAuthStore((state) => state.user);
+  const [shift, setShift] = useState<Shift | null>(null);
+  const [shiftLoading, setShiftLoading] = useState(true);
+  
+  // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
+  const userCanOpenShift = canOpenDay(user);
 
   // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -156,6 +168,23 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch,
     isFetching,
   } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
+  
+  // Cargar estado del turno
+  const loadShift = async () => {
+    try {
+      setShiftLoading(true);
+      const currentShift = await shiftsService.getCurrentShift();
+      setShift(currentShift);
+    } catch (error) {
+      console.error('Error al cargar turno:', error);
+    } finally {
+      setShiftLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadShift();
+  }, []);
 
   // No necesitamos useRefreshModuleOnFocus aquí porque el hook useGetOpenOrdersQuery
   // ya tiene configurado refetchInterval, refetchOnMount y refetchOnWindowFocus
@@ -204,7 +233,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const renderOrderItem = useCallback(
     ({ item: order }: { item: Order }) => {
       // Construir el título según el tipo de orden
-      let orderTitle = `#${order.dailyNumber} • ${formatOrderTypeShort(order.orderType)}`;
+      let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
       if (order.orderType === OrderTypeEnum.DINE_IN && order.table) {
         // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
@@ -450,7 +479,23 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {isLoading && !ordersData ? (
+      {!shiftLoading && (!shift || shift.status !== 'OPEN') ? (
+        <View style={styles.container}>
+          <ShiftStatusBanner
+            shift={shift}
+            loading={shiftLoading}
+            onOpenShift={() => navigation.goBack()}
+            canOpenShift={userCanOpenShift}
+          />
+          <View style={styles.emptyStateContainer}>
+            <Text variant="bodyLarge" style={styles.emptyStateText}>
+              {userCanOpenShift
+                ? 'Regresa a la pantalla anterior para abrir el turno.'
+                : 'Solicita a un administrador que abra el turno.'}
+            </Text>
+          </View>
+        </View>
+      ) : isLoading && !ordersData ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Cargando órdenes...</Text>
@@ -566,7 +611,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               isEditMode={true}
               orderId={editingOrderId}
               orderNumber={
-                ordersData?.find((o) => o.id === editingOrderId)?.dailyNumber
+                ordersData?.find((o) => o.id === editingOrderId)?.shiftOrderNumber
               }
               orderDate={
                 ordersData?.find((o) => o.id === editingOrderId)?.createdAt
@@ -605,7 +650,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 const orderId = editingOrderId;
                 const orderNumber = ordersData?.find(
                   (o) => o.id === editingOrderId,
-                )?.dailyNumber;
+                )?.shiftOrderNumber;
 
                 // Navegar a añadir productos
                 setTimeout(() => {
@@ -864,6 +909,16 @@ const createStyles = (
       color: theme.colors.onSurfaceVariant,
       marginTop: theme.spacing.xs, // Reducido de theme.spacing.s
       fontStyle: 'italic',
+    },
+    emptyStateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.l,
+    },
+    emptyStateText: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
     },
   });
 

@@ -2,7 +2,7 @@ import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.sch
 
 export interface OrderForFinalization {
   id: string;
-  dailyNumber: number;
+  shiftOrderNumber: number;
   deliveryInfo: DeliveryInfo;
   orderType: 'TAKEOUT' | 'DELIVERY' | 'DINE_IN';
   orderStatus:

@@ -14,7 +14,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
 import { CustomerEntity } from '../../../../../customers/infrastructure/persistence/relational/entities/customer.entity';
-import { DailyOrderCounterEntity } from './daily-order-counter.entity';
+import { ShiftEntity } from '../../../../../shifts/infrastructure/persistence/relational/entities/shift.entity';
 import { OrderStatus } from '../../../../domain/enums/order-status.enum';
 import { OrderType } from '../../../../domain/enums/order-type.enum';
 import { OrderItemEntity } from './order-item.entity';
@@ -31,15 +31,15 @@ export class OrderEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'daily_number' })
-  dailyNumber: number;
+  @Column({ name: 'shift_order_number' })
+  shiftOrderNumber: number;
 
-  @Column({ name: 'daily_order_counter_id', type: 'uuid' })
-  dailyOrderCounterId: string;
+  @Column({ name: 'shift_id', type: 'uuid' })
+  shiftId: string;
 
-  @ManyToOne(() => DailyOrderCounterEntity, (counter) => counter.orders)
-  @JoinColumn({ name: 'daily_order_counter_id' })
-  dailyOrderCounter: DailyOrderCounterEntity;
+  @ManyToOne(() => ShiftEntity)
+  @JoinColumn({ name: 'shift_id' })
+  shift: ShiftEntity;
 
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   userId: string | null;

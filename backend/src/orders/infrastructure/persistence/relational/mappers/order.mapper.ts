@@ -3,14 +3,13 @@ import { Order } from '../../../../domain/order';
 import { OrderEntity } from '../entities/order.entity';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import { TableMapper } from '../../../../../tables/infrastructure/persistence/relational/mappers/table.mapper';
-import { DailyOrderCounterMapper } from './daily-order-counter.mapper';
 import { OrderItemMapper } from './order-item.mapper';
 import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper';
 import { AdjustmentMapper } from '../../../../../adjustments/infrastructure/persistence/relational/mappers/adjustment.mapper';
 import { DeliveryInfoMapper } from './delivery-info.mapper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
-import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
+import { ShiftEntity } from '../../../../../shifts/infrastructure/persistence/relational/entities/shift.entity';
 import {
   BaseMapper,
   mapArray,
@@ -21,7 +20,6 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
   constructor(
     private readonly userMapper: UserMapper,
     private readonly tableMapper: TableMapper,
-    private readonly dailyOrderCounterMapper: DailyOrderCounterMapper,
     private readonly orderItemMapper: OrderItemMapper,
     @Inject(forwardRef(() => PaymentMapper))
     private readonly paymentMapper: PaymentMapper,
@@ -36,8 +34,8 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     if (!entity) return null;
     const domain = new Order();
     domain.id = entity.id;
-    domain.dailyNumber = entity.dailyNumber;
-    domain.dailyOrderCounterId = entity.dailyOrderCounterId;
+    domain.shiftOrderNumber = entity.shiftOrderNumber;
+    domain.shiftId = entity.shiftId;
     domain.userId = entity.userId;
     domain.tableId = entity.tableId;
     domain.orderStatus = entity.orderStatus;
@@ -55,9 +53,6 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     domain.table = entity.table
       ? this.tableMapper.toDomain(entity.table)
       : null;
-    domain.dailyOrderCounter = this.dailyOrderCounterMapper.toDomain(
-      entity.dailyOrderCounter!,
-    )!;
 
     domain.orderItems = mapArray(entity.orderItems, (item) =>
       this.orderItemMapper.toDomain(item),
@@ -82,10 +77,10 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     if (!domain) return null;
     const entity = new OrderEntity();
     if (domain.id) entity.id = domain.id;
-    entity.dailyNumber = domain.dailyNumber;
-    entity.dailyOrderCounter = {
-      id: domain.dailyOrderCounterId,
-    } as DailyOrderCounterEntity;
+    entity.shiftOrderNumber = domain.shiftOrderNumber;
+    entity.shift = {
+      id: domain.shiftId,
+    } as ShiftEntity;
     entity.userId = domain.userId;
     entity.user = domain.userId ? ({ id: domain.userId } as UserEntity) : null;
     entity.table = domain.tableId

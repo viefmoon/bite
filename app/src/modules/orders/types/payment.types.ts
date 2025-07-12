@@ -25,7 +25,7 @@ export interface Payment {
   updatedAt: string;
   order?: {
     id: string;
-    dailyNumber: number;
+    shiftOrderNumber: number;
     total: number;
   };
 }

@@ -110,6 +110,21 @@ export class OrdersController {
     return this.ordersService.findOpenOrders();
   }
 
+  @Get('open-current-shift')
+  @ApiOperation({ summary: 'Obtener las órdenes abiertas del turno actual' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de órdenes abiertas del turno actual.',
+    type: [Order],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  findOpenOrdersCurrentShift(): Promise<Order[]> {
+    return this.ordersService.findOpenOrders();
+  }
+
   @Get('for-finalization')
   @ApiOperation({ summary: 'Obtener todas las órdenes para finalizar' })
   @ApiResponse({
@@ -251,20 +266,20 @@ export class OrdersController {
     return this.ordersService.findByTableId(tableId);
   }
 
-  @Get('counter/:counterId')
-  @ApiOperation({ summary: 'Get all orders for a specific daily counter' })
+  @Get('shift/:shiftId')
+  @ApiOperation({ summary: 'Get all orders for a specific shift' })
   @ApiResponse({
     status: 200,
-    description: 'Return all orders for the specified daily counter.',
+    description: 'Return all orders for the specified shift.',
     type: [Order],
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
-  findByDailyOrderCounterId(
-    @Param('counterId', ParseUUIDPipe) counterId: string,
+  findByShiftId(
+    @Param('shiftId', ParseUUIDPipe) shiftId: string,
   ): Promise<Order[]> {
-    return this.ordersService.findByDailyOrderCounterId(counterId);
+    return this.ordersService.findByShiftId(shiftId);
   }
 
   // OrderItem endpoints

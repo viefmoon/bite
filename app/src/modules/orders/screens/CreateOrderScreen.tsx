@@ -37,6 +37,10 @@ import {
   audioOrderService,
   type AIOrderItem,
 } from '@/services/audioOrderService';
+import { shiftsService, type Shift } from '@/services/shifts';
+import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
+import { useAuthStore } from '@/app/store/authStore';
+import { canOpenDay } from '@/app/utils/roleUtils';
 
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
@@ -65,6 +69,14 @@ const CreateOrderScreen = () => {
     setDeliveryInfo,
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  
+  // Estado para turno
+  const user = useAuthStore((state) => state.user);
+  const [shift, setShift] = useState<Shift | null>(null);
+  const [dayLoading, setDayLoading] = useState(true);
+  
+  // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
+  const userCanOpenShift = canOpenDay(user);
 
   const createOrderMutation = useCreateOrderMutation();
 
@@ -100,6 +112,23 @@ const CreateOrderScreen = () => {
   const [audioError, setAudioError] = useState<string | undefined>();
 
   const { data: menu, isLoading } = useGetFullMenu();
+
+  // Cargar estado del turno
+  const loadShift = async () => {
+    try {
+      setDayLoading(true);
+      const currentShift = await shiftsService.getCurrentShift();
+      setShift(currentShift);
+    } catch (error) {
+      console.error('Error al cargar turno:', error);
+    } finally {
+      setDayLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadShift();
+  }, []);
 
   // Calcular número de columnas para el grid
   const numColumns = useMemo(() => {
@@ -254,9 +283,9 @@ const CreateOrderScreen = () => {
       // Llamar a la mutación para enviar la orden al backend
       const createdOrder = await createOrderMutation.mutateAsync(details);
 
-      // Usar 'dailyNumber' que es lo que devuelve el backend
+      // Usar 'shiftOrderNumber' que es lo que devuelve el backend
       showSnackbar({
-        message: `Orden #${createdOrder.dailyNumber} creada con éxito`,
+        message: `Orden #${createdOrder.shiftOrderNumber} creada con éxito`,
         type: 'success',
       });
       hideCart();
@@ -610,6 +639,16 @@ const CreateOrderScreen = () => {
           color: colors.onErrorContainer,
           fontWeight: '600',
         },
+        emptyStateContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: responsive.spacing.l,
+        },
+        emptyStateText: {
+          textAlign: 'center',
+          color: colors.onSurfaceVariant,
+        },
       }),
     [colors, fonts],
   );
@@ -802,6 +841,35 @@ const CreateOrderScreen = () => {
       : navigationLevel === 'categories'
         ? () => handleAttemptExit(() => navigation.goBack())
         : handleGoBackInternal;
+
+    // Verificar turno antes de renderizar
+    if (!dayLoading && (!shift || shift.status !== 'OPEN')) {
+      return (
+        <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+          <Appbar.Header style={styles.appBar} elevated>
+            <Appbar.BackAction onPress={() => navigation.goBack()} />
+            <Appbar.Content
+              title="Crear Orden"
+              titleStyle={styles.appBarTitle}
+              style={styles.appBarContent}
+            />
+          </Appbar.Header>
+          <ShiftStatusBanner
+            shift={shift}
+            loading={dayLoading}
+            onOpenShift={() => navigation.goBack()}
+            canOpenShift={userCanOpenShift}
+          />
+          <View style={styles.emptyStateContainer}>
+            <Text variant="bodyLarge" style={styles.emptyStateText}>
+              {userCanOpenDay
+                ? 'Regresa a la pantalla anterior para abrir el turno.'
+                : 'Solicita a un administrador que abra el turno.'}
+            </Text>
+          </View>
+        </SafeAreaView>
+      );
+    }
 
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>

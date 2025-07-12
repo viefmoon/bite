@@ -76,12 +76,12 @@ export const orderService = {
     };
   },
   /**
-   * Obtiene las órdenes abiertas del día actual.
+   * Obtiene las órdenes abiertas del turno actual.
    * @returns Una promesa que resuelve a un array de órdenes abiertas.
    * @throws {ApiError} Si la petición falla.
    */
-  getOpenOrdersToday: async (): Promise<Order[]> => {
-    const response = await apiClient.get<Order[]>(API_PATHS.ORDERS_OPEN_TODAY);
+  getOpenOrdersCurrentShift: async (): Promise<Order[]> => {
+    const response = await apiClient.get<Order[]>(API_PATHS.ORDERS_OPEN_CURRENT_SHIFT);
     return handleApiResponse(response);
   },
   /**

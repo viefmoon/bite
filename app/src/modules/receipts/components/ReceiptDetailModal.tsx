@@ -114,7 +114,7 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
         >
           <Appbar.Header>
             <Appbar.Content
-              title={`Recibo #${order.dailyNumber || order.orderNumber}`}
+              title={`Recibo #${order.shiftOrderNumber || order.orderNumber}`}
             />
             <Appbar.Action
               icon="history"

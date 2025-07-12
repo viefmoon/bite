@@ -77,7 +77,7 @@ export class KitchenOrderDto {
   id: string;
 
   @ApiProperty()
-  dailyNumber: number;
+  shiftOrderNumber: number;
 
   @ApiProperty({ enum: OrderType })
   orderType: OrderType;

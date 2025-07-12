@@ -55,7 +55,7 @@ export interface PreparationScreenStatusInfo {
 
 export interface KitchenOrder {
   id: string;
-  dailyNumber: number;
+  shiftOrderNumber: number;
   orderType: OrderType;
   orderStatus: string; // Estado real de la orden
   createdAt: string;

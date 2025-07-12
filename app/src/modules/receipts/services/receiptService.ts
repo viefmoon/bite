@@ -96,7 +96,7 @@ export const receiptService = {
       data.map((o) => ({
         id: o.id,
         orderStatus: o.orderStatus,
-        dailyNumber: o.dailyNumber,
+        shiftOrderNumber: o.shiftOrderNumber,
       })),
     );
 
@@ -113,7 +113,7 @@ export const receiptService = {
         // Buscar por número de orden
         if (
           order.orderNumber?.toString().includes(searchLower) ||
-          order.dailyNumber?.toString().includes(searchLower)
+          order.shiftOrderNumber?.toString().includes(searchLower)
         ) {
           return true;
         }

@@ -144,7 +144,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         <View style={styles.header}>
           <View>
             <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-              Orden #{order.dailyNumber}
+              Orden #{order.shiftOrderNumber}
             </Text>
             <Text
               style={[

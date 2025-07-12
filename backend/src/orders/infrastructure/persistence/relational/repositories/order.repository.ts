@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { startOfDay, endOfDay } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { Between, FindOptionsWhere, Repository, In } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
@@ -11,15 +11,15 @@ import { OrderRepository } from '../../order.repository';
 import { OrderEntity } from '../entities/order.entity';
 import { OrderMapper } from '../mappers/order.mapper';
 import { OrderStatus } from '../../../../domain/enums/order-status.enum';
-import { DAILY_ORDER_COUNTER_REPOSITORY } from '../../../../../common/tokens';
-import { DailyOrderCounterRepository } from '../../daily-order-counter.repository';
+import { ShiftsService } from '../../../../../shifts/shifts.service';
+import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class OrdersRelationalRepository implements OrderRepository {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly ordersRepository: Repository<OrderEntity>,
-    @Inject(DAILY_ORDER_COUNTER_REPOSITORY)
-    private readonly dailyOrderCounterRepository: DailyOrderCounterRepository,
+    @Inject(forwardRef(() => ShiftsService))
+    private readonly shiftsService: ShiftsService,
     private readonly orderMapper: OrderMapper,
   ) {}
   async create(data: {
@@ -35,17 +35,25 @@ export class OrdersRelationalRepository implements OrderRepository {
     isFromWhatsApp?: boolean;
     deliveryInfo: any;
     estimatedDeliveryTime?: Date | null;
+    operationalDate?: Date; // Nueva propiedad opcional para la fecha operacional
   }): Promise<Order> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const counter =
-      await this.dailyOrderCounterRepository.findOrCreateByDate(today);
-    const updatedCounter =
-      await this.dailyOrderCounterRepository.incrementCounter(counter.id);
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      throw new BadRequestException(
+        'No hay un turno activo. Debe abrir un turno antes de crear órdenes.',
+      );
+    }
+
+    // Obtener el próximo número de orden para este turno
+    const shiftOrderNumber = await this.getNextShiftOrderNumber(
+      currentShift.id,
+    );
+
     const orderToCreate = {
       ...data,
-      dailyNumber: updatedCounter.currentNumber,
-      dailyOrderCounterId: updatedCounter.id,
+      shiftOrderNumber,
+      shiftId: currentShift.id,
     };
     const persistenceModel = this.orderMapper.toEntity(orderToCreate as Order);
     if (!persistenceModel) {
@@ -60,7 +68,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -98,8 +106,8 @@ export class OrdersRelationalRepository implements OrderRepository {
     if (filterOptions?.tableId) {
       where.tableId = filterOptions.tableId;
     }
-    if (filterOptions?.dailyOrderCounterId) {
-      where.dailyOrderCounterId = filterOptions.dailyOrderCounterId;
+    if (filterOptions?.shiftId) {
+      where.shiftId = filterOptions.shiftId;
     }
     // Soportar tanto un solo estado como múltiples estados
     if (
@@ -133,7 +141,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -161,7 +169,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -184,7 +192,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -214,7 +222,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -234,16 +242,14 @@ export class OrdersRelationalRepository implements OrderRepository {
       .map((order) => this.orderMapper.toDomain(order))
       .filter((order): order is Order => order !== null);
   }
-  async findByDailyOrderCounterId(
-    dailyOrderCounterId: Order['dailyOrderCounterId'],
-  ): Promise<Order[]> {
+  async findByShiftId(shiftId: Order['shiftId']): Promise<Order[]> {
     const entities = await this.ordersRepository.find({
-      where: { dailyOrderCounterId },
+      where: { shiftId },
       relations: [
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -256,7 +262,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'deliveryInfo',
       ],
       order: {
-        dailyNumber: 'ASC',
+        shiftOrderNumber: 'ASC',
       },
     });
     return entities
@@ -268,14 +274,14 @@ export class OrdersRelationalRepository implements OrderRepository {
     const localDate = toZonedTime(date, timeZone);
     const startLocal = startOfDay(localDate);
     const endLocal = endOfDay(localDate);
-    const startUtc = startLocal;
-    const endUtc = endLocal;
+    const startUtc = fromZonedTime(startLocal, timeZone);
+    const endUtc = fromZonedTime(endLocal, timeZone);
     const queryBuilder = this.ordersRepository
       .createQueryBuilder('order')
       .select([
         'order.id',
-        'order.dailyNumber',
-        'order.dailyOrderCounterId',
+        'order.shiftOrderNumber',
+        'order.shiftId',
         'order.orderType',
         'order.orderStatus',
         'order.subtotal',
@@ -298,14 +304,12 @@ export class OrdersRelationalRepository implements OrderRepository {
       ])
       .leftJoin('order.orderItems', 'orderItems')
       .addSelect(['orderItems.id', 'orderItems.preparationStatus'])
-      .leftJoin('order.dailyOrderCounter', 'dailyOrderCounter')
-      .addSelect(['dailyOrderCounter.id'])
       .where('order.createdAt >= :start', { start: startUtc })
       .andWhere('order.createdAt < :end', { end: endUtc })
       .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
         excludedStatuses: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
       })
-      .orderBy('order.dailyNumber', 'ASC');
+      .orderBy('order.shiftOrderNumber', 'ASC');
     const entities = await queryBuilder.getMany();
     return entities
       .map((order) => this.orderMapper.toDomain(order))
@@ -318,7 +322,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -340,9 +344,9 @@ export class OrdersRelationalRepository implements OrderRepository {
     }
     const {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      dailyNumber,
+      shiftOrderNumber,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      dailyOrderCounterId,
+      shiftId,
       ...updateData
     } = payload;
     const updatedDomain = {
@@ -363,7 +367,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -390,6 +394,52 @@ export class OrdersRelationalRepository implements OrderRepository {
   async remove(id: Order['id']): Promise<void> {
     await this.ordersRepository.softDelete(id);
   }
+
+  async findByDateRange(startDate: Date, endDate: Date): Promise<Order[]> {
+    const entities = await this.ordersRepository.find({
+      where: {
+        createdAt: Between(startDate, endDate),
+      },
+      relations: [
+        'user',
+        'table',
+        'shift',
+        'orderItems',
+        'payments',
+        'deliveryInfo',
+      ],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    return entities
+      .map((entity) => this.orderMapper.toDomain(entity))
+      .filter((order): order is Order => order !== null);
+  }
+
+  async findByStatus(statuses: string[]): Promise<Order[]> {
+    const entities = await this.ordersRepository.find({
+      where: {
+        orderStatus: In(statuses as any),
+      },
+      relations: [
+        'user',
+        'table',
+        'shift',
+        'orderItems',
+        'payments',
+        'deliveryInfo',
+      ],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    return entities
+      .map((entity) => this.orderMapper.toDomain(entity))
+      .filter((order): order is Order => order !== null);
+  }
   async findOrdersForFinalization(): Promise<Order[]> {
     const entities = await this.ordersRepository.find({
       // Obtener todas las órdenes sin importar el estado
@@ -398,7 +448,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'user',
         'table',
         'table.area',
-        'dailyOrderCounter',
+        'shift',
         'orderItems',
         'orderItems.product',
         'orderItems.productVariant',
@@ -417,5 +467,16 @@ export class OrdersRelationalRepository implements OrderRepository {
     return entities
       .map((entity) => this.orderMapper.toDomain(entity))
       .filter(Boolean) as Order[];
+  }
+
+  private async getNextShiftOrderNumber(shiftId: string): Promise<number> {
+    // Obtener el último número de orden del turno actual
+    const lastOrder = await this.ordersRepository.findOne({
+      where: { shiftId },
+      order: { shiftOrderNumber: 'DESC' },
+      select: ['shiftOrderNumber'],
+    });
+
+    return lastOrder ? lastOrder.shiftOrderNumber + 1 : 1;
   }
 }
