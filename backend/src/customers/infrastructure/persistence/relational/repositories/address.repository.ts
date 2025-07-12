@@ -74,16 +74,13 @@ export class AddressRelationalRepository
     }
 
     // Crear el objeto de actualización manteniendo el customer
-    const updateData = Object.keys(payload).reduce(
-      (acc, key) => {
-        const value = payload[key];
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      },
-      {} as any,
-    );
+    const updateData = Object.keys(payload).reduce((acc, key) => {
+      const value = payload[key];
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as any);
 
     // Asegurar que el customer_id se mantenga
     updateData.customer = existing.customer;

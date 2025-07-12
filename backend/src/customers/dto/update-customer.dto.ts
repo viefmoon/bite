@@ -46,7 +46,7 @@ export class UpdateCustomerDto {
     example: 'juan.perez@example.com',
     description: 'Correo electrónico del cliente (debe ser único)',
   })
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(255)
@@ -57,7 +57,7 @@ export class UpdateCustomerDto {
     example: '1990-01-15',
     description: 'Fecha de nacimiento del cliente',
   })
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsDateString()
   birthDate?: string | null;

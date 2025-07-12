@@ -102,11 +102,11 @@ export class CustomerRelationalRepository
   // Sobrescribir findAll para incluir las direcciones
   override async findAll(filter?: FindAllCustomersDto): Promise<Customer[]> {
     const where = this.buildWhere(filter);
-    const entities = await this.ormRepo.find({ 
+    const entities = await this.ormRepo.find({
       where,
-      relations: ['addresses']
+      relations: ['addresses'],
     });
-    
+
     return entities
       .map((e) => this.mapper.toDomain(e))
       .filter((d): d is Customer => d !== null);
@@ -116,7 +116,7 @@ export class CustomerRelationalRepository
   override async findById(id: Customer['id']): Promise<NullableType<Customer>> {
     const found = await this.ormRepo.findOne({
       where: { id } as FindOptionsWhere<CustomerEntity>,
-      relations: ['addresses']
+      relations: ['addresses'],
     });
     return found ? this.mapper.toDomain(found) : null;
   }

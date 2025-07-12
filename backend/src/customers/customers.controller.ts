@@ -237,9 +237,9 @@ export class CustomersController {
     @Body() createAddressDto: CreateAddressDto,
   ): Promise<Address> {
     // Asignar el customerId al DTO
-    const addressData = { 
-      ...createAddressDto, 
-      customerId
+    const addressData = {
+      ...createAddressDto,
+      customerId,
     };
     return this.addressesService.create(addressData);
   }
@@ -248,11 +248,13 @@ export class CustomersController {
   @ApiOperation({ summary: 'Get all addresses for a customer' })
   @ApiParam({ name: 'id', description: 'Customer ID' })
   @HttpCode(HttpStatus.OK)
-  async getCustomerAddresses(@Param('id') customerId: string): Promise<Address[]> {
+  async getCustomerAddresses(
+    @Param('id') customerId: string,
+  ): Promise<Address[]> {
     try {
       // Verificar que el cliente existe primero
       await this.customersService.findOne(customerId);
-      
+
       // Crear un DTO explícito para evitar problemas de tipos
       const filter: FindAllAddressesDto = { customerId };
       return this.addressesService.findAll(filter);
@@ -280,7 +282,10 @@ export class CustomersController {
     if (address.customerId !== customerId) {
       throw new NotFoundException('Address not found for this customer');
     }
-    const updatedAddress = await this.addressesService.update(addressId, updateAddressDto);
+    const updatedAddress = await this.addressesService.update(
+      addressId,
+      updateAddressDto,
+    );
     if (!updatedAddress) {
       throw new NotFoundException('Address not found');
     }
