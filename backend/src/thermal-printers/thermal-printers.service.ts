@@ -64,6 +64,13 @@ export class ThermalPrintersService {
     printer.path = createDto.path || null;
     printer.isActive = createDto.isActive ?? true;
     printer.macAddress = createDto.macAddress || null;
+    printer.isDefaultPrinter = createDto.isDefaultPrinter ?? false;
+    printer.autoDeliveryPrint = createDto.autoDeliveryPrint ?? false;
+    printer.autoPickupPrint = createDto.autoPickupPrint ?? false;
+    printer.paperWidth = createDto.paperWidth ?? 80;
+    printer.charactersPerLine = createDto.charactersPerLine ?? 48;
+    printer.cutPaper = createDto.cutPaper ?? true;
+    printer.feedLines = createDto.feedLines ?? 3;
 
     try {
       return await this.thermalPrinterRepository.create(printer);
@@ -155,6 +162,13 @@ export class ThermalPrintersService {
       path: updateDto.path,
       isActive: updateDto.isActive,
       macAddress: updateDto.macAddress,
+      isDefaultPrinter: updateDto.isDefaultPrinter,
+      autoDeliveryPrint: updateDto.autoDeliveryPrint,
+      autoPickupPrint: updateDto.autoPickupPrint,
+      paperWidth: updateDto.paperWidth,
+      charactersPerLine: updateDto.charactersPerLine,
+      cutPaper: updateDto.cutPaper,
+      feedLines: updateDto.feedLines,
     };
 
     Object.keys(updatePayload).forEach(

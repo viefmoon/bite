@@ -22,6 +22,20 @@ export class ThermalPrinter {
 
   macAddress: string | null;
 
+  isDefaultPrinter: boolean;
+
+  autoDeliveryPrint: boolean;
+
+  autoPickupPrint: boolean;
+
+  paperWidth: number;
+
+  charactersPerLine: number;
+
+  cutPaper: boolean;
+
+  feedLines: number;
+
   createdAt: Date;
 
   updatedAt: Date;

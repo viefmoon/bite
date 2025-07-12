@@ -12,6 +12,13 @@ export class ThermalPrinterMapper {
     domain.path = entity.path;
     domain.isActive = entity.isActive;
     domain.macAddress = entity.macAddress;
+    domain.isDefaultPrinter = entity.isDefaultPrinter;
+    domain.autoDeliveryPrint = entity.autoDeliveryPrint;
+    domain.autoPickupPrint = entity.autoPickupPrint;
+    domain.paperWidth = entity.paperWidth;
+    domain.charactersPerLine = entity.charactersPerLine;
+    domain.cutPaper = entity.cutPaper;
+    domain.feedLines = entity.feedLines;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -29,6 +36,13 @@ export class ThermalPrinterMapper {
     entity.path = domain.path;
     entity.isActive = domain.isActive;
     entity.macAddress = domain.macAddress;
+    entity.isDefaultPrinter = domain.isDefaultPrinter;
+    entity.autoDeliveryPrint = domain.autoDeliveryPrint;
+    entity.autoPickupPrint = domain.autoPickupPrint;
+    entity.paperWidth = domain.paperWidth;
+    entity.charactersPerLine = domain.charactersPerLine;
+    entity.cutPaper = domain.cutPaper;
+    entity.feedLines = domain.feedLines;
 
     return entity;
   }

@@ -96,4 +96,70 @@ export class UpdateThermalPrinterDto {
   @IsOptional()
   @IsMACAddress({ message: 'La dirección MAC no es válida' })
   macAddress?: string | null;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: false,
+    description: 'Marca la impresora como predeterminada para el sistema',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isDefaultPrinter?: boolean;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: false,
+    description: 'Habilita la impresión automática para órdenes de delivery',
+  })
+  @IsOptional()
+  @IsBoolean()
+  autoDeliveryPrint?: boolean;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: false,
+    description: 'Habilita la impresión automática para órdenes de pickup (take away)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  autoPickupPrint?: boolean;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 80,
+    description: 'Ancho del papel en milímetros (58 o 80 son los más comunes)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(58)
+  paperWidth?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 48,
+    description: 'Número de caracteres por línea en modo normal',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(32)
+  charactersPerLine?: number;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    example: true,
+    description: 'Cortar el papel automáticamente al final del ticket',
+  })
+  @IsOptional()
+  @IsBoolean()
+  cutPaper?: boolean;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 3,
+    description: 'Líneas en blanco a añadir al final del ticket antes del corte',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  feedLines?: number;
 }
