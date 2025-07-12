@@ -160,7 +160,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                 >
                   {format(new Date(order.createdAt), 'p', { locale: es })}
                 </Text>
-                {order.estimatedDeliveryTime && (
+                {order.scheduledAt && (
                   <Text
                     style={[
                       styles.estimatedTime,
@@ -171,8 +171,8 @@ export const OrderCard = React.memo<OrderCardProps>(
                       },
                     ]}
                   >
-                    ⏱️{' '}
-                    {format(new Date(order.estimatedDeliveryTime), 'p', {
+                    📅{' '}
+                    {format(new Date(order.scheduledAt), 'p', {
                       locale: es,
                     })}
                   </Text>

@@ -8,12 +8,18 @@ import { PrintingService } from './printing.service';
 import { OrdersModule } from '../orders/orders.module';
 import { DiscoveryService } from './discovery.service';
 import { AutomaticPrintingService } from './automatic-printing.service';
+import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
 
 const infrastructurePersistenceModule =
   RelationalThermalPrinterPersistenceModule;
 
 @Module({
-  imports: [infrastructurePersistenceModule, AuthModule, forwardRef(() => OrdersModule)],
+  imports: [
+    infrastructurePersistenceModule, 
+    AuthModule, 
+    forwardRef(() => OrdersModule),
+    forwardRef(() => RestaurantConfigModule)
+  ],
   controllers: [ThermalPrintersController, PrintingController],
   providers: [ThermalPrintersService, PrintingService, DiscoveryService, AutomaticPrintingService],
   exports: [ThermalPrintersService, infrastructurePersistenceModule, AutomaticPrintingService],

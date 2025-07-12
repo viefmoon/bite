@@ -23,8 +23,8 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
   // Admin - Acceso completo
   [RoleEnum.ADMIN]: [
     'OrdersStack',
-    'ReceiptsStack',
     'OrderFinalizationStack',
+    'ReceiptsStack',
     'MenuStack',
     'AvailabilityStack',
     'ModifiersStack',
@@ -42,8 +42,8 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
   // Manager - Acceso completo excepto usuarios
   [RoleEnum.MANAGER]: [
     'OrdersStack',
-    'ReceiptsStack',
     'OrderFinalizationStack',
+    'ReceiptsStack',
     'MenuStack',
     'AvailabilityStack',
     'ModifiersStack',
@@ -60,8 +60,8 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
   // Cashier - Ventas, clientes y configuración básica
   [RoleEnum.CASHIER]: [
     'OrdersStack',
-    'ReceiptsStack',
     'OrderFinalizationStack',
+    'ReceiptsStack',
     'MenuStack',
     'AvailabilityStack',
     'AreasTablesStack',
@@ -111,12 +111,12 @@ export const DRAWER_SECTIONS = {
         label: 'Órdenes',
         icon: 'clipboard-list-outline',
       },
-      { route: 'ReceiptsStack', label: 'Recibos', icon: 'receipt' },
       {
         route: 'OrderFinalizationStack',
         label: 'Finalización',
         icon: 'clipboard-check-outline',
       },
+      { route: 'ReceiptsStack', label: 'Recibos', icon: 'receipt' },
     ],
   },
   configuration: {

@@ -135,7 +135,6 @@ const formatFieldName = (field: string): string => {
     notes: 'Notas',
     deliveryInfo: 'Información de entrega',
     scheduledAt: 'Programado para',
-    estimatedDeliveryTime: 'Tiempo estimado de entrega',
     customerId: 'Cliente',
     isFromWhatsApp: 'Orden de WhatsApp',
     // Campos dentro de deliveryInfo
@@ -207,7 +206,7 @@ const formatValue = (field: string, value: any): string => {
     return value || 'Sin cliente registrado';
   }
 
-  if (field === 'scheduledAt' || field === 'estimatedDeliveryTime') {
+  if (field === 'scheduledAt') {
     return value
       ? format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es })
       : 'No programado';
@@ -993,7 +992,6 @@ const HistoryItemComponent: React.FC<{
                         'tableId',
                         'customerId',
                         'scheduledAt',
-                        'estimatedDeliveryTime',
                         'deliveryInfo',
                         'isFromWhatsApp',
                       ];

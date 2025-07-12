@@ -85,7 +85,7 @@ interface OrderItemDtoForBackend {
   basePrice: number;
   finalPrice: number;
   preparationNotes?: string | null;
-  modifiers?: OrderItemModifierDto[];
+  productModifiers?: OrderItemModifierDto[];
   selectedPizzaCustomizations?: SelectedPizzaCustomization[];
 }
 
@@ -231,6 +231,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     useState<boolean>(false);
   const [editTemporaryTableName, setEditTemporaryTableName] =
     useState<string>('');
+  
+  // Estados para controlar si ya procesamos los productos pendientes y si los datos de la orden ya se cargaron
+  const [processedPendingProductsIds, setProcessedPendingProductsIds] =
+    useState<string[]>([]);
+  const [orderDataLoaded, setOrderDataLoaded] = useState(false);
 
   // Siempre llamar al hook, pero usar sus valores solo si no estamos en modo edición
   const cartContext = useCart();
@@ -528,7 +533,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<
-    'CASH' | 'CARD' | 'TRANSFER'
+    'CASH' | 'CARD' | 'TRANSFER' | null
   >('CASH');
   const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
@@ -942,11 +947,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return result;
   }, []);
 
-  // Estado para controlar si ya procesamos los productos pendientes
-  const [processedPendingProductsIds, setProcessedPendingProductsIds] =
-    useState<string[]>([]);
-  // Estado para controlar si los datos de la orden ya se cargaron
-  const [orderDataLoaded, setOrderDataLoaded] = useState(false);
+  // Estado para controlar si ya procesamos los productos pendientes (declarado arriba)
+  // const [processedPendingProductsIds, setProcessedPendingProductsIds] =
+  //   useState<string[]>([]);
+  // Estado para controlar si los datos de la orden ya se cargaron (declarado arriba)
+  // const [orderDataLoaded, setOrderDataLoaded] = useState(false);
 
   // Manejar productos pendientes de añadir
   useEffect(() => {
@@ -1203,23 +1208,31 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Mapear items según el modo (creación o edición)
     items.forEach((item: CartItem) => {
       if (isEditMode && item.id && !item.id.startsWith('new-')) {
-        // En modo edición, items con ID real se envían agrupados
-        itemsForBackend.push({
-          id: item.id, // IDs concatenados del grupo
-          productId: item.productId,
-          productVariantId: item.variantId || null,
-          basePrice: Number(item.unitPrice),
-          finalPrice: Number(item.totalPrice / item.quantity),
-          preparationNotes: item.preparationNotes || null,
-          productModifiers:
-            item.modifiers && item.modifiers.length > 0
-              ? item.modifiers.map((mod) => ({
-                  modifierId: mod.id,
-                }))
-              : undefined,
-          selectedPizzaCustomizations:
-            item.selectedPizzaCustomizations || undefined,
-        });
+        // En modo edición, expandir items con ID real según la cantidad
+        const existingIds = item.id.split(',').filter(id => id.trim() && !id.startsWith('new-'));
+        const requiredQuantity = item.quantity;
+        
+        // Enviar cada item individualmente
+        for (let i = 0; i < requiredQuantity; i++) {
+          const isExistingItem = i < existingIds.length;
+          
+          itemsForBackend.push({
+            id: isExistingItem ? existingIds[i] : undefined, // Solo incluir ID para items existentes
+            productId: item.productId,
+            productVariantId: item.variantId || null,
+            basePrice: Number(item.unitPrice),
+            finalPrice: Number(item.totalPrice / item.quantity),
+            preparationNotes: item.preparationNotes || null,
+            productModifiers:
+              item.modifiers && item.modifiers.length > 0
+                ? item.modifiers.map((mod) => ({
+                    modifierId: mod.id,
+                  }))
+                : undefined,
+            selectedPizzaCustomizations:
+              item.selectedPizzaCustomizations || undefined,
+          });
+        }
       } else {
         // Items nuevos se expanden según cantidad
         for (let i = 0; i < item.quantity; i++) {

@@ -1,5 +1,6 @@
 import {
   Inject,
+  forwardRef,
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -43,6 +44,7 @@ import {
 } from './domain/order-preparation-screen-status';
 import { PaymentsService } from '../payments/payments.service';
 import { TablesService } from '../tables/tables.service';
+import { AutomaticPrintingService } from '../thermal-printers/automatic-printing.service';
 import { ShiftsService } from '../shifts/shifts.service';
 
 @Injectable()
@@ -65,6 +67,8 @@ export class OrdersService {
     private readonly paymentsService: PaymentsService,
     private readonly tablesService: TablesService,
     private readonly shiftsService: ShiftsService,
+    @Inject(forwardRef(() => AutomaticPrintingService))
+    private readonly automaticPrintingService: AutomaticPrintingService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -244,6 +248,18 @@ export class OrdersService {
         null,
         createOrderDto.userId || 'system',
         this.dataSource.manager,
+      );
+    }
+
+    // Disparar impresión automática para órdenes de delivery/pickup
+    if (
+      order.orderType === OrderType.DELIVERY ||
+      order.orderType === OrderType.TAKE_AWAY
+    ) {
+      await this.automaticPrintingService.printOrderAutomatically(
+        order.id,
+        order.orderType,
+        createOrderDto.userId || null, // Pasar null en lugar de 'system'
       );
     }
 
@@ -623,7 +639,24 @@ export class OrdersService {
     }
 
     // Recargar la orden completa con todos los datos actualizados
-    return this.findOne(id);
+    const updatedOrder = await this.findOne(id);
+
+    // Disparar reimpresión automática para órdenes de delivery/pickup si hubo cambios
+    if (
+      (updatedOrder.orderType === OrderType.DELIVERY ||
+       updatedOrder.orderType === OrderType.TAKE_AWAY) &&
+      (Object.keys(updatePayload).length > 0 || 
+       (updateOrderDto.items !== undefined && Array.isArray(updateOrderDto.items)))
+    ) {
+      await this.automaticPrintingService.printOrderAutomatically(
+        updatedOrder.id,
+        updatedOrder.orderType,
+        updateOrderDto.userId || null, // Pasar null en lugar de 'system'
+        true, // isReprint = true
+      );
+    }
+
+    return updatedOrder;
   }
 
   async remove(id: string): Promise<void> {
