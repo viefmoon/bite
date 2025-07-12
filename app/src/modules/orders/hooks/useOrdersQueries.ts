@@ -191,7 +191,7 @@ export const usePrintKitchenTicketMutation = () => {
     mutationFn: ({ orderId, printerId }) =>
       orderService.printOrderTicket(orderId, printerId), // Usar la función renombrada
     onSuccess: (_, variables) => {
-      // Usar el número diario si está disponible en las variables o buscarlo si es necesario
+      // Usar el número del turno si está disponible en las variables o buscarlo si es necesario
       // Por ahora, usamos solo el ID para el mensaje
       showSnackbar({
         message: `Ticket de cocina para orden ID ${variables.orderId} enviado a impresora.`,

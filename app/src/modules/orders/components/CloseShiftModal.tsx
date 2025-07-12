@@ -173,7 +173,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
               <Divider style={styles.divider} />
 
-              {/* Resumen del día */}
+              {/* Resumen del turno */}
               {shift && (
                 <View style={styles.content}>
                   <Card style={styles.summaryCard}>
@@ -194,7 +194,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
                       {shift.totalSales !== null && (
                         <View style={styles.summaryRow}>
-                          <Text variant="bodyMedium" style={styles.label}>Ventas del día:</Text>
+                          <Text variant="bodyMedium" style={styles.label}>Ventas del turno:</Text>
                           <Text variant="bodyMedium" style={[styles.value, styles.highlight]}>{formatCurrency(shift.totalSales)}</Text>
                         </View>
                       )}

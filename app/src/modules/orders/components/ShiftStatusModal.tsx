@@ -100,7 +100,7 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
             <View style={styles.content}>
               {isShiftOpen && shift ? (
                 <>
-                  {/* Información del día abierto */}
+                  {/* Información del turno abierto */}
                   <Card style={styles.infoCard}>
                     <Card.Content>
                       <Text variant="titleMedium" style={styles.sectionTitle}>

@@ -73,7 +73,7 @@ const CreateOrderScreen = () => {
   // Estado para turno
   const user = useAuthStore((state) => state.user);
   const [shift, setShift] = useState<Shift | null>(null);
-  const [dayLoading, setDayLoading] = useState(true);
+  const [shiftLoading, setShiftLoading] = useState(true);
   
   // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
   const userCanOpenShift = canOpenDay(user);
@@ -116,13 +116,13 @@ const CreateOrderScreen = () => {
   // Cargar estado del turno
   const loadShift = async () => {
     try {
-      setDayLoading(true);
+      setShiftLoading(true);
       const currentShift = await shiftsService.getCurrentShift();
       setShift(currentShift);
     } catch (error) {
       console.error('Error al cargar turno:', error);
     } finally {
-      setDayLoading(false);
+      setShiftLoading(false);
     }
   };
 
@@ -843,7 +843,7 @@ const CreateOrderScreen = () => {
         : handleGoBackInternal;
 
     // Verificar turno antes de renderizar
-    if (!dayLoading && (!shift || shift.status !== 'OPEN')) {
+    if (!shiftLoading && (!shift || shift.status !== 'OPEN')) {
       return (
         <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
           <Appbar.Header style={styles.appBar} elevated>
@@ -856,13 +856,13 @@ const CreateOrderScreen = () => {
           </Appbar.Header>
           <ShiftStatusBanner
             shift={shift}
-            loading={dayLoading}
+            loading={shiftLoading}
             onOpenShift={() => navigation.goBack()}
             canOpenShift={userCanOpenShift}
           />
           <View style={styles.emptyStateContainer}>
             <Text variant="bodyLarge" style={styles.emptyStateText}>
-              {userCanOpenDay
+              {userCanOpenShift
                 ? 'Regresa a la pantalla anterior para abrir el turno.'
                 : 'Solicita a un administrador que abra el turno.'}
             </Text>
