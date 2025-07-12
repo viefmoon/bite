@@ -15,7 +15,7 @@ export interface CloudOrderItem {
 
 export interface CloudOrder {
   id?: string;
-  dailyOrderNumber?: number;
+  shiftOrderNumber?: number;
   orderType: 'delivery' | 'pickup';
   status: 'created' | 'accepted' | 'in_preparation' | 'prepared' | 'in_delivery' | 'finished' | 'canceled';
   items: CloudOrderItem[];

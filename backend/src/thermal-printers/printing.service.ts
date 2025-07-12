@@ -82,7 +82,7 @@ export class PrintingService {
 
       printer.alignLeft();
       printer.println(`Orden ID: ${order.id}`);
-      printer.println(`Folio del día: ${order.dailyNumber}`);
+      printer.println(`Folio del turno: ${order.shiftOrderNumber}`);
 
       printer.cut();
 

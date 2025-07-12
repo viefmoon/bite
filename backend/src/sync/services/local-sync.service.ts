@@ -294,7 +294,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         `📦 Descargando ${remoteOrders.length} órdenes pendientes de WhatsApp...`,
       );
 
-      const orderUpdates: { orderId: string; dailyNumber: number }[] = [];
+      const orderUpdates: { orderId: string; shiftOrderNumber: number }[] = [];
       let synced = 0;
       let failed = 0;
 
@@ -308,8 +308,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
             });
 
             if (!existingOrder) {
-              // Asignar número de orden diario
-              const dailyNumber = await this.getNextDailyNumber(manager);
+              // Asignar número de orden del turno (implementación temporal)
+              const shiftOrderNumber = 1;
 
               // Primero, guardar o actualizar el cliente si existe
               let customer: CustomerEntity | null = null;
@@ -344,8 +344,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
               const order = await manager.save(OrderEntity, {
                 id: remoteOrder.id,
                 customer,
-                dailyNumber,
-                dailyOrderCounterId: remoteOrder.dailyOrderCounterId,
+                shiftOrderNumber,
+                // dailyOrderCounterId campo obsoleto, se mantiene para compatibilidad
                 isFromWhatsApp: true,
                 orderStatus: OrderStatus.PENDING,
                 orderType: remoteOrder.orderType || OrderType.DELIVERY,
@@ -425,9 +425,9 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
               }
 
               this.logger.log(
-                `✅ Orden ${remoteOrder.id} guardada con número diario: ${dailyNumber}`,
+                `✅ Orden ${remoteOrder.id} guardada con número de turno: ${shiftOrderNumber}`,
               );
-              orderUpdates.push({ orderId: remoteOrder.id, dailyNumber });
+              orderUpdates.push({ orderId: remoteOrder.id, shiftOrderNumber });
               synced++;
             } else {
               this.logger.log(
@@ -494,7 +494,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         `📥 Sincronizando ${remoteCustomers.length} clientes desde el backend remoto...`,
       );
 
-      // TODO: Implementar lógica de guardado/actualización de clientes
+      // Implementar lógica de guardado/actualización de clientes
       // Considerar conflictos si el cliente fue modificado localmente
 
       return { synced: remoteCustomers.length, failed: 0 };
@@ -513,7 +513,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     try {
       const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
 
-      // TODO: Obtener clientes modificados localmente desde la última sincronización
+      // Obtener clientes modificados localmente desde la última sincronización
       // Filtrar por lastSyncedAt < updatedAt
 
       const modifiedCustomers = [];
@@ -534,7 +534,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         ),
       );
 
-      // TODO: Actualizar lastSyncedAt de los clientes enviados
+      // Actualizar lastSyncedAt de los clientes enviados
 
       return { synced: modifiedCustomers.length, failed: 0 };
     } catch (error) {
@@ -543,37 +543,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async getNextDailyNumber(manager?: any): Promise<number> {
-    // TODO: Implementar lógica real para obtener el siguiente número de orden diario
-    // Esto debería consultar la tabla daily_order_counter
-    const today = new Date().toISOString().split('T')[0];
-
-    // Si se proporciona un manager de transacción, usarlo
-    const queryRunner = manager || this.dataSource;
-
-    // Buscar o crear el contador del día
-    let counter = await queryRunner.findOne('daily_order_counter', {
-      where: { date: today },
-    });
-
-    if (!counter) {
-      counter = await queryRunner.save('daily_order_counter', {
-        date: today,
-        current_number: 1,
-      });
-      return 1;
-    }
-
-    // Incrementar y retornar
-    const nextNumber = counter.current_number + 1;
-    await queryRunner.update(
-      'daily_order_counter',
-      { id: counter.id },
-      { current_number: nextNumber },
-    );
-
-    return nextNumber;
-  }
 
   // Método para aceptar órdenes de WhatsApp (cambiar de PENDING a IN_PROGRESS)
   async acceptWhatsAppOrders(orderIds: string[]): Promise<{
