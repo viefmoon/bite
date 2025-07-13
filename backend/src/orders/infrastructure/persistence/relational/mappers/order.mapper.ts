@@ -7,6 +7,7 @@ import { OrderItemMapper } from './order-item.mapper';
 import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper';
 import { AdjustmentMapper } from '../../../../../adjustments/infrastructure/persistence/relational/mappers/adjustment.mapper';
 import { DeliveryInfoMapper } from './delivery-info.mapper';
+import { OrderPreparationScreenStatusMapper } from './order-preparation-screen-status.mapper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
 import { ShiftEntity } from '../../../../../shifts/infrastructure/persistence/relational/entities/shift.entity';
@@ -26,6 +27,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     @Inject(forwardRef(() => AdjustmentMapper))
     private readonly adjustmentMapper: AdjustmentMapper,
     private readonly deliveryInfoMapper: DeliveryInfoMapper,
+    private readonly orderPreparationScreenStatusMapper: OrderPreparationScreenStatusMapper,
   ) {
     super();
   }
@@ -69,6 +71,11 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       ? this.deliveryInfoMapper.toDomain(entity.deliveryInfo)
       : null;
     domain.estimatedDeliveryTime = entity.estimatedDeliveryTime;
+
+    domain.preparationScreenStatuses = mapArray(
+      entity.preparationScreenStatuses,
+      (status) => this.orderPreparationScreenStatusMapper.toDomain(status),
+    );
 
     return domain;
   }

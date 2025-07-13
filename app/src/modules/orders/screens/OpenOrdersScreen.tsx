@@ -682,7 +682,18 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   items: details.items, // Enviar items para actualizar
                   tableId: details.tableId || null,
                   scheduledAt: details.scheduledAt || null,
-                  deliveryInfo: details.deliveryInfo,
+                  // Enviar null cuando deliveryInfo está vacío para indicar limpieza
+                  deliveryInfo: (() => {
+                    if (!details.deliveryInfo) return null;
+                    
+                    // Filtrar solo las propiedades que tienen valores reales (no undefined)
+                    const filteredDeliveryInfo = Object.entries(details.deliveryInfo)
+                      .filter(([_, value]) => value !== undefined)
+                      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+                    
+                    // Si no quedan propiedades con valores, enviar null
+                    return Object.keys(filteredDeliveryInfo).length > 0 ? filteredDeliveryInfo : null;
+                  })(),
                   notes: details.notes || null,
                   total: details.total,
                   subtotal: details.subtotal,

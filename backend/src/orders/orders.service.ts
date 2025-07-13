@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Order } from './domain/order';
 import { OrderRepository } from './infrastructure/persistence/order.repository';
@@ -29,6 +30,10 @@ import {
   ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
 } from '../common/tokens';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
+import {
+  OrderForFinalizationDto,
+  OrderItemForFinalizationDto,
+} from './dto/order-for-finalization.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
 import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
@@ -49,6 +54,8 @@ import { ShiftsService } from '../shifts/shifts.service';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: OrderRepository,
@@ -146,12 +153,25 @@ export class OrdersService {
       );
 
     if (hasDeliveryData) {
-      deliveryInfo = {
-        id: uuidv4(),
-        ...createOrderDto.deliveryInfo,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as DeliveryInfo;
+      // Limpiar campos de deliveryInfo según el tipo de pedido
+      const cleanedDeliveryInfo = this.cleanDeliveryInfoByOrderType(
+        createOrderDto.deliveryInfo,
+        createOrderDto.orderType,
+      );
+
+      // Solo crear deliveryInfo si quedan campos después de la limpieza
+      const hasCleanedData = Object.entries(cleanedDeliveryInfo).some(
+        ([key, value]) => value !== undefined && value !== null && value !== '',
+      );
+
+      if (hasCleanedData) {
+        deliveryInfo = {
+          id: uuidv4(),
+          ...cleanedDeliveryInfo,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as DeliveryInfo;
+      }
     }
 
     const order = await this.orderRepository.create({
@@ -347,6 +367,32 @@ export class OrdersService {
     // Obtener la orden existente para comparar
     const existingOrder = await this.findOne(id);
 
+    // Capturar el estado anterior completo de la entidad ANTES de cualquier cambio
+    let previousOrderEntity: OrderEntity | null = null;
+    if (
+      existingOrder.orderType === OrderType.DELIVERY ||
+      existingOrder.orderType === OrderType.TAKE_AWAY
+    ) {
+      const queryRunner = this.dataSource.createQueryRunner();
+      try {
+        await queryRunner.connect();
+        previousOrderEntity = await queryRunner.manager.findOne(OrderEntity, {
+          where: { id },
+          relations: [
+            'orderItems',
+            'orderItems.product',
+            'orderItems.productVariant',
+            'orderItems.productModifiers',
+            'orderItems.selectedPizzaCustomizations',
+            'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+            'deliveryInfo',
+          ],
+        });
+      } finally {
+        await queryRunner.release();
+      }
+    }
+
     // Actualizar datos básicos de la orden
     const updatePayload: Partial<Order> = {};
 
@@ -441,27 +487,54 @@ export class OrdersService {
     ) {
       updatePayload.orderType = updateOrderDto.orderType;
 
+      this.logger.debug(`Cambio de tipo de orden: ${existingOrder.orderType} → ${updateOrderDto.orderType}`);
+
       // Si se cambia de DINE_IN a otro tipo, liberar la mesa
       if (
         existingOrder.orderType === OrderType.DINE_IN &&
-        updateOrderDto.orderType !== OrderType.DINE_IN &&
-        existingOrder.tableId &&
-        existingOrder.orderStatus !== OrderStatus.COMPLETED &&
-        existingOrder.orderStatus !== OrderStatus.CANCELLED
+        updateOrderDto.orderType !== OrderType.DINE_IN
       ) {
-        // Verificar si es mesa temporal
-        const table = await this.tablesService.findOne(existingOrder.tableId);
+        this.logger.debug(`Liberando mesa para orden ${id}. TableId actual: ${existingOrder.tableId}`);
+        
+        // SIEMPRE limpiar tableId cuando se cambia de DINE_IN a otro tipo
+        updatePayload.tableId = null;
+        this.logger.debug(`TableId limpiado: ${updatePayload.tableId}`);
+        
+        // Solo intentar liberar la mesa si existe y la orden no está terminada
+        if (
+          existingOrder.tableId &&
+          existingOrder.orderStatus !== OrderStatus.COMPLETED &&
+          existingOrder.orderStatus !== OrderStatus.CANCELLED
+        ) {
+          try {
+            // Verificar si es mesa temporal
+            const table = await this.tablesService.findOne(existingOrder.tableId);
 
-        if (table.isTemporary) {
-          // Eliminar mesa temporal
-          await this.tablesService.remove(existingOrder.tableId);
-        } else {
-          // Liberar mesa normal
-          await this.tablesService.update(existingOrder.tableId, {
-            isAvailable: true,
-          });
+            if (table.isTemporary) {
+              // Eliminar mesa temporal
+              await this.tablesService.remove(existingOrder.tableId);
+              this.logger.debug(`Mesa temporal ${existingOrder.tableId} eliminada`);
+            } else {
+              // Liberar mesa normal
+              await this.tablesService.update(existingOrder.tableId, {
+                isAvailable: true,
+              });
+              this.logger.debug(`Mesa normal ${existingOrder.tableId} liberada`);
+            }
+          } catch (error) {
+            this.logger.error(`Error al liberar mesa ${existingOrder.tableId}:`, error);
+            // Continuar con la actualización aunque haya error con la mesa
+          }
         }
-        updatePayload.tableId = null; // Quitar la mesa de la orden
+      }
+      
+      // Si se cambia de DELIVERY/TAKEAWAY a DINE_IN, asegurar que tableId se maneje correctamente
+      if (
+        (existingOrder.orderType === OrderType.DELIVERY || existingOrder.orderType === OrderType.TAKE_AWAY) &&
+        updateOrderDto.orderType === OrderType.DINE_IN
+      ) {
+        this.logger.debug(`Cambio a DINE_IN, tableId en payload: ${updateOrderDto.tableId}`);
+        // El tableId se maneja en la lógica general de actualización
       }
     }
     if (
@@ -485,38 +558,134 @@ export class OrdersService {
     )
       updatePayload.customerId = updateOrderDto.customerId;
 
-    // Manejar actualización de deliveryInfo
-    if (updateOrderDto.deliveryInfo !== undefined) {
-      const hasDeliveryInfoChanges = this.hasDeliveryInfoChanges(
-        existingOrder.deliveryInfo,
-        updateOrderDto.deliveryInfo,
+    // Determinar el tipo de orden final (nuevo o existente)
+    const finalOrderType = updateOrderDto.orderType || existingOrder.orderType;
+
+    // IMPORTANTE: Si no se envía deliveryInfo en el payload, aplicar limpieza según el tipo de orden
+    // Esto es crítico para que funcione correctamente cuando el frontend no envía el campo
+    const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
+    const orderTypeChanged =
+      updateOrderDto.orderType !== undefined &&
+      updateOrderDto.orderType !== existingOrder.orderType;
+
+    // SIEMPRE verificar y limpiar deliveryInfo según el tipo de orden
+    // Esto es fundamental para que funcione correctamente
+
+    // 1. Si el tipo de orden es DINE_IN, eliminar deliveryInfo completamente
+    if (finalOrderType === OrderType.DINE_IN) {
+      updatePayload.deliveryInfo = null;
+    }
+    // 2. Si se envió deliveryInfo en el payload, dar PRIORIDAD a los nuevos datos
+    else if (deliveryInfoInPayload && updateOrderDto.deliveryInfo) {
+      this.logger.debug(`PRIORIDAD: Procesando nuevos datos del payload`);
+      this.logger.debug(`Datos originales deliveryInfo: ${JSON.stringify(updateOrderDto.deliveryInfo)}`);
+      this.logger.debug(`Tipo de orden: ${finalOrderType}`);
+      
+      // Obtener datos existentes con más detalle
+      const existingDeliveryInfo = (existingOrder as any).deliveryInfo;
+      this.logger.debug(`Datos existentes completos: ${JSON.stringify(existingDeliveryInfo)}`);
+      
+      // Combinar datos existentes con nuevos datos del payload
+      const existingData = existingDeliveryInfo || {};
+      const combinedData = { ...existingData, ...updateOrderDto.deliveryInfo };
+      
+      this.logger.debug(`Datos combinados: ${JSON.stringify(combinedData)}`);
+      
+      const cleanedDeliveryInfo = this.cleanDeliveryInfoByOrderType(
+        combinedData,
+        finalOrderType,
       );
 
-      if (hasDeliveryInfoChanges) {
-        if (existingOrder.deliveryInfo && existingOrder.deliveryInfo.id) {
-          // Si ya existe deliveryInfo, actualizar manteniendo el ID existente
+      this.logger.debug(`Datos limpiados deliveryInfo: ${JSON.stringify(cleanedDeliveryInfo)}`);
+
+      const hasValidFields = Object.entries(cleanedDeliveryInfo).some(
+        ([key, value]) => value !== undefined && value !== null && value !== '',
+      );
+      
+      this.logger.debug(`Tiene campos válidos: ${hasValidFields}`);
+
+      if (hasValidFields) {
+        if (existingDeliveryInfo && existingDeliveryInfo.id) {
+          // Actualizar la instancia existente - PRESERVAR ID EXISTENTE
           updatePayload.deliveryInfo = {
-            id: existingOrder.deliveryInfo.id,
-            orderId: id,
-            ...updateOrderDto.deliveryInfo,
-            createdAt: existingOrder.deliveryInfo.createdAt,
+            ...existingDeliveryInfo,
+            ...cleanedDeliveryInfo,
+            id: existingDeliveryInfo.id, // CRÍTICO: preservar el ID existente
+            orderId: existingDeliveryInfo.orderId, // CRÍTICO: preservar el orderId existente
+            createdAt: existingDeliveryInfo.createdAt, // CRÍTICO: preservar createdAt existente
             updatedAt: new Date(),
-          };
+          } as DeliveryInfo;
+          this.logger.debug(`Actualizando delivery_info existente con ID: ${existingDeliveryInfo.id}`);
         } else {
-          // Si no existe deliveryInfo, crear uno nuevo
+          // Crear nueva instancia
           updatePayload.deliveryInfo = {
             id: uuidv4(),
             orderId: id,
-            ...updateOrderDto.deliveryInfo,
+            ...cleanedDeliveryInfo,
             createdAt: new Date(),
             updatedAt: new Date(),
-          };
+          } as DeliveryInfo;
+          this.logger.debug(`Creando nueva delivery_info con ID: ${updatePayload.deliveryInfo.id}`);
+        }
+      }
+    }
+    // 3. Si NO se envió deliveryInfo pero existe, aplicar limpieza sobre datos existentes
+    else if ((existingOrder as any).deliveryInfo) {
+      this.logger.debug(`Datos existentes deliveryInfo: ${JSON.stringify((existingOrder as any).deliveryInfo)}`);
+      this.logger.debug(`Tipo de orden final: ${finalOrderType}`);
+      
+      const cleanedDeliveryInfo = this.cleanDeliveryInfoByOrderType(
+        (existingOrder as any).deliveryInfo,
+        finalOrderType,
+      );
+
+      this.logger.debug(`Datos limpiados existentes: ${JSON.stringify(cleanedDeliveryInfo)}`);
+
+      // Contar campos con valores reales
+      const validFieldsCount = Object.entries(cleanedDeliveryInfo).filter(
+        ([key, value]) => value !== undefined && value !== null && value !== '',
+      ).length;
+      
+      this.logger.debug(`Campos válidos existentes: ${validFieldsCount}`);
+
+      // Si no quedan campos válidos, eliminar completamente
+      if (validFieldsCount === 0) {
+        updatePayload.deliveryInfo = null;
+      }
+      // Si hay campos válidos, verificar si hubo cambios
+      else {
+        const hasChanges = this.hasDeliveryInfoChanges(
+          (existingOrder as any).deliveryInfo,
+          cleanedDeliveryInfo,
+        );
+
+        // FORZAR actualización si hay cambios o si cambió el tipo de orden
+        if (hasChanges || orderTypeChanged) {
+          const existingDeliveryInfo = (existingOrder as any).deliveryInfo;
+          if (existingDeliveryInfo) {
+            // Actualizar la instancia existente
+            updatePayload.deliveryInfo = {
+              ...existingDeliveryInfo,
+              ...cleanedDeliveryInfo,
+              updatedAt: new Date(),
+            } as DeliveryInfo;
+          } else {
+            // Crear nueva instancia
+            updatePayload.deliveryInfo = {
+              id: uuidv4(),
+              orderId: id,
+              ...cleanedDeliveryInfo,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as DeliveryInfo;
+          }
         }
       }
     }
 
     // Solo actualizar si hay cambios en los campos básicos
     if (Object.keys(updatePayload).length > 0) {
+      this.logger.debug(`Payload completo para actualización: ${JSON.stringify(updatePayload, null, 2)}`);
       const updatedOrder = await this.orderRepository.update(id, updatePayload);
       if (!updatedOrder) {
         throw new Error(`Failed to update order with ID ${id}`);
@@ -641,21 +810,72 @@ export class OrdersService {
     // Recargar la orden completa con todos los datos actualizados
     const updatedOrder = await this.findOne(id);
 
-    // Disparar reimpresión automática para órdenes de delivery/pickup si hubo cambios
+    // Detectar cambios reales usando el servicio de tracking de cambios
+    let hasRealChanges = false;
+
     if (
       (updatedOrder.orderType === OrderType.DELIVERY ||
-       updatedOrder.orderType === OrderType.TAKE_AWAY) &&
-      (Object.keys(updatePayload).length > 0 || 
-       (updateOrderDto.items !== undefined && Array.isArray(updateOrderDto.items)))
+        updatedOrder.orderType === OrderType.TAKE_AWAY) &&
+      previousOrderEntity
     ) {
+      const queryRunner = this.dataSource.createQueryRunner();
+
+      try {
+        await queryRunner.connect();
+
+        // Obtener el estado actual (después de los cambios)
+        const currentEntity = await queryRunner.manager.findOne(OrderEntity, {
+          where: { id: updatedOrder.id },
+          relations: [
+            'orderItems',
+            'orderItems.product',
+            'orderItems.productVariant',
+            'orderItems.productModifiers',
+            'orderItems.selectedPizzaCustomizations',
+            'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+            'deliveryInfo',
+          ],
+        });
+
+        if (currentEntity) {
+          // Usar el método privado del servicio para detectar cambios
+          const changes = (
+            this.orderChangeTracker as any
+          ).detectChangesUsingSnapshots(currentEntity, previousOrderEntity);
+
+          hasRealChanges = changes !== null;
+
+          // Log para debugging
+          if (changes) {
+            this.logger.log(
+              `Cambios detectados en orden ${id}: ${changes.summary || 'Sin resumen'}`,
+            );
+          } else {
+            this.logger.log(
+              `No se detectaron cambios reales en orden ${id}, no se reimprimirá el ticket`,
+            );
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error al detectar cambios en orden ${id}:`, error);
+        // En caso de error, asumir que hay cambios para no perder reimpresiones importantes
+        hasRealChanges = true;
+      } finally {
+        await queryRunner.release();
+      }
+    }
+
+    // Disparar reimpresión automática solo si hubo cambios reales
+    if (hasRealChanges) {
       await this.automaticPrintingService.printOrderAutomatically(
         updatedOrder.id,
         updatedOrder.orderType,
-        updateOrderDto.userId || null, // Pasar null en lugar de 'system'
+        updateOrderDto.userId || null,
         true, // isReprint = true
       );
     }
 
+    this.logger.debug(`Orden actualizada - TableId final: ${updatedOrder.tableId}, OrderType: ${updatedOrder.orderType}`);
     return updatedOrder;
   }
 
@@ -721,14 +941,203 @@ export class OrdersService {
     return this.orderItemRepository.findByOrderId(orderId);
   }
 
+  /**
+   * Limpia los campos de deliveryInfo según el tipo de pedido
+   * REGLAS DE LIMPIEZA:
+   * - DINE_IN: No necesita deliveryInfo (se elimina completamente)
+   * - TAKE_AWAY: Solo necesita recipientName, recipientPhone y deliveryInstructions
+   * - DELIVERY: Solo necesita campos de dirección y recipientPhone
+   */
+  private cleanDeliveryInfoByOrderType(
+    deliveryInfo: Partial<DeliveryInfo>,
+    orderType: OrderType,
+  ): Partial<DeliveryInfo> {
+    // Inicializar el resultado con todos los campos posibles
+    const result: Partial<DeliveryInfo> = {};
+
+    if (orderType === OrderType.DINE_IN) {
+      // Para pedidos DINE_IN, marcar todos los campos como undefined
+      result.fullAddress = undefined;
+      result.street = undefined;
+      result.number = undefined;
+      result.interiorNumber = undefined;
+      result.neighborhood = undefined;
+      result.city = undefined;
+      result.state = undefined;
+      result.zipCode = undefined;
+      result.country = undefined;
+      result.latitude = undefined;
+      result.longitude = undefined;
+      result.recipientName = undefined;
+      result.recipientPhone = undefined;
+      result.deliveryInstructions = undefined;
+      
+      return result;
+    }
+
+    if (orderType === OrderType.TAKE_AWAY) {
+      // Para TAKE_AWAY solo conservamos:
+      // - recipientName (nombre del cliente)
+      // - recipientPhone (teléfono del cliente)
+      // - deliveryInstructions (notas especiales)
+      
+      // Conservar campos válidos
+              if (deliveryInfo.recipientName !== undefined && deliveryInfo.recipientName !== null && deliveryInfo.recipientName !== '') {
+          result.recipientName = deliveryInfo.recipientName;
+        } else {
+          result.recipientName = undefined;
+        }
+        
+        if (deliveryInfo.recipientPhone !== undefined && deliveryInfo.recipientPhone !== null && deliveryInfo.recipientPhone !== '') {
+          result.recipientPhone = deliveryInfo.recipientPhone;
+        } else {
+          result.recipientPhone = undefined;
+        }
+        
+        if (deliveryInfo.deliveryInstructions !== undefined && deliveryInfo.deliveryInstructions !== null && deliveryInfo.deliveryInstructions !== '') {
+          result.deliveryInstructions = deliveryInfo.deliveryInstructions;
+        } else {
+          result.deliveryInstructions = undefined;
+        }
+        
+        // Marcar campos de dirección como undefined
+        result.fullAddress = undefined;
+        result.street = undefined;
+        result.number = undefined;
+        result.interiorNumber = undefined;
+        result.neighborhood = undefined;
+        result.city = undefined;
+        result.state = undefined;
+        result.zipCode = undefined;
+        result.country = undefined;
+        result.latitude = undefined;
+        result.longitude = undefined;
+      
+      return result;
+    }
+
+    if (orderType === OrderType.DELIVERY) {
+      // Para DELIVERY solo conservamos:
+      // - Campos de dirección completa
+      // - recipientPhone (teléfono de contacto para entrega)
+      // - deliveryInstructions (instrucciones de entrega)
+      // NO conservamos recipientName
+      
+              // Conservar campos de dirección válidos
+        if (deliveryInfo.fullAddress !== undefined && deliveryInfo.fullAddress !== null && deliveryInfo.fullAddress !== '') {
+          result.fullAddress = deliveryInfo.fullAddress;
+        } else {
+          result.fullAddress = undefined;
+        }
+        
+        if (deliveryInfo.street !== undefined && deliveryInfo.street !== null && deliveryInfo.street !== '') {
+          result.street = deliveryInfo.street;
+        } else {
+          result.street = undefined;
+        }
+        
+        if (deliveryInfo.number !== undefined && deliveryInfo.number !== null && deliveryInfo.number !== '') {
+          result.number = deliveryInfo.number;
+        } else {
+          result.number = undefined;
+        }
+        
+        if (deliveryInfo.interiorNumber !== undefined && deliveryInfo.interiorNumber !== null && deliveryInfo.interiorNumber !== '') {
+          result.interiorNumber = deliveryInfo.interiorNumber;
+        } else {
+          result.interiorNumber = undefined;
+        }
+        
+        if (deliveryInfo.neighborhood !== undefined && deliveryInfo.neighborhood !== null && deliveryInfo.neighborhood !== '') {
+          result.neighborhood = deliveryInfo.neighborhood;
+        } else {
+          result.neighborhood = undefined;
+        }
+        
+        if (deliveryInfo.city !== undefined && deliveryInfo.city !== null && deliveryInfo.city !== '') {
+          result.city = deliveryInfo.city;
+        } else {
+          result.city = undefined;
+        }
+        
+        if (deliveryInfo.state !== undefined && deliveryInfo.state !== null && deliveryInfo.state !== '') {
+          result.state = deliveryInfo.state;
+        } else {
+          result.state = undefined;
+        }
+        
+        if (deliveryInfo.zipCode !== undefined && deliveryInfo.zipCode !== null && deliveryInfo.zipCode !== '') {
+          result.zipCode = deliveryInfo.zipCode;
+        } else {
+          result.zipCode = undefined;
+        }
+        
+        if (deliveryInfo.country !== undefined && deliveryInfo.country !== null && deliveryInfo.country !== '') {
+          result.country = deliveryInfo.country;
+        } else {
+          result.country = undefined;
+        }
+        
+        if (deliveryInfo.latitude !== undefined && deliveryInfo.latitude !== null) {
+          result.latitude = deliveryInfo.latitude;
+        } else {
+          result.latitude = undefined;
+        }
+        
+        if (deliveryInfo.longitude !== undefined && deliveryInfo.longitude !== null) {
+          result.longitude = deliveryInfo.longitude;
+        } else {
+          result.longitude = undefined;
+        }
+        
+        if (deliveryInfo.deliveryInstructions !== undefined && deliveryInfo.deliveryInstructions !== null && deliveryInfo.deliveryInstructions !== '') {
+          result.deliveryInstructions = deliveryInfo.deliveryInstructions;
+        } else {
+          result.deliveryInstructions = undefined;
+        }
+        
+        if (deliveryInfo.recipientPhone !== undefined && deliveryInfo.recipientPhone !== null && deliveryInfo.recipientPhone !== '') {
+          result.recipientPhone = deliveryInfo.recipientPhone;
+        } else {
+          result.recipientPhone = undefined;
+        }
+        
+        // Marcar recipientName como undefined (no necesario para DELIVERY)
+        result.recipientName = undefined;
+      
+      return result;
+    }
+
+    // Por defecto, marcar todos los campos como undefined
+    result.fullAddress = undefined;
+    result.street = undefined;
+    result.number = undefined;
+    result.interiorNumber = undefined;
+    result.neighborhood = undefined;
+    result.city = undefined;
+    result.state = undefined;
+    result.zipCode = undefined;
+    result.country = undefined;
+    result.latitude = undefined;
+    result.longitude = undefined;
+    result.recipientName = undefined;
+    result.recipientPhone = undefined;
+    result.deliveryInstructions = undefined;
+    
+    return result;
+  }
+
   // Función helper para comparar deliveryInfo
   private hasDeliveryInfoChanges(
     existing: DeliveryInfo | null | undefined,
     updated: Partial<DeliveryInfo>,
   ): boolean {
-    // Si no existe y se está creando uno nuevo
+    // Si no existe y se está creando uno nuevo con campos
     if (!existing && updated) {
-      return true;
+      const hasAnyValue = Object.values(updated).some(
+        (value) => value !== undefined && value !== null && value !== '',
+      );
+      return hasAnyValue;
     }
 
     // Si existe pero se está eliminando
@@ -741,13 +1150,20 @@ export class OrdersService {
       return false;
     }
 
-    // Comparar cada campo
+    // Comparar cada campo, incluyendo todos los campos de dirección
     const fieldsToCompare = [
       'recipientName',
       'recipientPhone',
       'fullAddress',
+      'street',
+      'number',
+      'interiorNumber',
+      'neighborhood',
+      'city',
+      'state',
+      'zipCode',
+      'country',
       'deliveryInstructions',
-      'recipientEmail',
       'latitude',
       'longitude',
     ];
@@ -756,8 +1172,16 @@ export class OrdersService {
       const existingValue = existing?.[field as keyof DeliveryInfo];
       const updatedValue = updated[field as keyof DeliveryInfo];
 
-      // Si el campo está definido en el update y es diferente
-      if (updatedValue !== undefined && existingValue !== updatedValue) {
+      // Normalizar valores: tratar null, undefined y string vacío como equivalentes
+      const normalizedExisting =
+        existingValue === null || existingValue === ''
+          ? undefined
+          : existingValue;
+      const normalizedUpdated =
+        updatedValue === null || updatedValue === '' ? undefined : updatedValue;
+
+      // Si los valores normalizados son diferentes, hay cambio
+      if (normalizedExisting !== normalizedUpdated) {
         return true;
       }
     }
@@ -999,8 +1423,140 @@ export class OrdersService {
     return this.update(id, updateData);
   }
 
-  async findOrdersForFinalization(): Promise<Order[]> {
-    return this.orderRepository.findOrdersForFinalization();
+  async findOrdersForFinalization(): Promise<OrderForFinalizationDto[]> {
+    const orders = await this.orderRepository.findOrdersForFinalization();
+
+    return orders.map((order) => this.mapOrderToFinalizationDto(order));
+  }
+
+  private mapOrderToFinalizationDto(order: Order): OrderForFinalizationDto {
+    // Agrupar items idénticos
+    const groupedItems = new Map<
+      string,
+      {
+        items: OrderItem[];
+        modifiers: any[];
+      }
+    >();
+
+    // Recopilar pantallas de preparación únicas
+    const preparationScreens = new Set<string>();
+
+    // Agrupar por producto, variante, modificadores y notas de preparación
+    order.orderItems.forEach((item) => {
+      // Agregar pantalla de preparación si existe
+      if (item.product?.preparationScreen?.name) {
+        preparationScreens.add(item.product.preparationScreen.name);
+      }
+
+      // Crear clave única basada en producto, variante, modificadores y notas
+      const modifierKeys =
+        item.productModifiers
+          ?.map((m) => m.id)
+          .sort()
+          .join(',') || '';
+      const key = `${item.productId}-${item.productVariantId || ''}-${modifierKeys}-${item.preparationNotes || ''}-${item.preparationStatus}`;
+
+      if (!groupedItems.has(key)) {
+        groupedItems.set(key, {
+          items: [],
+          modifiers: item.productModifiers || [],
+        });
+      }
+
+      groupedItems.get(key)!.items.push(item);
+    });
+
+    // Convertir grupos a DTOs
+    const orderItemDtos: OrderItemForFinalizationDto[] = [];
+
+    groupedItems.forEach(({ items, modifiers }) => {
+      const firstItem = items[0];
+
+      const dto: OrderItemForFinalizationDto = {
+        productId: firstItem.productId,
+        productVariantId: firstItem.productVariantId || undefined,
+        quantity: items.length,
+        basePrice: firstItem.basePrice,
+        finalPrice: firstItem.finalPrice,
+        preparationNotes: firstItem.preparationNotes || undefined,
+        preparationStatus: firstItem.preparationStatus,
+        product: firstItem.product
+          ? {
+              id: firstItem.product.id,
+              name: firstItem.product.name,
+              description: firstItem.product.description || undefined,
+            }
+          : {
+              id: firstItem.productId,
+              name: 'Producto no encontrado',
+              description: undefined,
+            },
+        productVariant: firstItem.productVariant
+          ? {
+              id: firstItem.productVariant.id,
+              name: firstItem.productVariant.name,
+            }
+          : undefined,
+        modifiers: modifiers.map((m) => ({
+          id: m.id,
+          name: m.name,
+          price: m.price,
+        })),
+        selectedPizzaCustomizations:
+          firstItem.selectedPizzaCustomizations || undefined,
+      };
+
+      orderItemDtos.push(dto);
+    });
+
+    // Crear DTO de orden
+    const orderDto: OrderForFinalizationDto = {
+      id: order.id,
+      shiftOrderNumber: order.shiftOrderNumber,
+      orderType: order.orderType,
+      orderStatus: order.orderStatus,
+      total: order.total,
+      orderItems: orderItemDtos,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      tableId: order.tableId || undefined,
+      user: order.user
+        ? {
+            id: order.user.id,
+            firstName: order.user.firstName || undefined,
+            lastName: order.user.lastName || undefined,
+          }
+        : undefined,
+      table: order.table
+        ? {
+            id: order.table.id,
+            number: order.table.name, // Mapear 'name' a 'number' como espera el DTO
+            area: order.table.area
+              ? {
+                  name: order.table.area.name,
+                }
+              : undefined,
+          }
+        : undefined,
+      deliveryInfo: order.deliveryInfo || undefined,
+      isFromWhatsApp: order.isFromWhatsApp,
+      preparationScreens: Array.from(preparationScreens).sort(),
+      payments: order.payments || undefined,
+      preparationScreenStatuses: order.preparationScreenStatuses?.map(
+        (status) => ({
+          id: status.id,
+          preparationScreenId: status.preparationScreenId,
+          preparationScreenName:
+            status.preparationScreen?.name || 'Pantalla desconocida',
+          status: status.status,
+          startedAt: status.startedAt,
+          completedAt: status.completedAt,
+        }),
+      ),
+    };
+
+    return orderDto;
   }
 
   async finalizeMultipleOrders(

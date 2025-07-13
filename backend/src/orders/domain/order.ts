@@ -7,6 +7,7 @@ import { Payment } from '../../payments/domain/payment';
 import { OrderItem } from './order-item'; // Importar OrderItem
 import { Adjustment } from '../../adjustments/domain/adjustment';
 import { DeliveryInfo } from './delivery-info';
+import { OrderPreparationScreenStatus } from './order-preparation-screen-status';
 
 export class Order {
   id: string;
@@ -54,4 +55,6 @@ export class Order {
   deliveryInfo: DeliveryInfo | null;
 
   estimatedDeliveryTime?: Date | null;
+
+  preparationScreenStatuses?: OrderPreparationScreenStatus[];
 }

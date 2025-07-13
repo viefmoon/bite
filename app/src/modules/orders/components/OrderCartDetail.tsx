@@ -200,6 +200,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
     isSuccess: isSuccessOrder,
+    refetch: refetchOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
@@ -591,6 +592,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     },
     [menu],
   );
+
 
   // Cargar datos de la orden cuando esté en modo edición
   useEffect(() => {
@@ -1138,9 +1140,71 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode],
   );
 
+  // Función para limpiar datos según el tipo de orden (solo se ejecuta al guardar)
+  const cleanOrderDataForSubmission = useCallback((
+    orderType: OrderType,
+    deliveryInfo: DeliveryInfo,
+    selectedTableId: string | null,
+    selectedAreaId: string | null,
+    isTemporaryTable: boolean,
+    temporaryTableName: string
+  ) => {
+    const cleanedData: {
+      deliveryInfo: DeliveryInfo;
+      tableId?: string;
+      isTemporaryTable?: boolean;
+      temporaryTableName?: string;
+      temporaryTableAreaId?: string;
+    } = {
+      deliveryInfo: {}
+    };
+
+    // Limpiar deliveryInfo según el tipo de orden
+    if (orderType === OrderTypeEnum.DINE_IN) {
+      // DINE_IN: No necesita deliveryInfo, pero sí mesa
+      cleanedData.deliveryInfo = {};
+      if (isTemporaryTable) {
+        cleanedData.isTemporaryTable = true;
+        cleanedData.temporaryTableName = temporaryTableName;
+        cleanedData.temporaryTableAreaId = selectedAreaId || undefined;
+      } else {
+        cleanedData.tableId = selectedTableId || undefined;
+      }
+    } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
+      // TAKE_AWAY: Solo recipientName, recipientPhone y deliveryInstructions
+      cleanedData.deliveryInfo = {
+        recipientName: deliveryInfo.recipientName,
+        recipientPhone: deliveryInfo.recipientPhone,
+        deliveryInstructions: deliveryInfo.deliveryInstructions,
+      };
+      // No necesita mesa ni área
+    } else if (orderType === OrderTypeEnum.DELIVERY) {
+      // DELIVERY: Solo campos de dirección y recipientPhone
+      cleanedData.deliveryInfo = {
+        fullAddress: deliveryInfo.fullAddress,
+        street: deliveryInfo.street,
+        number: deliveryInfo.number,
+        interiorNumber: deliveryInfo.interiorNumber,
+        neighborhood: deliveryInfo.neighborhood,
+        city: deliveryInfo.city,
+        state: deliveryInfo.state,
+        zipCode: deliveryInfo.zipCode,
+        country: deliveryInfo.country,
+        latitude: deliveryInfo.latitude,
+        longitude: deliveryInfo.longitude,
+        recipientPhone: deliveryInfo.recipientPhone,
+        deliveryInstructions: deliveryInfo.deliveryInstructions,
+      };
+      // No necesita mesa ni área
+    }
+
+    return cleanedData;
+  }, []);
+
   const handleConfirm = async () => {
     if (isConfirming) return; // Prevenir múltiples clics
 
+    // Resetear errores
     setAreaError(null);
     setTableError(null);
     setRecipientNameError(null);
@@ -1153,27 +1217,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     let isValid = true;
 
+    // Validaciones según el tipo de orden
     if (orderType === OrderTypeEnum.DINE_IN) {
-      // Usar Enum
       if (!selectedAreaId) {
         setAreaError('Debe seleccionar un área');
         isValid = false;
       }
       if (isTemporaryTable) {
-        // Validar mesa temporal
         if (!temporaryTableName || temporaryTableName.trim() === '') {
           setTableError('Debe ingresar un nombre para la mesa temporal');
           isValid = false;
         }
       } else {
-        // Validar mesa existente
         if (!selectedTableId) {
           setTableError('Debe seleccionar una mesa');
           isValid = false;
         }
       }
     } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
-      // Usar Enum
       if (
         !deliveryInfo.recipientName ||
         deliveryInfo.recipientName.trim() === ''
@@ -1181,10 +1242,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         setRecipientNameError('El nombre del cliente es obligatorio');
         isValid = false;
       }
-      // Phone is optional for take away
     } else if (orderType === OrderTypeEnum.DELIVERY) {
-      // Usar Enum
-      // Customer name not required for delivery as per new spec
       if (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '') {
         setAddressError('La dirección es obligatoria para Domicilio');
         isValid = false;
@@ -1202,6 +1260,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       return;
     }
 
+    // Limpiar datos según el tipo de orden SOLO AL GUARDAR
+    const cleanedData = cleanOrderDataForSubmission(
+      orderType,
+      deliveryInfo,
+      selectedTableId,
+      selectedAreaId,
+      isTemporaryTable,
+      temporaryTableName
+    );
+
     // Mapear items del carrito al formato esperado por el DTO del backend
     const itemsForBackend: OrderItemDtoForBackend[] = [];
 
@@ -1217,7 +1285,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           const isExistingItem = i < existingIds.length;
           
           itemsForBackend.push({
-            id: isExistingItem ? existingIds[i] : undefined, // Solo incluir ID para items existentes
+            id: isExistingItem ? existingIds[i] : undefined,
             productId: item.productId,
             productVariantId: item.variantId || null,
             basePrice: Number(item.unitPrice),
@@ -1258,56 +1326,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
     if (
-      deliveryInfo.recipientPhone &&
-      deliveryInfo.recipientPhone.trim() !== ''
+      cleanedData.deliveryInfo.recipientPhone &&
+      cleanedData.deliveryInfo.recipientPhone.trim() !== ''
     ) {
-      formattedPhone = deliveryInfo.recipientPhone.trim();
+      formattedPhone = cleanedData.deliveryInfo.recipientPhone.trim();
     }
 
     const orderDetails: OrderDetailsForBackend = {
-      userId: user?.id, // userId ahora es opcional
+      userId: user?.id,
       orderType,
       subtotal,
       total,
       items: itemsForBackend,
-      tableId:
-        orderType === OrderTypeEnum.DINE_IN && !isTemporaryTable
-          ? (selectedTableId ?? undefined)
-          : undefined, // Usar Enum
-      isTemporaryTable:
-        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
-          ? true
-          : undefined,
-      temporaryTableName:
-        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
-          ? temporaryTableName
-          : undefined,
-      temporaryTableAreaId:
-        orderType === OrderTypeEnum.DINE_IN && isTemporaryTable
-          ? selectedAreaId || undefined
-          : undefined,
+      tableId: cleanedData.tableId,
+      isTemporaryTable: cleanedData.isTemporaryTable,
+      temporaryTableName: cleanedData.temporaryTableName,
+      temporaryTableAreaId: cleanedData.temporaryTableAreaId,
       scheduledAt: scheduledTime ? scheduledTime : undefined,
       deliveryInfo: {
-        recipientName:
-          orderType === OrderTypeEnum.TAKE_AWAY
-            ? deliveryInfo.recipientName
-            : undefined,
-        recipientPhone:
-          (orderType === OrderTypeEnum.TAKE_AWAY ||
-            orderType === OrderTypeEnum.DELIVERY) &&
-          formattedPhone
-            ? formattedPhone
-            : undefined,
-        fullAddress:
-          orderType === OrderTypeEnum.DELIVERY
-            ? deliveryInfo.fullAddress
-            : undefined,
-        // Solo incluir instrucciones de entrega si es delivery y existen
-        deliveryInstructions:
-          orderType === OrderTypeEnum.DELIVERY &&
-          deliveryInfo.deliveryInstructions
-            ? deliveryInfo.deliveryInstructions
-            : undefined,
+        ...cleanedData.deliveryInfo,
+        recipientPhone: formattedPhone,
       },
       notes: orderNotes || undefined,
       adjustments: isEditMode
@@ -1317,7 +1355,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               return {
                 orderId: orderId || undefined,
                 name: adj.name,
-                // description: adj.description, // No existe en el tipo Adjustment
                 isPercentage: adj.isPercentage,
                 value: adj.value,
                 amount: adj.amount,
@@ -1328,10 +1365,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     if (!orderDetails.userId) {
       console.error('Error: Falta el ID del usuario al confirmar la orden.');
-      return; // Detener el proceso si falta el userId
+      return;
     }
 
-    setIsConfirming(true); // Marcar como procesando
+    setIsConfirming(true);
 
     // Si hay un pre-pago creado, incluir su ID
     if (!isEditMode && prepaymentId) {
@@ -1340,10 +1377,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     try {
       await onConfirmOrder(orderDetails);
-      // Si llegamos aquí, la orden fue exitosa
       setIsConfirming(false);
 
-      // Actualizar el estado original después de guardar exitosamente
       if (isEditMode) {
         setOriginalOrderState({
           items: [...editItems],
@@ -1356,17 +1391,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         });
         setHasUnsavedChanges(false);
 
-        // Mostrar mensaje de éxito
         showSnackbar({
           message: 'Cambios guardados exitosamente',
           type: 'success',
         });
 
-        // Cerrar el modal después de una actualización exitosa
         onClose?.();
       }
     } catch (error) {
-      // Solo re-habilitar si hubo un error
       setIsConfirming(false);
       console.error('Error en handleConfirm:', error);
     }
@@ -1489,113 +1521,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   }, [scheduledTime]);
 
   // [HELPER MOVIDO A dateTimeHelpers.ts para evitar problemas con Hermes]
-
-  // [FUNCIÓN ELIMINADA - hasUnsavedChanges ya existe como estado]
-  /*
-    if (!isEditMode || !orderData) return false;
-
-    // Comparar tipo de orden
-    if (editOrderType !== orderData.orderType) return true;
-
-    // Comparar mesa (solo para DINE_IN)
-    if (
-      editOrderType === OrderTypeEnum.DINE_IN &&
-      editSelectedTableId !== orderData.tableId
-    )
-      return true;
-
-    // Comparar hora programada
-    const originalScheduledTime = orderData.scheduledAt
-      ? new Date(orderData.scheduledAt).getTime()
-      : null;
-    const currentScheduledTime = editScheduledTime
-      ? editScheduledTime.getTime()
-      : null;
-    if (originalScheduledTime !== currentScheduledTime) return true;
-
-    // Comparar datos del cliente
-    if (JSON.stringify(editDeliveryInfo) !== JSON.stringify(orderData.deliveryInfo || {})) return true;
-    if (editOrderNotes !== (orderData.notes || '')) return true;
-
-    // Comparar items
-    const originalItems = orderData.orderItems || [];
-
-    // Si algún item tiene un ID temporal (new-*), hay cambios
-    if (editItems.some((item) => item.id.startsWith('new-'))) return true;
-
-    // Calcular la cantidad total de items originales
-    const originalTotalQuantity = originalItems.length; // Backend envía items individuales
-    const editTotalQuantity = editItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0,
-    );
-
-    // Si la cantidad total de items cambió, hay cambios
-    if (originalTotalQuantity !== editTotalQuantity) return true;
-
-    // Crear un mapa de items agrupados desde los items originales para comparación
-    const originalGroupedMap = new Map<string, number>();
-
-    originalItems.forEach((item: any) => {
-      // Crear una clave única para agrupar items idénticos
-      let modifierIds = '';
-      if (item.modifiers && Array.isArray(item.modifiers)) {
-        // Formato antiguo
-        modifierIds = item.modifiers
-          .map((m: any) => m.productModifierId)
-          .sort()
-          .join(',');
-      } else if (item.productModifiers && Array.isArray(item.productModifiers)) {
-        // Formato nuevo
-        modifierIds = item.productModifiers
-          .map((m: any) => m.id)
-          .sort()
-          .join(',');
-      }
-      const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
-
-      const currentQuantity = originalGroupedMap.get(groupKey) || 0;
-      originalGroupedMap.set(groupKey, currentQuantity + 1);
-    });
-
-    // Crear un mapa similar para los items editados
-    const editGroupedMap = new Map<string, number>();
-
-    editItems.forEach((item) => {
-      if (!item.id.startsWith('new-')) {
-        const modifierIds = item.modifiers
-          .map((m) => m.id)
-          .sort()
-          .join(',');
-        const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${item.preparationNotes || ''}`;
-
-        editGroupedMap.set(groupKey, item.quantity);
-      }
-    });
-
-    // Comparar los mapas
-    if (originalGroupedMap.size !== editGroupedMap.size) return true;
-
-    for (const [key, originalQuantity] of originalGroupedMap) {
-      const editQuantity = editGroupedMap.get(key);
-      if (editQuantity === undefined || editQuantity !== originalQuantity) {
-        return true;
-      }
-    }
-
-    return false;
-  }, [
-    isEditMode,
-    orderData,
-    editOrderType,
-    editSelectedTableId,
-    editScheduledTime,
-    editCustomerName,
-    editPhoneNumber,
-    editDeliveryAddress,
-    editOrderNotes,
-    editItems,
-  ]); */
 
   // Función para manejar la edición de un item del carrito
   const handleEditCartItem = useCallback(
@@ -2536,7 +2461,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
                                   {/* Renderizar modificadores */}
                                   {hasModifiers &&
-                                    item.modifiers.map((mod, index) => (
+                                    item.modifiers.map((mod: any, index: number) => (
                                       <Text
                                         key={mod.id || index}
                                         style={styles.itemDescription}
@@ -3263,7 +3188,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       alignItems: 'center',
       justifyContent: 'space-between', // 2) Separar título y acciones
       paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.s, // controla el “gap” desde el borde
+      paddingHorizontal: theme.spacing.s, // controla el "gap" desde el borde
       backgroundColor: theme.colors.surface,
       minHeight: 80, // Altura mínima para mejor experiencia de swipe
     },

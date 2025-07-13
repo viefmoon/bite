@@ -20,6 +20,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
+import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -130,13 +131,13 @@ export class OrdersController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todas las órdenes disponibles para finalización.',
-    type: [Order],
+    type: [OrderForFinalizationDto],
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
-  findOrdersForFinalization(): Promise<Order[]> {
+  findOrdersForFinalization(): Promise<OrderForFinalizationDto[]> {
     return this.ordersService.findOrdersForFinalization();
   }
 

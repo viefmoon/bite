@@ -349,18 +349,138 @@ export class OrdersRelationalRepository implements OrderRepository {
       shiftId,
       ...updateData
     } = payload;
+
+    // Manejar actualización/eliminación de deliveryInfo
+    if ('deliveryInfo' in updateData) {
+      if (updateData.deliveryInfo === null && entity.deliveryInfo) {
+        // Eliminar el registro de deliveryInfo de la base de datos
+        await this.ordersRepository.manager.delete('delivery_info', {
+          orderId: id,
+        });
+        entity.deliveryInfo = null;
+      } else if (
+        updateData.deliveryInfo &&
+        typeof updateData.deliveryInfo === 'object'
+      ) {
+        // Lista de todos los campos posibles de deliveryInfo
+        const allFields = [
+          'recipientName',
+          'recipientPhone',
+          'fullAddress',
+          'street',
+          'number',
+          'interiorNumber',
+          'neighborhood',
+          'city',
+          'state',
+          'zipCode',
+          'country',
+          'latitude',
+          'longitude',
+          'deliveryInstructions',
+        ];
+
+        if (entity.deliveryInfo) {
+          // Actualizar deliveryInfo existente, asegurándose de establecer campos como null explícitamente
+          const deliveryInfoUpdate: any = {};
+
+          // Establecer explícitamente cada campo, usando null para undefined
+          for (const field of allFields) {
+            const value = (updateData.deliveryInfo as any)[field];
+            deliveryInfoUpdate[field] = value === undefined ? null : value;
+          }
+
+          // Actualizar el registro de deliveryInfo
+          await this.ordersRepository.manager.update(
+            'delivery_info',
+            { orderId: id },
+            deliveryInfoUpdate,
+          );
+        } else {
+          // Crear nuevo deliveryInfo si no existía
+          const deliveryInfoData: any = {
+            orderId: id,
+          };
+
+          // Establecer cada campo, usando null para undefined
+          for (const field of allFields) {
+            const value = (updateData.deliveryInfo as any)[field];
+            deliveryInfoData[field] = value === undefined ? null : value;
+          }
+
+          // Solo crear si hay al menos un campo con valor
+          const hasAnyValue = allFields.some(
+            (field) =>
+              deliveryInfoData[field] !== null &&
+              deliveryInfoData[field] !== '',
+          );
+
+          if (hasAnyValue) {
+            await this.ordersRepository.manager.insert(
+              'delivery_info',
+              deliveryInfoData,
+            );
+          }
+        }
+      }
+    }
+
     const updatedDomain = {
       ...existingDomain,
       ...updateData,
     };
+    
+    // Logging para debuggear el problema de tableId
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] Actualizando tableId: ${existingDomain.tableId} → ${updateData.tableId}`);
+      console.log(`[OrderRepository] updatedDomain.tableId: ${updatedDomain.tableId}`);
+    }
+    
     const persistenceModel = this.orderMapper.toEntity(updatedDomain);
     if (!persistenceModel) {
       throw new Error('Failed to map updated order domain to entity');
     }
+    
+    // Logging adicional para persistenceModel
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] persistenceModel.tableId: ${persistenceModel.tableId}`);
+    }
+    // Manejar delivery_info de manera especial para evitar violaciones de unique constraint
+    if (persistenceModel.deliveryInfo) {
+      if (entity.deliveryInfo) {
+        // Si ya existe delivery_info, preservar su ID y actualizar los campos
+        persistenceModel.deliveryInfo.id = entity.deliveryInfo.id;
+        persistenceModel.deliveryInfo.createdAt = entity.deliveryInfo.createdAt;
+        // Mantener la misma instancia de entity para que TypeORM reconozca que es una actualización
+        entity.deliveryInfo = persistenceModel.deliveryInfo;
+      }
+    } else if (persistenceModel.deliveryInfo === null && entity.deliveryInfo) {
+      // Si se debe eliminar delivery_info, establecer la relación a null
+      entity.deliveryInfo = null;
+    }
+    
     // Usar merge en lugar de create para preservar la instancia original
     // y permitir que el subscriber detecte correctamente la actualización
     const mergedEntity = this.ordersRepository.merge(entity, persistenceModel);
+    
+    // Logging adicional del merge
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] entity.tableId antes del merge: ${entity.tableId}`);
+      console.log(`[OrderRepository] mergedEntity.tableId después del merge: ${mergedEntity.tableId}`);
+    }
+    
+    // FUERZA BRUTA: Si tableId está en updateData, aplicarlo directamente a la entidad
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] Forzando tableId = ${updateData.tableId}`);
+      mergedEntity.tableId = updateData.tableId === undefined ? null : updateData.tableId;
+    }
+    
     const updatedEntity = await this.ordersRepository.save(mergedEntity);
+    
+    // Logging después del save
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] updatedEntity.tableId después del save: ${updatedEntity.tableId}`);
+    }
     const completeEntity = await this.ordersRepository.findOne({
       where: { id: updatedEntity.id },
       relations: [
@@ -389,6 +509,13 @@ export class OrdersRelationalRepository implements OrderRepository {
     if (!finalDomainResult) {
       throw new Error('Failed to map final updated order entity to domain');
     }
+    
+    // Logging final
+    if ('tableId' in updateData) {
+      console.log(`[OrderRepository] completeEntity.tableId: ${completeEntity.tableId}`);
+      console.log(`[OrderRepository] finalDomainResult.tableId: ${finalDomainResult.tableId}`);
+    }
+    
     return finalDomainResult;
   }
   async remove(id: Order['id']): Promise<void> {
@@ -462,6 +589,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'shift',
         'orderItems',
         'orderItems.product',
+        'orderItems.product.preparationScreen',
         'orderItems.productVariant',
         'orderItems.productModifiers',
         'orderItems.preparedBy',
@@ -470,6 +598,8 @@ export class OrdersRelationalRepository implements OrderRepository {
         'payments',
         'adjustments',
         'deliveryInfo',
+        'preparationScreenStatuses',
+        'preparationScreenStatuses.preparationScreen',
       ],
       order: {
         createdAt: 'ASC',
