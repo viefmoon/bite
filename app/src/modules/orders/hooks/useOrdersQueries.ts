@@ -260,6 +260,8 @@ export const useGetOrderByIdQuery = (
     },
     enabled: !!orderId && (options?.enabled ?? true), // Habilitar solo si hay orderId y está habilitado externamente
     staleTime: 0, // Los datos del detalle de la orden siempre deben estar frescos
-    gcTime: 5 * 60 * 1000, // Mantener en caché por 5 minutos
+    gcTime: 0, // No mantener en caché - siempre refetchear cuando se necesite
+    refetchOnMount: 'always', // Siempre refetchear cuando el componente se monta
+    refetchOnWindowFocus: true, // Refetchear cuando la ventana recupera el foco
   });
 };

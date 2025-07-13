@@ -259,6 +259,39 @@ export const OrderCard = React.memo<OrderCardProps>(
             </View>
           </View>
 
+          {/* Preparation screens if any */}
+          {order.preparationScreens && order.preparationScreens.length > 0 && (
+            <View style={styles.preparationScreensContainer}>
+              {order.preparationScreens.map((screen, index) => (
+                <View
+                  key={`${order.id}-screen-${index}`}
+                  style={[
+                    styles.preparationScreenBadge,
+                    {
+                      backgroundColor: isSelected
+                        ? theme.colors.primaryContainer
+                        : theme.colors.surfaceVariant,
+                      borderColor: theme.colors.outline,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.preparationScreenText,
+                      {
+                        color: isSelected
+                          ? theme.colors.onPrimaryContainer
+                          : theme.colors.onSurfaceVariant,
+                      },
+                    ]}
+                  >
+                    🍳 {screen}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Notes if any */}
           {order.notes ? (
             <Text
@@ -355,5 +388,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  preparationScreensContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+    gap: 6,
+  },
+  preparationScreenBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  preparationScreenText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
 });

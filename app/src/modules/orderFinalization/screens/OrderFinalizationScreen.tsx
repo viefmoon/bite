@@ -70,6 +70,35 @@ export const OrderFinalizationScreen: React.FC = () => {
     });
   }, [orders, filter]);
 
+  // Calcular totales por tipo de pedido
+  const orderCounts = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) {
+      return {
+        delivery: 0,
+        take_away: 0,
+        dine_in: 0,
+      };
+    }
+
+    return orders.reduce(
+      (counts, order) => {
+        switch (order.orderType) {
+          case 'DELIVERY':
+            counts.delivery++;
+            break;
+          case 'TAKE_AWAY':
+            counts.take_away++;
+            break;
+          case 'DINE_IN':
+            counts.dine_in++;
+            break;
+        }
+        return counts;
+      },
+      { delivery: 0, take_away: 0, dine_in: 0 }
+    );
+  }, [orders]);
+
   // Limpiar selección cuando cambia el filtro
   useEffect(() => {
     setSelectionState({
@@ -185,6 +214,22 @@ export const OrderFinalizationScreen: React.FC = () => {
                 size={32}
                 color={filter === 'delivery' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
+              {orderCounts.delivery > 0 && (
+                <View 
+                  style={[
+                    styles.countBadge,
+                    { 
+                      backgroundColor: filter === 'delivery' ? theme.colors.error : theme.colors.errorContainer,
+                      borderColor: filter === 'delivery' ? theme.colors.error : theme.colors.outline,
+                    }
+                  ]}
+                >
+                  <Text style={[
+                    styles.countBadgeText,
+                    { color: filter === 'delivery' ? theme.colors.onError : theme.colors.onErrorContainer }
+                  ]}>{orderCounts.delivery}</Text>
+                </View>
+              )}
             </Pressable>
             <Pressable
               style={[
@@ -199,6 +244,22 @@ export const OrderFinalizationScreen: React.FC = () => {
                 size={32}
                 color={filter === 'take_away' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
+              {orderCounts.take_away > 0 && (
+                <View 
+                  style={[
+                    styles.countBadge,
+                    { 
+                      backgroundColor: filter === 'take_away' ? theme.colors.error : theme.colors.errorContainer,
+                      borderColor: filter === 'take_away' ? theme.colors.error : theme.colors.outline,
+                    }
+                  ]}
+                >
+                  <Text style={[
+                    styles.countBadgeText,
+                    { color: filter === 'take_away' ? theme.colors.onError : theme.colors.onErrorContainer }
+                  ]}>{orderCounts.take_away}</Text>
+                </View>
+              )}
             </Pressable>
             <Pressable
               style={[
@@ -213,6 +274,22 @@ export const OrderFinalizationScreen: React.FC = () => {
                 size={32}
                 color={filter === 'dine_in' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
+              {orderCounts.dine_in > 0 && (
+                <View 
+                  style={[
+                    styles.countBadge,
+                    { 
+                      backgroundColor: filter === 'dine_in' ? theme.colors.error : theme.colors.errorContainer,
+                      borderColor: filter === 'dine_in' ? theme.colors.error : theme.colors.outline,
+                    }
+                  ]}
+                >
+                  <Text style={[
+                    styles.countBadgeText,
+                    { color: filter === 'dine_in' ? theme.colors.onError : theme.colors.onErrorContainer }
+                  ]}>{orderCounts.dine_in}</Text>
+                </View>
+              )}
             </Pressable>
           </View>
           <IconButton
@@ -438,12 +515,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 0,
     elevation: 1,
+    position: 'relative',
   },
   filterButtonActive: {
     elevation: 3,
   },
   refreshButton: {
     margin: 0,
+  },
+  countBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    elevation: 2,
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   floatingButton: {
     position: 'absolute',

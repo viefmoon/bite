@@ -327,11 +327,26 @@ export class AutomaticPrintingService {
       printer.setTextSize(1, 2);
       printer.bold(true);
       
+      // Construir el título con indicadores
+      let orderTitle = `#${order.shiftOrderNumber} - `;
+      
+      // Tipo de orden (comprimido)
       if (order.orderType === OrderType.DELIVERY) {
-        printer.println(`#${order.shiftOrderNumber} - A DOMICILIO`);
+        orderTitle += 'DOMICILIO';
       } else {
-        printer.println(`#${order.shiftOrderNumber} - PARA LLEVAR`);
+        orderTitle += 'PARA LLEVAR';
       }
+      
+      // Agregar indicadores
+      if (order.scheduledAt) {
+        orderTitle += ' (P)'; // P para pedido Programado
+      }
+      
+      if (isReprint) {
+        orderTitle += ' *'; // Asterisco para reimpresión/edición
+      }
+      
+      printer.println(orderTitle);
       
       printer.bold(false);
       printer.setTextNormal();
@@ -369,22 +384,21 @@ export class AutomaticPrintingService {
         printer.println(phones.join(' - '));
       }
       
-      // Indicador de reimpresión si aplica (debajo del tipo de pedido y más pequeño)
-      if (isReprint) {
-        printer.alignCenter();
-        printer.setTextSize(0, 0); // Fuente más pequeña
-        printer.println('(Reimpresion por edicion)');
-        printer.setTextNormal();
-        printer.println('');
-      }
-      
       printer.drawLine();
 
-      // Información de la orden (ahora solo fecha y quien atendió)
+      // Información de la orden (fecha creación, actualización y quien atendió)
       printer.alignLeft();
       printer.println(`Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', { 
         timeZone: 'America/Mexico_City' 
       })}`);
+      
+      // Mostrar fecha de actualización si es diferente a la creación
+      if (order.updatedAt && new Date(order.updatedAt).getTime() !== new Date(order.createdAt).getTime()) {
+        printer.println(`Actualizada: ${new Date(order.updatedAt).toLocaleString('es-MX', { 
+          timeZone: 'America/Mexico_City' 
+        })}`);
+      }
+      
       if (order.user?.firstName || order.user?.lastName) {
         const userName = [order.user.firstName, order.user.lastName].filter(Boolean).join(' ');
         printer.println(`Atendido por: ${userName}`);
@@ -422,9 +436,6 @@ export class AutomaticPrintingService {
         if (order.deliveryInfo.recipientName) {
           printer.println(`Cliente: ${order.deliveryInfo.recipientName}`);
         }
-        if (order.deliveryInfo.recipientPhone) {
-          printer.println(`Tel: ${order.deliveryInfo.recipientPhone}`);
-        }
         if (order.deliveryInfo.fullAddress) {
           printer.println(`Direccion: ${order.deliveryInfo.fullAddress}`);
         } else if (order.deliveryInfo.street) {
@@ -437,28 +448,39 @@ export class AutomaticPrintingService {
           ].filter(Boolean).join(', ');
           printer.println(`Direccion: ${addressParts}`);
         }
+        
         if (order.deliveryInfo.deliveryInstructions) {
           printer.println(`Instrucciones: ${order.deliveryInfo.deliveryInstructions}`);
         }
         
-        // Agregar notas de orden si existen (encima de hora programada)
-        if (order.notes) {
-          printer.setTextSize(0, 1); // Fuente intermedia igual que hora programada
-          printer.println(`Notas de orden: ${order.notes}`);
-          printer.setTextSize(1, 1); // Volver a fuente de información de entrega
+        // Combinar teléfono, notas y hora programada en líneas optimizadas
+        printer.setTextSize(0, 1); // Fuente intermedia
+        
+        const phone = order.deliveryInfo.recipientPhone ? `Tel: ${order.deliveryInfo.recipientPhone}` : null;
+        const notes = order.notes ? `Notas: ${order.notes}` : null;
+        const scheduledTime = order.scheduledAt ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
+          timeZone: 'America/Mexico_City',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })}` : null;
+        
+        // Combinar campos disponibles
+        const fields: string[] = [phone, notes, scheduledTime].filter((field): field is string => field !== null);
+        
+        if (fields.length === 3) {
+          // Si hay 3 campos, imprimir teléfono solo, y notas + hora juntas
+          printer.println(fields[0]); // Teléfono
+          printer.println(`${fields[1]} | ${fields[2]}`); // Notas | Hora
+        } else if (fields.length === 2) {
+          // Si hay 2 campos, combinarlos en una línea
+          printer.println(`${fields[0]} | ${fields[1]}`);
+        } else if (fields.length === 1) {
+          // Si hay solo 1 campo, imprimirlo solo
+          printer.println(fields[0]);
         }
         
-        // Agregar hora programada si existe
-        if (order.scheduledAt) {
-          printer.setTextSize(0, 1); // Fuente intermedia
-          printer.println(`Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
-            timeZone: 'America/Mexico_City',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          })}`);
-          printer.setTextSize(1, 1); // Volver a fuente de información de entrega
-        }
+        printer.setTextSize(1, 1); // Volver a fuente de información de entrega
         
         // Volver a fuente normal
         printer.setTextNormal();
@@ -477,31 +499,39 @@ export class AutomaticPrintingService {
         if (order.deliveryInfo.recipientName) {
           printer.println(`Nombre: ${order.deliveryInfo.recipientName}`);
         }
-        if (order.deliveryInfo.recipientPhone) {
-          printer.println(`Tel: ${order.deliveryInfo.recipientPhone}`);
-        }
+        
         if (order.deliveryInfo.deliveryInstructions) {
           printer.println(`Notas: ${order.deliveryInfo.deliveryInstructions}`);
         }
         
-        // Agregar notas de orden si existen (encima de hora programada)
-        if (order.notes) {
-          printer.setTextSize(0, 1); // Fuente intermedia igual que hora programada
-          printer.println(`Notas de orden: ${order.notes}`);
-          printer.setTextSize(1, 1); // Volver a fuente de información de recolección
+        // Combinar teléfono, notas y hora programada en líneas optimizadas
+        printer.setTextSize(0, 1); // Fuente intermedia
+        
+        const phone = order.deliveryInfo.recipientPhone ? `Tel: ${order.deliveryInfo.recipientPhone}` : null;
+        const notes = order.notes ? `Notas: ${order.notes}` : null;
+        const scheduledTime = order.scheduledAt ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
+          timeZone: 'America/Mexico_City',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })}` : null;
+        
+        // Combinar campos disponibles
+        const fields: string[] = [phone, notes, scheduledTime].filter((field): field is string => field !== null);
+        
+        if (fields.length === 3) {
+          // Si hay 3 campos, imprimir teléfono solo, y notas + hora juntas
+          printer.println(fields[0]); // Teléfono
+          printer.println(`${fields[1]} | ${fields[2]}`); // Notas | Hora
+        } else if (fields.length === 2) {
+          // Si hay 2 campos, combinarlos en una línea
+          printer.println(`${fields[0]} | ${fields[1]}`);
+        } else if (fields.length === 1) {
+          // Si hay solo 1 campo, imprimirlo solo
+          printer.println(fields[0]);
         }
         
-        // Agregar hora programada si existe
-        if (order.scheduledAt) {
-          printer.setTextSize(0, 1); // Fuente intermedia
-          printer.println(`Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
-            timeZone: 'America/Mexico_City',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          })}`);
-          printer.setTextSize(1, 1); // Volver a fuente de información de recolección
-        }
+        printer.setTextSize(1, 1); // Volver a fuente de información de recolección
         
         // Volver a fuente normal
         printer.setTextNormal();
@@ -560,9 +590,17 @@ export class AutomaticPrintingService {
         if (item.modifiers && item.modifiers.length > 0) {
           printer.setTextSize(0, 1); // Fuente intermedia para modificadores
           for (const modifier of item.modifiers) {
-            const modifierText = modifier.price > 0 
-              ? `• ${modifier.name} (+${formatter.formatMoney(modifier.price)})`
-              : `• ${modifier.name}`;
+            let modifierText: string;
+            if (modifier.price > 0) {
+              // Si hay múltiples unidades, indicar que el precio es por c/u
+              if (item.quantity > 1) {
+                modifierText = `• ${modifier.name} (+${formatter.formatMoney(modifier.price)} c/u)`;
+              } else {
+                modifierText = `• ${modifier.name} (+${formatter.formatMoney(modifier.price)})`;
+              }
+            } else {
+              modifierText = `• ${modifier.name}`;
+            }
             printer.println(`  ${modifierText}`);
           }
           printer.setTextSize(1, 1); // Regresar a fuente grande para productos
@@ -586,23 +624,34 @@ export class AutomaticPrintingService {
       printer.drawLine();
       printer.alignLeft();
       
+      // Calcular el ancho máximo necesario para los totales
+      const subtotalStr = formatter.formatMoney(Number(order.subtotal));
+      const totalStr = formatter.formatMoney(Number(order.total));
+      const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
+      
       // Subtotal
-      const subtotalLine = formatter.formatLine(
+      const subtotalLines = formatter.formatProductTable(
         'Subtotal:', 
-        formatter.formatMoney(Number(order.subtotal)),
-        'normal'
+        subtotalStr,
+        'normal',
+        maxTotalWidth
       );
-      printer.println(subtotalLine);
+      for (const line of subtotalLines) {
+        printer.println(line);
+      }
       
       // Total con fuente grande
-      const totalLine = formatter.formatLine(
+      const totalLines = formatter.formatProductTable(
         'TOTAL:', 
-        formatter.formatMoney(Number(order.total)),
-        'normal'
+        totalStr,
+        'expanded', // Usamos expanded porque vamos a usar fuente grande
+        maxTotalWidth
       );
       printer.setTextSize(1, 2);
       printer.bold(true);
-      printer.println(totalLine);
+      for (const line of totalLines) {
+        printer.println(line);
+      }
       printer.setTextNormal();
       printer.bold(false);
 

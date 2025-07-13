@@ -45,7 +45,8 @@
       "Bash(find:*)",
       "Bash(npx tsc:*)",
       "Bash(npm info:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

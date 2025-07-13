@@ -30,6 +30,13 @@ export interface OrderForFinalization {
     };
   } | null;
   isFromWhatsApp?: boolean;
+  preparationScreens?: string[];
+  payments?: {
+    id: string;
+    amount: number;
+    paymentMethod: string;
+    status: string;
+  }[];
 }
 
 export interface OrderItemForFinalization {
@@ -38,6 +45,7 @@ export interface OrderItemForFinalization {
   basePrice: string;
   finalPrice: string;
   preparationNotes?: string;
+  preparationStatus?: string;
   product: {
     id: string;
     name: string;
@@ -48,6 +56,7 @@ export interface OrderItemForFinalization {
     name: string;
   } | null;
   modifiers: OrderItemModifierForFinalization[];
+  selectedPizzaCustomizations?: any[];
 }
 
 export interface OrderItemModifierForFinalization {
