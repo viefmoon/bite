@@ -1,22 +1,30 @@
 export interface Shift {
-  id: number;
+  id: string;
+  date: string;
+  globalShiftNumber: number;
+  shiftNumber: number;
+  status: 'open' | 'closed';
   openedAt: string;
   closedAt: string | null;
+  openedBy: User;
+  closedBy: User | null;
   initialCash: number;
   finalCash: number | null;
   totalSales: number | null;
   totalOrders: number | null;
-  openedBy: User;
-  closedBy: User | null;
-  createdAt: string;
-  updatedAt: string;
+  cashDifference: number | null;
+  expectedCash?: number | null;
+  notes: string | null;
+  closeNotes: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface User {
-  id: number;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
+  id: string;
+  email?: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface ShiftSummary {
@@ -40,7 +48,7 @@ export interface ProductSummary {
 }
 
 export interface ShiftOrder {
-  id: number;
+  id: string;
   orderNumber: string;
   total: number;
   status: string;
@@ -51,7 +59,7 @@ export interface ShiftOrder {
 }
 
 export interface OrderItem {
-  id: number;
+  id: string;
   productName: string;
   quantity: number;
   unitPrice: number;

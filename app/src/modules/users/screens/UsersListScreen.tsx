@@ -12,6 +12,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useGetUsers, useDeleteUser } from '../hooks';
 import type { User, UsersQuery } from '../types';
 import { RoleEnum } from '../types';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export function UsersListScreen() {
   const theme = useAppTheme();
@@ -60,6 +61,9 @@ export function UsersListScreen() {
   };
 
   const { data, isLoading, error, refetch } = useGetUsers(queryParams);
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('users');
 
   // Funciones auxiliares definidas antes del useMemo
   const getStatusColor = (user: User) => {

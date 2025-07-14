@@ -8,6 +8,7 @@ import { OrderItem } from './order-item'; // Importar OrderItem
 import { Adjustment } from '../../adjustments/domain/adjustment';
 import { DeliveryInfo } from './delivery-info';
 import { OrderPreparationScreenStatus } from './order-preparation-screen-status';
+import { TicketImpression } from './ticket-impression';
 
 export class Order {
   id: string;
@@ -44,6 +45,8 @@ export class Order {
 
   deletedAt: Date | null;
 
+  finalizedAt: Date | null;
+
   notes?: string;
 
   customerId?: string | null;
@@ -57,4 +60,6 @@ export class Order {
   estimatedDeliveryTime?: Date | null;
 
   preparationScreenStatuses?: OrderPreparationScreenStatus[];
+
+  ticketImpressions?: TicketImpression[];
 }

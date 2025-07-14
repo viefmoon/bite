@@ -234,8 +234,15 @@ export class ShiftsService {
    * Obtiene el histórico de turnos
    */
   async getHistory(limit: number = 30, offset: number = 0): Promise<Shift[]> {
-    // Por ahora devolvemos todos ordenados por fecha
-    const allShifts = await this.shiftRepository.findByStatus(ShiftStatus.CLOSED);
+    // Obtener todos los turnos (abiertos y cerrados)
+    const openShifts = await this.shiftRepository.findByStatus(ShiftStatus.OPEN);
+    const closedShifts = await this.shiftRepository.findByStatus(ShiftStatus.CLOSED);
+    
+    // Combinar y ordenar por fecha descendente
+    const allShifts = [...openShifts, ...closedShifts].sort((a, b) => 
+      b.openedAt.getTime() - a.openedAt.getTime()
+    );
+    
     return allShifts.slice(offset, offset + limit);
   }
 

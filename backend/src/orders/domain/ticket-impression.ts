@@ -13,9 +13,9 @@ export class TicketImpression {
 
   impressionTime: Date;
 
-  order: Order;
+  order?: Order;
 
-  user: User;
+  user?: User | null;
 
   createdAt: Date;
 
