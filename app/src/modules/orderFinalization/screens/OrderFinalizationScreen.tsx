@@ -3,15 +3,9 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Pressable } from 'react-n
 import {
   Surface,
   Text,
-  SegmentedButtons,
-  Button,
   ActivityIndicator,
-  Portal,
-  Dialog,
-  TextInput,
-  RadioButton,
-  IconButton,
   Icon,
+  Button,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
@@ -19,7 +13,6 @@ import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import {
   useOrdersForFinalizationList,
   useOrderForFinalizationDetail,
-  useFinalizeOrders,
 } from '../hooks/useOrderFinalizationQueries';
 import {
   OrderFinalizationFilter,
@@ -28,20 +21,23 @@ import {
   OrderForFinalizationList,
 } from '../types/orderFinalization.types';
 import EmptyState from '@/app/components/common/EmptyState';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '@/app/styles/theme';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { orderFinalizationService } from '../services/orderFinalizationService';
 
 export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
     selectedOrders: new Set(),
     totalAmount: 0,
   });
-  const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [notes, setNotes] = useState('');
   const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] =
     useState<string | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [isFinalizingOrders, setIsFinalizingOrders] = useState(false);
 
   const {
     data: orders = [],
@@ -51,8 +47,6 @@ export const OrderFinalizationScreen: React.FC = () => {
   } = useOrdersForFinalizationList();
   
   const { data: selectedOrderDetails, isLoading: isLoadingDetails } = useOrderForFinalizationDetail(selectedOrderIdForDetails);
-
-  const finalizeOrdersMutation = useFinalizeOrders();
 
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
@@ -99,7 +93,6 @@ export const OrderFinalizationScreen: React.FC = () => {
     );
   }, [orders]);
 
-  // Limpiar selección cuando cambia el filtro
   useEffect(() => {
     setSelectionState({
       selectedOrders: new Set(),
@@ -121,13 +114,16 @@ export const OrderFinalizationScreen: React.FC = () => {
           typeof order.total === 'string'
             ? parseFloat(order.total)
             : order.total;
+        const paymentsSummary = order.paymentsSummary;
+        const paid = paymentsSummary?.totalPaid || 0;
+        const pendingAmount = orderTotal - paid;
 
         if (newSelectedOrders.has(orderId)) {
           newSelectedOrders.delete(orderId);
-          newTotalAmount -= orderTotal;
+          newTotalAmount -= pendingAmount;
         } else {
           newSelectedOrders.add(orderId);
-          newTotalAmount += orderTotal;
+          newTotalAmount += pendingAmount;
         }
 
         return {
@@ -139,24 +135,84 @@ export const OrderFinalizationScreen: React.FC = () => {
     [orders],
   );
 
-  const handleFinalizeOrders = useCallback(async () => {
+  const formatOrderStatus = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendiente';
+      case 'IN_PROGRESS':
+        return 'En preparación';
+      case 'IN_PREPARATION':
+        return 'En preparación';
+      case 'READY':
+        return 'Listo';
+      case 'DELIVERED':
+        return 'Entregado';
+      case 'COMPLETED':
+        return 'Completado';
+      case 'CANCELLED':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  const ordersNotReady = useMemo(() => {
+    if (selectionState.selectedOrders.size === 0) return [];
+    
+    const selectedOrdersList = Array.from(selectionState.selectedOrders)
+      .map(id => orders.find(o => o.id === id))
+      .filter(Boolean) as OrderForFinalizationList[];
+    
+    return selectedOrdersList.filter(order => order.orderStatus !== 'READY');
+  }, [selectionState.selectedOrders, orders]);
+
+  const confirmationMessage = useMemo(() => {
+    let message = `¿Desea finalizar ${selectionState.selectedOrders.size} ${
+      selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'
+    }?\n\nTotal a cobrar: $${selectionState.totalAmount.toFixed(2)}`;
+
+    if (ordersNotReady.length > 0) {
+      message += `\n\n⚠️ ADVERTENCIA: ${ordersNotReady.length} ${
+        ordersNotReady.length === 1 ? 'orden no está' : 'órdenes no están'
+      } en estado "Listo"`;
+    }
+
+    return message;
+  }, [selectionState, ordersNotReady]);
+
+  const handleQuickFinalizeOrders = useCallback(() => {
     if (selectionState.selectedOrders.size === 0) return;
+    setShowConfirmationModal(true);
+  }, [selectionState.selectedOrders.size]);
 
-    await finalizeOrdersMutation.mutateAsync({
-      orderIds: Array.from(selectionState.selectedOrders),
-      paymentMethod,
-      notes: notes.trim() || undefined,
-    });
+  const handleConfirmFinalization = useCallback(async () => {
+    setIsFinalizingOrders(true);
+    try {
+      const result = await orderFinalizationService.quickFinalizeMultipleOrders(
+        Array.from(selectionState.selectedOrders)
+      );
+      
+      showSnackbar({ 
+        message: 'Órdenes finalizadas exitosamente', 
+        type: 'success' 
+      });
 
-    // Limpiar selección
-    setSelectionState({
-      selectedOrders: new Set(),
-      totalAmount: 0,
-    });
-    setShowFinalizeDialog(false);
-    setNotes('');
-    setPaymentMethod('cash');
-  }, [selectionState, paymentMethod, notes, finalizeOrdersMutation]);
+      setSelectionState({
+        selectedOrders: new Set(),
+        totalAmount: 0,
+      });
+      
+      setShowConfirmationModal(false);
+      refetch();
+    } catch (error) {
+      showSnackbar({ 
+        message: 'Error al finalizar las órdenes', 
+        type: 'error' 
+      });
+    } finally {
+      setIsFinalizingOrders(false);
+    }
+  }, [selectionState.selectedOrders, showSnackbar, refetch]);
 
   const handleShowOrderDetails = useCallback((order: OrderForFinalizationList) => {
     setSelectedOrderIdForDetails(null);
@@ -212,7 +268,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="moped"
-                size={32}
+                size={26}
                 color={filter === 'delivery' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
               {orderCounts.delivery > 0 && (
@@ -242,7 +298,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="bag-personal"
-                size={32}
+                size={26}
                 color={filter === 'take_away' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
               {orderCounts.take_away > 0 && (
@@ -272,7 +328,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="silverware-fork-knife"
-                size={32}
+                size={26}
                 color={filter === 'dine_in' ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
               {orderCounts.dine_in > 0 && (
@@ -293,15 +349,6 @@ export const OrderFinalizationScreen: React.FC = () => {
               )}
             </Pressable>
           </View>
-          <IconButton
-            icon="refresh"
-            mode="contained-tonal"
-            size={28}
-            onPress={() => refetch()}
-            loading={isLoading}
-            style={styles.refreshButton}
-            iconColor={theme.colors.primary}
-          />
         </View>
       </Surface>
 
@@ -326,15 +373,14 @@ export const OrderFinalizationScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Botón flotante para finalizar */}
       {selectionState.selectedOrders.size > 0 && (
         <Surface style={styles.floatingButton} elevation={8}>
           <Button
             mode="contained"
-            onPress={() => setShowFinalizeDialog(true)}
-            loading={finalizeOrdersMutation.isPending}
+            onPress={handleQuickFinalizeOrders}
             style={styles.finalizeButton}
             labelStyle={styles.finalizeButtonLabel}
+            disabled={isFinalizingOrders}
           >
             Finalizar ({selectionState.selectedOrders.size}) - $
             {(selectionState.totalAmount || 0).toFixed(2)}
@@ -342,149 +388,22 @@ export const OrderFinalizationScreen: React.FC = () => {
         </Surface>
       )}
 
-      {/* Dialog de finalización */}
-      <Portal>
-        <Dialog
-          visible={showFinalizeDialog}
-          onDismiss={() => setShowFinalizeDialog(false)}
-        >
-          <Dialog.Title>Finalizar Órdenes</Dialog.Title>
-          <Dialog.Content>
-            <View style={{ marginBottom: 20 }}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  marginBottom: 8,
-                  color: theme.colors.onSurface,
-                }}
-              >
-                ¿Finalizar {selectionState.selectedOrders.size}{' '}
-                {selectionState.selectedOrders.size === 1 ? 'orden' : 'órdenes'}
-                ?
-              </Text>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  color: theme.colors.primary,
-                }}
-              >
-                Total: ${(selectionState.totalAmount || 0).toFixed(2)}
-              </Text>
-            </View>
-
-            <Text
-              style={{
-                marginBottom: 12,
-                fontWeight: '600',
-                fontSize: 16,
-                color: theme.colors.onSurface,
-              }}
-            >
-              Método de pago:
-            </Text>
-            <RadioButton.Group
-              onValueChange={setPaymentMethod}
-              value={paymentMethod}
-            >
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingVertical: 12,
-                  paddingHorizontal: 8,
-                  marginBottom: 8,
-                  borderRadius: 8,
-                  backgroundColor:
-                    paymentMethod === 'cash'
-                      ? theme.colors.primaryContainer
-                      : 'transparent',
-                }}
-                onPress={() => setPaymentMethod('cash')}
-              >
-                <RadioButton value="cash" />
-                <Text
-                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
-                >
-                  💵 Efectivo
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingVertical: 12,
-                  paddingHorizontal: 8,
-                  marginBottom: 8,
-                  borderRadius: 8,
-                  backgroundColor:
-                    paymentMethod === 'card'
-                      ? theme.colors.primaryContainer
-                      : 'transparent',
-                }}
-                onPress={() => setPaymentMethod('card')}
-              >
-                <RadioButton value="card" />
-                <Text
-                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
-                >
-                  💳 Tarjeta
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingVertical: 12,
-                  paddingHorizontal: 8,
-                  marginBottom: 16,
-                  borderRadius: 8,
-                  backgroundColor:
-                    paymentMethod === 'transfer'
-                      ? theme.colors.primaryContainer
-                      : 'transparent',
-                }}
-                onPress={() => setPaymentMethod('transfer')}
-              >
-                <RadioButton value="transfer" />
-                <Text
-                  style={{ marginLeft: 8, fontSize: 16, fontWeight: '500' }}
-                >
-                  📱 Transferencia
-                </Text>
-              </TouchableOpacity>
-            </RadioButton.Group>
-
-            <TextInput
-              label="Notas (opcional)"
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={3}
-              mode="outlined"
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowFinalizeDialog(false)}>
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleFinalizeOrders}
-              loading={finalizeOrdersMutation.isPending}
-            >
-              Confirmar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      {/* Modal de detalles de orden */}
       <OrderDetailsModal
         visible={selectedOrderIdForDetails !== null}
         onDismiss={() => setSelectedOrderIdForDetails(null)}
         order={selectedOrderDetails}
         isLoading={isLoadingDetails}
+      />
+
+      <ConfirmationModal
+        visible={showConfirmationModal}
+        title="Finalizar Órdenes"
+        message={confirmationMessage}
+        onConfirm={handleConfirmFinalization}
+        onCancel={() => setShowConfirmationModal(false)}
+        onDismiss={() => setShowConfirmationModal(false)}
+        confirmText={isFinalizingOrders ? "Finalizando..." : "Finalizar"}
+        confirmButtonColor={ordersNotReady.length > 0 ? theme.colors.error : theme.colors.primary}
       />
     </SafeAreaView>
   );
@@ -495,24 +414,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     backgroundColor: 'transparent',
     elevation: 0,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 0,
   },
   filterContainer: {
     flex: 1,
     flexDirection: 'row',
-    gap: 2,
+    gap: 0,
   },
   filterButton: {
     flex: 1,
-    height: 56,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 0,
@@ -521,9 +440,6 @@ const styles = StyleSheet.create({
   },
   filterButtonActive: {
     elevation: 3,
-  },
-  refreshButton: {
-    margin: 0,
   },
   countBadge: {
     position: 'absolute',
@@ -574,7 +490,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 8,
-    paddingBottom: 100, // Espacio para el botón flotante
+    paddingBottom: 100,
     flexGrow: 1,
   },
 });

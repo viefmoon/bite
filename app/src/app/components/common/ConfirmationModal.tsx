@@ -47,10 +47,20 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           paddingBottom: 16,
           paddingTop: 8,
           flexDirection: 'row',
-          gap: 16,
+          gap: 12,
         },
         button: {
           flex: 1,
+          minHeight: 48,
+        },
+        buttonContent: {
+          minHeight: 48,
+          paddingHorizontal: 12,
+        },
+        buttonLabel: {
+          fontSize: 13,
+          lineHeight: 18,
+          textAlign: 'center',
         },
         cancelButton: {
           backgroundColor: theme.colors.secondaryContainer,
@@ -79,6 +89,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   onPress={onCancel}
                   textColor={theme.colors.onSecondaryContainer}
                   style={[styles.button, styles.cancelButton]}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
                 >
                   {cancelText}
                 </Button>
@@ -88,6 +100,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 mode="contained"
                 buttonColor={confirmButtonColor || theme.colors.primary}
                 style={[styles.button, styles.confirmButton]}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
               >
                 {confirmText}
               </Button>

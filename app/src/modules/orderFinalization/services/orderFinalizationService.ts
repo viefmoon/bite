@@ -22,4 +22,9 @@ export const orderFinalizationService = {
   async finalizeOrders(payload: FinalizeOrdersPayload): Promise<void> {
     await apiClient.patch(API_PATHS.ORDERS_FINALIZE_MULTIPLE, payload);
   },
+
+  async quickFinalizeMultipleOrders(orderIds: string[]): Promise<{ message: string; ordersWithWarnings: string[] }> {
+    const response = await apiClient.post('/api/v1/orders/quick-finalize-multiple', { orderIds });
+    return response.data;
+  },
 };

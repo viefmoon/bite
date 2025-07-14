@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { Card, Text, Checkbox, Chip } from 'react-native-paper';
+import { Card, Text, Checkbox, Chip, Button } from 'react-native-paper';
 import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
@@ -265,10 +265,40 @@ export const OrderCard = React.memo<OrderCardProps>(
                     );
                   }
                 })()}
+                {order.preparationScreens && order.preparationScreens.length > 0 && (
+                  <>
+                    {order.preparationScreens.map((screen, index) => (
+                      <View
+                        key={`${order.id}-screen-${index}`}
+                        style={[
+                          styles.inlinePreparationBadge,
+                          {
+                            backgroundColor: isSelected
+                              ? theme.colors.primaryContainer
+                              : theme.colors.surfaceVariant,
+                            borderColor: theme.colors.outline,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.inlinePreparationText,
+                            {
+                              color: isSelected
+                                ? theme.colors.onPrimaryContainer
+                                : theme.colors.onSurfaceVariant,
+                            },
+                          ]}
+                        >
+                          🍳 {screen}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                )}
               </View>
             </View>
 
-            {/* Right Side - Status and Checkbox */}
             <View style={styles.rightContainer}>
               <Chip
                 mode="flat"
@@ -289,40 +319,6 @@ export const OrderCard = React.memo<OrderCardProps>(
             </View>
           </View>
 
-          {/* Preparation screens if any */}
-          {order.preparationScreens && order.preparationScreens.length > 0 && (
-            <View style={styles.preparationScreensContainer}>
-              {order.preparationScreens.map((screen, index) => (
-                <View
-                  key={`${order.id}-screen-${index}`}
-                  style={[
-                    styles.preparationScreenBadge,
-                    {
-                      backgroundColor: isSelected
-                        ? theme.colors.primaryContainer
-                        : theme.colors.surfaceVariant,
-                      borderColor: theme.colors.outline,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.preparationScreenText,
-                      {
-                        color: isSelected
-                          ? theme.colors.onPrimaryContainer
-                          : theme.colors.onSurfaceVariant,
-                      },
-                    ]}
-                  >
-                    🍳 {screen}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Notes if any */}
           {order.notes ? (
             <Text
               style={[
@@ -436,6 +432,17 @@ const styles = StyleSheet.create({
   },
   preparationScreenText: {
     fontSize: 11,
+    fontWeight: '500',
+  },
+  inlinePreparationBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    marginLeft: 4,
+  },
+  inlinePreparationText: {
+    fontSize: 10,
     fontWeight: '500',
   },
 });

@@ -29,6 +29,7 @@ export interface OrderForFinalizationList {
     recipientPhone?: string;
     fullAddress?: string;
   };
+  preparationScreens?: string[];
 }
 
 // Tipo completo para el detalle de orden

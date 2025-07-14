@@ -136,6 +136,50 @@ interface OrderCartDetailProps {
   onItemsCountChanged?: (count: number) => void; // Callback cuando cambia el conteo de items
 }
 
+// Helper para formatear el estado de la orden
+const formatOrderStatus = (status: string): string => {
+  switch (status) {
+    case 'PENDING':
+      return 'Pendiente';
+    case 'IN_PROGRESS':
+      return 'En Progreso';
+    case 'IN_PREPARATION':
+      return 'En Preparación';
+    case 'READY':
+      return 'Lista';
+    case 'DELIVERED':
+      return 'Entregada';
+    case 'COMPLETED':
+      return 'Completada';
+    case 'CANCELLED':
+      return 'Cancelada';
+    default:
+      return status;
+  }
+};
+
+// Helper para obtener el color del estado de la orden
+const getOrderStatusColor = (status: string, theme: any) => {
+  switch (status) {
+    case 'PENDING':
+      return '#FFA000'; // Orange
+    case 'IN_PROGRESS':
+      return theme.colors.primary;
+    case 'IN_PREPARATION':
+      return '#FF6B35'; // Orange más oscuro
+    case 'READY':
+      return '#4CAF50'; // Green
+    case 'DELIVERED':
+      return theme.colors.tertiary;
+    case 'COMPLETED':
+      return '#10B981'; // Verde más brillante
+    case 'CANCELLED':
+      return theme.colors.error;
+    default:
+      return theme.colors.onSurfaceVariant;
+  }
+};
+
 // Helper para obtener el color del estado de preparación
 const getPreparationStatusColor = (status: string | undefined, theme: any) => {
   switch (status) {
@@ -2233,13 +2277,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     iconColor={theme.colors.onSurface}
                   />
 
-                  <Text style={styles.headerTitle}>
-                    {orderNumber && orderDate
-                      ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
-                      : orderNumber
-                        ? `Editando Orden #${orderNumber}`
-                        : 'Editar Orden'}
-                  </Text>
+                  <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle}>
+                      {orderNumber && orderDate
+                        ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
+                        : orderNumber
+                          ? `Editando Orden #${orderNumber}`
+                          : 'Editar Orden'}
+                    </Text>
+                    {orderData?.orderStatus && (
+                      <View style={[
+                        styles.orderStatusBadge,
+                        { backgroundColor: getOrderStatusColor(orderData.orderStatus, theme) }
+                      ]}>
+                        <Text style={styles.orderStatusText}>
+                          {formatOrderStatus(orderData.orderStatus)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
                   <Menu
                     visible={showOptionsMenu}
@@ -3133,6 +3189,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               orderId={orderId}
               orderTotal={total}
               orderNumber={orderNumber}
+              orderStatus={orderData?.orderStatus}
               onOrderCompleted={() => {
                 // Cerrar el modal de pagos
                 setShowPaymentModal(false);
@@ -3513,12 +3570,27 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       paddingVertical: 8,
       backgroundColor: theme.colors.elevation.level2,
     },
+    headerTitleContainer: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+    },
     headerTitle: {
       ...theme.fonts.titleMedium,
       color: theme.colors.onSurface,
       fontWeight: 'bold',
       textAlign: 'center',
-      flex: 1,
+    },
+    orderStatusBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    orderStatusText: {
+      ...theme.fonts.labelSmall,
+      color: 'white',
+      fontWeight: '600',
+      fontSize: 11,
     },
     statusContainer: {
       flexDirection: 'row',

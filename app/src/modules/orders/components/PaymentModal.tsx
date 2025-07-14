@@ -43,6 +43,7 @@ interface PaymentModalProps {
   orderId?: string; // Opcional para modo pre-pago
   orderTotal: number;
   orderNumber?: number;
+  orderStatus?: string; // Estado de la orden
   onOrderCompleted?: () => void; // Callback cuando se completa la orden
   mode?: 'payment' | 'prepayment'; // Modo del modal
   onPrepaymentCreated?: (
@@ -69,12 +70,35 @@ const _paymentMethodIcons: Record<PaymentMethod, string> = {
 // Métodos de pago deshabilitados temporalmente
 const _disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
 
+// Helper para formatear el estado de la orden
+const formatOrderStatus = (status: string): string => {
+  switch (status) {
+    case 'PENDING':
+      return 'Pendiente';
+    case 'IN_PROGRESS':
+      return 'En Progreso';
+    case 'IN_PREPARATION':
+      return 'En Preparación';
+    case 'READY':
+      return 'Lista';
+    case 'DELIVERED':
+      return 'Entregada';
+    case 'COMPLETED':
+      return 'Completada';
+    case 'CANCELLED':
+      return 'Cancelada';
+    default:
+      return status;
+  }
+};
+
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   visible,
   onDismiss,
   orderId,
   orderTotal,
   orderNumber,
+  orderStatus,
   onOrderCompleted,
   mode = 'payment',
   onPrepaymentCreated,
@@ -659,10 +683,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onCancel={() => setShowFinalizeConfirm(false)}
         onConfirm={handleFinalizeOrder}
         title="Finalizar orden"
-        message={`¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`}
-        confirmText="Sí, finalizar"
+        message={
+          orderStatus && orderStatus !== 'READY' 
+            ? `⚠️ ADVERTENCIA: Esta orden está en estado "${formatOrderStatus(orderStatus)}" y no "Lista".\n\n¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
+            : `¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
+        }
+        confirmText={orderStatus && orderStatus !== 'READY' ? "Finalizar igual" : "Sí, finalizar"}
         cancelText="No, cancelar"
-        confirmButtonColor="#10B981"
+        confirmButtonColor={orderStatus && orderStatus !== 'READY' ? theme.colors.error : "#10B981"}
       />
 
       {/* Modal de confirmación para eliminar pre-pago */}
@@ -700,6 +728,8 @@ const createStyles = (theme: AppTheme) =>
       width: '100%',
       maxHeight: '100%',
       overflow: 'hidden',
+      borderWidth: 2,
+      borderColor: theme.colors.outline,
     },
     header: {
       flexDirection: 'row',
@@ -815,14 +845,14 @@ const createStyles = (theme: AppTheme) =>
       marginTop: 2,
     },
     statusChipCompact: {
-      height: 22,
-      minWidth: 80,
+      height: 26,
+      minWidth: 90,
     },
     statusChipTextCompact: {
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '600',
       color: 'white',
-      lineHeight: 12,
+      lineHeight: 14,
     },
     deleteIconButton: {
       margin: 0,
