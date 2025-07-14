@@ -98,6 +98,9 @@ export class OrderForFinalizationDto {
   @ApiProperty({ description: 'Fecha de actualización' })
   updatedAt: Date;
 
+  @ApiProperty({ description: 'Fecha de finalización', required: false })
+  finalizedAt?: Date;
+
   @ApiProperty({ description: 'Fecha y hora de entrega programada', required: false })
   scheduledAt?: Date;
 
@@ -154,5 +157,20 @@ export class OrderForFinalizationDto {
     status: string;
     startedAt?: Date | null;
     completedAt?: Date | null;
+  }[];
+
+  @ApiProperty({
+    description: 'Historial de impresiones de tickets para la orden',
+    required: false,
+  })
+  ticketImpressions?: {
+    id: string;
+    ticketType: string;
+    impressionTime: Date;
+    user?: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+    };
   }[];
 }

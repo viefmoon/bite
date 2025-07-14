@@ -283,7 +283,7 @@ export class AutomaticPrintingService {
   /**
    * Imprime un ticket de delivery/pickup con formato específico
    */
-  private async printDeliveryPickupTicket(
+  async printDeliveryPickupTicket(
     orderId: string,
     printerDetails: ThermalPrinterEntity,
     userId: string | null,

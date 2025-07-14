@@ -501,6 +501,8 @@ export class OrdersRelationalRepository implements OrderRepository {
         'deliveryInfo',
         'preparationScreenStatuses',
         'preparationScreenStatuses.preparationScreen',
+        'ticketImpressions',
+        'ticketImpressions.user',
       ],
     });
 

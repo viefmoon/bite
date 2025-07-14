@@ -3,7 +3,6 @@ import { OrderEntity } from '../entities/order.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TicketImpression } from '../../../../domain/ticket-impression';
 import { TicketImpressionEntity } from '../entities/ticket-impression.entity';
-import { OrderMapper } from './order.mapper';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
@@ -13,7 +12,6 @@ export class TicketImpressionMapper extends BaseMapper<
   TicketImpression
 > {
   constructor(
-    private readonly orderMapper: OrderMapper,
     private readonly userMapper: UserMapper,
   ) {
     super();
@@ -30,8 +28,9 @@ export class TicketImpressionMapper extends BaseMapper<
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    domain.order = this.orderMapper.toDomain(entity.order!)!;
-    domain.user = this.userMapper.toDomain(entity.user!)!;
+    // No mapear la orden completa para evitar dependencia circular
+    // Solo mantener el orderId que ya tenemos
+    domain.user = entity.user ? this.userMapper.toDomain(entity.user) : null;
 
     return domain;
   }

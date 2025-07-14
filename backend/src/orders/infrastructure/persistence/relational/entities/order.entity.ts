@@ -121,6 +121,13 @@ export class OrderEntity extends EntityRelationalHelper {
   })
   estimatedDeliveryTime: Date | null;
 
+  @Column({
+    name: 'finalized_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  finalizedAt: Date | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
