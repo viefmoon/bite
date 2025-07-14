@@ -18,6 +18,8 @@ import { OrderItem } from './domain/order-item';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { PreparationStatus } from './domain/order-item';
+import { PaymentMethod } from '../payments/domain/enums/payment-method.enum';
+import { PaymentStatus } from '../payments/domain/enums/payment-status.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { TicketImpressionRepository } from './infrastructure/persistence/ticket-impression.repository';
 import { TicketType } from './domain/enums/ticket-type.enum';
@@ -771,31 +773,25 @@ export class OrdersService {
         });
 
         if (currentEntity) {
-          // Usar el método privado del servicio para detectar cambios
-          const changes = (
-            this.orderChangeTracker as any
-          ).detectChangesUsingSnapshots(currentEntity, previousOrderEntity);
-
-          hasRealChanges = changes !== null;
-
-          }
+          hasRealChanges = this.orderChangeTracker.detectStructuralChangesOnly(
+            currentEntity,
+            previousOrderEntity,
+          );
         }
       } catch (error) {
         this.logger.error(`Error al detectar cambios en orden ${id}:`, error);
-        // En caso de error, asumir que hay cambios para no perder reimpresiones importantes
         hasRealChanges = true;
       } finally {
         await queryRunner.release();
       }
     }
 
-    // Disparar reimpresión automática solo si hubo cambios reales
     if (hasRealChanges) {
       await this.automaticPrintingService.printOrderAutomatically(
         updatedOrder.id,
         updatedOrder.orderType,
         updateOrderDto.userId || null,
-        true, // isReprint = true
+        true,
       );
     }
 
@@ -803,7 +799,7 @@ export class OrdersService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id); // Asegurarse de que la orden existe
+    await this.findOne(id);
     return this.orderRepository.remove(id);
   }
 
@@ -1364,6 +1360,9 @@ export class OrdersService {
         'table.area',
         'payments',
         'deliveryInfo',
+        'orderItems',
+        'orderItems.product',
+        'orderItems.product.preparationScreen',
       ],
       select: {
         id: true,
@@ -1390,6 +1389,16 @@ export class OrdersService {
           recipientName: true,
           recipientPhone: true,
           fullAddress: true,
+        },
+        orderItems: {
+          id: true,
+          product: {
+            id: true,
+            preparationScreen: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
       order: {
@@ -1551,6 +1560,16 @@ export class OrdersService {
   private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
     const totalPaid = order.payments?.reduce((sum: number, payment: any) => sum + Number(payment.amount), 0) || 0;
 
+    // Recopilar pantallas de preparación únicas
+    const preparationScreens = new Set<string>();
+    if (order.orderItems) {
+      order.orderItems.forEach((item: any) => {
+        if (item.product?.preparationScreen?.name) {
+          preparationScreens.add(item.product.preparationScreen.name);
+        }
+      });
+    }
+
     const dto: OrderForFinalizationListDto = {
       id: order.id,
       shiftOrderNumber: order.shiftOrderNumber,
@@ -1563,6 +1582,11 @@ export class OrdersService {
         totalPaid,
       },
     };
+
+    // Agregar pantallas de preparación si existen
+    if (preparationScreens.size > 0) {
+      dto.preparationScreens = Array.from(preparationScreens);
+    }
 
     if (order.table) {
       dto.table = {
@@ -1883,6 +1907,77 @@ export class OrdersService {
         createdAt: new Date(),
         updatedAt: new Date(),
       } as DeliveryInfo;
+    }
+  }
+
+  async quickFinalizeMultipleOrders(orderIds: string[], userId: string): Promise<{ ordersWithWarnings: string[] }> {
+    const ordersWithWarnings: string[] = [];
+
+    for (const orderId of orderIds) {
+      try {
+        const order = await this.findOne(orderId);
+        
+        // Si la orden no está en estado READY, la agregamos a las advertencias
+        if (order.orderStatus !== OrderStatus.READY) {
+          ordersWithWarnings.push(orderId);
+        }
+
+        await this.quickFinalizeOrder(orderId, userId);
+      } catch (error) {
+        // Si hay un error con una orden específica, continuamos con las demás
+        this.logger.error(`Error finalizando orden ${orderId}: ${error.message}`);
+      }
+    }
+
+    return { ordersWithWarnings };
+  }
+
+  async quickFinalizeOrder(orderId: string, userId: string): Promise<void> {
+    // Obtener la orden con toda la información necesaria
+    const order = await this.findOne(orderId);
+
+    // Verificar que la orden exista
+    if (!order) {
+      throw new NotFoundException(`Orden con ID ${orderId} no encontrada`);
+    }
+
+    // Verificar que la orden no esté ya completada o cancelada
+    if (order.orderStatus === OrderStatus.COMPLETED || order.orderStatus === OrderStatus.CANCELLED) {
+      throw new BadRequestException('La orden ya está finalizada o cancelada');
+    }
+
+    // Calcular el monto pendiente de pago
+    const totalPaid = order.payments?.reduce((sum, payment) => {
+      return sum + Number(payment.amount);
+    }, 0) || 0;
+    
+    const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+    const pendingAmount = totalOrder - totalPaid;
+
+    // Si hay monto pendiente, crear un pago en efectivo
+    if (pendingAmount > 0) {
+      await this.paymentsService.create({
+        orderId: orderId,
+        amount: pendingAmount,
+        paymentMethod: PaymentMethod.CASH,
+      });
+    }
+
+    // Cambiar el estado de la orden a COMPLETED directamente
+    // Para finalización rápida, permitimos saltar las validaciones de transición
+    await this.update(orderId, { orderStatus: OrderStatus.COMPLETED });
+
+    // Si la orden tiene mesa asignada, liberarla
+    if (order.tableId) {
+      const table = await this.tablesService.findOne(order.tableId);
+      
+      if (table.isTemporary) {
+        // Eliminar mesa temporal
+        await this.tablesService.remove(order.tableId);
+      } else {
+        // Liberar mesa normal
+        await this.tablesService.update(order.tableId, { isAvailable: true });
+      }
     }
   }
 }

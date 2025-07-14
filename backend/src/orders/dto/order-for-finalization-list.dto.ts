@@ -58,4 +58,11 @@ export class OrderForFinalizationListDto {
     recipientPhone?: string;
     fullAddress?: string;
   };
+
+  @ApiProperty({ 
+    description: 'Pantallas de preparación únicas de los productos en la orden', 
+    required: false,
+    type: [String]
+  })
+  preparationScreens?: string[];
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList, ScrollView } from 'react-native';
+import { StyleSheet, View, FlatList, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
@@ -9,6 +9,8 @@ import {
   Portal,
   Card,
   Chip,
+  Icon,
+  Surface,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -501,85 +503,133 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         </View>
       ) : (
         <>
-          {/* Filtros de tipo de orden - Fuera del View para mantener posición fija */}
-          <View style={styles.filterWrapper}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filterContainer}
-              contentContainerStyle={styles.filterContentContainer}
-            >
-              <Chip
-                mode="outlined"
-                selected={selectedOrderType === 'ALL'}
-                onPress={() => setSelectedOrderType('ALL')}
-                style={[
-                  styles.filterChip,
-                  selectedOrderType === 'ALL' && styles.filterChipSelected,
-                ]}
-                textStyle={[
-                  styles.filterChipText,
-                  selectedOrderType === 'ALL' && styles.filterChipTextSelected,
-                ]}
-              >
-                Todas
-              </Chip>
-              <Chip
-                mode="outlined"
-                selected={selectedOrderType === OrderTypeEnum.DINE_IN}
-                onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
-                style={[
-                  styles.filterChip,
-                  selectedOrderType === OrderTypeEnum.DINE_IN &&
-                    styles.filterChipSelected,
-                ]}
-                textStyle={[
-                  styles.filterChipText,
-                  selectedOrderType === OrderTypeEnum.DINE_IN &&
-                    styles.filterChipTextSelected,
-                ]}
-                icon="silverware-fork-knife"
-              >
-                Para Comer Aquí
-              </Chip>
-              <Chip
-                mode="outlined"
-                selected={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
-                onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
-                style={[
-                  styles.filterChip,
-                  selectedOrderType === OrderTypeEnum.TAKE_AWAY &&
-                    styles.filterChipSelected,
-                ]}
-                textStyle={[
-                  styles.filterChipText,
-                  selectedOrderType === OrderTypeEnum.TAKE_AWAY &&
-                    styles.filterChipTextSelected,
-                ]}
-                icon="package-variant"
-              >
-                Para Llevar
-              </Chip>
-              <Chip
-                mode="outlined"
-                selected={selectedOrderType === OrderTypeEnum.DELIVERY}
-                onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
-                style={[
-                  styles.filterChip,
-                  selectedOrderType === OrderTypeEnum.DELIVERY &&
-                    styles.filterChipSelected,
-                ]}
-                textStyle={[
-                  styles.filterChipText,
-                  selectedOrderType === OrderTypeEnum.DELIVERY &&
-                    styles.filterChipTextSelected,
-                ]}
-                icon="truck-delivery"
-              >
-                Domicilio
-              </Chip>
-            </ScrollView>
-          </View>
+          {/* Filtros de tipo de orden con el mismo diseño que finalización */}
+          <Surface style={styles.header}>
+            <View style={styles.headerContent}>
+              <View style={styles.filterContainer}>
+                <Pressable
+                  style={[
+                    styles.filterButton,
+                    selectedOrderType === 'ALL' && styles.filterButtonActive,
+                    { backgroundColor: selectedOrderType === 'ALL' ? theme.colors.primaryContainer : theme.colors.surface },
+                  ]}
+                  onPress={() => setSelectedOrderType('ALL')}
+                >
+                  <Icon
+                    source="view-grid"
+                    size={26}
+                    color={selectedOrderType === 'ALL' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  {ordersData && ordersData.length > 0 && (
+                    <View 
+                      style={[
+                        styles.countBadge,
+                        { 
+                          backgroundColor: selectedOrderType === 'ALL' ? theme.colors.error : theme.colors.errorContainer,
+                          borderColor: selectedOrderType === 'ALL' ? theme.colors.error : theme.colors.outline,
+                        }
+                      ]}
+                    >
+                      <Text style={[
+                        styles.countBadgeText,
+                        { color: selectedOrderType === 'ALL' ? theme.colors.onError : theme.colors.onErrorContainer }
+                      ]}>{ordersData.length}</Text>
+                    </View>
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.filterButton,
+                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterButtonActive,
+                    { backgroundColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.primaryContainer : theme.colors.surface },
+                  ]}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
+                >
+                  <Icon
+                    source="silverware-fork-knife"
+                    size={26}
+                    color={selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.DINE_IN).length > 0 && (
+                    <View 
+                      style={[
+                        styles.countBadge,
+                        { 
+                          backgroundColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.error : theme.colors.errorContainer,
+                          borderColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.error : theme.colors.outline,
+                        }
+                      ]}
+                    >
+                      <Text style={[
+                        styles.countBadgeText,
+                        { color: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.onError : theme.colors.onErrorContainer }
+                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.DINE_IN).length}</Text>
+                    </View>
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.filterButton,
+                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterButtonActive,
+                    { backgroundColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.primaryContainer : theme.colors.surface },
+                  ]}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
+                >
+                  <Icon
+                    source="bag-personal"
+                    size={26}
+                    color={selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.TAKE_AWAY).length > 0 && (
+                    <View 
+                      style={[
+                        styles.countBadge,
+                        { 
+                          backgroundColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.error : theme.colors.errorContainer,
+                          borderColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.error : theme.colors.outline,
+                        }
+                      ]}
+                    >
+                      <Text style={[
+                        styles.countBadgeText,
+                        { color: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.onError : theme.colors.onErrorContainer }
+                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.TAKE_AWAY).length}</Text>
+                    </View>
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.filterButton,
+                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterButtonActive,
+                    { backgroundColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.primaryContainer : theme.colors.surface },
+                  ]}
+                  onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
+                >
+                  <Icon
+                    source="moped"
+                    size={26}
+                    color={selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.DELIVERY).length > 0 && (
+                    <View 
+                      style={[
+                        styles.countBadge,
+                        { 
+                          backgroundColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.error : theme.colors.errorContainer,
+                          borderColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.error : theme.colors.outline,
+                        }
+                      ]}
+                    >
+                      <Text style={[
+                        styles.countBadgeText,
+                        { color: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.onError : theme.colors.onErrorContainer }
+                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.DELIVERY).length}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </Surface>
 
           {/* Lista de órdenes */}
           <View style={styles.listContainer}>
@@ -759,50 +809,53 @@ const createStyles = (
       marginTop: theme.spacing.m,
       color: theme.colors.onSurfaceVariant,
     },
-    filterWrapper: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 1,
-      backgroundColor: theme.colors.background,
+    header: {
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+      backgroundColor: 'transparent',
+      elevation: 0,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 0,
     },
     filterContainer: {
-      backgroundColor: theme.colors.surface,
-      elevation: 2,
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      shadowOffset: { width: 0, height: 1 },
-      height: 56,
+      flex: 1,
+      flexDirection: 'row',
+      gap: 0,
     },
-    filterContentContainer: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
-      gap: theme.spacing.s,
+    filterButton: {
+      flex: 1,
+      height: 52,
+      justifyContent: 'center',
       alignItems: 'center',
+      borderRadius: 0,
+      elevation: 1,
+      position: 'relative',
     },
-    filterChip: {
-      marginRight: theme.spacing.xs,
-      height: 32,
-      backgroundColor: theme.colors.surface,
-    },
-    filterChipSelected: {
-      backgroundColor: theme.colors.primaryContainer,
-      borderColor: theme.colors.primary,
-      borderWidth: 2,
+    filterButtonActive: {
       elevation: 3,
     },
-    filterChipText: {
-      fontSize: 12,
-      lineHeight: 16,
+    countBadge: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      minWidth: 22,
+      height: 22,
+      borderRadius: 11,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      borderWidth: 1,
+      elevation: 2,
     },
-    filterChipTextSelected: {
-      color: theme.colors.onPrimaryContainer,
-      fontWeight: '600',
+    countBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
     },
     listContainer: {
       flex: 1,
-      paddingTop: 56, // Mismo height que filterContainer
     },
     listContentContainer: {
       padding: theme.spacing.s, // Reducido de theme.spacing.m

@@ -177,6 +177,34 @@ export class OrdersController {
     return this.ordersService.finalizeMultipleOrders(finalizeOrdersDto, userId);
   }
 
+  @Post('quick-finalize-multiple')
+  @ApiOperation({ 
+    summary: 'Finalización rápida de múltiples órdenes',
+    description: 'Finaliza múltiples órdenes de forma rápida, registrando automáticamente un pago en efectivo por el monto pendiente de cada una y cambiando su estado a COMPLETED.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Las órdenes han sido finalizadas exitosamente.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Una o más órdenes no pueden ser finalizadas.',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  async quickFinalizeMultipleOrders(
+    @Body() dto: { orderIds: string[] },
+    @CurrentUser('id') userId: string,
+  ): Promise<{ message: string; ordersWithWarnings: string[] }> {
+    const result = await this.ordersService.quickFinalizeMultipleOrders(dto.orderIds, userId);
+    return { 
+      message: 'Órdenes finalizadas exitosamente',
+      ordersWithWarnings: result.ordersWithWarnings 
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific order by ID' })
   @ApiResponse({

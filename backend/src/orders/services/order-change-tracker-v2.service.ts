@@ -86,7 +86,7 @@ export class OrderChangeTrackerV2Service {
     return changes;
   }
 
-  private detectChangesUsingSnapshots(
+  detectChangesUsingSnapshots(
     current: OrderEntity,
     previous: OrderEntity,
   ): ConsolidatedChangesV2 | null {
@@ -142,6 +142,68 @@ export class OrderChangeTrackerV2Service {
     changes.summary = summaryParts.join(' | ');
 
     return changes;
+  }
+
+  /**
+   * Detecta solo cambios estructurales que afectan el ticket de preparación
+   * Excluye cambios en estados, pagos, y otros campos que no requieren reimpresión
+   */
+  detectStructuralChangesOnly(
+    current: OrderEntity,
+    previous: OrderEntity,
+  ): boolean {
+    // 1. Detectar cambios en campos estructurales de la orden
+    const structuralFields = ['notes', 'scheduledAt', 'estimatedDeliveryTime'];
+    let hasStructuralChanges = false;
+
+    for (const field of structuralFields) {
+      const currentValue = (current as any)[field];
+      const previousValue = (previous as any)[field];
+
+      if (field === 'estimatedDeliveryTime' || field === 'scheduledAt') {
+        const currentTime = currentValue
+          ? new Date(currentValue).getTime()
+          : null;
+        const previousTime = previousValue
+          ? new Date(previousValue).getTime()
+          : null;
+
+        if (currentTime !== previousTime) {
+          hasStructuralChanges = true;
+          break;
+        }
+      } else if (currentValue !== previousValue) {
+        hasStructuralChanges = true;
+        break;
+      }
+    }
+
+    // 2. Detectar cambios en deliveryInfo (información de entrega)
+    if (current.deliveryInfo || previous.deliveryInfo) {
+      const deliveryChanges = this.compareDeliveryInfo(
+        previous.deliveryInfo || {},
+        current.deliveryInfo || {},
+      );
+
+      if (deliveryChanges) {
+        hasStructuralChanges = true;
+      }
+    }
+
+    // 3. Detectar cambios en items (lo más importante)
+    const currentSnapshot = this.createOrderSnapshot(current);
+    const previousSnapshot = this.createOrderSnapshot(previous);
+
+    const itemChanges = this.compareItemSnapshots(
+      currentSnapshot.orderItems || [],
+      previousSnapshot.orderItems || [],
+    );
+
+    if (itemChanges) {
+      hasStructuralChanges = true;
+    }
+
+    return hasStructuralChanges;
   }
 
   private detectOrderFieldChanges(
@@ -239,7 +301,6 @@ export class OrderChangeTrackerV2Service {
       }
     }
 
-    // Detectar items eliminados
     const removed: any[] = [];
     for (const [id, item] of previousMap) {
       if (!currentMap.has(id)) {
@@ -247,7 +308,6 @@ export class OrderChangeTrackerV2Service {
       }
     }
 
-    // Detectar items modificados
     const modified: any[] = [];
     for (const [id, currentItem] of currentMap) {
       const previousItem = previousMap.get(id);
@@ -263,7 +323,6 @@ export class OrderChangeTrackerV2Service {
       }
     }
 
-    // Solo retornar si hay cambios
     if (added.length > 0) changes.added = added;
     if (modified.length > 0) changes.modified = modified;
     if (removed.length > 0) changes.removed = removed;
@@ -274,7 +333,6 @@ export class OrderChangeTrackerV2Service {
   private detectItemChanges(current: any, previous: any): string[] {
     const changes: string[] = [];
 
-    // Comparar producto por ID y nombre
     if (
       current.productId !== previous.productId ||
       current.productName !== previous.productName
@@ -282,7 +340,6 @@ export class OrderChangeTrackerV2Service {
       changes.push('producto');
     }
 
-    // Comparar variante por ID y nombre
     if (
       current.variantId !== previous.variantId ||
       current.variantName !== previous.variantName
@@ -290,7 +347,6 @@ export class OrderChangeTrackerV2Service {
       changes.push('variante');
     }
 
-    // Comparar precio
     const currentPrice = parseFloat(current.finalPrice || current.price || '0');
     const previousPrice = parseFloat(
       previous.finalPrice || previous.price || '0',
@@ -299,14 +355,12 @@ export class OrderChangeTrackerV2Service {
       changes.push('precio');
     }
 
-    // Comparar modificadores (array de strings)
     const currentMods = JSON.stringify((current.modifiers || []).sort());
     const previousMods = JSON.stringify((previous.modifiers || []).sort());
     if (currentMods !== previousMods) {
       changes.push('modificadores');
     }
 
-    // Comparar personalizaciones (array de strings)
     const currentCustom = JSON.stringify((current.customizations || []).sort());
     const previousCustom = JSON.stringify(
       (previous.customizations || []).sort(),
@@ -315,12 +369,10 @@ export class OrderChangeTrackerV2Service {
       changes.push('personalizaciones');
     }
 
-    // Comparar notas
     if (current.preparationNotes !== previous.preparationNotes) {
       changes.push('notas');
     }
 
-    // Comparar estado de preparación
     if (current.preparationStatus !== previous.preparationStatus) {
       changes.push('estado_preparacion');
     }
@@ -374,7 +426,6 @@ export class OrderChangeTrackerV2Service {
   private createOrderSnapshot(order: OrderEntity): any {
     const snapshot = classToPlain(order);
 
-    // Normalizar items
     if (order.orderItems) {
       snapshot.orderItems = order.orderItems.map((item) =>
         this.createItemSnapshot(item),
