@@ -1,41 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Icon, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
-import { shiftsService, type Shift } from '@/services/shifts';
 import { useAuthStore } from '../store/authStore';
 import { canOpenShift } from '../utils/roleUtils';
 import { OpenShiftModal } from '@/modules/orders/components/OpenShiftModal';
 import { ShiftStatusModal } from '@/modules/orders/components/ShiftStatusModal';
 import { CloseShiftModal } from '@/modules/orders/components/CloseShiftModal';
+import { useGlobalShift } from '../hooks/useGlobalShift';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const ShiftIndicator: React.FC = () => {
   const theme = useAppTheme();
   const user = useAuthStore((state) => state.user);
-  const [shift, setShift] = useState<Shift | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
+  const { data: shift, isLoading: loading } = useGlobalShift();
+  
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [openShiftModalVisible, setOpenShiftModalVisible] = useState(false);
   const [closeShiftModalVisible, setCloseShiftModalVisible] = useState(false);
 
   const userCanOpenShift = canOpenShift(user);
   const isShiftOpen = shift && shift.status === 'OPEN';
-
-  const loadShift = async () => {
-    try {
-      setLoading(true);
-      const currentShift = await shiftsService.getCurrentShift();
-      setShift(currentShift);
-    } catch (error) {
-      // Error silencioso, el indicador mostrará estado de carga/cerrado
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadShift();
-  }, []);
 
   const handlePress = () => {
     setStatusModalVisible(true);
@@ -111,7 +98,7 @@ export const ShiftIndicator: React.FC = () => {
         visible={openShiftModalVisible}
         onDismiss={() => setOpenShiftModalVisible(false)}
         onShiftOpened={() => {
-          loadShift();
+          queryClient.invalidateQueries(['global', 'shift', 'current']);
           setOpenShiftModalVisible(false);
         }}
       />
@@ -120,7 +107,7 @@ export const ShiftIndicator: React.FC = () => {
         visible={closeShiftModalVisible}
         onDismiss={() => setCloseShiftModalVisible(false)}
         onShiftClosed={() => {
-          loadShift();
+          queryClient.invalidateQueries(['global', 'shift', 'current']);
           setCloseShiftModalVisible(false);
         }}
         shift={shift}

@@ -81,6 +81,7 @@ export const orderSchema = z.object({
   orderType: orderTypeSchema,
   createdAt: z.union([z.string().datetime(), z.date()]),
   updatedAt: z.union([z.string().datetime(), z.date()]),
+  finalizedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   userId: z.string().uuid().nullable().optional(),
   tableId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),

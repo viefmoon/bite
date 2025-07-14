@@ -22,6 +22,7 @@ import { TablesListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const theme = useAppTheme();
@@ -40,6 +41,9 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     refetch: refetchTables,
     isRefetching,
   } = useGetTablesByAreaId(areaId, { enabled: !!areaId });
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('tables');
 
   const createTableMutation = useCreateTable();
   const updateTableMutation = useUpdateTable();

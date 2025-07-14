@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { Card, Text, Checkbox, Chip, Button } from 'react-native-paper';
+import { Card, Text, Checkbox, Chip, Button, IconButton } from 'react-native-paper';
 import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ interface OrderCardProps {
   isSelected: boolean;
   onToggleSelection: (orderId: string) => void;
   onShowDetails: (order: OrderForFinalizationList) => void;
+  onPrintPress?: (order: OrderForFinalizationList) => void;
 }
 
 const formatOrderTypeShort = (type: string): string => {
@@ -28,7 +29,7 @@ const formatOrderTypeShort = (type: string): string => {
 };
 
 export const OrderCard = React.memo<OrderCardProps>(
-  ({ order, isSelected, onToggleSelection, onShowDetails }) => {
+  ({ order, isSelected, onToggleSelection, onShowDetails, onPrintPress }) => {
     const theme = useAppTheme();
     const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -67,7 +68,7 @@ export const OrderCard = React.memo<OrderCardProps>(
         case 'READY':
           return '#4CAF50'; // Green
         case 'DELIVERED':
-          return theme.colors.tertiary;
+          return '#9C27B0'; // Purple - better contrast
         default:
           return theme.colors.onSurfaceVariant;
       }
@@ -296,6 +297,28 @@ export const OrderCard = React.memo<OrderCardProps>(
                     ))}
                   </>
                 )}
+                {order.ticketImpressionCount && order.ticketImpressionCount > 0 && (
+                  <View
+                    style={[
+                      styles.inlinePreparationBadge,
+                      {
+                        backgroundColor: theme.colors.tertiaryContainer,
+                        borderColor: theme.colors.outline,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.inlinePreparationText,
+                        {
+                          color: theme.colors.onTertiaryContainer,
+                        },
+                      ]}
+                    >
+                      🖨️ {order.ticketImpressionCount}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -310,9 +333,23 @@ export const OrderCard = React.memo<OrderCardProps>(
               >
                 {formatOrderStatus(order.orderStatus)}
               </Chip>
+              {onPrintPress && (
+                <IconButton
+                  icon="printer"
+                  size={28}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onPrintPress(order);
+                  }}
+                  style={styles.printButton}
+                />
+              )}
               <Checkbox
                 status={isSelected ? 'checked' : 'unchecked'}
-                onPress={() => onToggleSelection(order.id)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onToggleSelection(order.id);
+                }}
                 color={theme.colors.primary}
                 style={styles.checkbox}
               />
@@ -444,5 +481,8 @@ const styles = StyleSheet.create({
   inlinePreparationText: {
     fontSize: 10,
     fontWeight: '500',
+  },
+  printButton: {
+    margin: 0,
   },
 });

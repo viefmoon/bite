@@ -105,7 +105,7 @@ export function AppDrawerNavigator() {
       <Drawer.Navigator
         initialRouteName={initialRouteName}
         drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={({ navigation }) => ({
+        screenOptions={({ navigation, route }) => ({
           headerStyle: styles.headerStyle,
           headerTintColor: theme.colors.onPrimary,
           headerTitleStyle: styles.headerTitleStyle,
@@ -207,12 +207,18 @@ export function AppDrawerNavigator() {
               </Surface>
             );
           },
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <ShiftIndicator />
-              <ConnectionIndicator />
-            </View>
-          ),
+          headerRight: () => {
+            // Solo mostrar ShiftIndicator en las secciones de ventas
+            const salesScreens = ['OrdersStack', 'ReceiptsStack', 'OrderFinalizationStack'];
+            const showShiftIndicator = salesScreens.includes(route.name);
+            
+            return (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {showShiftIndicator && <ShiftIndicator />}
+                <ConnectionIndicator />
+              </View>
+            );
+          },
         })}
       >
         <Drawer.Screen
@@ -483,7 +489,6 @@ export function AppDrawerNavigator() {
                   </PaperText>
                 </TouchableOpacity>
                 <KitchenFilterButton />
-                <ShiftIndicator />
                 <ConnectionIndicator />
               </View>
             ),

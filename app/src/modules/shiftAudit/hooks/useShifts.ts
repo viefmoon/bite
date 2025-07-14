@@ -6,7 +6,9 @@ export const useShifts = (limit = 30, offset = 0) => {
   return useQuery<Shift[], Error>({
     queryKey: ['shifts', 'history', limit, offset],
     queryFn: () => shiftService.getHistory({ limit, offset }),
-    staleTime: 60000, // 1 minuto
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
 
@@ -14,8 +16,10 @@ export const useCurrentShift = () => {
   return useQuery<Shift | null, Error>({
     queryKey: ['shifts', 'current'],
     queryFn: () => shiftService.getCurrentShift(),
-    staleTime: 30000, // 30 segundos
-    refetchInterval: 60000, // Refrescar cada minuto
+    staleTime: 30000,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 
@@ -24,6 +28,8 @@ export const useShiftDetail = (shiftId: string | undefined) => {
     queryKey: ['shifts', shiftId],
     queryFn: () => shiftService.getShiftById(shiftId!),
     enabled: !!shiftId,
-    staleTime: 300000, // 5 minutos
+    staleTime: 300000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };

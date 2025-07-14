@@ -45,6 +45,7 @@ import { ProductRepository } from '../products/infrastructure/persistence/produc
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
 import { DataSource, Not, In } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
+import { format } from 'date-fns';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
 import {
   PreparationScreenStatus,
@@ -54,6 +55,8 @@ import { PaymentsService } from '../payments/payments.service';
 import { TablesService } from '../tables/tables.service';
 import { AutomaticPrintingService } from '../thermal-printers/automatic-printing.service';
 import { ShiftsService } from '../shifts/shifts.service';
+import { ThermalPrintersService } from '../thermal-printers/thermal-printers.service';
+import { ThermalPrinter } from '../thermal-printers/domain/thermal-printer';
 
 @Injectable()
 export class OrdersService {
@@ -79,6 +82,8 @@ export class OrdersService {
     private readonly shiftsService: ShiftsService,
     @Inject(forwardRef(() => AutomaticPrintingService))
     private readonly automaticPrintingService: AutomaticPrintingService,
+    @Inject(forwardRef(() => ThermalPrintersService))
+    private readonly thermalPrintersService: ThermalPrintersService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -484,23 +489,27 @@ export class OrdersService {
     ) {
       updatePayload.orderStatus = updateOrderDto.orderStatus;
 
-      // Si la orden se está completando o cancelando, liberar la mesa
+      // Si la orden se está completando o cancelando, establecer finalizedAt y liberar la mesa
       if (
-        existingOrder.tableId &&
-        (updateOrderDto.orderStatus === OrderStatus.COMPLETED ||
-          updateOrderDto.orderStatus === OrderStatus.CANCELLED)
+        updateOrderDto.orderStatus === OrderStatus.COMPLETED ||
+        updateOrderDto.orderStatus === OrderStatus.CANCELLED
       ) {
-        // Verificar si es una mesa temporal
-        const table = await this.tablesService.findOne(existingOrder.tableId);
+        updatePayload.finalizedAt = new Date();
 
-        if (table.isTemporary) {
-          // Eliminar mesa temporal
-          await this.tablesService.remove(existingOrder.tableId);
-        } else {
-          // Liberar mesa normal
-          await this.tablesService.update(existingOrder.tableId, {
-            isAvailable: true,
-          });
+        // Liberar la mesa si existe
+        if (existingOrder.tableId) {
+          // Verificar si es una mesa temporal
+          const table = await this.tablesService.findOne(existingOrder.tableId);
+
+          if (table.isTemporary) {
+            // Eliminar mesa temporal
+            await this.tablesService.remove(existingOrder.tableId);
+          } else {
+            // Liberar mesa normal
+            await this.tablesService.update(existingOrder.tableId, {
+              isAvailable: true,
+            });
+          }
         }
       }
     }
@@ -1363,6 +1372,7 @@ export class OrdersService {
         'orderItems',
         'orderItems.product',
         'orderItems.product.preparationScreen',
+        'ticketImpressions',
       ],
       select: {
         id: true,
@@ -1552,6 +1562,16 @@ export class OrdersService {
           completedAt: status.completedAt,
         }),
       ),
+      ticketImpressions: order.ticketImpressions?.map((impression) => ({
+        id: impression.id,
+        ticketType: impression.ticketType,
+        impressionTime: impression.impressionTime,
+        user: impression.user ? {
+          id: impression.user.id,
+          firstName: impression.user.firstName || undefined,
+          lastName: impression.user.lastName || undefined,
+        } : undefined,
+      })) || undefined,
     };
 
     return orderDto;
@@ -1603,6 +1623,11 @@ export class OrdersService {
         recipientPhone: order.deliveryInfo.recipientPhone || undefined,
         fullAddress: order.deliveryInfo.fullAddress || undefined,
       };
+    }
+
+    // Agregar contador de impresiones de tickets
+    if (order.ticketImpressions && order.ticketImpressions.length > 0) {
+      dto.ticketImpressionCount = order.ticketImpressions.length;
     }
 
     return dto;
@@ -1978,6 +2003,437 @@ export class OrdersService {
         // Liberar mesa normal
         await this.tablesService.update(order.tableId, { isAvailable: true });
       }
+    }
+  }
+
+  async printOrderTicket(
+    orderId: string,
+    printerId: string,
+    ticketType: 'GENERAL' | 'BILLING',
+    userId: string,
+  ): Promise<void> {
+    // Verificar que la impresora existe y está activa
+    const printerDetails = await this.thermalPrintersService.findOne(printerId);
+    if (!printerDetails || !printerDetails.isActive) {
+      throw new BadRequestException('Printer not found or inactive');
+    }
+
+    if (ticketType === 'BILLING') {
+      // Para tickets de billing, usar el formato específico
+      await this.printBillingTicketWithPrinter(orderId, printerDetails, userId);
+    } else {
+      // Para tickets generales, usar el mismo formato que los tickets automáticos
+      // El último parámetro true indica que es una reimpresión manual
+      await this.automaticPrintingService.printDeliveryPickupTicket(
+        orderId,
+        printerDetails,
+        userId,
+        true, // isReprint = true para indicar que es una impresión manual
+      );
+    }
+  }
+
+  private async printBillingTicketWithPrinter(
+    orderId: string,
+    printerDetails: ThermalPrinter,
+    userId: string,
+  ): Promise<void> {
+    const order = await this.findOne(orderId);
+    
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    const restaurantConfig = await this.restaurantConfigService.getConfig();
+
+    // Importar las clases necesarias
+    const { ThermalPrinter: ThermalPrinterLib, PrinterTypes } = require('node-thermal-printer');
+    
+    const printer = new ThermalPrinterLib({
+      type: PrinterTypes.EPSON,
+      interface: `tcp://${printerDetails.ipAddress}:${printerDetails.port}`,
+      removeSpecialCharacters: false,
+      lineCharacter: '=',
+    });
+
+    try {
+      const isConnected = await printer.isPrinterConnected();
+      if (!isConnected) {
+        throw new Error(`No se pudo conectar a la impresora ${printerDetails.name}`);
+      }
+
+      await this.printBillingTicket(printer, order, restaurantConfig);
+      
+      // Añadir líneas de avance según configuración
+      for (let i = 0; i < printerDetails.feedLines; i++) {
+        printer.newLine();
+      }
+
+      // Cortar papel si está habilitado
+      if (printerDetails.cutPaper) {
+        printer.cut();
+      }
+      
+      await printer.execute();
+      printer.clear();
+    } catch (error) {
+      printer.clear();
+      throw error;
+    }
+
+    // Registrar la impresión
+    await this.registerTicketImpression(
+      orderId,
+      userId,
+      TicketType.BILLING,
+    );
+  }
+
+  private async printBillingTicket(printer: any, order: Order, restaurantConfig: any): Promise<void> {
+    // Importar TicketFormatter
+    const { TicketFormatter } = require('../thermal-printers/utils/ticket-formatter');
+    const formatter = new TicketFormatter(80); // Asumiendo papel de 80mm para billing
+    
+    // Encabezado del ticket - Primero el restaurante
+    printer.alignCenter();
+    
+    // Nombre del restaurante con tamaño más grande
+    printer.setTextSize(1, 1);
+    printer.bold(true);
+    printer.println(restaurantConfig.restaurantName || 'Restaurant');
+    printer.bold(false);
+    printer.setTextNormal();
+    
+    // Dirección del restaurante
+    if (restaurantConfig.address) {
+      printer.println(restaurantConfig.address);
+      if (restaurantConfig.city || restaurantConfig.state || restaurantConfig.postalCode) {
+        const cityStateParts = [
+          restaurantConfig.city,
+          restaurantConfig.state,
+          restaurantConfig.postalCode
+        ].filter(Boolean).join(', ');
+        printer.println(cityStateParts);
+      }
+    }
+    
+    // Teléfonos
+    if (restaurantConfig.phoneMain || restaurantConfig.phoneSecondary) {
+      const phones: string[] = [];
+      if (restaurantConfig.phoneMain) phones.push(`Tel: ${restaurantConfig.phoneMain}`);
+      if (restaurantConfig.phoneSecondary) phones.push(`Tel 2: ${restaurantConfig.phoneSecondary}`);
+      printer.println(phones.join(' - '));
+    }
+    
+    printer.drawLine();
+    
+    // Título CUENTA
+    printer.setTextSize(1, 1);
+    printer.bold(true);
+    printer.println('CUENTA');
+    printer.bold(false);
+    printer.setTextNormal();
+    
+    // Número de orden con tamaño moderado
+    printer.bold(true);
+    printer.println(`#${order.shiftOrderNumber} - ${this.getOrderTypeLabel(order.orderType)}`);
+    printer.bold(false);
+    
+    printer.drawLine();
+    
+    // Información de la orden
+    printer.alignLeft();
+    printer.println(`Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', { 
+      timeZone: 'America/Mexico_City' 
+    })}`);
+    
+    if (order.user?.firstName || order.user?.lastName) {
+      const userName = [order.user.firstName, order.user.lastName].filter(Boolean).join(' ');
+      printer.println(`Atendido por: ${userName}`);
+    }
+    
+    // Mesa o información de cliente según el tipo de orden
+    if (order.table) {
+      printer.println(`Mesa: ${order.table.name}`);
+      if (order.table.area) {
+        printer.println(`Área: ${order.table.area.name}`);
+      }
+    }
+    
+    // Información de cliente para delivery/takeaway
+    if (order.deliveryInfo && order.deliveryInfo.recipientName) {
+      printer.println(`Cliente: ${order.deliveryInfo.recipientName}`);
+      if (order.deliveryInfo.recipientPhone) {
+        printer.println(`Tel: ${order.deliveryInfo.recipientPhone}`);
+      }
+    }
+    
+    // Items de la orden
+    printer.drawLine();
+    printer.bold(true);
+    printer.println('DETALLE DE CONSUMO');
+    printer.bold(false);
+    
+    // Agrupar items idénticos usando el mismo método que el ticket general
+    const groupedItems = this.groupIdenticalItemsForBilling(order.orderItems || []);
+    
+    // Calcular el ancho máximo necesario para los precios
+    let maxPriceWidth = 0;
+    for (const item of groupedItems) {
+      const priceStr = this.formatMoney(item.totalPrice);
+      maxPriceWidth = Math.max(maxPriceWidth, priceStr.length);
+    }
+    const dynamicPriceColumnWidth = maxPriceWidth + 2;
+    
+    // Usar fuente normal para los productos (más conservador que el general)
+    for (const item of groupedItems) {
+      // Título del producto
+      const productTitle = `${item.quantity}x ${item.variantName || item.productName}`;
+      
+      // Imprimir producto principal
+      const productLines = formatter.formatProductTable(
+        productTitle, 
+        this.formatMoney(item.totalPrice),
+        'normal', // Fuente normal en lugar de expanded
+        dynamicPriceColumnWidth
+      );
+      
+      for (const line of productLines) {
+        printer.println(line);
+      }
+      
+      // Personalizaciones de pizza (si las hay)
+      if (item.pizzaCustomizations) {
+        printer.println(`  ${item.pizzaCustomizations}`);
+      }
+      
+      // Modificadores
+      if (item.modifiers && item.modifiers.length > 0) {
+        for (const modifier of item.modifiers) {
+          let modifierText: string;
+          if (modifier.price > 0) {
+            if (item.quantity > 1) {
+              modifierText = `• ${modifier.name} (+${this.formatMoney(modifier.price)} c/u)`;
+            } else {
+              modifierText = `• ${modifier.name} (+${this.formatMoney(modifier.price)})`;
+            }
+          } else {
+            modifierText = `• ${modifier.name}`;
+          }
+          printer.println(`  ${modifierText}`);
+        }
+      }
+      
+      // Notas de preparación
+      if (item.preparationNotes) {
+        const wrappedNotes = formatter.wrapText(`  Notas: ${item.preparationNotes}`, 'normal');
+        for (const line of wrappedNotes) {
+          printer.println(line);
+        }
+      }
+    }
+    
+    // Totales
+    printer.drawLine();
+    
+    // Calcular totales
+    const subtotal = Number(order.subtotal || order.total);
+    const total = Number(order.total);
+    const subtotalStr = this.formatMoney(subtotal);
+    const totalStr = this.formatMoney(total);
+    const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
+    
+    // Subtotal
+    const subtotalLines = formatter.formatProductTable(
+      'Subtotal:', 
+      subtotalStr,
+      'normal',
+      maxTotalWidth
+    );
+    for (const line of subtotalLines) {
+      printer.println(line);
+    }
+    
+    // Total con fuente ligeramente más grande
+    const totalLines = formatter.formatProductTable(
+      'TOTAL:', 
+      totalStr,
+      'normal',
+      maxTotalWidth
+    );
+    printer.setTextSize(1, 1);
+    printer.bold(true);
+    for (const line of totalLines) {
+      printer.println(line);
+    }
+    printer.setTextNormal();
+    printer.bold(false);
+    
+    // Sección de pagos
+    if (order.payments && order.payments.length > 0) {
+      printer.drawLine();
+      printer.bold(true);
+      printer.println('DETALLE DE PAGOS');
+      printer.bold(false);
+      
+      let totalPaid = 0;
+      order.payments.forEach(payment => {
+        const amount = payment.amount;
+        totalPaid += amount;
+        const paymentLines = formatter.formatProductTable(
+          this.getPaymentMethodLabel(payment.paymentMethod),
+          this.formatMoney(amount),
+          'normal',
+          maxTotalWidth
+        );
+        for (const line of paymentLines) {
+          printer.println(line);
+        }
+      });
+      
+      const remaining = total - totalPaid;
+      if (remaining > 0.01) { // Usar 0.01 para evitar problemas de precisión de punto flotante
+        printer.println('');
+        const remainingLines = formatter.formatProductTable(
+          'POR PAGAR:',
+          this.formatMoney(remaining),
+          'normal',
+          maxTotalWidth
+        );
+        printer.bold(true);
+        for (const line of remainingLines) {
+          printer.println(line);
+        }
+        printer.bold(false);
+      }
+    }
+    
+    // Notas adicionales
+    if (order.notes) {
+      printer.drawLine();
+      printer.bold(true);
+      printer.println('NOTAS:');
+      printer.bold(false);
+      const wrappedNotes = formatter.wrapText(order.notes, 'normal');
+      for (const line of wrappedNotes) {
+        printer.println(line);
+      }
+    }
+    
+    // Pie del ticket
+    printer.drawLine();
+    printer.alignCenter();
+    printer.println('¡Gracias por su preferencia!');
+    printer.println('');
+    
+    // RFC y datos fiscales si están configurados
+    if (restaurantConfig.rfc) {
+      printer.println(`RFC: ${restaurantConfig.rfc}`);
+    }
+    
+    printer.println('');
+  }
+
+  private getItemDescription(item: OrderItem): string {
+    if (!item.product) return 'Producto desconocido';
+    let description = item.product.name;
+    
+    if (item.productVariant) {
+      description += ' - ' + item.productVariant.name;
+    }
+    
+    if (item.productModifiers && item.productModifiers.length > 0) {
+      const modifiers = item.productModifiers.map(m => m.name).join(', ');
+      description += ' (' + modifiers + ')';
+    }
+    
+    return description;
+  }
+
+  private formatMoney(amount: number): string {
+    return `$${amount.toFixed(2)}`;
+  }
+
+  private groupIdenticalItemsForBilling(items: any[]): any[] {
+    const groupedMap = new Map<string, any>();
+
+    items.forEach((item) => {
+      // Crear una clave única basada en todas las propiedades que deben ser idénticas
+      const modifierIds = (item.productModifiers || [])
+        .map((mod) => mod.id)
+        .sort()
+        .join(',');
+
+      // Incluir personalizaciones de pizza en la clave
+      const pizzaCustomizationIds = (item.selectedPizzaCustomizations || [])
+        .map((pc) => `${pc.pizzaCustomizationId}-${pc.half}-${pc.action}`)
+        .sort()
+        .join(',');
+
+      const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}`;
+
+      const existingItem = groupedMap.get(groupKey);
+
+      if (existingItem) {
+        // Si ya existe un item idéntico, incrementar la cantidad
+        existingItem.quantity += 1;
+        existingItem.totalPrice += Number(item.finalPrice);
+      } else {
+        // Si es nuevo, agregarlo al mapa
+        const groupedItem = {
+          productId: item.productId,
+          productName: item.product?.name || 'Producto',
+          variantId: item.productVariantId || undefined,
+          variantName: item.productVariant?.name || undefined,
+          quantity: 1,
+          unitPrice: Number(item.basePrice),
+          totalPrice: Number(item.finalPrice),
+          modifiers: (item.productModifiers || []).map((mod) => ({
+            id: mod.id,
+            name: mod.name,
+            price: Number(mod.price) || 0,
+          })),
+          preparationNotes: item.preparationNotes || undefined,
+          pizzaCustomizations: this.formatPizzaCustomizationsForBilling(item.selectedPizzaCustomizations),
+        };
+        groupedMap.set(groupKey, groupedItem);
+      }
+    });
+
+    return Array.from(groupedMap.values());
+  }
+
+  private formatPizzaCustomizationsForBilling(customizations: any[]): string | undefined {
+    if (!customizations || customizations.length === 0) return undefined;
+    
+    // Simplificar el formato para billing
+    const parts: string[] = [];
+    
+    customizations.forEach(cust => {
+      if (cust.pizzaCustomization?.name) {
+        parts.push(cust.pizzaCustomization.name);
+      }
+    });
+    
+    return parts.length > 0 ? parts.join(', ') : undefined;
+  }
+
+  private getPaymentMethodLabel(method: string): string {
+    switch (method) {
+      case 'CASH': return 'Efectivo';
+      case 'CREDIT_CARD': return 'T. Crédito';
+      case 'DEBIT_CARD': return 'T. Débito';
+      case 'TRANSFER': return 'Transferencia';
+      default: return method;
+    }
+  }
+
+  private getOrderTypeLabel(orderType: OrderType): string {
+    switch (orderType) {
+      case OrderType.DELIVERY: return 'DOMICILIO';
+      case OrderType.TAKE_AWAY: return 'PARA LLEVAR';
+      case OrderType.DINE_IN: return 'MESA';
+      default: return orderType;
     }
   }
 }

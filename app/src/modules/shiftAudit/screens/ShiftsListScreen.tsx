@@ -1,33 +1,39 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Chip, Card, Divider, Surface, Searchbar, SegmentedButtons, Button, Menu, IconButton } from 'react-native-paper';
-import { useDrawerStatus } from '@react-navigation/drawer';
-import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { Text, Chip, Card, Divider, Surface, Button, Menu, Avatar, ActivityIndicator, IconButton } from 'react-native-paper';
+import { FlashList } from '@shopify/flash-list';
+import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
-import GenericList from '@/app/components/crud/GenericList';
-import { useListState } from '@/app/hooks/useListState';
 import { useAppTheme } from '@/app/styles/theme';
-import { useShifts, useCurrentShift } from '../hooks/useShifts';
+import { useShifts } from '../hooks/useShifts';
 import { formatCurrency } from '@/app/lib/formatters';
 import type { Shift } from '../types';
 import type { ShiftAuditStackNavigationProp } from '../navigation/types';
 import { useNavigation } from '@react-navigation/native';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export function ShiftsListScreen() {
   const theme = useAppTheme();
   const navigation = useNavigation<ShiftAuditStackNavigationProp>();
-  const drawerStatus = useDrawerStatus();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'yesterday' | 'week' | 'month' | 'custom'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed'>('all');
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'last7' | 'custom'>('last7');
   const [showDateMenu, setShowDateMenu] = useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date }>({ 
+    start: subDays(new Date(), 7), 
+    end: new Date() 
+  });
+  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end'>('start');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
   const limit = 30;
   const offset = 0;
 
   const { data: shifts, isLoading, error, refetch } = useShifts(limit, offset);
-  const { data: currentShift } = useCurrentShift();
+  
+  useRefreshModuleOnFocus('shifts');
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -35,89 +41,77 @@ export function ShiftsListScreen() {
     setIsRefreshing(false);
   };
 
-  // Filtrar turnos según los criterios seleccionados
   const filteredShifts = useMemo(() => {
-    if (!shifts) return [];
+    if (!shifts || !Array.isArray(shifts)) {
+      return [];
+    }
 
-    return shifts.filter((shift) => {
-      // Filtro por búsqueda
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = 
-          shift.id.toString().includes(searchLower) ||
-          shift.openedBy?.firstName?.toLowerCase().includes(searchLower) ||
-          shift.openedBy?.lastName?.toLowerCase().includes(searchLower) ||
-          shift.closedBy?.firstName?.toLowerCase().includes(searchLower) ||
-          shift.closedBy?.lastName?.toLowerCase().includes(searchLower);
-        
-        if (!matchesSearch) return false;
-      }
-
-      // Filtro por estado
-      if (statusFilter !== 'all') {
-        const isOpen = !shift.closedAt;
-        if (statusFilter === 'open' && !isOpen) return false;
-        if (statusFilter === 'closed' && isOpen) return false;
-      }
-
+    const filtered = shifts.filter((shift) => {
       // Filtro por fecha
-      if (dateFilter !== 'all') {
-        const shiftDate = parseISO(shift.openedAt);
-        const now = new Date();
-
-        switch (dateFilter) {
-          case 'today':
-            if (!isToday(shiftDate)) return false;
-            break;
-          case 'yesterday':
-            if (!isYesterday(shiftDate)) return false;
-            break;
-          case 'week':
-            if (!isThisWeek(shiftDate, { locale: es })) return false;
-            break;
-          case 'month':
-            if (!isThisMonth(shiftDate)) return false;
-            break;
+      if (shift.openedAt) {
+        try {
+          const shiftDate = parseISO(shift.openedAt);
+          const now = new Date();
+          
+          switch (dateFilter) {
+            case 'today':
+              if (!isToday(shiftDate)) return false;
+              break;
+            case 'yesterday':
+              if (!isYesterday(shiftDate)) return false;
+              break;
+            case 'last7':
+              const sevenDaysAgo = subDays(now, 7);
+              if (shiftDate < sevenDaysAgo) return false;
+              break;
+            case 'custom':
+              if (!isWithinInterval(shiftDate, { 
+                start: customDateRange.start, 
+                end: customDateRange.end 
+              })) return false;
+              break;
+          }
+        } catch (e) {
+          return false;
         }
       }
 
       return true;
     });
-  }, [shifts, searchQuery, dateFilter, statusFilter]);
+    
+    return filtered;
+  }, [shifts, dateFilter, customDateRange]);
 
   const getDateFilterLabel = () => {
     switch (dateFilter) {
       case 'today': return 'Hoy';
       case 'yesterday': return 'Ayer';
-      case 'week': return 'Esta semana';
-      case 'month': return 'Este mes';
-      default: return 'Todo el tiempo';
+      case 'last7': return 'Últimos 7 días';
+      case 'custom': 
+        return `${format(customDateRange.start, 'dd/MM')} - ${format(customDateRange.end, 'dd/MM')}`;
+      default: return 'Últimos 7 días';
     }
   };
 
-  const { ListEmptyComponent } = useListState({
-    isLoading,
-    isError: !!error,
-    data: filteredShifts,
-    emptyConfig: {
-      title: searchQuery || dateFilter !== 'all' || statusFilter !== 'all' 
-        ? 'No se encontraron turnos' 
-        : 'No hay turnos registrados',
-      message: searchQuery || dateFilter !== 'all' || statusFilter !== 'all'
-        ? 'Prueba ajustando los filtros de búsqueda'
-        : 'Aún no se han cerrado turnos para auditar',
-      icon: 'history',
-    },
-    errorConfig: {
-      title: 'Error al cargar turnos',
-      message: 'No se pudieron cargar los turnos. Verifica tu conexión.',
-      icon: 'alert-circle-outline',
-      onAction: refetch,
-    },
-  });
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      if (datePickerMode === 'start') {
+        setCustomDateRange({ ...customDateRange, start: selectedDate });
+      } else {
+        setCustomDateRange({ ...customDateRange, end: selectedDate });
+      }
+    }
+  };
+
+  const handleCustomDateRange = () => {
+    setDateFilter('custom');
+    setShowDateMenu(false);
+    setShowDateRangePicker(true);
+  };
 
   const handleShiftPress = (shift: Shift) => {
-    navigation.navigate('ShiftDetail', { shiftId: shift.id });
+    navigation.navigate('ShiftDetail', { shiftId: String(shift.id) });
   };
 
   const formatShiftDate = (dateString: string) => {
@@ -154,9 +148,9 @@ export function ShiftsListScreen() {
     }
   };
 
-  const renderShiftItem = (shift: Shift) => {
-    const isOpen = !shift.closedAt;
-    const isCurrent = currentShift?.id === shift.id;
+  const renderShiftItem = ({ item: shift }: { item: Shift }) => {
+    const isOpen = shift.status === 'open';
+    const isCurrent = false;
 
     return (
       <Card
@@ -171,7 +165,9 @@ export function ShiftsListScreen() {
         <Card.Content>
           <View style={styles.shiftHeader}>
             <View style={styles.shiftTitleRow}>
-              <Text style={styles.shiftNumber}>Turno #{shift.id}</Text>
+              <Text style={styles.shiftNumber}>
+                Turno #{shift.globalShiftNumber || shift.shiftNumber || 'N/A'}
+              </Text>
               {isCurrent && (
                 <Chip
                   mode="flat"
@@ -208,51 +204,44 @@ export function ShiftsListScreen() {
               </Chip>
             </View>
             <Text style={styles.shiftDate}>
-              {formatShiftDate(shift.openedAt)}
+              {shift.openedAt ? formatShiftDate(shift.openedAt) : 'Fecha no disponible'}
             </Text>
           </View>
 
           <Divider style={styles.divider} />
 
           <View style={styles.shiftDetails}>
+            {/* Sección de tiempo y estadísticas en una sola línea */}
             <View style={styles.timeSection}>
-              <Text style={styles.label}>Horario</Text>
-              <Text style={styles.timeText}>
-                {formatShiftTime(shift.openedAt)} -{' '}
-                {shift.closedAt ? formatShiftTime(shift.closedAt) : 'En curso'}
-              </Text>
-              <Text style={styles.durationText}>
-                Duración: {getShiftDuration(shift.openedAt, shift.closedAt)}
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.timeText}>
+                  {shift.openedAt ? formatShiftTime(shift.openedAt) : 'N/A'} - {shift.closedAt ? formatShiftTime(shift.closedAt) : 'En curso'}
+                </Text>
+                <Text style={styles.durationText}>
+                  {shift.openedAt ? getShiftDuration(shift.openedAt, shift.closedAt) : 'N/A'}
+                </Text>
+              </View>
             </View>
 
+            {/* Estadísticas más compactas */}
             <View style={styles.statsSection}>
               <Surface style={styles.statCard} elevation={0}>
-                <Icon source="currency-usd" size={20} color={theme.colors.primary} />
-                <Text style={styles.statLabel}>Ventas</Text>
+                <Text style={styles.statLabel}>VENTAS</Text>
                 <Text style={styles.statValue}>
-                  {formatCurrency(shift.totalSales || 0)}
+                  {formatCurrency(shift.totalSales)}
                 </Text>
               </Surface>
+              
               <Surface style={styles.statCard} elevation={0}>
-                <Icon source="receipt" size={20} color={theme.colors.secondary} />
-                <Text style={styles.statLabel}>Órdenes</Text>
+                <Text style={styles.statLabel}>ÓRDENES</Text>
                 <Text style={styles.statValue}>{shift.totalOrders || 0}</Text>
               </Surface>
-              {shift.totalOrders > 0 && (
-                <Surface style={styles.statCard} elevation={0}>
-                  <Icon source="calculator" size={20} color={theme.colors.tertiary} />
-                  <Text style={styles.statLabel}>Promedio</Text>
-                  <Text style={styles.statValue}>
-                    {formatCurrency((shift.totalSales || 0) / shift.totalOrders)}
-                  </Text>
-                </Surface>
-              )}
             </View>
 
+            {/* Sección de efectivo más compacta */}
             <View style={styles.cashSection}>
               <View style={styles.cashRow}>
-                <Text style={styles.cashLabel}>Efectivo Inicial:</Text>
+                <Text style={styles.cashLabel}>Inicial</Text>
                 <Text style={styles.cashValue}>
                   {formatCurrency(shift.initialCash)}
                 </Text>
@@ -260,14 +249,14 @@ export function ShiftsListScreen() {
               {shift.finalCash !== null && (
                 <>
                   <View style={styles.cashRow}>
-                    <Text style={styles.cashLabel}>Efectivo Final:</Text>
+                    <Text style={styles.cashLabel}>Final</Text>
                     <Text style={styles.cashValue}>
                       {formatCurrency(shift.finalCash)}
                     </Text>
                   </View>
                   <View style={styles.cashRow}>
                     <Text style={[styles.cashLabel, styles.differenceLabel]}>
-                      Diferencia:
+                      Diferencia
                     </Text>
                     <Text
                       style={[
@@ -288,15 +277,14 @@ export function ShiftsListScreen() {
               )}
             </View>
 
+            {/* Usuarios en una línea */}
             <View style={styles.userSection}>
               <Text style={styles.userText}>
-                Abierto por: {shift.openedBy?.firstName || ''}{' '}
-                {shift.openedBy?.lastName || ''}
+                👤 {shift.openedBy?.firstName || 'N/A'} {shift.openedBy?.lastName || ''}
               </Text>
               {shift.closedBy && (
                 <Text style={styles.userText}>
-                  Cerrado por: {shift.closedBy.firstName || ''}{' '}
-                  {shift.closedBy.lastName || ''}
+                  🔒 {shift.closedBy.firstName || 'N/A'} {shift.closedBy.lastName || ''}
                 </Text>
               )}
             </View>
@@ -307,70 +295,233 @@ export function ShiftsListScreen() {
   };
 
   const renderFilters = () => (
-    <Surface style={styles.filterContainer} elevation={0}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterScrollContent}
-      >
-        {/* Filtro de fecha */}
+    <Surface style={styles.filterContainer} elevation={1}>
+      <View style={styles.filterContent}>
         <Menu
           visible={showDateMenu}
           onDismiss={() => setShowDateMenu(false)}
           anchor={
-            <Chip
-              mode="outlined"
-              icon="calendar"
+            <TouchableOpacity 
+              style={styles.filterButton}
               onPress={() => setShowDateMenu(true)}
-              selected={dateFilter !== 'all'}
-              style={[styles.filterChip, dateFilter !== 'all' && styles.filterChipSelected]}
-              textStyle={styles.filterChipText}
+              activeOpacity={0.8}
             >
-              {getDateFilterLabel()}
-            </Chip>
+              <Avatar.Icon 
+                icon="calendar-range" 
+                size={32}
+                style={styles.filterIcon}
+                color={theme.colors.primary}
+              />
+              <View style={styles.filterTextContainer}>
+                <Text style={styles.filterLabel}>Filtrar por fecha</Text>
+                <Text style={styles.filterValue}>{getDateFilterLabel()}</Text>
+              </View>
+              <Avatar.Icon 
+                icon="chevron-down" 
+                size={24}
+                style={styles.filterArrow}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </TouchableOpacity>
           }
+          contentStyle={styles.menuContent}
         >
-          <Menu.Item onPress={() => { setDateFilter('all'); setShowDateMenu(false); }} title="Todo el tiempo" />
-          <Menu.Item onPress={() => { setDateFilter('today'); setShowDateMenu(false); }} title="Hoy" />
-          <Menu.Item onPress={() => { setDateFilter('yesterday'); setShowDateMenu(false); }} title="Ayer" />
-          <Menu.Item onPress={() => { setDateFilter('week'); setShowDateMenu(false); }} title="Esta semana" />
-          <Menu.Item onPress={() => { setDateFilter('month'); setShowDateMenu(false); }} title="Este mes" />
+          <Menu.Item 
+            onPress={() => { setDateFilter('today'); setShowDateMenu(false); }} 
+            title="Hoy"
+            leadingIcon="calendar-today"
+            style={dateFilter === 'today' && styles.selectedMenuItem}
+          />
+          <Menu.Item 
+            onPress={() => { setDateFilter('yesterday'); setShowDateMenu(false); }} 
+            title="Ayer"
+            leadingIcon="calendar-minus"
+            style={dateFilter === 'yesterday' && styles.selectedMenuItem}
+          />
+          <Menu.Item 
+            onPress={() => { setDateFilter('last7'); setShowDateMenu(false); }} 
+            title="Últimos 7 días"
+            leadingIcon="calendar-week"
+            style={dateFilter === 'last7' && styles.selectedMenuItem}
+          />
+          <Divider />
+          <Menu.Item 
+            onPress={handleCustomDateRange} 
+            title="Rango personalizado"
+            leadingIcon="calendar-range"
+            style={dateFilter === 'custom' && styles.selectedMenuItem}
+          />
         </Menu>
+      </View>
 
-        {/* Filtro de estado */}
-        <Chip
-          mode="outlined"
-          icon={statusFilter === 'open' ? 'lock-open' : statusFilter === 'closed' ? 'lock' : 'filter'}
-          onPress={() => {
-            if (statusFilter === 'all') setStatusFilter('open');
-            else if (statusFilter === 'open') setStatusFilter('closed');
-            else setStatusFilter('all');
-          }}
-          selected={statusFilter !== 'all'}
-          style={[styles.filterChip, statusFilter !== 'all' && styles.filterChipSelected]}
-          textStyle={styles.filterChipText}
-        >
-          {statusFilter === 'all' ? 'Todos' : statusFilter === 'open' ? 'Abiertos' : 'Cerrados'}
-        </Chip>
+      {/* Modal para selección de rango de fechas */}
+      <Modal
+        visible={showDateRangePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDateRangePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Header del modal */}
+            <View style={styles.modalHeader}>
+              <Avatar.Icon 
+                icon="calendar-range" 
+                size={48}
+                style={styles.modalIcon}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.modalTitle}>Seleccionar rango</Text>
+              <IconButton 
+                icon="close" 
+                onPress={() => setShowDateRangePicker(false)}
+                size={20}
+                style={styles.modalCloseButton}
+                iconColor={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            
+            {/* Selección de fechas */}
+            <View style={styles.dateRangeContainer}>
+              <TouchableOpacity 
+                style={styles.dateButton}
+                onPress={() => {
+                  setDatePickerMode('start');
+                  setShowDatePicker(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.dateButtonContent}>
+                  <Avatar.Icon 
+                    icon="calendar-start" 
+                    size={36}
+                    style={styles.dateButtonIcon}
+                    color={theme.colors.primary}
+                  />
+                  <View style={styles.dateButtonTextContainer}>
+                    <Text style={styles.dateButtonLabel}>DESDE</Text>
+                    <Text style={styles.dateButtonValue}>
+                      {format(customDateRange.start, "d MMM yyyy", { locale: es })}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+              
+              <View style={styles.dateArrowContainer}>
+                <Avatar.Icon 
+                  icon="arrow-right" 
+                  size={20}
+                  style={styles.dateArrow}
+                  color={theme.colors.primary}
+                />
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.dateButton}
+                onPress={() => {
+                  setDatePickerMode('end');
+                  setShowDatePicker(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.dateButtonContent}>
+                  <Avatar.Icon 
+                    icon="calendar-end" 
+                    size={36}
+                    style={styles.dateButtonIcon}
+                    color={theme.colors.primary}
+                  />
+                  <View style={styles.dateButtonTextContainer}>
+                    <Text style={styles.dateButtonLabel}>HASTA</Text>
+                    <Text style={styles.dateButtonValue}>
+                      {format(customDateRange.end, "d MMM yyyy", { locale: es })}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
 
-        {/* Limpiar filtros */}
-        {(dateFilter !== 'all' || statusFilter !== 'all' || searchQuery) && (
-          <Chip
-            mode="flat"
-            icon="close"
-            onPress={() => {
-              setDateFilter('all');
-              setStatusFilter('all');
-              setSearchQuery('');
-            }}
-            style={styles.clearChip}
-            textStyle={styles.clearChipText}
-          >
-            Limpiar
-          </Chip>
-        )}
-      </ScrollView>
+            
+            {/* Botones de acción */}
+            <View style={styles.modalActions}>
+              <Button 
+                mode="outlined" 
+                onPress={() => setShowDateRangePicker(false)}
+                style={styles.modalButton}
+                labelStyle={styles.modalButtonLabel}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                mode="contained" 
+                onPress={() => {
+                  setDateFilter('custom');
+                  setShowDateRangePicker(false);
+                }}
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                labelStyle={styles.modalButtonLabel}
+              >
+                Aplicar filtro
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={datePickerMode === 'start' ? customDateRange.start : customDateRange.end}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </Surface>
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Avatar.Icon 
+        icon="history" 
+        size={80} 
+        style={{ backgroundColor: theme.colors.surfaceVariant }} 
+        color={theme.colors.onSurfaceVariant}
+      />
+      <Text style={styles.emptyTitle}>
+        No se encontraron turnos
+      </Text>
+      <Text style={styles.emptyMessage}>
+        {dateFilter === 'custom'
+          ? 'No hay turnos en el rango seleccionado'
+          : 'Prueba seleccionando otro rango de fechas'}
+      </Text>
+    </View>
+  );
+
+  const renderError = () => (
+    <View style={styles.errorContainer}>
+      <Avatar.Icon 
+        icon="alert-circle-outline" 
+        size={80} 
+        style={{ backgroundColor: theme.colors.errorContainer }} 
+        color={theme.colors.error}
+      />
+      <Text style={styles.errorTitle}>Error al cargar turnos</Text>
+      <Text style={styles.errorMessage}>
+        {error?.message || 'No se pudieron cargar los turnos'}
+      </Text>
+      <Button mode="contained" onPress={refetch} style={styles.retryButton}>
+        Reintentar
+      </Button>
+    </View>
+  );
+
+  const renderLoading = () => (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" />
+      <Text style={styles.loadingText}>Cargando turnos...</Text>
+    </View>
   );
 
   const styles = StyleSheet.create({
@@ -380,67 +531,183 @@ export function ShiftsListScreen() {
     },
     filterContainer: {
       backgroundColor: theme.colors.surface,
-      paddingVertical: theme.spacing.m,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.surfaceVariant,
+      marginHorizontal: theme.spacing.m,
+      marginVertical: theme.spacing.s,
+      borderRadius: theme.roundness * 2,
+      elevation: 1,
     },
-    filterScrollContent: {
-      paddingHorizontal: theme.spacing.m,
-      gap: theme.spacing.s,
+    filterContent: {
+      padding: theme.spacing.s,
+    },
+    filterButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+    },
+    filterIcon: {
+      backgroundColor: theme.colors.primaryContainer,
+      marginRight: theme.spacing.m,
+    },
+    filterTextContainer: {
+      flex: 1,
+    },
+    filterLabel: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 2,
+    },
+    filterValue: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    filterArrow: {
+      backgroundColor: 'transparent',
+    },
+    menuContent: {
+      backgroundColor: theme.colors.surface,
+      marginTop: 40,
+      minWidth: 200,
+    },
+    selectedMenuItem: {
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      justifyContent: 'center',
       alignItems: 'center',
     },
-    filterChip: {
+    modalContent: {
       backgroundColor: theme.colors.surface,
+      borderRadius: theme.roundness * 4,
+      marginHorizontal: theme.spacing.xl,
+      width: '90%',
+      maxWidth: 380,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      borderWidth: 2,
       borderColor: theme.colors.outline,
     },
-    filterChipSelected: {
+    modalHeader: {
+      alignItems: 'center',
+      paddingTop: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.l,
+      paddingBottom: theme.spacing.m,
+      position: 'relative',
+    },
+    modalIcon: {
       backgroundColor: theme.colors.primaryContainer,
-      borderColor: theme.colors.primary,
+      marginBottom: theme.spacing.m,
     },
-    filterChipText: {
-      fontSize: 14,
+    modalTitle: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
     },
-    clearChip: {
-      backgroundColor: theme.colors.errorContainer,
+    modalCloseButton: {
+      position: 'absolute',
+      top: theme.spacing.s,
+      right: theme.spacing.s,
     },
-    clearChipText: {
-      color: theme.colors.onErrorContainer,
-      fontSize: 14,
+    dateRangeContainer: {
+      paddingHorizontal: theme.spacing.l,
+      paddingVertical: theme.spacing.l,
+      flexDirection: 'column',
+      gap: theme.spacing.m,
     },
-    searchContainer: {
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.s,
+    dateButton: {
+      backgroundColor: theme.colors.background,
+      borderRadius: theme.roundness * 2,
+      borderWidth: 1.5,
+      borderColor: theme.colors.outline,
+      overflow: 'hidden',
+      elevation: 1,
     },
-    searchbar: {
-      elevation: 0,
+    dateButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.m,
+      gap: theme.spacing.m,
+    },
+    dateButtonIcon: {
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    dateButtonTextContainer: {
+      flex: 1,
+    },
+    dateButtonLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.colors.onSurfaceVariant,
+      letterSpacing: 1,
+      marginBottom: 2,
+    },
+    dateButtonValue: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    dateArrowContainer: {
+      alignSelf: 'center',
+      paddingVertical: theme.spacing.xs,
+    },
+    dateArrow: {
       backgroundColor: theme.colors.surfaceVariant,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      padding: theme.spacing.l,
+      paddingTop: theme.spacing.m,
+      gap: theme.spacing.m,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+    },
+    modalButton: {
+      flex: 1,
+      borderRadius: theme.roundness * 2,
+    },
+    modalButtonPrimary: {
+      elevation: 0,
+    },
+    modalButtonLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      paddingVertical: 4,
+    },
+    listContent: {
+      paddingBottom: theme.spacing.m,
     },
     shiftCard: {
       marginHorizontal: theme.spacing.m,
-      marginVertical: theme.spacing.s,
+      marginVertical: theme.spacing.xs,
       backgroundColor: theme.colors.surface,
     },
     openShiftCard: {
       backgroundColor: theme.colors.primaryContainer,
     },
     shiftHeader: {
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     shiftTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
+      gap: theme.spacing.xs,
+      marginBottom: 2,
     },
     shiftNumber: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '600',
       color: theme.colors.onSurface,
       flex: 1,
     },
     shiftDate: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.colors.onSurfaceVariant,
     },
     currentChip: {
@@ -449,127 +716,193 @@ export function ShiftsListScreen() {
     currentChipText: {
       color: theme.colors.onTertiaryContainer,
       fontWeight: '600',
+      fontSize: 11,
     },
     statusChip: {
       marginLeft: 'auto',
     },
     statusChipText: {
       fontWeight: '600',
+      fontSize: 11,
     },
     divider: {
-      marginVertical: theme.spacing.m,
+      marginVertical: theme.spacing.s,
     },
     shiftDetails: {
-      gap: theme.spacing.m,
+      gap: theme.spacing.s,
     },
     timeSection: {
-      gap: theme.spacing.xs,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
     label: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.colors.onSurfaceVariant,
       fontWeight: '500',
       textTransform: 'uppercase',
     },
     timeText: {
-      fontSize: 16,
+      fontSize: 14,
       color: theme.colors.onSurface,
     },
     durationText: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.colors.onSurfaceVariant,
     },
     statsSection: {
       flexDirection: 'row',
-      gap: theme.spacing.m,
+      gap: theme.spacing.s,
     },
     statCard: {
       flex: 1,
-      padding: theme.spacing.m,
-      borderRadius: theme.roundness * 2,
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
       backgroundColor: theme.colors.surfaceVariant,
       alignItems: 'center',
-      gap: theme.spacing.xs,
+      gap: 2,
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 10,
       color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.3,
     },
     statValue: {
-      fontSize: 18,
+      fontSize: 15,
       fontWeight: '700',
       color: theme.colors.onSurface,
     },
     cashSection: {
-      gap: theme.spacing.xs,
-      padding: theme.spacing.m,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: theme.spacing.s,
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
     },
     cashRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
     },
     cashLabel: {
-      fontSize: 14,
+      fontSize: 11,
       color: theme.colors.onSurfaceVariant,
     },
     cashValue: {
-      fontSize: 16,
-      fontWeight: '500',
+      fontSize: 14,
+      fontWeight: '600',
       color: theme.colors.onSurface,
+      marginTop: 2,
     },
     differenceLabel: {
       fontWeight: '600',
     },
     differenceValue: {
-      fontWeight: '600',
+      fontWeight: '700',
     },
     userSection: {
-      gap: theme.spacing.xs,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: theme.spacing.xs,
     },
     userText: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+      gap: theme.spacing.l,
+    },
+    emptyTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+    },
+    emptyMessage: {
+      fontSize: 16,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+      gap: theme.spacing.l,
+    },
+    errorTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: theme.colors.error,
+      textAlign: 'center',
+    },
+    errorMessage: {
+      fontSize: 16,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    retryButton: {
+      marginTop: theme.spacing.m,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: theme.spacing.m,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: theme.colors.onSurfaceVariant,
+    },
   });
+
+  // Renderizado principal
+  if (isLoading && !shifts) {
+    return (
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        {renderLoading()}
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !shifts) {
+    return (
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        {renderError()}
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.container}>
-        {/* Barra de búsqueda */}
-        <View style={styles.searchContainer}>
-          <Searchbar
-            placeholder="Buscar por número de turno o empleado..."
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            style={styles.searchbar}
-            elevation={0}
-            icon="magnify"
-          />
-        </View>
-
         {/* Filtros */}
         {renderFilters()}
 
         {/* Lista de turnos */}
-        <GenericList
-          items={filteredShifts}
-          isLoading={isLoading}
-          isRefreshing={isRefreshing}
-          onRefresh={handleRefresh}
-          onItemPress={handleShiftPress}
-          ListEmptyComponent={ListEmptyComponent}
-          renderConfig={{
-            renderItem: renderShiftItem,
-          }}
-          showFab={false}
-          isDrawerOpen={drawerStatus === 'open'}
-        />
+        {filteredShifts.length === 0 ? (
+          renderEmpty()
+        ) : (
+          <FlashList
+            data={filteredShifts}
+            renderItem={renderShiftItem}
+            keyExtractor={(item) => item.id}
+            estimatedItemSize={200}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+              />
+            }
+          />
+        )}
       </View>
     </SafeAreaView>
   );

@@ -21,6 +21,7 @@ import {
 import { usePizzaCustomizationsAvailability } from '../hooks/usePizzaCustomizationsAvailability';
 import EmptyState from '@/app/components/common/EmptyState';
 import { useAppTheme } from '@/app/styles/theme';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export const AvailabilityScreen: React.FC = () => {
   const theme = useAppTheme();
@@ -50,6 +51,9 @@ export const AvailabilityScreen: React.FC = () => {
     isError: isErrorPizzaCustomizations,
     refetch: refetchPizzaCustomizations,
   } = usePizzaCustomizationsAvailability(searchQuery);
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('availability');
 
   const handleRefresh = useCallback(() => {
     if (viewMode === 'menu') {

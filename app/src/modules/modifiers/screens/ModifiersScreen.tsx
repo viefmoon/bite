@@ -18,6 +18,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import debounce from 'lodash.debounce';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 
 import ModifierFormModal from '@/modules/modifiers/components/ModifierFormModal';
@@ -105,6 +106,9 @@ const ModifiersScreen = () => {
     queryFn: () => modifierService.findByGroupId(groupId, queryParams),
     enabled: !!groupId,
   });
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('modifiers');
 
   const {
     isFormModalVisible,

@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Modal,
   Portal,
@@ -29,6 +29,7 @@ interface OrderDetailsModalProps {
   onDismiss: () => void;
   order: OrderForFinalization | null;
   isLoading?: boolean;
+  onPrintPress: () => void;
 }
 
 // Función para formatear personalizaciones de pizza
@@ -136,8 +137,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onDismiss,
   order,
   isLoading = false,
+  onPrintPress,
 }) => {
   const theme = useAppTheme();
+  const [showPrintHistory, setShowPrintHistory] = useState(false);
 
 
   if (!order && !isLoading) return null;
@@ -182,7 +185,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       case 'READY':
         return '#66BB6A';
       case 'DELIVERED':
-        return theme.colors.tertiary;
+        return '#9C27B0'; // Purple - better contrast
       default:
         return theme.colors.onSurfaceVariant;
     }
@@ -367,12 +370,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   {order?.createdAt ? format(new Date(order.createdAt), 'dd/MM HH:mm', { locale: es }) : ''}
                 </Text>
               </View>
-              <IconButton
-                icon="close"
-                size={24}
-                onPress={onDismiss}
-                style={styles.closeButton}
-              />
+              <View style={styles.headerActions}>
+                <IconButton
+                  icon="close"
+                  size={24}
+                  onPress={onDismiss}
+                  style={styles.closeButton}
+                />
+              </View>
             </View>
             <View style={styles.headerBottomRow}>
               <View style={styles.chipsRow}>
@@ -546,6 +551,64 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <Divider style={styles.divider} />
           </>
         )}
+
+        {/* Historial de Impresiones */}
+        {order?.ticketImpressions && order.ticketImpressions.length > 0 && (
+          <>
+            <View style={styles.ticketImpressionsSection}>
+              <TouchableOpacity 
+                style={styles.collapsibleHeader} 
+                onPress={() => setShowPrintHistory(!showPrintHistory)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+                  🖨️ Historial de Impresiones ({order.ticketImpressions.length})
+                </Text>
+                <IconButton
+                  icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  style={styles.collapseIcon}
+                />
+              </TouchableOpacity>
+              
+              {showPrintHistory && (
+                <View style={styles.collapsibleContent}>
+                  {order.ticketImpressions.map((impression, index) => {
+                    const getTicketTypeLabel = (type: string) => {
+                      switch (type) {
+                        case 'KITCHEN': return '🍳 Cocina';
+                        case 'BAR': return '🍺 Barra';
+                        case 'BILLING': return '💵 Cuenta';
+                        case 'CUSTOMER_COPY': return '📄 Copia Cliente';
+                        case 'GENERAL': return '📋 General';
+                        default: return type;
+                      }
+                    };
+                    
+                    return (
+                      <View key={impression.id || index} style={styles.impressionRow}>
+                        <View style={styles.impressionLeft}>
+                          <Text style={[styles.impressionType, { color: theme.colors.onSurface }]}>
+                            {getTicketTypeLabel(impression.ticketType)}
+                          </Text>
+                          {impression.user && (
+                            <Text style={[styles.impressionUser, { color: theme.colors.onSurfaceVariant }]}>
+                              por {impression.user.firstName || ''} {impression.user.lastName || ''}
+                            </Text>
+                          )}
+                        </View>
+                        <Text style={[styles.impressionTime, { color: theme.colors.onSurfaceVariant }]}>
+                          {format(new Date(impression.impressionTime), 'HH:mm:ss', { locale: es })}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+            <Divider style={styles.divider} />
+          </>
+        )}
         
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
@@ -696,6 +759,13 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   closeButton: {
+    margin: -8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
     margin: -8,
   },
   headerStatusChip: {
@@ -874,6 +944,50 @@ const styles = StyleSheet.create({
   paymentStatusTextCompact: {
     fontSize: 9,
     fontWeight: '600',
+  },
+  ticketImpressionsSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  collapsibleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 4,
+  },
+  collapseIcon: {
+    margin: -8,
+  },
+  collapsibleContent: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 0,
+  },
+  impressionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingLeft: 8,
+  },
+  impressionLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  impressionType: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  impressionUser: {
+    fontSize: 11,
+    opacity: 0.7,
+  },
+  impressionTime: {
+    fontSize: 11,
+    opacity: 0.7,
   },
   loadingContainer: {
     minHeight: 200,
