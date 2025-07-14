@@ -546,6 +546,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     items: CartItem[];
     orderType: OrderType;
     tableId: string | null;
+    isTemporaryTable: boolean;
+    temporaryTableName: string;
     deliveryInfo: DeliveryInfo;
     notes: string;
     scheduledAt: Date | null;
@@ -610,23 +612,29 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     // Cargar ajustes si existen
     if (orderData.adjustments && Array.isArray(orderData.adjustments)) {
-      setEditAdjustments(
-        orderData.adjustments.map((adj) => ({
-          id: adj.id,
-          name: adj.name,
-          description: adj.description || '',
-          isPercentage: adj.isPercentage,
-          value: adj.value,
-          amount: adj.amount,
-        })),
-      );
+      const mappedAdjustments = orderData.adjustments.map((adj) => ({
+        id: adj.id,
+        name: adj.name,
+        description: adj.description || '',
+        isPercentage: adj.isPercentage,
+        value: adj.value,
+        amount: adj.amount,
+        isDeleted: false, // Importante: establecer como no eliminado
+        isNew: false, // No es nuevo, viene del backend
+      }));
+      setEditAdjustments(mappedAdjustments);
     } else {
       setEditAdjustments([]);
     }
 
     // Si hay una mesa, necesitamos encontrar el área
     if (orderData.tableId && orderData.table) {
-      setEditSelectedAreaId(orderData.table.areaId);
+      // Intentar obtener el areaId de diferentes formas
+      const areaId = orderData.table.areaId || orderData.table.area?.id;
+      if (areaId) {
+        setEditSelectedAreaId(areaId);
+      }
+      
       // Verificar si es una mesa temporal
       if (orderData.table.isTemporary) {
         setEditIsTemporaryTable(true);
@@ -753,6 +761,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       items: originalItems,
       orderType: orderData.orderType,
       tableId: orderData.tableId ?? null,
+      isTemporaryTable: orderData.table?.isTemporary || false,
+      temporaryTableName: orderData.table?.isTemporary ? orderData.table.name : '',
       deliveryInfo: orderData.deliveryInfo || {},
       notes: orderData.notes ?? '',
       scheduledAt: orderData.scheduledAt
@@ -1043,12 +1053,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       editOrderType !== originalOrderState.orderType ||
       // Cambios en mesa
       editSelectedTableId !== originalOrderState.tableId ||
+      // Cambios en mesa temporal
+      editIsTemporaryTable !== originalOrderState.isTemporaryTable ||
+      editTemporaryTableName !== originalOrderState.temporaryTableName ||
       // Cambios en datos del cliente
       JSON.stringify(editDeliveryInfo) !==
         JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
-      // Cambios en hora programada
-      editScheduledTime !== originalOrderState.scheduledAt ||
+      // Cambios en hora programada (comparar valores de tiempo, no referencias)
+      (editScheduledTime?.getTime() ?? null) !== (originalOrderState.scheduledAt?.getTime() ?? null) ||
       // Cambios en ajustes
       JSON.stringify(editAdjustments) !==
         JSON.stringify(originalOrderState.adjustments);
@@ -1061,6 +1074,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     editItems,
     editOrderType,
     editSelectedTableId,
+    editIsTemporaryTable,
+    editTemporaryTableName,
     editDeliveryInfo,
     editOrderNotes,
     editScheduledTime,
@@ -1242,6 +1257,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         setRecipientNameError('El nombre del cliente es obligatorio');
         isValid = false;
       }
+      // Si se proporciona teléfono, validar que tenga al menos 10 dígitos
+      if (deliveryInfo.recipientPhone && deliveryInfo.recipientPhone.trim() !== '') {
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          setRecipientPhoneError('El teléfono debe tener al menos 10 dígitos');
+          isValid = false;
+        }
+      }
     } else if (orderType === OrderTypeEnum.DELIVERY) {
       if (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '') {
         setAddressError('La dirección es obligatoria para Domicilio');
@@ -1253,6 +1276,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       ) {
         setRecipientPhoneError('El teléfono es obligatorio para Domicilio');
         isValid = false;
+      } else {
+        // Validar que tenga al menos 10 dígitos
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          setRecipientPhoneError('El teléfono debe tener al menos 10 dígitos');
+          isValid = false;
+        }
       }
     }
 
@@ -1364,7 +1394,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     };
 
     if (!orderDetails.userId) {
-      console.error('Error: Falta el ID del usuario al confirmar la orden.');
+      // Usuario no autenticado
       return;
     }
 
@@ -1384,6 +1414,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           items: [...editItems],
           orderType: editOrderType,
           tableId: editSelectedTableId,
+          isTemporaryTable: editIsTemporaryTable,
+          temporaryTableName: editTemporaryTableName,
           deliveryInfo: editDeliveryInfo,
           notes: editOrderNotes,
           scheduledAt: editScheduledTime,
@@ -1400,7 +1432,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     } catch (error) {
       setIsConfirming(false);
-      console.error('Error en handleConfirm:', error);
+      // Error manejado por el componente padre
     }
   };
 
@@ -1408,10 +1440,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     () => areasData?.find((a: any) => a.id === selectedAreaId)?.name,
     [areasData, selectedAreaId],
   );
-  const selectedTableName = useMemo(
-    () => tablesData?.find((t) => t.id === selectedTableId)?.name,
-    [tablesData, selectedTableId],
-  );
+  const selectedTableName = useMemo(() => {
+    return tablesData?.find((t) => t.id === selectedTableId)?.name;
+  }, [tablesData, selectedTableId]);
 
   const showTimePicker = () => {
     setTimePickerVisible(true);
@@ -1515,7 +1546,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     try {
       return format(scheduledTime, 'h:mm a').toLowerCase(); // Formato 12 horas con am/pm
     } catch (error) {
-      console.error('Error formatting time:', error);
+      // Error al formatear fecha
       return 'Hora inválida';
     }
   }, [scheduledTime]);
@@ -1841,38 +1872,39 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   }}
                   color={theme.colors.primary}
                 />
-                <Text style={styles.checkboxLabel}>Crear mesa temporal</Text>
+                <Text style={styles.checkboxLabel}>{isEditMode && isTemporaryTable ? 'Mesa temporal' : 'Crear mesa temporal'}</Text>
               </TouchableOpacity>
 
-              {/* Campo para nombre de mesa temporal */}
-              {isTemporaryTable && (
-                <View style={styles.temporaryTableInputContainer}>
-                  <SpeechRecognitionInput
-                    key="temporary-table-name"
-                    label="Nombre de la Mesa Temporal *"
-                    value={temporaryTableName}
-                    onChangeText={(text) => {
-                      setTemporaryTableName(text);
-                      if (tableError) setTableError(null);
-                    }}
-                    error={!!tableError && isTemporaryTable}
-                    speechLang="es-MX"
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    placeholder="Ej: Mesa Terraza 1"
-                  />
-                  {tableError && isTemporaryTable && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      {tableError}
-                    </HelperText>
-                  )}
-                </View>
-              )}
-            </View>
+                {/* Campo para nombre de mesa temporal */}
+                {(isTemporaryTable || (isEditMode && editIsTemporaryTable)) && (
+                  <View style={styles.temporaryTableInputContainer}>
+                    <SpeechRecognitionInput
+                      key={`temporary-table-name-${isEditMode ? 'edit' : 'create'}`}
+                      label="Nombre de la Mesa Temporal *"
+                      value={temporaryTableName}
+                      onChangeText={(text) => {
+                        setTemporaryTableName(text);
+                        if (tableError) setTableError(null);
+                      }}
+                      error={!!tableError && isTemporaryTable}
+                      speechLang="es-MX"
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      placeholder="Ej: Mesa Terraza 1"
+                      editable={true} // Editable tanto en creación como en edición
+                    />
+                    {tableError && isTemporaryTable && (
+                      <HelperText
+                        type="error"
+                        visible={true}
+                        style={styles.helperTextFix}
+                      >
+                        {tableError}
+                      </HelperText>
+                    )}
+                  </View>
+                )}
+              </View>
 
             {/* 3. Notas */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
@@ -2735,7 +2767,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         },
                       });
                     } catch (error) {
-                      console.error('Error al navegar:', error);
+                      // Error al navegar
                     }
                   }
                 }}

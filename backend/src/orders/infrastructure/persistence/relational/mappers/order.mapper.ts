@@ -85,11 +85,13 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
     const entity = new OrderEntity();
     if (domain.id) entity.id = domain.id;
     entity.shiftOrderNumber = domain.shiftOrderNumber;
+    entity.shiftId = domain.shiftId;
     entity.shift = {
       id: domain.shiftId,
     } as ShiftEntity;
     entity.userId = domain.userId;
     entity.user = domain.userId ? ({ id: domain.userId } as UserEntity) : null;
+    entity.tableId = domain.tableId || null;
     entity.table = domain.tableId
       ? ({ id: domain.tableId } as TableEntity)
       : null;

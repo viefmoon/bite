@@ -176,7 +176,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       const currentShift = await shiftsService.getCurrentShift();
       setShift(currentShift);
     } catch (error) {
-      console.error('Error al cargar turno:', error);
+      // Error silenciado en producción
     } finally {
       setShiftLoading(false);
     }
@@ -456,7 +456,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           printerId: printer.id,
         });
         setOrderToPrintId(null); // Limpiar el ID de la orden
-      } else {
       }
     },
     [orderToPrintId, printKitchenTicketMutation],
@@ -681,6 +680,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   orderType: details.orderType,
                   items: details.items, // Enviar items para actualizar
                   tableId: details.tableId || null,
+                  isTemporaryTable: details.isTemporaryTable || false,
+                  temporaryTableName: details.temporaryTableName || null,
+                  temporaryTableAreaId: details.temporaryTableAreaId || null,
                   scheduledAt: details.scheduledAt || null,
                   // Enviar null cuando deliveryInfo está vacío para indicar limpieza
                   deliveryInfo: (() => {
@@ -697,29 +699,15 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   notes: details.notes || null,
                   total: details.total,
                   subtotal: details.subtotal,
-                  // NO incluir ajustes aquí, se manejan por separado
+                  adjustments: details.adjustments || [], // Incluir ajustes en el payload
                 };
 
                 try {
-                  // Primero actualizar la orden
+                  // Actualizar la orden (ahora incluye los ajustes)
                   await updateOrderMutation.mutateAsync({
                     orderId: editingOrderId,
                     payload,
                   });
-
-                  // Luego, si hay ajustes, crearlos
-                  if (details.adjustments && details.adjustments.length > 0) {
-                    // Asegurarse de que cada ajuste tenga el orderId correcto
-                    const adjustmentsWithOrderId = details.adjustments.map(
-                      (adj) => ({
-                        ...adj,
-                        orderId: editingOrderId,
-                      }),
-                    );
-                    await createBulkAdjustmentsMutation.mutateAsync(
-                      adjustmentsWithOrderId,
-                    );
-                  }
 
                   // Limpiar estados después de actualización exitosa
                   setIsEditModalVisible(false);

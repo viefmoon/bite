@@ -5,6 +5,7 @@ import {
   CustomizationAction,
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 import { DeliveryInfoSchema } from './delivery-info.schema';
+import { tableSchema } from './table.schema';
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
@@ -86,7 +87,7 @@ export const orderSchema = z.object({
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   deliveryInfo: DeliveryInfoSchema,
   user: z.any().optional(),
-  table: z.any().optional(),
+  table: tableSchema.optional(),
   payments: z.array(z.any()).optional(),
   deletedAt: z.string().nullable().optional(),
   adjustments: z.array(adjustmentSchema).optional(),

@@ -13,6 +13,10 @@ export const tableSchema = z.object({
   isAvailable: z.boolean(), // Incluido desde el schema original
   isTemporary: z.boolean(), // Incluido desde el schema original
   temporaryIdentifier: z.string().nullable().optional(), // Incluido desde el schema original
+  area: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+  }).optional(), // El área puede venir incluida opcionalmente
   createdAt: z.union([z.string().datetime(), z.date()]).optional(), // Permitir string o Date
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(), // Permitir string o Date
 });

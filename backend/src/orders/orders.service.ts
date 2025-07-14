@@ -214,7 +214,7 @@ export class OrdersService {
           finalPrice: itemDto.finalPrice,
           preparationNotes: itemDto.preparationNotes,
           productModifiers: itemDto.productModifiers, // Pasar los modificadores aquí
-          selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations, // IMPORTANTE: Pasar las personalizaciones de pizza
+          selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations,
         };
         // Guardar el item
         await this.createOrderItemInternal(createOrderItemDto); // Usar método interno
@@ -393,6 +393,26 @@ export class OrdersService {
       }
     }
 
+    // Manejar la creación de mesa temporal si es necesario
+    let newTableId = updateOrderDto.tableId;
+    if (
+      updateOrderDto.isTemporaryTable &&
+      updateOrderDto.temporaryTableName &&
+      updateOrderDto.temporaryTableAreaId
+    ) {
+      // Crear mesa temporal
+      const temporaryTable = await this.tablesService.create({
+        name: updateOrderDto.temporaryTableName,
+        areaId: updateOrderDto.temporaryTableAreaId,
+        isTemporary: true,
+        temporaryIdentifier: uuidv4(),
+        isActive: true,
+        isAvailable: false,
+        capacity: 4,
+      });
+      newTableId = temporaryTable.id;
+    }
+
     // Actualizar datos básicos de la orden
     const updatePayload: Partial<Order> = {};
 
@@ -403,10 +423,10 @@ export class OrdersService {
     )
       updatePayload.userId = updateOrderDto.userId;
     if (
-      updateOrderDto.tableId !== undefined &&
-      updateOrderDto.tableId !== existingOrder.tableId
+      newTableId !== undefined &&
+      newTableId !== existingOrder.tableId
     ) {
-      updatePayload.tableId = updateOrderDto.tableId;
+      updatePayload.tableId = newTableId;
 
       // Manejar cambio de mesa: liberar la anterior y ocupar la nueva
       // Solo si la orden no está finalizada
@@ -432,20 +452,20 @@ export class OrdersService {
         }
 
         // Ocupar nueva mesa si se especificó
-        if (updateOrderDto.tableId) {
-          // Verificar que la mesa esté disponible
-          const newTable = await this.tablesService.findOne(
-            updateOrderDto.tableId,
-          );
-          if (!newTable.isAvailable) {
-            throw new BadRequestException(
-              `La mesa ${newTable.name} no está disponible`,
-            );
-          }
+        if (newTableId) {
+          // Verificar que la mesa esté disponible (solo si no es temporal, ya que las temporales ya se crean ocupadas)
+          if (!updateOrderDto.isTemporaryTable) {
+            const newTable = await this.tablesService.findOne(newTableId);
+            if (!newTable.isAvailable) {
+              throw new BadRequestException(
+                `La mesa ${newTable.name} no está disponible`,
+              );
+            }
 
-          await this.tablesService.update(updateOrderDto.tableId, {
-            isAvailable: false,
-          });
+            await this.tablesService.update(newTableId, {
+              isAvailable: false,
+            });
+          }
         }
       }
     }
@@ -487,18 +507,14 @@ export class OrdersService {
     ) {
       updatePayload.orderType = updateOrderDto.orderType;
 
-      this.logger.debug(`Cambio de tipo de orden: ${existingOrder.orderType} → ${updateOrderDto.orderType}`);
 
       // Si se cambia de DINE_IN a otro tipo, liberar la mesa
       if (
         existingOrder.orderType === OrderType.DINE_IN &&
         updateOrderDto.orderType !== OrderType.DINE_IN
       ) {
-        this.logger.debug(`Liberando mesa para orden ${id}. TableId actual: ${existingOrder.tableId}`);
-        
-        // SIEMPRE limpiar tableId cuando se cambia de DINE_IN a otro tipo
+        // Limpiar tableId cuando se cambia de DINE_IN a otro tipo
         updatePayload.tableId = null;
-        this.logger.debug(`TableId limpiado: ${updatePayload.tableId}`);
         
         // Solo intentar liberar la mesa si existe y la orden no está terminada
         if (
@@ -513,13 +529,11 @@ export class OrdersService {
             if (table.isTemporary) {
               // Eliminar mesa temporal
               await this.tablesService.remove(existingOrder.tableId);
-              this.logger.debug(`Mesa temporal ${existingOrder.tableId} eliminada`);
             } else {
               // Liberar mesa normal
               await this.tablesService.update(existingOrder.tableId, {
                 isAvailable: true,
               });
-              this.logger.debug(`Mesa normal ${existingOrder.tableId} liberada`);
             }
           } catch (error) {
             this.logger.error(`Error al liberar mesa ${existingOrder.tableId}:`, error);
@@ -533,7 +547,6 @@ export class OrdersService {
         (existingOrder.orderType === OrderType.DELIVERY || existingOrder.orderType === OrderType.TAKE_AWAY) &&
         updateOrderDto.orderType === OrderType.DINE_IN
       ) {
-        this.logger.debug(`Cambio a DINE_IN, tableId en payload: ${updateOrderDto.tableId}`);
         // El tableId se maneja en la lógica general de actualización
       }
     }
@@ -561,131 +574,27 @@ export class OrdersService {
     // Determinar el tipo de orden final (nuevo o existente)
     const finalOrderType = updateOrderDto.orderType || existingOrder.orderType;
 
-    // IMPORTANTE: Si no se envía deliveryInfo en el payload, aplicar limpieza según el tipo de orden
-    // Esto es crítico para que funcione correctamente cuando el frontend no envía el campo
+    // Manejar delivery_info de forma centralizada y robusta
     const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
-    const orderTypeChanged =
-      updateOrderDto.orderType !== undefined &&
-      updateOrderDto.orderType !== existingOrder.orderType;
-
-    // SIEMPRE verificar y limpiar deliveryInfo según el tipo de orden
-    // Esto es fundamental para que funcione correctamente
-
-    // 1. Si el tipo de orden es DINE_IN, eliminar deliveryInfo completamente
+    
     if (finalOrderType === OrderType.DINE_IN) {
+      // Si es DINE_IN, siempre eliminar delivery_info
       updatePayload.deliveryInfo = null;
-    }
-    // 2. Si se envió deliveryInfo en el payload, dar PRIORIDAD a los nuevos datos
-    else if (deliveryInfoInPayload && updateOrderDto.deliveryInfo) {
-      this.logger.debug(`PRIORIDAD: Procesando nuevos datos del payload`);
-      this.logger.debug(`Datos originales deliveryInfo: ${JSON.stringify(updateOrderDto.deliveryInfo)}`);
-      this.logger.debug(`Tipo de orden: ${finalOrderType}`);
+    } else if (deliveryInfoInPayload || (existingOrder as any).deliveryInfo) {
+      // Si hay datos nuevos o existentes, procesarlos con el método centralizado
+      const deliveryData = deliveryInfoInPayload 
+        ? { ...(existingOrder as any).deliveryInfo, ...updateOrderDto.deliveryInfo }
+        : (existingOrder as any).deliveryInfo;
       
-      // Obtener datos existentes con más detalle
-      const existingDeliveryInfo = (existingOrder as any).deliveryInfo;
-      this.logger.debug(`Datos existentes completos: ${JSON.stringify(existingDeliveryInfo)}`);
-      
-      // Combinar datos existentes con nuevos datos del payload
-      const existingData = existingDeliveryInfo || {};
-      const combinedData = { ...existingData, ...updateOrderDto.deliveryInfo };
-      
-      this.logger.debug(`Datos combinados: ${JSON.stringify(combinedData)}`);
-      
-      const cleanedDeliveryInfo = this.cleanDeliveryInfoByOrderType(
-        combinedData,
-        finalOrderType,
+      updatePayload.deliveryInfo = await this.handleDeliveryInfo(
+        id,
+        deliveryData,
+        finalOrderType
       );
-
-      this.logger.debug(`Datos limpiados deliveryInfo: ${JSON.stringify(cleanedDeliveryInfo)}`);
-
-      const hasValidFields = Object.entries(cleanedDeliveryInfo).some(
-        ([key, value]) => value !== undefined && value !== null && value !== '',
-      );
-      
-      this.logger.debug(`Tiene campos válidos: ${hasValidFields}`);
-
-      if (hasValidFields) {
-        if (existingDeliveryInfo && existingDeliveryInfo.id) {
-          // Actualizar la instancia existente - PRESERVAR ID EXISTENTE
-          updatePayload.deliveryInfo = {
-            ...existingDeliveryInfo,
-            ...cleanedDeliveryInfo,
-            id: existingDeliveryInfo.id, // CRÍTICO: preservar el ID existente
-            orderId: existingDeliveryInfo.orderId, // CRÍTICO: preservar el orderId existente
-            createdAt: existingDeliveryInfo.createdAt, // CRÍTICO: preservar createdAt existente
-            updatedAt: new Date(),
-          } as DeliveryInfo;
-          this.logger.debug(`Actualizando delivery_info existente con ID: ${existingDeliveryInfo.id}`);
-        } else {
-          // Crear nueva instancia
-          updatePayload.deliveryInfo = {
-            id: uuidv4(),
-            orderId: id,
-            ...cleanedDeliveryInfo,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          } as DeliveryInfo;
-          this.logger.debug(`Creando nueva delivery_info con ID: ${updatePayload.deliveryInfo.id}`);
-        }
-      }
-    }
-    // 3. Si NO se envió deliveryInfo pero existe, aplicar limpieza sobre datos existentes
-    else if ((existingOrder as any).deliveryInfo) {
-      this.logger.debug(`Datos existentes deliveryInfo: ${JSON.stringify((existingOrder as any).deliveryInfo)}`);
-      this.logger.debug(`Tipo de orden final: ${finalOrderType}`);
-      
-      const cleanedDeliveryInfo = this.cleanDeliveryInfoByOrderType(
-        (existingOrder as any).deliveryInfo,
-        finalOrderType,
-      );
-
-      this.logger.debug(`Datos limpiados existentes: ${JSON.stringify(cleanedDeliveryInfo)}`);
-
-      // Contar campos con valores reales
-      const validFieldsCount = Object.entries(cleanedDeliveryInfo).filter(
-        ([key, value]) => value !== undefined && value !== null && value !== '',
-      ).length;
-      
-      this.logger.debug(`Campos válidos existentes: ${validFieldsCount}`);
-
-      // Si no quedan campos válidos, eliminar completamente
-      if (validFieldsCount === 0) {
-        updatePayload.deliveryInfo = null;
-      }
-      // Si hay campos válidos, verificar si hubo cambios
-      else {
-        const hasChanges = this.hasDeliveryInfoChanges(
-          (existingOrder as any).deliveryInfo,
-          cleanedDeliveryInfo,
-        );
-
-        // FORZAR actualización si hay cambios o si cambió el tipo de orden
-        if (hasChanges || orderTypeChanged) {
-          const existingDeliveryInfo = (existingOrder as any).deliveryInfo;
-          if (existingDeliveryInfo) {
-            // Actualizar la instancia existente
-            updatePayload.deliveryInfo = {
-              ...existingDeliveryInfo,
-              ...cleanedDeliveryInfo,
-              updatedAt: new Date(),
-            } as DeliveryInfo;
-          } else {
-            // Crear nueva instancia
-            updatePayload.deliveryInfo = {
-              id: uuidv4(),
-              orderId: id,
-              ...cleanedDeliveryInfo,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            } as DeliveryInfo;
-          }
-        }
-      }
     }
 
     // Solo actualizar si hay cambios en los campos básicos
     if (Object.keys(updatePayload).length > 0) {
-      this.logger.debug(`Payload completo para actualización: ${JSON.stringify(updatePayload, null, 2)}`);
       const updatedOrder = await this.orderRepository.update(id, updatePayload);
       if (!updatedOrder) {
         throw new Error(`Failed to update order with ID ${id}`);
@@ -807,6 +716,29 @@ export class OrdersService {
       }
     }
 
+    // Manejar ajustes si se proporcionaron
+    if (updateOrderDto.adjustments !== undefined && updateOrderDto.adjustments !== null) {
+      await this.dataSource.manager.transaction(async (manager) => {
+        // Eliminar todos los ajustes existentes de la orden
+        await manager.delete('adjustment', { orderId: id });
+        
+        // Crear los nuevos ajustes
+        for (const adj of updateOrderDto.adjustments!) {
+          if (!adj.isDeleted) {
+            await manager.save('adjustment', {
+              orderId: id,
+              name: adj.name,
+              isPercentage: adj.isPercentage || false,
+              value: adj.value || 0,
+              amount: adj.amount || 0,
+              appliedAt: new Date(),
+              appliedById: updateOrderDto.userId || existingOrder.userId || 'system',
+            });
+          }
+        }
+      });
+    }
+
     // Recargar la orden completa con todos los datos actualizados
     const updatedOrder = await this.findOne(id);
 
@@ -875,7 +807,6 @@ export class OrdersService {
       );
     }
 
-    this.logger.debug(`Orden actualizada - TableId final: ${updatedOrder.tableId}, OrderType: ${updatedOrder.orderType}`);
     return updatedOrder;
   }
 
@@ -951,9 +882,9 @@ export class OrdersService {
   private cleanDeliveryInfoByOrderType(
     deliveryInfo: Partial<DeliveryInfo>,
     orderType: OrderType,
-  ): Partial<DeliveryInfo> {
+  ): any {
     // Inicializar el resultado con todos los campos posibles
-    const result: Partial<DeliveryInfo> = {};
+    const result: any = {};
 
     if (orderType === OrderType.DINE_IN) {
       // Para pedidos DINE_IN, marcar todos los campos como undefined
@@ -1000,18 +931,18 @@ export class OrdersService {
           result.deliveryInstructions = undefined;
         }
         
-        // Marcar campos de dirección como undefined
-        result.fullAddress = undefined;
-        result.street = undefined;
-        result.number = undefined;
-        result.interiorNumber = undefined;
-        result.neighborhood = undefined;
-        result.city = undefined;
-        result.state = undefined;
-        result.zipCode = undefined;
-        result.country = undefined;
-        result.latitude = undefined;
-        result.longitude = undefined;
+        // Usar null para campos que deben eliminarse en TAKE_AWAY
+        result.fullAddress = null;
+        result.street = null;
+        result.number = null;
+        result.interiorNumber = null;
+        result.neighborhood = null;
+        result.city = null;
+        result.state = null;
+        result.zipCode = null;
+        result.country = null;
+        result.latitude = null;
+        result.longitude = null;
       
       return result;
     }
@@ -1102,8 +1033,8 @@ export class OrdersService {
           result.recipientPhone = undefined;
         }
         
-        // Marcar recipientName como undefined (no necesario para DELIVERY)
-        result.recipientName = undefined;
+        // Usar null para recipientName que debe eliminarse en DELIVERY
+        result.recipientName = null;
       
       return result;
     }
@@ -1803,6 +1734,61 @@ export class OrdersService {
           status: PreparationScreenStatus.PENDING,
         } as OrderPreparationScreenStatus);
       }
+    }
+  }
+
+  /**
+   * Maneja la creación o actualización de delivery_info para una orden
+   * Siempre intenta reutilizar un registro existente antes de crear uno nuevo
+   */
+  private async handleDeliveryInfo(
+    orderId: string,
+    deliveryData: Partial<DeliveryInfo>,
+    orderType: OrderType,
+  ): Promise<DeliveryInfo | null> {
+    // Si el tipo de orden es DINE_IN, no necesitamos delivery_info
+    if (orderType === OrderType.DINE_IN) {
+      return null;
+    }
+
+    // Limpiar los datos según el tipo de orden
+    const cleanedData = this.cleanDeliveryInfoByOrderType(deliveryData, orderType);
+    
+    // Verificar si hay campos válidos (null es válido porque indica que debe borrarse)
+    const hasValidFields = Object.entries(cleanedData).some(
+      ([key, value]) => value !== undefined,
+    );
+
+    if (!hasValidFields) {
+      return null;
+    }
+
+    // Buscar si existe un delivery_info para esta orden
+    // Importar la entidad correcta
+    const DeliveryInfoEntity = await import('./infrastructure/persistence/relational/entities/delivery-info.entity');
+    const DeliveryInfoRepo = this.dataSource.getRepository(DeliveryInfoEntity.DeliveryInfoEntity);
+    
+    let existingDeliveryInfo = await DeliveryInfoRepo.findOne({
+      where: { orderId }
+    });
+
+    if (existingDeliveryInfo) {
+      // Actualizar el registro existente
+      return {
+        ...existingDeliveryInfo,
+        ...cleanedData,
+        updatedAt: new Date(),
+      } as DeliveryInfo;
+    } else {
+      // Crear nuevo registro
+      const newId = uuidv4();
+      return {
+        id: newId,
+        orderId,
+        ...cleanedData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as DeliveryInfo;
     }
   }
 }

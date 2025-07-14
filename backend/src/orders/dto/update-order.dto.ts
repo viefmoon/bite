@@ -8,6 +8,7 @@ import {
   IsUUID,
   ValidateNested,
   IsString,
+  IsBoolean,
 } from 'class-validator';
 import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';
@@ -128,4 +129,42 @@ export class UpdateOrderDto {
   @ValidateNested()
   @Type(() => DeliveryInfoDto)
   deliveryInfo?: DeliveryInfoDto;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Indica si se debe crear una mesa temporal',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isTemporaryTable?: boolean;
+
+  @ApiProperty({
+    type: String,
+    example: 'Mesa Terraza 1',
+    description: 'Nombre de la mesa temporal',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  temporaryTableName?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'AREA-1',
+    description: 'ID del área para la mesa temporal',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  temporaryTableAreaId?: string;
+
+  @ApiProperty({
+    type: Array,
+    description: 'Ajustes de la orden',
+    required: false,
+  })
+  @IsOptional()
+  adjustments?: any[];
 }
