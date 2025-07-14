@@ -3,27 +3,26 @@ import { orderFinalizationService } from '../services/orderFinalizationService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { FinalizeOrdersPayload } from '../types/orderFinalization.types';
 
-export const useOrdersForFinalization = () => {
+export const useOrdersForFinalizationList = () => {
   return useQuery({
-    queryKey: ['orders', 'for-finalization'],
-    queryFn: orderFinalizationService.getOrdersForFinalization,
-    refetchInterval: 10000, // Actualizar cada 10 segundos
-    refetchIntervalInBackground: false, // No actualizar cuando la app está en background
+    queryKey: ['orders', 'for-finalization-list'],
+    queryFn: orderFinalizationService.getOrdersForFinalizationList,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 5000, // Los datos se consideran frescos por 5 segundos
-    // IMPORTANTE: Mantener datos previos durante refetch para evitar parpadeos
+    staleTime: 5000,
     keepPreviousData: true,
-    // No mostrar loading en refetch para mantener la UI estable
     notifyOnChangeProps: ['data', 'error'],
   });
 };
 
-export const useOrderDetail = (orderId: string) => {
+export const useOrderForFinalizationDetail = (orderId: string | null) => {
   return useQuery({
-    queryKey: ['orders', 'detail', orderId],
-    queryFn: () => orderFinalizationService.getOrderDetail(orderId),
+    queryKey: ['orders', 'for-finalization-detail', orderId],
+    queryFn: () => orderId ? orderFinalizationService.getOrderForFinalizationDetail(orderId) : null,
     enabled: !!orderId,
+    staleTime: 30000,
   });
 };
 

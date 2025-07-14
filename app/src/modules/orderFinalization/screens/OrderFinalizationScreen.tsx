@@ -17,13 +17,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import {
-  useOrdersForFinalization,
+  useOrdersForFinalizationList,
+  useOrderForFinalizationDetail,
   useFinalizeOrders,
 } from '../hooks/useOrderFinalizationQueries';
 import {
   OrderFinalizationFilter,
   OrderSelectionState,
   OrderForFinalization,
+  OrderForFinalizationList,
 } from '../types/orderFinalization.types';
 import EmptyState from '@/app/components/common/EmptyState';
 import { useAppTheme } from '@/app/styles/theme';
@@ -38,21 +40,20 @@ export const OrderFinalizationScreen: React.FC = () => {
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [notes, setNotes] = useState('');
-  const [selectedOrderForDetails, setSelectedOrderForDetails] =
-    useState<OrderForFinalization | null>(null);
+  const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] =
+    useState<string | null>(null);
 
   const {
     data: orders = [],
     isLoading,
     refetch,
     error,
-  } = useOrdersForFinalization();
-
-  // Debug removido - la funcionalidad está funcionando correctamente
+  } = useOrdersForFinalizationList();
+  
+  const { data: selectedOrderDetails, isLoading: isLoadingDetails } = useOrderForFinalizationDetail(selectedOrderIdForDetails);
 
   const finalizeOrdersMutation = useFinalizeOrders();
 
-  // Filtrar órdenes según el filtro seleccionado
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
 
@@ -70,7 +71,6 @@ export const OrderFinalizationScreen: React.FC = () => {
     });
   }, [orders, filter]);
 
-  // Calcular totales por tipo de pedido
   const orderCounts = useMemo(() => {
     if (!orders || !Array.isArray(orders)) {
       return {
@@ -106,8 +106,6 @@ export const OrderFinalizationScreen: React.FC = () => {
       totalAmount: 0,
     });
   }, [filter]);
-
-  // Ya no necesitamos agrupar porque filtramos desde el inicio
 
   const handleToggleOrderSelection = useCallback(
     (orderId: string) => {
@@ -160,8 +158,11 @@ export const OrderFinalizationScreen: React.FC = () => {
     setPaymentMethod('cash');
   }, [selectionState, paymentMethod, notes, finalizeOrdersMutation]);
 
-  const handleShowOrderDetails = useCallback((order: OrderForFinalization) => {
-    setSelectedOrderForDetails(order);
+  const handleShowOrderDetails = useCallback((order: OrderForFinalizationList) => {
+    setSelectedOrderIdForDetails(null);
+    setTimeout(() => {
+      setSelectedOrderIdForDetails(order.id);
+    }, 50);
   }, []);
 
   const renderOrderCard = useCallback(
@@ -480,9 +481,10 @@ export const OrderFinalizationScreen: React.FC = () => {
 
       {/* Modal de detalles de orden */}
       <OrderDetailsModal
-        visible={selectedOrderForDetails !== null}
-        onDismiss={() => setSelectedOrderForDetails(null)}
-        order={selectedOrderForDetails}
+        visible={selectedOrderIdForDetails !== null}
+        onDismiss={() => setSelectedOrderIdForDetails(null)}
+        order={selectedOrderDetails}
+        isLoading={isLoadingDetails}
       />
     </SafeAreaView>
   );

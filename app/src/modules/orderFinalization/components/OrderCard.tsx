@@ -1,19 +1,18 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Card, Text, Checkbox, Chip } from 'react-native-paper';
-import { OrderForFinalization } from '../types/orderFinalization.types';
+import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface OrderCardProps {
-  order: OrderForFinalization;
+  order: OrderForFinalizationList;
   isSelected: boolean;
   onToggleSelection: (orderId: string) => void;
-  onShowDetails: (order: OrderForFinalization) => void;
+  onShowDetails: (order: OrderForFinalizationList) => void;
 }
 
-// Helper para formatear el tipo de orden corto (copiado de OpenOrdersScreen)
 const formatOrderTypeShort = (type: string): string => {
   switch (type) {
     case 'DINE_IN':
@@ -31,12 +30,11 @@ const formatOrderTypeShort = (type: string): string => {
 export const OrderCard = React.memo<OrderCardProps>(
   ({ order, isSelected, onToggleSelection, onShowDetails }) => {
     const theme = useAppTheme();
+    const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
-    // Construir el título EXACTAMENTE como en OpenOrdersScreen
     let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
     if (order.orderType === 'DINE_IN' && order.table) {
-      // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
       const tableDisplay = order.table.isTemporary
         ? order.table.name
         : `Mesa ${order.table.name || order.table.number || 'N/A'}`;
@@ -91,38 +89,55 @@ export const OrderCard = React.memo<OrderCardProps>(
     };
 
     const getPaymentStatus = () => {
-      // Si hay pagos, verificar el estado
-      if (order.payments && order.payments.length > 0) {
-        const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
-        const totalAmount =
-          typeof order.total === 'string'
-            ? parseFloat(order.total)
-            : order.total;
+      const totalPaid = order.paymentsSummary?.totalPaid || 0;
+      const totalAmount =
+        typeof order.total === 'string'
+          ? parseFloat(order.total)
+          : order.total;
 
-        if (totalPaid >= totalAmount) {
-          return 'paid';
-        } else if (totalPaid > 0) {
-          return 'partial';
-        }
+      if (totalPaid >= totalAmount) {
+        return 'paid';
+      } else if (totalPaid > 0) {
+        return 'partial';
       }
       return 'pending';
     };
 
     return (
-      <Card
-        style={[
-          styles.orderCard,
-          {
-            backgroundColor: isSelected
-              ? theme.colors.primaryContainer
-              : theme.colors.surface,
-            borderColor: isSelected ? theme.colors.primary : 'transparent',
-            borderWidth: isSelected ? 2 : 0,
-          },
-        ]}
-        mode="elevated"
-        onPress={() => onShowDetails(order)}
-      >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          activeOpacity={0.95}
+          onPressIn={() => {
+            Animated.spring(scaleAnim, {
+              toValue: 0.98,
+              useNativeDriver: true,
+              speed: 50,
+              bounciness: 0,
+            }).start();
+          }}
+          onPressOut={() => {
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              useNativeDriver: true,
+              speed: 50,
+              bounciness: 0,
+            }).start();
+          }}
+          onPress={() => onShowDetails(order)}
+        >
+          <Card
+            style={[
+              styles.orderCard,
+              {
+                backgroundColor: isSelected
+                  ? theme.colors.primaryContainer
+                  : theme.colors.surface,
+                borderColor: isSelected ? theme.colors.primary : 'transparent',
+                borderWidth: isSelected ? 2 : 0,
+              },
+            ]}
+            mode="elevated"
+          >
         <Card.Content style={styles.cardContent}>
           {/* Main Container */}
           <View style={styles.mainContainer}>
@@ -137,14 +152,29 @@ export const OrderCard = React.memo<OrderCardProps>(
                       : theme.colors.onSurface,
                   },
                 ]}
-                numberOfLines={2}
               >
                 {orderTitle}
                 <Text
-                  style={[styles.orderPrice, { color: theme.colors.primary }]}
+                  style={[styles.orderPrice, { 
+                    color: (() => {
+                      const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+                      const totalPaid = order.paymentsSummary?.totalPaid || 0;
+                      const remaining = totalOrder - totalPaid;
+                      return remaining > 0 ? theme.colors.error : '#10B981';
+                    })()
+                  }]}
                 >
-                  {' '}
-                  • ${order.total}
+                  {' • '}
+                  {(() => {
+                    const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+                    const totalPaid = order.paymentsSummary?.totalPaid || 0;
+                    const remaining = totalOrder - totalPaid;
+                    if (remaining > 0) {
+                      return `Por pagar: $${remaining.toFixed(2)}`;
+                    } else {
+                      return `Pagado: $${totalOrder.toFixed(2)}`;
+                    }
+                  })()}
                 </Text>
               </Text>
               <View style={styles.timeAndPaymentRow}>
@@ -309,7 +339,9 @@ export const OrderCard = React.memo<OrderCardProps>(
             </Text>
           ) : null}
         </Card.Content>
-      </Card>
+          </Card>
+        </TouchableOpacity>
+      </Animated.View>
     );
   },
 );
@@ -343,6 +375,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   orderPrice: {
+    fontSize: 15,
     fontWeight: '700',
   },
   statusChip: {

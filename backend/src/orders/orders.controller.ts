@@ -21,6 +21,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
 import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
+import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -126,19 +127,37 @@ export class OrdersController {
     return this.ordersService.findOpenOrders();
   }
 
-  @Get('for-finalization')
-  @ApiOperation({ summary: 'Obtener todas las órdenes para finalizar' })
+
+  @Get('for-finalization/list')
+  @ApiOperation({ summary: 'Obtener lista ligera de órdenes para finalizar' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de todas las órdenes disponibles para finalización.',
-    type: [OrderForFinalizationDto],
+    description: 'Lista optimizada de órdenes para la vista de lista.',
+    type: [OrderForFinalizationListDto],
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
-  findOrdersForFinalization(): Promise<OrderForFinalizationDto[]> {
-    return this.ordersService.findOrdersForFinalization();
+  findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
+    return this.ordersService.findOrdersForFinalizationList();
+  }
+
+  @Get('for-finalization/:id')
+  @ApiOperation({ summary: 'Obtener detalle completo de una orden para finalización' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalle completo de la orden con todos sus items y relaciones.',
+    type: OrderForFinalizationDto,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  findOrderForFinalizationById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<OrderForFinalizationDto> {
+    return this.ordersService.findOrderForFinalizationById(id);
   }
 
   @Patch('finalize-multiple')

@@ -34,13 +34,14 @@ import {
   OrderForFinalizationDto,
   OrderItemForFinalizationDto,
 } from './dto/order-for-finalization.dto';
+import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
 import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
 import { OrderType } from './domain/enums/order-type.enum';
 import { ProductRepository } from '../products/infrastructure/persistence/product.repository';
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
-import { DataSource } from 'typeorm';
+import { DataSource, Not, In } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
 import {
@@ -234,7 +235,7 @@ export class OrdersService {
       } catch (error) {
         // Si falla la asociación del pago, registrar el error pero continuar
         // Ya que la orden ya fue creada exitosamente
-        console.error(
+        this.logger.error(
           `Error asociando pre-pago ${createOrderDto.prepaymentId} a orden ${order.id}:`,
           error,
         );
@@ -777,15 +778,6 @@ export class OrdersService {
 
           hasRealChanges = changes !== null;
 
-          // Log para debugging
-          if (changes) {
-            this.logger.log(
-              `Cambios detectados en orden ${id}: ${changes.summary || 'Sin resumen'}`,
-            );
-          } else {
-            this.logger.log(
-              `No se detectaron cambios reales en orden ${id}, no se reimprimirá el ticket`,
-            );
           }
         }
       } catch (error) {
@@ -1354,10 +1346,68 @@ export class OrdersService {
     return this.update(id, updateData);
   }
 
-  async findOrdersForFinalization(): Promise<OrderForFinalizationDto[]> {
-    const orders = await this.orderRepository.findOrdersForFinalization();
 
-    return orders.map((order) => this.mapOrderToFinalizationDto(order));
+  async findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      return [];
+    }
+
+    const orders = await this.dataSource.getRepository(OrderEntity).find({
+      where: {
+        shiftId: currentShift.id,
+        orderStatus: Not(In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])),
+      },
+      relations: [
+        'table',
+        'table.area',
+        'payments',
+        'deliveryInfo',
+      ],
+      select: {
+        id: true,
+        shiftOrderNumber: true,
+        orderType: true,
+        orderStatus: true,
+        total: true,
+        createdAt: true,
+        scheduledAt: true,
+        table: {
+          id: true,
+          name: true,
+          area: {
+            id: true,
+            name: true,
+          },
+        },
+        payments: {
+          id: true,
+          amount: true,
+        },
+        deliveryInfo: {
+          id: true,
+          recipientName: true,
+          recipientPhone: true,
+          fullAddress: true,
+        },
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    return orders.map((order) => this.mapToFinalizationListDto(order));
+  }
+
+  async findOrderForFinalizationById(id: string): Promise<OrderForFinalizationDto> {
+    const order = await this.orderRepository.findOrderForFinalizationById(id);
+    
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+
+    return this.mapOrderToFinalizationDto(order);
   }
 
   private mapOrderToFinalizationDto(order: Order): OrderForFinalizationDto {
@@ -1451,6 +1501,7 @@ export class OrdersService {
       orderItems: orderItemDtos,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
+      scheduledAt: order.scheduledAt || undefined,
       tableId: order.tableId || undefined,
       user: order.user
         ? {
@@ -1473,7 +1524,14 @@ export class OrdersService {
       deliveryInfo: order.deliveryInfo || undefined,
       isFromWhatsApp: order.isFromWhatsApp,
       preparationScreens: Array.from(preparationScreens).sort(),
-      payments: order.payments || undefined,
+      payments: order.payments?.map((payment) => ({
+        id: payment.id,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+        paymentStatus: payment.paymentStatus,
+        createdAt: payment.createdAt,
+        updatedAt: payment.updatedAt,
+      })) || undefined,
       preparationScreenStatuses: order.preparationScreenStatuses?.map(
         (status) => ({
           id: status.id,
@@ -1488,6 +1546,42 @@ export class OrdersService {
     };
 
     return orderDto;
+  }
+
+  private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
+    const totalPaid = order.payments?.reduce((sum: number, payment: any) => sum + Number(payment.amount), 0) || 0;
+
+    const dto: OrderForFinalizationListDto = {
+      id: order.id,
+      shiftOrderNumber: order.shiftOrderNumber,
+      orderType: order.orderType,
+      orderStatus: order.orderStatus,
+      total: Number(order.total),
+      createdAt: order.createdAt,
+      scheduledAt: order.scheduledAt || undefined,
+      paymentsSummary: {
+        totalPaid,
+      },
+    };
+
+    if (order.table) {
+      dto.table = {
+        number: order.table.name,
+        area: order.table.area ? {
+          name: order.table.area.name,
+        } : undefined,
+      };
+    }
+
+    if (order.deliveryInfo) {
+      dto.deliveryInfo = {
+        recipientName: order.deliveryInfo.recipientName || undefined,
+        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
+        fullAddress: order.deliveryInfo.fullAddress || undefined,
+      };
+    }
+
+    return dto;
   }
 
   async finalizeMultipleOrders(

@@ -1,5 +1,37 @@
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
+// Tipo ligero para la lista de órdenes (optimizado)
+export interface OrderForFinalizationList {
+  id: string;
+  shiftOrderNumber: number;
+  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
+  orderStatus:
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'READY'
+    | 'DELIVERED'
+    | 'COMPLETED'
+    | 'CANCELLED';
+  total: string | number;
+  createdAt: string;
+  scheduledAt?: string;
+  paymentsSummary?: {
+    totalPaid: number;
+  };
+  table?: {
+    number: string;
+    area?: {
+      name: string;
+    };
+  };
+  deliveryInfo?: {
+    recipientName?: string;
+    recipientPhone?: string;
+    fullAddress?: string;
+  };
+}
+
+// Tipo completo para el detalle de orden
 export interface OrderForFinalization {
   id: string;
   shiftOrderNumber: number;
@@ -16,6 +48,7 @@ export interface OrderForFinalization {
   orderItems: OrderItemForFinalization[];
   createdAt: string;
   updatedAt: string;
+  scheduledAt?: string;
   tableId?: string;
   user?: {
     id: string;
@@ -35,8 +68,11 @@ export interface OrderForFinalization {
     id: string;
     amount: number;
     paymentMethod: string;
-    status: string;
+    paymentStatus: string;
+    createdAt: string;
+    updatedAt: string;
   }[];
+  notes?: string;
 }
 
 export interface OrderItemForFinalization {

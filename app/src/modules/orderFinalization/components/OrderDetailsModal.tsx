@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
@@ -9,6 +9,7 @@ import {
   Divider,
   IconButton,
   Chip,
+  ActivityIndicator,
 } from 'react-native-paper';
 import {
   OrderForFinalization,
@@ -27,8 +28,8 @@ interface OrderDetailsModalProps {
   visible: boolean;
   onDismiss: () => void;
   order: OrderForFinalization | null;
+  isLoading?: boolean;
 }
-
 
 // Función para formatear personalizaciones de pizza
 const formatPizzaCustomizations = (
@@ -134,13 +135,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   visible,
   onDismiss,
   order,
+  isLoading = false,
 }) => {
   const theme = useAppTheme();
 
-  const totalItems =
-    order?.orderItems.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  if (!order) return null;
+  if (!order && !isLoading) return null;
 
   // Formatear tipo de pedido
   const getOrderTypeLabel = (type: string) => {
@@ -188,9 +188,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     }
   };
 
-  // Calcular estado del pago
   const getPaymentStatus = () => {
-    if (order.payments && order.payments.length > 0) {
+    if (order?.payments && order.payments.length > 0) {
       const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
       const totalAmount = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
       
@@ -203,7 +202,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     return { label: 'Pendiente', color: '#EF4444' };
   };
 
-  const paymentStatus = getPaymentStatus();
+  const paymentStatus = order ? getPaymentStatus() : { label: 'Pendiente', color: '#EF4444' };
 
   const renderItem = (item: OrderItemForFinalization) => {
     const unitPrice = parseFloat(item.finalPrice);
@@ -220,7 +219,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     return (
       <Surface
         key={`${item.product.id}-${item.productVariant?.id || ''}-${item.preparationStatus || ''}`}
-        style={[styles.itemCard, { backgroundColor: theme.colors.elevation.level1 }]}
+        style={[styles.itemCard, { backgroundColor: theme.colors.elevation.level1, marginBottom: 8 }]}
         elevation={1}
       >
         <View style={styles.itemContent}>
@@ -343,20 +342,29 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           { backgroundColor: theme.colors.background },
         ]}
       >
+        {isLoading || !order ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
+              Cargando detalles de la orden...
+            </Text>
+          </View>
+        ) : (
+        <>
         <View style={styles.header}>
           <View style={styles.headerInfo}>
             <View style={styles.headerTopRow}>
               <View style={styles.headerLeft}>
                 <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-                  Orden #{order.shiftOrderNumber}
+                  Orden #{order?.shiftOrderNumber || ''}
                 </Text>
                 <Text style={[styles.headerSeparator, { color: theme.colors.onSurfaceVariant }]}>•</Text>
                 <Text style={[styles.orderType, { color: theme.colors.primary }]}>
-                  {getOrderTypeLabel(order.orderType)}
+                  {order ? getOrderTypeLabel(order.orderType) : ''}
                 </Text>
                 <Text style={[styles.headerSeparator, { color: theme.colors.onSurfaceVariant }]}>•</Text>
                 <Text style={[styles.headerDate, { color: theme.colors.onSurfaceVariant }]}>
-                  {format(new Date(order.createdAt), 'dd/MM HH:mm', { locale: es })}
+                  {order?.createdAt ? format(new Date(order.createdAt), 'dd/MM HH:mm', { locale: es }) : ''}
                 </Text>
               </View>
               <IconButton
@@ -368,12 +376,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </View>
             <View style={styles.headerBottomRow}>
               <View style={styles.chipsRow}>
-                <View style={[styles.headerStatusChip, { backgroundColor: getStatusColor(order.orderStatus) }]}>
+                <View style={[styles.headerStatusChip, { backgroundColor: order ? getStatusColor(order.orderStatus) : theme.colors.surfaceVariant }]}>
                   <Text style={styles.headerStatusChipText}>
-                    {getOrderStatusLabel(order.orderStatus)}
+                    {order ? getOrderStatusLabel(order.orderStatus) : ''}
                   </Text>
                 </View>
-                {order.preparationScreens && order.preparationScreens.map((screen, index) => (
+                {order?.preparationScreens && order.preparationScreens.map((screen, index) => (
                   <Chip
                     key={index}
                     mode="outlined"
@@ -392,33 +400,47 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         {/* Información de contacto y detalles */}
         <View style={styles.infoSection}>
           {/* Datos de contacto */}
-          {(order.deliveryInfo?.recipientName || order.deliveryInfo?.recipientPhone) && (
-            <View style={styles.contactRow}>
-              {order.deliveryInfo.recipientName && (
-                <Text style={[styles.contactText, { color: theme.colors.onSurface }]}>
-                  👤 {order.deliveryInfo.recipientName}
-                </Text>
-              )}
-              {order.deliveryInfo.recipientPhone && (
-                <Text style={[styles.contactText, { color: theme.colors.onSurface }]}>
-                  📞 {order.deliveryInfo.recipientPhone}
-                </Text>
-              )}
+          {order?.deliveryInfo?.recipientName && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.contactText, { color: theme.colors.onSurface }]}>
+                👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
+              </Text>
+            </View>
+          )}
+          
+          {order?.deliveryInfo?.recipientPhone && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.contactText, { color: theme.colors.onSurface }]}>
+                📞 Teléfono: {order.deliveryInfo.recipientPhone}
+              </Text>
             </View>
           )}
           
           {/* Dirección para delivery */}
-          {order.orderType === 'DELIVERY' && order.deliveryInfo?.fullAddress && (
-            <Text style={[styles.addressText, { color: theme.colors.onSurfaceVariant }]}>
-              📦 {order.deliveryInfo.fullAddress}
-            </Text>
+          {order?.orderType === 'DELIVERY' && order?.deliveryInfo?.fullAddress && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.addressText, { color: theme.colors.onSurfaceVariant }]}>
+                📦 Dirección de Entrega: {order.deliveryInfo.fullAddress}
+              </Text>
+            </View>
           )}
 
           {/* Mesa para dine in */}
-          {order.orderType === 'DINE_IN' && order.table && (
-            <Text style={[styles.tableText, { color: theme.colors.onSurface }]}>
-              🏛️ {order.table.area?.name || 'Sin área'} - {order.table.number}
-            </Text>
+          {order?.orderType === 'DINE_IN' && order?.table && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.tableText, { color: theme.colors.onSurface }]}>
+                🏛️ Mesa: {order.table.area?.name || 'Sin área'} - {order.table.number}
+              </Text>
+            </View>
+          )}
+          
+          {/* Hora de entrega programada */}
+          {order?.scheduledAt && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.contactText, { color: theme.colors.primary, fontWeight: '600' }]}>
+                ⏰ Hora de Entrega Programada: {format(new Date(order.scheduledAt), 'HH:mm', { locale: es })}
+              </Text>
+            </View>
           )}
 
 
@@ -431,19 +453,120 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.itemsList}>
-            {order.orderItems.map((item) => renderItem(item))}
+            {order?.orderItems?.map((item) => renderItem(item)) || []}
           </View>
         </ScrollView>
 
         <Divider style={styles.divider} />
         
+        {/* Desglose de Pagos */}
+        {order?.payments && order.payments.length > 0 && (
+          <>
+            <View style={styles.paymentsSection}>
+              {/* Resumen compacto de pagos */}
+              <View style={styles.paymentSummaryCompact}>
+                <View style={styles.summaryCompactRow}>
+                  <Text style={[styles.summaryCompactLabel, { color: theme.colors.onSurfaceVariant }]}>
+                    Total: ${typeof order.total === 'string' ? parseFloat(order.total).toFixed(2) : order.total.toFixed(2)}
+                  </Text>
+                  <Text style={[styles.summaryCompactLabel, { color: '#10B981' }]}>
+                    Pagado: ${order.payments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}
+                  </Text>
+                  {(() => {
+                    const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+                    const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
+                    const remaining = totalOrder - totalPaid;
+                    if (remaining > 0) {
+                      return (
+                        <Text style={[styles.summaryCompactLabel, { color: theme.colors.error, fontWeight: '600' }]}>
+                          Resta: ${remaining.toFixed(2)}
+                        </Text>
+                      );
+                    }
+                    return null;
+                  })()}
+                </View>
+              </View>
+              
+              {/* Detalle de cada pago */}
+              {order.payments.map((payment, index) => {
+                const getPaymentMethodLabel = (method: string) => {
+                  switch (method) {
+                    case 'CASH': return 'Efectivo';
+                    case 'CREDIT_CARD': return 'Tarjeta de Crédito';
+                    case 'DEBIT_CARD': return 'Tarjeta de Débito';
+                    case 'TRANSFER': return 'Transferencia';
+                    case 'OTHER': return 'Otro';
+                    default: return method;
+                  }
+                };
+                
+                const getPaymentStatusColor = (status: string) => {
+                  switch (status) {
+                    case 'COMPLETED': return '#10B981';
+                    case 'PENDING': return '#F59E0B';
+                    case 'FAILED': return theme.colors.error;
+                    case 'REFUNDED': return '#6B7280';
+                    case 'CANCELLED': return theme.colors.error;
+                    default: return theme.colors.onSurfaceVariant;
+                  }
+                };
+                
+                const getPaymentStatusLabel = (status: string) => {
+                  switch (status) {
+                    case 'COMPLETED': return 'Completado';
+                    case 'PENDING': return 'Pendiente';
+                    case 'FAILED': return 'Fallido';
+                    case 'REFUNDED': return 'Reembolsado';
+                    case 'CANCELLED': return 'Cancelado';
+                    default: return status;
+                  }
+                };
+                
+                return (
+                  <View key={payment.id || index} style={styles.paymentRowCompact}>
+                    <Text style={[styles.paymentMethodCompact, { color: theme.colors.onSurface }]}>
+                      💳 {getPaymentMethodLabel(payment.paymentMethod)}
+                    </Text>
+                    <Text style={[styles.paymentDateCompact, { color: theme.colors.onSurfaceVariant }]}>
+                      {format(new Date(payment.createdAt), 'HH:mm', { locale: es })}
+                    </Text>
+                    <View style={[styles.paymentStatusBadgeCompact, { backgroundColor: getPaymentStatusColor(payment.paymentStatus) + '20' }]}>
+                      <Text style={[styles.paymentStatusTextCompact, { color: getPaymentStatusColor(payment.paymentStatus) }]}>
+                        {getPaymentStatusLabel(payment.paymentStatus)}
+                      </Text>
+                    </View>
+                    <Text style={[styles.paymentAmountCompact, { color: theme.colors.primary }]}>
+                      ${payment.amount.toFixed(2)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            <Divider style={styles.divider} />
+          </>
+        )}
+        
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
             <Text style={[styles.totalLabel, { color: theme.colors.onSurfaceVariant }]}>
-              Total:
+              Por pagar:
             </Text>
-            <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
-              ${typeof order.total === 'string' ? parseFloat(order.total).toFixed(2) : order.total.toFixed(2)}
+            <Text style={[styles.totalAmount, { 
+              color: (() => {
+                const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+                const totalPaid = order.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+                const remaining = totalOrder - totalPaid;
+                return remaining > 0 ? theme.colors.error : '#10B981';
+              })()
+            }]}>
+              ${(() => {
+                if (!order) return '0.00';
+                const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+                const totalPaid = order.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+                const remaining = totalOrder - totalPaid;
+                return remaining > 0 ? remaining.toFixed(2) : '0.00';
+              })()}
             </Text>
           </View>
           <View style={[styles.paymentBadge, { backgroundColor: paymentStatus.color }]}>
@@ -452,6 +575,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </Text>
           </View>
         </View>
+        </>
+        )}
       </Modal>
     </Portal>
   );
@@ -463,6 +588,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     maxHeight: '90%',
     elevation: 4,
+    overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 16,
@@ -513,6 +639,9 @@ const styles = StyleSheet.create({
   contactRow: {
     flexDirection: 'row',
     gap: 16,
+  },
+  infoRow: {
+    marginVertical: 2,
   },
   contactText: {
     fontSize: 12,
@@ -580,7 +709,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
   },
   subtitle: {
@@ -589,11 +718,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   scrollView: {
-    maxHeight: 520,
+    flexGrow: 0,
+    flexShrink: 1,
   },
   itemsList: {
     padding: 12,
-    gap: 8,
+    paddingBottom: 16,
   },
   itemCard: {
     borderRadius: 8,
@@ -699,5 +829,60 @@ const styles = StyleSheet.create({
   totalPrice: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  paymentsSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  paymentSummaryCompact: {
+    marginBottom: 8,
+  },
+  summaryCompactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryCompactLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  paymentRowCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 8,
+  },
+  paymentMethodCompact: {
+    fontSize: 11,
+    fontWeight: '500',
+    flex: 1,
+  },
+  paymentDateCompact: {
+    fontSize: 10,
+  },
+  paymentAmountCompact: {
+    fontSize: 12,
+    fontWeight: '600',
+    minWidth: 50,
+    textAlign: 'right',
+  },
+  paymentStatusBadgeCompact: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+  },
+  paymentStatusTextCompact: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    minHeight: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
   },
 });

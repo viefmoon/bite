@@ -19,7 +19,8 @@ export const API_PATHS = {
 
   ORDERS: '/api/v1/orders',
   ORDERS_OPEN_CURRENT_SHIFT: '/api/v1/orders/open-current-shift',
-  ORDERS_FOR_FINALIZATION: '/api/v1/orders/for-finalization',
+  ORDERS_FOR_FINALIZATION_LIST: '/api/v1/orders/for-finalization/list',
+  ORDERS_FOR_FINALIZATION_DETAIL: '/api/v1/orders/for-finalization/:id',
   ORDERS_FINALIZE_MULTIPLE: '/api/v1/orders/finalize-multiple',
   ORDERS_DETAIL: '/api/v1/orders/:orderId/detail',
   PRINT_ORDER_TICKET: '/api/v1/print/order', // Ruta para solicitar impresión de ticket

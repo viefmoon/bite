@@ -2941,6 +2941,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               disabled={
                 isConfirming || // Deshabilitar mientras se procesa
                 items.length === 0 ||
+                (isEditMode && !hasUnsavedChanges) || // Deshabilitar si estamos en modo edición y no hay cambios
                 (orderType === OrderTypeEnum.DINE_IN &&
                   (!selectedAreaId ||
                     (isTemporaryTable

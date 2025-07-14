@@ -479,21 +479,10 @@ export class OrdersRelationalRepository implements OrderRepository {
       .map((entity) => this.orderMapper.toDomain(entity))
       .filter((order): order is Order => order !== null);
   }
-  async findOrdersForFinalization(): Promise<Order[]> {
-    // Obtener el turno actual
-    const currentShift = await this.shiftsService.getCurrentShift();
-    if (!currentShift) {
-      // Si no hay turno activo, retornar array vacío
-      return [];
-    }
 
-    const entities = await this.ordersRepository.find({
-      where: {
-        // Filtrar solo órdenes del turno actual
-        shiftId: currentShift.id,
-        // Excluir órdenes con estado completado o cancelado
-        orderStatus: Not(In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])),
-      },
+  async findOrderForFinalizationById(id: string): Promise<Order | null> {
+    const entity = await this.ordersRepository.findOne({
+      where: { id },
       relations: [
         'user',
         'table',
@@ -513,13 +502,13 @@ export class OrdersRelationalRepository implements OrderRepository {
         'preparationScreenStatuses',
         'preparationScreenStatuses.preparationScreen',
       ],
-      order: {
-        createdAt: 'ASC',
-      },
     });
-    return entities
-      .map((entity) => this.orderMapper.toDomain(entity))
-      .filter(Boolean) as Order[];
+
+    if (!entity) {
+      return null;
+    }
+
+    return this.orderMapper.toDomain(entity);
   }
 
   private async getNextShiftOrderNumber(shiftId: string): Promise<number> {
