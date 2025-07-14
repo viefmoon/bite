@@ -1,5 +1,4 @@
 import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import { ApiError } from '../../../app/lib/errors';
 import { handleApiError } from '../../../app/lib/apiResponseHelper';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
@@ -10,7 +9,6 @@ import {
   FindAllThermalPrintersDto,
 } from '../types/printer.types';
 import {
-  BackendErrorResponse,
   PaginatedResponse,
   BaseListQueryDto,
 } from '../../../app/types/api.types';

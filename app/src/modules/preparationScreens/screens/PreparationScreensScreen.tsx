@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Button, IconButton } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
+import { IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { discoveryService } from '@/app/services/discoveryService';

@@ -3,10 +3,10 @@ import { availabilityService } from '../services/availabilityService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import {
   CategoryAvailability,
-  SubcategoryAvailability,
-  ProductAvailability,
+  SubcategoryAvailability as _SubcategoryAvailability,
+  ProductAvailability as _ProductAvailability,
   ModifierGroupAvailability,
-  ModifierAvailability,
+  ModifierAvailability as _ModifierAvailability,
   PizzaCustomizationGroupAvailability,
   AvailabilityUpdatePayload,
 } from '../types/availability.types';

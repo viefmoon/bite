@@ -23,7 +23,6 @@ export function PizzaCustomizationDetailModal({
   onDelete,
   isDeleting = false,
 }: PizzaCustomizationDetailModalProps) {
-  const theme = useAppTheme();
 
   if (!customization) return null;
 

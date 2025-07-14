@@ -6,7 +6,6 @@ import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema
 import type { Product } from '@/app/schemas/domain/product.schema'; // Asumiendo que se creará
 import type { SubCategory } from '@/app/schemas/domain/subcategory.schema'; // Asumiendo que se creará
 import type { Category } from '@/app/schemas/domain/category.schema';
-import type { PreparationScreen } from '@/app/schemas/domain/preparation-screen.schema';
 import {
   orderStatusSchema, // Importar el schema Zod
   orderTypeSchema, // Importar el schema Zod
@@ -76,3 +75,39 @@ export interface FindAllOrdersDto {
 // Otros tipos específicos de este módulo podrían ir aquí, por ejemplo:
 // - Tipos para el estado del carrito si no se maneja con Zustand/Context
 // - Tipos para formularios específicos de este módulo
+
+// Tipo optimizado para lista de órdenes abiertas
+export interface OrderOpenList
+  extends Omit<
+    Order,
+    'orderItems' | 'payments' | 'adjustments' | 'user' | 'customer'
+  > {
+  // Información básica de la mesa
+  table?: {
+    id: string;
+    number: number;
+    name: string;
+    isTemporary: boolean;
+    area?: {
+      name: string;
+    };
+  } | null;
+
+  // Información básica de entrega
+  deliveryInfo?: {
+    recipientName: string;
+    recipientPhone: string | null;
+    fullAddress: string;
+  } | null;
+
+  // Campos adicionales calculados
+  paymentsSummary?: {
+    totalPaid: number;
+  };
+  preparationScreens?: string[];
+  preparationScreenStatuses?: Array<{
+    name: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'READY';
+  }>;
+  ticketImpressionCount?: number;
+}

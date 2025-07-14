@@ -808,7 +808,7 @@ export default function AddressFormModal({
                           source={{ html: mapHtml }}
                           style={styles.map}
                           onMessage={handleWebViewMessage}
-                          onError={(error) => {}}
+                          onError={(_error) => {}}
                           javaScriptEnabled={true}
                           domStorageEnabled={true}
                           startInLoadingState={true}

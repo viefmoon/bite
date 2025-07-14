@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Text } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme } from '@/app/styles/theme';
@@ -14,7 +14,7 @@ function OrdersScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<OrdersStackParamList>>();
 
-  const { data: shift, isLoading: loading } = useGlobalShift();
+  const { data: shift, isLoading: _loading } = useGlobalShift();
 
   const handleOpenOrders = () => {
     if (shift && shift.status === 'OPEN') {

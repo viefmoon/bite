@@ -1,11 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import {
-  ActivityIndicator,
-  Text,
-  Button,
-  IconButton,
-} from 'react-native-paper';
+import { StyleSheet } from 'react-native';
+import { Text, IconButton } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +9,6 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '../schema/modifierGroup.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import debounce from 'lodash.debounce';
 import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
 import GenericList, {
@@ -72,7 +66,7 @@ const ModifierGroupsScreen = () => {
     data: paginatedData,
     isLoading,
     isError,
-    error,
+    error: _error,
     refetch,
     isRefetching,
   } = useQuery<PaginatedResponse<ModifierGroup>, Error>({

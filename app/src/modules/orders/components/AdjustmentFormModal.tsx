@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Modal,
   Portal,
@@ -9,7 +9,6 @@ import {
   HelperText,
   Chip,
   IconButton,
-  Icon,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import type {

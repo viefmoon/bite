@@ -23,7 +23,6 @@ export function PizzaCustomizationAvailabilityItem({
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const handleToggle = (id: string, currentState: boolean) => {
     updateAvailability.mutate({

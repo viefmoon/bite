@@ -10,7 +10,6 @@ import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
-import { getImageUrl } from '../../../app/lib/imageUtils';
 import { useListState } from '../../../app/hooks/useListState';
 import GenericList from '../../../app/components/crud/GenericList';
 import { FilterOption } from '../../../app/components/crud/GenericList';
@@ -31,10 +30,7 @@ import {
   UpdateCategoryDto,
   categoryFormSchema,
 } from '../schema/category.schema';
-import {
-  useRefreshOnFocus,
-  useRefreshModuleOnFocus,
-} from '../../../app/hooks/useRefreshOnFocus';
+import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 type RootStackParamList = {
   Categories: undefined;

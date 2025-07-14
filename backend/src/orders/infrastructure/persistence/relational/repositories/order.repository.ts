@@ -457,6 +457,133 @@ export class OrdersRelationalRepository implements OrderRepository {
       .filter((order): order is Order => order !== null);
   }
 
+  async findOpenOrdersOptimized(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Order[]> {
+    // Consulta optimizada que solo trae los campos necesarios
+    const queryBuilder = this.ordersRepository
+      .createQueryBuilder('order')
+      .select([
+        'order.id',
+        'order.shiftOrderNumber',
+        'order.orderType',
+        'order.orderStatus',
+        'order.total',
+        'order.createdAt',
+        'order.scheduledAt',
+        'order.notes',
+      ])
+      // Solo seleccionar campos mínimos de table
+      .leftJoin('order.table', 'table')
+      .addSelect(['table.id', 'table.name', 'table.isTemporary'])
+      .leftJoin('table.area', 'area')
+      .addSelect(['area.name'])
+      // Solo campos mínimos de deliveryInfo
+      .leftJoin('order.deliveryInfo', 'deliveryInfo')
+      .addSelect([
+        'deliveryInfo.recipientName',
+        'deliveryInfo.recipientPhone',
+        'deliveryInfo.fullAddress',
+      ])
+      .where('order.createdAt >= :startDate', { startDate })
+      .andWhere('order.createdAt <= :endDate', { endDate })
+      .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
+        excludedStatuses: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
+      })
+      .orderBy('order.createdAt', 'DESC');
+
+    const entities = await queryBuilder.getMany();
+
+    // Para cada orden, agregar solo los datos calculados necesarios
+    const ordersWithAggregates = await Promise.all(
+      entities.map(async (entity) => {
+        // Obtener el total pagado y contador de impresiones en una sola consulta
+        const aggregateResult = await this.ordersRepository
+          .createQueryBuilder('o')
+          .select([
+            'COALESCE(SUM(CASE WHEN p.paymentStatus = :completed THEN p.amount ELSE 0 END), 0) as totalPaid',
+            'COUNT(DISTINCT ti.id) as impressionCount'
+          ])
+          .leftJoin('o.payments', 'p')
+          .leftJoin('o.ticketImpressions', 'ti')
+          .where('o.id = :orderId', { orderId: entity.id })
+          .setParameter('completed', 'COMPLETED')
+          .getRawOne();
+
+        // Obtener las pantallas de preparación con sus estados
+        const preparationScreensResult = await this.ordersRepository
+          .createQueryBuilder('o')
+          .select([
+            'ps.name as "screenName"',
+            'ps.id as "screenId"',
+            `CASE 
+              WHEN COUNT(oi.id) = COUNT(CASE WHEN oi.preparationStatus IN ('READY', 'DELIVERED') THEN 1 END) THEN 'READY'
+              WHEN COUNT(CASE WHEN oi.preparationStatus = 'IN_PROGRESS' THEN 1 END) > 0 THEN 'IN_PROGRESS'
+              ELSE 'PENDING'
+            END as "status"`
+          ])
+          .leftJoin('o.orderItems', 'oi')
+          .leftJoin('oi.product', 'p')
+          .leftJoin('p.preparationScreen', 'ps')
+          .where('o.id = :orderId', { orderId: entity.id })
+          .andWhere('ps.id IS NOT NULL')
+          .groupBy('ps.id, ps.name')
+          .getRawMany();
+
+        const preparationScreenStatuses = preparationScreensResult.map(r => ({
+          name: r.screenName,
+          status: r.status
+        })).filter(s => s.name);
+
+        const order = this.orderMapper.toDomain(entity);
+        if (order) {
+          // Crear un objeto optimizado con solo los campos necesarios
+          const optimizedOrder: Order = {
+            id: order.id,
+            shiftOrderNumber: order.shiftOrderNumber,
+            shiftId: order.shiftId,
+            orderType: order.orderType,
+            orderStatus: order.orderStatus,
+            total: order.total,
+            createdAt: order.createdAt,
+            scheduledAt: order.scheduledAt,
+            notes: order.notes,
+            table: order.table,
+            deliveryInfo: order.deliveryInfo,
+            // Campos calculados
+            paymentsSummary: {
+              totalPaid: parseFloat(aggregateResult?.totalpaid || '0'),
+            },
+            ticketImpressionCount: parseInt(aggregateResult?.impressioncount || '0'),
+            preparationScreenStatuses: preparationScreenStatuses,
+            // Campos requeridos pero vacíos para la vista de lista
+            userId: order.userId,
+            tableId: order.tableId,
+            subtotal: order.subtotal,
+            user: null,
+            orderItems: [],
+            payments: null,
+            adjustments: undefined,
+            deletedAt: order.deletedAt,
+            updatedAt: order.updatedAt,
+            customerId: order.customerId,
+            customer: order.customer,
+            isFromWhatsApp: order.isFromWhatsApp,
+            estimatedDeliveryTime: order.estimatedDeliveryTime,
+            preparationScreenStatusesFull: undefined,
+            ticketImpressions: undefined,
+            finalizedAt: order.finalizedAt,
+          };
+          return optimizedOrder;
+        }
+        return null;
+      })
+    );
+
+    return ordersWithAggregates.filter((order): order is Order => order !== null);
+  }
+
   async findByStatus(statuses: string[]): Promise<Order[]> {
     const entities = await this.ordersRepository.find({
       where: {

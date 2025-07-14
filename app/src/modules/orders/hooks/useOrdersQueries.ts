@@ -9,7 +9,7 @@ import {
 import { orderService } from '../services/orderService';
 import type { Order } from '../../../app/schemas/domain/order.schema'; // Ruta corregida
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
-import type { FindAllOrdersDto } from '../types/orders.types';
+import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
 import type { PaginatedResponse } from '../../../app/types/api.types'; // Corregir ruta relativa
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
@@ -23,6 +23,7 @@ const orderKeys = {
   list: (filters: FindAllOrdersDto) => [...orderKeys.lists(), filters] as const,
   openCurrentShift: () =>
     [...orderKeys.all, 'list', 'open-current-shift'] as const, // Clave para órdenes abiertas del turno actual
+  openOrdersList: () => [...orderKeys.all, 'list', 'open-orders-list'] as const, // Clave para órdenes abiertas optimizadas
   details: () => [...orderKeys.all, 'detail'] as const,
   // detail: (id: string) => [...orderKeys.details(), id] as const, // Ejemplo
 };
@@ -42,7 +43,7 @@ export const useCreateOrderMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
       // El mensaje de éxito se maneja en el componente que llama a la mutación
     },
-    onError: (error) => {
+    onError: (_error) => {
       // El mensaje de error se maneja en el componente que llama a la mutación
     },
   });
@@ -232,6 +233,28 @@ export const useGetOpenOrdersQuery = (options?: {
   });
 
   // La lógica de useQueries y combinación se elimina
+};
+
+/**
+ * Hook optimizado para obtener las órdenes abiertas con campos mínimos.
+ */
+export const useGetOpenOrdersListQuery = (options?: {
+  enabled?: boolean;
+}): UseQueryResult<OrderOpenList[], ApiError> => {
+  const queryKey = orderKeys.openOrdersList();
+
+  return useQuery<OrderOpenList[], ApiError>({
+    queryKey: queryKey,
+    queryFn: () => orderService.getOpenOrdersList(),
+    enabled: options?.enabled ?? true,
+    refetchInterval: 10000, // Actualizar cada 10 segundos
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 5000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
 };
 
 /**

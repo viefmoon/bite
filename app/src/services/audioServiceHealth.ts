@@ -112,6 +112,7 @@ class AudioServiceHealthChecker {
     } catch (error) {
       // Solo log en modo debug, no en producción
       if (__DEV__) {
+        console.log('Error checking audio service health:', error);
       }
 
       let errorMessage = 'Servicio de voz no disponible';

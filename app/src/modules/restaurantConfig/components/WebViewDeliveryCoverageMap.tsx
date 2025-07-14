@@ -501,7 +501,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             webViewRef.current.injectJavaScript(jsCode);
           }
         }}
-        onError={(error) => {}}
+        onError={(_error) => {}}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         startInLoadingState={true}

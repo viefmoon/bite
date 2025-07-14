@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Switch, Chip, IconButton, Card } from 'react-native-paper';
+import { Text, Switch, Chip, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';

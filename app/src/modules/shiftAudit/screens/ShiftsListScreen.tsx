@@ -1,9 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  RefreshControl,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Chip, Card, Divider, Surface, Button, Menu, Avatar, ActivityIndicator, IconButton } from 'react-native-paper';
+import {
+  Text,
+  Chip,
+  Card,
+  Divider,
+  Surface,
+  Button,
+  Menu,
+  Avatar,
+  ActivityIndicator,
+  IconButton,
+} from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
-import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import {
+  format,
+  parseISO,
+  isToday,
+  isYesterday,
+  subDays,
+  isWithinInterval,
+} from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { useShifts } from '../hooks/useShifts';
@@ -18,21 +42,28 @@ export function ShiftsListScreen() {
   const theme = useAppTheme();
   const navigation = useNavigation<ShiftAuditStackNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'last7' | 'custom'>('last7');
+  const [dateFilter, setDateFilter] = useState<
+    'today' | 'yesterday' | 'last7' | 'custom'
+  >('last7');
   const [showDateMenu, setShowDateMenu] = useState(false);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date }>({ 
-    start: subDays(new Date(), 7), 
-    end: new Date() 
+  const [customDateRange, setCustomDateRange] = useState<{
+    start: Date;
+    end: Date;
+  }>({
+    start: subDays(new Date(), 7),
+    end: new Date(),
   });
-  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end'>('start');
+  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end'>(
+    'start',
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
+
   const limit = 30;
   const offset = 0;
 
   const { data: shifts, isLoading, error, refetch } = useShifts(limit, offset);
-  
+
   useRefreshModuleOnFocus('shifts');
 
   const handleRefresh = async () => {
@@ -52,24 +83,32 @@ export function ShiftsListScreen() {
         try {
           const shiftDate = parseISO(shift.openedAt);
           const now = new Date();
-          
+
           switch (dateFilter) {
-            case 'today':
+            case 'today': {
               if (!isToday(shiftDate)) return false;
               break;
-            case 'yesterday':
+            }
+            case 'yesterday': {
               if (!isYesterday(shiftDate)) return false;
               break;
-            case 'last7':
+            }
+            case 'last7': {
               const sevenDaysAgo = subDays(now, 7);
               if (shiftDate < sevenDaysAgo) return false;
               break;
-            case 'custom':
-              if (!isWithinInterval(shiftDate, { 
-                start: customDateRange.start, 
-                end: customDateRange.end 
-              })) return false;
+            }
+            case 'custom': {
+              if (
+                !isWithinInterval(shiftDate, {
+                  start: customDateRange.start,
+                  end: customDateRange.end,
+                })
+              ) {
+                return false;
+              }
               break;
+            }
           }
         } catch (e) {
           return false;
@@ -78,18 +117,22 @@ export function ShiftsListScreen() {
 
       return true;
     });
-    
+
     return filtered;
   }, [shifts, dateFilter, customDateRange]);
 
   const getDateFilterLabel = () => {
     switch (dateFilter) {
-      case 'today': return 'Hoy';
-      case 'yesterday': return 'Ayer';
-      case 'last7': return 'Últimos 7 días';
-      case 'custom': 
+      case 'today':
+        return 'Hoy';
+      case 'yesterday':
+        return 'Ayer';
+      case 'last7':
+        return 'Últimos 7 días';
+      case 'custom':
         return `${format(customDateRange.start, 'dd/MM')} - ${format(customDateRange.end, 'dd/MM')}`;
-      default: return 'Últimos 7 días';
+      default:
+        return 'Últimos 7 días';
     }
   };
 
@@ -204,7 +247,9 @@ export function ShiftsListScreen() {
               </Chip>
             </View>
             <Text style={styles.shiftDate}>
-              {shift.openedAt ? formatShiftDate(shift.openedAt) : 'Fecha no disponible'}
+              {shift.openedAt
+                ? formatShiftDate(shift.openedAt)
+                : 'Fecha no disponible'}
             </Text>
           </View>
 
@@ -215,10 +260,15 @@ export function ShiftsListScreen() {
             <View style={styles.timeSection}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.timeText}>
-                  {shift.openedAt ? formatShiftTime(shift.openedAt) : 'N/A'} - {shift.closedAt ? formatShiftTime(shift.closedAt) : 'En curso'}
+                  {shift.openedAt ? formatShiftTime(shift.openedAt) : 'N/A'} -{' '}
+                  {shift.closedAt
+                    ? formatShiftTime(shift.closedAt)
+                    : 'En curso'}
                 </Text>
                 <Text style={styles.durationText}>
-                  {shift.openedAt ? getShiftDuration(shift.openedAt, shift.closedAt) : 'N/A'}
+                  {shift.openedAt
+                    ? getShiftDuration(shift.openedAt, shift.closedAt)
+                    : 'N/A'}
                 </Text>
               </View>
             </View>
@@ -231,7 +281,7 @@ export function ShiftsListScreen() {
                   {formatCurrency(shift.totalSales)}
                 </Text>
               </Surface>
-              
+
               <Surface style={styles.statCard} elevation={0}>
                 <Text style={styles.statLabel}>ÓRDENES</Text>
                 <Text style={styles.statValue}>{shift.totalOrders || 0}</Text>
@@ -280,11 +330,13 @@ export function ShiftsListScreen() {
             {/* Usuarios en una línea */}
             <View style={styles.userSection}>
               <Text style={styles.userText}>
-                👤 {shift.openedBy?.firstName || 'N/A'} {shift.openedBy?.lastName || ''}
+                👤 {shift.openedBy?.firstName || 'N/A'}{' '}
+                {shift.openedBy?.lastName || ''}
               </Text>
               {shift.closedBy && (
                 <Text style={styles.userText}>
-                  🔒 {shift.closedBy.firstName || 'N/A'} {shift.closedBy.lastName || ''}
+                  🔒 {shift.closedBy.firstName || 'N/A'}{' '}
+                  {shift.closedBy.lastName || ''}
                 </Text>
               )}
             </View>
@@ -301,13 +353,13 @@ export function ShiftsListScreen() {
           visible={showDateMenu}
           onDismiss={() => setShowDateMenu(false)}
           anchor={
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.filterButton}
               onPress={() => setShowDateMenu(true)}
               activeOpacity={0.8}
             >
-              <Avatar.Icon 
-                icon="calendar-range" 
+              <Avatar.Icon
+                icon="calendar-range"
                 size={32}
                 style={styles.filterIcon}
                 color={theme.colors.primary}
@@ -316,8 +368,8 @@ export function ShiftsListScreen() {
                 <Text style={styles.filterLabel}>Filtrar por fecha</Text>
                 <Text style={styles.filterValue}>{getDateFilterLabel()}</Text>
               </View>
-              <Avatar.Icon 
-                icon="chevron-down" 
+              <Avatar.Icon
+                icon="chevron-down"
                 size={24}
                 style={styles.filterArrow}
                 color={theme.colors.onSurfaceVariant}
@@ -326,27 +378,36 @@ export function ShiftsListScreen() {
           }
           contentStyle={styles.menuContent}
         >
-          <Menu.Item 
-            onPress={() => { setDateFilter('today'); setShowDateMenu(false); }} 
+          <Menu.Item
+            onPress={() => {
+              setDateFilter('today');
+              setShowDateMenu(false);
+            }}
             title="Hoy"
             leadingIcon="calendar-today"
             style={dateFilter === 'today' && styles.selectedMenuItem}
           />
-          <Menu.Item 
-            onPress={() => { setDateFilter('yesterday'); setShowDateMenu(false); }} 
+          <Menu.Item
+            onPress={() => {
+              setDateFilter('yesterday');
+              setShowDateMenu(false);
+            }}
             title="Ayer"
             leadingIcon="calendar-minus"
             style={dateFilter === 'yesterday' && styles.selectedMenuItem}
           />
-          <Menu.Item 
-            onPress={() => { setDateFilter('last7'); setShowDateMenu(false); }} 
+          <Menu.Item
+            onPress={() => {
+              setDateFilter('last7');
+              setShowDateMenu(false);
+            }}
             title="Últimos 7 días"
             leadingIcon="calendar-week"
             style={dateFilter === 'last7' && styles.selectedMenuItem}
           />
           <Divider />
-          <Menu.Item 
-            onPress={handleCustomDateRange} 
+          <Menu.Item
+            onPress={handleCustomDateRange}
             title="Rango personalizado"
             leadingIcon="calendar-range"
             style={dateFilter === 'custom' && styles.selectedMenuItem}
@@ -365,25 +426,25 @@ export function ShiftsListScreen() {
           <View style={styles.modalContent}>
             {/* Header del modal */}
             <View style={styles.modalHeader}>
-              <Avatar.Icon 
-                icon="calendar-range" 
+              <Avatar.Icon
+                icon="calendar-range"
                 size={48}
                 style={styles.modalIcon}
                 color={theme.colors.primary}
               />
               <Text style={styles.modalTitle}>Seleccionar rango</Text>
-              <IconButton 
-                icon="close" 
+              <IconButton
+                icon="close"
                 onPress={() => setShowDateRangePicker(false)}
                 size={20}
                 style={styles.modalCloseButton}
                 iconColor={theme.colors.onSurfaceVariant}
               />
             </View>
-            
+
             {/* Selección de fechas */}
             <View style={styles.dateRangeContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => {
                   setDatePickerMode('start');
@@ -392,8 +453,8 @@ export function ShiftsListScreen() {
                 activeOpacity={0.8}
               >
                 <View style={styles.dateButtonContent}>
-                  <Avatar.Icon 
-                    icon="calendar-start" 
+                  <Avatar.Icon
+                    icon="calendar-start"
                     size={36}
                     style={styles.dateButtonIcon}
                     color={theme.colors.primary}
@@ -401,22 +462,24 @@ export function ShiftsListScreen() {
                   <View style={styles.dateButtonTextContainer}>
                     <Text style={styles.dateButtonLabel}>DESDE</Text>
                     <Text style={styles.dateButtonValue}>
-                      {format(customDateRange.start, "d MMM yyyy", { locale: es })}
+                      {format(customDateRange.start, 'd MMM yyyy', {
+                        locale: es,
+                      })}
                     </Text>
                   </View>
                 </View>
               </TouchableOpacity>
-              
+
               <View style={styles.dateArrowContainer}>
-                <Avatar.Icon 
-                  icon="arrow-right" 
+                <Avatar.Icon
+                  icon="arrow-right"
                   size={20}
                   style={styles.dateArrow}
                   color={theme.colors.primary}
                 />
               </View>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => {
                   setDatePickerMode('end');
@@ -425,8 +488,8 @@ export function ShiftsListScreen() {
                 activeOpacity={0.8}
               >
                 <View style={styles.dateButtonContent}>
-                  <Avatar.Icon 
-                    icon="calendar-end" 
+                  <Avatar.Icon
+                    icon="calendar-end"
                     size={36}
                     style={styles.dateButtonIcon}
                     color={theme.colors.primary}
@@ -434,26 +497,27 @@ export function ShiftsListScreen() {
                   <View style={styles.dateButtonTextContainer}>
                     <Text style={styles.dateButtonLabel}>HASTA</Text>
                     <Text style={styles.dateButtonValue}>
-                      {format(customDateRange.end, "d MMM yyyy", { locale: es })}
+                      {format(customDateRange.end, 'd MMM yyyy', {
+                        locale: es,
+                      })}
                     </Text>
                   </View>
                 </View>
               </TouchableOpacity>
             </View>
 
-            
             {/* Botones de acción */}
             <View style={styles.modalActions}>
-              <Button 
-                mode="outlined" 
+              <Button
+                mode="outlined"
                 onPress={() => setShowDateRangePicker(false)}
                 style={styles.modalButton}
                 labelStyle={styles.modalButtonLabel}
               >
                 Cancelar
               </Button>
-              <Button 
-                mode="contained" 
+              <Button
+                mode="contained"
                 onPress={() => {
                   setDateFilter('custom');
                   setShowDateRangePicker(false);
@@ -470,7 +534,11 @@ export function ShiftsListScreen() {
 
       {showDatePicker && (
         <DateTimePicker
-          value={datePickerMode === 'start' ? customDateRange.start : customDateRange.end}
+          value={
+            datePickerMode === 'start'
+              ? customDateRange.start
+              : customDateRange.end
+          }
           mode="date"
           display="default"
           onChange={handleDateChange}
@@ -482,15 +550,13 @@ export function ShiftsListScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Avatar.Icon 
-        icon="history" 
-        size={80} 
-        style={{ backgroundColor: theme.colors.surfaceVariant }} 
+      <Avatar.Icon
+        icon="history"
+        size={80}
+        style={{ backgroundColor: theme.colors.surfaceVariant }}
         color={theme.colors.onSurfaceVariant}
       />
-      <Text style={styles.emptyTitle}>
-        No se encontraron turnos
-      </Text>
+      <Text style={styles.emptyTitle}>No se encontraron turnos</Text>
       <Text style={styles.emptyMessage}>
         {dateFilter === 'custom'
           ? 'No hay turnos en el rango seleccionado'
@@ -501,10 +567,10 @@ export function ShiftsListScreen() {
 
   const renderError = () => (
     <View style={styles.errorContainer}>
-      <Avatar.Icon 
-        icon="alert-circle-outline" 
-        size={80} 
-        style={{ backgroundColor: theme.colors.errorContainer }} 
+      <Avatar.Icon
+        icon="alert-circle-outline"
+        size={80}
+        style={{ backgroundColor: theme.colors.errorContainer }}
         color={theme.colors.error}
       />
       <Text style={styles.errorTitle}>Error al cargar turnos</Text>

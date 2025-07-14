@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Portal } from 'react-native-paper';
 import {
   View,
   StyleSheet,
-  ScrollView,
   useWindowDimensions,
   BackHandler,
   Pressable,

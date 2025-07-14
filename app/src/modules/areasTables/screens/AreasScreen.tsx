@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
-import { ActivityIndicator, Text, IconButton } from 'react-native-paper';
+import { IconButton } from 'react-native-paper';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GenericList, {

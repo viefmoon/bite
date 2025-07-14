@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
@@ -36,8 +36,16 @@ export function ShiftDetailScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
-  const { data: shift, isLoading: isLoadingShift, error: shiftError } = useShiftDetail(shiftId);
-  const { data: orders, isLoading: isLoadingOrders, error: ordersError } = useShiftOrders(shiftId);
+  const {
+    data: shift,
+    isLoading: isLoadingShift,
+    error: shiftError,
+  } = useShiftDetail(shiftId);
+  const {
+    data: orders,
+    isLoading: isLoadingOrders,
+    error: ordersError,
+  } = useShiftOrders(shiftId);
   const { summary, isLoading: isLoadingSummary } = useShiftSummary(shiftId);
 
   const isLoading = isLoadingShift || isLoadingOrders || isLoadingSummary;
@@ -96,16 +104,20 @@ export function ShiftDetailScreen() {
 
   const renderError = () => (
     <View style={styles.centerContainer}>
-      <Avatar.Icon 
-        icon="alert-circle-outline" 
-        size={80} 
-        style={{ backgroundColor: theme.colors.errorContainer }} 
+      <Avatar.Icon
+        icon="alert-circle-outline"
+        size={80}
+        style={{ backgroundColor: theme.colors.errorContainer }}
         color={theme.colors.error}
       />
       <Text style={styles.errorText}>
         {error?.message || 'No se pudo cargar la información del turno'}
       </Text>
-      <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
+      <Button
+        mode="contained"
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
         Volver
       </Button>
     </View>
@@ -127,17 +139,19 @@ export function ShiftDetailScreen() {
               style={[
                 styles.statusChip,
                 {
-                  backgroundColor: shift.status === 'open'
-                    ? theme.colors.primaryContainer
-                    : theme.colors.surfaceVariant,
+                  backgroundColor:
+                    shift.status === 'open'
+                      ? theme.colors.primaryContainer
+                      : theme.colors.surfaceVariant,
                 },
               ]}
               textStyle={[
                 styles.statusChipText,
                 {
-                  color: shift.status === 'open'
-                    ? theme.colors.onPrimaryContainer
-                    : theme.colors.onSurfaceVariant,
+                  color:
+                    shift.status === 'open'
+                      ? theme.colors.onPrimaryContainer
+                      : theme.colors.onSurfaceVariant,
                 },
               ]}
               compact
@@ -156,7 +170,8 @@ export function ShiftDetailScreen() {
               </Text>
             )}
             <Text style={styles.headerUser}>
-              Por: {shift.openedBy?.firstName || 'N/A'} {shift.openedBy?.lastName || ''}
+              Por: {shift.openedBy?.firstName || 'N/A'}{' '}
+              {shift.openedBy?.lastName || ''}
             </Text>
           </View>
         </Card.Content>
@@ -190,36 +205,37 @@ export function ShiftDetailScreen() {
             <Text style={styles.statLabel}>Ticket Promedio</Text>
             <Text style={styles.statValue}>
               {formatCurrency(
-                (summary.totalSales || shift.totalSales || 0) / 
-                (summary.ordersCount || shift.totalOrders || 1),
+                (summary.totalSales || shift.totalSales || 0) /
+                  (summary.ordersCount || shift.totalOrders || 1),
               )}
             </Text>
           </Surface>
         </View>
 
-        {summary.paymentMethodsSummary && summary.paymentMethodsSummary.length > 0 && (
-          <>
-            <Text style={styles.subsectionTitle}>Métodos de Pago</Text>
-            <Card style={styles.summaryCard}>
-              <DataTable>
-                <DataTable.Header>
-                  <DataTable.Title>Método</DataTable.Title>
-                  <DataTable.Title numeric>Cantidad</DataTable.Title>
-                  <DataTable.Title numeric>Total</DataTable.Title>
-                </DataTable.Header>
-                {summary.paymentMethodsSummary.map((payment, index) => (
-                  <DataTable.Row key={`${payment.method}-${index}`}>
-                    <DataTable.Cell>{payment.method}</DataTable.Cell>
-                    <DataTable.Cell numeric>{payment.count}</DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {formatCurrency(payment.total)}
-                    </DataTable.Cell>
-                  </DataTable.Row>
-                ))}
-              </DataTable>
-            </Card>
-          </>
-        )}
+        {summary.paymentMethodsSummary &&
+          summary.paymentMethodsSummary.length > 0 && (
+            <>
+              <Text style={styles.subsectionTitle}>Métodos de Pago</Text>
+              <Card style={styles.summaryCard}>
+                <DataTable>
+                  <DataTable.Header>
+                    <DataTable.Title>Método</DataTable.Title>
+                    <DataTable.Title numeric>Cantidad</DataTable.Title>
+                    <DataTable.Title numeric>Total</DataTable.Title>
+                  </DataTable.Header>
+                  {summary.paymentMethodsSummary.map((payment, index) => (
+                    <DataTable.Row key={`${payment.method}-${index}`}>
+                      <DataTable.Cell>{payment.method}</DataTable.Cell>
+                      <DataTable.Cell numeric>{payment.count}</DataTable.Cell>
+                      <DataTable.Cell numeric>
+                        {formatCurrency(payment.total)}
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  ))}
+                </DataTable>
+              </Card>
+            </>
+          )}
 
         {summary.productsSummary && summary.productsSummary.length > 0 && (
           <>
@@ -312,7 +328,9 @@ export function ShiftDetailScreen() {
             </View>
             <View style={styles.orderMetaRow}>
               <Text style={styles.orderMeta}>
-                {order.createdAt ? format(parseISO(order.createdAt), 'HH:mm', { locale: es }) : 'N/A'}
+                {order.createdAt
+                  ? format(parseISO(order.createdAt), 'HH:mm', { locale: es })
+                  : 'N/A'}
               </Text>
               {order.customerName && (
                 <Text style={styles.orderMeta}> • {order.customerName}</Text>
@@ -372,7 +390,6 @@ export function ShiftDetailScreen() {
       </Card>
     );
   };
-
 
   const styles = StyleSheet.create({
     container: {
@@ -664,10 +681,10 @@ export function ShiftDetailScreen() {
 
   const ListEmptyComponent = () => (
     <View style={styles.emptyOrdersContainer}>
-      <Avatar.Icon 
-        icon="receipt-text-outline" 
-        size={60} 
-        style={{ backgroundColor: theme.colors.surfaceVariant }} 
+      <Avatar.Icon
+        icon="receipt-text-outline"
+        size={60}
+        style={{ backgroundColor: theme.colors.surfaceVariant }}
         color={theme.colors.onSurfaceVariant}
       />
       <Text style={styles.emptyOrdersText}>No hay órdenes en este turno</Text>
@@ -678,9 +695,11 @@ export function ShiftDetailScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content 
+        <Appbar.Content
           title={`Turno #${shift?.globalShiftNumber || shift?.shiftNumber || ''}`}
-          subtitle={shift?.status === 'open' ? 'Turno abierto' : 'Turno cerrado'}
+          subtitle={
+            shift?.status === 'open' ? 'Turno abierto' : 'Turno cerrado'
+          }
         />
       </Appbar.Header>
       <FlatList

@@ -1,17 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native'; // FlatList eliminado
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list'; // Importar FlashList y tipo
 import {
   Modal,
   Portal,
   Text,
-  Button,
   ActivityIndicator,
   List,
   Icon, // Añadir Icon a la importación
   Divider,
   IconButton,
-  Card,
   Appbar, // Importar Appbar
 } from 'react-native-paper';
 import {
@@ -53,7 +51,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
         },
       });
     }
-  }, [visible]); // Ejecutar solo cuando 'visible' cambia
+  }, [visible, discoverMutation, showSnackbar]); // Ejecutar solo cuando 'visible' cambia
 
   const handleRescan = () => {
     discoverMutation.mutate(undefined); // Volver a escanear con duración por defecto

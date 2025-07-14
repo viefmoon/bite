@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
   Portal,
@@ -9,7 +9,6 @@ import {
   Card,
   Chip,
   Surface,
-  DataTable,
 } from 'react-native-paper';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -92,7 +91,7 @@ export const OrderDetailContent: React.FC<{
   orderId: string | null;
   orderNumber?: number;
   orderData?: any; // Datos de la orden pasados como prop
-}> = ({ orderId, orderNumber, orderData }) => {
+}> = ({ orderId: _orderId, orderNumber: _orderNumber, orderData }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 

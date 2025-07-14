@@ -14,6 +14,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  SerializeOptions,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -22,6 +23,7 @@ import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
 import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
+import { OrderOpenListDto } from './dto/order-open-list.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -50,6 +52,7 @@ import {
   InfinityPaginationResponse,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('orders')
 @Controller({ path: 'orders', version: '1' })
@@ -129,6 +132,21 @@ export class OrdersController {
     return this.ordersService.findOpenOrders();
   }
 
+  @Get('open-orders-list')
+  @ApiOperation({ summary: 'Obtener lista optimizada de órdenes abiertas' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista optimizada de órdenes abiertas con campos mínimos necesarios.',
+    type: [OrderOpenListDto],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  async findOpenOrdersList(): Promise<OrderOpenListDto[]> {
+    const orders = await this.ordersService.findOpenOrdersOptimized();
+    return plainToInstance(OrderOpenListDto, orders);
+  }
 
   @Get('for-finalization/list')
   @ApiOperation({ summary: 'Obtener lista ligera de órdenes para finalizar' })
@@ -145,21 +163,20 @@ export class OrdersController {
     return this.ordersService.findOrdersForFinalizationList();
   }
 
-  @Get('for-finalization/:id')
-  @ApiOperation({ summary: 'Obtener detalle completo de una orden para finalización' })
+  @Get('items/:id')
+  @ApiOperation({ summary: 'Get a specific order item by ID' })
   @ApiResponse({
     status: 200,
-    description: 'Detalle completo de la orden con todos sus items y relaciones.',
-    type: OrderForFinalizationDto,
+    description: 'Return the order item with the specified ID.',
+    type: OrderItem,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  findOrderForFinalizationById(
+  findOrderItemById(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderForFinalizationDto> {
-    return this.ordersService.findOrderForFinalizationById(id);
+  ): Promise<OrderItem> {
+    return this.ordersService.findOrderItemById(id);
   }
 
   @Patch('finalize-multiple')
@@ -205,6 +222,102 @@ export class OrdersController {
       message: 'Órdenes finalizadas exitosamente',
       ordersWithWarnings: result.ordersWithWarnings 
     };
+  }
+
+  @Patch('items/:id')
+  @ApiOperation({ summary: 'Update a specific order item by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The order item has been successfully updated.',
+    type: OrderItem,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  updateOrderItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateOrderItemDto: UpdateOrderItemDto,
+  ): Promise<OrderItem> {
+    return this.ordersService.updateOrderItem(id, updateOrderItemDto);
+  }
+
+  @Delete('items/:id')
+  @ApiOperation({ summary: 'Delete a specific order item by ID' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'The order item has been successfully deleted.',
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  removeOrderItem(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.ordersService.deleteOrderItem(id);
+  }
+
+  @Get('for-finalization/:id')
+  @ApiOperation({ summary: 'Obtener detalle completo de una orden para finalización' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalle completo de la orden con todos sus items y relaciones.',
+    type: OrderForFinalizationDto,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  findOrderForFinalizationById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<OrderForFinalizationDto> {
+    return this.ordersService.findOrderForFinalizationById(id);
+  }
+
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Get all orders for a specific user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all orders for the specified user.',
+    type: [Order],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  findByUserId(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<Order[]> {
+    return this.ordersService.findByUserId(userId);
+  }
+
+  @Get('table/:tableId')
+  @ApiOperation({ summary: 'Get all orders for a specific table' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all orders for the specified table.',
+    type: [Order],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  findByTableId(
+    @Param('tableId', ParseUUIDPipe) tableId: string,
+  ): Promise<Order[]> {
+    return this.ordersService.findByTableId(tableId);
+  }
+
+  @Get('shift/:shiftId')
+  @ApiOperation({ summary: 'Get all orders for a specific shift' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all orders for the specified shift.',
+    type: [Order],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  findByShiftId(
+    @Param('shiftId', ParseUUIDPipe) shiftId: string,
+  ): Promise<Order[]> {
+    return this.ordersService.findByShiftId(shiftId);
   }
 
   @Get(':id')
@@ -284,55 +397,6 @@ export class OrdersController {
     return this.ordersService.changeOrderStatus(id, body.status);
   }
 
-  @Get('user/:userId')
-  @ApiOperation({ summary: 'Get all orders for a specific user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders for the specified user.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findByUserId(
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByUserId(userId);
-  }
-
-  @Get('table/:tableId')
-  @ApiOperation({ summary: 'Get all orders for a specific table' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders for the specified table.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findByTableId(
-    @Param('tableId', ParseUUIDPipe) tableId: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByTableId(tableId);
-  }
-
-  @Get('shift/:shiftId')
-  @ApiOperation({ summary: 'Get all orders for a specific shift' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders for the specified shift.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  findByShiftId(
-    @Param('shiftId', ParseUUIDPipe) shiftId: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByShiftId(shiftId);
-  }
-
-  // OrderItem endpoints
   @Post(':orderId/items')
   @ApiOperation({ summary: 'Create a new order item for an order' })
   @ApiResponse({
@@ -365,53 +429,6 @@ export class OrdersController {
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ): Promise<OrderItem[]> {
     return this.ordersService.findOrderItemsByOrderId(orderId);
-  }
-
-  @Get('items/:id')
-  @ApiOperation({ summary: 'Get a specific order item by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the order item with the specified ID.',
-    type: OrderItem,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findOrderItemById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderItem> {
-    return this.ordersService.findOrderItemById(id);
-  }
-
-  @Patch('items/:id')
-  @ApiOperation({ summary: 'Update a specific order item by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The order item has been successfully updated.',
-    type: OrderItem,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  updateOrderItem(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateOrderItemDto: UpdateOrderItemDto,
-  ): Promise<OrderItem> {
-    return this.ordersService.updateOrderItem(id, updateOrderItemDto);
-  }
-
-  @Delete('items/:id')
-  @ApiOperation({ summary: 'Delete a specific order item by ID' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'The order item has been successfully deleted.',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  removeOrderItem(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.ordersService.deleteOrderItem(id);
   }
 
   // --- Historial Endpoints ---

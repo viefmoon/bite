@@ -12,7 +12,7 @@ interface CategoryAvailabilityItemProps {
 
 export const CategoryAvailabilityItem: React.FC<
   CategoryAvailabilityItemProps
-> = ({ category, onRefresh }) => {
+> = ({ category, onRefresh: _onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();

@@ -20,8 +20,8 @@ const NumericField: React.FC<NumericFieldProps> = ({
   disabled,
   defaultValue,
 }) => {
-  const [displayValue, setDisplayValue] = useState(() => 
-    value !== undefined ? String(value) : ''
+  const [displayValue, setDisplayValue] = useState(() =>
+    value !== undefined ? String(value) : '',
   );
   const [isFocused, setIsFocused] = useState(false);
 
@@ -36,7 +36,7 @@ const NumericField: React.FC<NumericFieldProps> = ({
     // Permitir solo números
     const numericText = text.replace(/[^0-9]/g, '');
     setDisplayValue(numericText);
-    
+
     if (numericText === '') {
       onChange(undefined);
     } else {
@@ -76,4 +76,4 @@ const NumericField: React.FC<NumericFieldProps> = ({
   );
 };
 
-export default NumericField; 
+export default NumericField;

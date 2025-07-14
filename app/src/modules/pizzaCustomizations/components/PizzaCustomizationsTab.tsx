@@ -46,7 +46,12 @@ export function PizzaCustomizationsTab() {
 
   const deleteMutation = useDeletePizzaCustomization();
 
-  const { data, isLoading, isError, refetch } = usePizzaCustomizationsList({
+  const {
+    data,
+    isLoading,
+    isError: _isError,
+    refetch,
+  } = usePizzaCustomizationsList({
     search: searchQuery || undefined,
     type: selectedType === 'all' ? undefined : selectedType,
     limit: 100, // Aumentar el límite para obtener todos los registros

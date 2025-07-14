@@ -142,7 +142,10 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                   </Text>
                   {order.finalizedAt && (
                     <>
-                      <Text variant="bodyMedium" style={[styles.label, { marginTop: 8 }]}>
+                      <Text
+                        variant="bodyMedium"
+                        style={[styles.label, { marginTop: 8 }]}
+                      >
                         Fecha de finalización:
                       </Text>
                       <Text variant="bodyLarge">

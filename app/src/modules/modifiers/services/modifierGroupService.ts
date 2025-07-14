@@ -10,7 +10,7 @@ import {
 import { z } from 'zod';
 import { PaginatedResponse } from '@/app/types/api.types';
 
-const modifierGroupsListSchema = z.array(modifierGroupApiSchema);
+const _modifierGroupsListSchema = z.array(modifierGroupApiSchema);
 
 // Schema para respuesta paginada
 const paginatedModifierGroupsSchema = z.object({

@@ -25,7 +25,6 @@ import {
   IconButton,
   Modal,
   Checkbox,
-  TextInput,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
@@ -36,10 +35,10 @@ import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
 import {
-  safeTimeStringToDate,
-  safeDateToTimeString,
-  getNextAvailableTime,
-  parseDateFromBackend,
+  safeTimeStringToDate as _safeTimeStringToDate,
+  safeDateToTimeString as _safeDateToTimeString,
+  getNextAvailableTime as _getNextAvailableTime,
+  parseDateFromBackend as _parseDateFromBackend,
 } from '@/app/utils/dateTimeHelpers';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
@@ -243,8 +242,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
-    isSuccess: isSuccessOrder,
-    refetch: refetchOrder,
+    isSuccess: _isSuccessOrder,
+    refetch: _refetchOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
@@ -276,7 +275,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     useState<boolean>(false);
   const [editTemporaryTableName, setEditTemporaryTableName] =
     useState<string>('');
-  
+
   // Estados para controlar si ya procesamos los productos pendientes y si los datos de la orden ya se cargaron
   const [processedPendingProductsIds, setProcessedPendingProductsIds] =
     useState<string[]>([]);
@@ -577,7 +576,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     useState<OrderAdjustment | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<
+  const [_paymentMethod, _setPaymentMethod] = useState<
     'CASH' | 'CARD' | 'TRANSFER' | null
   >('CASH');
   const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
@@ -639,7 +638,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [menu],
   );
 
-
   // Cargar datos de la orden cuando esté en modo edición
   useEffect(() => {
     if (!isEditMode || !orderData || !visible) return;
@@ -678,7 +676,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       if (areaId) {
         setEditSelectedAreaId(areaId);
       }
-      
+
       // Verificar si es una mesa temporal
       if (orderData.table.isTemporary) {
         setEditIsTemporaryTable(true);
@@ -806,7 +804,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       orderType: orderData.orderType,
       tableId: orderData.tableId ?? null,
       isTemporaryTable: orderData.table?.isTemporary || false,
-      temporaryTableName: orderData.table?.isTemporary ? orderData.table.name : '',
+      temporaryTableName: orderData.table?.isTemporary
+        ? orderData.table.name
+        : '',
       deliveryInfo: orderData.deliveryInfo || {},
       notes: orderData.notes ?? '',
       scheduledAt: orderData.scheduledAt
@@ -1105,7 +1105,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
       // Cambios en hora programada (comparar valores de tiempo, no referencias)
-      (editScheduledTime?.getTime() ?? null) !== (originalOrderState.scheduledAt?.getTime() ?? null) ||
+      (editScheduledTime?.getTime() ?? null) !==
+        (originalOrderState.scheduledAt?.getTime() ?? null) ||
       // Cambios en ajustes
       JSON.stringify(editAdjustments) !==
         JSON.stringify(originalOrderState.adjustments);
@@ -1200,65 +1201,68 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   );
 
   // Función para limpiar datos según el tipo de orden (solo se ejecuta al guardar)
-  const cleanOrderDataForSubmission = useCallback((
-    orderType: OrderType,
-    deliveryInfo: DeliveryInfo,
-    selectedTableId: string | null,
-    selectedAreaId: string | null,
-    isTemporaryTable: boolean,
-    temporaryTableName: string
-  ) => {
-    const cleanedData: {
-      deliveryInfo: DeliveryInfo;
-      tableId?: string;
-      isTemporaryTable?: boolean;
-      temporaryTableName?: string;
-      temporaryTableAreaId?: string;
-    } = {
-      deliveryInfo: {}
-    };
+  const cleanOrderDataForSubmission = useCallback(
+    (
+      orderType: OrderType,
+      deliveryInfo: DeliveryInfo,
+      selectedTableId: string | null,
+      selectedAreaId: string | null,
+      isTemporaryTable: boolean,
+      temporaryTableName: string,
+    ) => {
+      const cleanedData: {
+        deliveryInfo: DeliveryInfo;
+        tableId?: string;
+        isTemporaryTable?: boolean;
+        temporaryTableName?: string;
+        temporaryTableAreaId?: string;
+      } = {
+        deliveryInfo: {},
+      };
 
-    // Limpiar deliveryInfo según el tipo de orden
-    if (orderType === OrderTypeEnum.DINE_IN) {
-      // DINE_IN: No necesita deliveryInfo, pero sí mesa
-      cleanedData.deliveryInfo = {};
-      if (isTemporaryTable) {
-        cleanedData.isTemporaryTable = true;
-        cleanedData.temporaryTableName = temporaryTableName;
-        cleanedData.temporaryTableAreaId = selectedAreaId || undefined;
-      } else {
-        cleanedData.tableId = selectedTableId || undefined;
+      // Limpiar deliveryInfo según el tipo de orden
+      if (orderType === OrderTypeEnum.DINE_IN) {
+        // DINE_IN: No necesita deliveryInfo, pero sí mesa
+        cleanedData.deliveryInfo = {};
+        if (isTemporaryTable) {
+          cleanedData.isTemporaryTable = true;
+          cleanedData.temporaryTableName = temporaryTableName;
+          cleanedData.temporaryTableAreaId = selectedAreaId || undefined;
+        } else {
+          cleanedData.tableId = selectedTableId || undefined;
+        }
+      } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
+        // TAKE_AWAY: Solo recipientName, recipientPhone y deliveryInstructions
+        cleanedData.deliveryInfo = {
+          recipientName: deliveryInfo.recipientName,
+          recipientPhone: deliveryInfo.recipientPhone,
+          deliveryInstructions: deliveryInfo.deliveryInstructions,
+        };
+        // No necesita mesa ni área
+      } else if (orderType === OrderTypeEnum.DELIVERY) {
+        // DELIVERY: Solo campos de dirección y recipientPhone
+        cleanedData.deliveryInfo = {
+          fullAddress: deliveryInfo.fullAddress,
+          street: deliveryInfo.street,
+          number: deliveryInfo.number,
+          interiorNumber: deliveryInfo.interiorNumber,
+          neighborhood: deliveryInfo.neighborhood,
+          city: deliveryInfo.city,
+          state: deliveryInfo.state,
+          zipCode: deliveryInfo.zipCode,
+          country: deliveryInfo.country,
+          latitude: deliveryInfo.latitude,
+          longitude: deliveryInfo.longitude,
+          recipientPhone: deliveryInfo.recipientPhone,
+          deliveryInstructions: deliveryInfo.deliveryInstructions,
+        };
+        // No necesita mesa ni área
       }
-    } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
-      // TAKE_AWAY: Solo recipientName, recipientPhone y deliveryInstructions
-      cleanedData.deliveryInfo = {
-        recipientName: deliveryInfo.recipientName,
-        recipientPhone: deliveryInfo.recipientPhone,
-        deliveryInstructions: deliveryInfo.deliveryInstructions,
-      };
-      // No necesita mesa ni área
-    } else if (orderType === OrderTypeEnum.DELIVERY) {
-      // DELIVERY: Solo campos de dirección y recipientPhone
-      cleanedData.deliveryInfo = {
-        fullAddress: deliveryInfo.fullAddress,
-        street: deliveryInfo.street,
-        number: deliveryInfo.number,
-        interiorNumber: deliveryInfo.interiorNumber,
-        neighborhood: deliveryInfo.neighborhood,
-        city: deliveryInfo.city,
-        state: deliveryInfo.state,
-        zipCode: deliveryInfo.zipCode,
-        country: deliveryInfo.country,
-        latitude: deliveryInfo.latitude,
-        longitude: deliveryInfo.longitude,
-        recipientPhone: deliveryInfo.recipientPhone,
-        deliveryInstructions: deliveryInfo.deliveryInstructions,
-      };
-      // No necesita mesa ni área
-    }
 
-    return cleanedData;
-  }, []);
+      return cleanedData;
+    },
+    [],
+  );
 
   const handleConfirm = async () => {
     if (isConfirming) return; // Prevenir múltiples clics
@@ -1302,7 +1306,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         isValid = false;
       }
       // Si se proporciona teléfono, validar que tenga al menos 10 dígitos
-      if (deliveryInfo.recipientPhone && deliveryInfo.recipientPhone.trim() !== '') {
+      if (
+        deliveryInfo.recipientPhone &&
+        deliveryInfo.recipientPhone.trim() !== ''
+      ) {
         const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
           setRecipientPhoneError('El teléfono debe tener al menos 10 dígitos');
@@ -1341,7 +1348,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       selectedTableId,
       selectedAreaId,
       isTemporaryTable,
-      temporaryTableName
+      temporaryTableName,
     );
 
     // Mapear items del carrito al formato esperado por el DTO del backend
@@ -1351,13 +1358,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     items.forEach((item: CartItem) => {
       if (isEditMode && item.id && !item.id.startsWith('new-')) {
         // En modo edición, expandir items con ID real según la cantidad
-        const existingIds = item.id.split(',').filter(id => id.trim() && !id.startsWith('new-'));
+        const existingIds = item.id
+          .split(',')
+          .filter((id) => id.trim() && !id.startsWith('new-'));
         const requiredQuantity = item.quantity;
-        
+
         // Enviar cada item individualmente
         for (let i = 0; i < requiredQuantity; i++) {
           const isExistingItem = i < existingIds.length;
-          
+
           itemsForBackend.push({
             id: isExistingItem ? existingIds[i] : undefined,
             productId: item.productId,
@@ -1916,39 +1925,43 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   }}
                   color={theme.colors.primary}
                 />
-                <Text style={styles.checkboxLabel}>{isEditMode && isTemporaryTable ? 'Mesa temporal' : 'Crear mesa temporal'}</Text>
+                <Text style={styles.checkboxLabel}>
+                  {isEditMode && isTemporaryTable
+                    ? 'Mesa temporal'
+                    : 'Crear mesa temporal'}
+                </Text>
               </TouchableOpacity>
 
-                {/* Campo para nombre de mesa temporal */}
-                {(isTemporaryTable || (isEditMode && editIsTemporaryTable)) && (
-                  <View style={styles.temporaryTableInputContainer}>
-                    <SpeechRecognitionInput
-                      key={`temporary-table-name-${isEditMode ? 'edit' : 'create'}`}
-                      label="Nombre de la Mesa Temporal *"
-                      value={temporaryTableName}
-                      onChangeText={(text) => {
-                        setTemporaryTableName(text);
-                        if (tableError) setTableError(null);
-                      }}
-                      error={!!tableError && isTemporaryTable}
-                      speechLang="es-MX"
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      placeholder="Ej: Mesa Terraza 1"
-                      editable={true} // Editable tanto en creación como en edición
-                    />
-                    {tableError && isTemporaryTable && (
-                      <HelperText
-                        type="error"
-                        visible={true}
-                        style={styles.helperTextFix}
-                      >
-                        {tableError}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              </View>
+              {/* Campo para nombre de mesa temporal */}
+              {(isTemporaryTable || (isEditMode && editIsTemporaryTable)) && (
+                <View style={styles.temporaryTableInputContainer}>
+                  <SpeechRecognitionInput
+                    key={`temporary-table-name-${isEditMode ? 'edit' : 'create'}`}
+                    label="Nombre de la Mesa Temporal *"
+                    value={temporaryTableName}
+                    onChangeText={(text) => {
+                      setTemporaryTableName(text);
+                      if (tableError) setTableError(null);
+                    }}
+                    error={!!tableError && isTemporaryTable}
+                    speechLang="es-MX"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    placeholder="Ej: Mesa Terraza 1"
+                    editable={true} // Editable tanto en creación como en edición
+                  />
+                  {tableError && isTemporaryTable && (
+                    <HelperText
+                      type="error"
+                      visible={true}
+                      style={styles.helperTextFix}
+                    >
+                      {tableError}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            </View>
 
             {/* 3. Notas */}
             <View style={[styles.sectionCompact, styles.fieldContainer]}>
@@ -2286,10 +2299,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                           : 'Editar Orden'}
                     </Text>
                     {orderData?.orderStatus && (
-                      <View style={[
-                        styles.orderStatusBadge,
-                        { backgroundColor: getOrderStatusColor(orderData.orderStatus, theme) }
-                      ]}>
+                      <View
+                        style={[
+                          styles.orderStatusBadge,
+                          {
+                            backgroundColor: getOrderStatusColor(
+                              orderData.orderStatus,
+                              theme,
+                            ),
+                          },
+                        ]}
+                      >
                         <Text style={styles.orderStatusText}>
                           {formatOrderStatus(orderData.orderStatus)}
                         </Text>
@@ -2549,17 +2569,19 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
                                   {/* Renderizar modificadores */}
                                   {hasModifiers &&
-                                    item.modifiers.map((mod: any, index: number) => (
-                                      <Text
-                                        key={mod.id || index}
-                                        style={styles.itemDescription}
-                                      >
-                                        • {mod.name}{' '}
-                                        {mod.price && Number(mod.price) > 0
-                                          ? `(+$${Number(mod.price).toFixed(2)})`
-                                          : ''}
-                                      </Text>
-                                    ))}
+                                    item.modifiers.map(
+                                      (mod: any, index: number) => (
+                                        <Text
+                                          key={mod.id || index}
+                                          style={styles.itemDescription}
+                                        >
+                                          • {mod.name}{' '}
+                                          {mod.price && Number(mod.price) > 0
+                                            ? `(+$${Number(mod.price).toFixed(2)})`
+                                            : ''}
+                                        </Text>
+                                      ),
+                                    )}
 
                                   {/* Renderizar notas */}
                                   {hasNotes && (

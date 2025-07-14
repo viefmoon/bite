@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import {
-  Modal,
-  Portal,
-  Text,
-  Button,
-  TextInput,
-  Surface,
-  IconButton,
-} from 'react-native-paper';
+import { Modal, Portal, Text, Button, TextInput } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 
 interface ChangeCalculatorModalProps {

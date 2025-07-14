@@ -12,7 +12,7 @@ interface ModifierGroupAvailabilityItemProps {
 
 export const ModifierGroupAvailabilityItem: React.FC<
   ModifierGroupAvailabilityItemProps
-> = ({ modifierGroup, onRefresh }) => {
+> = ({ modifierGroup, onRefresh: _onRefresh }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();

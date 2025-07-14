@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Portal, Text, Chip } from 'react-native-paper';
+import { Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import debounce from 'lodash.debounce';

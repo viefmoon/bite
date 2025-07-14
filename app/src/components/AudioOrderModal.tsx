@@ -72,7 +72,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   error,
 }) => {
   const theme = useAppTheme();
-  const { colors, fonts } = theme;
+  const { colors } = theme;
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [editableDeliveryInfo, setEditableDeliveryInfo] =
     useState<DeliveryInfoData>({});
@@ -94,17 +94,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     }
   }, [orderData?.deliveryInfo, orderData?.orderItems]);
 
-  const toggleItemExpansion = (itemId: string) => {
-    setExpandedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-  };
 
   const handleConfirm = () => {
     if (editableItems && editableItems.length > 0) {
@@ -279,7 +268,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       variantName?: string,
       unitPrice?: number,
       selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-      pizzaExtraCost?: number,
     ) => {
       const index = parseInt(itemId.split('-').pop() || '0');
 
@@ -428,7 +416,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     if (!orderData) return null;
 
     const {
-      orderItems = [],
       deliveryInfo,
       scheduledDelivery,
       orderType,
@@ -497,7 +484,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
               <List.Section>
                 {editableItems.map((item, index) => {
                   const itemKey = `${item.productId}-${index}`;
-                  const isExpanded = expandedItems.has(itemKey);
                   const { productName, variantName } = getProductDetails(
                     item.productId,
                     item.variantId,
@@ -507,7 +493,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                   );
 
                   // Función para renderizar acciones de deslizar
-                  const renderRightActions = (progress: any, dragX: any) => {
+                  const renderRightActions = (_progress: any, dragX: any) => {
                     const translateX = dragX.interpolate({
                       inputRange: [-100, 0],
                       outputRange: [0, 100],

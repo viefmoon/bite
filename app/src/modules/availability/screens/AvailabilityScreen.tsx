@@ -2,13 +2,13 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, RefreshControl, FlatList } from 'react-native';
 import {
   Searchbar,
-  SegmentedButtons,
+  SegmentedButtons as _SegmentedButtons,
   ActivityIndicator,
   Surface,
   Text,
   Menu,
   IconButton,
-  Badge,
+  Badge as _Badge,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryAvailabilityItem } from '../components/CategoryAvailabilityItem';

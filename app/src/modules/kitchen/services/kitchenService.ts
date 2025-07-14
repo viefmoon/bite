@@ -2,7 +2,7 @@ import ApiClientWrapper from '@/app/services/apiClientWrapper';
 import { KitchenOrder, KitchenFilters } from '../types/kitchen.types';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
-interface PaginationResponse<T> {
+interface _PaginationResponse<T> {
   data: T[];
   hasNextPage: boolean;
 }

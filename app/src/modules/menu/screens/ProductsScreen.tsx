@@ -105,7 +105,7 @@ function ProductsScreen(): React.ReactElement {
   const products = useMemo(() => {
     return (productsResponse?.data ?? []).map((p: Product) => ({
       ...p,
-      _displayDescription: p.hasVariants
+      displayDescription: p.hasVariants
         ? `${p.variants?.length || 0} variante(s)`
         : !isNaN(parseFloat(String(p.price)))
           ? `$${parseFloat(String(p.price)).toFixed(2)}`
@@ -178,8 +178,8 @@ function ProductsScreen(): React.ReactElement {
 
   const listRenderConfig = {
     titleField: 'name' as keyof Product,
-    descriptionField: '_displayDescription' as keyof (Product & {
-      _displayDescription: string;
+    descriptionField: 'displayDescription' as keyof (Product & {
+      displayDescription: string;
     }),
     imageField: 'photo' as keyof Product,
     sortOrderField: 'sortOrder' as keyof Product,
@@ -226,7 +226,7 @@ function ProductsScreen(): React.ReactElement {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <GenericList<Product & { _displayDescription: string }>
+      <GenericList<Product & { displayDescription: string }>
         items={products}
         renderConfig={listRenderConfig}
         onItemPress={handleOpenEditModal}

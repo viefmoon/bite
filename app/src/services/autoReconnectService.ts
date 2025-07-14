@@ -196,7 +196,7 @@ class AutoReconnectService extends EventEmitter {
     try {
       const netInfo = await NetInfo.fetch();
       const hasWifi =
-        netInfo.isConnected &&
+        !!netInfo.isConnected &&
         (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
 
       return hasWifi;

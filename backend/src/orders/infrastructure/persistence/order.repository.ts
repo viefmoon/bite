@@ -37,6 +37,7 @@ export abstract class OrderRepository {
   abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
   abstract findOrderForFinalizationById(id: string): Promise<Order | null>;
   abstract findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
+  abstract findOpenOrdersOptimized(startDate: Date, endDate: Date): Promise<Order[]>;
   abstract findByStatus(statuses: string[]): Promise<Order[]>;
 
   abstract update(

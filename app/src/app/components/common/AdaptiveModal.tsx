@@ -53,7 +53,6 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const _insets = useSafeAreaInsets();
 
   const screenHeight = Dimensions.get('window').height;
 

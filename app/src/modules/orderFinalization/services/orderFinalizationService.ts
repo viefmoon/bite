@@ -8,11 +8,15 @@ import {
 
 export const orderFinalizationService = {
   async getOrdersForFinalizationList(): Promise<OrderForFinalizationList[]> {
-    const response = await apiClient.get(API_PATHS.ORDERS_FOR_FINALIZATION_LIST);
+    const response = await apiClient.get(
+      API_PATHS.ORDERS_FOR_FINALIZATION_LIST,
+    );
     return response.data;
   },
 
-  async getOrderForFinalizationDetail(orderId: string): Promise<OrderForFinalization> {
+  async getOrderForFinalizationDetail(
+    orderId: string,
+  ): Promise<OrderForFinalization> {
     const response = await apiClient.get(
       API_PATHS.ORDERS_FOR_FINALIZATION_DETAIL.replace(':id', orderId),
     );
@@ -23,12 +27,20 @@ export const orderFinalizationService = {
     await apiClient.patch(API_PATHS.ORDERS_FINALIZE_MULTIPLE, payload);
   },
 
-  async quickFinalizeMultipleOrders(orderIds: string[]): Promise<{ message: string; ordersWithWarnings: string[] }> {
-    const response = await apiClient.post('/api/v1/orders/quick-finalize-multiple', { orderIds });
+  async quickFinalizeMultipleOrders(
+    orderIds: string[],
+  ): Promise<{ message: string; ordersWithWarnings: string[] }> {
+    const response = await apiClient.post(
+      '/api/v1/orders/quick-finalize-multiple',
+      { orderIds },
+    );
     return response.data;
   },
 
-  async printTicket(orderId: string, params: { printerId: string; ticketType: 'GENERAL' | 'BILLING' }): Promise<void> {
+  async printTicket(
+    orderId: string,
+    params: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
+  ): Promise<void> {
     await apiClient.post(`/api/v1/orders/${orderId}/print-ticket`, params);
   },
 };

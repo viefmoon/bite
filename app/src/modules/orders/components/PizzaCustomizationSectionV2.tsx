@@ -1,16 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Text,
-  Divider,
   Checkbox,
-  RadioButton,
   Card,
-  Chip,
   ActivityIndicator,
   Surface,
-  SegmentedButtons,
-  List,
   Switch,
   IconButton,
   TouchableRipple,
@@ -475,98 +470,6 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
     );
   };
 
-  // Función para formatear la vista previa de la pizza
-  const getFormattedPizzaPreview = () => {
-    // Agrupar personalizaciones por mitad
-    const groupedByHalf = selectedPizzaCustomizations.reduce(
-      (acc, curr) => {
-        const half =
-          curr.half === PizzaHalf.HALF_1
-            ? 'HALF_1'
-            : curr.half === PizzaHalf.HALF_2
-              ? 'HALF_2'
-              : 'FULL';
-
-        if (!acc[half]) {
-          acc[half] = {
-            flavors: [],
-            addedIngredients: [],
-            removedIngredients: [],
-          };
-        }
-
-        // Buscar si es sabor o ingrediente
-        const customization = [...flavors, ...ingredients].find(
-          (c) => c.id === curr.pizzaCustomizationId,
-        );
-        const name = customization?.name || curr.pizzaCustomizationId;
-
-        if (customization?.type === CustomizationType.FLAVOR) {
-          acc[half].flavors.push(name);
-        } else if (customization?.type === CustomizationType.INGREDIENT) {
-          if (curr.action === CustomizationAction.ADD) {
-            acc[half].addedIngredients.push(name);
-          } else {
-            acc[half].removedIngredients.push(name);
-          }
-        }
-
-        return acc;
-      },
-      {} as Record<
-        string,
-        {
-          flavors: string[];
-          addedIngredients: string[];
-          removedIngredients: string[];
-        }
-      >,
-    );
-
-    // Formatear según el tipo de pizza
-    if (groupedByHalf.FULL) {
-      const parts: string[] = [];
-      if (groupedByHalf.FULL.flavors.length > 0) {
-        parts.push(groupedByHalf.FULL.flavors.join(', '));
-      }
-      if (groupedByHalf.FULL.addedIngredients.length > 0) {
-        parts.push(`con: ${groupedByHalf.FULL.addedIngredients.join(', ')}`);
-      }
-      if (groupedByHalf.FULL.removedIngredients.length > 0) {
-        parts.push(`sin: ${groupedByHalf.FULL.removedIngredients.join(', ')}`);
-      }
-      return parts.length > 0 ? parts.join(' - ') : 'Pizza sin personalizar';
-    } else if (groupedByHalf.HALF_1 || groupedByHalf.HALF_2) {
-      const formatHalf = (halfData: {
-        flavors: string[];
-        addedIngredients: string[];
-        removedIngredients: string[];
-      }) => {
-        const parts: string[] = [];
-        if (halfData.flavors.length > 0) {
-          parts.push(halfData.flavors.join(', '));
-        }
-        if (halfData.addedIngredients.length > 0) {
-          parts.push(`con: ${halfData.addedIngredients.join(', ')}`);
-        }
-        if (halfData.removedIngredients.length > 0) {
-          parts.push(`sin: ${halfData.removedIngredients.join(', ')}`);
-        }
-        return parts.length > 0 ? parts.join(' - ') : 'Sin personalizar';
-      };
-
-      const half1 = groupedByHalf.HALF_1
-        ? formatHalf(groupedByHalf.HALF_1)
-        : 'Sin personalizar';
-      const half2 = groupedByHalf.HALF_2
-        ? formatHalf(groupedByHalf.HALF_2)
-        : 'Sin personalizar';
-
-      return `(${half1} / ${half2})`;
-    }
-
-    return 'Pizza sin personalizar';
-  };
 
   return (
     <View style={styles.container}>

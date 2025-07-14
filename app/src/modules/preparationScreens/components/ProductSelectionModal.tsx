@@ -506,7 +506,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
           }}
           showsVerticalScrollIndicator={true}
         >
-          {conflictingProducts.map((product, index) => (
+          {conflictingProducts.map((product, _index) => (
             <View
               key={product.id}
               style={{

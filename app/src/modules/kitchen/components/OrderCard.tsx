@@ -7,7 +7,13 @@ import {
   Pressable,
   Vibration,
 } from 'react-native';
-import { Card, Text, Divider, Surface, IconButton } from 'react-native-paper';
+import {
+  Card as _Card,
+  Text,
+  Divider,
+  Surface,
+  IconButton,
+} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
@@ -15,7 +21,7 @@ import { es } from 'date-fns/locale';
 import {
   KitchenOrder,
   OrderType,
-  PreparationStatus,
+  PreparationStatus as _PreparationStatus,
   PreparationScreenStatus,
 } from '../types/kitchen.types';
 import { OrderItemRow } from './OrderItemRow';

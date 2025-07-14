@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Pressable } from 'react-native';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import {
   Surface,
   Text,
@@ -19,7 +19,6 @@ import {
 import {
   OrderFinalizationFilter,
   OrderSelectionState,
-  OrderForFinalization,
   OrderForFinalizationList,
 } from '../types/orderFinalization.types';
 import EmptyState from '@/app/components/common/EmptyState';
@@ -36,24 +35,27 @@ export const OrderFinalizationScreen: React.FC = () => {
     selectedOrders: new Set(),
     totalAmount: 0,
   });
-  const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] =
-    useState<string | null>(null);
+  const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] = useState<
+    string | null
+  >(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [isFinalizingOrders, setIsFinalizingOrders] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<OrderForFinalizationList | null>(null);
+  const [selectedOrderForPrint, setSelectedOrderForPrint] =
+    useState<OrderForFinalizationList | null>(null);
 
   const {
     data: orders = [],
     isLoading,
     refetch,
-    error,
   } = useOrdersForFinalizationList();
-  
-  const { data: selectedOrderDetails, isLoading: isLoadingDetails } = useOrderForFinalizationDetail(selectedOrderIdForDetails);
-  
-  // Hook separado para obtener detalles de orden para impresión
-  const { data: orderForPrint } = useOrderForFinalizationDetail(selectedOrderForPrint?.id || null);
+
+  const { data: selectedOrderDetails, isLoading: isLoadingDetails } =
+    useOrderForFinalizationDetail(selectedOrderIdForDetails);
+
+  const { data: orderForPrint } = useOrderForFinalizationDetail(
+    selectedOrderForPrint?.id || null,
+  );
 
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
@@ -96,7 +98,7 @@ export const OrderFinalizationScreen: React.FC = () => {
         }
         return counts;
       },
-      { delivery: 0, take_away: 0, dine_in: 0 }
+      { delivery: 0, take_away: 0, dine_in: 0 },
     );
   }, [orders]);
 
@@ -142,35 +144,15 @@ export const OrderFinalizationScreen: React.FC = () => {
     [orders],
   );
 
-  const formatOrderStatus = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'Pendiente';
-      case 'IN_PROGRESS':
-        return 'En preparación';
-      case 'IN_PREPARATION':
-        return 'En preparación';
-      case 'READY':
-        return 'Listo';
-      case 'DELIVERED':
-        return 'Entregado';
-      case 'COMPLETED':
-        return 'Completado';
-      case 'CANCELLED':
-        return 'Cancelado';
-      default:
-        return status;
-    }
-  };
 
   const ordersNotReady = useMemo(() => {
     if (selectionState.selectedOrders.size === 0) return [];
-    
+
     const selectedOrdersList = Array.from(selectionState.selectedOrders)
-      .map(id => orders.find(o => o.id === id))
+      .map((id) => orders.find((o) => o.id === id))
       .filter(Boolean) as OrderForFinalizationList[];
-    
-    return selectedOrdersList.filter(order => order.orderStatus !== 'READY');
+
+    return selectedOrdersList.filter((order) => order.orderStatus !== 'READY');
   }, [selectionState.selectedOrders, orders]);
 
   const confirmationMessage = useMemo(() => {
@@ -195,77 +177,81 @@ export const OrderFinalizationScreen: React.FC = () => {
   const handleConfirmFinalization = useCallback(async () => {
     setIsFinalizingOrders(true);
     try {
-      const result = await orderFinalizationService.quickFinalizeMultipleOrders(
-        Array.from(selectionState.selectedOrders)
+      await orderFinalizationService.quickFinalizeMultipleOrders(
+        Array.from(selectionState.selectedOrders),
       );
-      
-      showSnackbar({ 
-        message: 'Órdenes finalizadas exitosamente', 
-        type: 'success' 
+
+      showSnackbar({
+        message: 'Órdenes finalizadas exitosamente',
+        type: 'success',
       });
 
       setSelectionState({
         selectedOrders: new Set(),
         totalAmount: 0,
       });
-      
+
       setShowConfirmationModal(false);
       refetch();
     } catch (error) {
-      showSnackbar({ 
-        message: 'Error al finalizar las órdenes', 
-        type: 'error' 
+      showSnackbar({
+        message: 'Error al finalizar las órdenes',
+        type: 'error',
       });
     } finally {
       setIsFinalizingOrders(false);
     }
   }, [selectionState.selectedOrders, showSnackbar, refetch]);
 
-  const handleShowOrderDetails = useCallback((order: OrderForFinalizationList) => {
-    setSelectedOrderIdForDetails(null);
-    setTimeout(() => {
-      setSelectedOrderIdForDetails(order.id);
-    }, 50);
-  }, []);
+  const handleShowOrderDetails = useCallback(
+    (order: OrderForFinalizationList) => {
+      setSelectedOrderIdForDetails(null);
+      setTimeout(() => {
+        setSelectedOrderIdForDetails(order.id);
+      }, 50);
+    },
+    [],
+  );
 
   const handlePrintPress = useCallback(() => {
     setShowPrintModal(true);
   }, []);
 
-  const handlePrintFromList = useCallback(async (order: OrderForFinalizationList) => {
-    // Solo establecer la orden para imprimir, no abrir el modal de detalles
-    setSelectedOrderForPrint(order);
-    setShowPrintModal(true);
-  }, []);
+  const handlePrintFromList = useCallback(
+    async (order: OrderForFinalizationList) => {
+      setSelectedOrderForPrint(order);
+      setShowPrintModal(true);
+    },
+    [],
+  );
 
-  const handlePrint = useCallback(async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
-    // Usar orderForPrint si viene de la lista, o selectedOrderDetails si viene del detalle
-    const orderToUse = orderForPrint || selectedOrderDetails;
-    if (!orderToUse) return;
-    
-    try {
-      await orderFinalizationService.printTicket(orderToUse.id, {
-        printerId,
-        ticketType,
-      });
-      
-      showSnackbar({
-        message: 'Ticket impreso exitosamente',
-        type: 'success',
-      });
-      
-      // Refrescar la lista para actualizar el contador de impresiones
-      await refetch();
-      
-      // Limpiar estado después de imprimir
-      setSelectedOrderForPrint(null);
-    } catch (error) {
-      showSnackbar({
-        message: 'Error al imprimir el ticket',
-        type: 'error',
-      });
-    }
-  }, [orderForPrint, selectedOrderDetails, showSnackbar, refetch]);
+  const handlePrint = useCallback(
+    async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
+      const orderToUse = orderForPrint || selectedOrderDetails;
+      if (!orderToUse) return;
+
+      try {
+        await orderFinalizationService.printTicket(orderToUse.id, {
+          printerId,
+          ticketType,
+        });
+
+        showSnackbar({
+          message: 'Ticket impreso exitosamente',
+          type: 'success',
+        });
+
+        await refetch();
+        setSelectedOrderForPrint(null);
+      } catch (error) {
+        showSnackbar({
+          message: 'Error al imprimir el ticket',
+          type: 'error',
+        });
+      }
+    },
+    [orderForPrint, selectedOrderDetails, showSnackbar, refetch],
+  );
 
   const renderOrderCard = useCallback(
     ({ item }) => (
@@ -310,29 +296,53 @@ export const OrderFinalizationScreen: React.FC = () => {
               style={[
                 styles.filterButton,
                 filter === 'delivery' && styles.filterButtonActive,
-                { backgroundColor: filter === 'delivery' ? theme.colors.primaryContainer : theme.colors.surface },
+                {
+                  backgroundColor:
+                    filter === 'delivery'
+                      ? theme.colors.primaryContainer
+                      : theme.colors.surface,
+                },
               ]}
               onPress={() => setFilter('delivery')}
             >
               <Icon
                 source="moped"
                 size={26}
-                color={filter === 'delivery' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                color={
+                  filter === 'delivery'
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant
+                }
               />
               {orderCounts.delivery > 0 && (
-                <View 
+                <View
                   style={[
                     styles.countBadge,
-                    { 
-                      backgroundColor: filter === 'delivery' ? theme.colors.error : theme.colors.errorContainer,
-                      borderColor: filter === 'delivery' ? theme.colors.error : theme.colors.outline,
-                    }
+                    {
+                      backgroundColor:
+                        filter === 'delivery'
+                          ? theme.colors.error
+                          : theme.colors.errorContainer,
+                      borderColor:
+                        filter === 'delivery'
+                          ? theme.colors.error
+                          : theme.colors.outline,
+                    },
                   ]}
                 >
-                  <Text style={[
-                    styles.countBadgeText,
-                    { color: filter === 'delivery' ? theme.colors.onError : theme.colors.onErrorContainer }
-                  ]}>{orderCounts.delivery}</Text>
+                  <Text
+                    style={[
+                      styles.countBadgeText,
+                      {
+                        color:
+                          filter === 'delivery'
+                            ? theme.colors.onError
+                            : theme.colors.onErrorContainer,
+                      },
+                    ]}
+                  >
+                    {orderCounts.delivery}
+                  </Text>
                 </View>
               )}
             </Pressable>
@@ -340,29 +350,53 @@ export const OrderFinalizationScreen: React.FC = () => {
               style={[
                 styles.filterButton,
                 filter === 'take_away' && styles.filterButtonActive,
-                { backgroundColor: filter === 'take_away' ? theme.colors.primaryContainer : theme.colors.surface },
+                {
+                  backgroundColor:
+                    filter === 'take_away'
+                      ? theme.colors.primaryContainer
+                      : theme.colors.surface,
+                },
               ]}
               onPress={() => setFilter('take_away')}
             >
               <Icon
                 source="bag-personal"
                 size={26}
-                color={filter === 'take_away' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                color={
+                  filter === 'take_away'
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant
+                }
               />
               {orderCounts.take_away > 0 && (
-                <View 
+                <View
                   style={[
                     styles.countBadge,
-                    { 
-                      backgroundColor: filter === 'take_away' ? theme.colors.error : theme.colors.errorContainer,
-                      borderColor: filter === 'take_away' ? theme.colors.error : theme.colors.outline,
-                    }
+                    {
+                      backgroundColor:
+                        filter === 'take_away'
+                          ? theme.colors.error
+                          : theme.colors.errorContainer,
+                      borderColor:
+                        filter === 'take_away'
+                          ? theme.colors.error
+                          : theme.colors.outline,
+                    },
                   ]}
                 >
-                  <Text style={[
-                    styles.countBadgeText,
-                    { color: filter === 'take_away' ? theme.colors.onError : theme.colors.onErrorContainer }
-                  ]}>{orderCounts.take_away}</Text>
+                  <Text
+                    style={[
+                      styles.countBadgeText,
+                      {
+                        color:
+                          filter === 'take_away'
+                            ? theme.colors.onError
+                            : theme.colors.onErrorContainer,
+                      },
+                    ]}
+                  >
+                    {orderCounts.take_away}
+                  </Text>
                 </View>
               )}
             </Pressable>
@@ -370,29 +404,53 @@ export const OrderFinalizationScreen: React.FC = () => {
               style={[
                 styles.filterButton,
                 filter === 'dine_in' && styles.filterButtonActive,
-                { backgroundColor: filter === 'dine_in' ? theme.colors.primaryContainer : theme.colors.surface },
+                {
+                  backgroundColor:
+                    filter === 'dine_in'
+                      ? theme.colors.primaryContainer
+                      : theme.colors.surface,
+                },
               ]}
               onPress={() => setFilter('dine_in')}
             >
               <Icon
                 source="silverware-fork-knife"
                 size={26}
-                color={filter === 'dine_in' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                color={
+                  filter === 'dine_in'
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant
+                }
               />
               {orderCounts.dine_in > 0 && (
-                <View 
+                <View
                   style={[
                     styles.countBadge,
-                    { 
-                      backgroundColor: filter === 'dine_in' ? theme.colors.error : theme.colors.errorContainer,
-                      borderColor: filter === 'dine_in' ? theme.colors.error : theme.colors.outline,
-                    }
+                    {
+                      backgroundColor:
+                        filter === 'dine_in'
+                          ? theme.colors.error
+                          : theme.colors.errorContainer,
+                      borderColor:
+                        filter === 'dine_in'
+                          ? theme.colors.error
+                          : theme.colors.outline,
+                    },
                   ]}
                 >
-                  <Text style={[
-                    styles.countBadgeText,
-                    { color: filter === 'dine_in' ? theme.colors.onError : theme.colors.onErrorContainer }
-                  ]}>{orderCounts.dine_in}</Text>
+                  <Text
+                    style={[
+                      styles.countBadgeText,
+                      {
+                        color:
+                          filter === 'dine_in'
+                            ? theme.colors.onError
+                            : theme.colors.onErrorContainer,
+                      },
+                    ]}
+                  >
+                    {orderCounts.dine_in}
+                  </Text>
                 </View>
               )}
             </Pressable>
@@ -454,7 +512,7 @@ export const OrderFinalizationScreen: React.FC = () => {
         isLoading={isLoadingDetails}
         onPrintPress={handlePrintPress}
       />
-      
+
       <PrintTicketModal
         visible={showPrintModal}
         onDismiss={() => {
@@ -472,8 +530,10 @@ export const OrderFinalizationScreen: React.FC = () => {
         onConfirm={handleConfirmFinalization}
         onCancel={() => setShowConfirmationModal(false)}
         onDismiss={() => setShowConfirmationModal(false)}
-        confirmText={isFinalizingOrders ? "Finalizando..." : "Finalizar"}
-        confirmButtonColor={ordersNotReady.length > 0 ? theme.colors.error : theme.colors.primary}
+        confirmText={isFinalizingOrders ? 'Finalizando...' : 'Finalizar'}
+        confirmButtonColor={
+          ordersNotReady.length > 0 ? theme.colors.error : theme.colors.primary
+        }
       />
     </SafeAreaView>
   );

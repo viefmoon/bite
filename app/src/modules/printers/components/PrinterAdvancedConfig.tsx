@@ -171,12 +171,8 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
           {errors.charactersPerLine.message}
         </HelperText>
       )}
-      
-      <HelperText
-        type="info"
-        visible={true}
-        style={styles.helperText}
-      >
+
+      <HelperText type="info" visible={true} style={styles.helperText}>
         Ajusta según el ancho real de impresión de tu impresora
       </HelperText>
 
@@ -227,12 +223,8 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
           {errors.feedLines.message}
         </HelperText>
       )}
-      
-      <HelperText
-        type="info"
-        visible={true}
-        style={styles.helperText}
-      >
+
+      <HelperText type="info" visible={true} style={styles.helperText}>
         Líneas en blanco para que el ticket salga completamente (0-50)
       </HelperText>
     </View>

@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Dimensions,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
 import {
@@ -12,7 +11,6 @@ import {
   Portal,
   Text,
   Surface,
-  IconButton,
   Divider,
   ActivityIndicator,
   Chip,
@@ -178,126 +176,6 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       default:
         return 'information';
     }
-  };
-
-  const renderChangeDetail = (change: any, fieldName?: string) => {
-    if (
-      change &&
-      typeof change === 'object' &&
-      change.anterior !== undefined &&
-      change.nuevo !== undefined
-    ) {
-      // Para descripción del item, mostrar en formato vertical si es muy largo
-      if (
-        fieldName === 'Descripción del Item' &&
-        (String(change.anterior).length > 30 ||
-          String(change.nuevo).length > 30)
-      ) {
-        return (
-          <View style={{ marginTop: 4 }}>
-            <View
-              style={{
-                backgroundColor: theme.colors.errorContainer,
-                padding: 8,
-                borderRadius: 6,
-                marginBottom: 8,
-              }}
-            >
-              <Text
-                variant="labelSmall"
-                style={{
-                  color: theme.colors.onErrorContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
-              >
-                Antes:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onErrorContainer }}
-              >
-                {String(change.anterior)}
-              </Text>
-            </View>
-            <View
-              style={{
-                backgroundColor: theme.colors.primaryContainer,
-                padding: 8,
-                borderRadius: 6,
-              }}
-            >
-              <Text
-                variant="labelSmall"
-                style={{
-                  color: theme.colors.onPrimaryContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
-              >
-                Después:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onPrimaryContainer }}
-              >
-                {String(change.nuevo)}
-              </Text>
-            </View>
-          </View>
-        );
-      }
-
-      // Formato horizontal para cambios cortos
-      return (
-        <View style={styles.changeDetail}>
-          <View
-            style={{
-              backgroundColor: theme.colors.errorContainer,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 4,
-              marginRight: 6,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onErrorContainer,
-                fontWeight: '500',
-              }}
-            >
-              {String(change.anterior)}
-            </Text>
-          </View>
-          <Icon
-            name="arrow-right"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-            style={{ marginHorizontal: 4 }}
-          />
-          <View
-            style={{
-              backgroundColor: theme.colors.primaryContainer,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 4,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onPrimaryContainer,
-                fontWeight: '500',
-              }}
-            >
-              {String(change.nuevo)}
-            </Text>
-          </View>
-        </View>
-      );
-    }
-    return null;
   };
 
   return (
@@ -466,7 +344,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
                   showsVerticalScrollIndicator={false}
                 >
                   {history && history.length > 0 ? (
-                    history.map((item, index) => {
+                    history.map((item, _index) => {
                       const isExpanded = expandedItems.has(item.id);
                       return (
                         <Surface

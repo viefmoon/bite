@@ -4,7 +4,6 @@ import {
   AudioModule,
   RecordingPresets,
 } from 'expo-audio';
-import { Platform } from 'react-native';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -247,9 +246,9 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       try {
         const stopPromise = ExpoSpeechRecognitionModule.stop();
         if (stopPromise && typeof stopPromise.catch === 'function') {
-          stopPromise.catch((err) => {});
+          stopPromise.catch((_err) => {});
         }
-      } catch (err) {}
+      } catch (_err) {}
       isTranscribing.current = false;
     }
 
@@ -258,7 +257,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       try {
         const stopPromise = audioRecorder.stop();
         if (stopPromise && typeof stopPromise.catch === 'function') {
-          stopPromise.catch((err) => {
+          stopPromise.catch((_err) => {
             // Ignorar el error "stop failed" ya que es esperado cuando se resetea rápidamente
           });
         }

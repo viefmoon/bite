@@ -26,8 +26,8 @@ const PrinterSelectionModal: React.FC<PrinterSelectionModalProps> = ({
     data: printersResponse,
     isLoading,
     isError,
-    error,
-    refetch,
+    error: _error,
+    refetch: _refetch,
   } = usePrintersQuery(
     { isActive: true, limit: 100, page: 1 },
     { enabled: visible },

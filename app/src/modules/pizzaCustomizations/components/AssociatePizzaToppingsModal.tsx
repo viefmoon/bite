@@ -18,7 +18,6 @@ import { pizzaCustomizationsService } from '../services/pizzaCustomizationsServi
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { CustomizationType } from '../types/pizzaCustomization.types';
 import type { Product } from '@/modules/menu/schema/products.schema';
-import type { PizzaCustomization } from '../types/pizzaCustomization.types';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 interface AssociatePizzaToppingsModalProps {

@@ -451,6 +451,7 @@ const CreateOrderScreen = () => {
       if (orderType) {
         setOrderType(orderType);
       } else {
+        // Order type not changed, keep current value
       }
 
       setShowAudioModal(false);

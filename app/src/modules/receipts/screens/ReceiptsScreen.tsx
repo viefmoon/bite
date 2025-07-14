@@ -214,7 +214,8 @@ export const ReceiptsScreen: React.FC = () => {
               </Text>
               <View style={styles.timeAndPaymentRow}>
                 <Text style={styles.orderTime}>
-                  Creado: {format(new Date(item.createdAt), 'p', { locale: es })}
+                  Creado:{' '}
+                  {format(new Date(item.createdAt), 'p', { locale: es })}
                 </Text>
                 <Text style={styles.dateText}>
                   {format(new Date(item.createdAt), "d 'de' MMMM", {
@@ -225,7 +226,8 @@ export const ReceiptsScreen: React.FC = () => {
               {item.finalizedAt && (
                 <View style={styles.timeAndPaymentRow}>
                   <Text style={styles.orderTimeFinal}>
-                    Finalizado: {format(new Date(item.finalizedAt), 'p', { locale: es })}
+                    Finalizado:{' '}
+                    {format(new Date(item.finalizedAt), 'p', { locale: es })}
                   </Text>
                   <Text style={styles.dateText}>
                     {format(new Date(item.finalizedAt), "d 'de' MMMM", {

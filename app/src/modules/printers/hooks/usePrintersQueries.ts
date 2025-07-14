@@ -4,7 +4,6 @@ import {
   useQuery,
   UseQueryResult,
   useQueryClient,
-  QueryKey,
 } from '@tanstack/react-query';
 import { printerService } from '../services/printerService';
 import {
@@ -137,7 +136,7 @@ export const useUpdatePrinterMutation = (): UseMutationResult<
         type: 'success',
       });
     },
-    onError: (error, variables) => {
+    onError: (error, _variables) => {
       showSnackbar({
         message: getApiErrorMessage(error),
         type: 'error',
@@ -186,7 +185,7 @@ export const usePingPrinterMutation = (): UseMutationResult<
 
   return useMutation<{ status: string }, ApiError, string>({
     mutationFn: (printerId: string) => printerService.pingPrinter(printerId),
-    onSuccess: (data, printerId) => {
+    onSuccess: (data, _printerId) => {
       const message =
         data.status === 'online'
           ? `Impresora conectada (ping exitoso).`

@@ -39,7 +39,6 @@ import CustomImagePicker, {
   FileObject,
 } from '@/app/components/common/CustomImagePicker';
 import { ImageUploadService } from '@/app/lib/imageUploadService';
-import { getImageUrl } from '@/app/lib/imageUtils';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
@@ -175,7 +174,6 @@ function ProductFormModal({
   const hasVariants = watch('hasVariants');
   const currentImageUri = watch('imageUri');
   const priceValue = watch('price');
-  const selectedPreparationScreenId = watch('preparationScreenId');
 
   useEffect(() => {
     setPriceInputValue(

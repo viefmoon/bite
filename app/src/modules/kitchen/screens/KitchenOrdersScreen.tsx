@@ -1,18 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  Animated,
-} from 'react-native';
-import {
-  Text,
-  FAB,
-  ActivityIndicator,
-  Surface,
-  IconButton,
-} from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Animated } from 'react-native';
+import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { useOrientation } from '@/hooks/useOrientation';
 import {
@@ -30,11 +18,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useKitchenContext } from '../context/KitchenContext';
 import { OrderType } from '../types/kitchen.types';
 
-export default function KitchenOrdersScreen({ navigation }: any) {
+export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const isLandscape = useOrientation();
-  const { filters, setFilters } = useKitchenStore();
+  const { filters, setFilters: _setFilters } = useKitchenStore();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isSwipingCard, setIsSwipingCard] = useState(false);
   const flatListRef = useRef<ScrollView>(null);
@@ -44,7 +31,7 @@ export default function KitchenOrdersScreen({ navigation }: any) {
     data: orders,
     isLoading,
     refetch,
-    isRefetching,
+    isRefetching: _isRefetching,
   } = useKitchenOrders(filters);
   const startOrderPreparation = useStartOrderPreparation();
   const cancelOrderPreparation = useCancelOrderPreparation();

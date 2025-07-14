@@ -16,17 +16,12 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  useNavigation,
-  useRoute,
-  useFocusEffect,
-} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useGetFullMenu } from '../hooks/useMenuQueries';
 import { Product, Category, SubCategory } from '../types/orders.types';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
-import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import CartButton from '../components/CartButton';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
@@ -60,7 +55,7 @@ const AddProductsToOrderScreen = () => {
 
   // Obtener parámetros de navegación
   const {
-    orderId,
+    orderId: _orderId,
     orderNumber,
     existingTempProducts,
     existingOrderItemsCount,
@@ -362,30 +357,6 @@ const AddProductsToOrderScreen = () => {
     setSelectedProduct(null);
   };
 
-  const handleEditItem = (item: CartItem) => {
-    // Buscar el producto completo en el menú
-    if (!menu || !Array.isArray(menu)) return;
-
-    let product: Product | undefined;
-    for (const category of menu) {
-      if (category.subcategories && Array.isArray(category.subcategories)) {
-        for (const subcategory of category.subcategories) {
-          if (subcategory.products && Array.isArray(subcategory.products)) {
-            product = subcategory.products.find(
-              (p: Product) => p.id === item.productId,
-            );
-            if (product) break;
-          }
-        }
-      }
-      if (product) break;
-    }
-
-    if (product) {
-      setEditingItem(item);
-      setSelectedProduct(product);
-    }
-  };
 
   const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);

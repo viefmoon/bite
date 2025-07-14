@@ -39,7 +39,6 @@ import {
   findAllSubcategoriesDtoSchema,
 } from '../schema/subcategories.schema';
 import { z } from 'zod';
-import { getImageUrl } from '../../../app/lib/imageUtils';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 
 type SubcategoriesScreenRouteProp = RouteProp<

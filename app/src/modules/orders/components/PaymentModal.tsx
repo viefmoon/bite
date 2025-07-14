@@ -29,7 +29,7 @@ import {
 import {
   useGetPaymentsByOrderIdQuery,
   useCreatePaymentMutation,
-  useUpdatePaymentMutation,
+  useUpdatePaymentMutation as _useUpdatePaymentMutation,
   useDeletePaymentMutation,
 } from '../hooks/usePaymentQueries';
 import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
@@ -61,14 +61,14 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   TRANSFER: '📱 Transferencia',
 };
 
-const _paymentMethodIcons: Record<PaymentMethod, string> = {
+const paymentMethodIcons: Record<PaymentMethod, string> = {
   CASH: 'cash',
   CARD: 'credit-card',
   TRANSFER: 'bank-transfer',
 };
 
 // Métodos de pago deshabilitados temporalmente
-const _disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
+const disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
 
 // Helper para formatear el estado de la orden
 const formatOrderStatus = (status: string): string => {
@@ -489,7 +489,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   {/* Métodos de pago */}
                   <View style={styles.methodsContainer}>
                     {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-                      const isDisabled = _disabledMethods.includes(
+                      const isDisabled = disabledMethods.includes(
                         value as PaymentMethod,
                       );
                       return (
@@ -684,13 +684,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onConfirm={handleFinalizeOrder}
         title="Finalizar orden"
         message={
-          orderStatus && orderStatus !== 'READY' 
+          orderStatus && orderStatus !== 'READY'
             ? `⚠️ ADVERTENCIA: Esta orden está en estado "${formatOrderStatus(orderStatus)}" y no "Lista".\n\n¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
             : `¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
         }
-        confirmText={orderStatus && orderStatus !== 'READY' ? "Finalizar igual" : "Sí, finalizar"}
+        confirmText={
+          orderStatus && orderStatus !== 'READY'
+            ? 'Finalizar igual'
+            : 'Sí, finalizar'
+        }
         cancelText="No, cancelar"
-        confirmButtonColor={orderStatus && orderStatus !== 'READY' ? theme.colors.error : "#10B981"}
+        confirmButtonColor={
+          orderStatus && orderStatus !== 'READY'
+            ? theme.colors.error
+            : '#10B981'
+        }
       />
 
       {/* Modal de confirmación para eliminar pre-pago */}

@@ -33,7 +33,7 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
   onOpenShift,
   onCloseShift,
   canOpenShift,
-  loading,
+  loading: _loading,
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);

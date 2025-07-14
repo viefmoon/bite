@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   Button,
-  Surface,
   IconButton,
   HelperText,
   Divider,
@@ -46,7 +45,7 @@ export function PizzaConfigurationModal({
   const [extraCostText, setExtraCostText] = useState('20.00');
 
   // Query para obtener la configuración existente
-  const { data: configuration, isLoading } = useQuery({
+  const { data: configuration, isLoading: _isLoading } = useQuery({
     queryKey: ['pizza-configuration', product?.id],
     queryFn: async () => {
       if (!product?.id) return null;
@@ -66,7 +65,7 @@ export function PizzaConfigurationModal({
     formState: { errors, isDirty },
     reset,
     setValue,
-    getValues,
+    getValues: _getValues,
   } = useForm<ConfigurationFormData>({
     resolver: zodResolver(configurationSchema),
     defaultValues: {

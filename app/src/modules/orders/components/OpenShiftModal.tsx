@@ -3,7 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TextInput as RNTextInput,
+  TextInput as _RNTextInput,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';

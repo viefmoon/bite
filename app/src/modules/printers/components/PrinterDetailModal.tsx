@@ -9,7 +9,6 @@ import {
   Divider,
   Button,
   Chip,
-  ActivityIndicator,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { ThermalPrinter } from '../types/printer.types';

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, FlatList, Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
@@ -19,15 +19,16 @@ import { useRoute } from '@react-navigation/native';
 import { useAuthStore } from '../../../app/store/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
+import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import {
-  useGetOpenOrdersQuery,
-  usePrintKitchenTicketMutation,
+  useGetOpenOrdersListQuery,
   useUpdateOrderMutation,
   useCancelOrderMutation,
 } from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
 import { useCreateBulkAdjustmentsMutation } from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
 import {
   Order,
+  OrderOpenList,
   OrderStatusEnum,
   type OrderStatus,
   OrderType,
@@ -35,8 +36,8 @@ import {
 } from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
 import { format } from 'date-fns'; // Para formatear fechas
 import { es } from 'date-fns/locale'; // Locale español
-import PrinterSelectionModal from '../components/PrinterSelectionModal'; // Importar el modal
-import type { ThermalPrinter } from '../../printers/types/printer.types';
+import { PrintTicketModal } from '../components/PrintTicketModal'; // Importar el nuevo modal
+import { orderPrintService } from '../services/orderPrintService'; // Importar el servicio de impresión
 // Importar OrderCartDetail y el tipo de payload
 import OrderCartDetail, {
   OrderDetailsForBackend,
@@ -100,7 +101,24 @@ const formatOrderTypeShort = (type: OrderType): string => {
 };
 
 // Helper para determinar el estado de pago de una orden
-const getPaymentStatus = (order: Order): 'unpaid' | 'partial' | 'paid' => {
+const getPaymentStatus = (
+  order: Order | OrderOpenList,
+): 'unpaid' | 'partial' | 'paid' => {
+  // Si es OrderOpenList, usar paymentsSummary
+  if ('paymentsSummary' in order) {
+    const totalPaid = order.paymentsSummary?.totalPaid || 0;
+    const orderTotal = order.total || 0;
+
+    if (totalPaid >= orderTotal) {
+      return 'paid';
+    } else if (totalPaid > 0) {
+      return 'partial';
+    } else {
+      return 'unpaid';
+    }
+  }
+
+  // Si es Order completa, usar payments
   if (!order.payments || order.payments.length === 0) {
     return 'unpaid';
   }
@@ -124,10 +142,9 @@ const getPaymentStatus = (order: Order): 'unpaid' | 'partial' | 'paid' => {
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  const route = useRoute<OpenOrdersScreenProps['route']>();
-  const [isPrinterModalVisible, setIsPrinterModalVisible] = useState(false);
-  const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
-  const printKitchenTicketMutation = usePrintKitchenTicketMutation();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  const [isPrintModalVisible, setIsPrintModalVisible] = useState(false);
+  const [orderToPrint, setOrderToPrint] = useState<OrderOpenList | null>(null);
 
   const user = useAuthStore((state) => state.user);
   const { data: shift, isLoading: shiftLoading } = useGlobalShift();
@@ -151,7 +168,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   const updateOrderMutation = useUpdateOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
-  const createBulkAdjustmentsMutation = useCreateBulkAdjustmentsMutation();
 
   const {
     data: ordersData,
@@ -159,7 +175,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     isError,
     refetch,
     isFetching,
-  } = useGetOpenOrdersQuery();
+  } = useGetOpenOrdersListQuery();
   const filteredOrders = React.useMemo(() => {
     if (!ordersData) return [];
     if (selectedOrderType === 'ALL') return ordersData;
@@ -185,20 +201,20 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     refetch();
   }, [refetch]);
 
-  // Función para abrir el modal de selección de impresora
-  const handleOpenPrinterModal = useCallback((orderId: string) => {
-    setOrderToPrintId(orderId);
-    setIsPrinterModalVisible(true);
+  // Función para abrir el modal de impresión
+  const handleOpenPrintModal = useCallback((order: OrderOpenList) => {
+    setOrderToPrint(order);
+    setIsPrintModalVisible(true);
   }, []);
 
-  const handleOrderItemPress = (order: Order) => {
+  const handleOrderItemPress = (order: OrderOpenList) => {
     // Guardar solo el ID y abrir el modal
     setEditingOrderId(order.id);
     setIsEditModalVisible(true);
   };
 
   const renderOrderItem = useCallback(
-    ({ item: order }: { item: Order }) => {
+    ({ item: order }: { item: OrderOpenList }) => {
       // Construir el título según el tipo de orden
       let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
@@ -224,137 +240,208 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         }
       }
 
+      const totalAmount = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      const totalPaid = order.paymentsSummary?.totalPaid || 0;
+      const pendingAmount = totalAmount - totalPaid;
+
       return (
-        <Card
-          style={styles.orderCard}
-          mode="elevated"
+        <TouchableOpacity
+          activeOpacity={0.95}
           onPress={() => handleOrderItemPress(order)}
         >
-          <Card.Content style={styles.cardContent}>
-            {/* Main Container */}
-            <View style={styles.mainContainer}>
-              {/* Left Side - Title and Time */}
-              <View style={styles.leftContainer}>
-                <Text style={styles.orderNumber} numberOfLines={2}>
-                  {orderTitle}
-                  <Text style={styles.orderPrice}> • ${order.total}</Text>
-                </Text>
-                <View style={styles.timeAndPaymentRow}>
-                  <Text style={styles.orderTime}>
-                    {format(new Date(order.createdAt), 'p', { locale: es })}
-                  </Text>
-                  {order.scheduledAt && (
-                    <Text style={styles.estimatedTime}>
-                      📅{' '}
-                      {format(new Date(order.scheduledAt), 'p', {
-                        locale: es,
-                      })}
+          <Card
+            style={[
+              styles.orderCard,
+              {
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+            mode="elevated"
+          >
+            <Card.Content style={styles.cardContent}>
+              <View style={styles.mainContainer}>
+                <View style={styles.leftContainer}>
+                  <Text
+                    style={[
+                      styles.orderNumber,
+                      { color: theme.colors.onSurface },
+                    ]}
+                  >
+                    {orderTitle}
+                    <Text
+                      style={[
+                        styles.orderPrice,
+                        {
+                          color: pendingAmount > 0 ? theme.colors.error : '#10B981',
+                        },
+                      ]}
+                    >
+                      {' • '}
+                      {pendingAmount > 0
+                        ? `Por pagar: $${pendingAmount.toFixed(2)}`
+                        : `Pagado: $${totalAmount.toFixed(2)}`}
                     </Text>
-                  )}
-                  {(() => {
-                    const paymentStatus = getPaymentStatus(order);
-                    if (paymentStatus === 'paid') {
-                      return (
-                        <View
-                          style={[
-                            styles.paymentBadge,
-                            { backgroundColor: '#10B981' },
-                          ]}
-                        >
-                          <Text
+                  </Text>
+                  <View style={styles.timeAndPaymentRow}>
+                    <Text
+                      style={[
+                        styles.orderTime,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      {format(new Date(order.createdAt), 'p', { locale: es })}
+                    </Text>
+                    {order.scheduledAt && (
+                      <Text
+                        style={[
+                          styles.estimatedTime,
+                          { color: theme.colors.onSurfaceVariant },
+                        ]}
+                      >
+                        📅{' '}
+                        {format(new Date(order.scheduledAt), 'p', {
+                          locale: es,
+                        })}
+                      </Text>
+                    )}
+                    {(() => {
+                      const paymentStatus = getPaymentStatus(order);
+                      if (paymentStatus === 'paid') {
+                        return (
+                          <View
                             style={[
-                              styles.paymentBadgeText,
-                              { color: '#FFFFFF' },
+                              styles.paymentBadge,
+                              { backgroundColor: '#10B981' },
                             ]}
                           >
-                            💵 Pagado
-                          </Text>
-                        </View>
-                      );
-                    } else if (paymentStatus === 'partial') {
-                      return (
-                        <View
-                          style={[
-                            styles.paymentBadge,
-                            { backgroundColor: '#F59E0B' },
-                          ]}
-                        >
-                          <Text
+                            <Text
+                              style={[
+                                styles.paymentBadgeText,
+                                { color: '#FFFFFF' },
+                              ]}
+                            >
+                              💵 Pagado
+                            </Text>
+                          </View>
+                        );
+                      } else if (paymentStatus === 'partial') {
+                        return (
+                          <View
                             style={[
-                              styles.paymentBadgeText,
-                              { color: '#FFFFFF' },
+                              styles.paymentBadge,
+                              { backgroundColor: '#F59E0B' },
                             ]}
                           >
-                            💵 Parcial
-                          </Text>
-                        </View>
-                      );
-                    } else {
-                      return (
-                        <View
-                          style={[
-                            styles.paymentBadge,
-                            { backgroundColor: '#EF4444' },
-                          ]}
-                        >
-                          <Text
+                            <Text
+                              style={[
+                                styles.paymentBadgeText,
+                                { color: '#FFFFFF' },
+                              ]}
+                            >
+                              💵 Parcial
+                            </Text>
+                          </View>
+                        );
+                      } else {
+                        return (
+                          <View
                             style={[
-                              styles.paymentBadgeText,
-                              { color: '#FFFFFF' },
+                              styles.paymentBadge,
+                              { backgroundColor: '#EF4444' },
                             ]}
                           >
-                            💵 Pendiente
+                            <Text
+                              style={[
+                                styles.paymentBadgeText,
+                                { color: '#FFFFFF' },
+                              ]}
+                            >
+                              💵 Pendiente
+                            </Text>
+                          </View>
+                        );
+                      }
+                    })()}
+                    {order.preparationScreenStatuses &&
+                      order.preparationScreenStatuses.length > 0 && (
+                        <>
+                          {order.preparationScreenStatuses.map((screen, index) => (
+                            <View
+                              key={`${order.id}-screen-${index}`}
+                              style={[
+                                styles.inlinePreparationBadge,
+                                {
+                                  backgroundColor: theme.colors.surfaceVariant,
+                                  borderColor: theme.colors.outline,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.inlinePreparationText,
+                                  { color: theme.colors.onSurfaceVariant },
+                                ]}
+                              >
+                                🍳 {screen.name}
+                              </Text>
+                            </View>
+                          ))}
+                        </>
+                      )}
+                  </View>
+                </View>
+
+                <View style={styles.rightContainer}>
+                  <Chip
+                    mode="flat"
+                    style={[
+                      styles.statusChip,
+                      { backgroundColor: getStatusColor(order.orderStatus) },
+                    ]}
+                    textStyle={styles.statusChipText}
+                  >
+                    {formatOrderStatus(order.orderStatus)}
+                  </Chip>
+                  <View style={styles.actionsContainer}>
+                    <View style={styles.printContainer}>
+                      <IconButton
+                        icon="printer"
+                        size={32}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleOpenPrintModal(order);
+                        }}
+                        style={styles.printButton}
+                      />
+                      {(order.ticketImpressionCount ?? 0) > 0 && (
+                        <View style={styles.printCountBadge}>
+                          <Text style={styles.printCountText}>
+                            {order.ticketImpressionCount}
                           </Text>
                         </View>
-                      );
-                    }
-                  })()}
+                      )}
+                    </View>
+                  </View>
                 </View>
               </View>
 
-              {/* Right Side - Status and Print */}
-              <View style={styles.rightContainer}>
-                <Chip
-                  mode="flat"
+              {order.notes ? (
+                <Text
                   style={[
-                    styles.statusChip,
-                    { backgroundColor: getStatusColor(order.orderStatus) },
+                    styles.notes,
+                    { color: theme.colors.onSurfaceVariant },
                   ]}
-                  textStyle={styles.statusChipText}
+                  numberOfLines={2}
                 >
-                  {formatOrderStatus(order.orderStatus)}
-                </Chip>
-                <IconButton
-                  icon="printer"
-                  size={28}
-                  style={styles.printButton}
-                  onPress={() => handleOpenPrinterModal(order.id)}
-                  disabled={
-                    printKitchenTicketMutation.isPending &&
-                    printKitchenTicketMutation.variables?.orderId === order.id
-                  }
-                />
-              </View>
-            </View>
-
-            {/* Notes if any */}
-            {order.notes ? (
-              <Text style={styles.notes} numberOfLines={2}>
-                📝 {order.notes}
-              </Text>
-            ) : null}
-          </Card.Content>
-        </Card>
+                  📝 {order.notes}
+                </Text>
+              ) : null}
+            </Card.Content>
+          </Card>
+        </TouchableOpacity>
       );
     },
-    [
-      handleOrderItemPress,
-      handleOpenPrinterModal,
-      printKitchenTicketMutation.isPending,
-      printKitchenTicketMutation.variables?.orderId,
-      theme,
-      styles,
-    ],
+    [handleOrderItemPress, handleOpenPrintModal, theme, styles],
   );
 
   const { ListEmptyComponent } = useListState({
@@ -412,21 +499,37 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     }
   }, [isEditModalVisible, editingOrderId, temporaryProducts]);
 
-  // Función que se ejecuta al seleccionar una impresora en el modal
-  const handlePrinterSelect = useCallback(
-    (printer: ThermalPrinter) => {
-      setIsPrinterModalVisible(false);
-      if (orderToPrintId) {
-        // Llamar a la mutación para imprimir
-        printKitchenTicketMutation.mutate({
-          orderId: orderToPrintId,
-          printerId: printer.id,
+  // Función para manejar la impresión del ticket
+  const handlePrint = useCallback(
+    async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
+      if (!orderToPrint) return;
+
+      try {
+        await orderPrintService.printTicket(orderToPrint.id, {
+          printerId,
+          ticketType,
         });
-        setOrderToPrintId(null); // Limpiar el ID de la orden
+
+        showSnackbar({
+          message: 'Ticket impreso exitosamente',
+          type: 'success',
+        });
+
+        // Refrescar la lista
+        refetch();
+
+        // Limpiar estado
+        setOrderToPrint(null);
+      } catch (error) {
+        console.error('Error al imprimir el ticket:', error);
+        showSnackbar({
+          message: 'Error al imprimir el ticket',
+          type: 'error',
+        });
       }
     },
-    [orderToPrintId, printKitchenTicketMutation],
-  ); // Dependencias
+    [orderToPrint, refetch, showSnackbar],
+  );
 
   // Función para manejar la cancelación de una orden
   const handleCancelOrder = useCallback(
@@ -478,121 +581,241 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   style={[
                     styles.filterButton,
                     selectedOrderType === 'ALL' && styles.filterButtonActive,
-                    { backgroundColor: selectedOrderType === 'ALL' ? theme.colors.primaryContainer : theme.colors.surface },
+                    {
+                      backgroundColor:
+                        selectedOrderType === 'ALL'
+                          ? theme.colors.primaryContainer
+                          : theme.colors.surface,
+                    },
                   ]}
                   onPress={() => setSelectedOrderType('ALL')}
                 >
                   <Icon
                     source="view-grid"
                     size={26}
-                    color={selectedOrderType === 'ALL' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    color={
+                      selectedOrderType === 'ALL'
+                        ? theme.colors.primary
+                        : theme.colors.onSurfaceVariant
+                    }
                   />
                   {ordersData && ordersData.length > 0 && (
-                    <View 
+                    <View
                       style={[
                         styles.countBadge,
-                        { 
-                          backgroundColor: selectedOrderType === 'ALL' ? theme.colors.error : theme.colors.errorContainer,
-                          borderColor: selectedOrderType === 'ALL' ? theme.colors.error : theme.colors.outline,
-                        }
+                        {
+                          backgroundColor:
+                            selectedOrderType === 'ALL'
+                              ? theme.colors.error
+                              : theme.colors.errorContainer,
+                          borderColor:
+                            selectedOrderType === 'ALL'
+                              ? theme.colors.error
+                              : theme.colors.outline,
+                        },
                       ]}
                     >
-                      <Text style={[
-                        styles.countBadgeText,
-                        { color: selectedOrderType === 'ALL' ? theme.colors.onError : theme.colors.onErrorContainer }
-                      ]}>{ordersData.length}</Text>
+                      <Text
+                        style={[
+                          styles.countBadgeText,
+                          {
+                            color:
+                              selectedOrderType === 'ALL'
+                                ? theme.colors.onError
+                                : theme.colors.onErrorContainer,
+                          },
+                        ]}
+                      >
+                        {ordersData.length}
+                      </Text>
                     </View>
                   )}
                 </Pressable>
                 <Pressable
                   style={[
                     styles.filterButton,
-                    selectedOrderType === OrderTypeEnum.DINE_IN && styles.filterButtonActive,
-                    { backgroundColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.primaryContainer : theme.colors.surface },
+                    selectedOrderType === OrderTypeEnum.DINE_IN &&
+                      styles.filterButtonActive,
+                    {
+                      backgroundColor:
+                        selectedOrderType === OrderTypeEnum.DINE_IN
+                          ? theme.colors.primaryContainer
+                          : theme.colors.surface,
+                    },
                   ]}
                   onPress={() => setSelectedOrderType(OrderTypeEnum.DINE_IN)}
                 >
                   <Icon
                     source="silverware-fork-knife"
                     size={26}
-                    color={selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    color={
+                      selectedOrderType === OrderTypeEnum.DINE_IN
+                        ? theme.colors.primary
+                        : theme.colors.onSurfaceVariant
+                    }
                   />
-                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.DINE_IN).length > 0 && (
-                    <View 
-                      style={[
-                        styles.countBadge,
-                        { 
-                          backgroundColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.error : theme.colors.errorContainer,
-                          borderColor: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.error : theme.colors.outline,
-                        }
-                      ]}
-                    >
-                      <Text style={[
-                        styles.countBadgeText,
-                        { color: selectedOrderType === OrderTypeEnum.DINE_IN ? theme.colors.onError : theme.colors.onErrorContainer }
-                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.DINE_IN).length}</Text>
-                    </View>
-                  )}
+                  {ordersData &&
+                    ordersData.filter(
+                      (o) => o.orderType === OrderTypeEnum.DINE_IN,
+                    ).length > 0 && (
+                      <View
+                        style={[
+                          styles.countBadge,
+                          {
+                            backgroundColor:
+                              selectedOrderType === OrderTypeEnum.DINE_IN
+                                ? theme.colors.error
+                                : theme.colors.errorContainer,
+                            borderColor:
+                              selectedOrderType === OrderTypeEnum.DINE_IN
+                                ? theme.colors.error
+                                : theme.colors.outline,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.countBadgeText,
+                            {
+                              color:
+                                selectedOrderType === OrderTypeEnum.DINE_IN
+                                  ? theme.colors.onError
+                                  : theme.colors.onErrorContainer,
+                            },
+                          ]}
+                        >
+                          {
+                            ordersData.filter(
+                              (o) => o.orderType === OrderTypeEnum.DINE_IN,
+                            ).length
+                          }
+                        </Text>
+                      </View>
+                    )}
                 </Pressable>
                 <Pressable
                   style={[
                     styles.filterButton,
-                    selectedOrderType === OrderTypeEnum.TAKE_AWAY && styles.filterButtonActive,
-                    { backgroundColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.primaryContainer : theme.colors.surface },
+                    selectedOrderType === OrderTypeEnum.TAKE_AWAY &&
+                      styles.filterButtonActive,
+                    {
+                      backgroundColor:
+                        selectedOrderType === OrderTypeEnum.TAKE_AWAY
+                          ? theme.colors.primaryContainer
+                          : theme.colors.surface,
+                    },
                   ]}
                   onPress={() => setSelectedOrderType(OrderTypeEnum.TAKE_AWAY)}
                 >
                   <Icon
                     source="bag-personal"
                     size={26}
-                    color={selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    color={
+                      selectedOrderType === OrderTypeEnum.TAKE_AWAY
+                        ? theme.colors.primary
+                        : theme.colors.onSurfaceVariant
+                    }
                   />
-                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.TAKE_AWAY).length > 0 && (
-                    <View 
-                      style={[
-                        styles.countBadge,
-                        { 
-                          backgroundColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.error : theme.colors.errorContainer,
-                          borderColor: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.error : theme.colors.outline,
-                        }
-                      ]}
-                    >
-                      <Text style={[
-                        styles.countBadgeText,
-                        { color: selectedOrderType === OrderTypeEnum.TAKE_AWAY ? theme.colors.onError : theme.colors.onErrorContainer }
-                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.TAKE_AWAY).length}</Text>
-                    </View>
-                  )}
+                  {ordersData &&
+                    ordersData.filter(
+                      (o) => o.orderType === OrderTypeEnum.TAKE_AWAY,
+                    ).length > 0 && (
+                      <View
+                        style={[
+                          styles.countBadge,
+                          {
+                            backgroundColor:
+                              selectedOrderType === OrderTypeEnum.TAKE_AWAY
+                                ? theme.colors.error
+                                : theme.colors.errorContainer,
+                            borderColor:
+                              selectedOrderType === OrderTypeEnum.TAKE_AWAY
+                                ? theme.colors.error
+                                : theme.colors.outline,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.countBadgeText,
+                            {
+                              color:
+                                selectedOrderType === OrderTypeEnum.TAKE_AWAY
+                                  ? theme.colors.onError
+                                  : theme.colors.onErrorContainer,
+                            },
+                          ]}
+                        >
+                          {
+                            ordersData.filter(
+                              (o) => o.orderType === OrderTypeEnum.TAKE_AWAY,
+                            ).length
+                          }
+                        </Text>
+                      </View>
+                    )}
                 </Pressable>
                 <Pressable
                   style={[
                     styles.filterButton,
-                    selectedOrderType === OrderTypeEnum.DELIVERY && styles.filterButtonActive,
-                    { backgroundColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.primaryContainer : theme.colors.surface },
+                    selectedOrderType === OrderTypeEnum.DELIVERY &&
+                      styles.filterButtonActive,
+                    {
+                      backgroundColor:
+                        selectedOrderType === OrderTypeEnum.DELIVERY
+                          ? theme.colors.primaryContainer
+                          : theme.colors.surface,
+                    },
                   ]}
                   onPress={() => setSelectedOrderType(OrderTypeEnum.DELIVERY)}
                 >
                   <Icon
                     source="moped"
                     size={26}
-                    color={selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    color={
+                      selectedOrderType === OrderTypeEnum.DELIVERY
+                        ? theme.colors.primary
+                        : theme.colors.onSurfaceVariant
+                    }
                   />
-                  {ordersData && ordersData.filter(o => o.orderType === OrderTypeEnum.DELIVERY).length > 0 && (
-                    <View 
-                      style={[
-                        styles.countBadge,
-                        { 
-                          backgroundColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.error : theme.colors.errorContainer,
-                          borderColor: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.error : theme.colors.outline,
-                        }
-                      ]}
-                    >
-                      <Text style={[
-                        styles.countBadgeText,
-                        { color: selectedOrderType === OrderTypeEnum.DELIVERY ? theme.colors.onError : theme.colors.onErrorContainer }
-                      ]}>{ordersData.filter(o => o.orderType === OrderTypeEnum.DELIVERY).length}</Text>
-                    </View>
-                  )}
+                  {ordersData &&
+                    ordersData.filter(
+                      (o) => o.orderType === OrderTypeEnum.DELIVERY,
+                    ).length > 0 && (
+                      <View
+                        style={[
+                          styles.countBadge,
+                          {
+                            backgroundColor:
+                              selectedOrderType === OrderTypeEnum.DELIVERY
+                                ? theme.colors.error
+                                : theme.colors.errorContainer,
+                            borderColor:
+                              selectedOrderType === OrderTypeEnum.DELIVERY
+                                ? theme.colors.error
+                                : theme.colors.outline,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.countBadgeText,
+                            {
+                              color:
+                                selectedOrderType === OrderTypeEnum.DELIVERY
+                                  ? theme.colors.onError
+                                  : theme.colors.onErrorContainer,
+                            },
+                          ]}
+                        >
+                          {
+                            ordersData.filter(
+                              (o) => o.orderType === OrderTypeEnum.DELIVERY,
+                            ).length
+                          }
+                        </Text>
+                      </View>
+                    )}
                 </Pressable>
               </View>
             </View>
@@ -612,12 +835,16 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           </View>
         </>
       )}
-      {/* Modal de Selección de Impresora */}
+      {/* Modal de Impresión de Ticket */}
       <Portal>
-        <PrinterSelectionModal
-          visible={isPrinterModalVisible}
-          onDismiss={() => setIsPrinterModalVisible(false)}
-          onPrinterSelect={handlePrinterSelect}
+        <PrintTicketModal
+          visible={isPrintModalVisible}
+          onDismiss={() => {
+            setIsPrintModalVisible(false);
+            setOrderToPrint(null);
+          }}
+          order={orderToPrint}
+          onPrint={handlePrint}
         />
         {/* Modal de Edición de Orden usando OrderCartDetail */}
         {editingOrderId && (
@@ -704,14 +931,21 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   // Enviar null cuando deliveryInfo está vacío para indicar limpieza
                   deliveryInfo: (() => {
                     if (!details.deliveryInfo) return null;
-                    
+
                     // Filtrar solo las propiedades que tienen valores reales (no undefined)
-                    const filteredDeliveryInfo = Object.entries(details.deliveryInfo)
+                    const filteredDeliveryInfo = Object.entries(
+                      details.deliveryInfo,
+                    )
                       .filter(([_, value]) => value !== undefined)
-                      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
-                    
+                      .reduce(
+                        (acc, [key, value]) => ({ ...acc, [key]: value }),
+                        {},
+                      );
+
                     // Si no quedan propiedades con valores, enviar null
-                    return Object.keys(filteredDeliveryInfo).length > 0 ? filteredDeliveryInfo : null;
+                    return Object.keys(filteredDeliveryInfo).length > 0
+                      ? filteredDeliveryInfo
+                      : null;
                   })(),
                   notes: details.notes || null,
                   total: details.total,
@@ -830,11 +1064,10 @@ const createStyles = (
       flexGrow: 1,
     },
     orderCard: {
-      marginBottom: theme.spacing.s, // Reducido de theme.spacing.m
-      backgroundColor: theme.colors.surface,
+      marginBottom: 8,
     },
     cardContent: {
-      paddingBottom: theme.spacing.s,
+      paddingBottom: 8,
     },
     mainContainer: {
       flexDirection: 'row',
@@ -843,27 +1076,34 @@ const createStyles = (
     },
     leftContainer: {
       flex: 1,
-      paddingRight: theme.spacing.s,
+      paddingRight: 8,
     },
     rightContainer: {
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      minWidth: 140,
+      gap: 8,
+    },
+    actionsContainer: {
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'flex-end',
+      gap: 4,
     },
     orderNumber: {
-      ...theme.fonts.bodyLarge,
+      fontSize: 16,
       fontWeight: 'bold',
-      color: theme.colors.onSurface,
       lineHeight: 22,
-      marginBottom: theme.spacing.xs,
+      marginBottom: 4,
     },
     orderPrice: {
-      color: theme.colors.primary,
+      fontSize: 15,
       fontWeight: '700',
     },
     statusChip: {
       height: 28,
       minHeight: 28,
-      marginBottom: theme.spacing.xs,
+      alignSelf: 'flex-end',
     },
     statusChipText: {
       fontSize: 12,
@@ -883,19 +1123,17 @@ const createStyles = (
       lineHeight: 16,
     },
     orderTime: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.primary,
+      fontSize: 16,
       fontWeight: '600',
     },
     estimatedTime: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onSurfaceVariant,
-      marginLeft: theme.spacing.xs,
+      fontSize: 14,
+      marginLeft: 4,
     },
     timeAndPaymentRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: 8,
     },
     paymentBadge: {
       paddingHorizontal: 8,
@@ -905,14 +1143,34 @@ const createStyles = (
       justifyContent: 'center',
     },
     paymentBadgeText: {
-      ...theme.fonts.labelSmall,
-      fontWeight: '600',
       fontSize: 11,
+      fontWeight: '600',
       lineHeight: 14,
     },
     printButton: {
-      margin: 0,
-      padding: theme.spacing.xs, // Aumentar el área táctil
+      margin: -4,
+    },
+    printContainer: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printCountBadge: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      backgroundColor: '#3B82F6',
+      borderRadius: 10,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printCountText: {
+      color: '#FFFFFF',
+      fontSize: 10,
+      fontWeight: 'bold',
     },
     customerInfo: {
       ...theme.fonts.bodyMedium,
@@ -925,10 +1183,20 @@ const createStyles = (
       marginBottom: theme.spacing.xs,
     },
     notes: {
-      ...theme.fonts.bodySmall,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs, // Reducido de theme.spacing.s
+      fontSize: 12,
+      marginTop: 4,
       fontStyle: 'italic',
+    },
+    inlinePreparationBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 10,
+      borderWidth: 0.5,
+      marginLeft: 4,
+    },
+    inlinePreparationText: {
+      fontSize: 10,
+      fontWeight: '500',
     },
     emptyStateContainer: {
       flex: 1,

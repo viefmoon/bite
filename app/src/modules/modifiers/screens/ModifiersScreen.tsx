@@ -1,13 +1,7 @@
 import React, { useLayoutEffect, useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import {
-  FAB,
-  ActivityIndicator,
-  Text,
-  Portal,
-  Button,
-} from 'react-native-paper';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { View, StyleSheet } from 'react-native';
+import { Text, Portal, Button } from 'react-native-paper';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -16,7 +10,6 @@ import { modifierService } from '../services/modifierService';
 import { Modifier } from '../schema/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
@@ -52,8 +45,6 @@ const ModifiersScreen = () => {
   const theme = useAppTheme();
   const navigation = useNavigation<NavigationProps>();
   const route = useRoute<ModifiersScreenRouteProp>();
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
@@ -98,7 +89,7 @@ const ModifiersScreen = () => {
     data: modifiers = [],
     isLoading,
     isError,
-    error,
+    error: _error,
     refetch,
     isRefetching,
   } = useQuery<Modifier[], Error>({

@@ -846,6 +846,20 @@ export class OrdersService {
     );
   }
 
+  async findOpenOrdersOptimized(): Promise<Order[]> {
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      return [];
+    }
+
+    // Usar una consulta optimizada que solo trae los campos necesarios
+    return this.orderRepository.findOpenOrdersOptimized(
+      currentShift.openedAt,
+      new Date(),
+    );
+  }
+
   // OrderItem methods
   // Este método ahora solo crea el item, los modificadores se manejan en 'create'
   async createOrderItem(
@@ -1551,7 +1565,7 @@ export class OrdersService {
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
       })) || undefined,
-      preparationScreenStatuses: order.preparationScreenStatuses?.map(
+      preparationScreenStatuses: order.preparationScreenStatusesFull?.map(
         (status) => ({
           id: status.id,
           preparationScreenId: status.preparationScreenId,

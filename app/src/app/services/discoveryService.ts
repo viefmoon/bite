@@ -214,14 +214,10 @@ export class DiscoveryService {
       const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
 
       // Escanear todas las IPs pero detener en cuanto encontremos el servidor
-      let _totalScanned = 0;
-
       for (let i = 0; i < chunks.length; i++) {
         const results = await Promise.allSettled(
           chunks[i].map((ip) => this.probeServer(ip)),
         );
-
-        _totalScanned += chunks[i].length;
 
         // Buscar si alguna petición fue exitosa
         for (let j = 0; j < results.length; j++) {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import { KitchenFilters, OrderType } from '../types/kitchen.types';
+import { KitchenFilters } from '../types/kitchen.types';
 
 const KITCHEN_FILTERS_STORAGE_KEY = 'kitchen-filters-preferences';
 

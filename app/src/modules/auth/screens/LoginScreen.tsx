@@ -14,7 +14,6 @@ import {
   IconButton,
   Surface,
   TouchableRipple,
-  Button,
 } from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -23,7 +22,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
-import { ApiError } from '../../../app/lib/errors';
 import { useThemeStore } from '../../../app/store/themeStore';
 import { useAuthStore } from '../../../app/store/authStore';
 import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
@@ -31,7 +29,6 @@ import { authService } from '../services/authService';
 import LoginForm from '../components/LoginForm';
 import { ConnectionIndicator } from '../../../app/components/ConnectionIndicator';
 import { useResponsive } from '../../../app/hooks/useResponsive';
-import { ResponsiveView } from '../../../app/components/responsive';
 import { ConnectionErrorModal } from '../../../app/components/ConnectionErrorModal';
 import { useServerConnection } from '../../../app/hooks/useServerConnection';
 
@@ -43,12 +40,7 @@ const LoginScreen = () => {
   const { showSnackbar } = useSnackbarStore();
   const { setThemePreference } = useThemeStore();
   const setTokens = useAuthStore((state) => state.setTokens);
-  const {
-    hasWifi,
-    isConnected,
-    isSearching,
-    error: connectionErrorMessage,
-  } = useServerConnection();
+  const {} = useServerConnection();
 
   const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<
     string | undefined

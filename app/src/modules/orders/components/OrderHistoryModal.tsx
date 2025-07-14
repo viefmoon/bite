@@ -1,20 +1,16 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
-  ScrollView,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
   Platform,
-  Dimensions,
 } from 'react-native';
 import {
   Modal,
   Portal,
   Text,
-  IconButton,
-  Card,
   Divider,
   Chip,
   Button,
@@ -215,89 +211,6 @@ const formatValue = (field: string, value: any): string => {
   return String(value);
 };
 
-// Función para agrupar cambios que ocurren en una ventana de tiempo
-const groupHistoryByTimeWindow = (
-  history: HistoryItem[],
-  windowMs: number = 5000, // 5 segundos por defecto
-): HistoryItem[] => {
-  if (!history || history.length === 0) return [];
-
-  // Ordenar por fecha
-  const sorted = [...history].sort((a, b) => {
-    const dateA = new Date(a.changedAt);
-    const dateB = new Date(b.changedAt);
-    return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
-  });
-
-  const grouped: HistoryItem[] = [];
-  let currentGroup: HistoryItem[] = [sorted[0]];
-
-  for (let i = 1; i < sorted.length; i++) {
-    const current = sorted[i];
-    const lastInGroup = currentGroup[currentGroup.length - 1];
-
-    const currentTime = new Date(current.changedAt);
-    const lastTime = new Date(lastInGroup.changedAt);
-    const timeDiff = Math.abs(currentTime.valueOf() - lastTime.valueOf());
-
-    // Si es el mismo usuario, mismo tipo y está dentro de la ventana de tiempo
-    if (
-      current.changedBy === lastInGroup.changedBy &&
-      current.type === 'item' &&
-      lastInGroup.type === 'item' &&
-      timeDiff <= windowMs
-    ) {
-      currentGroup.push(current);
-    } else {
-      // Procesar el grupo actual
-      if (currentGroup.length === 1 || currentGroup[0].type === 'order') {
-        grouped.push(currentGroup[0]);
-      } else {
-        // Crear entrada agrupada para items
-        const groupedEntry: HistoryItem = {
-          ...currentGroup[0],
-          id: `grouped-${currentGroup[0].id}`,
-          operation: 'BATCH',
-          batchOperations: currentGroup.map((item) => ({
-            operation: item.operation,
-            snapshot: item.snapshot,
-            diff: item.diff,
-            itemDescription: item.itemDescription,
-          })),
-        };
-        grouped.push(groupedEntry);
-      }
-
-      // Iniciar nuevo grupo
-      currentGroup = [current];
-    }
-  }
-
-  // Procesar el último grupo
-  if (currentGroup.length === 1 || currentGroup[0].type === 'order') {
-    grouped.push(currentGroup[0]);
-  } else {
-    const groupedEntry: HistoryItem = {
-      ...currentGroup[0],
-      id: `grouped-${currentGroup[0].id}`,
-      operation: 'BATCH',
-      batchOperations: currentGroup.map((item) => ({
-        operation: item.operation,
-        snapshot: item.snapshot,
-        diff: item.diff,
-        itemDescription: item.itemDescription,
-      })),
-    };
-    grouped.push(groupedEntry);
-  }
-
-  // Ordenar por fecha descendente (más reciente primero)
-  return grouped.sort((a, b) => {
-    const dateA = new Date(a.changedAt);
-    const dateB = new Date(b.changedAt);
-    return dateB < dateA ? -1 : dateB > dateA ? 1 : 0;
-  });
-};
 
 // Componente para cada item del historial
 const HistoryItemComponent: React.FC<{
@@ -542,37 +455,6 @@ const HistoryItemComponent: React.FC<{
     return null;
   };
 
-  const getOrderChangeSummary = () => {
-    if (item.operation === 'INSERT') return 'Nueva orden creada';
-    if (item.operation === 'DELETE') return 'Orden eliminada';
-
-    if (item.operation === 'UPDATE' && item.diff) {
-      const changes = [];
-      for (const [field, change] of Object.entries(item.diff)) {
-        if (
-          field === 'orderStatus' &&
-          Array.isArray(change) &&
-          change.length === 2
-        ) {
-          changes.push(`Estado: ${formatValue('orderStatus', change[1])}`);
-        } else if (
-          field === 'total' &&
-          Array.isArray(change) &&
-          change.length === 2
-        ) {
-          changes.push('Total actualizado');
-        } else if (
-          field === 'tableId' &&
-          Array.isArray(change) &&
-          change.length === 2
-        ) {
-          changes.push('Mesa cambiada');
-        }
-      }
-      return changes.length > 0 ? changes.join(' • ') : 'Orden modificada';
-    }
-    return 'Orden modificada';
-  };
 
   return (
     <Surface
@@ -1871,32 +1753,28 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     queryFn: async () => {
       if (!orderId) throw new Error('No order ID');
 
-      try {
-        // Obtener historial consolidado de la orden
-        const orderHistoryResponse = await apiClient.get(
-          `/api/v1/orders/${orderId}/history`,
-          {
-            page: 1,
-            limit: 100,
-          },
-        );
+      // Obtener historial consolidado de la orden
+      const orderHistoryResponse = await apiClient.get(
+        `/api/v1/orders/${orderId}/history`,
+        {
+          page: 1,
+          limit: 100,
+        },
+      );
 
-        const orderHistory =
-          orderHistoryResponse.ok && orderHistoryResponse.data?.data
-            ? orderHistoryResponse.data.data.map((item: any) => ({
-                ...item,
-                type: 'order' as const,
-              }))
-            : [];
+      const orderHistory =
+        orderHistoryResponse.ok && orderHistoryResponse.data?.data
+          ? orderHistoryResponse.data.data.map((item: any) => ({
+              ...item,
+              type: 'order' as const,
+            }))
+          : [];
 
-        // Ya no necesitamos consultar el historial de items por separado
-        // Todo está consolidado en el historial de la orden
+      // Ya no necesitamos consultar el historial de items por separado
+      // Todo está consolidado en el historial de la orden
 
-        // No es necesario agrupar ya que cada registro ya contiene cambios consolidados
-        return orderHistory;
-      } catch (error) {
-        throw error;
-      }
+      // No es necesario agrupar ya que cada registro ya contiene cambios consolidados
+      return orderHistory;
     },
     enabled: visible && !!orderId,
     staleTime: 30000,

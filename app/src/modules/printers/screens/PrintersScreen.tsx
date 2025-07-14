@@ -1,13 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Portal,
-  ActivityIndicator,
-  IconButton,
-  FAB,
-  Text,
-} from 'react-native-paper';
+import { Portal, ActivityIndicator, IconButton, FAB } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import PrinterDiscoveryModal from '../components/PrinterDiscoveryModal';
 import PrinterFormModal from '../components/PrinterFormModal';
@@ -204,16 +198,6 @@ const PrintersScreen: React.FC = () => {
     },
   });
 
-  // Wrapper para el cambio de filtro
-  const handleFilterChange = useCallback((value: string | number) => {
-    // Asegurar que el valor sea uno de los esperados por StatusFilter
-    if (value === 'all' || value === 'active' || value === 'inactive') {
-      setStatusFilter(value as StatusFilter);
-    } else {
-      // Opcional: manejar caso inesperado, por ahora default a 'all'
-      setStatusFilter('all');
-    }
-  }, []);
 
   // --- Funcionalidad de Ping ---
   const handlePingPrinter = useCallback(

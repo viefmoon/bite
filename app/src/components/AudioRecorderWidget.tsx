@@ -53,7 +53,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   // Animaciones
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const waveAnim1 = useRef(new Animated.Value(0.8)).current;
   const waveAnim2 = useRef(new Animated.Value(0.8)).current;

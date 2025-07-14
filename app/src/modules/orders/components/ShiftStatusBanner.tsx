@@ -1,13 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Banner,
-  Text,
-  Button,
-  ActivityIndicator,
-  Surface,
-  Card,
-} from 'react-native-paper';
+import { Text, Button, ActivityIndicator, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';

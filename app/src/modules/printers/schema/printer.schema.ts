@@ -41,17 +41,34 @@ const thermalPrinterDtoObjectSchema = z.object({
     .string()
     .ip({ version: 'v4', message: 'IP inválida' })
     .optional(),
-  port: z.coerce.number().int().positive('El puerto debe ser un número positivo').optional(),
+  port: z.coerce
+    .number()
+    .int()
+    .positive('El puerto debe ser un número positivo')
+    .optional(),
   path: z.string().optional(),
   isActive: z.boolean().optional().default(true),
   macAddress: z.string().regex(macRegex, 'MAC inválida').optional(),
   isDefaultPrinter: z.boolean().optional().default(false),
   autoDeliveryPrint: z.boolean().optional().default(false),
   autoPickupPrint: z.boolean().optional().default(false),
-  paperWidth: z.number().min(58, 'El ancho del papel debe ser de al menos 58mm').optional().default(80),
-  charactersPerLine: z.number().min(32, 'Debe tener al menos 32 caracteres por línea').optional().default(48),
+  paperWidth: z
+    .number()
+    .min(58, 'El ancho del papel debe ser de al menos 58mm')
+    .optional()
+    .default(80),
+  charactersPerLine: z
+    .number()
+    .min(32, 'Debe tener al menos 32 caracteres por línea')
+    .optional()
+    .default(48),
   cutPaper: z.boolean().optional().default(true),
-  feedLines: z.number().min(0, 'No puede ser menor a 0 líneas').max(50, 'No puede ser mayor a 50 líneas').optional().default(3),
+  feedLines: z
+    .number()
+    .min(0, 'No puede ser menor a 0 líneas')
+    .max(50, 'No puede ser mayor a 50 líneas')
+    .optional()
+    .default(3),
 });
 
 const refinePrinterDto = (

@@ -19,11 +19,13 @@ class AppConfigService {
       this.config = response.data;
       return this.config;
     } catch (error) {
-      return {
+      const defaultConfig: AppConfig = {
         maps: {
           apiKey: '',
         },
       };
+      this.config = defaultConfig;
+      return defaultConfig;
     }
   }
 

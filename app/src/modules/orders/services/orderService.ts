@@ -3,7 +3,7 @@ import { handleApiResponse } from '@/app/lib/apiHelpers';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import { ApiError } from '@/app/lib/errors'; // Importar ApiError
 import type { Order } from '../../../app/schemas/domain/order.schema';
-import type { FindAllOrdersDto } from '../types/orders.types'; // FindAllOrdersDto se queda aquí
+import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types'; // FindAllOrdersDto se queda aquí
 import type { PaginatedResponse } from '../../../app/types/api.types'; // Importar PaginatedResponse
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail'; // Importar la interfaz del payload de creación
 import type { UpdateOrderPayload } from '../types/update-order.types'; // Importar la interfaz del payload de actualización
@@ -83,6 +83,18 @@ export const orderService = {
   getOpenOrdersCurrentShift: async (): Promise<Order[]> => {
     const response = await apiClient.get<Order[]>(
       API_PATHS.ORDERS_OPEN_CURRENT_SHIFT,
+    );
+    return handleApiResponse(response);
+  },
+
+  /**
+   * Obtiene las órdenes abiertas del turno actual (optimizado).
+   * @returns Una promesa que resuelve a un array de órdenes abiertas con campos mínimos.
+   * @throws {ApiError} Si la petición falla.
+   */
+  getOpenOrdersList: async (): Promise<OrderOpenList[]> => {
+    const response = await apiClient.get<OrderOpenList[]>(
+      `${API_PATHS.ORDERS}/open-orders-list`,
     );
     return handleApiResponse(response);
   },
