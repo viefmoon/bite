@@ -51,7 +51,15 @@ const GlobalSnackbar: React.FC = () => {
         Toast.hide(toast);
       };
     }
-  }, [visible, message, type, duration, hideSnackbar]);
+  }, [
+    visible,
+    message,
+    type,
+    duration,
+    hideSnackbar,
+    theme.colors.shadow,
+    theme.roundness,
+  ]);
 
   const getBackgroundColor = (snackbarType: SnackbarType) => {
     switch (snackbarType) {

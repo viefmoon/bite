@@ -47,7 +47,8 @@
       "Bash(npm info:*)",
       "Bash(curl:*)",
       "Bash(npx eslint:*)",
-      "Bash(timeout 30 npm run start:dev)"
+      "Bash(timeout 30 npm run start:dev)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

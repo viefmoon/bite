@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 // Plugin para generar iconos personalizados
 function withCustomIcons(config) {

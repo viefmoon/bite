@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Portal, Dialog, Button, Text } from 'react-native-paper';
 import { useAuthStore } from '../store/authStore';
@@ -14,11 +14,7 @@ export function ConditionalAppNavigator() {
   const [showNoScreenAlert, setShowNoScreenAlert] = useState(false);
   const [isKitchenUser, setIsKitchenUser] = useState(false);
 
-  useEffect(() => {
-    checkUserAccess();
-  }, [user]);
-
-  const checkUserAccess = async () => {
+  const checkUserAccess = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -46,7 +42,11 @@ export function ConditionalAppNavigator() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    checkUserAccess();
+  }, [checkUserAccess]);
 
   if (loading) {
     return (

@@ -576,6 +576,9 @@ const GenericList = <TItem extends { id: string }>({
       itemActionsContainerStyle,
       enableGrid,
       numColumns,
+      showImagePlaceholder,
+      placeholderIcon,
+      responsive,
     ],
   );
 

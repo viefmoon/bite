@@ -28,14 +28,10 @@ async function downloadWithRetry(
 ): Promise<string | null> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const downloadStartTime = Date.now();
       const { uri: downloadedUri } = await FileSystem.downloadAsync(
         remoteUrl,
         localUri,
       );
-
-      const downloadEndTime = Date.now();
-      const finalFileInfo = await FileSystem.getInfoAsync(localUri);
 
       // Solo loggear si hubo múltiples intentos y falló al final
       // Éxito después de reintentos no necesita log
@@ -241,14 +237,10 @@ export async function getCachedImageUri(
   if (fileInfo.exists) {
     return localUri;
   } else {
-    const downloadStartTime = Date.now();
-
     // Usar downloadWithRetry en lugar de descarga directa
     const downloadedUri = await downloadWithRetry(remoteUrl, localUri);
 
     if (downloadedUri) {
-      const downloadEndTime = Date.now();
-      const finalFileInfo = await FileSystem.getInfoAsync(localUri);
 
       // Descarga exitosa - no necesita log en producción
 
@@ -323,10 +315,7 @@ export async function prefetchImages(
     return;
   }
 
-  const startTime = Date.now();
   let completed = 0;
-  let cached = 0;
-  let downloaded = 0;
   let failed = 0;
 
   // Función para procesar una imagen
@@ -348,16 +337,13 @@ export async function prefetchImages(
         const fileInfo = await FileSystem.getInfoAsync(localUri);
 
         if (fileInfo.exists) {
-          cached++;
           return;
         }
       }
 
       // Descargar la imagen usando el método con retry
       const result = await getCachedImageUri(fullUrl);
-      if (result) {
-        downloaded++;
-      } else {
+      if (!result) {
         failed++;
       }
     } catch (error) {

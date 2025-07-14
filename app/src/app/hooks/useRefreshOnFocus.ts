@@ -40,7 +40,7 @@ export function useRefreshOnFocus(
         queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
       });
     });
-  }, []);
+  }, [enabled, refetchOnMount, queryKeys, queryClient]);
 
   return {
     refetch: () => {

@@ -209,9 +209,13 @@ export function AppDrawerNavigator() {
           },
           headerRight: () => {
             // Solo mostrar ShiftIndicator en las secciones de ventas
-            const salesScreens = ['OrdersStack', 'ReceiptsStack', 'OrderFinalizationStack'];
+            const salesScreens = [
+              'OrdersStack',
+              'ReceiptsStack',
+              'OrderFinalizationStack',
+            ];
             const showShiftIndicator = salesScreens.includes(route.name);
-            
+
             return (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {showShiftIndicator && <ShiftIndicator />}

@@ -5,7 +5,6 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
-  ScrollView,
 } from 'react-native';
 import { Text, Button, Chip, ActivityIndicator } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';

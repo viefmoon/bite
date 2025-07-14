@@ -1,6 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import { Platform } from 'react-native';
 
 const DISCOVERY_PORT = 3737;
 const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
@@ -215,14 +214,14 @@ export class DiscoveryService {
       const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
 
       // Escanear todas las IPs pero detener en cuanto encontremos el servidor
-      let totalScanned = 0;
+      let _totalScanned = 0;
 
       for (let i = 0; i < chunks.length; i++) {
         const results = await Promise.allSettled(
           chunks[i].map((ip) => this.probeServer(ip)),
         );
 
-        totalScanned += chunks[i].length;
+        _totalScanned += chunks[i].length;
 
         // Buscar si alguna petición fue exitosa
         for (let j = 0; j < results.length; j++) {

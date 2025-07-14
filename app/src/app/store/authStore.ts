@@ -34,28 +34,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     refreshToken: string,
     user: User | null,
   ) => {
-    try {
-      // Verificar si el usuario está activo antes de guardar los tokens
-      if (user && 'isActive' in user && !user.isActive) {
-        throw new Error('Usuario inactivo');
-      }
-
-      await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
-      await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-      if (user) {
-        await EncryptedStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
-      } else {
-        await EncryptedStorage.removeItem(USER_INFO_KEY);
-      }
-      set({
-        accessToken,
-        refreshToken,
-        user: user ?? null,
-        isAuthenticated: true,
-      });
-    } catch (error) {
-      throw error; // Re-lanzar el error para que el login lo maneje
+    // Verificar si el usuario está activo antes de guardar los tokens
+    if (user && 'isActive' in user && !user.isActive) {
+      throw new Error('Usuario inactivo');
     }
+
+    await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+    await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    if (user) {
+      await EncryptedStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+    } else {
+      await EncryptedStorage.removeItem(USER_INFO_KEY);
+    }
+    set({
+      accessToken,
+      refreshToken,
+      user: user ?? null,
+      isAuthenticated: true,
+    });
   },
 
   setAccessToken: async (accessToken: string) => {
@@ -155,6 +151,7 @@ export const initializeAuthStore = async () => {
       const isTokenValid = await authService.verifyToken();
 
       if (isTokenValid) {
+        // Token is valid, authentication state is already set
       } else {
         // Si el token no es válido, limpiamos todo
         await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);

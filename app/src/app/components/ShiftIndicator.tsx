@@ -14,9 +14,9 @@ export const ShiftIndicator: React.FC = () => {
   const theme = useAppTheme();
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  
+
   const { data: shift, isLoading: loading } = useGlobalShift();
-  
+
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [openShiftModalVisible, setOpenShiftModalVisible] = useState(false);
   const [closeShiftModalVisible, setCloseShiftModalVisible] = useState(false);

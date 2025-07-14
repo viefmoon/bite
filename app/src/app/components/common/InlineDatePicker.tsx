@@ -3,11 +3,9 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Dimensions,
   ScrollView,
   Modal,
-  Platform,
 } from 'react-native';
 import {
   Surface,

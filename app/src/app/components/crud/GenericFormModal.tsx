@@ -327,7 +327,7 @@ const GenericFormModal = <
     reset,
     setValue,
     watch,
-    getValues,
+    getValues: _getValues,
     formState: { errors },
   }: UseFormReturn<TFormData> = useForm<TFormData>({
     resolver: zodResolver(formSchema) as any,
@@ -402,7 +402,7 @@ const GenericFormModal = <
         onFileSelected?.(file);
       }
     },
-    [setValue, getValues, imagePickerConfig, onFileSelected],
+    [setValue, imagePickerConfig, onFileSelected],
   );
 
   const handleImageRemoved = useCallback(() => {

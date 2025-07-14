@@ -46,8 +46,8 @@ interface ResponsiveImageProps
 
   // Optimización
   enableDPIScaling?: boolean;
-  quality?: 'low' | 'medium' | 'high';
-  qualityTablet?: 'low' | 'medium' | 'high';
+  _quality?: 'low' | 'medium' | 'high';
+  _qualityTablet?: 'low' | 'medium' | 'high';
 
   // Estilos condicionales
   mobileStyle?: StyleProp<ImageStyle>;
@@ -101,8 +101,8 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
 
   // Optimización
   enableDPIScaling = true,
-  quality = 'medium',
-  qualityTablet,
+  _quality = 'medium',
+  _qualityTablet,
 
   // Estilos condicionales
   mobileStyle,
@@ -305,8 +305,8 @@ export const ResponsiveThumbnail: React.FC<ResponsiveImageProps> = (props) => {
       sizeTablet="large"
       contentFit="cover"
       enableDPIScaling={true}
-      quality="medium"
-      qualityTablet="high"
+      _quality="medium"
+      _qualityTablet="high"
       {...props}
     />
   );
