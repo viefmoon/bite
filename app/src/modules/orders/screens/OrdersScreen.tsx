@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Text } from 'react-native-paper';
@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackParamList } from '@/app/navigation/types';
-import { shiftsService, type Shift } from '@/services/shifts';
+import { useGlobalShift } from '@/app/hooks/useGlobalShift';
 
 function OrdersScreen() {
   const theme = useAppTheme();
@@ -14,24 +14,7 @@ function OrdersScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<OrdersStackParamList>>();
 
-  const [shift, setShift] = useState<Shift | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadShift = async () => {
-    try {
-      setLoading(true);
-      const currentShift = await shiftsService.getCurrentShift();
-      setShift(currentShift);
-    } catch (error) {
-      // Error silencioso, el usuario verá que no hay turno activo
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadShift();
-  }, []);
+  const { data: shift, isLoading: loading } = useGlobalShift();
 
   const handleOpenOrders = () => {
     if (shift && shift.status === 'OPEN') {

@@ -33,6 +33,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiParam,
+  ApiBody,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
@@ -581,5 +583,34 @@ export class OrdersController {
     await this.ordersService.update(id, {
       orderStatus: OrderStatus.READY,
     });
+  }
+
+  @Post(':id/print-ticket')
+  @ApiOperation({ summary: 'Imprimir ticket de una orden' })
+  @ApiParam({ name: 'id', type: 'string', description: 'ID de la orden' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        printerId: { type: 'string', description: 'ID de la impresora' },
+        ticketType: { 
+          type: 'string', 
+          enum: ['GENERAL', 'BILLING'],
+          description: 'Tipo de ticket a imprimir' 
+        },
+      },
+      required: ['printerId', 'ticketType'],
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  async printTicket(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() printTicketDto: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    await this.ordersService.printOrderTicket(id, printTicketDto.printerId, printTicketDto.ticketType, userId);
   }
 }

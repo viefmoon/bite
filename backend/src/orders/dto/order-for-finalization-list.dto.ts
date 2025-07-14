@@ -27,6 +27,9 @@ export class OrderForFinalizationListDto {
   @ApiProperty({ description: 'Fecha de creación' })
   createdAt: Date;
 
+  @ApiProperty({ description: 'Fecha de finalización', required: false })
+  finalizedAt?: Date;
+
   @ApiProperty({ description: 'Fecha y hora de entrega programada', required: false })
   scheduledAt?: Date;
 
@@ -65,4 +68,10 @@ export class OrderForFinalizationListDto {
     type: [String]
   })
   preparationScreens?: string[];
+
+  @ApiProperty({ 
+    description: 'Cantidad de tickets impresos para esta orden', 
+    required: false
+  })
+  ticketImpressionCount?: number;
 }

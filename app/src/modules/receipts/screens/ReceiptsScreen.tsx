@@ -18,6 +18,7 @@ import {
   useRecoverOrder,
 } from '../hooks/useReceiptsQueries';
 import { Order } from '@/app/schemas/domain/order.schema';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
 import { ConfirmRecoverModal } from '../components/ConfirmRecoverModal';
@@ -84,6 +85,9 @@ export const ReceiptsScreen: React.FC = () => {
     refetch,
     isRefetching,
   } = useReceiptsInfinite(filters);
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('receipts');
 
   // Aplanar los datos paginados
   const receipts = useMemo(() => {
@@ -210,7 +214,7 @@ export const ReceiptsScreen: React.FC = () => {
               </Text>
               <View style={styles.timeAndPaymentRow}>
                 <Text style={styles.orderTime}>
-                  {format(new Date(item.createdAt), 'p', { locale: es })}
+                  Creado: {format(new Date(item.createdAt), 'p', { locale: es })}
                 </Text>
                 <Text style={styles.dateText}>
                   {format(new Date(item.createdAt), "d 'de' MMMM", {
@@ -218,6 +222,18 @@ export const ReceiptsScreen: React.FC = () => {
                   })}
                 </Text>
               </View>
+              {item.finalizedAt && (
+                <View style={styles.timeAndPaymentRow}>
+                  <Text style={styles.orderTimeFinal}>
+                    Finalizado: {format(new Date(item.finalizedAt), 'p', { locale: es })}
+                  </Text>
+                  <Text style={styles.dateText}>
+                    {format(new Date(item.finalizedAt), "d 'de' MMMM", {
+                      locale: es,
+                    })}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Right Side - Status and Actions */}
@@ -572,6 +588,11 @@ const createStyles = (theme: AppTheme) =>
     orderTime: {
       ...theme.fonts.titleMedium,
       color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    orderTimeFinal: {
+      ...theme.fonts.titleMedium,
+      color: theme.colors.secondary,
       fontWeight: '600',
     },
     dateText: {

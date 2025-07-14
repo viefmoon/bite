@@ -129,7 +129,7 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
               <View style={styles.headerRow}>
                 <View style={styles.headerInfo}>
                   <Text variant="bodyMedium" style={styles.label}>
-                    Fecha:
+                    Fecha de creación:
                   </Text>
                   <Text variant="bodyLarge">
                     {format(
@@ -140,6 +140,22 @@ export const ReceiptDetailModal: React.FC<ReceiptDetailModalProps> = ({
                       },
                     )}
                   </Text>
+                  {order.finalizedAt && (
+                    <>
+                      <Text variant="bodyMedium" style={[styles.label, { marginTop: 8 }]}>
+                        Fecha de finalización:
+                      </Text>
+                      <Text variant="bodyLarge">
+                        {format(
+                          new Date(order.finalizedAt),
+                          "d 'de' MMMM, yyyy 'a las' HH:mm",
+                          {
+                            locale: es,
+                          },
+                        )}
+                      </Text>
+                    </>
+                  )}
                 </View>
                 <Chip
                   mode="flat"

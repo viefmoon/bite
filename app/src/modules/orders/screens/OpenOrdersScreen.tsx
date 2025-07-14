@@ -16,10 +16,9 @@ import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
 import { useRoute } from '@react-navigation/native';
-import { shiftsService, type Shift } from '../../../services/shifts';
-import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
 import { useAuthStore } from '../../../app/store/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
+import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
 import {
   useGetOpenOrdersQuery,
   usePrintKitchenTicketMutation,
@@ -130,76 +129,42 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const [orderToPrintId, setOrderToPrintId] = useState<string | null>(null);
   const printKitchenTicketMutation = usePrintKitchenTicketMutation();
 
-  // Estado para turno
   const user = useAuthStore((state) => state.user);
-  const [shift, setShift] = useState<Shift | null>(null);
-  const [shiftLoading, setShiftLoading] = useState(true);
-
-  // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
+  const { data: shift, isLoading: shiftLoading } = useGlobalShift();
   const userCanOpenShift = canOpenShift(user);
 
-  // Estados para el modal de edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingOrderId, setEditingOrderId] = useState<string | null>(null); // Cambiado a ID
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [pendingProductsToAdd, setPendingProductsToAdd] = useState<CartItem[]>(
     [],
   );
-  // Estado para mantener productos temporales mientras se navega
   const [temporaryProducts, setTemporaryProducts] = useState<{
     [orderId: string]: CartItem[];
   }>({});
-  // Estado para rastrear el conteo de items existentes en cada orden
   const [existingItemsCount, setExistingItemsCount] = useState<{
     [orderId: string]: number;
   }>({});
 
-  // Estado para filtro de tipo de orden
   const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL'>(
     'ALL',
   );
 
-  // Instanciar las mutaciones
   const updateOrderMutation = useUpdateOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
   const createBulkAdjustmentsMutation = useCreateBulkAdjustmentsMutation();
 
   const {
-    data: ordersData, // Renombrar para claridad, ahora es Order[] | undefined
+    data: ordersData,
     isLoading,
     isError,
     refetch,
     isFetching,
-  } = useGetOpenOrdersQuery(); // Usar el hook para obtener órdenes abiertas
-
-  // Cargar estado del turno
-  const loadShift = async () => {
-    try {
-      setShiftLoading(true);
-      const currentShift = await shiftsService.getCurrentShift();
-      setShift(currentShift);
-    } catch (error) {
-      // Error silenciado en producción
-    } finally {
-      setShiftLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadShift();
-  }, []);
-
-  // No necesitamos useRefreshModuleOnFocus aquí porque el hook useGetOpenOrdersQuery
-  // ya tiene configurado refetchInterval, refetchOnMount y refetchOnWindowFocus
-
-  // Filtrar órdenes por tipo
+  } = useGetOpenOrdersQuery();
   const filteredOrders = React.useMemo(() => {
     if (!ordersData) return [];
     if (selectedOrderType === 'ALL') return ordersData;
     return ordersData.filter((order) => order.orderType === selectedOrderType);
   }, [ordersData, selectedOrderType]);
-
-  // Ya no necesitamos procesar items agregados porque la actualización se hace directamente en CreateOrderScreen
-  // Este efecto se puede eliminar o simplificar
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -482,17 +447,19 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {!shiftLoading && (!shift || shift.status !== 'OPEN') ? (
         <View style={styles.container}>
-          <ShiftStatusBanner
-            shift={shift}
-            loading={shiftLoading}
-            onOpenShift={() => navigation.goBack()}
-            canOpenShift={userCanOpenShift}
-          />
           <View style={styles.emptyStateContainer}>
+            <Icon
+              source="store-alert"
+              size={64}
+              color={theme.colors.onSurfaceVariant}
+            />
+            <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+              Turno Cerrado
+            </Text>
             <Text variant="bodyLarge" style={styles.emptyStateText}>
               {userCanOpenShift
-                ? 'Regresa a la pantalla anterior para abrir el turno.'
-                : 'Solicita a un administrador que abra el turno.'}
+                ? 'Para ver las órdenes abiertas, primero debes abrir el turno usando el indicador en la barra superior.'
+                : 'El turno debe estar abierto para ver las órdenes. Contacta a un administrador.'}
             </Text>
           </View>
         </View>
@@ -969,9 +936,18 @@ const createStyles = (
       alignItems: 'center',
       padding: theme.spacing.l,
     },
+    emptyStateTitle: {
+      marginTop: theme.spacing.l,
+      marginBottom: theme.spacing.m,
+      textAlign: 'center',
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
     emptyStateText: {
       textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
+      maxWidth: 320,
+      lineHeight: 24,
     },
   });
 

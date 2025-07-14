@@ -30,6 +30,7 @@ export interface OrderForFinalizationList {
     fullAddress?: string;
   };
   preparationScreens?: string[];
+  ticketImpressionCount?: number;
 }
 
 // Tipo completo para el detalle de orden
@@ -74,6 +75,16 @@ export interface OrderForFinalization {
     updatedAt: string;
   }[];
   notes?: string;
+  ticketImpressions?: {
+    id: string;
+    ticketType: string;
+    impressionTime: string;
+    user?: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+    };
+  }[];
 }
 
 export interface OrderItemForFinalization {

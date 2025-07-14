@@ -205,6 +205,8 @@ export const receiptQueryOptions = {
       getNextPageParam: (lastPage) =>
         lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
       initialPageParam: 1,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
     }),
 
   receipts: (

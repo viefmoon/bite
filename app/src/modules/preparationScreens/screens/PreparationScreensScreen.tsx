@@ -27,6 +27,7 @@ import {
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useListState } from '@/app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -81,6 +82,9 @@ const PreparationScreensScreen = () => {
     useGetMenuWithAssociations(productModalScreenId, {
       enabled: !!productModalScreenId && isProductModalVisible,
     });
+
+  // Recargar automáticamente cuando la pantalla recibe foco
+  useRefreshModuleOnFocus('preparation-screens');
 
   // Enriquecer menuData con información de pantallas
   const enrichedMenuData = React.useMemo(() => {

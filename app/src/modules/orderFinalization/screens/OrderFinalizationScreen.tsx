@@ -6,10 +6,12 @@ import {
   ActivityIndicator,
   Icon,
   Button,
+  IconButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
+import { PrintTicketModal } from '../components/PrintTicketModal';
 import {
   useOrdersForFinalizationList,
   useOrderForFinalizationDetail,
@@ -38,6 +40,8 @@ export const OrderFinalizationScreen: React.FC = () => {
     useState<string | null>(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [isFinalizingOrders, setIsFinalizingOrders] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<OrderForFinalizationList | null>(null);
 
   const {
     data: orders = [],
@@ -47,6 +51,9 @@ export const OrderFinalizationScreen: React.FC = () => {
   } = useOrdersForFinalizationList();
   
   const { data: selectedOrderDetails, isLoading: isLoadingDetails } = useOrderForFinalizationDetail(selectedOrderIdForDetails);
+  
+  // Hook separado para obtener detalles de orden para impresión
+  const { data: orderForPrint } = useOrderForFinalizationDetail(selectedOrderForPrint?.id || null);
 
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
@@ -221,6 +228,45 @@ export const OrderFinalizationScreen: React.FC = () => {
     }, 50);
   }, []);
 
+  const handlePrintPress = useCallback(() => {
+    setShowPrintModal(true);
+  }, []);
+
+  const handlePrintFromList = useCallback(async (order: OrderForFinalizationList) => {
+    // Solo establecer la orden para imprimir, no abrir el modal de detalles
+    setSelectedOrderForPrint(order);
+    setShowPrintModal(true);
+  }, []);
+
+  const handlePrint = useCallback(async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
+    // Usar orderForPrint si viene de la lista, o selectedOrderDetails si viene del detalle
+    const orderToUse = orderForPrint || selectedOrderDetails;
+    if (!orderToUse) return;
+    
+    try {
+      await orderFinalizationService.printTicket(orderToUse.id, {
+        printerId,
+        ticketType,
+      });
+      
+      showSnackbar({
+        message: 'Ticket impreso exitosamente',
+        type: 'success',
+      });
+      
+      // Refrescar la lista para actualizar el contador de impresiones
+      await refetch();
+      
+      // Limpiar estado después de imprimir
+      setSelectedOrderForPrint(null);
+    } catch (error) {
+      showSnackbar({
+        message: 'Error al imprimir el ticket',
+        type: 'error',
+      });
+    }
+  }, [orderForPrint, selectedOrderDetails, showSnackbar, refetch]);
+
   const renderOrderCard = useCallback(
     ({ item }) => (
       <OrderCard
@@ -228,12 +274,14 @@ export const OrderFinalizationScreen: React.FC = () => {
         isSelected={selectionState.selectedOrders.has(item.id)}
         onToggleSelection={handleToggleOrderSelection}
         onShowDetails={handleShowOrderDetails}
+        onPrintPress={handlePrintFromList}
       />
     ),
     [
       selectionState.selectedOrders,
       handleToggleOrderSelection,
       handleShowOrderDetails,
+      handlePrintFromList,
     ],
   );
 
@@ -349,6 +397,17 @@ export const OrderFinalizationScreen: React.FC = () => {
               )}
             </Pressable>
           </View>
+          <View style={styles.refreshButtonContainer}>
+            <IconButton
+              icon="refresh"
+              size={24}
+              mode="contained"
+              containerColor={theme.colors.surfaceVariant}
+              iconColor={theme.colors.onSurfaceVariant}
+              onPress={() => refetch()}
+              style={styles.refreshButton}
+            />
+          </View>
         </View>
       </Surface>
 
@@ -393,6 +452,17 @@ export const OrderFinalizationScreen: React.FC = () => {
         onDismiss={() => setSelectedOrderIdForDetails(null)}
         order={selectedOrderDetails}
         isLoading={isLoadingDetails}
+        onPrintPress={handlePrintPress}
+      />
+      
+      <PrintTicketModal
+        visible={showPrintModal}
+        onDismiss={() => {
+          setShowPrintModal(false);
+          setSelectedOrderForPrint(null);
+        }}
+        order={orderForPrint || selectedOrderDetails}
+        onPrint={handlePrint}
       />
 
       <ConfirmationModal
@@ -428,6 +498,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: 0,
+  },
+  refreshButtonContainer: {
+    paddingHorizontal: 8,
+  },
+  refreshButton: {
+    margin: 0,
   },
   filterButton: {
     flex: 1,

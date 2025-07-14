@@ -27,4 +27,8 @@ export const orderFinalizationService = {
     const response = await apiClient.post('/api/v1/orders/quick-finalize-multiple', { orderIds });
     return response.data;
   },
+
+  async printTicket(orderId: string, params: { printerId: string; ticketType: 'GENERAL' | 'BILLING' }): Promise<void> {
+    await apiClient.post(`/api/v1/orders/${orderId}/print-ticket`, params);
+  },
 };

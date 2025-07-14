@@ -23,6 +23,7 @@ import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
 import { Product, Category, SubCategory } from '../types/orders.types';
 import { AutoImage } from '@/app/components/common/AutoImage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import OrderCartDetail from '../components/OrderCartDetail';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
@@ -37,10 +38,9 @@ import {
   audioOrderService,
   type AIOrderItem,
 } from '@/services/audioOrderService';
-import { shiftsService, type Shift } from '@/services/shifts';
-import { ShiftStatusBanner } from '../components/ShiftStatusBanner';
 import { useAuthStore } from '@/app/store/authStore';
 import { canOpenShift } from '@/app/utils/roleUtils';
+import { useGlobalShift } from '@/app/hooks/useGlobalShift';
 
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
@@ -70,12 +70,8 @@ const CreateOrderScreen = () => {
   } = useCart();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  // Estado para turno
   const user = useAuthStore((state) => state.user);
-  const [shift, setShift] = useState<Shift | null>(null);
-  const [shiftLoading, setShiftLoading] = useState(true);
-
-  // Verificar si el usuario puede abrir el turno usando la utilidad centralizada
+  const { data: shift, isLoading: shiftLoading } = useGlobalShift();
   const userCanOpenShift = canOpenShift(user);
 
   const createOrderMutation = useCreateOrderMutation();
@@ -112,23 +108,6 @@ const CreateOrderScreen = () => {
   const [audioError, setAudioError] = useState<string | undefined>();
 
   const { data: menu, isLoading } = useGetFullMenu();
-
-  // Cargar estado del turno
-  const loadShift = async () => {
-    try {
-      setShiftLoading(true);
-      const currentShift = await shiftsService.getCurrentShift();
-      setShift(currentShift);
-    } catch (error) {
-      console.error('Error al cargar turno:', error);
-    } finally {
-      setShiftLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadShift();
-  }, []);
 
   // Calcular número de columnas para el grid
   const numColumns = useMemo(() => {
@@ -645,9 +624,18 @@ const CreateOrderScreen = () => {
           alignItems: 'center',
           padding: responsive.spacing.l,
         },
+        emptyStateTitle: {
+          marginTop: responsive.spacing.l,
+          marginBottom: responsive.spacing.m,
+          textAlign: 'center',
+          color: colors.onSurface,
+          fontWeight: '600',
+        },
         emptyStateText: {
           textAlign: 'center',
           color: colors.onSurfaceVariant,
+          maxWidth: 320,
+          lineHeight: 24,
         },
       }),
     [colors, fonts],
@@ -857,17 +845,19 @@ const CreateOrderScreen = () => {
               style={styles.appBarContent}
             />
           </Appbar.Header>
-          <ShiftStatusBanner
-            shift={shift}
-            loading={shiftLoading}
-            onOpenShift={() => navigation.goBack()}
-            canOpenShift={userCanOpenShift}
-          />
           <View style={styles.emptyStateContainer}>
+            <MaterialCommunityIcons
+              name="store-alert"
+              size={64}
+              color={theme.colors.onSurfaceVariant}
+            />
+            <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+              Turno Cerrado
+            </Text>
             <Text variant="bodyLarge" style={styles.emptyStateText}>
               {userCanOpenShift
-                ? 'Regresa a la pantalla anterior para abrir el turno.'
-                : 'Solicita a un administrador que abra el turno.'}
+                ? 'Para crear órdenes, primero debes abrir el turno usando el indicador en la barra superior.'
+                : 'El turno debe estar abierto para crear órdenes. Contacta a un administrador.'}
             </Text>
           </View>
         </SafeAreaView>
