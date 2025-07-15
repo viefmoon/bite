@@ -17,6 +17,7 @@
     "build:ios:dev": "eas build --platform ios --profile preview --local",
     "build:android:dev": "eas build --platform android --profile preview --local",
     "build:android:prod": "eas build --platform android --profile production --local",
+    "build:android:prod-apk": "eas build --platform android --profile production-apk --local",
     "build:prod": "eas build --platform android --profile production",
     "submit:prod": "eas submit --platform android --profile production",
     "release:prod": "npm run build:prod && npm run submit:prod",

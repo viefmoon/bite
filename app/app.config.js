@@ -28,7 +28,8 @@ export default {
           android: {
             compileSdkVersion: 35,
             targetSdkVersion: 34,
-            buildToolsVersion: "35.0.0"
+            buildToolsVersion: "35.0.0",
+            usesCleartextTraffic: true
           }
         }
       ],
