@@ -15,30 +15,34 @@ export function AppNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const paperTheme = useAppTheme();
 
+  // Inicializar servicios una sola vez al montar la app
   useEffect(() => {
     initImageCache();
+    
+    // Inicializar el servicio de conexión siempre, incluso sin autenticación
+    // para que funcione en la pantalla de login
+    serverConnectionService.initialize().catch((error) => {
+      console.error(
+        '[AppNavigator] Error inicializando servicio de conexión:',
+        error,
+      );
+    });
 
-    // Iniciar servicios cuando el usuario esté autenticado
+    return () => {
+      // Limpiar cuando se desmonte toda la app
+      serverConnectionService.cleanup();
+    };
+  }, []); // Sin dependencias para que solo se ejecute una vez
+
+  // Manejar servicios de notificación basados en autenticación
+  useEffect(() => {
     if (isAuthenticated) {
-      // Inicializar el servicio de conexión UNA SOLA VEZ
-      serverConnectionService.initialize().catch((error) => {
-        console.error(
-          '[AppNavigator] Error inicializando servicio de conexión:',
-          error,
-        );
-      });
-
       reconnectionSnackbarService.start();
     } else {
-      // Limpiar servicios cuando se cierre sesión
-      serverConnectionService.cleanup();
       reconnectionSnackbarService.stop();
     }
 
     return () => {
-      if (!isAuthenticated) {
-        serverConnectionService.cleanup();
-      }
       reconnectionSnackbarService.stop();
     };
   }, [isAuthenticated]);

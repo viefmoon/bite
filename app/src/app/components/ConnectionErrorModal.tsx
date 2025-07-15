@@ -3,8 +3,6 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Dimensions,
-  Platform,
 } from 'react-native';
 import {
   Text,
@@ -12,7 +10,6 @@ import {
   Portal,
   Surface,
   Icon,
-  ActivityIndicator,
   IconButton,
   useTheme,
   ProgressBar,
@@ -23,8 +20,9 @@ import {
 } from '@/services/autoReconnectService';
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../store/authStore';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 export function ConnectionErrorModal() {
   const theme = useTheme();
@@ -47,9 +45,11 @@ export function ConnectionErrorModal() {
       }
       
       if (state.status === 'connected') {
+        setVisible(false);
+        // Notificar al servicio de conexión que verifique la nueva conexión
         setTimeout(() => {
-          setVisible(false);
-        }, 2000);
+          serverConnectionService.checkSavedConnection();
+        }, 100);
       }
     });
 
@@ -137,7 +137,7 @@ export function ConnectionErrorModal() {
     container: {
       width: screenWidth - 40,
       minHeight: 400,
-      maxHeight: screenHeight * 0.85,
+      maxHeight: Dimensions.get('window').height * 0.85,
       backgroundColor: theme.colors.surface,
       borderRadius: 24,
       overflow: 'hidden',
@@ -221,7 +221,7 @@ export function ConnectionErrorModal() {
       lineHeight: 20,
       color: theme.colors.onSurface,
       marginBottom: 6,
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: 'monospace',
     },
     logInfo: {
       color: theme.colors.onSurface,
@@ -330,7 +330,7 @@ export function ConnectionErrorModal() {
                   }
                   
                   return (
-                    <Text key={`log-${index}-${log.substring(0, 10)}`} style={logStyle}>
+                    <Text key={index} style={logStyle}>
                       {log}
                     </Text>
                   );

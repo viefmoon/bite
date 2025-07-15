@@ -129,7 +129,7 @@ export function ConnectionIndicator() {
     }
 
     // Si no está conectado y no está reconectando, iniciar reconexión
-    if (!isConnected && !isReconnecting) {
+    if (!isConnected && !isReconnecting && hasWifi) {
       showSnackbar({
         message: 'Iniciando proceso de reconexión...',
         type: 'info',

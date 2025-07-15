@@ -1,14 +1,13 @@
 import axios from 'axios';
 import { discoveryService } from '@/app/services/discoveryService';
 import EventEmitter from 'eventemitter3';
+import { NETWORK_CONFIG } from '@/app/constants/network';
 
 export type HealthStatus = 'ok' | 'error' | 'checking';
 
 export interface HealthState {
   status: HealthStatus;
   isAvailable: boolean;
-  lastCheck: number;
-  uptime?: number;
   message?: string;
 }
 
@@ -16,16 +15,11 @@ class HealthMonitoringService extends EventEmitter {
   private state: HealthState = {
     status: 'checking',
     isAvailable: false,
-    lastCheck: 0,
   };
 
   private checkInterval: NodeJS.Timeout | null = null;
   private retryTimeout: NodeJS.Timeout | null = null;
   private isChecking = false;
-
-  // Configuración
-  private readonly NORMAL_INTERVAL = 30000; // 30 segundos
-  private readonly RETRY_INTERVALS = [5000, 10000, 20000, 30000]; // 5s, 10s, 20s, 30s
   private retryCount = 0;
 
   constructor() {
@@ -50,7 +44,7 @@ class HealthMonitoringService extends EventEmitter {
     // Configurar intervalo normal
     this.checkInterval = setInterval(() => {
       this.checkHealth();
-    }, this.NORMAL_INTERVAL);
+    }, NETWORK_CONFIG.HEALTH_CHECK_INTERVAL);
   }
 
   // Detener monitoreo
@@ -100,7 +94,7 @@ class HealthMonitoringService extends EventEmitter {
       const healthUrl = `${baseUrl}api/v1/health`;
 
       const response = await axios.get(healthUrl, {
-        timeout: 3000, // 3 segundos de timeout
+        timeout: NETWORK_CONFIG.HEALTH_CHECK_TIMEOUT,
       });
 
       if (response.data.status === 'ok') {
@@ -108,8 +102,6 @@ class HealthMonitoringService extends EventEmitter {
         this.updateState({
           status: 'ok',
           isAvailable: true,
-          lastCheck: Date.now(),
-          uptime: response.data.uptime,
           message: 'Conectado al servidor',
         });
 
@@ -134,7 +126,6 @@ class HealthMonitoringService extends EventEmitter {
       this.updateState({
         status: 'error',
         isAvailable: false,
-        lastCheck: Date.now(),
         message: this.getErrorMessage(error),
       });
 
@@ -157,8 +148,8 @@ class HealthMonitoringService extends EventEmitter {
 
     // Obtener intervalo de reintento
     const retryInterval =
-      this.RETRY_INTERVALS[
-        Math.min(this.retryCount, this.RETRY_INTERVALS.length - 1)
+      NETWORK_CONFIG.HEALTH_RETRY_INTERVALS[
+        Math.min(this.retryCount, NETWORK_CONFIG.HEALTH_RETRY_INTERVALS.length - 1)
       ];
 
     this.retryTimeout = setTimeout(() => {
@@ -167,18 +158,9 @@ class HealthMonitoringService extends EventEmitter {
     }, retryInterval);
   }
 
-  // Actualizar estado y notificar
   private updateState(newState: HealthState) {
-    const oldAvailable = this.state.isAvailable;
     this.state = newState;
-
-    // Emitir evento de cambio
     this.emit('stateChange', this.state);
-
-    // Emitir evento específico si cambió la disponibilidad
-    if (oldAvailable !== newState.isAvailable) {
-      this.emit('availabilityChange', newState.isAvailable);
-    }
   }
 
   // Detectar si es un error temporal

@@ -30,7 +30,6 @@ class ServerConnectionService {
   private listeners: Array<(state: ServerConnectionState) => void> = [];
   private initialized = false;
   private initPromise: Promise<void> | null = null;
-  private lastKnownUrl: string | null = null;
   private netInfoUnsubscribe: (() => void) | null = null;
   private healthUnsubscribe: (() => void) | null = null;
   private reconnectUnsubscribe: (() => void) | null = null;
@@ -167,7 +166,6 @@ class ServerConnectionService {
 
       // Si llegamos aquí, tenemos una URL válida.
       await (forceNew ? reinitializeApiClient(url) : getApiClient(url));
-      this.lastKnownUrl = url;
 
       this.updateState({
         isSearching: false,
@@ -188,6 +186,15 @@ class ServerConnectionService {
         error: err.message || 'No se pudo conectar con el servidor',
       });
     }
+  }
+
+  async checkSavedConnection() {
+    try {
+      const url = await discoveryService.getApiUrl();
+      if (url && !this.state.isConnected) {
+        await this.checkConnection(false);
+      }
+    } catch {}
   }
 
   private setupNetworkListener() {
@@ -249,7 +256,7 @@ class ServerConnectionService {
           if (!autoReconnectService.getState().isReconnecting) {
             setTimeout(() => {
               autoReconnectService.startAutoReconnect();
-            }, 1000); // Esperar 1 segundo antes de iniciar reconexión
+            }, 1000);
           }
         }
       },
@@ -265,8 +272,6 @@ class ServerConnectionService {
             // Obtener la URL actual del servicio de discovery
             const url = await discoveryService.getApiUrl();
             if (url) {
-              // Actualizar la URL conocida
-              this.lastKnownUrl = url;
 
               // Detener el monitoreo actual para reiniciarlo limpio
               healthMonitoringService.stopMonitoring();
@@ -285,12 +290,15 @@ class ServerConnectionService {
               // Reiniciar monitoreo de salud limpio
               setTimeout(() => {
                 healthMonitoringService.startMonitoring();
-              }, 1000); // Pequeño delay para asegurar que todo esté listo
+              }, 1000);
             }
-          } catch (error) {
-            // Si hay error obteniendo la URL, ignorar silenciosamente
-            // El servicio de reconexión ya verificó que hay conexión
-          }
+          } catch {}
+        } else if (reconnectState.status === 'running-discovery') {
+          // Actualizar el estado para mostrar que está buscando
+          this.updateState({
+            isSearching: true,
+            error: null,
+          });
         }
       },
     );

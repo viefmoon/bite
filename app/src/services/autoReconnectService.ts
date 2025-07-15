@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3';
 import { healthMonitoringService } from './healthMonitoringService';
 import { discoveryService } from '@/app/services/discoveryService';
 import NetInfo from '@react-native-community/netinfo';
+import { NETWORK_CONFIG } from '@/app/constants/network';
 
 export type ReconnectStatus =
   | 'idle'
@@ -31,11 +32,6 @@ class AutoReconnectService extends EventEmitter {
 
   private reconnectTimer: NodeJS.Timeout | null = null;
   private isRunning = false;
-
-  // Configuración
-  private readonly HEALTH_CHECK_ATTEMPTS = 3;
-  private readonly HEALTH_CHECK_INTERVAL = 2000; // 2 segundos entre checks
-  private readonly CYCLE_DELAY = 10000; // 10 segundos antes de reiniciar ciclo
   private readonly MAX_LOGS = 50;
 
   constructor() {
@@ -111,12 +107,8 @@ class AutoReconnectService extends EventEmitter {
   private async reconnectCycle() {
     while (this.isRunning) {
       this.updateState({ attempts: this.state.attempts + 1 });
-      this.addLog(`════════════════════════════════`, 'info');
       this.addLog(`CICLO DE RECONEXIÓN #${this.state.attempts}`, 'info');
-      this.addLog(`════════════════════════════════`, 'info');
 
-      // 1. Verificar estado de red
-      this.addLog('📡 PASO 1: Verificando WiFi...', 'info');
       const hasNetwork = await this.checkNetwork();
       if (!hasNetwork) {
         this.addLog('❌ Sin conexión WiFi. Esperando...', 'error');
@@ -126,13 +118,11 @@ class AutoReconnectService extends EventEmitter {
         });
 
         // Esperar antes de reintentar
-        await this.delay(this.CYCLE_DELAY);
+        await this.delay(NETWORK_CONFIG.RECONNECT_CYCLE_DELAY);
         continue;
       }
       this.addLog('✅ WiFi conectado', 'success');
 
-      // 2. Intentar health checks múltiples veces
-      this.addLog('🏥 PASO 2: Health Checks', 'info');
       this.addLog('Verificando servidor con health checks...', 'info');
       const healthOk = await this.tryHealthChecks();
 
@@ -147,8 +137,6 @@ class AutoReconnectService extends EventEmitter {
         break;
       }
 
-      // 3. Si fallan los health checks, intentar discovery
-      this.addLog('🔍 PASO 3: Discovery', 'info');
       this.addLog(
         'Health checks fallaron. Buscando servidor en red...',
         'info',
@@ -170,14 +158,12 @@ class AutoReconnectService extends EventEmitter {
           this.isRunning = false;
           break;
         } else {
-          // Si el health check falla después del discovery, el servidor fue encontrado pero no responde
           this.addLog('❌ Servidor encontrado pero no responde', 'error');
         }
       }
 
-      // 4. Si todo falla, esperar y reiniciar ciclo
       this.addLog(
-        `❌ Ciclo fallido. Esperando ${this.CYCLE_DELAY / 1000}s...`,
+        `❌ Ciclo fallido. Esperando ${NETWORK_CONFIG.RECONNECT_CYCLE_DELAY / 1000}s...`,
         'error',
       );
       this.updateState({
@@ -185,7 +171,7 @@ class AutoReconnectService extends EventEmitter {
         lastError: 'No se pudo establecer conexión con el servidor',
       });
 
-      await this.delay(this.CYCLE_DELAY);
+      await this.delay(NETWORK_CONFIG.RECONNECT_CYCLE_DELAY);
     }
   }
 
@@ -208,7 +194,7 @@ class AutoReconnectService extends EventEmitter {
 
   // Intentar health checks múltiples veces
   private async tryHealthChecks(
-    maxAttempts = this.HEALTH_CHECK_ATTEMPTS,
+    maxAttempts = NETWORK_CONFIG.HEALTH_CHECK_ATTEMPTS,
   ): Promise<boolean> {
     this.updateState({ status: 'checking-health' });
 
@@ -230,11 +216,8 @@ class AutoReconnectService extends EventEmitter {
 
       // Esperar antes del siguiente intento (excepto el último)
       if (i < maxAttempts) {
-        this.addLog(
-          `  ⏳ Esperando ${this.HEALTH_CHECK_INTERVAL / 1000}s...`,
-          'info',
-        );
-        await this.delay(this.HEALTH_CHECK_INTERVAL);
+        this.addLog(`  ⏳ Esperando 2s...`, 'info');
+        await this.delay(2000);
       }
     }
 
@@ -246,8 +229,7 @@ class AutoReconnectService extends EventEmitter {
   private async tryDiscovery(): Promise<boolean> {
     this.updateState({ status: 'running-discovery' });
 
-    // Configurar callback directo para logs (más confiable en producción)
-    discoveryService.setLogCallback((message: string) => {
+      discoveryService.setLogCallback((message: string) => {
       this.addLog(`  ${message}`, 'info');
     });
 
@@ -268,7 +250,6 @@ class AutoReconnectService extends EventEmitter {
       this.addLog(`  ✗ Error: ${error.message || 'Error al buscar servidor'}`, 'error');
       return false;
     } finally {
-      // Limpiar callback
       discoveryService.setLogCallback(null);
     }
   }
@@ -293,11 +274,6 @@ class AutoReconnectService extends EventEmitter {
     };
   }
 
-  // Limpiar logs
-  clearLogs() {
-    this.updateState({ logs: [] });
-    this.addLog('Logs limpiados', 'info');
-  }
 }
 
 // Singleton
