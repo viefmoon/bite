@@ -55,20 +55,20 @@ interface PaymentModalProps {
   onPrepaymentDeleted?: () => void; // Callback para eliminar pre-pago
 }
 
-const paymentMethodLabels: Record<PaymentMethod, string> = {
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   CASH: '💵 Efectivo',
   CARD: '💳 Tarjeta',
   TRANSFER: '📱 Transferencia',
 };
 
-const paymentMethodIcons: Record<PaymentMethod, string> = {
+const PAYMENT_METHOD_ICONS: Record<PaymentMethod, string> = {
   CASH: 'cash',
   CARD: 'credit-card',
   TRANSFER: 'bank-transfer',
 };
 
 // Métodos de pago deshabilitados temporalmente
-const disabledMethods: PaymentMethod[] = ['CARD', 'TRANSFER'];
+const DISABLED_METHODS: PaymentMethod[] = ['CARD', 'TRANSFER'];
 
 // Helper para formatear el estado de la orden
 const formatOrderStatus = (status: string): string => {
@@ -424,7 +424,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           <View style={styles.paymentLeftInfo}>
                             <View style={styles.paymentMethodRow}>
                               <Text style={styles.paymentMethodCompact}>
-                                {paymentMethodLabels[payment.paymentMethod]}
+                                {PAYMENT_METHOD_LABELS[payment.paymentMethod]}
                               </Text>
                             </View>
                             <Text style={styles.paymentDateCompact}>
@@ -489,7 +489,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   {/* Métodos de pago */}
                   <View style={styles.methodsContainer}>
                     {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-                      const isDisabled = disabledMethods.includes(
+                      const isDisabled = DISABLED_METHODS.includes(
                         value as PaymentMethod,
                       );
                       return (
@@ -525,7 +525,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 isDisabled && styles.methodTextDisabled,
                               ]}
                             >
-                              {paymentMethodLabels[value]}
+                              {PAYMENT_METHOD_LABELS[value]}
                             </Text>
                             {isDisabled && (
                               <Text style={styles.comingSoonText}>

@@ -135,9 +135,9 @@ export const RESPONSIVE_DIMENSIONS = {
   // Modales
   modalWidth: (width: number = screenWidth) => {
     if (width < BREAKPOINTS.sm) return width * 0.95;
-    if (width < BREAKPOINTS.md) return width * 0.9;
-    if (width < BREAKPOINTS.lg) return width * 0.7;
-    return Math.min(width * 0.5, 600);
+    if (width < BREAKPOINTS.md) return width * 0.85;
+    if (width < BREAKPOINTS.lg) return Math.min(width * 0.6, 500);
+    return Math.min(width * 0.45, 550);
   },
 
   // Headers

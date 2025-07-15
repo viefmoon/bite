@@ -57,79 +57,61 @@ const getStyles = (
 ) => {
   return StyleSheet.create({
     modalSurface: {
-      padding: responsive.isTablet
-        ? responsive.spacing.xl
-        : responsive.spacing.m,
-      margin: responsive.spacing.m,
-      borderRadius: theme.roundness * 2,
-      elevation: 4,
       backgroundColor: theme.colors.elevation.level2,
-      maxWidth: responsive.isTablet ? 600 : 400,
-      alignSelf: 'center',
-      width: '90%',
     },
     modalTitle: {
-      marginBottom: responsive.isTablet
-        ? responsive.spacing.l
-        : responsive.spacing.m,
+      marginBottom: responsive.spacing.s,
       textAlign: 'center',
       fontWeight: '700',
-      fontSize: responsive.isTablet ? 28 : 22,
+      fontSize: responsive.isTablet ? 22 : 20,
     },
     detailContent: {
       alignItems: 'center',
-      marginBottom: responsive.spacing.m,
+      marginBottom: responsive.spacing.s,
       width: '100%',
     },
     detailImage: {
-      width: responsive.isLandscape
-        ? responsive.getResponsiveDimension(150, 220)
-        : responsive.getResponsiveDimension(180, 250),
-      height: responsive.isLandscape
-        ? responsive.getResponsiveDimension(150, 220)
-        : responsive.getResponsiveDimension(180, 250),
+      width: responsive.isTablet
+        ? responsive.getResponsiveDimension(120, 150)
+        : responsive.getResponsiveDimension(150, 180),
+      height: responsive.isTablet
+        ? responsive.getResponsiveDimension(120, 150)
+        : responsive.getResponsiveDimension(150, 180),
       borderRadius: theme.roundness * 2,
-      marginBottom: responsive.isTablet
-        ? responsive.spacing.l
-        : responsive.spacing.s,
+      marginBottom: responsive.spacing.s,
       backgroundColor: theme.colors.surfaceDisabled,
       elevation: 2,
     },
     detailDescription: {
-      marginBottom: responsive.spacing.m,
+      marginBottom: responsive.spacing.s,
       textAlign: 'center',
-      lineHeight: responsive.isTablet ? 26 : 20,
-      fontSize: responsive.isTablet ? 16 : 14,
-      paddingHorizontal: responsive.spacing.s,
+      lineHeight: responsive.isTablet ? 20 : 18,
+      fontSize: responsive.isTablet ? 14 : 13,
+      paddingHorizontal: responsive.spacing.xs,
       flexWrap: 'wrap',
       width: '100%',
     },
     statusChipContainer: {
-      marginBottom: responsive.spacing.s,
-      marginTop: responsive.spacing.s,
+      marginBottom: responsive.spacing.xs,
+      marginTop: responsive.spacing.xs,
     },
     statusChip: {
-      paddingHorizontal: responsive.spacing.m,
-      height: responsive.isTablet ? 42 : 36,
+      paddingHorizontal: responsive.spacing.s,
+      height: responsive.isTablet ? 36 : 32,
     },
     fieldsContainer: {
       width: '100%',
       marginBottom: responsive.spacing.s,
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness * 1.5,
-      padding: responsive.isTablet
-        ? responsive.spacing.l
-        : responsive.spacing.s,
-      paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.l
-        : responsive.spacing.m,
+      padding: responsive.isTablet ? responsive.spacing.s : responsive.spacing.m,
     },
     fieldRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: responsive.spacing.s,
-      paddingVertical: responsive.spacing.xs,
+      marginBottom: responsive.isTablet ? responsive.spacing.xs : responsive.spacing.s,
+      paddingVertical: responsive.isTablet ? responsive.spacing.xxs : responsive.spacing.xs,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
       flexWrap: 'wrap',
@@ -142,7 +124,7 @@ const getStyles = (
       fontWeight: '600',
       marginRight: responsive.spacing.s,
       color: theme.colors.onSurfaceVariant,
-      fontSize: responsive.isTablet ? 16 : 14,
+      fontSize: responsive.isTablet ? 14 : 13,
       flexBasis: '35%',
       minWidth: 100,
     },
@@ -150,7 +132,7 @@ const getStyles = (
       flex: 1,
       textAlign: 'right',
       color: theme.colors.onSurface,
-      fontSize: responsive.isTablet ? 16 : 14,
+      fontSize: responsive.isTablet ? 14 : 13,
       flexWrap: 'wrap',
       maxWidth: '65%',
     },
@@ -172,7 +154,8 @@ const getStyles = (
     loadingContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: 200,
+      minHeight: 300,
+      flex: 1,
     },
     actionButton: {
       borderRadius: theme.roundness,
@@ -189,17 +172,6 @@ const getStyles = (
       paddingHorizontal: responsive.spacing.m,
       paddingTop: responsive.spacing.m,
       paddingBottom: responsive.spacing.l,
-      borderBottomLeftRadius: theme.roundness * 2,
-      borderBottomRightRadius: theme.roundness * 2,
-      minHeight: 100,
-      flexShrink: 0,
-    },
-    scrollContainer: {
-      flex: 1,
-      overflow: 'hidden',
-    },
-    footerContainer: {
-      width: '100%',
     },
   });
 };
@@ -404,7 +376,7 @@ function GenericDetailModal<TItem extends { id: string }>({
     if (!item) return null;
 
     return (
-      <View style={styles.footerContainer}>
+      <>
         {(onEdit || onDelete) && (
           <View style={[styles.detailActions, actionsContainerStyle]}>
             {onEdit && (
@@ -417,7 +389,7 @@ function GenericDetailModal<TItem extends { id: string }>({
                 buttonColor={theme.colors.secondaryContainer}
                 textColor={theme.colors.onSecondaryContainer}
                 contentStyle={{ flexDirection: 'row' }}
-                labelStyle={{ fontSize: responsive.isTablet ? 14 : 13 }}
+                labelStyle={{ fontSize: responsive.isTablet ? 13 : 12 }}
                 compact={!responsive.isTablet}
               >
                 {editButtonLabel}
@@ -434,7 +406,7 @@ function GenericDetailModal<TItem extends { id: string }>({
                 disabled={isDeleting}
                 style={styles.actionButton}
                 contentStyle={{ flexDirection: 'row' }}
-                labelStyle={{ fontSize: responsive.isTablet ? 14 : 13 }}
+                labelStyle={{ fontSize: responsive.isTablet ? 13 : 12 }}
                 compact={!responsive.isTablet}
               >
                 {deleteButtonLabel}
@@ -455,7 +427,7 @@ function GenericDetailModal<TItem extends { id: string }>({
         >
           {closeButtonLabel}
         </Button>
-      </View>
+      </>
     );
   };
 
@@ -463,13 +435,12 @@ function GenericDetailModal<TItem extends { id: string }>({
     <AdaptiveModal
       visible={visible}
       onDismiss={onDismiss}
-      contentContainerStyle={modalStyle}
       dismissable={!isDeleting}
       dismissableBackButton={!isDeleting}
       scrollable={true}
-      maxWidth={responsive.isTablet ? 800 : 500}
-      minHeight={responsive.isTablet ? 300 : 250}
-      maxHeight={responsive.isTablet ? '95%' : '92%'}
+      maxWidth={responsive.isTablet ? 480 : 400}
+      minHeight={200}
+      maxHeight={'85%'}
       footer={renderFooter()}
       stickyFooter={true}
     >

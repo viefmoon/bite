@@ -222,6 +222,9 @@ const LoginScreen = () => {
           width: 120,
           height: 120,
           marginBottom: 16,
+          borderRadius: 60, // Hace el logo circular
+          backgroundColor: 'transparent',
+          overflow: 'hidden',
         },
         title: {
           fontSize: 32,
@@ -311,7 +314,7 @@ const LoginScreen = () => {
               </View>
               <View style={styles.logoContainer}>
                 <Image
-                  source={require('../../../assets/logo.png')}
+                  source={require('../../../../assets/icon.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />

@@ -209,9 +209,10 @@ export const OrderCard = React.memo<OrderCardProps>(
                   )}
                   <Chip
                     mode="flat"
+                    compact
                     style={[
                       styles.statusChip,
-                      { backgroundColor: getStatusColor(order.orderStatus) },
+                      { backgroundColor: getStatusColor(order.orderStatus, theme) },
                     ]}
                     textStyle={styles.statusChipText}
                   >
@@ -301,15 +302,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   statusChip: {
-    height: 28,
-    minHeight: 28,
+    minHeight: 24,
     alignSelf: 'flex-end',
+    paddingVertical: 2,
   },
   statusChipText: {
     fontSize: 12,
     fontWeight: '600',
     color: 'white',
-    lineHeight: 16,
+    lineHeight: 14,
+    marginVertical: 0,
+    paddingVertical: 0,
   },
   orderTime: {
     fontSize: 16,

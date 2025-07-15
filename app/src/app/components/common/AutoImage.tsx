@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Platform,
@@ -12,7 +12,7 @@ import { Image, ImageProps as ExpoImageProps } from 'expo-image';
 import { Icon } from 'react-native-paper';
 import { getCachedImageUri } from '../../lib/imageCache';
 import { getImageUrl } from '../../lib/imageUtils';
-import { useAppTheme } from '../../styles/theme';
+import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 
 export interface AutoImageProps
@@ -37,6 +37,22 @@ function useAutoImageSize(
     height: maxHeight ?? '100%',
   };
 }
+
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: {
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surfaceVariant,
+  },
+  loadingIndicator: {
+    position: 'absolute',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+});
 
 export const AutoImage: React.FC<AutoImageProps> = ({
   source: originalSourceProp,
@@ -111,58 +127,51 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     };
   }, [originalSourceProp, useCache]);
 
-  const styles = StyleSheet.create({
-    container: {
-      overflow: 'hidden',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    loadingIndicator: {
-      position: 'absolute',
-    },
-    image: {
-      width: '100%',
-      height: '100%',
-    },
-  });
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const containerStyle: StyleProp<ViewStyle> = [
+  const containerStyle: StyleProp<ViewStyle> = useMemo(() => [
     styles.container,
     { width: width as DimensionValue, height: height as DimensionValue },
     style,
-  ];
+  ], [styles, width, height, style]);
+
+  const iconSize = useMemo(() => {
+    if (typeof width === 'number' && typeof height === 'number') {
+      return Math.min(width, height) * 0.4;
+    }
+    return responsive.dimensions.iconSize.large;
+  }, [width, height, responsive.dimensions.iconSize.large]);
 
   return (
     <View style={containerStyle}>
-      {isLoadingUri && originalSourceProp && (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          animating={true}
-          color={theme.colors.primary}
-          size="small"
-        />
-      )}
-      {!isLoadingUri && processedUri && (
-        <Image
-          source={{ uri: processedUri }}
-          style={styles.image}
-          placeholder={placeholder}
-          contentFit={contentFit}
-          transition={transition}
-          {...restExpoImageProps}
-        />
-      )}
-      {!isLoadingUri && !processedUri && (
-        <Icon
-          source={placeholderIcon}
-          size={
-            typeof width === 'number' && typeof height === 'number'
-              ? Math.min(width, height) * 0.4
-              : responsive.dimensions.iconSize.large
-          }
-          color={theme.colors.onSurfaceVariant}
-        />
+      {processedUri ? (
+        <>
+          <Image
+            source={{ uri: processedUri }}
+            style={styles.image}
+            placeholder={placeholder}
+            contentFit={contentFit}
+            transition={transition}
+            cachePolicy="memory-disk"
+            {...restExpoImageProps}
+          />
+          {isLoadingUri && originalSourceProp && (
+            <ActivityIndicator
+              style={styles.loadingIndicator}
+              animating={true}
+              color={theme.colors.primary}
+              size="small"
+            />
+          )}
+        </>
+      ) : (
+        !isLoadingUri && (
+          <Icon
+            source={placeholderIcon}
+            size={iconSize}
+            color={theme.colors.onSurfaceVariant}
+          />
+        )
       )}
     </View>
   );

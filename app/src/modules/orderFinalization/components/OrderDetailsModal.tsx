@@ -430,7 +430,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         styles.headerStatusChip,
                         {
                           backgroundColor: order
-                            ? getStatusColor(order.orderStatus)
+                            ? getStatusColor(order.orderStatus, theme)
                             : theme.colors.surfaceVariant,
                         },
                       ]}

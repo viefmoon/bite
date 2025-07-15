@@ -341,6 +341,7 @@ export const ReceiptsScreen: React.FC = () => {
                 )}
                 <Chip
                   mode="flat"
+                  compact
                   style={[
                     styles.statusChip,
                     { backgroundColor: getReceiptStatusColor(item.orderStatus) },
@@ -695,15 +696,17 @@ const createStyles = (theme: AppTheme) =>
       lineHeight: 14,
     },
     statusChip: {
-      height: 28,
-      minHeight: 28,
+      minHeight: 24,
       alignSelf: 'flex-end',
+      paddingVertical: 2,
     },
     statusChipText: {
       fontSize: 12,
       fontWeight: '600',
       color: 'white',
-      lineHeight: 16,
+      lineHeight: 14,
+      marginVertical: 0,
+      paddingVertical: 0,
     },
     actionsContainer: {
       flexDirection: 'row',

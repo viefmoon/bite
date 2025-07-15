@@ -101,22 +101,6 @@ export interface OrderDetailsForBackend {
   prepaymentId?: string;
 }
 
-interface OrderCartDetailProps {
-  visible: boolean;
-  onConfirmOrder: (details: OrderDetailsForBackend) => void;
-  onClose?: () => void;
-  onEditItem?: (item: CartItem) => void;
-  isEditMode?: boolean;
-  orderId?: string | null;
-  orderNumber?: number;
-  orderDate?: Date;
-  onCancelOrder?: () => void; // Función para cancelar la orden
-  navigation?: any; // Prop de navegación opcional para añadir productos
-  onAddProducts?: () => void; // Callback para añadir productos
-  pendingProductsToAdd?: CartItem[]; // Productos pendientes de añadir
-  onItemsCountChanged?: (count: number) => void; // Callback cuando cambia el conteo de items
-}
-
 // Helper para formatear el estado de la orden
 const formatOrderStatus = (status: string): string => {
   switch (status) {
@@ -136,28 +120,6 @@ const formatOrderStatus = (status: string): string => {
       return 'Cancelada';
     default:
       return status;
-  }
-};
-
-// Helper para obtener el color del estado de la orden
-const getOrderStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case 'PENDING':
-      return '#FFA000'; // Orange
-    case 'IN_PROGRESS':
-      return theme.colors.primary;
-    case 'IN_PREPARATION':
-      return '#FF6B35'; // Orange más oscuro
-    case 'READY':
-      return '#4CAF50'; // Green
-    case 'DELIVERED':
-      return theme.colors.tertiary;
-    case 'COMPLETED':
-      return '#10B981'; // Verde más brillante
-    case 'CANCELLED':
-      return theme.colors.error;
-    default:
-      return theme.colors.onSurfaceVariant;
   }
 };
 
@@ -198,6 +160,44 @@ const getPreparationStatusText = (status: string | undefined): string => {
       return 'Cancelado';
     default:
       return '';
+  }
+};
+
+interface OrderCartDetailProps {
+  visible: boolean;
+  onConfirmOrder: (details: OrderDetailsForBackend) => void;
+  onClose?: () => void;
+  onEditItem?: (item: CartItem) => void;
+  isEditMode?: boolean;
+  orderId?: string | null;
+  orderNumber?: number;
+  orderDate?: Date;
+  onCancelOrder?: () => void; // Función para cancelar la orden
+  navigation?: any; // Prop de navegación opcional para añadir productos
+  onAddProducts?: () => void; // Callback para añadir productos
+  pendingProductsToAdd?: CartItem[]; // Productos pendientes de añadir
+  onItemsCountChanged?: (count: number) => void; // Callback cuando cambia el conteo de items
+}
+
+// Helper para obtener el color del estado de la orden
+const getOrderStatusColor = (status: string, theme: any) => {
+  switch (status) {
+    case 'PENDING':
+      return '#FFA000'; // Orange
+    case 'IN_PROGRESS':
+      return theme.colors.primary;
+    case 'IN_PREPARATION':
+      return '#FF6B35'; // Orange más oscuro
+    case 'READY':
+      return '#4CAF50'; // Green
+    case 'DELIVERED':
+      return theme.colors.tertiary;
+    case 'COMPLETED':
+      return '#10B981'; // Verde más brillante
+    case 'CANCELLED':
+      return theme.colors.error;
+    default:
+      return theme.colors.onSurfaceVariant;
   }
 };
 
@@ -356,7 +356,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     : setCartDeliveryInfo;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
 
-  const removeItem = (itemId: string) => {
+  const removeItem = useCallback((itemId: string) => {
     if (isEditMode) {
       const item = editItems.find((i) => i.id === itemId);
       if (!item) return;
@@ -388,9 +388,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     } else {
       removeCartItem(itemId);
     }
-  };
+  }, [isEditMode, editItems, showSnackbar, removeCartItem]);
 
-  const updateItemQuantity = (itemId: string, quantity: number) => {
+  const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
     if (isEditMode) {
       if (quantity <= 0) {
         removeItem(itemId);
@@ -446,7 +446,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     } else {
       updateCartItemQuantity(itemId, quantity);
     }
-  };
+  }, [isEditMode, editItems, removeItem, showSnackbar, updateCartItemQuantity]);
 
   // Calcular totales
   const subtotal = useMemo(() => {

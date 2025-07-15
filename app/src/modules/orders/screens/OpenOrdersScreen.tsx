@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList, Pressable, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
 import {
   Text,
   ActivityIndicator,
@@ -270,6 +271,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   )}
                   <Chip
                     mode="flat"
+                    compact
                     style={[
                       styles.statusChip,
                       { backgroundColor: getStatusColor(order.orderStatus, theme) },
@@ -689,7 +691,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
           {/* Lista de órdenes */}
           <View style={styles.listContainer}>
-            <FlatList
+            <FlashList
               data={filteredOrders}
               keyExtractor={(item) => item.id}
               renderItem={renderOrderItem}
@@ -697,6 +699,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               onRefresh={handleRefresh}
               contentContainerStyle={styles.listContentContainer}
               ListEmptyComponent={ListEmptyComponent}
+              estimatedItemSize={120}
+              removeClippedSubviews={true}
             />
           </View>
         </>
@@ -966,15 +970,17 @@ const createStyles = (
       fontWeight: '700',
     },
     statusChip: {
-      height: 28,
-      minHeight: 28,
+      minHeight: 24,
       alignSelf: 'flex-end',
+      paddingVertical: 2,
     },
     statusChipText: {
       fontSize: 12,
       fontWeight: '600',
       color: 'white',
-      lineHeight: 16,
+      lineHeight: 14,
+      marginVertical: 0,
+      paddingVertical: 0,
     },
     paidChip: {
       height: 28,

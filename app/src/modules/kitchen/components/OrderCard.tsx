@@ -312,7 +312,7 @@ export const OrderCard = React.memo<OrderCardProps>(
       Animated.timing(animatedValue, {
         toValue: 1,
         duration: 1000,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
 
       // Timer para completar después de 1 segundo
@@ -330,7 +330,7 @@ export const OrderCard = React.memo<OrderCardProps>(
         Animated.timing(animatedValue, {
           toValue: 0,
           duration: 200,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }).start();
       }, 1000);
     };
@@ -520,14 +520,20 @@ export const OrderCard = React.memo<OrderCardProps>(
                   >
                     <Animated.View
                       style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
                         height: '100%',
-                        width: animatedValue.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0%', '100%'],
-                        }),
+                        width: '100%',
                         backgroundColor: canMarkAsReady()
                           ? '#4CAF50'
                           : '#FF6B35',
+                        transform: [
+                          {
+                            scaleX: animatedValue,
+                          },
+                        ],
+                        transformOrigin: 'left center',
                       }}
                     />
                   </View>

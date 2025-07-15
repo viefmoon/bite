@@ -1,16 +1,13 @@
 import React, { ReactNode, useMemo } from 'react';
 import {
-  Modal,
   View,
   StyleSheet,
   ScrollView,
-  Pressable,
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
 } from 'react-native';
-import { Portal } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Modal, Portal } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
@@ -18,21 +15,13 @@ interface AdaptiveModalProps {
   visible: boolean;
   onDismiss: () => void;
   children: ReactNode;
-
-  // Estilo
   contentContainerStyle?: any;
-
-  // Dimensiones
   maxWidth?: number | string;
   minHeight?: number;
-  maxHeight?: string;
-
-  // Comportamiento
+  maxHeight?: string | number;
   dismissable?: boolean;
   dismissableBackButton?: boolean;
   scrollable?: boolean;
-
-  // Footer
   footer?: ReactNode;
   stickyFooter?: boolean;
 }
@@ -53,75 +42,54 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-
   const screenHeight = Dimensions.get('window').height;
 
-  // Calcular altura máxima en píxeles
+  // Calcular altura máxima
   const maxHeightPixels = useMemo(() => {
     if (typeof maxHeight === 'string' && maxHeight.endsWith('%')) {
       const percentage = parseInt(maxHeight) / 100;
       return screenHeight * percentage;
     }
-    return maxHeight;
+    return typeof maxHeight === 'number' ? maxHeight : screenHeight * 0.9;
   }, [maxHeight, screenHeight]);
 
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        backdrop: {
-          flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: responsive.spacing.m,
-          paddingVertical: responsive.spacing.m,
-        },
         modalContainer: {
           backgroundColor: theme.colors.surface,
           borderRadius: theme.roundness * 2,
-          width: '100%',
-          maxWidth: maxWidth || (responsive.isTablet ? 800 : 500),
-          minWidth: responsive.isTablet ? 600 : 350,
+          width: '90%',
+          maxWidth: maxWidth || (responsive.isTablet ? 600 : 500),
           minHeight: minHeight,
           maxHeight: maxHeightPixels,
+          alignSelf: 'center',
           overflow: 'hidden',
           elevation: 24,
           shadowColor: '#000',
-          shadowOffset: {
-            width: 0,
-            height: 12,
-          },
+          shadowOffset: { width: 0, height: 12 },
           shadowOpacity: 0.58,
           shadowRadius: 16.0,
         },
         scrollView: {
-          flexGrow: 0,
-          flexShrink: 1,
+          maxHeight: maxHeightPixels - (footer ? 100 : 20),
         },
         scrollContent: {
-          flexGrow: 1,
+          padding: responsive.isTablet ? responsive.spacing.l : responsive.spacing.m,
         },
-        contentContainer: {
-          padding: responsive.isTablet
-            ? responsive.spacing.xl
-            : responsive.spacing.m,
+        contentPadding: {
+          padding: responsive.isTablet ? responsive.spacing.l : responsive.spacing.m,
+          flex: 1,
         },
         footer: {
           borderTopWidth: 1,
           borderTopColor: theme.colors.surfaceVariant,
           padding: responsive.spacing.m,
-          paddingTop: responsive.spacing.m,
           backgroundColor: theme.colors.surface,
         },
       }),
-    [theme, responsive, minHeight, maxHeightPixels, maxWidth],
+    [theme, responsive, minHeight, maxHeightPixels, maxWidth, footer],
   );
-
-  const handleBackdropPress = () => {
-    if (dismissable) {
-      onDismiss();
-    }
-  };
 
   const modalContent = (
     <View style={styles.modalContainer}>
@@ -129,14 +97,11 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
         <>
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[styles.contentContainer, contentContainerStyle]}>
-              {children}
-            </View>
-            {!stickyFooter && footer}
+            {children}
           </ScrollView>
           {stickyFooter && footer && (
             <View style={styles.footer}>{footer}</View>
@@ -144,7 +109,7 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
         </>
       ) : (
         <>
-          <View style={[styles.contentContainer, contentContainerStyle]}>
+          <View style={[styles.contentPadding, contentContainerStyle]}>
             {children}
           </View>
           {footer && <View style={styles.footer}>{footer}</View>}
@@ -157,21 +122,22 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
     <Portal>
       <Modal
         visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={dismissableBackButton ? onDismiss : undefined}
+        onDismiss={onDismiss}
+        dismissable={dismissable}
+        dismissableBackButton={dismissableBackButton}
+        contentContainerStyle={{ 
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 1,
+        }}
       >
-        <Pressable style={styles.backdrop} onPress={handleBackdropPress}>
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            {Platform.OS === 'ios' ? (
-              <KeyboardAvoidingView behavior="padding">
-                {modalContent}
-              </KeyboardAvoidingView>
-            ) : (
-              modalContent
-            )}
-          </Pressable>
-        </Pressable>
+        {Platform.OS === 'ios' ? (
+          <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={20}>
+            {modalContent}
+          </KeyboardAvoidingView>
+        ) : (
+          modalContent
+        )}
       </Modal>
     </Portal>
   );

@@ -5,7 +5,8 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import {
   Text,
   Portal,
@@ -892,16 +893,17 @@ const CreateOrderScreen = () => {
               <Text>Cargando...</Text>
             </View>
           ) : itemsToDisplay.length > 0 ? (
-            <FlatList
+            <FlashList
               data={itemsToDisplay}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.gridContainer}
               numColumns={numColumns}
-              columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
+              estimatedItemSize={200}
               initialNumToRender={6}
               maxToRenderPerBatch={10}
               windowSize={5}
+              removeClippedSubviews={true}
               key={`grid-${numColumns}`} // Key para forzar re-render cuando cambian las columnas
             />
           ) : (

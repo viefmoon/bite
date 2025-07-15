@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import {
   Surface,
   Text,
@@ -477,7 +478,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             icon="clipboard-check-outline"
           />
         ) : (
-          <FlatList
+          <FlashList
             data={filteredOrders}
             keyExtractor={(item) => item.id}
             renderItem={renderOrderCard}
@@ -486,6 +487,8 @@ export const OrderFinalizationScreen: React.FC = () => {
             ItemSeparatorComponent={() => null}
             onRefresh={refetch}
             refreshing={isLoading}
+            estimatedItemSize={150}
+            removeClippedSubviews={true}
           />
         )}
       </View>

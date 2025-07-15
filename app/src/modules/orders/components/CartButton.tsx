@@ -1,11 +1,29 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import { StyleSheet, View, Animated } from 'react-native';
-import { IconButton, Badge, useTheme } from 'react-native-paper';
+import { IconButton, Badge, useTheme, MD3Theme } from 'react-native-paper';
 
 interface CartButtonProps {
   itemCount: number;
   onPress: () => void;
 }
+
+const createStyles = (theme: MD3Theme) => StyleSheet.create({
+  cartButton: {
+    margin: 0,
+    backgroundColor: theme.colors.surfaceVariant,
+    zIndex: 999,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: theme.colors.error,
+    zIndex: 1000,
+  },
+  touchableArea: {
+    padding: 5,
+  },
+});
 
 const CartButton = React.forwardRef(
   ({ itemCount, onPress }: CartButtonProps, ref) => {
@@ -14,23 +32,7 @@ const CartButton = React.forwardRef(
     const cartBounceAnimation = useRef(new Animated.Value(1)).current;
     const isPressedRef = useRef(false);
 
-    const styles = StyleSheet.create({
-      cartButton: {
-        margin: 0,
-        backgroundColor: theme.colors.surfaceVariant,
-        zIndex: 999,
-      },
-      cartBadge: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        backgroundColor: theme.colors.error,
-        zIndex: 1000,
-      },
-      touchableArea: {
-        padding: 5,
-      },
-    });
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const animateCartButton = () => {
       Animated.sequence([
