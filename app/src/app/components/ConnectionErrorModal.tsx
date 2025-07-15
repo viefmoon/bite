@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import {
   Text,
@@ -22,7 +23,7 @@ import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../store/authStore';
 import { serverConnectionService } from '@/app/services/serverConnectionService';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export function ConnectionErrorModal() {
   const theme = useTheme();
@@ -137,7 +138,7 @@ export function ConnectionErrorModal() {
     container: {
       width: screenWidth - 40,
       minHeight: 400,
-      maxHeight: Dimensions.get('window').height * 0.85,
+      maxHeight: screenHeight * 0.85,
       backgroundColor: theme.colors.surface,
       borderRadius: 24,
       overflow: 'hidden',
