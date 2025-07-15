@@ -224,6 +224,14 @@ export class DiscoveryService extends EventEmitter {
         throw new Error('No hay conexión de red disponible');
       }
 
+      // Log de configuración inicial
+      this.log(`🔧 CONFIGURACIÓN DE DISCOVERY:`);
+      this.log(`   Puerto: ${DISCOVERY_PORT}`);
+      this.log(`   Endpoint: /${DISCOVERY_ENDPOINT}`);
+      this.log(`   Timeout: ${DISCOVERY_TIMEOUT}ms`);
+      this.log(`   Batch size: ${MAX_CONCURRENT_REQUESTS}`);
+      this.log(`   Delay entre batches: ${BATCH_DELAY}ms`);
+
       // Obtener lista de subnets prioritarias para escanear
       const subnets = await this.detectCurrentSubnet();
       this.log(`📡 Iniciando búsqueda en redes: ${subnets.join(', ')}`);
@@ -245,6 +253,12 @@ export class DiscoveryService extends EventEmitter {
           }
 
           const currentIps = chunks[i];
+          
+          // Log cuando llegamos a la IP objetivo
+          if (currentIps.includes('192.168.1.38')) {
+            this.log(`🎯 BATCH INCLUYE IP OBJETIVO: ${currentIps.join(', ')}`);
+          }
+          
           const results = await Promise.allSettled(
             currentIps.map((ip) => this.probeServer(ip)),
           );
@@ -287,7 +301,8 @@ export class DiscoveryService extends EventEmitter {
     const url = `http://${ip}:${DISCOVERY_PORT}/`;
     const fullUrl = `http://${ip}:${DISCOVERY_PORT}/${DISCOVERY_ENDPOINT}`;
     
-    // No loguear cada IP que se prueba, es demasiado
+    // Log detallado para debuggear en producción
+    const startTime = Date.now();
 
     // Crear AbortController para timeout real
     const controller = new AbortController();
@@ -296,6 +311,11 @@ export class DiscoveryService extends EventEmitter {
     }, DISCOVERY_TIMEOUT);
 
     try {
+      // Log antes de hacer fetch
+      if (ip.endsWith('.100') || ip.endsWith('.1') || ip === '192.168.1.38') {
+        this.log(`🔍 Probando ${ip} -> ${fullUrl}`);
+      }
+
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
@@ -305,9 +325,18 @@ export class DiscoveryService extends EventEmitter {
       });
 
       clearTimeout(timeoutId);
+      const responseTime = Date.now() - startTime;
+
+      // Log detallado para IPs importantes
+      if (ip === '192.168.1.38' || response.ok || response.status !== 0) {
+        this.log(`📡 ${ip}: Status=${response.status}, Time=${responseTime}ms`);
+      }
 
       if (response.ok) {
+        this.log(`✅ ${ip} respondió OK en ${responseTime}ms`);
         const text = await response.text();
+        this.log(`📄 Respuesta: ${text.substring(0, 100)}...`);
+        
         try {
           const data = JSON.parse(text);
           if (data.type === 'cloudbite-api') {
@@ -315,25 +344,38 @@ export class DiscoveryService extends EventEmitter {
             this.log(`📍 IP: ${ip}`);
             this.log(`🔗 URL: ${url}`);
             this.log(`🌐 Puerto: ${DISCOVERY_PORT}`);
+            this.log(`⏱️ Tiempo de respuesta: ${responseTime}ms`);
             return url;
+          } else {
+            this.log(`❌ ${ip} respondió pero no es CloudBite: ${JSON.stringify(data)}`);
           }
-        } catch (parseError) {
-          // Solo loguear si hay error al parsear una respuesta válida
-          this.log(`⚠️ ${ip} respondió OK pero error al parsear JSON`);
+        } catch (parseError: any) {
+          this.log(`⚠️ ${ip} - Error parseando JSON: ${parseError.message}`);
+          this.log(`📄 Texto recibido: ${text}`);
         }
-      } else {
-        // Solo loguear errores HTTP importantes
-        if (response.status !== 404 && response.status !== 0) {
-          this.log(`⚠️ ${ip} - Error HTTP ${response.status}`);
-        }
+      } else if (response.status !== 0) {
+        // Loguear todos los errores HTTP no-cero
+        this.log(`❌ ${ip} - HTTP ${response.status} en ${responseTime}ms`);
       }
     } catch (error: any) {
-      // Solo loguear errores inusuales, no timeouts ni errores de red normales
-      if (error.name !== 'AbortError' && 
-          !error.message?.includes('Network request failed') &&
-          !error.message?.includes('fetch') &&
-          error.message) {
-        this.log(`⚠️ Error inusual en ${ip}: ${error.message}`);
+      const errorTime = Date.now() - startTime;
+      
+      // Log detallado de TODOS los errores para debuggear
+      if (ip === '192.168.1.38' || !error.message?.includes('Network request failed')) {
+        this.log(`🚫 ${ip} - Error en ${errorTime}ms:`);
+        this.log(`   Tipo: ${error.name}`);
+        this.log(`   Mensaje: ${error.message || 'Sin mensaje'}`);
+        
+        if (error.name === 'AbortError') {
+          this.log(`   ⏱️ Timeout después de ${DISCOVERY_TIMEOUT}ms`);
+        }
+      }
+      
+      // Si es la IP objetivo, dar más detalles
+      if (ip === '192.168.1.38') {
+        this.log(`🔴 ERROR CRÍTICO en IP objetivo ${ip}:`);
+        this.log(`   URL completa: ${fullUrl}`);
+        this.log(`   Error completo: ${JSON.stringify(error)}`);
       }
     } finally {
       clearTimeout(timeoutId);
