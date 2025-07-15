@@ -5,9 +5,9 @@ import EventEmitter from 'eventemitter3';
 const DISCOVERY_PORT = 3737;
 const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
 const STORAGE_KEY = 'last_known_api_url';
-const DISCOVERY_TIMEOUT = 5000; // 5 segundos por IP para producción
-const MAX_CONCURRENT_REQUESTS = 5; // Más conservador para evitar problemas en producción
-const BATCH_DELAY = 100; // Delay entre lotes de requests en ms
+const DISCOVERY_TIMEOUT = 3000; // 3 segundos por IP
+const MAX_CONCURRENT_REQUESTS = 3; // Menos concurrentes para dar más tiempo
+const BATCH_DELAY = 500; // Medio segundo entre lotes para evitar saturación
 
 interface DiscoveryResponse {
   type: string;
@@ -245,14 +245,22 @@ export class DiscoveryService extends EventEmitter {
           }
 
           const currentIps = chunks[i];
-          const startRange = currentIps[0].split('.').pop();
-          const endRange = currentIps[currentIps.length - 1].split('.').pop();
+          // Mostrar las IPs exactas que se están escaneando
+          const ipNumbers = currentIps.map(ip => ip.split('.').pop()).join(', ');
           
-          this.log(`Escaneando rango: ${subnet}.${startRange}-${endRange}`);
+          this.log(`Escaneando: ${subnet}.[${ipNumbers}]`);
 
+          // Iniciar todas las requests del lote
+          const startTime = Date.now();
           const results = await Promise.allSettled(
             currentIps.map((ip) => this.probeServer(ip)),
           );
+          const elapsed = Date.now() - startTime;
+          
+          // Si el lote se completó muy rápido, agregar un delay adicional
+          if (elapsed < 1000) {
+            await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+          }
 
           totalIpsScanned += currentIps.length;
           
@@ -289,35 +297,42 @@ export class DiscoveryService extends EventEmitter {
     const url = `http://${ip}:${DISCOVERY_PORT}/`;
     const fullUrl = `${url}${DISCOVERY_ENDPOINT}`;
 
+    // Crear AbortController para timeout real
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, DISCOVERY_TIMEOUT);
+
     try {
-      // Usar Promise.race para garantizar timeout
-      const fetchPromise = fetch(fullUrl, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), DISCOVERY_TIMEOUT);
-      });
-
-      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const text = await response.text();
         try {
           const data = JSON.parse(text);
           if (data.type === 'cloudbite-api') {
+            this.log(`✅ Respuesta válida de ${ip}`);
             return url;
           }
         } catch (parseError) {
-          // Ignorar errores de parseo
+          this.log(`⚠️ Error parseando respuesta de ${ip}`);
         }
       }
     } catch (error: any) {
-      // Ignorar errores esperados de conexión y timeout
+      // Solo loguear si no es un error de abort/timeout esperado
+      if (error.name !== 'AbortError' && !error.message?.includes('aborted')) {
+        // Error real de conexión (no timeout)
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     return null;
@@ -346,38 +361,8 @@ export class DiscoveryService extends EventEmitter {
   private generateIpRange(subnet: string): string[] {
     const ips: string[] = [];
 
-    // IPs prioritarias individuales (las más comunes para servidores)
-    const priorityIps = [1, 2, 100, 200, 10, 20, 30, 50, 150, 250];
-    
-    // Agregar IPs prioritarias primero
-    for (const ip of priorityIps) {
-      ips.push(`${subnet}.${ip}`);
-    }
-
-    // Rangos prioritarios después de las IPs individuales
-    const priorityRanges = [
-      { start: 3, end: 9 },     // Primeras IPs
-      { start: 101, end: 110 }, // Rango 100+
-      { start: 201, end: 210 }, // Rango 200+
-      { start: 11, end: 19 },   // Más IPs bajas
-      { start: 21, end: 29 },   
-      { start: 31, end: 49 },
-    ];
-
-    // Agregar rangos prioritarios
-    for (const range of priorityRanges) {
-      for (let i = range.start; i <= range.end; i++) {
-        if (!priorityIps.includes(i)) {
-          ips.push(`${subnet}.${i}`);
-        }
-      }
-    }
-
-    // Finalmente agregar el resto de IPs
-    for (let i = 51; i <= 254; i++) {
-      // Saltar las que ya agregamos
-      if (i >= 100 && i <= 110) continue;
-      if (i >= 200 && i <= 210) continue;
+    // Escanear todas las IPs en orden secuencial del 1 al 254
+    for (let i = 1; i <= 254; i++) {
       ips.push(`${subnet}.${i}`);
     }
 
