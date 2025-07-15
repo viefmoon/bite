@@ -4,8 +4,8 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 const DISCOVERY_PORT = 3737;
 const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
 const STORAGE_KEY = 'last_known_api_url';
-const DISCOVERY_TIMEOUT = 1000; // 1 segundo por IP
-const MAX_CONCURRENT_REQUESTS = 30; // Procesar 30 IPs en paralelo
+const DISCOVERY_TIMEOUT = 3000; // 3 segundos por IP (aumentado para producción)
+const MAX_CONCURRENT_REQUESTS = 10; // Reducido para ser más amigable con móviles
 
 interface DiscoveryResponse {
   type: string;
@@ -206,23 +206,26 @@ export class DiscoveryService {
         throw new Error('No hay conexión de red disponible');
       }
 
-      // Detectar subnet actual basándonos en pruebas rápidas
-      const subnet = await this.detectCurrentSubnet();
+      // Obtener lista de subnets prioritarias para escanear
+      const subnets = await this.detectCurrentSubnet();
 
-      const ips = this.generateIpRange(subnet);
-      const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
+      // Probar cada subnet hasta encontrar el servidor
+      for (const subnet of subnets) {
+        const ips = this.generateIpRange(subnet);
+        const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
 
-      // Escanear todas las IPs pero detener en cuanto encontremos el servidor
-      for (let i = 0; i < chunks.length; i++) {
-        const results = await Promise.allSettled(
-          chunks[i].map((ip) => this.probeServer(ip)),
-        );
+        // Escanear todas las IPs de esta subnet
+        for (let i = 0; i < chunks.length; i++) {
+          const results = await Promise.allSettled(
+            chunks[i].map((ip) => this.probeServer(ip)),
+          );
 
-        // Buscar si alguna petición fue exitosa
-        for (let j = 0; j < results.length; j++) {
-          const result = results[j];
-          if (result.status === 'fulfilled' && result.value) {
-            return result.value;
+          // Buscar si alguna petición fue exitosa
+          for (let j = 0; j < results.length; j++) {
+            const result = results[j];
+            if (result.status === 'fulfilled' && result.value) {
+              return result.value;
+            }
           }
         }
       }
@@ -268,53 +271,20 @@ export class DiscoveryService {
   }
 
   /**
-   * Detecta la subnet actual probando los gateways más comunes
+   * Obtiene las subnets más comunes para escanear, en orden de prioridad
+   * Ya no intenta detectar la subnet actual para evitar problemas de seguridad en Android
    */
-  private async detectCurrentSubnet(): Promise<string> {
-    // Probar los gateways más comunes primero
-    const commonGateways = [
-      '192.168.1.1',
-      '192.168.0.1',
-      '192.168.1.254',
-      '192.168.0.254',
-      '10.0.0.1',
-      '172.16.0.1',
+  private async detectCurrentSubnet(): Promise<string[]> {
+    // Retornar las subnets más comunes en orden de prioridad
+    // Esto es más confiable que intentar hacer HTTP requests a gateways
+    return [
+      '192.168.1',    // La más común en redes domésticas
+      '192.168.0',    // Segunda más común  
+      '192.168.2',    // Algunas configuraciones alternativas
+      '10.0.0',       // Redes corporativas comunes
+      '172.16.0',     // Otras redes privadas
+      '192.168.100',  // Algunas configuraciones especiales
     ];
-
-    // Probar gateways en paralelo para detectar cuál responde
-    const gatewayTests = await Promise.allSettled(
-      commonGateways.map(async (gateway) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 500); // Timeout corto
-
-        try {
-          // Intentar hacer una petición al gateway
-          await fetch(`http://${gateway}`, {
-            method: 'HEAD',
-            signal: controller.signal,
-          });
-
-          return gateway;
-        } catch {
-          // Es normal que falle, solo queremos ver si hay respuesta
-          return null;
-        } finally {
-          clearTimeout(timeoutId);
-        }
-      }),
-    );
-
-    // Extraer subnet del primer gateway que respondió
-    for (const result of gatewayTests) {
-      if (result.status === 'fulfilled' && result.value) {
-        const parts = result.value.split('.');
-        const subnet = `${parts[0]}.${parts[1]}.${parts[2]}`;
-        return subnet;
-      }
-    }
-
-    // Si no detectamos nada, usar la más común
-    return '192.168.1';
   }
 
   /**
