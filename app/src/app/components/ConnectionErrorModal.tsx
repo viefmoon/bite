@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -34,6 +34,9 @@ export function ConnectionErrorModal() {
   const [reconnectState, setReconnectState] = useState<ReconnectState>(
     autoReconnectService.getState(),
   );
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedLogs, setPausedLogs] = useState<string[]>([]);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const unsubscribe = autoReconnectService.subscribe((state) => {
@@ -44,7 +47,9 @@ export function ConnectionErrorModal() {
       }
       
       if (state.status === 'connected') {
-        setTimeout(() => setVisible(false), 2000);
+        setTimeout(() => {
+          setVisible(false);
+        }, 2000);
       }
     });
 
@@ -52,6 +57,17 @@ export function ConnectionErrorModal() {
       unsubscribe();
     };
   }, [isLoggedIn]);
+
+  // Efecto para pausar los logs
+  useEffect(() => {
+    if (isPaused && pausedLogs.length === 0) {
+      // Guardar los logs actuales cuando se pausa
+      setPausedLogs([...reconnectState.logs]);
+    } else if (!isPaused) {
+      // Limpiar logs pausados cuando se reanuda
+      setPausedLogs([]);
+    }
+  }, [isPaused, reconnectState.logs]);
 
   useEffect(() => {
     if (!isConnected && !autoReconnectService.getState().isReconnecting) {
@@ -285,16 +301,26 @@ export function ConnectionErrorModal() {
           {reconnectState.logs.length > 0 && (
             <View style={styles.logsContainer}>
               <View style={styles.logsHeader}>
-                <Text style={styles.logsTitle}>
-                  Detalles del proceso • {reconnectState.logs.length} entradas
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.logsTitle}>
+                    DETALLES DEL PROCESO {isPaused ? '(PAUSADO)' : ''}
+                  </Text>
+                  <IconButton
+                    icon={isPaused ? 'play' : 'pause'}
+                    size={32}
+                    onPress={() => setIsPaused(!isPaused)}
+                    iconColor={theme.colors.primary}
+                    style={{ margin: -4 }}
+                  />
+                </View>
               </View>
               <ScrollView 
+                ref={scrollViewRef}
                 style={styles.logsList}
                 showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
               >
-                {reconnectState.logs.map((log, index) => {
+                {(isPaused ? pausedLogs : reconnectState.logs).map((log, index) => {
                   let logStyle = [styles.logEntry, styles.logInfo];
                   
                   if (log.includes('ERROR:') || log.includes('❌') || log.includes('✗')) {

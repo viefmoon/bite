@@ -3,7 +3,7 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import EventEmitter from 'eventemitter3';
 
 const DISCOVERY_PORT = 3737;
-const DISCOVERY_ENDPOINT = '/api/v1/discovery'; // Con la barra inicial para ser más explícito
+const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
 const STORAGE_KEY = 'last_known_api_url';
 const DISCOVERY_TIMEOUT = 2000; // 2 segundos por IP
 const MAX_CONCURRENT_REQUESTS = 10; // Más requests concurrentes
@@ -226,11 +226,11 @@ export class DiscoveryService extends EventEmitter {
 
       // Obtener lista de subnets prioritarias para escanear
       const subnets = await this.detectCurrentSubnet();
-      this.log(`Escaneando subnets: ${subnets.join(', ')}`);
+      this.log(`📡 Iniciando búsqueda en redes: ${subnets.join(', ')}`);
 
       // Probar cada subnet hasta encontrar el servidor
       for (const subnet of subnets) {
-        this.log(`\n[${subnet}.*] Iniciando escaneo...`);
+        this.log(`🔍 Escaneando red ${subnet}.*`);
         const ips = this.generateIpRange(subnet);
         const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
 
@@ -245,11 +245,6 @@ export class DiscoveryService extends EventEmitter {
           }
 
           const currentIps = chunks[i];
-          // Mostrar las IPs exactas que se están escaneando
-          const ipNumbers = currentIps.map(ip => ip.split('.').pop()).join(', ');
-          
-          this.log(`Escaneando: ${subnet}.[${ipNumbers}]`);
-
           const results = await Promise.allSettled(
             currentIps.map((ip) => this.probeServer(ip)),
           );
@@ -262,18 +257,21 @@ export class DiscoveryService extends EventEmitter {
             if (result.status === 'fulfilled' && result.value) {
               const foundIp = currentIps[j];
               this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${foundIp}!`);
+              // Agregar delay de 3 segundos antes de retornar para que se pueda leer
+              this.log(`⏳ Esperando 3 segundos antes de conectar...`);
+              await new Promise(resolve => setTimeout(resolve, 3000));
               return result.value;
             }
           }
           
-          // Mostrar progreso cada 20 IPs
-          if (totalIpsScanned % 20 === 0 || totalIpsScanned === totalIps) {
-            const progress = Math.round((totalIpsScanned / totalIps) * 100);
-            this.log(`Progreso: ${progress}% (${totalIpsScanned}/${totalIps} IPs)`);
+          // Mostrar progreso cada 10 IPs
+          if (totalIpsScanned % 10 === 0) {
+            const lastIp = currentIps[currentIps.length - 1];
+            this.log(`  ▶ Escaneadas ${totalIpsScanned} IPs (última: ${lastIp})`);
           }
         }
         
-        this.log(`❌ No encontrado en subnet ${subnet}.*`);
+        this.log(`  ❌ No encontrado en ${subnet}.*`);
       }
 
       return null;
@@ -287,7 +285,9 @@ export class DiscoveryService extends EventEmitter {
    */
   private async probeServer(ip: string): Promise<string | null> {
     const url = `http://${ip}:${DISCOVERY_PORT}/`;
-    const fullUrl = `${url}${DISCOVERY_ENDPOINT}`;
+    const fullUrl = `http://${ip}:${DISCOVERY_PORT}/${DISCOVERY_ENDPOINT}`;
+    
+    // No loguear cada IP que se prueba, es demasiado
 
     // Crear AbortController para timeout real
     const controller = new AbortController();
@@ -307,31 +307,33 @@ export class DiscoveryService extends EventEmitter {
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        this.log(`📡 ${ip} respondió con status ${response.status}`);
         const text = await response.text();
         try {
           const data = JSON.parse(text);
           if (data.type === 'cloudbite-api') {
-            this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${ip}!`);
+            this.log(`\n✅ ¡SERVIDOR ENCONTRADO!`);
+            this.log(`📍 IP: ${ip}`);
+            this.log(`🔗 URL: ${url}`);
+            this.log(`🌐 Puerto: ${DISCOVERY_PORT}`);
             return url;
-          } else {
-            this.log(`❓ ${ip} respondió pero no es CloudBite`);
           }
         } catch (parseError) {
-          this.log(`⚠️ ${ip} respondió pero error al parsear`);
+          // Solo loguear si hay error al parsear una respuesta válida
+          this.log(`⚠️ ${ip} respondió OK pero error al parsear JSON`);
         }
       } else {
-        this.log(`❌ ${ip} respondió con error ${response.status}`);
+        // Solo loguear errores HTTP importantes
+        if (response.status !== 404 && response.status !== 0) {
+          this.log(`⚠️ ${ip} - Error HTTP ${response.status}`);
+        }
       }
     } catch (error: any) {
-      // Loguear diferentes tipos de errores
-      if (error.name === 'AbortError') {
-        // Timeout - esto es normal
-      } else if (error.message?.includes('Network request failed')) {
-        // Error de red - también normal
-      } else if (error.message) {
-        // Otro error - esto sí es interesante
-        this.log(`⚠️ Error en ${ip}: ${error.message}`);
+      // Solo loguear errores inusuales, no timeouts ni errores de red normales
+      if (error.name !== 'AbortError' && 
+          !error.message?.includes('Network request failed') &&
+          !error.message?.includes('fetch') &&
+          error.message) {
+        this.log(`⚠️ Error inusual en ${ip}: ${error.message}`);
       }
     } finally {
       clearTimeout(timeoutId);
