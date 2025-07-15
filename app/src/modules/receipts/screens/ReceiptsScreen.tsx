@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import { View, FlatList, RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Text,
   Searchbar,
@@ -11,13 +11,17 @@ import {
   Divider,
   Badge,
   Card,
+  Icon,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
-  useReceiptsInfinite,
+  useReceipts,
   useRecoverOrder,
 } from '../hooks/useReceiptsQueries';
 import { Order } from '@/app/schemas/domain/order.schema';
+import type { Receipt, ReceiptList, ReceiptsListResponse, ReceiptFilters } from '../types/receipt.types';
+import { getPaymentStatus } from '@/app/utils/orderFormatters';
+import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
@@ -57,55 +61,73 @@ export const ReceiptsScreen: React.FC = () => {
   const filters = useMemo(() => {
     const baseFilters: any = {};
 
-    if (searchQuery.trim()) {
-      baseFilters.search = searchQuery.trim();
-    }
-
-    if (statusFilter !== 'all') {
-      baseFilters.status = statusFilter;
-    }
-
     if (startDate) {
-      baseFilters.startDate = startDate;
+      baseFilters.startDate = startDate.toISOString();
     }
 
     if (endDate) {
-      baseFilters.endDate = endDate;
+      baseFilters.endDate = endDate.toISOString();
     }
 
     return baseFilters;
-  }, [searchQuery, statusFilter, startDate, endDate]);
+  }, [startDate, endDate]);
 
   // Query para obtener recibos
   const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    data: allReceipts,
     isLoading,
     refetch,
     isRefetching,
-  } = useReceiptsInfinite(filters);
+  } = useReceipts(filters);
 
   // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('receipts');
 
-  // Aplanar los datos paginados
+  // Filtrar recibos localmente
   const receipts = useMemo(() => {
-    return data?.pages.flatMap((page: any) => page.data) || [];
-  }, [data]);
+    if (!allReceipts) return [];
+    
+    let filtered = [...allReceipts];
+    
+    // Filtro por estado
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(receipt => receipt.orderStatus === statusFilter);
+    }
+    
+    // Filtro por búsqueda
+    if (searchQuery.trim()) {
+      const search = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(receipt => {
+        // Buscar por número de orden
+        if (receipt.shiftOrderNumber.toString().includes(search)) return true;
+        
+        // Buscar en información de entrega
+        if (receipt.deliveryInfo) {
+          const { recipientName, recipientPhone, fullAddress } = receipt.deliveryInfo;
+          if (recipientName?.toLowerCase().includes(search)) return true;
+          if (recipientPhone?.includes(search)) return true;
+          if (fullAddress?.toLowerCase().includes(search)) return true;
+        }
+        
+        // Buscar en notas
+        if (receipt.notes?.toLowerCase().includes(search)) return true;
+        
+        return false;
+      });
+    }
+    
+    return filtered;
+  }, [allReceipts, statusFilter, searchQuery]);
 
   // Handlers
-  const handleReceiptPress = useCallback((receipt: Order) => {
-    setSelectedReceipt(receipt);
-    setShowDetailModal(true);
+  const handleReceiptPress = useCallback((receipt: ReceiptList) => {
+    // Fetch full order details when opening modal
+    receiptService.getReceiptById(receipt.id).then((fullOrder) => {
+      setSelectedReceipt(fullOrder);
+      setShowDetailModal(true);
+    });
   }, []);
 
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery('');
@@ -114,9 +136,12 @@ export const ReceiptsScreen: React.FC = () => {
     setEndDate(undefined);
   }, []);
 
-  const handleRecoverPress = useCallback((order: Order) => {
-    setOrderToRecover(order);
-    setShowRecoverConfirm(true);
+  const handleRecoverPress = useCallback((receipt: ReceiptList) => {
+    // Fetch full order details before recovering
+    receiptService.getReceiptById(receipt.id).then((fullOrder) => {
+      setOrderToRecover(fullOrder);
+      setShowRecoverConfirm(true);
+    });
   }, []);
 
   const handleConfirmRecover = useCallback(async () => {
@@ -127,7 +152,7 @@ export const ReceiptsScreen: React.FC = () => {
       setShowRecoverConfirm(false);
       setOrderToRecover(null);
     } catch (error) {
-      console.error('Error al recuperar orden:', error);
+      // Error ya manejado por el mutation hook
     }
   }, [orderToRecover, recoverOrderMutation]);
 
@@ -158,7 +183,7 @@ export const ReceiptsScreen: React.FC = () => {
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
   // Renderizar item de recibo
-  const renderReceiptItem = ({ item }: { item: Order }) => {
+  const renderReceiptItem = ({ item }: { item: ReceiptList }) => {
     // Construir el título según el tipo de orden
     let orderTitle = `#${item.shiftOrderNumber} • ${formatOrderTypeShort(item.orderType)}`;
 
@@ -184,88 +209,168 @@ export const ReceiptsScreen: React.FC = () => {
       }
     }
 
+    const totalAmount = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+    const totalPaid = item.paymentsSummary?.totalPaid || 0;
+    const pendingAmount = totalAmount - totalPaid;
+
     return (
-      <Card
-        style={styles.orderCard}
-        mode="elevated"
+      <TouchableOpacity
+        activeOpacity={0.95}
         onPress={() => handleReceiptPress(item)}
       >
-        <Card.Content style={styles.cardContent}>
-          {/* Main Container */}
-          <View style={styles.mainContainer}>
-            {/* Left Side - Title and Time */}
-            <View style={styles.leftContainer}>
-              <Text style={styles.orderNumber} numberOfLines={2}>
-                {orderTitle}
-                <Text style={styles.orderPrice}>
-                  {' '}
-                  • ${parseFloat(item.total?.toString() || '0').toFixed(2)}
-                </Text>
-              </Text>
-              <View style={styles.timeAndPaymentRow}>
-                <Text style={styles.orderTime}>
-                  Creado:{' '}
-                  {format(new Date(item.createdAt), 'p', { locale: es })}
-                </Text>
-                <Text style={styles.dateText}>
-                  {format(new Date(item.createdAt), "d 'de' MMMM", {
-                    locale: es,
-                  })}
-                </Text>
-              </View>
-              {item.finalizedAt && (
-                <View style={styles.timeAndPaymentRow}>
-                  <Text style={styles.orderTimeFinal}>
-                    Finalizado:{' '}
-                    {format(new Date(item.finalizedAt), 'p', { locale: es })}
-                  </Text>
-                  <Text style={styles.dateText}>
-                    {format(new Date(item.finalizedAt), "d 'de' MMMM", {
-                      locale: es,
-                    })}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Right Side - Status and Actions */}
-            <View style={styles.rightContainer}>
-              <Chip
-                mode="flat"
-                style={[
-                  styles.statusChip,
-                  { backgroundColor: getReceiptStatusColor(item.orderStatus) },
-                ]}
-                textStyle={styles.statusChipText}
-              >
-                {getStatusLabel(item.orderStatus)}
-              </Chip>
-              {/* Botón de recuperar solo para órdenes completadas o canceladas */}
-              {(item.orderStatus === 'COMPLETED' ||
-                item.orderStatus === 'CANCELLED') && (
-                <IconButton
-                  icon="restore"
-                  size={28}
+        <Card
+          style={[
+            styles.orderCard,
+            {
+              backgroundColor: theme.colors.surface,
+            },
+          ]}
+          mode="elevated"
+        >
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.mainContainer}>
+              <View style={styles.leftContainer}>
+                <Text
                   style={[
-                    styles.restoreButton,
-                    { backgroundColor: theme.colors.primaryContainer },
+                    styles.orderNumber,
+                    { color: theme.colors.onSurface },
                   ]}
-                  iconColor={theme.colors.primary}
-                  onPress={() => handleRecoverPress(item)}
-                  disabled={recoverOrderMutation.isPending}
-                />
-              )}
-            </View>
-          </View>
+                >
+                  {orderTitle}
+                  <Text
+                    style={[
+                      styles.orderPrice,
+                      {
+                        color: pendingAmount > 0 ? theme.colors.error : '#10B981',
+                      },
+                    ]}
+                  >
+                    {' • '}
+                    {pendingAmount > 0
+                      ? `Por pagar: $${pendingAmount.toFixed(2)}`
+                      : `Pagado: $${totalAmount.toFixed(2)}`}
+                  </Text>
+                  {item.notes && (
+                    <Text
+                      style={[
+                        styles.notesInline,
+                        { color: theme.colors.onSurfaceVariant },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {' • '}{item.notes}
+                    </Text>
+                  )}
+                </Text>
+                <View style={styles.timeAndPaymentRow}>
+                  <Text
+                    style={[
+                      styles.orderTime,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    {format(new Date(item.createdAt), 'p', { locale: es })}
+                  </Text>
+                  {(() => {
+                    const paymentStatus = getPaymentStatus(item as any);
+                    const color = paymentStatus === 'paid' ? '#10B981' : 
+                                paymentStatus === 'partial' ? '#F59E0B' : '#EF4444';
+                    const icon = paymentStatus === 'paid' ? '✓' : 
+                               paymentStatus === 'partial' ? '½' : '•';
+                    return (
+                      <View
+                        style={[
+                          styles.miniPaymentBadge,
+                          { backgroundColor: color },
+                        ]}
+                      >
+                        <Text style={styles.miniPaymentText}>
+                          {icon}
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                  {item.preparationScreenStatuses && item.preparationScreenStatuses.length > 0 && (
+                    <>
+                      {item.preparationScreenStatuses.map((screen, index) => {
+                        const backgroundColor = 
+                          screen.status === 'READY' ? '#4CAF50' :
+                          screen.status === 'IN_PROGRESS' ? '#FFA000' :
+                          theme.colors.surfaceVariant;
+                        
+                        const textColor = 
+                          screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
+                          theme.colors.onSurfaceVariant;
+                          
+                        return (
+                          <View
+                            key={`${item.id}-screen-${index}`}
+                            style={[
+                              styles.inlinePreparationBadge,
+                              {
+                                backgroundColor,
+                                borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.inlinePreparationText,
+                                { color: textColor },
+                              ]}
+                            >
+                              {screen.status === 'READY' ? '✓ ' : 
+                               screen.status === 'IN_PROGRESS' ? '⏳' : ''}
+                              🍳 {screen.name}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </>
+                  )}
+                </View>
+              </View>
 
-          {/* Notes - if present */}
-          {item.notes && (
-            <Text style={styles.notes} numberOfLines={2}>
-              📝 {item.notes}
-            </Text>
-          )}
-        </Card.Content>
-      </Card>
+              <View style={styles.rightContainer}>
+                {item.createdBy && (
+                  <Text style={styles.createdByText} numberOfLines={1}>
+                    {item.createdBy.firstName && item.createdBy.lastName
+                      ? `${item.createdBy.firstName} ${item.createdBy.lastName}`
+                      : item.createdBy.username}
+                  </Text>
+                )}
+                <Chip
+                  mode="flat"
+                  style={[
+                    styles.statusChip,
+                    { backgroundColor: getReceiptStatusColor(item.orderStatus) },
+                  ]}
+                  textStyle={styles.statusChipText}
+                >
+                  {getStatusLabel(item.orderStatus)}
+                </Chip>
+                <View style={styles.actionsContainer}>
+                  <TouchableOpacity
+                    style={styles.restoreContainer}
+                    onPress={() => handleRecoverPress(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Surface style={styles.restoreButtonSurface} elevation={2}>
+                      <IconButton
+                        icon="restore"
+                        size={36}
+                        iconColor={theme.colors.primary}
+                        style={styles.restoreButton}
+                      />
+                    </Surface>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -294,21 +399,20 @@ export const ReceiptsScreen: React.FC = () => {
     );
   };
 
-  // Renderizar footer de la lista
-  const renderFooter = () => {
-    if (!isFetchingNextPage) return null;
-
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={theme.colors.primary} />
-      </View>
-    );
-  };
 
   return (
     <View style={styles.container}>
       {/* Header con búsqueda y filtros */}
       <Surface style={styles.header} elevation={2}>
+        <Surface style={styles.shiftIndicator} elevation={1}>
+          <Icon source="cash-register" size={20} color={theme.colors.primary} />
+          <Text style={styles.shiftText}>
+            Recibos del turno actual
+          </Text>
+          <View style={styles.shiftBadge}>
+            <Text style={styles.shiftBadgeText}>ACTIVO</Text>
+          </View>
+        </Surface>
         <View style={styles.searchContainer}>
           <Searchbar
             placeholder="Buscar por nombre, teléfono o dirección..."
@@ -437,10 +541,7 @@ export const ReceiptsScreen: React.FC = () => {
             colors={[theme.colors.primary]}
           />
         }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
         ListEmptyComponent={renderEmptyComponent}
-        ListFooterComponent={renderFooter}
       />
 
       {/* Modal de detalle */}
@@ -531,16 +632,15 @@ const createStyles = (theme: AppTheme) =>
       height: 32,
     },
     listContent: {
-      padding: theme.spacing.s, // Reducido de 16 a theme.spacing.s
+      padding: theme.spacing.s,
       paddingBottom: theme.spacing.l * 2,
       flexGrow: 1,
     },
     orderCard: {
-      marginBottom: theme.spacing.s, // Reducido para coincidir con órdenes abiertas
-      backgroundColor: theme.colors.surface,
+      marginBottom: 8,
     },
     cardContent: {
-      paddingBottom: theme.spacing.s,
+      paddingBottom: 8,
     },
     mainContainer: {
       flexDirection: 'row',
@@ -549,27 +649,55 @@ const createStyles = (theme: AppTheme) =>
     },
     leftContainer: {
       flex: 1,
-      paddingRight: theme.spacing.s,
+      paddingRight: 12,
+      flexShrink: 1,
     },
     rightContainer: {
-      alignItems: 'center',
-      justifyContent: 'flex-start',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      minWidth: 120,
+      gap: 8,
+      flexShrink: 0,
     },
     orderNumber: {
-      ...theme.fonts.bodyLarge,
+      fontSize: 16,
       fontWeight: 'bold',
-      color: theme.colors.onSurface,
       lineHeight: 22,
-      marginBottom: theme.spacing.xs,
+      marginBottom: 4,
     },
     orderPrice: {
-      color: theme.colors.primary,
+      fontSize: 15,
       fontWeight: '700',
+    },
+    orderTime: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    estimatedTime: {
+      fontSize: 14,
+      marginLeft: 4,
+    },
+    timeAndPaymentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 0,
+    },
+    paymentBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    paymentBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      lineHeight: 14,
     },
     statusChip: {
       height: 28,
       minHeight: 28,
-      marginBottom: theme.spacing.xs,
+      alignSelf: 'flex-end',
     },
     statusChipText: {
       fontSize: 12,
@@ -577,41 +705,41 @@ const createStyles = (theme: AppTheme) =>
       color: 'white',
       lineHeight: 16,
     },
-    orderTime: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.primary,
-      fontWeight: '600',
-    },
-    orderTimeFinal: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.secondary,
-      fontWeight: '600',
-    },
-    dateText: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onSurfaceVariant,
-      marginLeft: theme.spacing.xs,
-    },
-    timeAndPaymentRow: {
+    actionsContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      justifyContent: 'flex-end',
+      gap: 8,
+      marginTop: 4,
     },
-    printButton: {
-      margin: 0,
-      padding: theme.spacing.xs,
+    restoreContainer: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    restoreButtonSurface: {
+      borderRadius: 20,
+      backgroundColor: theme.colors.primaryContainer,
+      overflow: 'hidden',
     },
     restoreButton: {
       margin: 0,
-      padding: theme.spacing.xs,
-      borderRadius: theme.roundness * 2,
-      elevation: 1,
+      width: 44,
+      height: 44,
     },
-    notes: {
-      ...theme.fonts.bodySmall,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
+    notesInline: {
+      fontSize: 12,
       fontStyle: 'italic',
+    },
+    inlinePreparationBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 10,
+      borderWidth: 0.5,
+    },
+    inlinePreparationText: {
+      fontSize: 10,
+      fontWeight: '500',
     },
     centerContainer: {
       flex: 1,
@@ -619,8 +747,68 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       padding: 32,
     },
-    footerLoader: {
-      paddingVertical: 16,
+    shiftIndicator: {
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      marginBottom: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    shiftText: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onPrimaryContainer,
+      fontWeight: '600',
+    },
+    shiftBadge: {
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    shiftBadgeText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: theme.colors.onPrimary,
+    },
+    miniPaymentBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 6,
+    },
+    miniPaymentText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+    },
+    miniPreparationBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 4,
+    },
+    miniPreparationText: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: '#FFFFFF',
+    },
+    moreIndicator: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: 4,
+    },
+    createdByText: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 4,
+      textAlign: 'right',
     },
   });

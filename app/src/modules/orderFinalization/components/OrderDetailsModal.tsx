@@ -770,17 +770,29 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                               >
                                 {getTicketTypeLabel(impression.ticketType)}
                               </Text>
-                              {impression.user && (
-                                <Text
-                                  style={[
-                                    styles.impressionUser,
-                                    { color: theme.colors.onSurfaceVariant },
-                                  ]}
-                                >
-                                  por {impression.user.firstName || ''}{' '}
-                                  {impression.user.lastName || ''}
-                                </Text>
-                              )}
+                              <View style={styles.impressionDetails}>
+                                {impression.user && (
+                                  <Text
+                                    style={[
+                                      styles.impressionUser,
+                                      { color: theme.colors.onSurfaceVariant },
+                                    ]}
+                                  >
+                                    por {impression.user.firstName || ''}{' '}
+                                    {impression.user.lastName || ''}
+                                  </Text>
+                                )}
+                                {impression.printer && (
+                                  <Text
+                                    style={[
+                                      styles.impressionPrinter,
+                                      { color: theme.colors.onSurfaceVariant },
+                                    ]}
+                                  >
+                                    🖨️ {impression.printer.name}
+                                  </Text>
+                                )}
+                              </View>
                             </View>
                             <Text
                               style={[
@@ -1191,9 +1203,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
+  impressionDetails: {
+    gap: 2,
+  },
   impressionUser: {
     fontSize: 11,
     opacity: 0.7,
+  },
+  impressionPrinter: {
+    fontSize: 11,
+    opacity: 0.7,
+    fontStyle: 'italic',
   },
   impressionTime: {
     fontSize: 11,
