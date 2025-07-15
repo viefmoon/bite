@@ -82,23 +82,20 @@ export class DiscoveryService {
       }
     }
 
-    // Verificar que no se esté llamando muy frecuentemente
-    const now = Date.now();
-    const timeSinceLastDiscovery = now - this.lastDiscoveryTime;
-    if (
-      timeSinceLastDiscovery < this.MIN_DISCOVERY_INTERVAL &&
-      this.cachedUrl
-    ) {
-      // Si tenemos una URL cacheada y no ha pasado suficiente tiempo, devolverla
-      return this.cachedUrl;
-    }
-
-    // Limpiar cache para forzar nueva búsqueda
+    // FORZAR nueva búsqueda - limpiar cache SIEMPRE en forceRediscovery
     this.cachedUrl = null;
     try {
       await EncryptedStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       // Ignorar error
+    }
+
+    // Verificar que no se esté llamando muy frecuentemente (solo para evitar spam)
+    const now = Date.now();
+    const timeSinceLastDiscovery = now - this.lastDiscoveryTime;
+    if (timeSinceLastDiscovery < this.MIN_DISCOVERY_INTERVAL) {
+      // Reducir el intervalo mínimo para producción, pero still dar tiempo entre intentos
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de delay
     }
 
     const discoveredUrl = await this.discoverBackend();
