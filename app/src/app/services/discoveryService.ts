@@ -3,11 +3,11 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import EventEmitter from 'eventemitter3';
 
 const DISCOVERY_PORT = 3737;
-const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
+const DISCOVERY_ENDPOINT = '/api/v1/discovery'; // Con la barra inicial para ser más explícito
 const STORAGE_KEY = 'last_known_api_url';
-const DISCOVERY_TIMEOUT = 3000; // 3 segundos por IP
-const MAX_CONCURRENT_REQUESTS = 3; // Menos concurrentes para dar más tiempo
-const BATCH_DELAY = 500; // Medio segundo entre lotes para evitar saturación
+const DISCOVERY_TIMEOUT = 2000; // 2 segundos por IP
+const MAX_CONCURRENT_REQUESTS = 10; // Más requests concurrentes
+const BATCH_DELAY = 100; // Delay pequeño entre lotes
 
 interface DiscoveryResponse {
   type: string;
@@ -250,17 +250,9 @@ export class DiscoveryService extends EventEmitter {
           
           this.log(`Escaneando: ${subnet}.[${ipNumbers}]`);
 
-          // Iniciar todas las requests del lote
-          const startTime = Date.now();
           const results = await Promise.allSettled(
             currentIps.map((ip) => this.probeServer(ip)),
           );
-          const elapsed = Date.now() - startTime;
-          
-          // Si el lote se completó muy rápido, agregar un delay adicional
-          if (elapsed < 1000) {
-            await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
-          }
 
           totalIpsScanned += currentIps.length;
           
@@ -315,21 +307,31 @@ export class DiscoveryService extends EventEmitter {
       clearTimeout(timeoutId);
 
       if (response.ok) {
+        this.log(`📡 ${ip} respondió con status ${response.status}`);
         const text = await response.text();
         try {
           const data = JSON.parse(text);
           if (data.type === 'cloudbite-api') {
-            this.log(`✅ Respuesta válida de ${ip}`);
+            this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${ip}!`);
             return url;
+          } else {
+            this.log(`❓ ${ip} respondió pero no es CloudBite`);
           }
         } catch (parseError) {
-          this.log(`⚠️ Error parseando respuesta de ${ip}`);
+          this.log(`⚠️ ${ip} respondió pero error al parsear`);
         }
+      } else {
+        this.log(`❌ ${ip} respondió con error ${response.status}`);
       }
     } catch (error: any) {
-      // Solo loguear si no es un error de abort/timeout esperado
-      if (error.name !== 'AbortError' && !error.message?.includes('aborted')) {
-        // Error real de conexión (no timeout)
+      // Loguear diferentes tipos de errores
+      if (error.name === 'AbortError') {
+        // Timeout - esto es normal
+      } else if (error.message?.includes('Network request failed')) {
+        // Error de red - también normal
+      } else if (error.message) {
+        // Otro error - esto sí es interesante
+        this.log(`⚠️ Error en ${ip}: ${error.message}`);
       }
     } finally {
       clearTimeout(timeoutId);
