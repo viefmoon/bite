@@ -36,8 +36,9 @@ export class DiscoveryService {
   /**
    * Obtiene la URL del API desde cache o almacenamiento
    * Solo verifica si la URL almacenada sigue funcionando
+   * @returns string si encuentra una URL válida, null si no encuentra ninguna
    */
-  async getApiUrl(): Promise<string> {
+  async getApiUrl(): Promise<string | null> {
     // Si ya tenemos una URL en cache, verificar que siga funcionando
     if (this.cachedUrl) {
       // Hacer una verificación rápida
@@ -62,10 +63,8 @@ export class DiscoveryService {
       // Ignorar error silenciosamente
     }
 
-    // Si no hay URL conocida o no funciona, lanzar error
-    throw new Error(
-      'No hay servidor configurado. Es necesario ejecutar discovery.',
-    );
+    // Si no hay URL válida, devolver null en lugar de lanzar error
+    return null;
   }
 
   /**

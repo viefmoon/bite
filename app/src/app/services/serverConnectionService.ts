@@ -128,15 +128,12 @@ class ServerConnectionService {
   }
 
   private async checkConnection(forceNew = false) {
-    // Establecer que estamos buscando
     this.updateState({ isSearching: true, error: null });
 
     try {
-      // Primero verificar el estado de la red
       const netInfo = await NetInfo.fetch();
       const isNetworkConnected =
-        netInfo.isConnected &&
-        (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
+        netInfo.isConnected && (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
 
       if (!isNetworkConnected) {
         this.updateState({
@@ -144,74 +141,32 @@ class ServerConnectionService {
           isConnected: false,
           serverUrl: null,
           hasWifi: false,
-          error:
-            'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
+          error: 'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
         });
         return;
       }
 
       this.updateState({ hasWifi: true });
 
-      let url: string;
+      let url: string | null = null;
 
-      // Primero intentar con la última URL conocida si existe (excepto si se fuerza nuevo discovery)
       if (!forceNew) {
-        const lastUrl = await discoveryService.getLastKnownUrl();
-        if (lastUrl) {
-          try {
-            // Verificar rápidamente si el servidor responde
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-            // Asegurar que la URL termine con /
-            const baseUrl = lastUrl.endsWith('/') ? lastUrl : `${lastUrl}/`;
-            const response = await fetch(`${baseUrl}api/v1/health`, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            if (response.ok) {
-              // Servidor encontrado en la última URL conocida
-              url = lastUrl;
-              this.lastKnownUrl = url;
-              await getApiClient(url);
-
-              this.updateState({
-                isSearching: false,
-                isConnected: true,
-                serverUrl: url,
-                error: null,
-                isHealthy: false,
-              });
-
-              healthMonitoringService.startMonitoring();
-              return;
-            }
-          } catch {
-            // Si falla, continuar con discovery
-          }
-        }
+        // Intenta obtener la URL guardada. getApiUrl ahora devuelve null si no es válida.
+        url = await discoveryService.getApiUrl();
       }
 
-      // Solo hacer discovery si no hay URL conocida o si falló la verificación
-      try {
-        if (forceNew) {
-          url = await discoveryService.forceRediscovery();
-        } else {
-          // Intentar obtener URL sin discovery
-          url = await discoveryService.getApiUrl();
-        }
-      } catch (error) {
-        // Si no hay URL almacenada, hacer discovery por primera vez
+      // Si no se encontró una URL válida o se está forzando, hacer discovery.
+      if (!url) {
         url = await discoveryService.forceRediscovery();
       }
 
-      await (forceNew ? reinitializeApiClient(url) : getApiClient(url));
+      if (!url) {
+        // Si después de todo no se encontró una URL, lanzar error.
+        throw new Error('No se pudo encontrar el servidor en la red local.');
+      }
 
-      // Guardar la URL conocida para reconexión rápida
+      // Si llegamos aquí, tenemos una URL válida.
+      await (forceNew ? reinitializeApiClient(url) : getApiClient(url));
       this.lastKnownUrl = url;
 
       this.updateState({
@@ -219,13 +174,13 @@ class ServerConnectionService {
         isConnected: true,
         serverUrl: url,
         error: null,
-        isHealthy: false, // Se actualizará cuando el health monitor responda
+        isHealthy: false,
       });
 
-      // Iniciar monitoreo de salud
       healthMonitoringService.startMonitoring();
+
     } catch (err: any) {
-      // Error al conectar
+      // Si cualquier paso falla (incluyendo el discovery), reportar el error.
       this.updateState({
         isSearching: false,
         isConnected: false,
