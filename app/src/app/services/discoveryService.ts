@@ -1,11 +1,13 @@
 import NetInfo from '@react-native-community/netinfo';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import EventEmitter from 'eventemitter3';
 
 const DISCOVERY_PORT = 3737;
 const DISCOVERY_ENDPOINT = 'api/v1/discovery'; // Sin la barra inicial
 const STORAGE_KEY = 'last_known_api_url';
-const DISCOVERY_TIMEOUT = 3000; // 3 segundos por IP (aumentado para producción)
-const MAX_CONCURRENT_REQUESTS = 10; // Reducido para ser más amigable con móviles
+const DISCOVERY_TIMEOUT = 5000; // 5 segundos por IP para producción
+const MAX_CONCURRENT_REQUESTS = 5; // Más conservador para evitar problemas en producción
+const BATCH_DELAY = 100; // Delay entre lotes de requests en ms
 
 interface DiscoveryResponse {
   type: string;
@@ -16,15 +18,34 @@ interface DiscoveryResponse {
   timestamp: number;
 }
 
-export class DiscoveryService {
+export class DiscoveryService extends EventEmitter {
   private static instance: DiscoveryService;
   private cachedUrl: string | null = null;
   private discovering = false;
   private discoveryPromise: Promise<string | null> | null = null;
   private lastDiscoveryTime = 0;
   private MIN_DISCOVERY_INTERVAL = 10000; // 10 segundos mínimo entre descubrimientos
+  private logCallback: ((message: string) => void) | null = null;
 
-  private constructor() {}
+  private constructor() {
+    super();
+  }
+  
+  /**
+   * Establece un callback para logs (más confiable que eventos en producción)
+   */
+  setLogCallback(callback: ((message: string) => void) | null) {
+    this.logCallback = callback;
+  }
+  
+  private log(message: string) {
+    // Usar callback directo si está disponible
+    if (this.logCallback) {
+      this.logCallback(message);
+    }
+    // También emitir evento por compatibilidad
+    this.emit('discovery:log', message);
+  }
 
   static getInstance(): DiscoveryService {
     if (!DiscoveryService.instance) {
@@ -205,26 +226,54 @@ export class DiscoveryService {
 
       // Obtener lista de subnets prioritarias para escanear
       const subnets = await this.detectCurrentSubnet();
+      this.log(`Escaneando subnets: ${subnets.join(', ')}`);
 
       // Probar cada subnet hasta encontrar el servidor
       for (const subnet of subnets) {
+        this.log(`\n[${subnet}.*] Iniciando escaneo...`);
         const ips = this.generateIpRange(subnet);
         const chunks = this.chunkArray(ips, MAX_CONCURRENT_REQUESTS);
 
         // Escanear todas las IPs de esta subnet
+        let totalIpsScanned = 0;
+        const totalIps = ips.length;
+        
         for (let i = 0; i < chunks.length; i++) {
+          // Agregar un pequeño delay entre lotes para evitar sobrecarga
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+          }
+
+          const currentIps = chunks[i];
+          const startRange = currentIps[0].split('.').pop();
+          const endRange = currentIps[currentIps.length - 1].split('.').pop();
+          
+          this.log(`Escaneando rango: ${subnet}.${startRange}-${endRange}`);
+
           const results = await Promise.allSettled(
-            chunks[i].map((ip) => this.probeServer(ip)),
+            currentIps.map((ip) => this.probeServer(ip)),
           );
 
+          totalIpsScanned += currentIps.length;
+          
           // Buscar si alguna petición fue exitosa
           for (let j = 0; j < results.length; j++) {
             const result = results[j];
             if (result.status === 'fulfilled' && result.value) {
+              const foundIp = currentIps[j];
+              this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${foundIp}!`);
               return result.value;
             }
           }
+          
+          // Mostrar progreso cada 20 IPs
+          if (totalIpsScanned % 20 === 0 || totalIpsScanned === totalIps) {
+            const progress = Math.round((totalIpsScanned / totalIps) * 100);
+            this.log(`Progreso: ${progress}% (${totalIpsScanned}/${totalIps} IPs)`);
+          }
         }
+        
+        this.log(`❌ No encontrado en subnet ${subnet}.*`);
       }
 
       return null;
@@ -240,28 +289,35 @@ export class DiscoveryService {
     const url = `http://${ip}:${DISCOVERY_PORT}/`;
     const fullUrl = `${url}${DISCOVERY_ENDPOINT}`;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), DISCOVERY_TIMEOUT);
-
     try {
-      const response = await fetch(fullUrl, {
+      // Usar Promise.race para garantizar timeout
+      const fetchPromise = fetch(fullUrl, {
         method: 'GET',
-        signal: controller.signal,
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
       });
 
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout')), DISCOVERY_TIMEOUT);
+      });
+
+      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+
       if (response.ok) {
-        const data = await response.json();
-        if (data.type === 'cloudbite-api') {
-          return url;
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.type === 'cloudbite-api') {
+            return url;
+          }
+        } catch (parseError) {
+          // Ignorar errores de parseo
         }
       }
     } catch (error: any) {
-      // Ignorar errores esperados de conexión
-    } finally {
-      clearTimeout(timeoutId);
+      // Ignorar errores esperados de conexión y timeout
     }
 
     return null;
@@ -290,21 +346,34 @@ export class DiscoveryService {
   private generateIpRange(subnet: string): string[] {
     const ips: string[] = [];
 
-    // Primero agregar IPs comunes para servidores (1-50, 100, 150, 200)
+    // IPs prioritarias individuales (las más comunes para servidores)
+    const priorityIps = [1, 2, 100, 200, 10, 20, 30, 50, 150, 250];
+    
+    // Agregar IPs prioritarias primero
+    for (const ip of priorityIps) {
+      ips.push(`${subnet}.${ip}`);
+    }
+
+    // Rangos prioritarios después de las IPs individuales
     const priorityRanges = [
-      { start: 1, end: 50 }, // Rango común para servidores
-      { start: 100, end: 110 }, // Otro rango común
-      { start: 200, end: 210 }, // Dispositivos estáticos
+      { start: 3, end: 9 },     // Primeras IPs
+      { start: 101, end: 110 }, // Rango 100+
+      { start: 201, end: 210 }, // Rango 200+
+      { start: 11, end: 19 },   // Más IPs bajas
+      { start: 21, end: 29 },   
+      { start: 31, end: 49 },
     ];
 
-    // Agregar IPs prioritarias primero
+    // Agregar rangos prioritarios
     for (const range of priorityRanges) {
       for (let i = range.start; i <= range.end; i++) {
-        ips.push(`${subnet}.${i}`);
+        if (!priorityIps.includes(i)) {
+          ips.push(`${subnet}.${i}`);
+        }
       }
     }
 
-    // Luego agregar el resto de IPs
+    // Finalmente agregar el resto de IPs
     for (let i = 51; i <= 254; i++) {
       // Saltar las que ya agregamos
       if (i >= 100 && i <= 110) continue;

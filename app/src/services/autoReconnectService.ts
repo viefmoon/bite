@@ -246,6 +246,11 @@ class AutoReconnectService extends EventEmitter {
   private async tryDiscovery(): Promise<boolean> {
     this.updateState({ status: 'running-discovery' });
 
+    // Configurar callback directo para logs (más confiable en producción)
+    discoveryService.setLogCallback((message: string) => {
+      this.addLog(`  ${message}`, 'info');
+    });
+
     try {
       this.addLog('  → Iniciando escaneo de red...', 'info');
       this.addLog('  → Buscando servidor en puerto 3737...', 'info');
@@ -260,8 +265,11 @@ class AutoReconnectService extends EventEmitter {
         return false;
       }
     } catch (error: any) {
-      this.addLog('  ✗ Error al buscar servidor', 'error');
+      this.addLog(`  ✗ Error: ${error.message || 'Error al buscar servidor'}`, 'error');
       return false;
+    } finally {
+      // Limpiar callback
+      discoveryService.setLogCallback(null);
     }
   }
 

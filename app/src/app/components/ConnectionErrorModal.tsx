@@ -24,7 +24,7 @@ import {
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../store/authStore';
 
-const { height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export function ConnectionErrorModal() {
   const theme = useTheme();
@@ -35,95 +35,31 @@ export function ConnectionErrorModal() {
     autoReconnectService.getState(),
   );
 
-  // Configuración
-  const SHOW_MODAL_AFTER_ATTEMPTS = 1; // Mostrar modal después de 1 intento fallido
-  const SHOW_MODAL_AFTER_TIME = 5000; // O después de 5 segundos reconectando
-
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    let hideTimeoutId: NodeJS.Timeout | null = null;
-
-    // Suscribirse a cambios del servicio
     const unsubscribe = autoReconnectService.subscribe((state) => {
       setReconnectState(state);
-
-      // Usar callback para obtener el valor actual de visible
-      setVisible((currentVisible) => {
-        // NO mostrar el modal si el usuario está logueado
-        if (isLoggedIn) {
-          return false;
-        }
-
-        // Lógica para mostrar el modal de forma discreta (solo en login)
-        if (state.isReconnecting && !currentVisible) {
-          // Caso 1: Mostrar inmediatamente si no hay WiFi
-          if (state.status === 'no-wifi') {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
-            return true;
-          }
-          // Caso 2: Mostrar después de varios intentos fallidos
-          else if (
-            state.attempts >= SHOW_MODAL_AFTER_ATTEMPTS &&
-            state.status === 'failed'
-          ) {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
-            return true;
-          }
-          // Caso 3: Mostrar después de un tiempo reconectando
-          else if (!timeoutId) {
-            timeoutId = setTimeout(() => {
-              if (!isLoggedIn) {
-                setVisible(true);
-              }
-            }, SHOW_MODAL_AFTER_TIME);
-          }
-        }
-
-        // Ocultar modal cuando se conecta exitosamente
-        if (state.status === 'connected') {
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-
-          if (currentVisible) {
-            // Solo mostrar éxito si el modal ya estaba visible
-            if (hideTimeoutId) clearTimeout(hideTimeoutId);
-            hideTimeoutId = setTimeout(() => {
-              setVisible(false);
-            }, 2000); // Mostrar éxito por 2 segundos
-          }
-        }
-
-        return currentVisible; // Mantener el estado actual si no hay cambios
-      });
+      
+      if (!isLoggedIn && state.isReconnecting) {
+        setVisible(true);
+      }
+      
+      if (state.status === 'connected') {
+        setTimeout(() => setVisible(false), 2000);
+      }
     });
 
     return () => {
       unsubscribe();
-      if (timeoutId) clearTimeout(timeoutId);
-      if (hideTimeoutId) clearTimeout(hideTimeoutId);
     };
   }, [isLoggedIn]);
 
-  // Efecto separado para manejar cambios en la conexión
   useEffect(() => {
-    // Si perdemos la conexión, iniciar reconexión automática
     if (!isConnected && !autoReconnectService.getState().isReconnecting) {
-      // Pequeño delay para evitar iniciar múltiples veces
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         if (!isConnected) {
           autoReconnectService.startAutoReconnect();
         }
       }, 500);
-
-      return () => clearTimeout(timer);
     }
   }, [isConnected]);
 
@@ -169,7 +105,7 @@ export function ConnectionErrorModal() {
         return {
           icon: 'alert-circle',
           title: 'Conectando...',
-          color: theme.colors.warning || theme.colors.tertiary,
+          color: theme.colors.tertiary,
         };
     }
   };
@@ -180,22 +116,23 @@ export function ConnectionErrorModal() {
     modal: {
       justifyContent: 'center',
       alignItems: 'center',
+      margin: 20,
     },
     container: {
-      width: '90%',
-      maxWidth: 420,
-      maxHeight: screenHeight * 0.75,
-      borderRadius: 28,
-      overflow: 'hidden',
+      width: screenWidth - 40,
+      minHeight: 400,
+      maxHeight: screenHeight * 0.85,
       backgroundColor: theme.colors.surface,
-      elevation: 24,
+      borderRadius: 24,
+      overflow: 'hidden',
+      elevation: 8,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 24,
-      paddingVertical: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
       backgroundColor: theme.colors.elevation.level2,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
@@ -204,78 +141,74 @@ export function ConnectionErrorModal() {
       fontSize: 18,
       fontWeight: '600',
       color: theme.colors.onSurface,
+      flex: 1,
+      marginLeft: 12,
     },
     statusSection: {
-      padding: 32,
+      paddingTop: 12,
+      paddingBottom: 8,
+      paddingHorizontal: 16,
       alignItems: 'center',
-      backgroundColor: theme.colors.background,
-    },
-    iconContainer: {
-      marginBottom: 20,
-      padding: 16,
-      borderRadius: 100,
-      backgroundColor: theme.colors.surfaceVariant,
     },
     title: {
-      fontSize: 22,
+      fontSize: 18,
       fontWeight: '600',
       color: theme.colors.onSurface,
       textAlign: 'center',
-      marginBottom: 12,
+      marginBottom: 6,
     },
     subtitle: {
       fontSize: 14,
       color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
     },
-    attemptInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
+    attemptBadge: {
       backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 24,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      marginTop: 8,
     },
     attemptText: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '500',
       color: theme.colors.onPrimaryContainer,
-      marginLeft: 8,
     },
-    logsSection: {
-      flex: 1,
-      maxHeight: 280,
-      backgroundColor: theme.colors.background,
+    logsContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      borderRadius: 16,
+      overflow: 'hidden',
+      minHeight: 200,
+      maxHeight: 350,
     },
     logsHeader: {
-      paddingHorizontal: 24,
-      paddingVertical: 16,
       backgroundColor: theme.colors.elevation.level1,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
     },
     logsTitle: {
-      fontSize: 14,
-      fontWeight: '500',
+      fontSize: 12,
+      fontWeight: '600',
       color: theme.colors.onSurfaceVariant,
-      letterSpacing: 0.5,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
     },
-    logsScroll: {
-      flex: 1,
-      paddingHorizontal: 24,
-      paddingVertical: 16,
-      maxHeight: 200,
+    logsList: {
+      padding: 16,
     },
     logEntry: {
       fontSize: 13,
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
       lineHeight: 20,
-      paddingVertical: 4,
-      color: theme.colors.onSurfaceVariant,
+      color: theme.colors.onSurface,
+      marginBottom: 6,
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
     logInfo: {
-      color: theme.colors.onSurfaceVariant,
+      color: theme.colors.onSurface,
     },
     logError: {
       color: theme.colors.error,
@@ -285,38 +218,32 @@ export function ConnectionErrorModal() {
       color: theme.colors.primary,
       fontWeight: '600',
     },
+    progressContainer: {
+      paddingHorizontal: 24,
+      paddingBottom: 12,
+    },
   });
+
+  if (!visible) return null;
 
   return (
     <Portal>
       <Modal
         visible={visible}
         onDismiss={() => {
-          // Solo permitir cerrar si está conectado o es error de WiFi
-          if (
-            reconnectState.status === 'connected' ||
-            reconnectState.status === 'no-wifi'
-          ) {
+          if (reconnectState.status === 'connected' || reconnectState.status === 'no-wifi') {
             setVisible(false);
           }
         }}
         contentContainerStyle={styles.modal}
-        dismissable={
-          reconnectState.status === 'connected' ||
-          reconnectState.status === 'no-wifi'
-        }
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        dismissable={reconnectState.status === 'connected' || reconnectState.status === 'no-wifi'}
       >
-        <Surface style={styles.container} elevation={4}>
+        <Surface style={styles.container}>
+          {/* Header */}
           <View style={styles.header}>
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
-            >
-              <Icon source="wifi-sync" size={24} color={theme.colors.primary} />
-              <Text style={styles.headerTitle}>Estado de Conexión</Text>
-            </View>
-            {(reconnectState.status === 'connected' ||
-              reconnectState.status === 'no-wifi') && (
+            <Icon source="wifi-sync" size={24} color={theme.colors.primary} />
+            <Text style={styles.headerTitle}>Estado de Conexión</Text>
+            {(reconnectState.status === 'connected' || reconnectState.status === 'no-wifi') && (
               <IconButton
                 icon="close"
                 size={24}
@@ -326,114 +253,66 @@ export function ConnectionErrorModal() {
             )}
           </View>
 
+          {/* Status Section */}
           <View style={styles.statusSection}>
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: statusInfo.color + '20' },
-              ]}
-            >
-              {reconnectState.isReconnecting &&
-              reconnectState.status !== 'connected' ? (
-                <ActivityIndicator size={56} color={statusInfo.color} />
-              ) : (
-                <Icon
-                  source={statusInfo.icon}
-                  size={56}
-                  color={statusInfo.color}
-                />
-              )}
-            </View>
-
             <Text style={styles.title}>{statusInfo.title}</Text>
 
-            {reconnectState.lastError &&
-              reconnectState.status !== 'connected' && (
-                <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
-              )}
+            {reconnectState.lastError && reconnectState.status !== 'connected' && (
+              <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
+            )}
 
-            {reconnectState.attempts > 0 &&
-              reconnectState.status !== 'connected' && (
-                <View style={styles.attemptInfo}>
-                  <Icon
-                    source="refresh"
-                    size={18}
-                    color={theme.colors.onPrimaryContainer}
-                  />
-                  <Text style={styles.attemptText}>
-                    Intento #{reconnectState.attempts}
-                  </Text>
-                </View>
-              )}
-
-            {reconnectState.isReconnecting &&
-              reconnectState.status !== 'connected' && (
-                <View style={{ marginTop: 24, width: '100%' }}>
-                  <ProgressBar
-                    indeterminate
-                    color={statusInfo.color}
-                    style={{ height: 3, borderRadius: 2 }}
-                  />
-                </View>
-              )}
+            {reconnectState.attempts > 0 && reconnectState.status !== 'connected' && (
+              <View style={styles.attemptBadge}>
+                <Text style={styles.attemptText}>
+                  Intento #{reconnectState.attempts}
+                </Text>
+              </View>
+            )}
           </View>
 
-          <View style={styles.logsSection}>
-            <View style={styles.logsHeader}>
-              <Text style={styles.logsTitle}>REGISTRO DE ACTIVIDAD</Text>
+          {/* Progress Bar */}
+          {reconnectState.isReconnecting && reconnectState.status !== 'connected' && (
+            <View style={styles.progressContainer}>
+              <ProgressBar 
+                indeterminate 
+                color={statusInfo.color}
+                style={{ height: 4, borderRadius: 2 }}
+              />
             </View>
-            <ScrollView
-              style={styles.logsScroll}
-              contentContainerStyle={{ paddingBottom: 20 }}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              scrollEnabled={true}
-            >
-              {reconnectState.logs.length > 0 ? (
-                <View>
-                  {reconnectState.logs.map((log, index) => {
-                    let logStyle = styles.logInfo;
-                    if (
-                      log.includes('ERROR:') ||
-                      log.includes('❌') ||
-                      log.includes('✗')
-                    ) {
-                      logStyle = styles.logError;
-                    } else if (
-                      log.includes('SUCCESS:') ||
-                      log.includes('✅') ||
-                      log.includes('✓') ||
-                      log.includes('🎉')
-                    ) {
-                      logStyle = styles.logSuccess;
-                    }
+          )}
 
-                    return (
-                      <View key={`log-${index}`} style={{ marginBottom: 8 }}>
-                        <Text style={[styles.logEntry, logStyle]}>{log}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                  <Icon
-                    source="history"
-                    size={32}
-                    color={theme.colors.onSurfaceVariant}
-                  />
-                  <Text
-                    style={[
-                      styles.logEntry,
-                      { textAlign: 'center', opacity: 0.6, marginTop: 12 },
-                    ]}
-                  >
-                    Iniciando proceso de reconexión...
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
-          </View>
+          {/* Logs Section */}
+          {reconnectState.logs.length > 0 && (
+            <View style={styles.logsContainer}>
+              <View style={styles.logsHeader}>
+                <Text style={styles.logsTitle}>
+                  Detalles del proceso • {reconnectState.logs.length} entradas
+                </Text>
+              </View>
+              <ScrollView 
+                style={styles.logsList}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                {reconnectState.logs.map((log, index) => {
+                  let logStyle = [styles.logEntry, styles.logInfo];
+                  
+                  if (log.includes('ERROR:') || log.includes('❌') || log.includes('✗')) {
+                    logStyle = [styles.logEntry, styles.logError];
+                  } else if (log.includes('SUCCESS:') || log.includes('✅') || log.includes('✓') || log.includes('🎉')) {
+                    logStyle = [styles.logEntry, styles.logSuccess];
+                  }
+                  
+                  return (
+                    <Text key={`log-${index}-${log.substring(0, 10)}`} style={logStyle}>
+                      {log}
+                    </Text>
+                  );
+                })}
+                <View style={{ height: 10 }} />
+              </ScrollView>
+            </View>
+          )}
         </Surface>
       </Modal>
     </Portal>

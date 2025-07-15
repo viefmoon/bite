@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Permite tráfico HTTP para toda la aplicación temporalmente en desarrollo -->
-    <!-- NOTA: En producción esto debe ser más restrictivo -->
+    <!-- Para desarrollo y redes locales, permitir HTTP en toda la app -->
+    <!-- Esto es necesario para el escaneo de red local y comunicación con el servidor -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
+            <certificates src="user" />
         </trust-anchors>
     </base-config>
 </network-security-config> 
