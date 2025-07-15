@@ -49,7 +49,8 @@ export default {
       },
       icon: "./assets/icon.png",
       supportsTablet: true,
-      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ? "./google-services.json" : undefined
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ? "./google-services.json" : undefined,
+      networkSecurityConfig: "./android/app/src/main/res/xml/network_security_config.xml"
     },
     ios: {
       infoPlist: {
