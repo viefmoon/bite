@@ -17,13 +17,12 @@ import {
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
 import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
 import { OrderOpenListDto } from './dto/order-open-list.dto';
 import { ReceiptListDto } from './dto/receipt-list.dto';
-import { IPaginationOptions } from '../utils/types/pagination-options';
+import { OrderType } from './domain/enums/order-type.enum';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { OrderItem } from './domain/order-item';
@@ -36,6 +35,7 @@ import {
   ApiTags,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
@@ -52,6 +52,7 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { plainToInstance } from 'class-transformer';
+import { IPaginationOptions } from '../utils/types/pagination-options';
 
 @ApiTags('orders')
 @Controller({ path: 'orders', version: '1' })
@@ -73,32 +74,6 @@ export class OrdersController {
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   create(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
     return this.ordersService.create(createOrderDto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all orders with pagination and filters' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders that match the filters.',
-    type: InfinityPaginationResponse(Order),
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  async findAll(
-    @Query() filterOptions: FindAllOrdersDto,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<InfinityPaginationResponseDto<Order>> {
-    const paginationOptions: IPaginationOptions = {
-      page,
-      limit: limit > 50 ? 50 : limit,
-    };
-    const [data] = await this.ordersService.findAll(
-      filterOptions,
-      paginationOptions,
-    );
-    return infinityPagination(data, paginationOptions);
   }
 
   @Get('open-today')
@@ -143,19 +118,16 @@ export class OrdersController {
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
   async findOpenOrdersList(): Promise<OrderOpenListDto[]> {
-    const orders = await this.ordersService.findOpenOrdersOptimized();
-    return plainToInstance(OrderOpenListDto, orders);
+    return this.ordersService.findOpenOrdersOptimized();
   }
 
   @Get('receipts-list')
-  @ApiOperation({ summary: 'Obtener lista optimizada de recibos (órdenes completadas/canceladas)' })
+  @ApiOperation({ summary: 'Obtener lista optimizada de recibos del turno actual (órdenes completadas/canceladas)' })
   @ApiResponse({
     status: 200,
-    description: 'Lista optimizada de recibos con campos mínimos necesarios.',
+    description: 'Lista optimizada de recibos del turno actual con campos mínimos necesarios.',
     type: [ReceiptListDto],
   })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'orderType', required: false, enum: OrderType })
@@ -164,12 +136,10 @@ export class OrdersController {
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
   @HttpCode(HttpStatus.OK)
   async findReceiptsList(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('orderType') orderType?: OrderType,
-  ): Promise<{ data: ReceiptListDto[]; total: number }> {
+  ): Promise<ReceiptListDto[]> {
     const filterOptions: any = {};
     
     if (startDate) {
@@ -182,10 +152,7 @@ export class OrdersController {
       filterOptions.orderType = orderType;
     }
 
-    return this.ordersService.getReceiptsList(
-      { page, limit },
-      filterOptions
-    );
+    return this.ordersService.getReceiptsList(filterOptions);
   }
 
   @Get('for-finalization/list')
@@ -199,7 +166,7 @@ export class OrdersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
-  findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
+  async findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
     return this.ordersService.findOrdersForFinalizationList();
   }
 

@@ -172,5 +172,9 @@ export class OrderForFinalizationDto {
       firstName?: string;
       lastName?: string;
     };
+    printer?: {
+      id: string;
+      name: string;
+    };
   }[];
 }

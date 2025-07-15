@@ -94,4 +94,19 @@ export class OrderForFinalizationListDto {
     required: false
   })
   notes?: string;
+
+  @ApiProperty({ 
+    required: false,
+    description: 'Usuario que creó la orden',
+    example: {
+      username: 'john.doe',
+      firstName: 'John',
+      lastName: 'Doe'
+    }
+  })
+  createdBy?: {
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
 }

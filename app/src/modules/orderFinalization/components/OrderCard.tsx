@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Text, Checkbox, Chip, IconButton } from 'react-native-paper';
+import { Card, Text, Checkbox, Chip, IconButton, Icon } from 'react-native-paper';
 import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
@@ -101,6 +101,21 @@ export const OrderCard = React.memo<OrderCardProps>(
                         ? `Por pagar: $${pendingAmount.toFixed(2)}`
                         : `Pagado: $${totalAmount.toFixed(2)}`}
                     </Text>
+                    {order.notes && (
+                      <Text
+                        style={[
+                          styles.notesInline,
+                          { 
+                            color: isSelected
+                              ? theme.colors.onPrimaryContainer
+                              : theme.colors.onSurfaceVariant 
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {' • '}{order.notes}
+                      </Text>
+                    )}
                   </Text>
                   <View style={styles.timeAndPaymentRow}>
                     <Text
@@ -115,123 +130,83 @@ export const OrderCard = React.memo<OrderCardProps>(
                     >
                       {format(new Date(order.createdAt), 'p', { locale: es })}
                     </Text>
-                    {order.scheduledAt && (
-                      <Text
-                        style={[
-                          styles.estimatedTime,
-                          {
-                            color: isSelected
-                              ? theme.colors.onPrimaryContainer
-                              : theme.colors.onSurfaceVariant,
-                          },
-                        ]}
-                      >
-                        📅{' '}
-                        {format(new Date(order.scheduledAt), 'p', {
-                          locale: es,
-                        })}
-                      </Text>
-                    )}
                     {(() => {
-                      if (paymentStatus === 'paid') {
-                        return (
-                          <View
-                            style={[
-                              styles.paymentBadge,
-                              { backgroundColor: '#10B981' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.paymentBadgeText,
-                                { color: '#FFFFFF' },
-                              ]}
-                            >
-                              💵 Pagado
-                            </Text>
-                          </View>
-                        );
-                      } else if (paymentStatus === 'partial') {
-                        return (
-                          <View
-                            style={[
-                              styles.paymentBadge,
-                              { backgroundColor: '#F59E0B' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.paymentBadgeText,
-                                { color: '#FFFFFF' },
-                              ]}
-                            >
-                              💵 Parcial
-                            </Text>
-                          </View>
-                        );
-                      } else {
-                        return (
-                          <View
-                            style={[
-                              styles.paymentBadge,
-                              { backgroundColor: '#EF4444' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.paymentBadgeText,
-                                { color: '#FFFFFF' },
-                              ]}
-                            >
-                              💵 Pendiente
-                            </Text>
-                          </View>
-                        );
-                      }
+                      const color = paymentStatus === 'paid' ? '#10B981' : 
+                                  paymentStatus === 'partial' ? '#F59E0B' : '#EF4444';
+                      const icon = paymentStatus === 'paid' ? '✓' : 
+                                 paymentStatus === 'partial' ? '½' : '•';
+                      return (
+                        <View
+                          style={[
+                            styles.miniPaymentBadge,
+                            { backgroundColor: color },
+                          ]}
+                        >
+                          <Text style={styles.miniPaymentText}>
+                            {icon}
+                          </Text>
+                        </View>
+                      );
                     })()}
-                    {order.preparationScreenStatuses &&
-                      order.preparationScreenStatuses.length > 0 && (
-                        <>
-                          {order.preparationScreenStatuses.map((screen, index) => {
-                            const backgroundColor = 
-                              screen.status === 'READY' ? '#4CAF50' :
-                              screen.status === 'IN_PROGRESS' ? '#FFA000' :
-                              isSelected ? theme.colors.primaryContainer : theme.colors.surfaceVariant;
+                    {order.preparationScreenStatuses && order.preparationScreenStatuses.length > 0 && (
+                      <>
+                        {order.preparationScreenStatuses.map((screen, index) => {
+                          const backgroundColor = 
+                            screen.status === 'READY' ? '#4CAF50' :
+                            screen.status === 'IN_PROGRESS' ? '#FFA000' :
+                            isSelected ? theme.colors.primaryContainer : theme.colors.surfaceVariant;
+                          
+                          const textColor = 
+                            screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
+                            isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant;
                             
-                            const textColor = 
-                              screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
-                              isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant;
-                              
-                            return (
-                              <View
-                                key={`${order.id}-screen-${index}`}
+                          return (
+                            <View
+                              key={`${order.id}-screen-${index}`}
+                              style={[
+                                styles.inlinePreparationBadge,
+                                {
+                                  backgroundColor,
+                                  borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
+                                },
+                              ]}
+                            >
+                              <Text
                                 style={[
-                                  styles.inlinePreparationBadge,
-                                  {
-                                    backgroundColor,
-                                    borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
-                                  },
+                                  styles.inlinePreparationText,
+                                  { color: textColor },
                                 ]}
                               >
-                                <Text
-                                  style={[
-                                    styles.inlinePreparationText,
-                                    { color: textColor },
-                                  ]}
-                                >
-                                  {screen.status === 'READY' ? '✓ ' : 
-                                   screen.status === 'IN_PROGRESS' ? '⏳ ' : ''}
-                                  🍳 {screen.name}
-                                </Text>
-                              </View>
-                            );
-                          })}
-                        </>
-                      )}
+                                {screen.status === 'READY' ? '✓ ' : 
+                                 screen.status === 'IN_PROGRESS' ? '⏳ ' : ''}
+                                🍳 {screen.name}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </>
+                    )}
                   </View>
                 </View>
 
                 <View style={styles.rightContainer}>
+                  {order.createdBy && (
+                    <Text 
+                      style={[
+                        styles.createdByText,
+                        { 
+                          color: isSelected
+                            ? theme.colors.onPrimaryContainer
+                            : theme.colors.onSurfaceVariant 
+                        },
+                      ]} 
+                      numberOfLines={1}
+                    >
+                      {order.createdBy.firstName && order.createdBy.lastName
+                        ? `${order.createdBy.firstName} ${order.createdBy.lastName}`
+                        : order.createdBy.username}
+                    </Text>
+                  )}
                   <Chip
                     mode="flat"
                     style={[
@@ -278,21 +253,6 @@ export const OrderCard = React.memo<OrderCardProps>(
                 </View>
               </View>
 
-              {order.notes ? (
-                <Text
-                  style={[
-                    styles.notes,
-                    {
-                      color: isSelected
-                        ? theme.colors.onPrimaryContainer
-                        : theme.colors.onSurfaceVariant,
-                    },
-                  ]}
-                  numberOfLines={2}
-                >
-                  📝 {order.notes}
-                </Text>
-              ) : null}
             </Card.Content>
           </Card>
         </TouchableOpacity>
@@ -362,7 +322,7 @@ const styles = StyleSheet.create({
   timeAndPaymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 0,
   },
   paymentBadge: {
     paddingHorizontal: 8,
@@ -385,9 +345,8 @@ const styles = StyleSheet.create({
     margin: 0,
     transform: [{ scale: 1.5 }],
   },
-  notes: {
+  notesInline: {
     fontSize: 12,
-    marginTop: 4,
     fontStyle: 'italic',
   },
   inlinePreparationBadge: {
@@ -400,6 +359,44 @@ const styles = StyleSheet.create({
   inlinePreparationText: {
     fontSize: 10,
     fontWeight: '500',
+  },
+  miniPaymentBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  miniPaymentText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  miniPreparationBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  miniPreparationText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  moreIndicator: {
+    fontSize: 10,
+    marginLeft: 4,
+  },
+  createdByText: {
+    fontSize: 10,
+    marginBottom: 4,
+    textAlign: 'right',
+  },
+  rightTopRow: {
+    width: '100%',
   },
   printButton: {
     margin: -4,

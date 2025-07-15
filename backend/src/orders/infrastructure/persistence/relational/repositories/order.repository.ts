@@ -486,6 +486,9 @@ export class OrdersRelationalRepository implements OrderRepository {
         'deliveryInfo.recipientPhone',
         'deliveryInfo.fullAddress',
       ])
+      // Incluir información del usuario creador
+      .leftJoin('order.user', 'user')
+      .addSelect(['user.username', 'user.firstName', 'user.lastName'])
       .where('order.createdAt >= :startDate', { startDate })
       .andWhere('order.createdAt <= :endDate', { endDate })
       .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
@@ -561,7 +564,7 @@ export class OrdersRelationalRepository implements OrderRepository {
             userId: order.userId,
             tableId: order.tableId,
             subtotal: order.subtotal,
-            user: null,
+            user: order.user,
             orderItems: [],
             payments: null,
             adjustments: undefined,
@@ -630,6 +633,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'preparationScreenStatuses.preparationScreen',
         'ticketImpressions',
         'ticketImpressions.user',
+        'ticketImpressions.printer',
       ],
     });
 

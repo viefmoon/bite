@@ -37,6 +37,7 @@ import {
   OrderItemForFinalizationDto,
 } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
+import { OrderOpenListDto } from './dto/order-open-list.dto';
 import { ReceiptListDto } from './dto/receipt-list.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
@@ -44,7 +45,7 @@ import { RestaurantConfigService } from '../restaurant-config/restaurant-config.
 import { OrderType } from './domain/enums/order-type.enum';
 import { ProductRepository } from '../products/infrastructure/persistence/product.repository';
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
-import { DataSource, Not, In } from 'typeorm';
+import { DataSource, Not, In, Between } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
 import { format } from 'date-fns';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
@@ -353,15 +354,6 @@ export class OrdersService {
     return this.orderItemRepository.save(orderItem);
   }
 
-  async findAll(
-    filterOptions: FindAllOrdersDto,
-    paginationOptions: IPaginationOptions,
-  ): Promise<[Order[], number]> {
-    return this.orderRepository.findManyWithPagination({
-      filterOptions,
-      paginationOptions,
-    });
-  }
 
   async findOne(id: string): Promise<Order> {
     const order = await this.orderRepository.findById(id);
@@ -847,7 +839,7 @@ export class OrdersService {
     );
   }
 
-  async findOpenOrdersOptimized(): Promise<Order[]> {
+  async findOpenOrdersOptimized(): Promise<OrderOpenListDto[]> {
     // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
     if (!currentShift) {
@@ -855,10 +847,13 @@ export class OrdersService {
     }
 
     // Usar una consulta optimizada que solo trae los campos necesarios
-    return this.orderRepository.findOpenOrdersOptimized(
+    const orders = await this.orderRepository.findOpenOrdersOptimized(
       currentShift.openedAt,
       new Date(),
     );
+
+    // Mapear a DTO con el campo createdBy
+    return orders.map(order => this.mapToOpenListDto(order));
   }
 
   // OrderItem methods
@@ -1195,6 +1190,7 @@ export class OrdersService {
     orderId: string,
     userId: string,
     ticketType: TicketType,
+    printerId?: string,
   ): Promise<TicketImpression> {
     await this.findOne(orderId); // Verificar orden
 
@@ -1202,6 +1198,7 @@ export class OrdersService {
       orderId,
       userId,
       ticketType,
+      printerId,
       impressionTime: new Date(),
     };
     return this.ticketImpressionRepository.create(impressionData);
@@ -1247,6 +1244,7 @@ export class OrdersService {
         orderStatus: Not(In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])),
       },
       relations: [
+        'user',
         'table',
         'table.area',
         'payments',
@@ -1265,6 +1263,11 @@ export class OrdersService {
         createdAt: true,
         scheduledAt: true,
         notes: true,
+        user: {
+          username: true,
+          firstName: true,
+          lastName: true,
+        },
         table: {
           id: true,
           name: true,
@@ -1448,6 +1451,10 @@ export class OrdersService {
           firstName: impression.user.firstName || undefined,
           lastName: impression.user.lastName || undefined,
         } : undefined,
+        printer: impression.printer ? {
+          id: impression.printer.id,
+          name: impression.printer.name,
+        } : undefined,
       })) || undefined,
     };
 
@@ -1543,6 +1550,15 @@ export class OrdersService {
     
     if (order.notes) {
       dto.notes = order.notes;
+    }
+
+    // Agregar información del usuario creador
+    if (order.user) {
+      dto.createdBy = {
+        username: order.user.username,
+        firstName: order.user.firstName,
+        lastName: order.user.lastName
+      };
     }
 
     return dto;
@@ -1647,53 +1663,106 @@ export class OrdersService {
       dto.notes = order.notes;
     }
 
+    // Agregar información del usuario creador
+    if (order.user) {
+      dto.createdBy = {
+        username: order.user.username,
+        firstName: order.user.firstName,
+        lastName: order.user.lastName
+      };
+    }
+
+    return dto;
+  }
+
+  private mapToOpenListDto(order: Order): OrderOpenListDto {
+    const dto: OrderOpenListDto = {
+      id: order.id,
+      shiftOrderNumber: order.shiftOrderNumber,
+      orderType: order.orderType,
+      orderStatus: order.orderStatus,
+      total: order.total,
+      createdAt: order.createdAt,
+      scheduledAt: order.scheduledAt || undefined,
+      notes: order.notes,
+      paymentsSummary: order.paymentsSummary,
+      ticketImpressionCount: order.ticketImpressionCount,
+      preparationScreenStatuses: order.preparationScreenStatuses,
+    };
+
+    // Mapear tabla si existe
+    if (order.table) {
+      dto.table = {
+        id: order.table.id,
+        number: order.table.name, // En el dominio Table, 'name' contiene el número
+        name: order.table.name,
+        isTemporary: order.table.isTemporary,
+        area: order.table.area ? {
+          name: order.table.area.name
+        } : undefined,
+      };
+    }
+
+    // Mapear deliveryInfo si existe
+    if (order.deliveryInfo) {
+      dto.deliveryInfo = {
+        recipientName: order.deliveryInfo.recipientName || undefined,
+        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
+        fullAddress: order.deliveryInfo.fullAddress || undefined,
+      };
+    }
+
+    // Agregar información del usuario creador
+    if (order.user) {
+      dto.createdBy = {
+        username: order.user.username,
+        firstName: order.user.firstName,
+        lastName: order.user.lastName
+      };
+    }
+
     return dto;
   }
 
   async getReceiptsList(
-    paginationOptions: IPaginationOptions,
     filterOptions?: {
       startDate?: Date;
       endDate?: Date;
       orderType?: OrderType;
     },
-  ): Promise<{
-    data: ReceiptListDto[];
-    total: number;
-  }> {
-    const where: any = {
-      orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
-    };
-
-    if (filterOptions?.orderType) {
-      where.orderType = filterOptions.orderType;
+  ): Promise<ReceiptListDto[]> {
+    // Obtener el turno actual
+    const currentShift = await this.shiftsService.getCurrentShift();
+    if (!currentShift) {
+      return [];
     }
 
-    if (filterOptions?.startDate && filterOptions?.endDate) {
-      where.finalizedAt = Between(filterOptions.startDate, filterOptions.endDate);
-    }
-
-    const [orders, total] = await this.orderRepository.findManyWithPagination({
-      filterOptions: {
-        orderStatuses: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
-        orderType: filterOptions?.orderType,
-        startDate: filterOptions?.startDate,
-        endDate: filterOptions?.endDate,
+    const orders = await this.dataSource.getRepository(OrderEntity).find({
+      where: {
+        shiftId: currentShift.id,
+        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
+        ...(filterOptions?.orderType && { orderType: filterOptions.orderType }),
+        ...(filterOptions?.startDate && filterOptions?.endDate && {
+          finalizedAt: Between(filterOptions.startDate, filterOptions.endDate),
+        }),
       },
-      paginationOptions,
+      relations: [
+        'user',
+        'table',
+        'table.area',
+        'payments',
+        'deliveryInfo',
+        'orderItems',
+        'orderItems.product',
+        'orderItems.product.preparationScreen',
+        'ticketImpressions',
+      ],
+      order: {
+        finalizedAt: 'DESC', // Más recientes primero
+      },
     });
 
-    const ordersWithDetails = await Promise.all(
-      orders.map(async (order) => {
-        const completeOrder = await this.orderRepository.findById(order.id);
-        return this.mapToReceiptListDto(completeOrder);
-      })
-    );
-
-    return {
-      data: ordersWithDetails,
-      total,
-    };
+    return orders.map((order) => this.mapToReceiptListDto(order));
   }
 
   async finalizeMultipleOrders(

@@ -1,5 +1,4 @@
 import {
-  useInfiniteQuery,
   useQuery,
   useMutation,
   useQueryClient,
@@ -10,16 +9,15 @@ import {
 } from '../services/receiptService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
-export const useReceiptsInfinite = (filters?: {
-  status?: 'COMPLETED' | 'CANCELLED';
-  search?: string;
-  startDate?: Date;
-  endDate?: Date;
+export const useReceipts = (filters?: {
+  startDate?: string;
+  endDate?: string;
+  orderType?: string;
 }) => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const query = useInfiniteQuery({
-    ...receiptQueryOptions.receiptsInfinite(filters || {}),
+  const query = useQuery({
+    ...receiptQueryOptions.receipts(filters || {}),
   });
 
   // Manejar errores
@@ -51,24 +49,6 @@ export const useReceipt = (id: string) => {
   return query;
 };
 
-export const useReceiptsCount = (filters?: {
-  status?: 'COMPLETED' | 'CANCELLED';
-  search?: string;
-  startDate?: Date;
-  endDate?: Date;
-}) => {
-  return useQuery({
-    queryKey: ['receipts', 'count', filters],
-    queryFn: async () => {
-      const response = await receiptService.getReceipts({
-        ...filters,
-        page: 1,
-        limit: 20, // Usar un límite más alto para obtener un conteo más preciso
-      });
-      return response.totalData;
-    },
-  });
-};
 
 export const useRecoverOrder = () => {
   const queryClient = useQueryClient();

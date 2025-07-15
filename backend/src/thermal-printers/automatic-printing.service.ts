@@ -694,6 +694,7 @@ export class AutomaticPrintingService {
           orderId,
           userId,
           ticketType,
+          printerDetails.id,
         );
       }
 

@@ -60,7 +60,9 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
    npm run migration:run
    ```
 
-   > **Nota para usuarios de Windows**: Si necesitas generar nuevas migraciones y encuentras el error `/usr/bin/bash: Files\Git\bin\bash.exe: No such file or directory`, esto se debe a que `env-cmd` tiene problemas con las rutas de Git Bash que contienen espacios. En lugar de usar:
+   > **Nota para usuarios de Windows**: Si encuentras el error `/usr/bin/bash: Files\Git\bin\bash.exe: No such file or directory`, esto se debe a que `env-cmd` tiene problemas con las rutas de Git Bash que contienen espacios.
+   > 
+   > Para **generar** nuevas migraciones, en lugar de usar:
    > ```bash
    > npm run migration:generate -- src/database/migrations/MigrationName
    > ```
@@ -68,7 +70,17 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
    > ```bash
    > npx typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts src/database/migrations/MigrationName
    > ```
-   > Este comando evita el problema con env-cmd y funciona correctamente en Windows.
+   > 
+   > Para **ejecutar** migraciones, en lugar de usar:
+   > ```bash
+   > npm run migration:run
+   > ```
+   > Usa este comando alternativo:
+   > ```bash
+   > npx typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts
+   > ```
+   > 
+   > Estos comandos evitan el problema con env-cmd y funcionan correctamente en Windows.
 
 1. Run seeds
 

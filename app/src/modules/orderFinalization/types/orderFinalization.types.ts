@@ -18,12 +18,6 @@ export interface OrderForFinalizationList {
   paymentsSummary?: {
     totalPaid: number;
   };
-  table?: {
-    number: string;
-    area?: {
-      name: string;
-    };
-  };
   deliveryInfo?: {
     recipientName?: string;
     recipientPhone?: string;
@@ -36,6 +30,19 @@ export interface OrderForFinalizationList {
   }>;
   ticketImpressionCount?: number;
   notes?: string;
+  table?: {
+    number: string;
+    name: string;
+    isTemporary: boolean;
+    area?: {
+      name: string;
+    };
+  };
+  createdBy?: {
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
 }
 
 // Tipo completo para el detalle de orden
@@ -88,6 +95,10 @@ export interface OrderForFinalization {
       id: string;
       firstName?: string;
       lastName?: string;
+    };
+    printer?: {
+      id: string;
+      name: string;
     };
   }[];
 }

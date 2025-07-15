@@ -111,9 +111,25 @@ export class OrderOpenListDto {
     required: false 
   })
   @Expose()
-  preparationScreenStatusesSummary?: Array<{ name: string; status: string }>;
+  preparationScreenStatuses?: Array<{ name: string; status: string }>;
 
   @ApiProperty({ required: false })
   @Expose()
   ticketImpressionCount?: number;
+
+  @ApiProperty({ 
+    required: false,
+    description: 'Usuario que creó la orden',
+    example: {
+      username: 'john.doe',
+      firstName: 'John',
+      lastName: 'Doe'
+    }
+  })
+  @Expose()
+  createdBy?: {
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
 }

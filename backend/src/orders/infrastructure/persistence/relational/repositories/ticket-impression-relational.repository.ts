@@ -40,7 +40,7 @@ export class TicketImpressionRelationalRepository
     // Recargar para obtener relaciones
     const completeEntity = await this.repository.findOne({
       where: { id: newEntity.id },
-      relations: ['order', 'user'],
+      relations: ['order', 'user', 'printer'],
     });
     if (!completeEntity) {
       // Usar NotFoundException o InternalServerErrorException según el caso
@@ -84,7 +84,7 @@ export class TicketImpressionRelationalRepository
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
-      relations: ['order', 'user'],
+      relations: ['order', 'user', 'printer'],
       order: {
         impressionTime: 'DESC', // Ordenar por fecha de impresión descendente
       },
@@ -101,7 +101,7 @@ export class TicketImpressionRelationalRepository
   ): Promise<NullableType<TicketImpression>> {
     const entity = await this.repository.findOne({
       where: { id },
-      relations: ['order', 'user'],
+      relations: ['order', 'user', 'printer'],
     });
 
     const domainResult = entity
@@ -119,7 +119,7 @@ export class TicketImpressionRelationalRepository
   ): Promise<TicketImpression[]> {
     const entities = await this.repository.find({
       where: { orderId },
-      relations: ['order', 'user'],
+      relations: ['order', 'user', 'printer'],
       order: {
         impressionTime: 'DESC',
       },

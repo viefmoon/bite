@@ -12,6 +12,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { OrderEntity } from './order.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { TicketType } from '../../../../domain/enums/ticket-type.enum';
+import { ThermalPrinterEntity } from '../../../../../thermal-printers/infrastructure/persistence/relational/entities/thermal-printer.entity';
 
 @Entity({ name: 'ticket_impression' })
 export class TicketImpressionEntity extends EntityRelationalHelper {
@@ -23,6 +24,9 @@ export class TicketImpressionEntity extends EntityRelationalHelper {
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
+
+  @Column({ name: 'printer_id', type: 'uuid', nullable: true })
+  printerId?: string;
 
   @Column({ type: 'enum', enum: TicketType })
   ticketType: TicketType;
@@ -41,6 +45,12 @@ export class TicketImpressionEntity extends EntityRelationalHelper {
   })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
+
+  @ManyToOne(() => ThermalPrinterEntity, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'printer_id' })
+  printer?: ThermalPrinterEntity;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

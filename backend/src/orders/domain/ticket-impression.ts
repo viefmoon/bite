@@ -1,6 +1,7 @@
 import { Order } from './order';
 import { User } from '../../users/domain/user';
 import { TicketType } from './enums/ticket-type.enum';
+import { ThermalPrinter } from '../../thermal-printers/domain/thermal-printer';
 
 export class TicketImpression {
   id: string;
@@ -9,6 +10,8 @@ export class TicketImpression {
 
   userId: string;
 
+  printerId?: string;
+
   ticketType: TicketType;
 
   impressionTime: Date;
@@ -16,6 +19,8 @@ export class TicketImpression {
   order?: Order;
 
   user?: User | null;
+
+  printer?: ThermalPrinter | null;
 
   createdAt: Date;
 
