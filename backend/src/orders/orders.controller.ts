@@ -1,4 +1,3 @@
-// src/orders/orders.controller.ts
 import {
   DefaultValuePipe,
   Controller,
@@ -14,7 +13,6 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  SerializeOptions,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -24,6 +22,7 @@ import { Order } from './domain/order';
 import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
 import { OrderOpenListDto } from './dto/order-open-list.dto';
+import { ReceiptListDto } from './dto/receipt-list.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -99,7 +98,7 @@ export class OrdersController {
       filterOptions,
       paginationOptions,
     );
-    return infinityPagination(data, paginationOptions); // Pasar total a infinityPagination si es necesario
+    return infinityPagination(data, paginationOptions);
   }
 
   @Get('open-today')
@@ -146,6 +145,47 @@ export class OrdersController {
   async findOpenOrdersList(): Promise<OrderOpenListDto[]> {
     const orders = await this.ordersService.findOpenOrdersOptimized();
     return plainToInstance(OrderOpenListDto, orders);
+  }
+
+  @Get('receipts-list')
+  @ApiOperation({ summary: 'Obtener lista optimizada de recibos (órdenes completadas/canceladas)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista optimizada de recibos con campos mínimos necesarios.',
+    type: [ReceiptListDto],
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'orderType', required: false, enum: OrderType })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
+  @HttpCode(HttpStatus.OK)
+  async findReceiptsList(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('orderType') orderType?: OrderType,
+  ): Promise<{ data: ReceiptListDto[]; total: number }> {
+    const filterOptions: any = {};
+    
+    if (startDate) {
+      filterOptions.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      filterOptions.endDate = new Date(endDate);
+    }
+    if (orderType) {
+      filterOptions.orderType = orderType;
+    }
+
+    return this.ordersService.getReceiptsList(
+      { page, limit },
+      filterOptions
+    );
   }
 
   @Get('for-finalization/list')
@@ -431,7 +471,6 @@ export class OrdersController {
     return this.ordersService.findOrderItemsByOrderId(orderId);
   }
 
-  // --- Historial Endpoints ---
 
   @Get(':id/history')
   @HttpCode(HttpStatus.OK)
@@ -463,10 +502,9 @@ export class OrdersController {
       id,
       paginationOptions,
     );
-    return infinityPagination(data, paginationOptions); // Pasar total si es necesario
+    return infinityPagination(data, paginationOptions);
   }
 
-  // --- Kitchen Preparation Status Endpoints ---
 
   @Patch(':id/start-preparation')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -486,7 +524,6 @@ export class OrdersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
   ): Promise<void> {
-    // Cambiar todos los items PENDING a IN_PROGRESS
     await this.ordersService.changeOrderItemsStatus(
       id,
       userId,
@@ -494,7 +531,6 @@ export class OrdersController {
       'IN_PROGRESS',
     );
 
-    // Actualizar el estado de la orden a IN_PREPARATION
     await this.ordersService.update(id, {
       orderStatus: OrderStatus.IN_PREPARATION,
     });
@@ -518,21 +554,13 @@ export class OrdersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
   ): Promise<void> {
-    // Obtener el estado actual de la orden con sus items
     const order = await this.ordersService.findOne(id);
 
     if (order.orderStatus === OrderStatus.READY) {
-      // Si la orden está LISTA y se regresa a EN PREPARACIÓN:
-      // Los OrderItems mantienen su estado (READY)
-      // Solo cambiamos el estado de la orden
       await this.ordersService.update(id, {
         orderStatus: OrderStatus.IN_PREPARATION,
       });
     } else if (order.orderStatus === OrderStatus.IN_PREPARATION) {
-      // Si la orden está EN PREPARACIÓN y se regresa a EN PROGRESO:
-      // Todos los items deben regresar a PENDING
-
-      // Cambiar items IN_PROGRESS a PENDING
       const hasInProgressItems = await this.ordersService.hasItemsWithStatus(
         id,
         'IN_PROGRESS',
@@ -546,7 +574,6 @@ export class OrdersController {
         );
       }
 
-      // Cambiar items READY a PENDING
       const hasReadyItems = await this.ordersService.hasItemsWithStatus(
         id,
         'READY',
@@ -560,13 +587,10 @@ export class OrdersController {
         );
       }
 
-      // Cambiar el estado de la orden
       await this.ordersService.update(id, {
         orderStatus: OrderStatus.IN_PROGRESS,
       });
     } else if (order.orderStatus === OrderStatus.IN_PROGRESS) {
-      // La orden ya está en IN_PROGRESS, no hay nada que hacer
-      // Esto puede pasar si todos los items están READY pero la orden no fue marcada como READY
     }
   }
 
@@ -588,7 +612,6 @@ export class OrdersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
   ): Promise<void> {
-    // Cambiar todos los items IN_PROGRESS a READY
     await this.ordersService.changeOrderItemsStatus(
       id,
       userId,
@@ -596,7 +619,6 @@ export class OrdersController {
       'READY',
     );
 
-    // Actualizar el estado de la orden a READY
     await this.ordersService.update(id, {
       orderStatus: OrderStatus.READY,
     });

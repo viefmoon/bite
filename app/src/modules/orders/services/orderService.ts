@@ -135,7 +135,6 @@ export const orderService = {
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
-    // TODO: Considerar validar la respuesta con Zod si es necesario
     return response.data;
   },
 

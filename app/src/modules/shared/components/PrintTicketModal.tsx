@@ -18,12 +18,17 @@ import {
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { usePrintersQuery } from '@/modules/printers/hooks/usePrintersQueries';
-import { Order } from '../types/orders.types';
+
+// Interfaz mínima que requiere el componente
+interface OrderBasicInfo {
+  shiftOrderNumber: number;
+  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN' | 'TAKEOUT';
+}
 
 interface PrintTicketModalProps {
   visible: boolean;
   onDismiss: () => void;
-  order: Order | null;
+  order: OrderBasicInfo | null;
   onPrint: (
     printerId: string,
     ticketType: 'GENERAL' | 'BILLING',

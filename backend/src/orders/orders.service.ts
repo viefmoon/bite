@@ -37,6 +37,7 @@ import {
   OrderItemForFinalizationDto,
 } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
+import { ReceiptListDto } from './dto/receipt-list.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
 import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
@@ -883,189 +884,56 @@ export class OrdersService {
     return this.orderItemRepository.findByOrderId(orderId);
   }
 
-  /**
-   * Limpia los campos de deliveryInfo según el tipo de pedido
-   * REGLAS DE LIMPIEZA:
-   * - DINE_IN: No necesita deliveryInfo (se elimina completamente)
-   * - TAKE_AWAY: Solo necesita recipientName, recipientPhone y deliveryInstructions
-   * - DELIVERY: Solo necesita campos de dirección y recipientPhone
-   */
   private cleanDeliveryInfoByOrderType(
     deliveryInfo: Partial<DeliveryInfo>,
     orderType: OrderType,
   ): any {
-    // Inicializar el resultado con todos los campos posibles
     const result: any = {};
+    const allFields = [
+      'fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
+      'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
+      'recipientName', 'recipientPhone', 'deliveryInstructions'
+    ];
 
     if (orderType === OrderType.DINE_IN) {
-      // Para pedidos DINE_IN, marcar todos los campos como undefined
-      result.fullAddress = undefined;
-      result.street = undefined;
-      result.number = undefined;
-      result.interiorNumber = undefined;
-      result.neighborhood = undefined;
-      result.city = undefined;
-      result.state = undefined;
-      result.zipCode = undefined;
-      result.country = undefined;
-      result.latitude = undefined;
-      result.longitude = undefined;
-      result.recipientName = undefined;
-      result.recipientPhone = undefined;
-      result.deliveryInstructions = undefined;
-      
+      allFields.forEach(field => result[field] = undefined);
       return result;
     }
 
+    const getValue = (field: keyof DeliveryInfo) => {
+      const value = deliveryInfo[field];
+      return (value !== undefined && value !== null && value !== '') ? value : undefined;
+    };
+
     if (orderType === OrderType.TAKE_AWAY) {
-      // Para TAKE_AWAY solo conservamos:
-      // - recipientName (nombre del cliente)
-      // - recipientPhone (teléfono del cliente)
-      // - deliveryInstructions (notas especiales)
+      result.recipientName = getValue('recipientName');
+      result.recipientPhone = getValue('recipientPhone');
+      result.deliveryInstructions = getValue('deliveryInstructions');
       
-      // Conservar campos válidos
-              if (deliveryInfo.recipientName !== undefined && deliveryInfo.recipientName !== null && deliveryInfo.recipientName !== '') {
-          result.recipientName = deliveryInfo.recipientName;
-        } else {
-          result.recipientName = undefined;
-        }
-        
-        if (deliveryInfo.recipientPhone !== undefined && deliveryInfo.recipientPhone !== null && deliveryInfo.recipientPhone !== '') {
-          result.recipientPhone = deliveryInfo.recipientPhone;
-        } else {
-          result.recipientPhone = undefined;
-        }
-        
-        if (deliveryInfo.deliveryInstructions !== undefined && deliveryInfo.deliveryInstructions !== null && deliveryInfo.deliveryInstructions !== '') {
-          result.deliveryInstructions = deliveryInfo.deliveryInstructions;
-        } else {
-          result.deliveryInstructions = undefined;
-        }
-        
-        // Usar null para campos que deben eliminarse en TAKE_AWAY
-        result.fullAddress = null;
-        result.street = null;
-        result.number = null;
-        result.interiorNumber = null;
-        result.neighborhood = null;
-        result.city = null;
-        result.state = null;
-        result.zipCode = null;
-        result.country = null;
-        result.latitude = null;
-        result.longitude = null;
+      ['fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
+       'city', 'state', 'zipCode', 'country', 'latitude', 'longitude'].forEach(
+        field => result[field] = null
+      );
       
       return result;
     }
 
     if (orderType === OrderType.DELIVERY) {
-      // Para DELIVERY solo conservamos:
-      // - Campos de dirección completa
-      // - recipientPhone (teléfono de contacto para entrega)
-      // - deliveryInstructions (instrucciones de entrega)
-      // NO conservamos recipientName
+      ['fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
+       'city', 'state', 'zipCode', 'country', 'deliveryInstructions', 'recipientPhone'].forEach(
+        field => result[field] = getValue(field as keyof DeliveryInfo)
+      );
       
-              // Conservar campos de dirección válidos
-        if (deliveryInfo.fullAddress !== undefined && deliveryInfo.fullAddress !== null && deliveryInfo.fullAddress !== '') {
-          result.fullAddress = deliveryInfo.fullAddress;
-        } else {
-          result.fullAddress = undefined;
-        }
-        
-        if (deliveryInfo.street !== undefined && deliveryInfo.street !== null && deliveryInfo.street !== '') {
-          result.street = deliveryInfo.street;
-        } else {
-          result.street = undefined;
-        }
-        
-        if (deliveryInfo.number !== undefined && deliveryInfo.number !== null && deliveryInfo.number !== '') {
-          result.number = deliveryInfo.number;
-        } else {
-          result.number = undefined;
-        }
-        
-        if (deliveryInfo.interiorNumber !== undefined && deliveryInfo.interiorNumber !== null && deliveryInfo.interiorNumber !== '') {
-          result.interiorNumber = deliveryInfo.interiorNumber;
-        } else {
-          result.interiorNumber = undefined;
-        }
-        
-        if (deliveryInfo.neighborhood !== undefined && deliveryInfo.neighborhood !== null && deliveryInfo.neighborhood !== '') {
-          result.neighborhood = deliveryInfo.neighborhood;
-        } else {
-          result.neighborhood = undefined;
-        }
-        
-        if (deliveryInfo.city !== undefined && deliveryInfo.city !== null && deliveryInfo.city !== '') {
-          result.city = deliveryInfo.city;
-        } else {
-          result.city = undefined;
-        }
-        
-        if (deliveryInfo.state !== undefined && deliveryInfo.state !== null && deliveryInfo.state !== '') {
-          result.state = deliveryInfo.state;
-        } else {
-          result.state = undefined;
-        }
-        
-        if (deliveryInfo.zipCode !== undefined && deliveryInfo.zipCode !== null && deliveryInfo.zipCode !== '') {
-          result.zipCode = deliveryInfo.zipCode;
-        } else {
-          result.zipCode = undefined;
-        }
-        
-        if (deliveryInfo.country !== undefined && deliveryInfo.country !== null && deliveryInfo.country !== '') {
-          result.country = deliveryInfo.country;
-        } else {
-          result.country = undefined;
-        }
-        
-        if (deliveryInfo.latitude !== undefined && deliveryInfo.latitude !== null) {
-          result.latitude = deliveryInfo.latitude;
-        } else {
-          result.latitude = undefined;
-        }
-        
-        if (deliveryInfo.longitude !== undefined && deliveryInfo.longitude !== null) {
-          result.longitude = deliveryInfo.longitude;
-        } else {
-          result.longitude = undefined;
-        }
-        
-        if (deliveryInfo.deliveryInstructions !== undefined && deliveryInfo.deliveryInstructions !== null && deliveryInfo.deliveryInstructions !== '') {
-          result.deliveryInstructions = deliveryInfo.deliveryInstructions;
-        } else {
-          result.deliveryInstructions = undefined;
-        }
-        
-        if (deliveryInfo.recipientPhone !== undefined && deliveryInfo.recipientPhone !== null && deliveryInfo.recipientPhone !== '') {
-          result.recipientPhone = deliveryInfo.recipientPhone;
-        } else {
-          result.recipientPhone = undefined;
-        }
-        
-        // Usar null para recipientName que debe eliminarse en DELIVERY
-        result.recipientName = null;
+      result.latitude = deliveryInfo.latitude !== undefined && deliveryInfo.latitude !== null 
+        ? deliveryInfo.latitude : undefined;
+      result.longitude = deliveryInfo.longitude !== undefined && deliveryInfo.longitude !== null 
+        ? deliveryInfo.longitude : undefined;
+      result.recipientName = null;
       
       return result;
     }
 
-    // Por defecto, marcar todos los campos como undefined
-    result.fullAddress = undefined;
-    result.street = undefined;
-    result.number = undefined;
-    result.interiorNumber = undefined;
-    result.neighborhood = undefined;
-    result.city = undefined;
-    result.state = undefined;
-    result.zipCode = undefined;
-    result.country = undefined;
-    result.latitude = undefined;
-    result.longitude = undefined;
-    result.recipientName = undefined;
-    result.recipientPhone = undefined;
-    result.deliveryInstructions = undefined;
-    
+    allFields.forEach(field => result[field] = undefined);
     return result;
   }
 
@@ -1396,6 +1264,7 @@ export class OrdersService {
         total: true,
         createdAt: true,
         scheduledAt: true,
+        notes: true,
         table: {
           id: true,
           name: true,
@@ -1444,7 +1313,6 @@ export class OrdersService {
   }
 
   private mapOrderToFinalizationDto(order: Order): OrderForFinalizationDto {
-    // Agrupar items idénticos
     const groupedItems = new Map<
       string,
       {
@@ -1453,12 +1321,9 @@ export class OrdersService {
       }
     >();
 
-    // Recopilar pantallas de preparación únicas
     const preparationScreens = new Set<string>();
 
-    // Agrupar por producto, variante, modificadores y notas de preparación
     order.orderItems.forEach((item) => {
-      // Agregar pantalla de preparación si existe
       if (item.product?.preparationScreen?.name) {
         preparationScreens.add(item.product.preparationScreen.name);
       }
@@ -1481,7 +1346,6 @@ export class OrdersService {
       groupedItems.get(key)!.items.push(item);
     });
 
-    // Convertir grupos a DTOs
     const orderItemDtos: OrderItemForFinalizationDto[] = [];
 
     groupedItems.forEach(({ items, modifiers }) => {
@@ -1524,7 +1388,6 @@ export class OrdersService {
       orderItemDtos.push(dto);
     });
 
-    // Crear DTO de orden
     const orderDto: OrderForFinalizationDto = {
       id: order.id,
       shiftOrderNumber: order.shiftOrderNumber,
@@ -1594,15 +1457,50 @@ export class OrdersService {
   private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
     const totalPaid = order.payments?.reduce((sum: number, payment: any) => sum + Number(payment.amount), 0) || 0;
 
-    // Recopilar pantallas de preparación únicas
-    const preparationScreens = new Set<string>();
+    // Recopilar pantallas de preparación únicas y calcular sus estados
+    const preparationScreensMap = new Map<string, { 
+      items: any[], 
+      name: string 
+    }>();
+    
     if (order.orderItems) {
       order.orderItems.forEach((item: any) => {
         if (item.product?.preparationScreen?.name) {
-          preparationScreens.add(item.product.preparationScreen.name);
+          const screenName = item.product.preparationScreen.name;
+          if (!preparationScreensMap.has(screenName)) {
+            preparationScreensMap.set(screenName, {
+              name: screenName,
+              items: []
+            });
+          }
+          preparationScreensMap.get(screenName)!.items.push(item);
         }
       });
     }
+
+    const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+      const items = screen.items;
+      const allReady = items.every((item: any) => 
+        item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+      );
+      const someInProgress = items.some((item: any) => 
+        item.preparationStatus === 'IN_PROGRESS'
+      );
+      
+      let status: string;
+      if (allReady) {
+        status = 'READY';
+      } else if (someInProgress) {
+        status = 'IN_PROGRESS';
+      } else {
+        status = 'PENDING';
+      }
+      
+      return {
+        name: screen.name,
+        status
+      };
+    });
 
     const dto: OrderForFinalizationListDto = {
       id: order.id,
@@ -1617,9 +1515,9 @@ export class OrdersService {
       },
     };
 
-    // Agregar pantallas de preparación si existen
-    if (preparationScreens.size > 0) {
-      dto.preparationScreens = Array.from(preparationScreens);
+    if (preparationScreenStatuses.length > 0) {
+      dto.preparationScreens = preparationScreenStatuses.map(s => s.name);
+      dto.preparationScreenStatuses = preparationScreenStatuses;
     }
 
     if (order.table) {
@@ -1639,12 +1537,163 @@ export class OrdersService {
       };
     }
 
+    if (order.ticketImpressions && order.ticketImpressions.length > 0) {
+      dto.ticketImpressionCount = order.ticketImpressions.length;
+    }
+    
+    if (order.notes) {
+      dto.notes = order.notes;
+    }
+
+    return dto;
+  }
+
+  private mapToReceiptListDto(order: any): ReceiptListDto {
+    const totalPaid = order.payments?.reduce((sum: number, payment: any) => 
+      payment.paymentStatus === 'COMPLETED' ? sum + Number(payment.amount) : sum, 0) || 0;
+
+    // Recopilar pantallas de preparación únicas y calcular sus estados
+    const preparationScreensMap = new Map<string, { 
+      items: any[], 
+      name: string 
+    }>();
+    
+    if (order.orderItems) {
+      order.orderItems.forEach((item: any) => {
+        if (item.product?.preparationScreen?.name) {
+          const screenName = item.product.preparationScreen.name;
+          if (!preparationScreensMap.has(screenName)) {
+            preparationScreensMap.set(screenName, {
+              name: screenName,
+              items: []
+            });
+          }
+          preparationScreensMap.get(screenName)!.items.push(item);
+        }
+      });
+    }
+
+    // Calcular el estado de cada pantalla
+    const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+      const items = screen.items;
+      const allReady = items.every((item: any) => 
+        item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+      );
+      const someInProgress = items.some((item: any) => 
+        item.preparationStatus === 'IN_PROGRESS'
+      );
+      
+      let status: string;
+      if (allReady) {
+        status = 'READY';
+      } else if (someInProgress) {
+        status = 'IN_PROGRESS';
+      } else {
+        status = 'PENDING';
+      }
+      
+      return {
+        name: screen.name,
+        status
+      };
+    });
+
+    const dto: ReceiptListDto = {
+      id: order.id,
+      shiftOrderNumber: order.shiftOrderNumber,
+      orderType: order.orderType,
+      orderStatus: order.orderStatus,
+      total: Number(order.total),
+      createdAt: order.createdAt,
+      finalizedAt: order.finalizedAt,
+      scheduledAt: order.scheduledAt || undefined,
+      paymentsSummary: {
+        totalPaid,
+      },
+    };
+
+    // Agregar pantallas de preparación y sus estados
+    if (preparationScreenStatuses.length > 0) {
+      dto.preparationScreenStatuses = preparationScreenStatuses;
+    }
+
+    if (order.table) {
+      dto.table = {
+        id: order.table.id,
+        number: order.table.number || order.table.name,
+        name: order.table.name,
+        isTemporary: order.table.isTemporary || false,
+        area: order.table.area ? {
+          name: order.table.area.name,
+        } : undefined,
+      };
+    }
+
+    if (order.deliveryInfo) {
+      dto.deliveryInfo = {
+        recipientName: order.deliveryInfo.recipientName || undefined,
+        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
+        fullAddress: order.deliveryInfo.fullAddress || undefined,
+      };
+    }
+
     // Agregar contador de impresiones de tickets
     if (order.ticketImpressions && order.ticketImpressions.length > 0) {
       dto.ticketImpressionCount = order.ticketImpressions.length;
     }
+    
+    // Agregar notas si existen
+    if (order.notes) {
+      dto.notes = order.notes;
+    }
 
     return dto;
+  }
+
+  async getReceiptsList(
+    paginationOptions: IPaginationOptions,
+    filterOptions?: {
+      startDate?: Date;
+      endDate?: Date;
+      orderType?: OrderType;
+    },
+  ): Promise<{
+    data: ReceiptListDto[];
+    total: number;
+  }> {
+    const where: any = {
+      orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
+    };
+
+    if (filterOptions?.orderType) {
+      where.orderType = filterOptions.orderType;
+    }
+
+    if (filterOptions?.startDate && filterOptions?.endDate) {
+      where.finalizedAt = Between(filterOptions.startDate, filterOptions.endDate);
+    }
+
+    const [orders, total] = await this.orderRepository.findManyWithPagination({
+      filterOptions: {
+        orderStatuses: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
+        orderType: filterOptions?.orderType,
+        startDate: filterOptions?.startDate,
+        endDate: filterOptions?.endDate,
+      },
+      paginationOptions,
+    });
+
+    const ordersWithDetails = await Promise.all(
+      orders.map(async (order) => {
+        const completeOrder = await this.orderRepository.findById(order.id);
+        return this.mapToReceiptListDto(completeOrder);
+      })
+    );
+
+    return {
+      data: ordersWithDetails,
+      total,
+    };
   }
 
   async finalizeMultipleOrders(
@@ -1704,7 +1753,6 @@ export class OrdersService {
   async changeOrderStatus(id: string, newStatus: OrderStatus): Promise<Order> {
     const order = await this.findOne(id);
 
-    // Validar transiciones de estado permitidas
     const validTransitions: Record<OrderStatus, OrderStatus[]> = {
       [OrderStatus.PENDING]: [
         OrderStatus.IN_PROGRESS,
@@ -1736,10 +1784,8 @@ export class OrdersService {
       );
     }
 
-    // Actualizar el estado de la orden
     const updatedOrder = await this.update(id, { orderStatus: newStatus });
 
-    // Liberar la mesa si la orden se completa o cancela
     if (
       order.tableId &&
       (newStatus === OrderStatus.COMPLETED ||
@@ -1808,10 +1854,8 @@ export class OrdersService {
   }
 
   private async createInitialScreenStatuses(orderId: string): Promise<void> {
-    // Obtener todos los items de la orden con sus productos
     const orderItems = await this.orderItemRepository.findByOrderId(orderId);
 
-    // Agrupar items por pantalla de preparación
     const screenIds = new Set<string>();
 
     for (const item of orderItems) {
@@ -1820,7 +1864,6 @@ export class OrdersService {
       }
     }
 
-    // Crear estado inicial para cada pantalla
     for (const screenId of screenIds) {
       await this.screenStatusRepository.create({
         orderId,
@@ -1834,10 +1877,8 @@ export class OrdersService {
     orderId: string,
     existingOrder: Order,
   ): Promise<void> {
-    // Obtener todos los items de la orden con sus productos
     const orderItems = await this.orderItemRepository.findByOrderId(orderId);
 
-    // Agrupar items por pantalla de preparación
     const itemsByScreen = new Map<string, OrderItem[]>();
 
     for (const item of orderItems) {
@@ -1850,9 +1891,7 @@ export class OrdersService {
       }
     }
 
-    // Para cada pantalla que tenga items
     for (const [screenId, items] of itemsByScreen) {
-      // Verificar si la pantalla ya tiene un estado
       const existingStatus =
         await this.screenStatusRepository.findByOrderAndScreen(
           orderId,
@@ -1860,7 +1899,6 @@ export class OrdersService {
         );
 
       if (existingStatus) {
-        // Si la pantalla estaba READY y se agregaron nuevos items (PENDING)
         const hasPendingItems = items.some(
           (item) => item.preparationStatus === PreparationStatus.PENDING,
         );
@@ -1869,14 +1907,12 @@ export class OrdersService {
           existingStatus.status === PreparationScreenStatus.READY &&
           hasPendingItems
         ) {
-          // Regresar la pantalla a IN_PREPARATION
           await this.screenStatusRepository.update(existingStatus.id, {
             status: PreparationScreenStatus.IN_PREPARATION,
             completedAt: null,
             completedById: null,
           });
 
-          // Actualizar el estado de la orden si estaba READY
           if (existingOrder.orderStatus === OrderStatus.READY) {
             await this.orderRepository.update(orderId, {
               orderStatus: OrderStatus.IN_PREPARATION,
@@ -1884,7 +1920,6 @@ export class OrdersService {
           }
         }
       } else {
-        // Si es una pantalla nueva, crear el estado inicial
         await this.screenStatusRepository.create({
           orderId,
           preparationScreenId: screenId,
@@ -1894,24 +1929,17 @@ export class OrdersService {
     }
   }
 
-  /**
-   * Maneja la creación o actualización de delivery_info para una orden
-   * Siempre intenta reutilizar un registro existente antes de crear uno nuevo
-   */
   private async handleDeliveryInfo(
     orderId: string,
     deliveryData: Partial<DeliveryInfo>,
     orderType: OrderType,
   ): Promise<DeliveryInfo | null> {
-    // Si el tipo de orden es DINE_IN, no necesitamos delivery_info
     if (orderType === OrderType.DINE_IN) {
       return null;
     }
 
-    // Limpiar los datos según el tipo de orden
     const cleanedData = this.cleanDeliveryInfoByOrderType(deliveryData, orderType);
     
-    // Verificar si hay campos válidos (null es válido porque indica que debe borrarse)
     const hasValidFields = Object.entries(cleanedData).some(
       ([key, value]) => value !== undefined,
     );
@@ -1920,8 +1948,6 @@ export class OrdersService {
       return null;
     }
 
-    // Buscar si existe un delivery_info para esta orden
-    // Importar la entidad correcta
     const DeliveryInfoEntity = await import('./infrastructure/persistence/relational/entities/delivery-info.entity');
     const DeliveryInfoRepo = this.dataSource.getRepository(DeliveryInfoEntity.DeliveryInfoEntity);
     
@@ -1930,14 +1956,12 @@ export class OrdersService {
     });
 
     if (existingDeliveryInfo) {
-      // Actualizar el registro existente
       return {
         ...existingDeliveryInfo,
         ...cleanedData,
         updatedAt: new Date(),
       } as DeliveryInfo;
     } else {
-      // Crear nuevo registro
       const newId = uuidv4();
       return {
         id: newId,

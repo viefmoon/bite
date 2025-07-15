@@ -30,7 +30,12 @@ export interface OrderForFinalizationList {
     fullAddress?: string;
   };
   preparationScreens?: string[];
+  preparationScreenStatuses?: Array<{
+    name: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'READY';
+  }>;
   ticketImpressionCount?: number;
+  notes?: string;
 }
 
 // Tipo completo para el detalle de orden

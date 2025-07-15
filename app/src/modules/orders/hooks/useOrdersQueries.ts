@@ -1,31 +1,29 @@
-import { useMemo } from 'react'; // Importar useMemo
+import { useMemo } from 'react';
 
 import {
   useMutation,
   useQuery,
   useQueryClient,
   UseQueryResult,
-} from '@tanstack/react-query'; // Añadir useQueries y QueryObserverResult
+} from '@tanstack/react-query';
 import { orderService } from '../services/orderService';
-import type { Order } from '../../../app/schemas/domain/order.schema'; // Ruta corregida
+import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
 import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
-import type { PaginatedResponse } from '../../../app/types/api.types'; // Corregir ruta relativa
+import type { PaginatedResponse } from '../../../app/types/api.types';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import type { UpdateOrderPayload } from '../types/update-order.types'; // Importar payload
+import type { UpdateOrderPayload } from '../types/update-order.types';
 
-// --- Query Keys (si se necesitan queries futuras para órdenes) ---
+// Query Keys
 const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
   list: (filters: FindAllOrdersDto) => [...orderKeys.lists(), filters] as const,
-  openCurrentShift: () =>
-    [...orderKeys.all, 'list', 'open-current-shift'] as const, // Clave para órdenes abiertas del turno actual
-  openOrdersList: () => [...orderKeys.all, 'list', 'open-orders-list'] as const, // Clave para órdenes abiertas optimizadas
+  openOrdersList: () => [...orderKeys.all, 'list', 'open-orders-list'] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
-  // detail: (id: string) => [...orderKeys.details(), id] as const, // Ejemplo
+  detail: (id: string) => [...orderKeys.details(), id] as const,
 };
 
 /**
@@ -54,6 +52,7 @@ export const useCreateOrderMutation = () => {
  */
 export const useUpdateOrderMutation = () => {
   const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Definir el tipo de las variables de la mutación
   type UpdateVariables = { orderId: string; payload: UpdateOrderPayload };
@@ -63,9 +62,8 @@ export const useUpdateOrderMutation = () => {
       orderService.updateOrder(orderId, payload),
     onSuccess: (updatedOrder, variables) => {
       // Invalidar queries relevantes para refrescar datos
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() }); // Invalida todas las listas
-      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() }); // Invalida la lista de órdenes abiertas del turno actual
-      // IMPORTANTE: Invalidar también el detalle específico de la orden
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), variables.orderId],
       });
@@ -84,7 +82,6 @@ export const useUpdateOrderMutation = () => {
         message: `Error al actualizar orden #${variables.orderId}: ${message}`,
         type: 'error',
       });
-      // Error manejado en el componente
     },
   });
 };
@@ -101,8 +98,7 @@ export const useCancelOrderMutation = () => {
     onSuccess: (cancelledOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() });
-      // Invalidar también el detalle específico
+      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), orderId],
       });
@@ -120,7 +116,6 @@ export const useCancelOrderMutation = () => {
         message: `Error al cancelar orden: ${message}`,
         type: 'error',
       });
-      // Error manejado en el componente
     },
   });
 };
@@ -138,8 +133,7 @@ export const useCompleteOrderMutation = () => {
     onSuccess: (completedOrder, orderId) => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openCurrentShift() });
-      // Invalidar también el detalle específico
+      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
       queryClient.invalidateQueries({
         queryKey: [...orderKeys.details(), orderId],
       });
@@ -155,85 +149,10 @@ export const useCompleteOrderMutation = () => {
         message: `Error al finalizar orden: ${message}`,
         type: 'error',
       });
-      // Error manejado en el componente
     },
   });
 };
 
-// Añadir aquí otros hooks para órdenes si son necesarios (useGetOrders, etc.)
-
-/**
- * Hook para obtener la lista de órdenes con filtros y paginación.
- */
-export const useGetOrdersQuery = (
-  filters: FindAllOrdersDto = {},
-  options?: { enabled?: boolean },
-): UseQueryResult<PaginatedResponse<Order>, ApiError> => {
-  const queryKey = orderKeys.list(filters);
-  return useQuery<PaginatedResponse<Order>, ApiError>({
-    queryKey: queryKey,
-    queryFn: () => orderService.getOrders(filters), // Usar la función del servicio que añadiremos
-    enabled: options?.enabled ?? true,
-  });
-};
-
-/**
- * Hook para obtener las órdenes abiertas (PENDING, IN_PROGRESS, READY).
- */
-/**
- * Hook para solicitar la impresión del ticket de cocina.
- */
-export const usePrintKitchenTicketMutation = () => {
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  // Definir el tipo de las variables de la mutación
-  type PrintVariables = { orderId: string; printerId: string };
-
-  return useMutation<void, ApiError, PrintVariables>({
-    mutationFn: ({ orderId, printerId }) =>
-      orderService.printOrderTicket(orderId, printerId), // Usar la función renombrada
-    onSuccess: (_, variables) => {
-      // Usar el número del turno si está disponible en las variables o buscarlo si es necesario
-      // Por ahora, usamos solo el ID para el mensaje
-      showSnackbar({
-        message: `Ticket de cocina para orden ID ${variables.orderId} enviado a impresora.`,
-        type: 'success',
-      });
-      // No es necesario invalidar queries aquí, ya que solo es una acción
-    },
-    onError: (error) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({
-        message: `Error al imprimir ticket: ${message}`,
-        type: 'error',
-      });
-      // Error manejado en el componente
-    },
-  });
-};
-
-export const useGetOpenOrdersQuery = (options?: {
-  enabled?: boolean;
-}): UseQueryResult<Order[], ApiError> => {
-  // Devuelve Order[] directamente
-  const queryKey = orderKeys.openCurrentShift(); // Usar la clave específica del turno actual
-
-  return useQuery<Order[], ApiError>({
-    queryKey: queryKey,
-    queryFn: () => orderService.getOpenOrdersCurrentShift(), // Llamar a la función del servicio del turno actual
-    enabled: options?.enabled ?? true,
-    refetchInterval: 10000, // Actualizar cada 10 segundos
-    refetchIntervalInBackground: false, // No actualizar cuando la app está en background
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 5000, // Los datos se consideran frescos por 5 segundos
-    gcTime: 10 * 60 * 1000, // Mantener en caché por 10 minutos
-    // IMPORTANTE: Usar placeholderData en lugar de keepPreviousData (deprecated en v5)
-    placeholderData: (previousData) => previousData,
-  });
-
-  // La lógica de useQueries y combinación se elimina
-};
 
 /**
  * Hook optimizado para obtener las órdenes abiertas con campos mínimos.

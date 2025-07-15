@@ -34,12 +34,6 @@ import OrderHeader from './OrderHeader';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
-import {
-  safeTimeStringToDate as _safeTimeStringToDate,
-  safeDateToTimeString as _safeDateToTimeString,
-  getNextAvailableTime as _getNextAvailableTime,
-  parseDateFromBackend as _parseDateFromBackend,
-} from '@/app/utils/dateTimeHelpers';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -70,23 +64,11 @@ import {
   CustomizationAction,
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
-// Definir la estructura esperada para los items en el DTO de backend
-interface OrderItemModifierDto {
-  modifierId: string;
-  quantity?: number;
-  price?: number | null;
-}
-
-interface OrderItemDtoForBackend {
-  id?: string; // ID opcional para actualizaciones
-  productId: string;
-  productVariantId?: string | null;
-  basePrice: number;
-  finalPrice: number;
-  preparationNotes?: string | null;
-  productModifiers?: OrderItemModifierDto[];
-  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
-}
+// Importar tipos desde update-order.types.ts
+import type { 
+  OrderItemDtoForBackend, 
+  OrderItemModifierDto 
+} from '../types/update-order.types';
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
 export interface OrderDetailsForBackend {

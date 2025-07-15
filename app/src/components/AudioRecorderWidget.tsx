@@ -233,15 +233,11 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     ) {
       hasCompletedRef.current = true;
 
-      // Guardar valores antes de resetear
-      const uri = audioUri;
-      const trans = transcription;
-
       // Reset primero para evitar loops
       resetRecording();
 
       // Luego llamar a onRecordingComplete
-      onRecordingComplete(uri, trans);
+      onRecordingComplete(audioUri, transcription);
 
       // Resetear el flag después de un tiempo
       setTimeout(() => {

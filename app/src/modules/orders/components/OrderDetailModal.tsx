@@ -95,12 +95,9 @@ export const OrderDetailContent: React.FC<{
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Si se pasan los datos de la orden, usarlos directamente
-  const order = orderData;
-
   return (
     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-      {!order ? (
+      {!orderData ? (
         <View style={styles.errorContainer}>
           <Icon
             name="alert-circle-outline"
@@ -118,13 +115,13 @@ export const OrderDetailContent: React.FC<{
             <View style={styles.infoHeaderRow}>
               <Text style={styles.infoHeaderLabel}>Creada:</Text>
               <Text style={styles.infoHeaderValue}>
-                {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
+                {format(new Date(orderData.createdAt), 'HH:mm', { locale: es })}
               </Text>
             </View>
             <View style={styles.infoHeaderRow}>
               <Text style={styles.infoHeaderLabel}>Total:</Text>
               <Text style={[styles.infoHeaderValue, styles.totalAmount]}>
-                ${Number(order.total || 0).toFixed(2)}
+                ${Number(orderData.total || 0).toFixed(2)}
               </Text>
             </View>
           </View>
@@ -133,10 +130,10 @@ export const OrderDetailContent: React.FC<{
           <Card style={styles.itemsCard}>
             <Card.Content>
               <Text style={styles.sectionTitle}>
-                Artículos ({order.orderItems?.length || 0})
+                Artículos ({orderData.orderItems?.length || 0})
               </Text>
 
-              {order.orderItems?.map((item: any, index: number) => (
+              {orderData.orderItems?.map((item: any, index: number) => (
                 <View key={item.id || index} style={styles.itemRow}>
                   <View style={styles.itemContent}>
                     <View style={styles.itemHeader}>
@@ -205,7 +202,7 @@ export const OrderDetailContent: React.FC<{
                       </View>
                     </View>
                   </View>
-                  {index < order.orderItems.length - 1 && (
+                  {index < orderData.orderItems.length - 1 && (
                     <Divider style={styles.itemDivider} />
                   )}
                 </View>
@@ -228,9 +225,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Usar los datos pasados como prop
-  const order = orderData;
-
   if (!visible) return null;
 
   return (
@@ -247,18 +241,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <Text style={styles.title}>
                 {orderNumber ? `Orden #${orderNumber}` : 'Detalles de la Orden'}
               </Text>
-              {order && (
+              {orderData && (
                 <Chip
                   mode="flat"
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getStatusColor(order.orderStatus, theme),
+                      backgroundColor: getStatusColor(orderData.orderStatus, theme),
                     },
                   ]}
                   textStyle={styles.statusChipText}
                 >
-                  {getStatusLabel(order.orderStatus)}
+                  {getStatusLabel(orderData.orderStatus)}
                 </Chip>
               )}
             </View>

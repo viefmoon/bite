@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
+import { formatOrderTypeShort, getStatusColor } from '@/app/utils/orderFormatters';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 
@@ -130,20 +131,9 @@ export const ReceiptsScreen: React.FC = () => {
     }
   }, [orderToRecover, recoverOrderMutation]);
 
-  const formatOrderTypeShort = (type: string): string => {
-    switch (type) {
-      case OrderTypeEnum.DINE_IN:
-        return '🍽️ Local';
-      case OrderTypeEnum.DELIVERY:
-        return '🚚 Envío';
-      case OrderTypeEnum.TAKE_AWAY:
-        return '🥡 Llevar';
-      default:
-        return type;
-    }
-  };
 
-  const getStatusColor = (status: string) => {
+  // Función específica para el color de estado en recibos
+  const getReceiptStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
         return theme.colors.primary;
@@ -244,7 +234,7 @@ export const ReceiptsScreen: React.FC = () => {
                 mode="flat"
                 style={[
                   styles.statusChip,
-                  { backgroundColor: getStatusColor(item.orderStatus) },
+                  { backgroundColor: getReceiptStatusColor(item.orderStatus) },
                 ]}
                 textStyle={styles.statusChipText}
               >

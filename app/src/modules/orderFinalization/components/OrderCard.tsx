@@ -5,6 +5,12 @@ import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import {
+  formatOrderTypeShort,
+  formatOrderStatus,
+  getStatusColor,
+  getPaymentStatus,
+} from '@/app/utils/orderFormatters';
 
 interface OrderCardProps {
   order: OrderForFinalizationList;
@@ -14,19 +20,6 @@ interface OrderCardProps {
   onPrintPress?: (order: OrderForFinalizationList) => void;
 }
 
-const formatOrderTypeShort = (type: string): string => {
-  switch (type) {
-    case 'DINE_IN':
-      return '🍽️ Local';
-    case 'TAKEOUT':
-    case 'TAKE_AWAY':
-      return '🥡 Llevar';
-    case 'DELIVERY':
-      return '🚚 Envío';
-    default:
-      return type;
-  }
-};
 
 export const OrderCard = React.memo<OrderCardProps>(
   ({ order, isSelected, onToggleSelection, onShowDetails, onPrintPress }) => {
@@ -55,49 +48,13 @@ export const OrderCard = React.memo<OrderCardProps>(
       }
     }
 
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case 'PENDING':
-          return '#FFA000'; // Orange
-        case 'IN_PROGRESS':
-          return theme.colors.primary;
-        case 'READY':
-          return '#4CAF50'; // Green
-        case 'DELIVERED':
-          return '#9C27B0'; // Purple - better contrast
-        default:
-          return theme.colors.onSurfaceVariant;
-      }
-    };
-
-    const formatOrderStatus = (status: string) => {
-      switch (status) {
-        case 'PENDING':
-          return 'Pendiente';
-        case 'IN_PROGRESS':
-          return 'En preparación';
-        case 'READY':
-          return 'Listo';
-        case 'DELIVERED':
-          return 'Entregado';
-        default:
-          return status;
-      }
-    };
 
     const totalAmount =
       typeof order.total === 'string' ? parseFloat(order.total) : order.total;
     const totalPaid = order.paymentsSummary?.totalPaid || 0;
     const pendingAmount = totalAmount - totalPaid;
 
-    const getPaymentStatus = () => {
-      if (totalPaid >= totalAmount) {
-        return 'paid';
-      } else if (totalPaid > 0) {
-        return 'partial';
-      }
-      return 'pending';
-    };
+    const paymentStatus = getPaymentStatus(order);
 
     return (
       <TouchableOpacity
@@ -176,7 +133,6 @@ export const OrderCard = React.memo<OrderCardProps>(
                       </Text>
                     )}
                     {(() => {
-                      const paymentStatus = getPaymentStatus();
                       if (paymentStatus === 'paid') {
                         return (
                           <View
@@ -233,36 +189,43 @@ export const OrderCard = React.memo<OrderCardProps>(
                         );
                       }
                     })()}
-                    {order.preparationScreens &&
-                      order.preparationScreens.length > 0 && (
+                    {order.preparationScreenStatuses &&
+                      order.preparationScreenStatuses.length > 0 && (
                         <>
-                          {order.preparationScreens.map((screen, index) => (
-                            <View
-                              key={`${order.id}-screen-${index}`}
-                              style={[
-                                styles.inlinePreparationBadge,
-                                {
-                                  backgroundColor: isSelected
-                                    ? theme.colors.primaryContainer
-                                    : theme.colors.surfaceVariant,
-                                  borderColor: theme.colors.outline,
-                                },
-                              ]}
-                            >
-                              <Text
+                          {order.preparationScreenStatuses.map((screen, index) => {
+                            const backgroundColor = 
+                              screen.status === 'READY' ? '#4CAF50' :
+                              screen.status === 'IN_PROGRESS' ? '#FFA000' :
+                              isSelected ? theme.colors.primaryContainer : theme.colors.surfaceVariant;
+                            
+                            const textColor = 
+                              screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
+                              isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant;
+                              
+                            return (
+                              <View
+                                key={`${order.id}-screen-${index}`}
                                 style={[
-                                  styles.inlinePreparationText,
+                                  styles.inlinePreparationBadge,
                                   {
-                                    color: isSelected
-                                      ? theme.colors.onPrimaryContainer
-                                      : theme.colors.onSurfaceVariant,
+                                    backgroundColor,
+                                    borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
                                   },
                                 ]}
                               >
-                                🍳 {screen}
-                              </Text>
-                            </View>
-                          ))}
+                                <Text
+                                  style={[
+                                    styles.inlinePreparationText,
+                                    { color: textColor },
+                                  ]}
+                                >
+                                  {screen.status === 'READY' ? '✓ ' : 
+                                   screen.status === 'IN_PROGRESS' ? '⏳ ' : ''}
+                                  🍳 {screen.name}
+                                </Text>
+                              </View>
+                            );
+                          })}
                         </>
                       )}
                   </View>
@@ -281,15 +244,16 @@ export const OrderCard = React.memo<OrderCardProps>(
                   </Chip>
                   <View style={styles.actionsContainer}>
                     {onPrintPress && (
-                      <View style={styles.printContainer}>
+                      <TouchableOpacity
+                        style={styles.printContainer}
+                        onPress={() => onPrintPress(order)}
+                        activeOpacity={0.7}
+                      >
                         <IconButton
                           icon="printer"
                           size={32}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            onPrintPress(order);
-                          }}
                           style={styles.printButton}
+                          disabled
                         />
                         {(order.ticketImpressionCount ?? 0) > 0 && (
                           <View style={styles.printCountBadge}>
@@ -298,7 +262,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                             </Text>
                           </View>
                         )}
-                      </View>
+                      </TouchableOpacity>
                     )}
                     <View style={styles.checkboxContainer}>
                       <Checkbox

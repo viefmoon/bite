@@ -12,10 +12,9 @@ import {
   Icon,
   Surface,
 } from 'react-native-paper';
-import { useAppTheme, AppTheme } from '../../../app/styles/theme'; // Corregida ruta
+import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { OrdersStackParamList } from '../../../app/navigation/types'; // Corregida ruta
-import { useRoute } from '@react-navigation/native';
+import type { OrdersStackParamList } from '../../../app/navigation/types';
 import { useAuthStore } from '../../../app/store/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
@@ -24,120 +23,33 @@ import {
   useGetOpenOrdersListQuery,
   useUpdateOrderMutation,
   useCancelOrderMutation,
-} from '../hooks/useOrdersQueries'; // Importar hooks y mutaciones
-import { useCreateBulkAdjustmentsMutation } from '../hooks/useAdjustmentQueries'; // Importar mutations de ajustes
+} from '../hooks/useOrdersQueries';
 import {
-  Order,
   OrderOpenList,
   OrderStatusEnum,
-  type OrderStatus,
   OrderType,
   OrderTypeEnum,
-} from '../types/orders.types'; // Importar OrderStatusEnum y el tipo OrderStatus
-import { format } from 'date-fns'; // Para formatear fechas
-import { es } from 'date-fns/locale'; // Locale español
-import { PrintTicketModal } from '../components/PrintTicketModal'; // Importar el nuevo modal
-import { orderPrintService } from '../services/orderPrintService'; // Importar el servicio de impresión
-// Importar OrderCartDetail y el tipo de payload
-import OrderCartDetail, {
-  OrderDetailsForBackend,
-} from '../components/OrderCartDetail';
-import { useListState } from '../../../app/hooks/useListState'; // Para estado de lista consistente
-import { CartItem, CartProvider } from '../context/CartContext'; // Para el tipo CartItem y CartProvider
+} from '../types/orders.types';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
+import { orderPrintService } from '../services/orderPrintService';
+import OrderCartDetail from '../components/OrderCartDetail';
+import { useListState } from '../../../app/hooks/useListState';
+import { CartItem, CartProvider } from '../context/CartContext';
+import {
+  formatOrderStatus,
+  formatOrderType,
+  formatOrderTypeShort,
+  getPaymentStatus,
+  getStatusColor,
+} from '../../../app/utils/orderFormatters';
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
   'OpenOrders'
 >;
 
-// Helper para formatear el estado de la orden
-const formatOrderStatus = (status: OrderStatus): string => {
-  switch (status) {
-    case OrderStatusEnum.PENDING:
-      return 'Pendiente';
-    case OrderStatusEnum.IN_PROGRESS:
-      return 'En Progreso';
-    case OrderStatusEnum.IN_PREPARATION:
-      return 'En Preparación';
-    case OrderStatusEnum.READY:
-      return 'Lista';
-    case OrderStatusEnum.DELIVERED:
-      return 'Entregada';
-    case OrderStatusEnum.COMPLETED:
-      return 'Completada';
-    case OrderStatusEnum.CANCELLED:
-      return 'Cancelada';
-    default:
-      return status;
-  }
-};
-
-// Helper para formatear el tipo de orden
-const formatOrderType = (type: OrderType): string => {
-  switch (type) {
-    case OrderTypeEnum.DINE_IN:
-      return '🍽️ Para Comer Aquí';
-    case OrderTypeEnum.TAKE_AWAY:
-      return '🥡 Para Llevar';
-    case OrderTypeEnum.DELIVERY:
-      return '🚚 Domicilio';
-    default:
-      return type;
-  }
-};
-
-// Helper para formatear el tipo de orden corto (para el título)
-const formatOrderTypeShort = (type: OrderType): string => {
-  switch (type) {
-    case OrderTypeEnum.DINE_IN:
-      return '🍽️ Local';
-    case OrderTypeEnum.TAKE_AWAY:
-      return '🥡 Llevar';
-    case OrderTypeEnum.DELIVERY:
-      return '🚚 Envío';
-    default:
-      return type;
-  }
-};
-
-// Helper para determinar el estado de pago de una orden
-const getPaymentStatus = (
-  order: Order | OrderOpenList,
-): 'unpaid' | 'partial' | 'paid' => {
-  // Si es OrderOpenList, usar paymentsSummary
-  if ('paymentsSummary' in order) {
-    const totalPaid = order.paymentsSummary?.totalPaid || 0;
-    const orderTotal = order.total || 0;
-
-    if (totalPaid >= orderTotal) {
-      return 'paid';
-    } else if (totalPaid > 0) {
-      return 'partial';
-    } else {
-      return 'unpaid';
-    }
-  }
-
-  // Si es Order completa, usar payments
-  if (!order.payments || order.payments.length === 0) {
-    return 'unpaid';
-  }
-
-  // Sumar todos los pagos completados
-  const totalPaid = order.payments
-    .filter((payment: any) => payment.paymentStatus === 'COMPLETED')
-    .reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0);
-
-  const orderTotal = order.total || 0;
-
-  if (totalPaid === 0) {
-    return 'unpaid';
-  } else if (totalPaid >= orderTotal) {
-    return 'paid';
-  } else {
-    return 'partial';
-  }
-};
 
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
@@ -182,20 +94,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     return ordersData.filter((order) => order.orderType === selectedOrderType);
   }, [ordersData, selectedOrderType]);
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatusEnum.PENDING:
-        return '#FFA000'; // Orange
-      case OrderStatusEnum.IN_PROGRESS:
-        return theme.colors.primary;
-      case OrderStatusEnum.READY:
-        return '#4CAF50'; // Green
-      case OrderStatusEnum.DELIVERED:
-        return theme.colors.tertiary;
-      default:
-        return theme.colors.onSurfaceVariant;
-    }
-  };
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -365,27 +263,40 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     {order.preparationScreenStatuses &&
                       order.preparationScreenStatuses.length > 0 && (
                         <>
-                          {order.preparationScreenStatuses.map((screen, index) => (
-                            <View
-                              key={`${order.id}-screen-${index}`}
-                              style={[
-                                styles.inlinePreparationBadge,
-                                {
-                                  backgroundColor: theme.colors.surfaceVariant,
-                                  borderColor: theme.colors.outline,
-                                },
-                              ]}
-                            >
-                              <Text
+                          {order.preparationScreenStatuses.map((screen, index) => {
+                            const backgroundColor = 
+                              screen.status === 'READY' ? '#4CAF50' :
+                              screen.status === 'IN_PROGRESS' ? '#FFA000' :
+                              theme.colors.surfaceVariant;
+                            
+                            const textColor = 
+                              screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
+                              theme.colors.onSurfaceVariant;
+                              
+                            return (
+                              <View
+                                key={`${order.id}-screen-${index}`}
                                 style={[
-                                  styles.inlinePreparationText,
-                                  { color: theme.colors.onSurfaceVariant },
+                                  styles.inlinePreparationBadge,
+                                  {
+                                    backgroundColor,
+                                    borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
+                                  },
                                 ]}
                               >
-                                🍳 {screen.name}
-                              </Text>
-                            </View>
-                          ))}
+                                <Text
+                                  style={[
+                                    styles.inlinePreparationText,
+                                    { color: textColor },
+                                  ]}
+                                >
+                                  {screen.status === 'READY' ? '✓ ' : 
+                                   screen.status === 'IN_PROGRESS' ? '⏳ ' : ''}
+                                  🍳 {screen.name}
+                                </Text>
+                              </View>
+                            );
+                          })}
                         </>
                       )}
                   </View>
@@ -396,22 +307,23 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     mode="flat"
                     style={[
                       styles.statusChip,
-                      { backgroundColor: getStatusColor(order.orderStatus) },
+                      { backgroundColor: getStatusColor(order.orderStatus, theme) },
                     ]}
                     textStyle={styles.statusChipText}
                   >
                     {formatOrderStatus(order.orderStatus)}
                   </Chip>
                   <View style={styles.actionsContainer}>
-                    <View style={styles.printContainer}>
+                    <TouchableOpacity
+                      style={styles.printContainer}
+                      onPress={() => handleOpenPrintModal(order)}
+                      activeOpacity={0.7}
+                    >
                       <IconButton
                         icon="printer"
                         size={32}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleOpenPrintModal(order);
-                        }}
                         style={styles.printButton}
+                        disabled
                       />
                       {(order.ticketImpressionCount ?? 0) > 0 && (
                         <View style={styles.printCountBadge}>
@@ -420,7 +332,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                           </Text>
                         </View>
                       )}
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -891,25 +803,24 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 // Cerrar el modal temporalmente para navegar
                 setIsEditModalVisible(false);
 
-                const orderId = editingOrderId;
                 const orderNumber = ordersData?.find(
                   (o) => o.id === editingOrderId,
                 )?.shiftOrderNumber;
 
                 // Navegar a añadir productos
                 setTimeout(() => {
-                  const existingProducts = temporaryProducts[orderId!] || [];
+                  const existingProducts = temporaryProducts[editingOrderId!] || [];
                   navigation.navigate('AddProductsToOrder', {
-                    orderId: orderId!,
+                    orderId: editingOrderId!,
                     orderNumber: orderNumber!,
                     // Pasar productos temporales existentes si los hay
                     existingTempProducts: existingProducts,
-                    existingOrderItemsCount: existingItemsCount[orderId!] || 0, // Usar el conteo rastreado
+                    existingOrderItemsCount: existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
                     onProductsAdded: (newProducts) => {
                       // Actualizar productos temporales para esta orden
                       setTemporaryProducts((prev) => ({
                         ...prev,
-                        [orderId!]: newProducts,
+                        [editingOrderId!]: newProducts,
                       }));
                       // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
                       // Reabrir el modal cuando regresemos
@@ -1059,7 +970,7 @@ const createStyles = (
       flex: 1,
     },
     listContentContainer: {
-      padding: theme.spacing.s, // Reducido de theme.spacing.m
+      padding: theme.spacing.s,
       paddingBottom: theme.spacing.l * 2,
       flexGrow: 1,
     },

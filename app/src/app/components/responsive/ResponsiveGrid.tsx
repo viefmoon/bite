@@ -138,21 +138,20 @@ export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   // Procesar children en filas
   const processedChildren = useMemo(() => {
     const childArray = Children.toArray(children);
-    const itemsPerRow = calculateColumns;
     const gridRows: ReactNode[][] = [];
 
     // Agrupar children en filas
-    for (let i = 0; i < childArray.length; i += itemsPerRow) {
-      const row = childArray.slice(i, i + itemsPerRow);
+    for (let i = 0; i < childArray.length; i += calculateColumns) {
+      const row = childArray.slice(i, i + calculateColumns);
 
       // Si fillLastRow está activo y es la última fila incompleta
       if (
         fillLastRow &&
-        row.length < itemsPerRow &&
-        i + itemsPerRow >= childArray.length
+        row.length < calculateColumns &&
+        i + calculateColumns >= childArray.length
       ) {
         // Agregar elementos vacíos para completar la fila
-        while (row.length < itemsPerRow) {
+        while (row.length < calculateColumns) {
           row.push(
             <View key={`empty-${i}-${row.length}`} style={{ flex: 1 }} />,
           );

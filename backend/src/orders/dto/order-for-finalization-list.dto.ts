@@ -70,8 +70,28 @@ export class OrderForFinalizationListDto {
   preparationScreens?: string[];
 
   @ApiProperty({ 
+    type: 'array', 
+    items: { 
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] }
+      }
+    },
+    required: false,
+    description: 'Estados de las pantallas de preparación'
+  })
+  preparationScreenStatuses?: Array<{ name: string; status: string }>;
+
+  @ApiProperty({ 
     description: 'Cantidad de tickets impresos para esta orden', 
     required: false
   })
   ticketImpressionCount?: number;
+
+  @ApiProperty({ 
+    description: 'Notas de la orden', 
+    required: false
+  })
+  notes?: string;
 }

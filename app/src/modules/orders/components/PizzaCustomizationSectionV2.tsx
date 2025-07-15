@@ -180,23 +180,22 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
       } else if (selectedFlavors.length === 1) {
         // Segundo sabor - convertir a mitades
         const existingFlavor = selectedFlavors[0];
-        const newSelections = nonFlavorSelections;
 
         // Cambiar el sabor existente a mitad 1
-        newSelections.push({
+        nonFlavorSelections.push({
           pizzaCustomizationId: existingFlavor.pizzaCustomizationId,
           half: PizzaHalf.HALF_1,
           action: CustomizationAction.ADD,
         });
 
         // Agregar el nuevo sabor a mitad 2
-        newSelections.push({
+        nonFlavorSelections.push({
           pizzaCustomizationId: flavorId,
           half: PizzaHalf.HALF_2,
           action: CustomizationAction.ADD,
         });
 
-        onCustomizationChange(newSelections);
+        onCustomizationChange(nonFlavorSelections);
       }
     }
   };

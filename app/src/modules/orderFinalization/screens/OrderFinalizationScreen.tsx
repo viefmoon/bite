@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
-import { PrintTicketModal } from '../components/PrintTicketModal';
+import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import {
   useOrdersForFinalizationList,
   useOrderForFinalizationDetail,
