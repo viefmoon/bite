@@ -205,7 +205,7 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
           >
             {label}
           </Animated.Text>
-          <View style={styles.inputContainer} pointerEvents="box-none">
+          <View style={[styles.inputContainer, { pointerEvents: 'box-none' }]}>
             <TextInput
               ref={finalRef}
               value={value}

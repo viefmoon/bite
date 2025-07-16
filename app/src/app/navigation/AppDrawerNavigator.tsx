@@ -23,6 +23,8 @@ import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavig
 import { UsersStackNavigator } from '../../modules/users/navigation/UsersStackNavigator';
 import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
 import { ShiftAuditStackNavigator } from '../../modules/shiftAudit/navigation/ShiftAuditStackNavigator';
+import { SettingsStackNavigator } from '../../modules/settings/navigation/SettingsStackNavigator';
+import { ServerSettingsScreen } from '../../modules/settings/screens/ServerSettingsScreen';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
@@ -83,7 +85,7 @@ export function AppDrawerNavigator() {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
-          fontSize: responsive.fontSize(responsive.isTablet ? 18 : 20),
+          fontSize: responsive.isTablet ? 20 : 22,
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
@@ -191,6 +193,9 @@ export function AppDrawerNavigator() {
                 break;
               case 'ShiftAuditStack':
                 title = 'Historial de Turnos';
+                break;
+              case 'ServerSettings':
+                title = 'Configuración del Servidor';
                 break;
               default:
                 title = children?.toString() || '';
@@ -495,6 +500,14 @@ export function AppDrawerNavigator() {
                 <ConnectionIndicator />
               </View>
             ),
+          }}
+        />
+        <Drawer.Screen
+          name="ServerSettings"
+          component={ServerSettingsScreen}
+          options={{
+            title: 'Configuración del Servidor',
+            drawerItemStyle: { display: 'none' }, // Oculto del drawer, solo accesible desde el botón
           }}
         />
       </Drawer.Navigator>

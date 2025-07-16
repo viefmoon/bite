@@ -6,6 +6,7 @@ import {
   Animated,
   Easing,
   Text,
+  Platform,
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
@@ -487,16 +488,27 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
               styles.button,
               {
                 backgroundColor: getBackgroundColor(),
-                shadowColor: !isServiceAvailable
-                  ? 'transparent'
-                  : isRecording
-                    ? '#FF3B30'
-                    : theme.colors.primary,
-                shadowOpacity: !isServiceAvailable
-                  ? 0
-                  : isRecording
-                    ? 0.4
-                    : 0.25,
+                ...Platform.select({
+                  web: {
+                    boxShadow: !isServiceAvailable
+                      ? 'none'
+                      : isRecording
+                        ? '0px 2px 8px rgba(255, 59, 48, 0.4)'
+                        : `0px 2px 8px ${theme.colors.primary}40`,
+                  },
+                  default: {
+                    shadowColor: !isServiceAvailable
+                      ? 'transparent'
+                      : isRecording
+                        ? '#FF3B30'
+                        : theme.colors.primary,
+                    shadowOpacity: !isServiceAvailable
+                      ? 0
+                      : isRecording
+                        ? 0.4
+                        : 0.25,
+                  },
+                }),
               },
             ]}
           >
@@ -548,8 +560,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.25)',
+      },
+      default: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 8,
+      },
+    }),
     zIndex: 10,
   },
   glowEffect: {

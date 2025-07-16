@@ -66,14 +66,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
           width: '100%',
         },
         input: {
-          marginBottom: responsive.spacingPreset.s,
+          marginBottom: 8,
           fontSize: responsive.fontSizePreset.m,
         },
         firstInput: {
           marginTop: responsive.spacingPreset.xs,
         },
         button: {
-          marginTop: responsive.spacingPreset.m,
+          marginTop: 16,
           paddingVertical: responsive.spacingPreset.xs,
         },
         helperText: {
@@ -83,8 +83,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         checkboxContainer: {
           flexDirection: 'row',
           alignItems: 'center',
-          marginTop: responsive.spacingPreset.s,
-          marginBottom: responsive.spacingPreset.s,
+          marginTop: 4,
+          marginBottom: 8,
         },
         checkbox: {},
         checkboxLabel: {
@@ -196,9 +196,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         onPress={handleSubmit((data) => onSubmit(data, rememberMe))}
         loading={isLoading}
         disabled={isLoading}
-        style={styles.button}
-        contentStyle={{ height: responsive.getResponsiveDimension(48, 56) }}
-        labelStyle={{ fontSize: responsive.fontSizePreset.m }}
+        style={[styles.button, { 
+          backgroundColor: theme.colors.primary,
+          borderRadius: 30,
+        }]}
+        contentStyle={{ 
+          height: 42,
+          paddingHorizontal: responsive.spacingPreset.s,
+        }}
+        labelStyle={{ 
+          fontSize: responsive.fontSizePreset.m,
+          fontWeight: '600',
+        }}
       >
         {isLoading ? 'Ingresando...' : 'Ingresar'}
       </Button>

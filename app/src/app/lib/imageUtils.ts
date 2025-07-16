@@ -1,4 +1,4 @@
-import { serverConnectionService } from '@/app/services/serverConnectionService';
+import { serverConnectionService } from '@/services/serverConnectionService';
 
 /**
  * Construye la URL completa de una imagen a partir de su ruta relativa o absoluta.

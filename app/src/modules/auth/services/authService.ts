@@ -13,11 +13,8 @@ import {
 
 class AuthService {
   async login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
-    // Validación mejorada de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(loginData.emailOrUsername);
-
-    // Sanitizar entrada
     const sanitizedInput = loginData.emailOrUsername.trim().toLowerCase();
 
     const payload: AuthEmailLoginDto = {

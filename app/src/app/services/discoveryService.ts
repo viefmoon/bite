@@ -26,6 +26,7 @@ export class DiscoveryService {
   private lastDiscoveryTime = 0;
   private logCallback: ((message: string) => void) | null = null;
   private manualUrl: string | null = null;
+  private progressCallback: ((progress: { current: number; total: number; message: string }) => void) | null = null;
 
   private constructor() {}
 
@@ -36,9 +37,22 @@ export class DiscoveryService {
     this.logCallback = callback;
   }
 
+  /**
+   * Establece un callback para el progreso del discovery
+   */
+  setProgressCallback(callback: ((progress: { current: number; total: number; message: string }) => void) | null) {
+    this.progressCallback = callback;
+  }
+
   private log(message: string) {
     if (this.logCallback) {
       this.logCallback(message);
+    }
+  }
+
+  private updateProgress(current: number, total: number, message: string) {
+    if (this.progressCallback) {
+      this.progressCallback({ current, total, message });
     }
   }
 
@@ -60,34 +74,34 @@ export class DiscoveryService {
       return this.manualUrl;
     }
 
-    // En web, no hay auto-descubrimiento - solo manual
+    // En web, intentar recuperar URL manual guardada
     if (Platform.OS === 'web') {
+      try {
+        const savedUrl = await EncryptedStorage.getItem('manual_server_url');
+        if (savedUrl) {
+          this.manualUrl = savedUrl;
+          return savedUrl;
+        }
+      } catch {}
       return null;
     }
 
-    // Si ya tenemos una URL en cache, verificar que siga funcionando
+    // Si ya tenemos una URL en cache, devolverla sin verificar
+    // La verificación se hace en otros lugares (health monitoring)
     if (this.cachedUrl) {
-      // Hacer una verificación rápida
-      if (await this.checkServer(this.cachedUrl)) {
-        return this.cachedUrl;
-      }
-      // Si falló, limpiar cache
-      this.cachedUrl = null;
+      return this.cachedUrl;
     }
 
     // Intentar con la última URL conocida almacenada
     try {
       const lastKnown = await EncryptedStorage.getItem(STORAGE_KEY);
       if (lastKnown) {
-        // Verificar si sigue funcionando
-        if (await this.checkServer(lastKnown)) {
-          this.cachedUrl = lastKnown;
-          return lastKnown;
-        }
+        this.cachedUrl = lastKnown;
+        return lastKnown;
       }
     } catch {}
 
-    // Si no hay URL válida, devolver null en lugar de lanzar error
+    // Si no hay URL válida, devolver null
     return null;
   }
 
@@ -106,8 +120,7 @@ export class DiscoveryService {
     await this.clearCache();
 
     // Verificar que no se esté llamando muy frecuentemente
-    const now = Date.now();
-    const timeSinceLastDiscovery = now - this.lastDiscoveryTime;
+    const timeSinceLastDiscovery = Date.now() - this.lastDiscoveryTime;
     if (timeSinceLastDiscovery < NETWORK_CONFIG.MIN_DISCOVERY_INTERVAL) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -188,8 +201,8 @@ export class DiscoveryService {
     this.discoveryPromise = this.performDiscovery()
       .then(async (result) => {
         if (result) {
-          this.cachedUrl = result;
-          await this.saveUrl(result);
+          // Usar el método unificado para guardar la URL descubierta
+          await this.setServerUrl(result, false);
         }
         return result;
       })
@@ -205,6 +218,7 @@ export class DiscoveryService {
     try {
       // En web no podemos hacer descubrimiento
       if (Platform.OS === 'web') {
+        this.log('❌ El descubrimiento automático no está disponible en web');
         return null;
       }
 
@@ -222,9 +236,20 @@ export class DiscoveryService {
       const subnets = this.detectCurrentSubnet();
       this.log(`📡 Iniciando búsqueda en redes: ${subnets.join(', ')}`);
 
+      // Calcular total de IPs a escanear
+      let totalIps = 0;
+      for (const subnet of subnets) {
+        totalIps += 254; // IPs de .1 a .254
+      }
+      this.updateProgress(0, totalIps, 'Iniciando búsqueda...');
+
+      let globalIpsScanned = 0;
+
       // Probar cada subnet hasta encontrar el servidor
       for (const subnet of subnets) {
         this.log(`🔍 Escaneando red ${subnet}.*`);
+        this.updateProgress(globalIpsScanned, totalIps, `Escaneando red ${subnet}.*`);
+        
         const ips = this.generateIpRange(subnet);
         const chunks = this.chunkArray(
           ips,
@@ -241,6 +266,10 @@ export class DiscoveryService {
           );
 
           totalIpsScanned += currentIps.length;
+          globalIpsScanned += currentIps.length;
+
+          // Actualizar progreso
+          this.updateProgress(globalIpsScanned, totalIps, `Escaneando ${subnet}.* (${Math.round((globalIpsScanned / totalIps) * 100)}%)`);
 
           // Buscar si alguna petición fue exitosa
           for (let j = 0; j < results.length; j++) {
@@ -248,6 +277,7 @@ export class DiscoveryService {
             if (result.status === 'fulfilled' && result.value) {
               const foundIp = currentIps[j];
               this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${foundIp}!`);
+              this.updateProgress(globalIpsScanned, totalIps, `¡Servidor encontrado en ${foundIp}!`);
               return result.value;
             }
           }
@@ -355,28 +385,29 @@ export class DiscoveryService {
   }
 
   /**
-   * Establece una URL manual para el servidor
+   * Establece la URL del servidor y la guarda
+   * @param url - La URL del servidor (null para limpiar URL manual)
+   * @param isManual - Si es true, se marca como configuración manual
    */
-  async setManualUrl(url: string | null): Promise<void> {
-    this.manualUrl = url;
+  async setServerUrl(url: string | null, isManual: boolean = false): Promise<void> {
     if (url) {
-      // Guardar como última URL conocida
-      await this.saveUrl(url);
+      // Actualizar cache en memoria
       this.cachedUrl = url;
+      
+      // Si es manual, guardar referencia especial
+      if (isManual) {
+        this.manualUrl = url;
+      }
+      
+      // Persistir en almacenamiento seguro
+      await this.saveUrl(url);
+    } else if (isManual) {
+      // Solo limpiar manual URL si explícitamente se pide
+      this.manualUrl = null;
     }
   }
 
-  /**
-   * Establece la URL del API (para compatibilidad)
-   */
-  async setApiUrl(url: string): Promise<void> {
-    this.cachedUrl = url;
-    await this.saveUrl(url);
-  }
 
-  /**
-   * Descubre el servidor (público para serverConnectionService)
-   */
   async discoverServer(): Promise<string | null> {
     return this.discoverBackend();
   }

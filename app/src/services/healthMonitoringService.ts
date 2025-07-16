@@ -32,6 +32,11 @@ class HealthMonitoringService extends EventEmitter {
     return { ...this.state };
   }
 
+  // Verificar si está monitoreando
+  isMonitoring(): boolean {
+    return this.checkInterval !== null;
+  }
+
   // Iniciar monitoreo periódico
   startMonitoring() {
     this.stopMonitoring(); // Detener cualquier monitoreo previo
@@ -83,7 +88,6 @@ class HealthMonitoringService extends EventEmitter {
         this.updateState({
           status: 'error',
           isAvailable: false,
-          lastCheck: Date.now(),
           message: 'Servidor no configurado',
         });
         this.isChecking = false;
@@ -100,11 +104,21 @@ class HealthMonitoringService extends EventEmitter {
 
       if (response.data.status === 'ok') {
         // Backend está saludable
+        const wasUnavailable = !this.state.isAvailable;
+        
         this.updateState({
           status: 'ok',
           isAvailable: true,
           message: 'Conectado al servidor',
         });
+
+        // Si pasamos de no disponible a disponible, emitir evento adicional
+        if (wasUnavailable) {
+          // Emitir evento de recuperación después de un pequeño delay
+          setTimeout(() => {
+            this.emit('recovered');
+          }, 100);
+        }
 
         // Reset retry count en conexión exitosa
         this.retryCount = 0;
@@ -207,10 +221,33 @@ class HealthMonitoringService extends EventEmitter {
     };
   }
 
+  // Verificar salud con URL específica (sin actualizar estado interno)
+  async checkHealthWithUrl(apiUrl: string): Promise<boolean> {
+    try {
+      // Asegurar que la URL NO termine con /
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const healthUrl = `${baseUrl}${API_PATHS.HEALTH}`;
+
+      const response = await axios.get(healthUrl, {
+        timeout: NETWORK_CONFIG.HEALTH_CHECK_TIMEOUT,
+      });
+
+      return response.data.status === 'ok';
+    } catch (error) {
+      return false;
+    }
+  }
+
   // Forzar verificación inmediata
   async forceCheck(): Promise<boolean> {
     this.retryCount = 0; // Reset retry count
-    return this.checkHealth();
+    const result = await this.checkHealth();
+    
+    // Forzar emisión del estado actual después del check
+    // Esto asegura que todos los componentes se actualicen
+    this.emit('stateChange', this.state);
+    
+    return result;
   }
 }
 

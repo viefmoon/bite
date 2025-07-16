@@ -15,6 +15,7 @@ import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStack
 import type { UsersStackParamList } from '../../modules/users/navigation/UsersStackNavigator';
 import type { KitchenStackParamList } from '../../modules/kitchen/navigation/KitchenNavigator';
 import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigation/types';
+import type { SettingsStackParamList } from '../../modules/settings/navigation/types';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -67,6 +68,8 @@ export type AppDrawerParamList = {
   UsersStack: NavigatorScreenParams<UsersStackParamList>; // Stack de usuarios
   KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
   ShiftAuditStack: NavigatorScreenParams<ShiftAuditStackParamList>; // Stack de auditoría de turnos
+  SettingsStack: NavigatorScreenParams<SettingsStackParamList>; // Stack de configuración
+  ServerSettings: undefined; // Pantalla directa de configuración del servidor
 };
 
 export type DrawerScreenProps<T extends keyof AppDrawerParamList> =
@@ -93,6 +96,7 @@ declare global {
         CustomersStackParamList,
         SyncStackParamList,
         UsersStackParamList,
-        ShiftAuditStackParamList {}
+        ShiftAuditStackParamList,
+        SettingsStackParamList {}
   }
 }

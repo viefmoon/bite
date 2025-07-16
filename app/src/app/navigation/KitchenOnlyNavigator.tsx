@@ -5,12 +5,15 @@ import {
   StatusBar,
   StyleSheet,
   View,
+  Text,
+  Platform,
 } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
 import { CustomDrawerContent } from './components/CustomDrawerContent';
+import { ServerSettingsScreen } from '../../modules/settings/screens/ServerSettingsScreen';
 import { useAppTheme } from '../styles/theme';
-import { Icon, Surface, Text, Checkbox } from 'react-native-paper';
+import { Icon, Surface, Checkbox } from 'react-native-paper';
 import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
@@ -42,17 +45,19 @@ function KitchenOnlyNavigatorContent() {
     }
   };
 
-  // Prevenir navegación hacia atrás en Android
+  // Prevenir navegación hacia atrás en Android (no aplicar en web)
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        // Retornar true previene el comportamiento por defecto
-        return true;
-      },
-    );
+    if (Platform.OS !== 'web') {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          // Retornar true previene el comportamiento por defecto
+          return true;
+        },
+      );
 
-    return () => backHandler.remove();
+      return () => backHandler.remove();
+    }
   }, []);
 
   const responsive = useResponsive();
@@ -61,30 +66,36 @@ function KitchenOnlyNavigatorContent() {
     () =>
       StyleSheet.create({
         drawerButtonContainer: {
-          width: responsive.dimensions.iconSize.large + responsive.spacing.s,
-          height: responsive.dimensions.iconSize.large + responsive.spacing.s,
+          width: 56,
+          height: 56,
           justifyContent: 'center',
           alignItems: 'center',
-          marginLeft: responsive.spacing.xs,
-          borderRadius:
-            (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
+          marginLeft: 0,
+          borderRadius: 28,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
-          height: responsive.dimensions.headerHeight,
+          height: responsive.isWeb ? 80 : responsive.dimensions.headerHeight,
           elevation: 2,
         },
         headerTitleStyle: {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
-          fontSize: responsive.fontSize(responsive.isTablet ? 18 : 20),
+          fontSize: responsive.isWeb ? 26 : (responsive.isTablet ? 20 : 22),
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
-          width: responsive.dimensions.drawerWidth,
-          borderTopRightRadius: theme.roundness * 2,
-          borderBottomRightRadius: theme.roundness * 2,
+          width: responsive.isWeb ? 320 : responsive.dimensions.drawerWidth,
+          borderTopRightRadius: responsive.isWeb ? 0 : theme.roundness * 2,
+          borderBottomRightRadius: responsive.isWeb ? 0 : theme.roundness * 2,
+          borderRightWidth: 0,
+          borderRightColor: theme.colors.outlineVariant,
+          elevation: 2,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0,
+          shadowRadius: 0,
         },
         titleContainer: {
           flexDirection: 'row',
@@ -108,6 +119,7 @@ function KitchenOnlyNavigatorContent() {
       <Drawer.Navigator
         initialRouteName="Kitchen"
         drawerContent={(props) => <CustomDrawerContent {...props} />}
+        defaultStatus="closed"
         screenOptions={({ navigation }) => ({
           headerStyle: styles.headerStyle,
           headerTintColor: theme.colors.onPrimary,
@@ -126,21 +138,21 @@ function KitchenOnlyNavigatorContent() {
             paddingHorizontal: responsive.spacing.xs,
           },
           headerShown: true,
-          drawerType: 'front',
+          drawerType: 'slide',
           drawerPosition: 'left',
           headerShadowVisible: false,
-          swipeEdgeWidth: 0, // Desactivar completamente el swipe del drawer
-          swipeEnabled: false, // Desactivar swipe para abrir drawer
-          gestureEnabled: false, // Desactivar todos los gestos del drawer
+          swipeEdgeWidth: 0,
+          swipeEnabled: false,
+          drawerHideStatusBarOnOpen: false,
           headerLeft: () => (
             <TouchableOpacity
               style={styles.drawerButtonContainer}
               onPress={() => navigation.openDrawer()}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
             >
               <Icon
                 source="menu"
-                size={responsive.dimensions.iconSize.large}
+                size={responsive.isWeb ? 36 : 32}
                 color={theme.colors.onPrimary}
               />
             </TouchableOpacity>
@@ -203,8 +215,8 @@ function KitchenOnlyNavigatorContent() {
                 <Text
                   style={{
                     color: theme.colors.onPrimary,
-                    fontSize: responsive.fontSize.m,
-                    marginLeft: responsive.spacing.xs,
+                    fontSize: responsive.isWeb ? 16 : 14,
+                    marginLeft: 4,
                     fontWeight: filters.showPrepared ? 'bold' : 'normal',
                   }}
                 >
@@ -221,12 +233,28 @@ function KitchenOnlyNavigatorContent() {
       >
         <Drawer.Screen
           name="Kitchen"
-          component={KitchenNavigator}
           options={{
             title: screenName,
             drawerIcon: ({ color, size }) => (
               <Icon source="chef-hat" color={color} size={size} />
             ),
+          }}
+        >
+          {() => <KitchenNavigator />}
+        </Drawer.Screen>
+        
+        <Drawer.Screen
+          name="ServerSettings"
+          component={ServerSettingsScreen}
+          options={{
+            title: 'Configuración del Servidor',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="server-network" color={color} size={size} />
+            ),
+            headerShown: true,
+            headerStyle: styles.headerStyle,
+            headerTintColor: theme.colors.onPrimary,
+            headerTitleStyle: styles.headerTitleStyle,
           }}
         />
       </Drawer.Navigator>
@@ -235,6 +263,13 @@ function KitchenOnlyNavigatorContent() {
 }
 
 export function KitchenOnlyNavigator() {
+  // Usar navegador web personalizado en plataforma web
+  if (Platform.OS === 'web') {
+    const { KitchenWebNavigator } = require('./KitchenWebNavigator');
+    return <KitchenWebNavigator />;
+  }
+  
+  // Usar navegador nativo para otras plataformas
   return (
     <KitchenProvider>
       <KitchenOnlyNavigatorContent />

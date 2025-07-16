@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import type { User } from '../../modules/auth/schema/auth.schema'; // Corregida ruta de importación
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -90,7 +91,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    try {
+    const ORIENTATION_DELAYS = {
+      UNLOCK: 100,
+      LOCK: 200,
+    };
+
+    const clearAuthData = async () => {
       await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
       await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
       await EncryptedStorage.removeItem(USER_INFO_KEY);
@@ -100,8 +106,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         isAuthenticated: false,
       });
+    };
+
+    try {
+      await ScreenOrientation.unlockAsync();
+      await new Promise(resolve => setTimeout(resolve, ORIENTATION_DELAYS.UNLOCK));
+      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      await new Promise(resolve => setTimeout(resolve, ORIENTATION_DELAYS.LOCK));
+      await clearAuthData();
     } catch (error) {
-      // Error durante logout
+      try {
+        await clearAuthData();
+      } catch (fallbackError) {
+        // Silently handle critical error
+      }
     }
   },
 }));

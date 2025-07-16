@@ -9,7 +9,7 @@ import { ConditionalAppNavigator } from './ConditionalAppNavigator';
 import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
 import { reconnectionSnackbarService } from '@/services/reconnectionSnackbarService';
-import { serverConnectionService } from '../services/serverConnectionService';
+import { serverConnectionService } from '@/services/serverConnectionService';
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -19,15 +19,12 @@ export function AppNavigator() {
   useEffect(() => {
     initImageCache();
 
-    // Inicializar el servicio de conexión siempre, incluso sin autenticación
-    // para que funcione en la pantalla de login
-    serverConnectionService.initialize().catch((error) => {
-      // Error inicializando servicio de conexión
-    });
+    // El servicio se inicializa automáticamente en su constructor
+    // No necesita llamada explícita a initialize()
 
     return () => {
       // Limpiar cuando se desmonte toda la app
-      serverConnectionService.cleanup();
+      serverConnectionService.destroy();
     };
   }, []); // Sin dependencias para que solo se ejecute una vez
 

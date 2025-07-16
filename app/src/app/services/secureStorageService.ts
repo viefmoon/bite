@@ -74,6 +74,8 @@ class SecureStorageService {
       'app_theme_preference',
       'user_credentials',
       'remember_me_preference',
+      'connection_mode',
+      'manual_server_url',
     ];
 
     for (const key of keysToRemove) {

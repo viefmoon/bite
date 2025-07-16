@@ -1,6 +1,6 @@
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
-import { serverConnectionService } from '@/app/services/serverConnectionService';
+import { serverConnectionService } from '@/services/serverConnectionService';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
 interface NetworkDiagnosticResult {

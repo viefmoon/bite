@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { serverConnectionService } from '../services/serverConnectionService';
+import { serverConnectionService } from '@/services/serverConnectionService';
 
 /**
  * Hook para monitorear la conexión con el servidor
@@ -20,12 +20,43 @@ export interface ServerConnectionState {
 }
 
 export function useServerConnection(): ServerConnectionState {
-  const [state, setState] = useState(serverConnectionService.getState());
+  const [state, setState] = useState(() => {
+    const serviceState = serverConnectionService.getState();
+    return {
+      isSearching: serviceState.isSearching,
+      isConnected: serviceState.isConnected,
+      error: serviceState.error,
+      serverUrl: serviceState.currentUrl,
+      hasWifi: serviceState.hasWifi,
+      isHealthy: serviceState.isHealthy,
+      retry: () => {},
+    };
+  });
 
   useEffect(() => {
+    // Obtener estado inicial
+    const serviceState = serverConnectionService.getState();
+    setState({
+      isSearching: serviceState.isSearching,
+      isConnected: serviceState.isConnected,
+      error: serviceState.error,
+      serverUrl: serviceState.currentUrl,
+      hasWifi: serviceState.hasWifi,
+      isHealthy: serviceState.isHealthy,
+      retry: () => serverConnectionService.retry(),
+    });
+
     // Suscribirse a cambios en el servicio
     const unsubscribe = serverConnectionService.subscribe((newState) => {
-      setState(newState);
+      setState({
+        isSearching: newState.isSearching,
+        isConnected: newState.isConnected,
+        error: newState.error,
+        serverUrl: newState.currentUrl,
+        hasWifi: newState.hasWifi,
+        isHealthy: newState.isHealthy,
+        retry: () => serverConnectionService.retry(),
+      });
     });
 
     return () => {
@@ -37,8 +68,5 @@ export function useServerConnection(): ServerConnectionState {
     serverConnectionService.retry();
   }, []);
 
-  return {
-    ...state,
-    retry,
-  };
+  return state;
 }

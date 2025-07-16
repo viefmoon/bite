@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
+import { Platform } from 'react-native';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}image-cache/`;
@@ -63,6 +64,11 @@ async function downloadWithRetry(
 }
 
 async function ensureCacheDirExists() {
+  // En web, el sistema de archivos no está disponible
+  if (Platform.OS === 'web') {
+    return;
+  }
+  
   const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
   if (!dirInfo.exists) {
     await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
@@ -230,6 +236,11 @@ export async function getCachedImageUri(
     return remoteUrl;
   }
 
+  // En web, no usar cache - devolver URL directamente
+  if (Platform.OS === 'web') {
+    return remoteUrl;
+  }
+
   await ensureCacheDirExists();
   const filename = await getCacheFilename(remoteUrl);
   const localUri = `${CACHE_DIR}${filename}`;
@@ -264,6 +275,11 @@ export async function getCachedImageUri(
 }
 
 export async function initImageCache() {
+  // En web, no inicializar cache
+  if (Platform.OS === 'web') {
+    return;
+  }
+
   await ensureCacheDirExists();
 
   cleanCache().catch((error) => {
@@ -273,6 +289,12 @@ export async function initImageCache() {
 
 export async function removeImageFromCache(remoteUrl: string) {
   if (!remoteUrl || typeof remoteUrl !== 'string') return;
+  
+  // En web, no hay cache que limpiar
+  if (Platform.OS === 'web') {
+    return;
+  }
+  
   try {
     const filename = await getCacheFilename(remoteUrl);
     const localUri = `${CACHE_DIR}${filename}`;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { View, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native';
 import {
   Drawer as PaperDrawer,
   Text,
@@ -9,7 +9,9 @@ import {
   TouchableRipple,
   Icon,
   Surface,
-  IconButton,
+  Portal,
+  Dialog,
+  Button,
 } from 'react-native-paper';
 import { useThemeStore } from '../../store/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
@@ -18,16 +20,11 @@ import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
-import {
-  hasPermission,
-  DRAWER_SECTIONS,
-  DrawerSection,
-} from '../../constants/rolePermissions';
-import { generateNavigationAction } from '../helpers/navigationHelpers';
 import { RoleEnum } from '@/modules/users/types/user.types';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
 
-import type { DrawerContentComponentProps } from '@react-navigation/drawer';
+interface WebDrawerContentProps {
+  onClose: () => void;
+}
 
 // Traducciones de roles
 const ROLE_TRANSLATIONS: Record<number, string> = {
@@ -51,6 +48,7 @@ const createStyles = (
   StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: theme.colors.surface,
     },
     userInfoSection: {
       padding: responsive.spacing(theme.spacing.m),
@@ -99,9 +97,6 @@ const createStyles = (
       marginHorizontal: responsive.spacing(theme.spacing.xs),
       marginVertical: responsive.spacing(theme.spacing.xxs),
     },
-    drawerItemActive: {
-      backgroundColor: theme.colors.primaryContainer,
-    },
     drawerItemIconContainer: {
       marginRight: responsive.spacing(theme.spacing.l),
       width: responsive.isTablet ? 20 : theme.spacing.l,
@@ -111,7 +106,6 @@ const createStyles = (
       marginVertical: responsive.spacing(theme.spacing.s),
       marginHorizontal: responsive.spacing(theme.spacing.m),
     },
-
     configSubheader: {
       ...theme.fonts.labelLarge,
       fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
@@ -123,93 +117,31 @@ const createStyles = (
     },
   });
 
-export function CustomDrawerContent(props: DrawerContentComponentProps) {
+export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const logout = useAuthStore((state) => state.logout);
   const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const navigation = useNavigation<any>();
+  const [showServerSettings, setShowServerSettings] = React.useState(false);
 
+  // Efecto para cerrar con ESC
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [onClose]);
 
   const styles = React.useMemo(
     () => createStyles(theme, responsive),
     [theme, responsive],
   );
-
-  const getItemActive = (routeName: string) => {
-    const currentRoute = props.state.routes[props.state.index];
-    return currentRoute?.name === routeName;
-  };
-
-  const getItemColor = (routeName: string) => {
-    return getItemActive(routeName)
-      ? theme.colors.primary
-      : theme.colors.onSurfaceVariant;
-  };
-
-  const renderDrawerItem = (
-    routeName: string,
-    label: string,
-    iconName: string,
-    navigateToScreen: () => void,
-  ) => {
-    // Verificar permisos antes de renderizar
-    if (!hasPermission(user?.role?.id, routeName as DrawerSection)) {
-      return null;
-    }
-
-    const isActive = getItemActive(routeName);
-
-    return (
-      <TouchableRipple
-        key={routeName}
-        onPress={navigateToScreen}
-        style={[
-          styles.drawerItemContainer,
-          isActive && styles.drawerItemActive,
-        ]}
-        rippleColor={`${theme.colors.primary}20`}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={styles.drawerItemIconContainer}>
-            <Icon
-              source={iconName}
-              size={responsive.isTablet ? 20 : 24}
-              color={getItemColor(routeName)}
-            />
-          </View>
-          <Text
-            style={[styles.drawerItemLabel, { color: getItemColor(routeName) }]}
-          >
-            {label}
-          </Text>
-        </View>
-      </TouchableRipple>
-    );
-  };
-
-  // Helper simplificado para renderizar items del drawer
-  const renderDrawerItemSimple = (
-    route: DrawerSection,
-    label: string,
-    icon: string,
-  ) => {
-    return renderDrawerItem(route, label, icon, () => {
-      // For kitchen users in KitchenOnlyNavigator, handle navigation differently
-      const isKitchenUser = user?.role?.id === 5;
-      if (isKitchenUser && route === 'KitchenStack') {
-        // Simply navigate to the Kitchen screen without reset
-        props.navigation.navigate('Kitchen');
-      } else {
-        const action = generateNavigationAction(route, user?.role?.id);
-        if (action) {
-          props.navigation.dispatch(action);
-        }
-      }
-    });
-  };
 
   const handleClearCache = async () => {
     try {
@@ -227,18 +159,13 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   };
 
   return (
-    <Surface
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.surface,
-      }}
-      elevation={0}
-    >
-      <DrawerContentScrollView
-        {...props}
+    <Surface style={styles.container} elevation={0}>
+      <ScrollView
         contentContainerStyle={{ paddingTop: 0 }}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.container}>
+
+        <View style={{ flex: 1 }}>
           <Surface style={styles.userInfoSection} elevation={0}>
             {user ? (
               <>
@@ -263,80 +190,37 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </Surface>
           <Divider style={styles.divider} />
 
-          {/* Sección de Ventas - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.sales.items.some((item) =>
-            hasPermission(user?.role?.id, item.route as DrawerSection),
-          ) && (
-            <PaperDrawer.Section style={styles.drawerSection}>
-              <Text style={styles.configSubheader}>
-                {DRAWER_SECTIONS.sales.title}
-              </Text>
-              {DRAWER_SECTIONS.sales.items.map((item) =>
-                renderDrawerItemSimple(
-                  item.route as DrawerSection,
-                  item.label,
-                  item.icon,
-                ),
-              )}
-            </PaperDrawer.Section>
-          )}
-
-          {/* Sección de Cocina - Solo para usuarios con rol kitchen */}
-          {hasPermission(user?.role?.id, 'KitchenStack') && (
+          {/* Sección de Cocina */}
+          {user?.role?.id === 5 && (
             <PaperDrawer.Section style={styles.drawerSection}>
               <Text style={styles.configSubheader}>Cocina</Text>
-              {renderDrawerItemSimple(
-                'KitchenStack',
-                'Pantalla de Preparación',
-                'chef-hat',
-              )}
+              <TouchableRipple
+                onPress={() => {
+                  // No need to navigate for kitchen users
+                  onClose();
+                }}
+                style={styles.drawerItemContainer}
+                rippleColor={`${theme.colors.primary}20`}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={styles.drawerItemIconContainer}>
+                    <Icon
+                      source="chef-hat"
+                      size={responsive.isTablet ? 20 : 24}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text
+                    style={[styles.drawerItemLabel, { color: theme.colors.primary }]}
+                  >
+                    Pantalla de Preparación
+                  </Text>
+                </View>
+              </TouchableRipple>
             </PaperDrawer.Section>
           )}
-
-          {/* Sección de Configuración - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.configuration.items.some((item) =>
-            hasPermission(user?.role?.id, item.route as DrawerSection),
-          ) && (
-            <>
-              <Divider style={styles.divider} />
-              <PaperDrawer.Section style={styles.drawerSection}>
-                <Text style={styles.configSubheader}>
-                  {DRAWER_SECTIONS.configuration.title}
-                </Text>
-                {DRAWER_SECTIONS.configuration.items.map((item) =>
-                  renderDrawerItemSimple(
-                    item.route as DrawerSection,
-                    item.label,
-                    item.icon,
-                  ),
-                )}
-              </PaperDrawer.Section>
-            </>
-          )}
-
-          {/* Sección de Administración - Solo visible si tiene permisos */}
-          {DRAWER_SECTIONS.administration.items.some((item) =>
-            hasPermission(user?.role?.id, item.route as DrawerSection),
-          ) && (
-            <>
-              <Divider style={styles.divider} />
-
-              <PaperDrawer.Section style={styles.drawerSection}>
-                <Text style={styles.configSubheader}>
-                  {DRAWER_SECTIONS.administration.title}
-                </Text>
-                {DRAWER_SECTIONS.administration.items.map((item) =>
-                  renderDrawerItemSimple(
-                    item.route as DrawerSection,
-                    item.label,
-                    item.icon,
-                  ),
-                )}
-              </PaperDrawer.Section>
-            </>
-          )}
         </View>
-      </DrawerContentScrollView>
+      </ScrollView>
 
       <PaperDrawer.Section style={styles.bottomDrawerSection}>
         <TouchableRipple
@@ -405,7 +289,8 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         <TouchableRipple
           onPress={() => {
-            props.navigation.navigate('ServerSettings');
+            setShowServerSettings(true);
+            onClose();
           }}
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}
@@ -452,6 +337,33 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </View>
         </TouchableRipple>
       </PaperDrawer.Section>
+      
+      {/* Modal de configuración del servidor */}
+      {showServerSettings && (
+        <Portal>
+          <Dialog 
+            visible={showServerSettings} 
+            onDismiss={() => setShowServerSettings(false)}
+            style={{ maxWidth: 600, alignSelf: 'center' }}
+          >
+            <Dialog.Title>Configuración del Servidor</Dialog.Title>
+            <Dialog.ScrollArea style={{ maxHeight: 400 }}>
+              <Text style={{ marginBottom: 16 }}>
+                Para configurar el servidor en la versión web, utiliza la aplicación móvil.
+              </Text>
+              <Text style={{ marginBottom: 8 }}>
+                La configuración del servidor incluye:
+              </Text>
+              <Text style={{ marginLeft: 16 }}>• Modo de conexión (Auto/Manual)</Text>
+              <Text style={{ marginLeft: 16 }}>• URL del servidor</Text>
+              <Text style={{ marginLeft: 16 }}>• Prueba de conexión</Text>
+            </Dialog.ScrollArea>
+            <Dialog.Actions>
+              <Button onPress={() => setShowServerSettings(false)}>Cerrar</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+      )}
     </Surface>
   );
 }

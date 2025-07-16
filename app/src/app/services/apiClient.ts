@@ -35,6 +35,11 @@ async function initializeApiClient(providedUrl?: string) {
   initializationPromise = (async () => {
     try {
       const baseURL = providedUrl || (await discoveryService.getApiUrl());
+      
+      if (!baseURL) {
+        throw new Error('No se pudo obtener la URL del servidor');
+      }
+      
       currentBaseURL = baseURL;
 
       // Validar la seguridad de la conexión
@@ -67,11 +72,9 @@ async function initializeApiClient(providedUrl?: string) {
 
       // Crear cliente Apisauce
       apiClient = createApisauceInstance({
-        baseURL, // Apisauce requiere baseURL aunque no lo use
+        baseURL,
         axiosInstance: axiosInstance as any,
       });
-
-      // Cliente inicializado con interceptores
 
       // Agregar transforms
       addResponseTransforms(apiClient);
@@ -116,27 +119,19 @@ function configureAxiosRetry() {
   if (!axiosInstance) return;
 
   axiosRetry(axiosInstance, {
-    retries: 1, // Solo 1 reintento para fallar más rápido
-    retryDelay: (_retryCount: number) => {
-      return 500; // Solo 500ms de espera
-    },
+    retries: 1,
+    retryDelay: () => 500,
     retryCondition: (error: AxiosError) => {
-      // NO reintentar en timeouts para fallar rápido
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         return false;
       }
-
-      // Solo reintentar en errores de red reales
       return (
         error.code === 'ENOTFOUND' ||
         error.code === 'ECONNREFUSED' ||
         error.code === 'ECONNRESET'
       );
     },
-    shouldResetTimeout: false, // No resetear timeout
-    onRetry: (_retryCount: number, _error: AxiosError, _requestConfig: any) => {
-      // Silencioso, sin logs
-    },
+    shouldResetTimeout: false,
   });
 }
 

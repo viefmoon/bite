@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Dimensions, PixelRatio, ScaledSize } from 'react-native';
+import { Dimensions, PixelRatio, ScaledSize, Platform } from 'react-native';
 import {
   BREAKPOINTS,
   DEVICE_TYPES,
@@ -29,6 +29,8 @@ interface ResponsiveInfo {
   isTablet: boolean;
   isMobile: boolean;
   isSmallMobile: boolean;
+  isWeb: boolean;
+  isDesktop: boolean;
 
   // Orientación
   orientation: 'portrait' | 'landscape';
@@ -149,11 +151,16 @@ export const useResponsive = (): ResponsiveInfo => {
     () => getDeviceType(dimensions.width),
     [dimensions.width],
   );
-  const isTablet = useMemo(
-    () => checkIsTablet(dimensions.width),
-    [dimensions.width],
+  const isWeb = Platform.OS === 'web';
+  const isDesktop = useMemo(
+    () => isWeb && dimensions.width >= BREAKPOINTS.lg,
+    [isWeb, dimensions.width],
   );
-  const isMobile = useMemo(() => !isTablet, [isTablet]);
+  const isTablet = useMemo(
+    () => checkIsTablet(dimensions.width) || (isWeb && dimensions.width >= BREAKPOINTS.md && dimensions.width < BREAKPOINTS.lg),
+    [dimensions.width, isWeb],
+  );
+  const isMobile = useMemo(() => !isTablet && !isDesktop, [isTablet, isDesktop]);
   const isSmallMobile = useMemo(
     () => deviceType === DEVICE_TYPES.MOBILE_SMALL,
     [deviceType],
@@ -207,13 +214,17 @@ export const useResponsive = (): ResponsiveInfo => {
   // Función de spacing que escala valores arbitrarios
   const spacing = useCallback(
     (value: number) => {
+      // Para web desktop, aumentar el spacing
+      if (isDesktop) {
+        return Math.round(value * 1.3); // 30% más
+      }
       // Para tablets, reducir el spacing en un 25-35%
       if (isTablet) {
         return Math.round(value * 0.7); // 30% menos
       }
       return value;
     },
-    [isTablet],
+    [isTablet, isDesktop],
   );
 
   // Tamaños de fuente responsive
@@ -233,13 +244,21 @@ export const useResponsive = (): ResponsiveInfo => {
   // Función de fontSize que escala valores arbitrarios
   const fontSize = useCallback(
     (value: number) => {
-      // Para tablets, reducir las fuentes en un 10-15%
+      // Para web desktop, aumentar las fuentes significativamente
+      if (isDesktop) {
+        return Math.round(value * 1.4); // 40% más grande
+      }
+      // Para web tablet, aumentar un poco
+      if (isWeb && isTablet) {
+        return Math.round(value * 1.2); // 20% más grande
+      }
+      // Para tablets nativos, reducir las fuentes en un 10-15%
       if (isTablet) {
         return Math.round(value * 0.87); // 13% menos
       }
       return value;
     },
-    [isTablet],
+    [isTablet, isDesktop, isWeb],
   );
 
   // Dimensiones comunes
@@ -305,6 +324,8 @@ export const useResponsive = (): ResponsiveInfo => {
     isTablet,
     isMobile,
     isSmallMobile,
+    isWeb,
+    isDesktop,
 
     // Orientación
     orientation,

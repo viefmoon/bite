@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, Platform } from 'react-native';
 import {
   Text,
   Modal,
@@ -9,14 +9,16 @@ import {
   IconButton,
   useTheme,
   ProgressBar,
+  Button,
 } from 'react-native-paper';
+import { ServerConfigModal } from './ServerConfigModal';
 import {
   autoReconnectService,
   ReconnectState,
 } from '@/services/autoReconnectService';
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../store/authStore';
-import { serverConnectionService } from '@/app/services/serverConnectionService';
+import { serverConnectionService } from '@/services/serverConnectionService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -31,8 +33,15 @@ export function ConnectionErrorModal() {
   const [isPaused, setIsPaused] = useState(false);
   const [pausedLogs, setPausedLogs] = useState<string[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   useEffect(() => {
+    // En web, mostrar directamente el modal de configuración
+    if (Platform.OS === 'web' && !isConnected && !isLoggedIn) {
+      setVisible(true);
+      return;
+    }
+
     const unsubscribe = autoReconnectService.subscribe((state) => {
       setReconnectState(state);
 
@@ -42,17 +51,23 @@ export function ConnectionErrorModal() {
 
       if (state.status === 'connected') {
         setVisible(false);
-        // Notificar al servicio de conexión que verifique la nueva conexión
-        setTimeout(() => {
-          serverConnectionService.checkSavedConnection();
-        }, 100);
+        // El servicio se actualiza automáticamente cuando se reconecta
+        // No necesita verificación manual
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isConnected]);
+
+  // Efecto adicional para web - cerrar modal cuando se conecta
+  useEffect(() => {
+    if (Platform.OS === 'web' && isConnected && visible) {
+      setVisible(false);
+      setShowConfigModal(false);
+    }
+  }, [isConnected, visible]);
 
   // Efecto para pausar los logs
   useEffect(() => {
@@ -66,6 +81,11 @@ export function ConnectionErrorModal() {
   }, [isPaused, reconnectState.logs]);
 
   useEffect(() => {
+    // En web no intentar auto-reconexión
+    if (Platform.OS === 'web') {
+      return;
+    }
+    
     if (!isConnected && !autoReconnectService.getState().isReconnecting) {
       setTimeout(() => {
         if (!isConnected) {
@@ -234,6 +254,14 @@ export function ConnectionErrorModal() {
       paddingHorizontal: 24,
       paddingBottom: 12,
     },
+    actionContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      paddingTop: 8,
+    },
+    actionButton: {
+      marginTop: 8,
+    },
   });
 
   if (!visible) return null;
@@ -244,6 +272,7 @@ export function ConnectionErrorModal() {
         visible={visible}
         onDismiss={() => {
           if (
+            Platform.OS === 'web' ||
             reconnectState.status === 'connected' ||
             reconnectState.status === 'no-wifi'
           ) {
@@ -252,6 +281,7 @@ export function ConnectionErrorModal() {
         }}
         contentContainerStyle={styles.modal}
         dismissable={
+          Platform.OS === 'web' ||
           reconnectState.status === 'connected' ||
           reconnectState.status === 'no-wifi'
         }
@@ -261,7 +291,8 @@ export function ConnectionErrorModal() {
           <View style={styles.header}>
             <Icon source="wifi-sync" size={24} color={theme.colors.primary} />
             <Text style={styles.headerTitle}>Estado de Conexión</Text>
-            {(reconnectState.status === 'connected' ||
+            {(Platform.OS === 'web' ||
+              reconnectState.status === 'connected' ||
               reconnectState.status === 'no-wifi') && (
               <IconButton
                 icon="close"
@@ -274,15 +305,32 @@ export function ConnectionErrorModal() {
 
           {/* Status Section */}
           <View style={styles.statusSection}>
-            <Text style={styles.title}>{statusInfo.title}</Text>
-
-            {reconnectState.lastError &&
-              reconnectState.status !== 'connected' && (
-                <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
-              )}
+            {Platform.OS === 'web' ? (
+              <>
+                <Icon 
+                  source="server-network" 
+                  size={64} 
+                  color={theme.colors.tertiary}
+                  style={{ marginBottom: 16 }}
+                />
+                <Text style={styles.title}>Configuración Requerida</Text>
+                <Text style={styles.subtitle}>
+                  En la versión web, debes configurar manualmente la URL del servidor
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.title}>{statusInfo.title}</Text>
+                {reconnectState.lastError &&
+                  reconnectState.status !== 'connected' && (
+                    <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
+                  )}
+              </>
+            )}
 
             {reconnectState.attempts > 0 &&
-              reconnectState.status !== 'connected' && (
+              reconnectState.status !== 'connected' &&
+              Platform.OS !== 'web' && (
                 <View style={styles.attemptBadge}>
                   <Text style={styles.attemptText}>
                     Intento #{reconnectState.attempts}
@@ -291,9 +339,10 @@ export function ConnectionErrorModal() {
               )}
           </View>
 
-          {/* Progress Bar */}
+          {/* Progress Bar - No mostrar en web */}
           {reconnectState.isReconnecting &&
-            reconnectState.status !== 'connected' && (
+            reconnectState.status !== 'connected' &&
+            Platform.OS !== 'web' && (
               <View style={styles.progressContainer}>
                 <ProgressBar
                   indeterminate
@@ -303,8 +352,8 @@ export function ConnectionErrorModal() {
               </View>
             )}
 
-          {/* Logs Section */}
-          {reconnectState.logs.length > 0 && (
+          {/* Logs Section - No mostrar en web */}
+          {reconnectState.logs.length > 0 && Platform.OS !== 'web' && (
             <View style={styles.logsContainer}>
               <View style={styles.logsHeader}>
                 <View
@@ -362,8 +411,45 @@ export function ConnectionErrorModal() {
               </ScrollView>
             </View>
           )}
+
+          {/* Action Buttons */}
+          {(Platform.OS === 'web' ||
+           reconnectState.status === 'failed' || 
+           reconnectState.status === 'no-wifi' ||
+           (reconnectState.attempts > 2 && reconnectState.status !== 'connected')) ? (
+            <View style={styles.actionContainer}>
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setShowConfigModal(true);
+                }}
+                icon="server-network"
+                style={styles.actionButton}
+              >
+                Configurar Servidor Manualmente
+              </Button>
+            </View>
+          ) : null}
         </Surface>
       </Modal>
+      
+      {/* Modal de configuración del servidor */}
+      <ServerConfigModal
+        visible={showConfigModal}
+        onDismiss={() => setShowConfigModal(false)}
+        onSuccess={() => {
+          setShowConfigModal(false);
+          // En web, cerrar también el modal principal
+          if (Platform.OS === 'web') {
+            setVisible(false);
+          } else {
+            // En móvil, reintentar conexión después de configurar
+            setTimeout(() => {
+              autoReconnectService.startAutoReconnect();
+            }, 1000);
+          }
+        }}
+      />
     </Portal>
   );
 }
