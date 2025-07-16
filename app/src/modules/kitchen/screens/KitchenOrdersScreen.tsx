@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Animated, Platform } from 'react-native';
 import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import {
@@ -41,12 +41,19 @@ export default function KitchenOrdersScreen() {
 
   const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   
-  const cardWidth = useMemo(() => 
-    responsive.isTablet
+  const cardWidth = useMemo(() => {
+    if (responsive.isDesktop) {
+      // En desktop, las tarjetas son más grandes
+      return responsive.getResponsiveDimension(340, 380);
+    }
+    if (responsive.isWeb && responsive.isTablet) {
+      // En web tablet, tamaño intermedio
+      return responsive.getResponsiveDimension(300, 340);
+    }
+    return responsive.isTablet
       ? responsive.getResponsiveDimension(280, 320)
-      : responsive.getResponsiveDimension(240, 280),
-    [responsive.isTablet]
-  );
+      : responsive.getResponsiveDimension(240, 280);
+  }, [responsive.isTablet, responsive.isDesktop, responsive.isWeb]);
 
   const handleStartPreparation = useCallback((orderId: string) => {
     startOrderPreparation.mutate(orderId);
@@ -157,25 +164,35 @@ export default function KitchenOrdersScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {hasOrders ? (
           <ScrollView
-            horizontal
+            horizontal={!responsive.isWeb || responsive.width < 1200}
             scrollEnabled={!isSwipingCard}
             showsHorizontalScrollIndicator={false}
             pagingEnabled={false}
-            contentContainerStyle={styles.horizontalListContainer}
-            snapToInterval={cardWidth + responsive.spacing.m}
+            contentContainerStyle={[
+              styles.horizontalListContainer,
+              responsive.isWeb && responsive.width >= 1200 && styles.gridContainer
+            ]}
+            snapToInterval={responsive.isWeb ? undefined : cardWidth + responsive.spacing.m}
             decelerationRate="fast"
-            snapToAlignment="start"
+            snapToAlignment={responsive.isWeb ? undefined : "start"}
           >
             {orders.map((item, index) => (
               <View
                 key={item.id}
-                style={{
-                  width: cardWidth,
-                  marginRight:
-                    index === orders.length - 1 ? 0 : responsive.spacing.xxs,
-                  height: '100%',
-                  paddingVertical: responsive.spacing.xxxs,
-                }}
+                style={[
+                  {
+                    width: cardWidth,
+                    marginRight:
+                      index === orders.length - 1 ? 0 : responsive.spacing.xxs,
+                    height: '100%',
+                    paddingVertical: responsive.spacing.xxxs,
+                  },
+                  responsive.isWeb && responsive.width >= 1200 && {
+                    marginRight: responsive.spacing.s,
+                    marginBottom: responsive.spacing.s,
+                    height: 'auto',
+                  }
+                ]}
               >
                 <OrderCard
                   order={item}
@@ -210,7 +227,7 @@ export default function KitchenOrdersScreen() {
                       ? 'filter-remove'
                       : 'chef-hat'
                   }
-                  size={responsive.getResponsiveDimension(32, 40)}
+                  size={responsive.isWeb ? 64 : responsive.getResponsiveDimension(32, 40)}
                   color={theme.colors.primary}
                 />
               </Animated.View>
@@ -264,11 +281,19 @@ const createStyles = (theme: any, responsive: any) =>
       backgroundColor: theme.colors.background,
     },
     horizontalListContainer: {
-      paddingLeft: responsive.spacing.xxs,
-      paddingRight: responsive.spacing.xs,
-      paddingVertical: responsive.spacing.xxs,
+      paddingLeft: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xxs,
+      paddingRight: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xs,
+      paddingVertical: responsive.isWeb ? responsive.spacing.s : responsive.spacing.xxs,
       minHeight: '100%',
-      alignItems: 'center',
+      alignItems: responsive.isWeb && responsive.width >= 1200 ? 'flex-start' : 'center',
+    },
+    gridContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
+      alignItems: 'flex-start',
+      paddingHorizontal: responsive.spacing.l,
+      paddingVertical: responsive.spacing.m,
     },
     emptyStateContainer: {
       flex: 1,
@@ -279,12 +304,14 @@ const createStyles = (theme: any, responsive: any) =>
       backgroundColor: theme.colors.background,
     },
     emptyCard: {
-      paddingHorizontal: responsive.spacing.m,
-      paddingVertical: responsive.spacing.m,
+      paddingHorizontal: responsive.isWeb ? responsive.spacing.xl : responsive.spacing.m,
+      paddingVertical: responsive.isWeb ? responsive.spacing.xl : responsive.spacing.m,
       borderRadius: theme.roundness * 2,
       alignItems: 'center',
       maxHeight: '70%',
-      width: responsive.getResponsiveDimension(280, 320),
+      width: responsive.isWeb 
+        ? responsive.getResponsiveDimension(400, 480)
+        : responsive.getResponsiveDimension(280, 320),
       backgroundColor: theme.colors.surface,
       shadowColor: '#000',
       shadowOffset: {

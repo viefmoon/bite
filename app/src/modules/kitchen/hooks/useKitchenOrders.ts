@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { kitchenService } from '../services/kitchenService';
 import { KitchenFilters } from '../types/kitchen.types';
-import { useSnackbar } from '@/hooks/useSnackbar';
+import { useKitchenSnackbar } from './useKitchenSnackbar';
 
 export const KITCHEN_ORDERS_KEY = 'kitchen-orders';
 
@@ -23,7 +23,7 @@ export function useKitchenOrders(filters: Partial<KitchenFilters> = {}) {
 
 export function useMarkItemPrepared() {
   const queryClient = useQueryClient();
-  const { showSnackbar } = useSnackbar();
+  const { showError } = useKitchenSnackbar();
 
   return useMutation({
     mutationFn: ({
@@ -33,75 +33,187 @@ export function useMarkItemPrepared() {
       itemId: string;
       isPrepared: boolean;
     }) => kitchenService.markItemPrepared(itemId, isPrepared),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
-      showSnackbar('Item actualizado correctamente', 'success');
+    onMutate: async ({ itemId, isPrepared }) => {
+      // Cancelar refetches para evitar sobrescribir la actualización optimista
+      await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
+
+      // Guardar estado previo para rollback
+      const previousOrders = queryClient.getQueryData([KITCHEN_ORDERS_KEY]);
+
+      // Actualizar optimistamente
+      queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
+        if (!old?.data) return old;
+        
+        return {
+          ...old,
+          data: old.data.map((order: any) => ({
+            ...order,
+            items: order.items?.map((item: any) => 
+              item.id === itemId 
+                ? { 
+                    ...item, 
+                    preparationStatus: isPrepared 
+                      ? 'READY' 
+                      : 'IN_PROGRESS',
+                    preparedAt: isPrepared ? new Date().toISOString() : null
+                  }
+                : item
+            )
+          }))
+        };
+      });
+
+      return { previousOrders };
     },
-    onError: (error: any) => {
-      showSnackbar(
-        error.response?.data?.message || 'Error al actualizar el item',
-        'error',
+    onError: (error: any, variables, context) => {
+      // Rollback en caso de error
+      if (context?.previousOrders) {
+        queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
+      }
+      showError(
+        error.response?.data?.message || 'Error al actualizar el item'
       );
+    },
+    onSettled: () => {
+      // Refrescar datos del servidor
+      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
     },
   });
 }
 
 export function useStartOrderPreparation() {
   const queryClient = useQueryClient();
-  const { showSnackbar } = useSnackbar();
+  const { showError } = useKitchenSnackbar();
 
   return useMutation({
     mutationFn: (orderId: string) =>
       kitchenService.startOrderPreparation(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
-      showSnackbar('Orden en preparación', 'success');
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
+      const previousOrders = queryClient.getQueryData([KITCHEN_ORDERS_KEY]);
+
+      queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
+        if (!old?.data) return old;
+        
+        return {
+          ...old,
+          data: old.data.map((order: any) => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  myScreenStatus: 'IN_PREPARATION',
+                  preparationStartedAt: new Date().toISOString()
+                }
+              : order
+          )
+        };
+      });
+
+      return { previousOrders };
     },
-    onError: (error: any) => {
-      showSnackbar(
-        error.response?.data?.message || 'Error al iniciar preparación',
-        'error',
+    onError: (error: any, variables, context) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
+      }
+      showError(
+        error.response?.data?.message || 'Error al iniciar preparación'
       );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
     },
   });
 }
 
 export function useCancelOrderPreparation() {
   const queryClient = useQueryClient();
-  const { showSnackbar } = useSnackbar();
+  const { showError } = useKitchenSnackbar();
 
   return useMutation({
     mutationFn: (orderId: string) =>
       kitchenService.cancelOrderPreparation(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
-      showSnackbar('Preparación cancelada', 'info');
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
+      const previousOrders = queryClient.getQueryData([KITCHEN_ORDERS_KEY]);
+
+      queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
+        if (!old?.data) return old;
+        
+        return {
+          ...old,
+          data: old.data.map((order: any) => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  myScreenStatus: 'PENDING',
+                  preparationStartedAt: null,
+                  items: order.items?.map((item: any) => ({
+                    ...item,
+                    preparationStatus: item.belongsToMyScreen ? 'IN_PROGRESS' : item.preparationStatus,
+                    preparedAt: item.belongsToMyScreen ? null : item.preparedAt
+                  }))
+                }
+              : order
+          )
+        };
+      });
+
+      return { previousOrders };
     },
-    onError: (error: any) => {
-      showSnackbar(
-        error.response?.data?.message || 'Error al cancelar preparación',
-        'error',
+    onError: (error: any, variables, context) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
+      }
+      showError(
+        error.response?.data?.message || 'Error al cancelar preparación'
       );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
     },
   });
 }
 
 export function useCompleteOrderPreparation() {
   const queryClient = useQueryClient();
-  const { showSnackbar } = useSnackbar();
+  const { showError } = useKitchenSnackbar();
 
   return useMutation({
     mutationFn: (orderId: string) =>
       kitchenService.completeOrderPreparation(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
-      showSnackbar('Orden lista', 'success');
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
+      const previousOrders = queryClient.getQueryData([KITCHEN_ORDERS_KEY]);
+
+      queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
+        if (!old?.data) return old;
+        
+        return {
+          ...old,
+          data: old.data.map((order: any) => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  myScreenStatus: 'READY',
+                  preparationCompletedAt: new Date().toISOString()
+                }
+              : order
+          )
+        };
+      });
+
+      return { previousOrders };
     },
-    onError: (error: any) => {
-      showSnackbar(
-        error.response?.data?.message || 'Error al completar preparación',
-        'error',
+    onError: (error: any, variables, context) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
+      }
+      showError(
+        error.response?.data?.message || 'Error al completar preparación'
       );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
     },
   });
 }

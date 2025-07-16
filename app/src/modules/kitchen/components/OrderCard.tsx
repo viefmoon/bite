@@ -6,6 +6,7 @@ import {
   Animated,
   Pressable,
   Vibration,
+  Platform,
 } from 'react-native';
 import { Card, Text, Divider, Surface, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -167,10 +168,48 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     });
   };
 
+  // Determinar qué acciones de swipe están disponibles basado en myScreenStatus
+  const getSwipeActions = () => {
+    const rightAction = (() => {
+      // Solo permitir iniciar preparación si mi pantalla está PENDING
+      if (order.myScreenStatus === PreparationScreenStatus.PENDING) {
+        return {
+          type: 'start',
+          color: '#FF6B35', // Naranja
+          textColor: '#FFFFFF',
+          icon: 'chef-hat',
+          text: 'En Preparación',
+        };
+      }
+      return null;
+    })();
+
+    const leftAction = (() => {
+      // Permitir regresar si mi pantalla está en preparación o lista
+      if (
+        order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION ||
+        order.myScreenStatus === PreparationScreenStatus.READY
+      ) {
+        return {
+          type: 'cancel',
+          color: '#9C27B0', // Púrpura
+          textColor: '#FFFFFF',
+          icon: 'arrow-left',
+          text: 'Regresar',
+        };
+      }
+      return null;
+    })();
+
+    return { rightAction, leftAction };
+  };
+
+  const swipeActions = getSwipeActions();
+
   // Verificar si la orden puede hacer swipe
   React.useEffect(() => {
     setIsSwipeable(!!swipeActions.rightAction || !!swipeActions.leftAction);
-  }, [swipeActions]);
+  }, [swipeActions.rightAction, swipeActions.leftAction]);
 
   // Renderizar las acciones del swipe hacia la derecha (lo que aparece detrás)
   const renderRightActions = () => {
@@ -227,44 +266,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       </View>
     );
   };
-
-  // Determinar qué acciones de swipe están disponibles basado en myScreenStatus
-  const getSwipeActions = () => {
-    const rightAction = (() => {
-      // Solo permitir iniciar preparación si mi pantalla está PENDING
-      if (order.myScreenStatus === PreparationScreenStatus.PENDING) {
-        return {
-          type: 'start',
-          color: '#FF6B35', // Naranja
-          textColor: '#FFFFFF',
-          icon: 'chef-hat',
-          text: 'En Preparación',
-        };
-      }
-      return null;
-    })();
-
-    const leftAction = (() => {
-      // Permitir regresar si mi pantalla está en preparación o lista
-      if (
-        order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION ||
-        order.myScreenStatus === PreparationScreenStatus.READY
-      ) {
-        return {
-          type: 'cancel',
-          color: '#9C27B0', // Púrpura
-          textColor: '#FFFFFF',
-          icon: 'arrow-left',
-          text: 'Regresar',
-        };
-      }
-      return null;
-    })();
-
-    return { rightAction, leftAction };
-  };
-
-  const swipeActions = getSwipeActions();
 
   // Verificar si la orden puede ser marcada como lista con long press
   const canMarkAsReady = () => {
@@ -464,7 +465,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 >
                   <Icon
                     name={getOrderTypeIcon()}
-                    size={14}
+                    size={responsive.isWeb ? 18 : 14}
                     color={theme.colors.surface}
                     style={{ marginRight: 4 }}
                   />
@@ -799,7 +800,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         }}>
           <IconButton
             icon="file-document-multiple-outline"
-            size={28}
+            size={responsive.isWeb ? 32 : 28}
             iconColor="#FFFFFF"
             style={{
               backgroundColor: theme.colors.primary,
@@ -808,9 +809,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               shadowOffset: { width: 0, height: 3 },
               shadowOpacity: 0.3,
               shadowRadius: 4.65,
-              width: 48,
-              height: 48,
-              borderRadius: 24,
+              width: responsive.isWeb ? 56 : 48,
+              height: responsive.isWeb ? 56 : 48,
+              borderRadius: responsive.isWeb ? 28 : 24,
               margin: 0,
               opacity: 0.7,
             }}
@@ -855,11 +856,11 @@ const createStyles = (responsive: any, theme: any) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      paddingHorizontal: responsive.spacing.m,
-      paddingVertical: responsive.spacing.s,
+      paddingHorizontal: responsive.isWeb ? responsive.spacing.l : responsive.spacing.m,
+      paddingVertical: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
       borderTopLeftRadius: theme.roundness,
       borderTopRightRadius: theme.roundness,
-      minHeight: responsive.getResponsiveDimension(50, 60),
+      minHeight: responsive.isWeb ? 80 : responsive.getResponsiveDimension(50, 60),
     },
     headerLeft: {
       flex: 1,
@@ -872,8 +873,8 @@ const createStyles = (responsive: any, theme: any) =>
       gap: responsive.spacing.xs,
     },
     headerDetails: {
-      fontSize: responsive.isTablet ? 12 : 13,
-      lineHeight: responsive.isTablet ? 16 : 18,
+      fontSize: responsive.isWeb ? 16 : (responsive.isTablet ? 12 : 13),
+      lineHeight: responsive.isWeb ? 22 : (responsive.isTablet ? 16 : 18),
       opacity: 0.95,
       marginTop: responsive.spacing.xxxs,
       fontWeight: '500',
@@ -885,23 +886,22 @@ const createStyles = (responsive: any, theme: any) =>
     },
     orderNumber: {
       fontWeight: 'bold',
-      fontSize: responsive.isTablet ? 18 : 20,
-      lineHeight: responsive.isTablet ? 24 : 28,
+      fontSize: responsive.isWeb ? 24 : (responsive.isTablet ? 18 : 20),
+      lineHeight: responsive.isWeb ? 32 : (responsive.isTablet ? 24 : 28),
     },
     typeChip: {
-      paddingHorizontal: responsive.spacing.s,
-      paddingVertical: 4,
-      minHeight: 28,
+      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
+      paddingVertical: responsive.isWeb ? 6 : 4,
+      minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       alignSelf: 'flex-end',
-      minHeight: 28,
       marginBottom: responsive.spacing.xxxs,
     },
     typeChipText: {
-      fontSize: responsive.isTablet ? 11 : 12,
+      fontSize: responsive.isWeb ? 14 : (responsive.isTablet ? 11 : 12),
       fontWeight: '700',
       letterSpacing: 0.4,
       textAlign: 'center',
@@ -911,12 +911,12 @@ const createStyles = (responsive: any, theme: any) =>
     },
     headerTime: {
       fontWeight: '500',
-      fontSize: responsive.isTablet ? 12 : 13,
+      fontSize: responsive.isWeb ? 16 : (responsive.isTablet ? 12 : 13),
     },
     statusChip: {
-      paddingHorizontal: responsive.spacing.xs,
-      paddingVertical: 4,
-      minHeight: 28,
+      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xs,
+      paddingVertical: responsive.isWeb ? 6 : 4,
+      minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
       alignItems: 'center',
       justifyContent: 'center',
@@ -924,22 +924,22 @@ const createStyles = (responsive: any, theme: any) =>
       marginBottom: responsive.spacing.xxxs,
     },
     statusChipText: {
-      fontSize: responsive.isTablet ? 12 : 13,
+      fontSize: responsive.isWeb ? 15 : (responsive.isTablet ? 12 : 13),
       fontWeight: '600',
       letterSpacing: 0.3,
       textAlign: 'center',
       textAlignVertical: 'center',
-      lineHeight: responsive.isTablet ? 18 : 20,
+      lineHeight: responsive.isWeb ? 22 : (responsive.isTablet ? 18 : 20),
       includeFontPadding: false,
     },
     details: {
-      paddingHorizontal: responsive.spacing.s,
-      paddingVertical: responsive.spacing.xs,
+      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
+      paddingVertical: responsive.isWeb ? responsive.spacing.s : responsive.spacing.xs,
     },
     detailText: {
       marginBottom: 0,
-      fontSize: responsive.isTablet ? 11 : 12,
-      lineHeight: responsive.isTablet ? 16 : 14,
+      fontSize: responsive.isWeb ? 15 : (responsive.isTablet ? 11 : 12),
+      lineHeight: responsive.isWeb ? 20 : (responsive.isTablet ? 16 : 14),
     },
     notesContainer: {
       marginTop: responsive.spacing.xxs,
