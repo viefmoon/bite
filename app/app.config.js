@@ -11,6 +11,9 @@ export default {
       resizeMode: "cover",
       backgroundColor: "#ffffff"
     },
+    web: {
+      favicon: "./assets/favicon.png"
+    },
     assetBundlePatterns: [
       "**/*"
     ],

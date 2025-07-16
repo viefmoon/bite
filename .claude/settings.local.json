@@ -60,7 +60,14 @@
       "Bash(do echo \"$f:\")",
       "Bash(file:*)",
       "Bash(done)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(git checkout:*)",
+      "Bash(git log:*)",
+      "Bash(npx expo config:*)",
+      "Bash(set PLATFORM=web)",
+      "Bash(npx create-expo-webpack-config:*)",
+      "Bash(npx expo export:*)",
+      "Bash(npx kill-port:*)"
     ],
     "deny": []
   }
