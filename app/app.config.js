@@ -48,10 +48,6 @@ export default {
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       package: "com.viefmoon.cloudbite",
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#FFFFFF"
-      },
       icon: "./assets/icon.png",
       supportsTablet: true,
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ? "./google-services.json" : undefined,
