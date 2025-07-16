@@ -9,16 +9,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Text,
-  IconButton,
-  Surface,
-  TouchableRipple,
-} from 'react-native-paper';
+import { Text, IconButton, Surface, TouchableRipple } from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
-import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
@@ -37,11 +31,10 @@ const LoginScreen = () => {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const queryClient = useQueryClient();
-  const navigation = useNavigation();
   const { showSnackbar } = useSnackbarStore();
   const { setThemePreference } = useThemeStore();
   const setTokens = useAuthStore((state) => state.setTokens);
-  const {} = useServerConnection();
+  useServerConnection();
 
   const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<
     string | undefined
@@ -346,9 +339,7 @@ const LoginScreen = () => {
             <View>
               <View style={styles.registerContainer}>
                 <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
-                <TouchableRipple
-                  onPress={() => setShowRegisterModal(true)}
-                >
+                <TouchableRipple onPress={() => setShowRegisterModal(true)}>
                   <Text style={styles.registerLink}>Regístrate</Text>
                 </TouchableRipple>
               </View>

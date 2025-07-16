@@ -42,81 +42,84 @@ const getRoleTranslation = (roleId?: number): string => {
   return ROLE_TRANSLATIONS[roleId] || 'Desconocido';
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
-        container: {
-          flex: 1,
-        },
-        userInfoSection: {
-          padding: responsive.spacing(theme.spacing.m),
-        },
-        title: {
-          ...theme.fonts.titleMedium,
-          fontSize: responsive.fontSize(theme.fonts.titleMedium.fontSize),
-          color: theme.colors.onSurface,
-          marginBottom: responsive.spacing(4),
-        },
-        caption: {
-          ...theme.fonts.bodySmall,
-          fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
-          color: theme.colors.onSurfaceVariant,
-          marginBottom: responsive.spacing(2),
-        },
-        drawerSection: {
-          marginTop: responsive.spacing(theme.spacing.s),
-        },
-        bottomDrawerSection: {
-          marginBottom: responsive.spacing(theme.spacing.m),
-          marginTop: 'auto',
-          borderTopColor: theme.colors.outlineVariant,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          paddingTop: responsive.spacing(theme.spacing.s),
-        },
-        preference: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          paddingVertical: responsive.spacing(theme.spacing.s),
-          paddingHorizontal: responsive.spacing(theme.spacing.m),
-          alignItems: 'center',
-          marginHorizontal: responsive.spacing(theme.spacing.xs),
-          borderRadius: theme.roundness * 2,
-        },
-        drawerItemLabel: {
-          ...theme.fonts.labelLarge,
-          fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
-        },
-        drawerItemContainer: {
-          paddingHorizontal: responsive.spacing(theme.spacing.m),
-          paddingVertical: responsive.spacing(theme.spacing.m),
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderRadius: theme.roundness * 2,
-          marginHorizontal: responsive.spacing(theme.spacing.xs),
-          marginVertical: responsive.spacing(theme.spacing.xxs),
-        },
-        drawerItemActive: {
-          backgroundColor: theme.colors.primaryContainer,
-        },
-        drawerItemIconContainer: {
-          marginRight: responsive.spacing(theme.spacing.l),
-          width: responsive.isTablet ? 20 : theme.spacing.l,
-          alignItems: 'center',
-        },
-        divider: {
-          marginVertical: responsive.spacing(theme.spacing.s),
-          marginHorizontal: responsive.spacing(theme.spacing.m),
-        },
+    container: {
+      flex: 1,
+    },
+    userInfoSection: {
+      padding: responsive.spacing(theme.spacing.m),
+    },
+    title: {
+      ...theme.fonts.titleMedium,
+      fontSize: responsive.fontSize(theme.fonts.titleMedium.fontSize),
+      color: theme.colors.onSurface,
+      marginBottom: responsive.spacing(4),
+    },
+    caption: {
+      ...theme.fonts.bodySmall,
+      fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: responsive.spacing(2),
+    },
+    drawerSection: {
+      marginTop: responsive.spacing(theme.spacing.s),
+    },
+    bottomDrawerSection: {
+      marginBottom: responsive.spacing(theme.spacing.m),
+      marginTop: 'auto',
+      borderTopColor: theme.colors.outlineVariant,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      paddingTop: responsive.spacing(theme.spacing.s),
+    },
+    preference: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: responsive.spacing(theme.spacing.s),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      alignItems: 'center',
+      marginHorizontal: responsive.spacing(theme.spacing.xs),
+      borderRadius: theme.roundness * 2,
+    },
+    drawerItemLabel: {
+      ...theme.fonts.labelLarge,
+      fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
+    },
+    drawerItemContainer: {
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.m),
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: theme.roundness * 2,
+      marginHorizontal: responsive.spacing(theme.spacing.xs),
+      marginVertical: responsive.spacing(theme.spacing.xxs),
+    },
+    drawerItemActive: {
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    drawerItemIconContainer: {
+      marginRight: responsive.spacing(theme.spacing.l),
+      width: responsive.isTablet ? 20 : theme.spacing.l,
+      alignItems: 'center',
+    },
+    divider: {
+      marginVertical: responsive.spacing(theme.spacing.s),
+      marginHorizontal: responsive.spacing(theme.spacing.m),
+    },
 
-        configSubheader: {
-          ...theme.fonts.labelLarge,
-          fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
-          color: theme.colors.onSurfaceVariant,
-          paddingLeft: responsive.spacing(theme.spacing.l),
-          paddingRight: responsive.spacing(theme.spacing.m),
-          paddingTop: responsive.spacing(theme.spacing.s),
-          paddingBottom: responsive.spacing(theme.spacing.xxs),
-        },
-      });
+    configSubheader: {
+      ...theme.fonts.labelLarge,
+      fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
+      color: theme.colors.onSurfaceVariant,
+      paddingLeft: responsive.spacing(theme.spacing.l),
+      paddingRight: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.s),
+      paddingBottom: responsive.spacing(theme.spacing.xxs),
+    },
+  });
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const theme = useAppTheme();
@@ -167,7 +170,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={styles.drawerItemIconContainer}>
-            <Icon source={iconName} size={responsive.isTablet ? 20 : 24} color={getItemColor(routeName)} />
+            <Icon
+              source={iconName}
+              size={responsive.isTablet ? 20 : 24}
+              color={getItemColor(routeName)}
+            />
           </View>
           <Text
             style={[styles.drawerItemLabel, { color: getItemColor(routeName) }]}
@@ -401,7 +408,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={styles.drawerItemIconContainer}>
-              <Icon source="logout" size={responsive.isTablet ? 20 : 24} color={theme.colors.error} />
+              <Icon
+                source="logout"
+                size={responsive.isTablet ? 20 : 24}
+                color={theme.colors.error}
+              />
             </View>
             <Text
               style={[styles.drawerItemLabel, { color: theme.colors.error }]}

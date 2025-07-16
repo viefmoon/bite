@@ -101,7 +101,8 @@ const getStyles = (
       flex: 1,
     },
     searchbarContainer: {
-      paddingHorizontal: listItemHorizontalMargin - responsive.spacing(theme.spacing.xs),
+      paddingHorizontal:
+        listItemHorizontalMargin - responsive.spacing(theme.spacing.xs),
       paddingTop: responsive.spacing(theme.spacing.xs),
       paddingBottom: responsive.spacing(theme.spacing.s),
       backgroundColor: theme.colors.background,
@@ -137,8 +138,12 @@ const getStyles = (
     },
     listItem: {
       backgroundColor: theme.colors.surface,
-      marginVertical: responsive.isTablet ? responsive.spacing(3) : responsive.spacing(4),
-      marginHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginVertical: responsive.isTablet
+        ? responsive.spacing(3)
+        : responsive.spacing(4),
+      marginHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
       borderRadius: theme.roundness * 1.5,
       elevation: 1,
       overflow: 'hidden',
@@ -153,7 +158,9 @@ const getStyles = (
       overflow: 'hidden',
     },
     listItemContent: {
-      paddingVertical: responsive.isTablet ? 4 : responsive.spacing(theme.spacing.s),
+      paddingVertical: responsive.isTablet
+        ? 4
+        : responsive.spacing(theme.spacing.s),
       paddingHorizontal: responsive.spacing(theme.spacing.xs),
       minHeight: responsive.isTablet ? 40 : 56,
       flexWrap: 'wrap',
@@ -164,7 +171,9 @@ const getStyles = (
       height: responsive.isTablet ? 36 : 40,
       borderRadius: theme.roundness,
       marginLeft: responsive.spacing(theme.spacing.xs),
-      marginRight: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginRight: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
       backgroundColor: theme.colors.surfaceDisabled,
     },
     gridItemImage: {
@@ -697,7 +706,11 @@ const GenericList = <TItem extends { id: string }>({
         ItemSeparatorComponent={
           enableGrid && numColumns > 1
             ? () => (
-                <View style={{ height: itemSpacing || responsive.spacing(theme.spacing.m) }} />
+                <View
+                  style={{
+                    height: itemSpacing || responsive.spacing(theme.spacing.m),
+                  }}
+                />
               )
             : undefined
         }

@@ -20,7 +20,6 @@ import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
@@ -58,12 +57,15 @@ interface RegisterModalProps {
   onRegisterSuccess?: (username: string, password: string) => void;
 }
 
-export function RegisterModal({ visible, onDismiss, onRegisterSuccess }: RegisterModalProps) {
+export function RegisterModal({
+  visible,
+  onDismiss,
+  onRegisterSuccess,
+}: RegisterModalProps) {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const styles = getStyles(theme, responsive);
   const [showPassword, setShowPassword] = useState(false);
-  const navigation = useNavigation();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const {
@@ -103,12 +105,12 @@ export function RegisterModal({ visible, onDismiss, onRegisterSuccess }: Registe
         message: 'Registro exitoso. Ya puedes iniciar sesión.',
         type: 'success',
       });
-      
+
       // Pasar los datos al formulario de login
       if (onRegisterSuccess) {
         onRegisterSuccess(variables.username, variables.password);
       }
-      
+
       reset();
       onDismiss();
     },
@@ -346,8 +348,7 @@ export function RegisterModal({ visible, onDismiss, onRegisterSuccess }: Registe
                             <Text
                               style={[
                                 styles.roleLabel,
-                                value === role.value &&
-                                  styles.roleLabelActive,
+                                value === role.value && styles.roleLabelActive,
                               ]}
                               variant="labelMedium"
                             >
@@ -502,7 +503,10 @@ export function RegisterModal({ visible, onDismiss, onRegisterSuccess }: Registe
   );
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalContainer: {
       margin: responsive.isTablet ? 20 : 12,
@@ -511,7 +515,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       width: responsive.isTablet ? '80%' : '94%',
     },
     modalContent: {
-      borderRadius: responsive.isTablet ? theme.roundness * 3 : theme.roundness * 2,
+      borderRadius: responsive.isTablet
+        ? theme.roundness * 3
+        : theme.roundness * 2,
       backgroundColor: theme.colors.surface,
       maxHeight: responsive.isTablet ? '90%' : '92%',
       minHeight: responsive.isTablet ? 600 : 550,
@@ -542,12 +548,18 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     formContainer: {
       flex: 1,
-      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : responsive.spacing.s,
-      paddingTop: responsive.isTablet ? responsive.spacing.s : responsive.spacing.xs,
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing.m
+        : responsive.spacing.s,
+      paddingTop: responsive.isTablet
+        ? responsive.spacing.s
+        : responsive.spacing.xs,
       paddingBottom: responsive.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: responsive.isTablet ? theme.spacing.s : responsive.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.s
+        : responsive.spacing.xs,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -634,7 +646,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     divider: {
       marginVertical: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
-      marginHorizontal: responsive.isTablet ? -theme.spacing.m : -theme.spacing.s,
+      marginHorizontal: responsive.isTablet
+        ? -theme.spacing.m
+        : -theme.spacing.s,
     },
     buttonContainer: {
       flexDirection: 'row',

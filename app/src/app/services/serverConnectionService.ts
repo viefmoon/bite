@@ -132,7 +132,8 @@ class ServerConnectionService {
     try {
       const netInfo = await NetInfo.fetch();
       const isNetworkConnected =
-        netInfo.isConnected && (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
+        netInfo.isConnected &&
+        (netInfo.type === 'wifi' || netInfo.type === 'ethernet');
 
       if (!isNetworkConnected) {
         this.updateState({
@@ -140,7 +141,8 @@ class ServerConnectionService {
           isConnected: false,
           serverUrl: null,
           hasWifi: false,
-          error: 'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
+          error:
+            'Asegúrate de tener el WiFi encendido y estar conectado a la red del servidor',
         });
         return;
       }
@@ -176,7 +178,6 @@ class ServerConnectionService {
       });
 
       healthMonitoringService.startMonitoring();
-
     } catch (err: any) {
       // Si cualquier paso falla (incluyendo el discovery), reportar el error.
       this.updateState({
@@ -272,7 +273,6 @@ class ServerConnectionService {
             // Obtener la URL actual del servicio de discovery
             const url = await discoveryService.getApiUrl();
             if (url) {
-
               // Detener el monitoreo actual para reiniciarlo limpio
               healthMonitoringService.stopMonitoring();
 

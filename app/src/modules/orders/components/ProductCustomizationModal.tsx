@@ -6,7 +6,6 @@ import {
   Text,
   Button,
   RadioButton,
-  Checkbox,
   Divider,
   Appbar, // Importar Appbar
   TouchableRipple,
@@ -100,15 +99,14 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
     }, [selectedModifiersByGroup]);
 
     // Pre-calcular si el producto tiene variantes o modificadores
-    const hasVariants = useMemo(() => 
-      product?.variants && Array.isArray(product.variants) && product.variants.length > 0,
-      [product?.variants]
+    const hasVariants = useMemo(
+      () =>
+        product?.variants &&
+        Array.isArray(product.variants) &&
+        product.variants.length > 0,
+      [product?.variants],
     );
-    
-    const hasModifiers = useMemo(() => 
-      product?.modifierGroups && Array.isArray(product.modifierGroups) && product.modifierGroups.length > 0,
-      [product?.modifierGroups]
-    );
+
     const [quantity, setQuantity] = useState(1);
     const [showExitConfirmation, setShowExitConfirmation] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
@@ -124,7 +122,6 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       useState<PizzaConfiguration | null>(null);
     const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
       useState<SelectedPizzaCustomization[]>([]);
-
 
     // Función para calcular el precio extra de las pizzas
     const calculatePizzaExtraCost = useCallback(() => {
@@ -475,9 +472,14 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       onDismiss();
     };
 
-    const increaseQuantity = useCallback(() => setQuantity((prev) => prev + 1), []);
-    const decreaseQuantity = useCallback(() =>
-      setQuantity((prev) => (prev > 1 ? prev - 1 : 1)), []);
+    const increaseQuantity = useCallback(
+      () => setQuantity((prev) => prev + 1),
+      [],
+    );
+    const decreaseQuantity = useCallback(
+      () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1)),
+      [],
+    );
 
     const handleDismiss = useCallback(() => {
       if (editingItem && hasChanges) {
@@ -500,13 +502,14 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       return null;
     }
 
-    const selectedVariant = useMemo(() =>
-      hasVariants
-        ? product.variants.find(
-            (variant: ProductVariant) => variant.id === selectedVariantId,
-          )
-        : undefined,
-      [hasVariants, product?.variants, selectedVariantId]
+    const selectedVariant = useMemo(
+      () =>
+        hasVariants
+          ? product.variants.find(
+              (variant: ProductVariant) => variant.id === selectedVariantId,
+            )
+          : undefined,
+      [hasVariants, product?.variants, selectedVariantId],
     );
 
     const basePrice = selectedVariant
@@ -531,267 +534,188 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
             onDismiss={handleDismiss}
             contentContainerStyle={styles.modalContent}
           >
-          {/* Encabezado Refactorizado con Appbar */}
-          <Appbar.Header style={styles.appBar} elevated>
-            <Appbar.BackAction
-              onPress={handleDismiss}
-              color={theme.colors.onSurface}
-            />
-            <Appbar.Content
-              title={product?.name || 'Producto'}
-              titleStyle={styles.appBarTitle}
-              style={styles.appBarContent}
-            />
-            {/* Espaciador si no hay acción a la derecha */}
-            <View style={styles.appBarSpacer} />
-          </Appbar.Header>
+            {/* Encabezado Refactorizado con Appbar */}
+            <Appbar.Header style={styles.appBar} elevated>
+              <Appbar.BackAction
+                onPress={handleDismiss}
+                color={theme.colors.onSurface}
+              />
+              <Appbar.Content
+                title={product?.name || 'Producto'}
+                titleStyle={styles.appBarTitle}
+                style={styles.appBarContent}
+              />
+              {/* Espaciador si no hay acción a la derecha */}
+              <View style={styles.appBarSpacer} />
+            </Appbar.Header>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={true}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled={true}
-          >
-            {product.hasVariants &&
-              product.variants &&
-              Array.isArray(product.variants) &&
-              product.variants.length > 0 && (
-                <Card style={styles.sectionCard}>
-                  <Card.Content>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Variantes</Text>
-                      <Chip mode="flat" compact style={styles.requiredChip}>
-                        Requerido
-                      </Chip>
-                    </View>
-                    <RadioButton.Group
-                      onValueChange={(value) => handleVariantSelect(value)}
-                      value={selectedVariantId || ''}
-                    >
-                      {product.variants.map((variant: ProductVariant) => (
-                        <Surface
-                          key={variant.id}
-                          style={[
-                            styles.variantSurface,
-                            selectedVariantId === variant.id &&
-                              styles.variantSurfaceSelected,
-                            !variant.isActive && styles.inactiveVariantSurface,
-                          ]}
-                          elevation={
-                            selectedVariantId === variant.id && variant.isActive
-                              ? 2
-                              : 0
-                          }
-                        >
-                          <TouchableRipple
-                            onPress={() =>
-                              variant.isActive &&
-                              handleVariantSelect(variant.id)
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled={true}
+            >
+              {product.hasVariants &&
+                product.variants &&
+                Array.isArray(product.variants) &&
+                product.variants.length > 0 && (
+                  <Card style={styles.sectionCard}>
+                    <Card.Content>
+                      <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Variantes</Text>
+                        <Chip mode="flat" compact style={styles.requiredChip}>
+                          Requerido
+                        </Chip>
+                      </View>
+                      <RadioButton.Group
+                        onValueChange={(value) => handleVariantSelect(value)}
+                        value={selectedVariantId || ''}
+                      >
+                        {product.variants.map((variant: ProductVariant) => (
+                          <Surface
+                            key={variant.id}
+                            style={[
+                              styles.variantSurface,
+                              selectedVariantId === variant.id &&
+                                styles.variantSurfaceSelected,
+                              !variant.isActive &&
+                                styles.inactiveVariantSurface,
+                            ]}
+                            elevation={
+                              selectedVariantId === variant.id &&
+                              variant.isActive
+                                ? 2
+                                : 0
                             }
-                            disabled={!variant.isActive}
-                            style={styles.variantTouchable}
                           >
-                            <View style={styles.variantRow}>
-                              <RadioButton
-                                value={variant.id}
-                                status={
-                                  selectedVariantId === variant.id
-                                    ? 'checked'
-                                    : 'unchecked'
-                                }
-                                onPress={() =>
-                                  variant.isActive &&
-                                  handleVariantSelect(variant.id)
-                                }
-                                disabled={!variant.isActive}
-                              />
-                              <Text
-                                style={[
-                                  styles.variantName,
-                                  !variant.isActive && styles.inactiveText,
-                                ]}
-                              >
-                                {variant.name}
-                                {!variant.isActive && ' (No disponible)'}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.variantPrice,
-                                  !variant.isActive && styles.inactiveText,
-                                ]}
-                              >
-                                ${Number(variant.price).toFixed(2)}
-                              </Text>
-                            </View>
-                          </TouchableRipple>
-                        </Surface>
-                      ))}
-                    </RadioButton.Group>
-                  </Card.Content>
-                </Card>
+                            <TouchableRipple
+                              onPress={() =>
+                                variant.isActive &&
+                                handleVariantSelect(variant.id)
+                              }
+                              disabled={!variant.isActive}
+                              style={styles.variantTouchable}
+                            >
+                              <View style={styles.variantRow}>
+                                <RadioButton
+                                  value={variant.id}
+                                  status={
+                                    selectedVariantId === variant.id
+                                      ? 'checked'
+                                      : 'unchecked'
+                                  }
+                                  onPress={() =>
+                                    variant.isActive &&
+                                    handleVariantSelect(variant.id)
+                                  }
+                                  disabled={!variant.isActive}
+                                />
+                                <Text
+                                  style={[
+                                    styles.variantName,
+                                    !variant.isActive && styles.inactiveText,
+                                  ]}
+                                >
+                                  {variant.name}
+                                  {!variant.isActive && ' (No disponible)'}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.variantPrice,
+                                    !variant.isActive && styles.inactiveText,
+                                  ]}
+                                >
+                                  ${Number(variant.price).toFixed(2)}
+                                </Text>
+                              </View>
+                            </TouchableRipple>
+                          </Surface>
+                        ))}
+                      </RadioButton.Group>
+                    </Card.Content>
+                  </Card>
+                )}
+
+              {/* Sección de Personalización de Pizza - Después de variantes */}
+              {product.isPizza && (
+                <PizzaCustomizationSection
+                  pizzaCustomizations={pizzaCustomizations}
+                  pizzaConfiguration={pizzaConfiguration}
+                  selectedPizzaCustomizations={selectedPizzaCustomizations}
+                  onCustomizationChange={setSelectedPizzaCustomizations}
+                  loading={false}
+                />
               )}
 
-            {/* Sección de Personalización de Pizza - Después de variantes */}
-            {product.isPizza && (
-              <PizzaCustomizationSection
-                pizzaCustomizations={pizzaCustomizations}
-                pizzaConfiguration={pizzaConfiguration}
-                selectedPizzaCustomizations={selectedPizzaCustomizations}
-                onCustomizationChange={setSelectedPizzaCustomizations}
-                loading={false}
-              />
-            )}
-
-            {product.modifierGroups &&
-              Array.isArray(product.modifierGroups) &&
-              product.modifierGroups.length > 0 &&
-              product.modifierGroups.map((group: FullMenuModifierGroup) => (
-                <Card key={group.id} style={styles.sectionCard}>
-                  <Card.Content>
-                    <View style={styles.sectionHeader}>
-                      <View style={styles.groupTitleContainer}>
-                        <Text style={styles.groupTitle}>{group.name}</Text>
-                        <View style={styles.selectionInfo}>
-                          {group.minSelections !== undefined &&
-                            group.maxSelections !== undefined && (
-                              <Text style={styles.selectionRules}>
-                                {(group.minSelections || 0) === 0 &&
-                                group.maxSelections === 1
-                                  ? 'Hasta 1 opción'
-                                  : (group.minSelections || 0) ===
-                                      group.maxSelections
-                                    ? `Elegir ${group.maxSelections}`
-                                    : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+              {product.modifierGroups &&
+                Array.isArray(product.modifierGroups) &&
+                product.modifierGroups.length > 0 &&
+                product.modifierGroups.map((group: FullMenuModifierGroup) => (
+                  <Card key={group.id} style={styles.sectionCard}>
+                    <Card.Content>
+                      <View style={styles.sectionHeader}>
+                        <View style={styles.groupTitleContainer}>
+                          <Text style={styles.groupTitle}>{group.name}</Text>
+                          <View style={styles.selectionInfo}>
+                            {group.minSelections !== undefined &&
+                              group.maxSelections !== undefined && (
+                                <Text style={styles.selectionRules}>
+                                  {(group.minSelections || 0) === 0 &&
+                                  group.maxSelections === 1
+                                    ? 'Hasta 1 opción'
+                                    : (group.minSelections || 0) ===
+                                        group.maxSelections
+                                      ? `Elegir ${group.maxSelections}`
+                                      : `${group.minSelections || 0}-${group.maxSelections} opciones`}
+                                </Text>
+                              )}
+                            {group.allowMultipleSelections && (
+                              <Text style={styles.selectedCount}>
+                                (
+                                {
+                                  (selectedModifiersByGroup[group.id] || [])
+                                    .length
+                                }{' '}
+                                seleccionadas)
                               </Text>
                             )}
-                          {group.allowMultipleSelections && (
-                            <Text style={styles.selectedCount}>
-                              (
-                              {
-                                (selectedModifiersByGroup[group.id] || [])
-                                  .length
-                              }{' '}
-                              seleccionadas)
-                            </Text>
-                          )}
+                          </View>
                         </View>
-                      </View>
-                      <View style={styles.chipContainer}>
-                        {validationErrors[group.id] && (
+                        <View style={styles.chipContainer}>
+                          {validationErrors[group.id] && (
+                            <Chip
+                              mode="flat"
+                              compact
+                              style={styles.errorChip}
+                              icon="alert-circle"
+                            >
+                              {validationErrors[group.id]}
+                            </Chip>
+                          )}
                           <Chip
                             mode="flat"
                             compact
-                            style={styles.errorChip}
-                            icon="alert-circle"
+                            style={
+                              group.isRequired
+                                ? styles.requiredChip
+                                : styles.optionalChip
+                            }
                           >
-                            {validationErrors[group.id]}
+                            {group.isRequired ? 'Requerido' : 'Opcional'}
                           </Chip>
-                        )}
-                        <Chip
-                          mode="flat"
-                          compact
-                          style={
-                            group.isRequired
-                              ? styles.requiredChip
-                              : styles.optionalChip
-                          }
-                        >
-                          {group.isRequired ? 'Requerido' : 'Opcional'}
-                        </Chip>
+                        </View>
                       </View>
-                    </View>
 
-                    {group.allowMultipleSelections ? (
-                      <View style={styles.modifiersContainer}>
-                        {Array.isArray(group.productModifiers) &&
-                          group.productModifiers.map((modifier: Modifier) => {
-                            const groupModifiers =
-                              selectedModifiersByGroup[group.id] || [];
-                            const isSelected = groupModifiers.some(
-                              (mod) => mod.id === modifier.id,
-                            );
-
-                            return (
-                              <Surface
-                                key={modifier.id}
-                                style={[
-                                  styles.modifierSurface,
-                                  isSelected && styles.modifierSurfaceSelected,
-                                  !modifier.isActive &&
-                                    styles.inactiveModifierSurface,
-                                ]}
-                                elevation={
-                                  isSelected && modifier.isActive ? 1 : 0
-                                }
-                              >
-                                <TouchableRipple
-                                  onPress={() =>
-                                    modifier.isActive &&
-                                    handleModifierToggle(modifier, group)
-                                  }
-                                  disabled={!modifier.isActive}
-                                  style={styles.modifierTouchable}
-                                >
-                                  <View style={styles.modifierRow}>
-                                    <RadioButton
-                                      value={modifier.id}
-                                      status={
-                                        isSelected ? 'checked' : 'unchecked'
-                                      }
-                                      disabled={!modifier.isActive}
-                                      onPress={() =>
-                                        modifier.isActive &&
-                                        handleModifierToggle(modifier, group)
-                                      }
-                                    />
-                                    <Text
-                                      style={[
-                                        styles.modifierName,
-                                        !modifier.isActive &&
-                                          styles.inactiveText,
-                                      ]}
-                                    >
-                                      {modifier.name}
-                                      {!modifier.isActive && ' (No disponible)'}
-                                    </Text>
-                                    {Number(modifier.price) > 0 && (
-                                      <Text
-                                        style={[
-                                          styles.modifierPrice,
-                                          !modifier.isActive &&
-                                            styles.inactiveText,
-                                        ]}
-                                      >
-                                        +${Number(modifier.price).toFixed(2)}
-                                      </Text>
-                                    )}
-                                  </View>
-                                </TouchableRipple>
-                              </Surface>
-                            );
-                          })}
-                      </View>
-                    ) : (
-                      <RadioButton.Group
-                        onValueChange={(value) => {
-                          const modifier = group.productModifiers?.find(
-                            (m: Modifier) => m.id === value,
-                          );
-                          if (modifier) {
-                            handleModifierToggle(modifier, group);
-                          }
-                        }}
-                        value={
-                          selectedModifiersByGroup[group.id]?.[0]?.id || ''
-                        }
-                      >
+                      {group.allowMultipleSelections ? (
                         <View style={styles.modifiersContainer}>
                           {Array.isArray(group.productModifiers) &&
                             group.productModifiers.map((modifier: Modifier) => {
-                              const isSelected =
-                                selectedModifiersByGroup[group.id]?.[0]?.id ===
-                                modifier.id;
+                              const groupModifiers =
+                                selectedModifiersByGroup[group.id] || [];
+                              const isSelected = groupModifiers.some(
+                                (mod) => mod.id === modifier.id,
+                              );
 
                               return (
                                 <Surface
@@ -855,141 +779,233 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                               );
                             })}
                         </View>
-                      </RadioButton.Group>
-                    )}
-                  </Card.Content>
-                </Card>
-              ))}
+                      ) : (
+                        <RadioButton.Group
+                          onValueChange={(value) => {
+                            const modifier = group.productModifiers?.find(
+                              (m: Modifier) => m.id === value,
+                            );
+                            if (modifier) {
+                              handleModifierToggle(modifier, group);
+                            }
+                          }}
+                          value={
+                            selectedModifiersByGroup[group.id]?.[0]?.id || ''
+                          }
+                        >
+                          <View style={styles.modifiersContainer}>
+                            {Array.isArray(group.productModifiers) &&
+                              group.productModifiers.map(
+                                (modifier: Modifier) => {
+                                  const isSelected =
+                                    selectedModifiersByGroup[group.id]?.[0]
+                                      ?.id === modifier.id;
 
-            {/* Sección Cantidad - Mejorada */}
-            <Card style={styles.sectionCard}>
-              <Card.Content>
-                <Text style={styles.sectionTitle}>Cantidad</Text>
-                <View style={styles.quantityContainer}>
-                  <IconButton
-                    icon="minus-circle-outline"
-                    size={36}
-                    onPress={decreaseQuantity}
-                    style={[
-                      styles.quantityIconButton,
-                      quantity <= 1 && styles.quantityIconButtonDisabled,
-                    ]}
-                    iconColor={
-                      quantity <= 1
-                        ? theme.colors.onSurfaceDisabled
-                        : theme.colors.primary
-                    }
-                    disabled={quantity <= 1}
-                  />
-                  <Surface style={styles.quantityBadge} elevation={1}>
-                    <Text style={styles.quantityText}>{quantity}</Text>
-                  </Surface>
-                  <IconButton
-                    icon="plus-circle-outline"
-                    size={36}
-                    onPress={increaseQuantity}
-                    style={styles.quantityIconButton}
-                    iconColor={theme.colors.primary}
-                  />
-                </View>
-              </Card.Content>
-            </Card>
+                                  return (
+                                    <Surface
+                                      key={modifier.id}
+                                      style={[
+                                        styles.modifierSurface,
+                                        isSelected &&
+                                          styles.modifierSurfaceSelected,
+                                        !modifier.isActive &&
+                                          styles.inactiveModifierSurface,
+                                      ]}
+                                      elevation={
+                                        isSelected && modifier.isActive ? 1 : 0
+                                      }
+                                    >
+                                      <TouchableRipple
+                                        onPress={() =>
+                                          modifier.isActive &&
+                                          handleModifierToggle(modifier, group)
+                                        }
+                                        disabled={!modifier.isActive}
+                                        style={styles.modifierTouchable}
+                                      >
+                                        <View style={styles.modifierRow}>
+                                          <RadioButton
+                                            value={modifier.id}
+                                            status={
+                                              isSelected
+                                                ? 'checked'
+                                                : 'unchecked'
+                                            }
+                                            disabled={!modifier.isActive}
+                                            onPress={() =>
+                                              modifier.isActive &&
+                                              handleModifierToggle(
+                                                modifier,
+                                                group,
+                                              )
+                                            }
+                                          />
+                                          <Text
+                                            style={[
+                                              styles.modifierName,
+                                              !modifier.isActive &&
+                                                styles.inactiveText,
+                                            ]}
+                                          >
+                                            {modifier.name}
+                                            {!modifier.isActive &&
+                                              ' (No disponible)'}
+                                          </Text>
+                                          {Number(modifier.price) > 0 && (
+                                            <Text
+                                              style={[
+                                                styles.modifierPrice,
+                                                !modifier.isActive &&
+                                                  styles.inactiveText,
+                                              ]}
+                                            >
+                                              +$
+                                              {Number(modifier.price).toFixed(
+                                                2,
+                                              )}
+                                            </Text>
+                                          )}
+                                        </View>
+                                      </TouchableRipple>
+                                    </Surface>
+                                  );
+                                },
+                              )}
+                          </View>
+                        </RadioButton.Group>
+                      )}
+                    </Card.Content>
+                  </Card>
+                ))}
 
-            {/* Sección Notas de Preparación - Mejorada */}
-            <Card style={styles.sectionCard}>
-              <Card.Content>
-                <Controller
-                  control={control}
-                  name="preparationNotes"
-                  render={({ field: { onChange, value } }) => (
-                    <SpeechRecognitionInput
-                      key="preparation-notes-input"
-                      label="Notas de Preparación"
-                      value={value}
-                      onChangeText={onChange}
-                      multiline
-                      numberOfLines={2}
-                      style={styles.preparationInput}
-                      speechLang="es-MX"
+              {/* Sección Cantidad - Mejorada */}
+              <Card style={styles.sectionCard}>
+                <Card.Content>
+                  <Text style={styles.sectionTitle}>Cantidad</Text>
+                  <View style={styles.quantityContainer}>
+                    <IconButton
+                      icon="minus-circle-outline"
+                      size={36}
+                      onPress={decreaseQuantity}
+                      style={[
+                        styles.quantityIconButton,
+                        quantity <= 1 && styles.quantityIconButtonDisabled,
+                      ]}
+                      iconColor={
+                        quantity <= 1
+                          ? theme.colors.onSurfaceDisabled
+                          : theme.colors.primary
+                      }
+                      disabled={quantity <= 1}
                     />
-                  )}
-                />
-              </Card.Content>
-            </Card>
-
-            {/* Sección Resumen - Mejorada */}
-            <Card style={[styles.sectionCard, styles.summaryCard]}>
-              <Card.Content>
-                <Text style={styles.sectionTitle}>Resumen del pedido</Text>
-                <View style={styles.summaryContent}>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Precio base:</Text>
-                    <Text style={styles.summaryValue}>
-                      ${basePrice.toFixed(2)}
-                    </Text>
+                    <Surface style={styles.quantityBadge} elevation={1}>
+                      <Text style={styles.quantityText}>{quantity}</Text>
+                    </Surface>
+                    <IconButton
+                      icon="plus-circle-outline"
+                      size={36}
+                      onPress={increaseQuantity}
+                      style={styles.quantityIconButton}
+                      iconColor={theme.colors.primary}
+                    />
                   </View>
-                  {selectedModifiers.length > 0 && (
+                </Card.Content>
+              </Card>
+
+              {/* Sección Notas de Preparación - Mejorada */}
+              <Card style={styles.sectionCard}>
+                <Card.Content>
+                  <Controller
+                    control={control}
+                    name="preparationNotes"
+                    render={({ field: { onChange, value } }) => (
+                      <SpeechRecognitionInput
+                        key="preparation-notes-input"
+                        label="Notas de Preparación"
+                        value={value}
+                        onChangeText={onChange}
+                        multiline
+                        numberOfLines={2}
+                        style={styles.preparationInput}
+                        speechLang="es-MX"
+                      />
+                    )}
+                  />
+                </Card.Content>
+              </Card>
+
+              {/* Sección Resumen - Mejorada */}
+              <Card style={[styles.sectionCard, styles.summaryCard]}>
+                <Card.Content>
+                  <Text style={styles.sectionTitle}>Resumen del pedido</Text>
+                  <View style={styles.summaryContent}>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Adicionales:</Text>
+                      <Text style={styles.summaryLabel}>Precio base:</Text>
                       <Text style={styles.summaryValue}>
-                        +${modifiersPrice.toFixed(2)}
+                        ${basePrice.toFixed(2)}
                       </Text>
                     </View>
-                  )}
-                  {pizzaExtraCost > 0 && (
+                    {selectedModifiers.length > 0 && (
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Adicionales:</Text>
+                        <Text style={styles.summaryValue}>
+                          +${modifiersPrice.toFixed(2)}
+                        </Text>
+                      </View>
+                    )}
+                    {pizzaExtraCost > 0 && (
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Toppings extra:</Text>
+                        <Text style={styles.summaryValue}>
+                          +${pizzaExtraCost.toFixed(2)}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Toppings extra:</Text>
-                      <Text style={styles.summaryValue}>
-                        +${pizzaExtraCost.toFixed(2)}
+                      <Text style={styles.summaryLabel}>Cantidad:</Text>
+                      <Text style={styles.summaryValue}>×{quantity}</Text>
+                    </View>
+                    <Divider style={styles.summaryDivider} />
+                    <View style={[styles.summaryRow, styles.totalRow]}>
+                      <Text style={styles.totalLabel}>Total:</Text>
+                      <Text style={styles.totalValue}>
+                        ${totalPrice.toFixed(2)}
                       </Text>
                     </View>
-                  )}
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Cantidad:</Text>
-                    <Text style={styles.summaryValue}>×{quantity}</Text>
                   </View>
-                  <Divider style={styles.summaryDivider} />
-                  <View style={[styles.summaryRow, styles.totalRow]}>
-                    <Text style={styles.totalLabel}>Total:</Text>
-                    <Text style={styles.totalValue}>
-                      ${totalPrice.toFixed(2)}
-                    </Text>
-                  </View>
-                </View>
-              </Card.Content>
-            </Card>
-          </ScrollView>
+                </Card.Content>
+              </Card>
+            </ScrollView>
 
-          {/* Footer Button - Estilo OrderCartDetail */}
-          <View style={styles.footer}>
-            <Button
-              mode="contained"
-              onPress={handleAddToCart}
-              style={styles.confirmButton}
-              icon={editingItem ? 'cart-check' : 'cart-plus'}
-            >
-              {editingItem
-                ? `Actualizar Item - $${totalPrice.toFixed(2)}`
-                : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
-            </Button>
-          </View>
-        </Modal>
+            {/* Footer Button - Estilo OrderCartDetail */}
+            <View style={styles.footer}>
+              <Button
+                mode="contained"
+                onPress={handleAddToCart}
+                style={styles.confirmButton}
+                icon={editingItem ? 'cart-check' : 'cart-plus'}
+              >
+                {editingItem
+                  ? `Actualizar Item - $${totalPrice.toFixed(2)}`
+                  : `Agregar al Carrito - $${totalPrice.toFixed(2)}`}
+              </Button>
+            </View>
+          </Modal>
+        </Portal>
 
-      </Portal>
-      
-      {/* ConfirmationModal fuera del Portal principal */}
-      <Portal>
-        <ConfirmationModal
-          visible={showExitConfirmation}
-          onDismiss={handleCancelExit}
-          onConfirm={handleConfirmExit}
-          title="¿Descartar cambios?"
-          message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
-          confirmText="Descartar"
-          cancelText="Cancelar"
-          confirmButtonColor={theme.colors.error}
-        />
-      </Portal>
+        {/* ConfirmationModal fuera del Portal principal */}
+        <Portal>
+          <ConfirmationModal
+            visible={showExitConfirmation}
+            onDismiss={handleCancelExit}
+            onConfirm={handleConfirmExit}
+            title="¿Descartar cambios?"
+            message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+            confirmText="Descartar"
+            cancelText="Cancelar"
+            confirmButtonColor={theme.colors.error}
+          />
+        </Portal>
       </>
     );
   },

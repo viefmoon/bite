@@ -82,7 +82,7 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
       await onPrint(selectedPrinterId, selectedTicketType);
       onDismiss();
     } catch (error) {
-      console.error('Error printing ticket:', error);
+      // Error al imprimir ticket
     } finally {
       setIsPrinting(false);
     }

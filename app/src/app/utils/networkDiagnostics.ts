@@ -48,7 +48,7 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
     recommendations: [],
   };
 
-  console.log('[NetworkDiagnostics] Iniciando diagnóstico de red...');
+  // Iniciando diagnóstico de red...
 
   // 1. Verificar estado de la red
   try {
@@ -59,18 +59,15 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
       type: netInfoState.type,
       details: netInfoState.details,
     };
-    console.log('[NetworkDiagnostics] Estado de red:', result.networkState);
+    // Estado de red obtenido
   } catch (error: any) {
-    console.error(
-      '[NetworkDiagnostics] Error obteniendo estado de red:',
-      error,
-    );
+    // Error obteniendo estado de red
   }
 
   // 2. Probar conexión directa a la API
   const apiStartTime = Date.now();
   try {
-    console.log('[NetworkDiagnostics] Probando conexión a API:', apiUrl);
+    // Probando conexión a API
     const response = await axios.get(`${apiUrl}api/v1/health`, {
       timeout: 5000,
       validateStatus: () => true, // Aceptar cualquier status
@@ -82,7 +79,7 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
       responseTime,
       error: response.status >= 500 ? `Status ${response.status}` : undefined,
     };
-    console.log('[NetworkDiagnostics] Resultado API test:', result.apiTest);
+    // Resultado API test obtenido
   } catch (error: any) {
     const responseTime = Date.now() - apiStartTime;
     result.apiTest = {
@@ -91,17 +88,13 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
       error: error.message,
       errorCode: error.code,
     };
-    console.error(
-      '[NetworkDiagnostics] Error en API test:',
-      error.code,
-      error.message,
-    );
+    // Error en API test
   }
 
   // 3. Probar resolución DNS con un servicio externo
   const dnsStartTime = Date.now();
   try {
-    console.log('[NetworkDiagnostics] Probando DNS con servicio externo...');
+    // Probando DNS con servicio externo...
     await axios.get('https://dns.google/resolve?name=google.com', {
       timeout: 5000,
     });
@@ -111,7 +104,7 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
       success: true,
       responseTime,
     };
-    console.log('[NetworkDiagnostics] DNS test exitoso');
+    // DNS test exitoso
   } catch (error: any) {
     const responseTime = Date.now() - dnsStartTime;
     result.dnsTest = {
@@ -119,7 +112,7 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
       responseTime,
       error: error.message,
     };
-    console.error('[NetworkDiagnostics] Error en DNS test:', error.message);
+    // Error en DNS test
   }
 
   // 4. Generar recomendaciones basadas en los resultados
@@ -184,7 +177,7 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
     result.recommendations.push('- Driver de red desactualizado');
   }
 
-  console.log('[NetworkDiagnostics] Diagnóstico completo:', result);
+  // Diagnóstico completo
   return result;
 }
 

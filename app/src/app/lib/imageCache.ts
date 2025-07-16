@@ -15,7 +15,7 @@ const logCacheOperation = (operation: string, details: any) => {
     operation.includes('FAILED') ||
     operation === 'CACHE_CLEANED'
   ) {
-    console.log(`[ImageCache] ${operation}:`, details);
+    // [ImageCache] operation: details
   }
 };
 
@@ -241,7 +241,6 @@ export async function getCachedImageUri(
     const downloadedUri = await downloadWithRetry(remoteUrl, localUri);
 
     if (downloadedUri) {
-
       // Descarga exitosa - no necesita log en producción
 
       return downloadedUri;

@@ -1140,7 +1140,12 @@ const RestaurantConfigScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: any, width: number, height: number) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: any,
+  width: number,
+  height: number,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,

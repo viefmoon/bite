@@ -56,7 +56,7 @@ function KitchenOnlyNavigatorContent() {
   }, []);
 
   const responsive = useResponsive();
-  
+
   const styles = React.useMemo(
     () =>
       StyleSheet.create({
@@ -66,7 +66,8 @@ function KitchenOnlyNavigatorContent() {
           justifyContent: 'center',
           alignItems: 'center',
           marginLeft: responsive.spacing.xs,
-          borderRadius: (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
+          borderRadius:
+            (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
@@ -137,7 +138,11 @@ function KitchenOnlyNavigatorContent() {
               onPress={() => navigation.openDrawer()}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon source="menu" size={responsive.dimensions.iconSize.large} color={theme.colors.onPrimary} />
+              <Icon
+                source="menu"
+                size={responsive.dimensions.iconSize.large}
+                color={theme.colors.onPrimary}
+              />
             </TouchableOpacity>
           ),
           headerTitle: () => (

@@ -9,25 +9,24 @@ import {
 } from 'react-native';
 import {
   Portal,
-  Surface,
   Appbar,
   Searchbar,
   Text,
   Card,
   Chip,
   ActivityIndicator,
-  IconButton,
-  Icon,
 } from 'react-native-paper';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useShiftOrders } from '../hooks/useShiftOrders';
-import { formatCurrency } from '@/app/lib/formatters';
 import EmptyState from '@/app/components/common/EmptyState';
 import type { Order } from '@/app/schemas/domain/order.schema';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { formatOrderTypeShort, getPaymentStatus } from '@/app/utils/orderFormatters';
+import {
+  formatOrderTypeShort,
+  getPaymentStatus,
+} from '@/app/utils/orderFormatters';
 import { receiptService } from '@/modules/receipts/services/receiptService';
 import type { Receipt } from '@/modules/receipts/types/receipt.types';
 import { OrderDetailsView } from './OrderDetailsView';
@@ -46,14 +45,20 @@ export function ShiftOrdersModal({
 }: ShiftOrdersModalProps) {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showReceiptDetails, setShowReceiptDetails] = useState(false);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: orders, isLoading, error, refetch, isRefetching } = useShiftOrders(shiftId);
+  const {
+    data: orders,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useShiftOrders(shiftId);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -67,7 +72,7 @@ export function ShiftOrdersModal({
       setSelectedReceipt(fullOrder);
       setShowReceiptDetails(true);
     } catch (error) {
-      console.error('Error loading receipt details:', error);
+      // Error al cargar detalles del recibo
     }
   };
 
@@ -81,51 +86,61 @@ export function ShiftOrdersModal({
       // Buscar por número de orden
       if (order.shiftOrderNumber?.toString().includes(search)) return true;
       if (order.orderNumber?.toString().includes(search)) return true;
-      
+
       // Buscar en información de entrega
       if (order.deliveryInfo) {
         // Campos principales
-        if (order.deliveryInfo.customerName?.toLowerCase().includes(search)) return true;
+        if (order.deliveryInfo.customerName?.toLowerCase().includes(search))
+          return true;
         if (order.deliveryInfo.customerPhone?.includes(search)) return true;
-        if (order.deliveryInfo.address?.toLowerCase().includes(search)) return true;
-        
+        if (order.deliveryInfo.address?.toLowerCase().includes(search))
+          return true;
+
         // Campos alternativos que pueden venir del backend
-        if (order.deliveryInfo.recipientName?.toLowerCase().includes(search)) return true;
+        if (order.deliveryInfo.recipientName?.toLowerCase().includes(search))
+          return true;
         if (order.deliveryInfo.recipientPhone?.includes(search)) return true;
-        if (order.deliveryInfo.fullAddress?.toLowerCase().includes(search)) return true;
-        
+        if (order.deliveryInfo.fullAddress?.toLowerCase().includes(search))
+          return true;
+
         // Campos adicionales de dirección
-        if (order.deliveryInfo.street?.toLowerCase().includes(search)) return true;
-        if (order.deliveryInfo.neighborhood?.toLowerCase().includes(search)) return true;
-        if (order.deliveryInfo.city?.toLowerCase().includes(search)) return true;
+        if (order.deliveryInfo.street?.toLowerCase().includes(search))
+          return true;
+        if (order.deliveryInfo.neighborhood?.toLowerCase().includes(search))
+          return true;
+        if (order.deliveryInfo.city?.toLowerCase().includes(search))
+          return true;
       }
-      
+
       // Buscar en mesa/área para órdenes locales
       if (order.table) {
         if (order.table.name?.toLowerCase().includes(search)) return true;
         if (order.table.number?.toString().includes(search)) return true;
         if (order.table.area?.name?.toLowerCase().includes(search)) return true;
       }
-      
+
       // Buscar en área directa
       if (order.area?.name?.toLowerCase().includes(search)) return true;
-      
+
       // Buscar en notas
       if (order.notes?.toLowerCase().includes(search)) return true;
-      
+
       // Buscar en nombre del usuario creador
       if (order.createdBy) {
-        if (order.createdBy.firstName?.toLowerCase().includes(search)) return true;
-        if (order.createdBy.lastName?.toLowerCase().includes(search)) return true;
-        if (order.createdBy.username?.toLowerCase().includes(search)) return true;
+        if (order.createdBy.firstName?.toLowerCase().includes(search))
+          return true;
+        if (order.createdBy.lastName?.toLowerCase().includes(search))
+          return true;
+        if (order.createdBy.username?.toLowerCase().includes(search))
+          return true;
       }
-      
+
       // Buscar en user (campo alternativo)
       if (order.user) {
         if (order.user.firstName?.toLowerCase().includes(search)) return true;
         if (order.user.lastName?.toLowerCase().includes(search)) return true;
       }
-      
+
       return false;
     });
   }, [orders, searchQuery]);
@@ -172,20 +187,30 @@ export function ShiftOrdersModal({
       if (item.deliveryInfo?.recipientName || item.deliveryInfo?.customerName) {
         orderTitle += ` • ${item.deliveryInfo.recipientName || item.deliveryInfo.customerName}`;
       }
-      if (item.deliveryInfo?.recipientPhone || item.deliveryInfo?.customerPhone) {
+      if (
+        item.deliveryInfo?.recipientPhone ||
+        item.deliveryInfo?.customerPhone
+      ) {
         orderTitle += ` • ${item.deliveryInfo.recipientPhone || item.deliveryInfo.customerPhone}`;
       }
     } else if (item.orderType === OrderTypeEnum.DELIVERY) {
       if (item.deliveryInfo?.fullAddress || item.deliveryInfo?.address) {
         orderTitle += ` • ${item.deliveryInfo.fullAddress || item.deliveryInfo.address}`;
       }
-      if (item.deliveryInfo?.recipientPhone || item.deliveryInfo?.customerPhone) {
+      if (
+        item.deliveryInfo?.recipientPhone ||
+        item.deliveryInfo?.customerPhone
+      ) {
         orderTitle += ` • ${item.deliveryInfo.recipientPhone || item.deliveryInfo.customerPhone}`;
       }
     }
 
-    const totalAmount = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
-    const totalPaid = item.paymentsSummary?.totalPaid || item.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    const totalAmount =
+      typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+    const totalPaid =
+      item.paymentsSummary?.totalPaid ||
+      item.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) ||
+      0;
     const pendingAmount = totalAmount - totalPaid;
 
     return (
@@ -216,7 +241,8 @@ export function ShiftOrdersModal({
                     style={[
                       styles.orderPrice,
                       {
-                        color: pendingAmount > 0 ? theme.colors.error : '#10B981',
+                        color:
+                          pendingAmount > 0 ? theme.colors.error : '#10B981',
                       },
                     ]}
                   >
@@ -233,25 +259,31 @@ export function ShiftOrdersModal({
                       ]}
                       numberOfLines={1}
                     >
-                      {' • '}{item.notes}
+                      {' • '}
+                      {item.notes}
                     </Text>
                   )}
                 </Text>
                 <View style={styles.timeAndPaymentRow}>
                   <Text
-                    style={[
-                      styles.orderTime,
-                      { color: theme.colors.primary },
-                    ]}
+                    style={[styles.orderTime, { color: theme.colors.primary }]}
                   >
                     {format(new Date(item.createdAt), 'p', { locale: es })}
                   </Text>
                   {(() => {
                     const paymentStatus = getPaymentStatus(item as any);
-                    const color = paymentStatus === 'paid' ? '#10B981' : 
-                                paymentStatus === 'partial' ? '#F59E0B' : '#EF4444';
-                    const icon = paymentStatus === 'paid' ? '✓' : 
-                               paymentStatus === 'partial' ? '½' : '•';
+                    const color =
+                      paymentStatus === 'paid'
+                        ? '#10B981'
+                        : paymentStatus === 'partial'
+                          ? '#F59E0B'
+                          : '#EF4444';
+                    const icon =
+                      paymentStatus === 'paid'
+                        ? '✓'
+                        : paymentStatus === 'partial'
+                          ? '½'
+                          : '•';
                     return (
                       <View
                         style={[
@@ -259,50 +291,60 @@ export function ShiftOrdersModal({
                           { backgroundColor: color },
                         ]}
                       >
-                        <Text style={styles.miniPaymentText}>
-                          {icon}
-                        </Text>
+                        <Text style={styles.miniPaymentText}>{icon}</Text>
                       </View>
                     );
                   })()}
-                  {item.preparationScreenStatuses && item.preparationScreenStatuses.length > 0 && (
-                    <>
-                      {item.preparationScreenStatuses.map((screen, index) => {
-                        const backgroundColor = 
-                          screen.status === 'READY' ? '#4CAF50' :
-                          screen.status === 'IN_PROGRESS' ? '#FFA000' :
-                          theme.colors.surfaceVariant;
-                        
-                        const textColor = 
-                          screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
-                          theme.colors.onSurfaceVariant;
-                          
-                        return (
-                          <View
-                            key={`${item.id}-screen-${index}`}
-                            style={[
-                              styles.inlinePreparationBadge,
-                              {
-                                backgroundColor,
-                                borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
-                              },
-                            ]}
-                          >
-                            <Text
+                  {item.preparationScreenStatuses &&
+                    item.preparationScreenStatuses.length > 0 && (
+                      <>
+                        {item.preparationScreenStatuses.map((screen, index) => {
+                          const backgroundColor =
+                            screen.status === 'READY'
+                              ? '#4CAF50'
+                              : screen.status === 'IN_PROGRESS'
+                                ? '#FFA000'
+                                : theme.colors.surfaceVariant;
+
+                          const textColor =
+                            screen.status === 'READY' ||
+                            screen.status === 'IN_PROGRESS'
+                              ? '#FFFFFF'
+                              : theme.colors.onSurfaceVariant;
+
+                          return (
+                            <View
+                              key={`${item.id}-screen-${index}`}
                               style={[
-                                styles.inlinePreparationText,
-                                { color: textColor },
+                                styles.inlinePreparationBadge,
+                                {
+                                  backgroundColor,
+                                  borderColor:
+                                    backgroundColor ===
+                                    theme.colors.surfaceVariant
+                                      ? theme.colors.outline
+                                      : backgroundColor,
+                                },
                               ]}
                             >
-                              {screen.status === 'READY' ? '✓ ' : 
-                               screen.status === 'IN_PROGRESS' ? '⏳' : ''}
-                              🍳 {screen.name}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </>
-                  )}
+                              <Text
+                                style={[
+                                  styles.inlinePreparationText,
+                                  { color: textColor },
+                                ]}
+                              >
+                                {screen.status === 'READY'
+                                  ? '✓ '
+                                  : screen.status === 'IN_PROGRESS'
+                                    ? '⏳'
+                                    : ''}
+                                🍳 {screen.name}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </>
+                    )}
                 </View>
               </View>
 
@@ -311,7 +353,9 @@ export function ShiftOrdersModal({
                   <Text style={styles.createdByText} numberOfLines={1}>
                     {item.createdBy.firstName && item.createdBy.lastName
                       ? `${item.createdBy.firstName} ${item.createdBy.lastName}`
-                      : item.createdBy.username || item.user?.firstName || 'Usuario'}
+                      : item.createdBy.username ||
+                        item.user?.firstName ||
+                        'Usuario'}
                   </Text>
                 )}
                 <Chip
@@ -319,7 +363,9 @@ export function ShiftOrdersModal({
                   compact
                   style={[
                     styles.statusChip,
-                    { backgroundColor: getReceiptStatusColor(item.orderStatus) },
+                    {
+                      backgroundColor: getReceiptStatusColor(item.orderStatus),
+                    },
                   ]}
                   textStyle={styles.statusChipText}
                 >
@@ -327,7 +373,6 @@ export function ShiftOrdersModal({
                 </Chip>
               </View>
             </View>
-
           </Card.Content>
         </Card>
       </TouchableOpacity>
@@ -369,7 +414,9 @@ export function ShiftOrdersModal({
           {showOrderHistory && selectedReceipt ? (
             <OrderHistoryView
               orderId={selectedReceipt.id}
-              orderNumber={selectedReceipt.shiftOrderNumber || selectedReceipt.orderNumber}
+              orderNumber={
+                selectedReceipt.shiftOrderNumber || selectedReceipt.orderNumber
+              }
               onBack={() => {
                 setShowOrderHistory(false);
                 setShowReceiptDetails(true);
@@ -392,8 +439,8 @@ export function ShiftOrdersModal({
               <Appbar.Header style={styles.header}>
                 <Appbar.BackAction onPress={onClose} />
                 <Appbar.Content title="Órdenes del Turno" />
-                <Appbar.Action 
-                  icon="refresh" 
+                <Appbar.Action
+                  icon="refresh"
                   onPress={handleRefresh}
                   disabled={isLoading || isRefreshing}
                 />

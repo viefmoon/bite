@@ -34,7 +34,10 @@ const configurationSchema = z.object({
 
 type ConfigurationFormData = z.infer<typeof configurationSchema>;
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modal: {
       backgroundColor: theme.colors.background,
@@ -150,7 +153,10 @@ export function PizzaConfigurationModal({
 }: PizzaConfigurationModalProps) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [showConfirmation, setShowConfirmation] = useState(false);

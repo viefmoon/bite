@@ -18,14 +18,11 @@ export function AppNavigator() {
   // Inicializar servicios una sola vez al montar la app
   useEffect(() => {
     initImageCache();
-    
+
     // Inicializar el servicio de conexión siempre, incluso sin autenticación
     // para que funcione en la pantalla de login
     serverConnectionService.initialize().catch((error) => {
-      console.error(
-        '[AppNavigator] Error inicializando servicio de conexión:',
-        error,
-      );
+      // Error inicializando servicio de conexión
     });
 
     return () => {

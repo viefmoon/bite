@@ -16,7 +16,10 @@ export const CategoryAvailabilityItem: React.FC<
 > = ({ category, onRefresh: _onRefresh }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();
 
@@ -244,7 +247,10 @@ export const CategoryAvailabilityItem: React.FC<
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     container: {
       marginHorizontal: responsive.spacing(theme.spacing.m),

@@ -70,7 +70,7 @@ export const useCreateTable = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error('Error creating table:', error);
+      // Error al crear mesa
     },
   });
 };
@@ -112,7 +112,7 @@ export const useUpdateTable = () => {
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error updating table ${variables.id}:`, error);
+      // Error al actualizar mesa
 
       if (context?.previousDetail) {
         queryClient.setQueryData(
@@ -163,7 +163,7 @@ export const useDeleteTable = () => {
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error deleting table ${deletedId}:`, error);
+      // Error al eliminar mesa
 
       if (context?.previousDetail) {
         queryClient.setQueryData(

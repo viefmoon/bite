@@ -65,7 +65,10 @@ export default function InlineDatePicker({
 }: InlineDatePickerProps) {
   const theme = useTheme<AppTheme>();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => getStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => getStyles(theme, responsive),
+    [theme, responsive],
+  );
 
   const [selectedDate, setSelectedDate] = useState<Date>(date || new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(date || new Date());
@@ -321,7 +324,10 @@ export default function InlineDatePicker({
   );
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) => {
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) => {
   const { width } = Dimensions.get('window');
 
   return StyleSheet.create({
@@ -335,7 +341,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
     surface: {
-      width: responsive.isTablet ? Math.min(width * 0.6, 450) : Math.min(width * 0.9, 360),
+      width: responsive.isTablet
+        ? Math.min(width * 0.6, 450)
+        : Math.min(width * 0.9, 360),
       maxHeight: responsive.isTablet ? '85%' : '80%',
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,

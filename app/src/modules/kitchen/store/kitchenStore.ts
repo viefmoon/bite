@@ -32,16 +32,14 @@ export const useKitchenStore = create<KitchenStore>()(
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
-            console.error('Error rehydrating kitchen filters:', error);
+            // Error al rehidratar filtros de cocina
             return;
           }
           if (!state) {
-            console.warn(
-              'State not available during kitchen filters rehydration',
-            );
+            // Estado no disponible durante la rehidratación de filtros de cocina
             return;
           }
-          console.log('Kitchen filters restored:', state.filters);
+          // Filtros de cocina restaurados
         };
       },
     },

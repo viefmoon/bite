@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, Animated } from 'react-native';
 import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { useOrientation } from '@/hooks/useOrientation';
 import {
   useKitchenOrders,
   useStartOrderPreparation,

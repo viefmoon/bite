@@ -229,7 +229,7 @@ class AutoReconnectService extends EventEmitter {
   private async tryDiscovery(): Promise<boolean> {
     this.updateState({ status: 'running-discovery' });
 
-      discoveryService.setLogCallback((message: string) => {
+    discoveryService.setLogCallback((message: string) => {
       this.addLog(`  ${message}`, 'info');
     });
 
@@ -247,7 +247,10 @@ class AutoReconnectService extends EventEmitter {
         return false;
       }
     } catch (error: any) {
-      this.addLog(`  ✗ Error: ${error.message || 'Error al buscar servidor'}`, 'error');
+      this.addLog(
+        `  ✗ Error: ${error.message || 'Error al buscar servidor'}`,
+        'error',
+      );
       return false;
     } finally {
       discoveryService.setLogCallback(null);
@@ -273,7 +276,6 @@ class AutoReconnectService extends EventEmitter {
       this.off('stateChange', callback);
     };
   }
-
 }
 
 // Singleton

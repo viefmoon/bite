@@ -101,25 +101,40 @@ export const getResponsiveDimension = (
 
 // Escalas de spacing responsive (más espacioso en tablets para mejor legibilidad)
 export const RESPONSIVE_SPACING = {
-  xxxs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(2, width) : scaleWidth(1, width),
-  xxs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(4, width) : scaleWidth(2, width),
-  xs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(6, width) : scaleWidth(4, width),
-  s: (width: number = screenWidth) => isTablet(width) ? scaleWidth(10, width) : scaleWidth(8, width),
-  m: (width: number = screenWidth) => isTablet(width) ? scaleWidth(16, width) : scaleWidth(16, width),
-  l: (width: number = screenWidth) => isTablet(width) ? scaleWidth(24, width) : scaleWidth(24, width),
-  xl: (width: number = screenWidth) => isTablet(width) ? scaleWidth(32, width) : scaleWidth(32, width),
-  xxl: (width: number = screenWidth) => isTablet(width) ? scaleWidth(40, width) : scaleWidth(40, width),
+  xxxs: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(2, width) : scaleWidth(1, width),
+  xxs: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(4, width) : scaleWidth(2, width),
+  xs: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(6, width) : scaleWidth(4, width),
+  s: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(10, width) : scaleWidth(8, width),
+  m: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(16, width) : scaleWidth(16, width),
+  l: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(24, width) : scaleWidth(24, width),
+  xl: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(32, width) : scaleWidth(32, width),
+  xxl: (width: number = screenWidth) =>
+    isTablet(width) ? scaleWidth(40, width) : scaleWidth(40, width),
 } as const;
 
 // Tamaños de fuente responsive (optimizadas para tablets)
 export const RESPONSIVE_FONT_SIZES = {
-  xs: (width: number = screenWidth) => isTablet(width) ? 10 : scaleWithLimits(10, 0.9, 1.1, width),
-  s: (width: number = screenWidth) => isTablet(width) ? 12 : scaleWithLimits(12, 0.9, 1.1, width),
-  m: (width: number = screenWidth) => isTablet(width) ? 14 : scaleWithLimits(14, 0.9, 1.2, width),
-  l: (width: number = screenWidth) => isTablet(width) ? 16 : scaleWithLimits(16, 0.9, 1.2, width),
-  xl: (width: number = screenWidth) => isTablet(width) ? 18 : scaleWithLimits(20, 0.9, 1.3, width),
-  xxl: (width: number = screenWidth) => isTablet(width) ? 22 : scaleWithLimits(24, 0.9, 1.3, width),
-  xxxl: (width: number = screenWidth) => isTablet(width) ? 28 : scaleWithLimits(32, 0.9, 1.4, width),
+  xs: (width: number = screenWidth) =>
+    isTablet(width) ? 10 : scaleWithLimits(10, 0.9, 1.1, width),
+  s: (width: number = screenWidth) =>
+    isTablet(width) ? 12 : scaleWithLimits(12, 0.9, 1.1, width),
+  m: (width: number = screenWidth) =>
+    isTablet(width) ? 14 : scaleWithLimits(14, 0.9, 1.2, width),
+  l: (width: number = screenWidth) =>
+    isTablet(width) ? 16 : scaleWithLimits(16, 0.9, 1.2, width),
+  xl: (width: number = screenWidth) =>
+    isTablet(width) ? 18 : scaleWithLimits(20, 0.9, 1.3, width),
+  xxl: (width: number = screenWidth) =>
+    isTablet(width) ? 22 : scaleWithLimits(24, 0.9, 1.3, width),
+  xxxl: (width: number = screenWidth) =>
+    isTablet(width) ? 28 : scaleWithLimits(32, 0.9, 1.4, width),
 } as const;
 
 // Dimensiones comunes responsive
@@ -261,7 +276,7 @@ export const TABLET_DENSITY_MULTIPLIER = 0.75;
 export const getCompactSize = (
   mobileSize: number,
   width: number = screenWidth,
-  compactRatio: number = TABLET_DENSITY_MULTIPLIER
+  compactRatio: number = TABLET_DENSITY_MULTIPLIER,
 ): number => {
   return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
 };
@@ -270,7 +285,7 @@ export const getCompactSize = (
 export const getCompactFontSize = (
   mobileSize: number,
   width: number = screenWidth,
-  compactRatio: number = 0.85
+  compactRatio: number = 0.85,
 ): number => {
   return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
 };
@@ -279,7 +294,9 @@ export const getCompactFontSize = (
 export const getCompactSpacing = (
   mobileSpacing: number,
   width: number = screenWidth,
-  compactRatio: number = 0.65
+  compactRatio: number = 0.65,
 ): number => {
-  return isTablet(width) ? Math.round(mobileSpacing * compactRatio) : mobileSpacing;
+  return isTablet(width)
+    ? Math.round(mobileSpacing * compactRatio)
+    : mobileSpacing;
 };

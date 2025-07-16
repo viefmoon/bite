@@ -17,15 +17,10 @@ import {
   Avatar,
   ActivityIndicator,
   IconButton,
+  Surface,
 } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
-import {
-  format,
-  parseISO,
-  subDays,
-  startOfDay,
-  endOfDay,
-} from 'date-fns';
+import { format, parseISO, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { useShifts } from '../hooks/useShifts';
@@ -55,25 +50,28 @@ export function ShiftsListScreen() {
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
-  const [selectedShiftNumber, setSelectedShiftNumber] = useState<number | undefined>();
+  const [selectedShiftNumber, setSelectedShiftNumber] = useState<
+    number | undefined
+  >();
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [showSalesSummaryView, setShowSalesSummaryView] = useState(false);
 
   const dateParams = useMemo(() => {
     const now = new Date();
-    
+
     switch (dateFilter) {
       case 'today':
         return {
           startDate: format(startOfDay(now), 'yyyy-MM-dd'),
           endDate: format(endOfDay(now), 'yyyy-MM-dd'),
         };
-      case 'yesterday':
+      case 'yesterday': {
         const yesterday = subDays(now, 1);
         return {
           startDate: format(startOfDay(yesterday), 'yyyy-MM-dd'),
           endDate: format(endOfDay(yesterday), 'yyyy-MM-dd'),
         };
+      }
       case 'last7':
         return {
           startDate: format(startOfDay(subDays(now, 7)), 'yyyy-MM-dd'),
@@ -92,7 +90,13 @@ export function ShiftsListScreen() {
     }
   }, [dateFilter, customDateRange]);
 
-  const { data: shifts, isLoading, error, refetch, isRefetching } = useShifts(dateParams);
+  const {
+    data: shifts,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useShifts(dateParams);
 
   useRefreshModuleOnFocus('shifts');
 
@@ -109,24 +113,28 @@ export function ShiftsListScreen() {
 
     return shifts.filter((shift) => {
       if (!shift.openedAt) return false;
-      
+
       try {
         const shiftDate = parseISO(shift.openedAt);
         const shiftDateOnly = format(shiftDate, 'yyyy-MM-dd');
-        
+
         switch (dateFilter) {
           case 'today':
             return shiftDateOnly === format(new Date(), 'yyyy-MM-dd');
           case 'yesterday':
-            return shiftDateOnly === format(subDays(new Date(), 1), 'yyyy-MM-dd');
-          case 'last7':
+            return (
+              shiftDateOnly === format(subDays(new Date(), 1), 'yyyy-MM-dd')
+            );
+          case 'last7': {
             const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
             const today = format(new Date(), 'yyyy-MM-dd');
             return shiftDateOnly >= sevenDaysAgo && shiftDateOnly <= today;
-          case 'custom':
+          }
+          case 'custom': {
             const customStart = format(customDateRange.start, 'yyyy-MM-dd');
             const customEnd = format(customDateRange.end, 'yyyy-MM-dd');
             return shiftDateOnly >= customStart && shiftDateOnly <= customEnd;
+          }
           default:
             return true;
         }
@@ -167,7 +175,7 @@ export function ShiftsListScreen() {
     setShowDateMenu(false);
     setShowDateRangePicker(true);
   };
-  
+
   const handleViewOrders = (shift: Shift) => {
     setSelectedShiftId(String(shift.id));
     setSelectedShiftNumber(shift.globalShiftNumber || shift.shiftNumber);
@@ -179,7 +187,6 @@ export function ShiftsListScreen() {
     setSelectedShiftNumber(shift.globalShiftNumber || shift.shiftNumber);
     setShowSalesSummaryView(true);
   };
-
 
   const formatShiftDate = (dateString: string) => {
     try {
@@ -220,10 +227,7 @@ export function ShiftsListScreen() {
 
     return (
       <Card
-        style={[
-          styles.shiftCard,
-          isOpen && styles.openShiftCard,
-        ]}
+        style={[styles.shiftCard, isOpen && styles.openShiftCard]}
         mode="contained"
       >
         <Card.Content>
@@ -1019,7 +1023,7 @@ export function ShiftsListScreen() {
             }
           />
         )}
-        
+
         {/* Modal de órdenes del turno */}
         {selectedShiftId && !showSalesSummaryView && (
           <ShiftOrdersModal
@@ -1032,7 +1036,7 @@ export function ShiftsListScreen() {
             shiftId={selectedShiftId}
           />
         )}
-        
+
         {/* Vista de resumen de ventas */}
         {showSalesSummaryView && selectedShiftId && (
           <Modal

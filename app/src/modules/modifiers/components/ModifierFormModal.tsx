@@ -95,7 +95,7 @@ const ModifierFormModal: React.FC<Props> = ({
     onError: (error) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      console.error('Error saving modifier:', error);
+      // Error al guardar modificador
     },
   });
 
@@ -118,7 +118,7 @@ const ModifierFormModal: React.FC<Props> = ({
       try {
         await mutation.mutateAsync(dataToSend);
       } catch (error) {
-        console.error('Mutation failed in submit handler:', error);
+        // Fallo en la mutación al enviar el formulario
       }
     },
     [

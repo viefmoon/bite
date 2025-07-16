@@ -4,7 +4,6 @@ import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Shift, ShiftSummary, ShiftOrder } from '../types';
 import type { Order } from '@/app/schemas/domain/order.schema';
 
-
 export const shiftService = {
   /**
    * Obtiene el historial de turnos
@@ -13,97 +12,90 @@ export const shiftService = {
     startDate?: string;
     endDate?: string;
   }): Promise<Shift[]> => {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (params?.startDate) {
-        queryParams.append('startDate', params.startDate);
-      }
-      if (params?.endDate) {
-        queryParams.append('endDate', params.endDate);
-      }
-      
-      const url = queryParams.toString() 
-        ? `${API_PATHS.SHIFTS_HISTORY}?${queryParams.toString()}`
-        : API_PATHS.SHIFTS_HISTORY;
-        
-      const response = await apiClient.get<any>(url);
+    const queryParams = new URLSearchParams();
 
-      const rawData = handleApiResponse(response);
+    if (params?.startDate) {
+      queryParams.append('startDate', params.startDate);
+    }
+    if (params?.endDate) {
+      queryParams.append('endDate', params.endDate);
+    }
 
-      // Asegurar que siempre trabajamos con un array
-      let shiftsArray: any[] = [];
+    const url = queryParams.toString()
+      ? `${API_PATHS.SHIFTS_HISTORY}?${queryParams.toString()}`
+      : API_PATHS.SHIFTS_HISTORY;
 
-      // Si ya es un array, usarlo directamente
-      if (Array.isArray(rawData)) {
-        shiftsArray = rawData;
-      }
-      // Si es un objeto, buscar propiedades comunes que contengan arrays
-      else if (rawData && typeof rawData === 'object') {
-        // Buscar en orden de preferencia
-        if (Array.isArray(rawData.data)) {
-          shiftsArray = rawData.data;
-        } else if (Array.isArray(rawData.items)) {
-          shiftsArray = rawData.items;
-        } else if (Array.isArray(rawData.results)) {
-          shiftsArray = rawData.results;
-        } else if (Array.isArray(rawData.shifts)) {
-          shiftsArray = rawData.shifts;
-        } else {
-          // Si no encontramos un array en propiedades conocidas,
-          // buscar la primera propiedad que sea un array
-          for (const key in rawData) {
-            if (Array.isArray(rawData[key])) {
-              shiftsArray = rawData[key];
-              break;
-            }
+    const response = await apiClient.get<any>(url);
+
+    const rawData = handleApiResponse(response);
+
+    // Asegurar que siempre trabajamos con un array
+    let shiftsArray: any[] = [];
+
+    // Si ya es un array, usarlo directamente
+    if (Array.isArray(rawData)) {
+      shiftsArray = rawData;
+    }
+    // Si es un objeto, buscar propiedades comunes que contengan arrays
+    else if (rawData && typeof rawData === 'object') {
+      // Buscar en orden de preferencia
+      if (Array.isArray(rawData.data)) {
+        shiftsArray = rawData.data;
+      } else if (Array.isArray(rawData.items)) {
+        shiftsArray = rawData.items;
+      } else if (Array.isArray(rawData.results)) {
+        shiftsArray = rawData.results;
+      } else if (Array.isArray(rawData.shifts)) {
+        shiftsArray = rawData.shifts;
+      } else {
+        // Si no encontramos un array en propiedades conocidas,
+        // buscar la primera propiedad que sea un array
+        for (const key in rawData) {
+          if (Array.isArray(rawData[key])) {
+            shiftsArray = rawData[key];
+            break;
           }
         }
       }
-
-      // Si es un solo objeto shift, convertirlo en array
-      if (
-        !Array.isArray(shiftsArray) &&
-        shiftsArray &&
-        typeof shiftsArray === 'object' &&
-        shiftsArray.id
-      ) {
-        shiftsArray = [shiftsArray];
-      }
-
-      // Normalizar cada turno
-      const normalizedShifts = shiftsArray.map((shift: any) => ({
-        ...shift,
-        // Normalizar status
-        status: (
-          shift.status ||
-          shift.shiftStatus ||
-          'CLOSED'
-        ).toLowerCase() as 'open' | 'closed',
-        // Asegurar que los IDs sean strings
-        id: String(shift.id),
-        // Asegurar que tenemos las propiedades esperadas
-        openedBy: shift.openedBy || {
-          id: '',
-          firstName: 'Usuario',
-          lastName: 'Desconocido',
-        },
-        closedBy: shift.closedBy || null,
-        // Asegurar números
-        initialCash: Number(shift.initialCash) || 0,
-        finalCash: shift.finalCash !== null ? Number(shift.finalCash) : null,
-        totalSales: shift.totalSales !== null ? Number(shift.totalSales) : null,
-        totalOrders:
-          shift.totalOrders !== null ? Number(shift.totalOrders) : null,
-        globalShiftNumber: Number(shift.globalShiftNumber) || 0,
-        shiftNumber: Number(shift.shiftNumber) || 0,
-      }));
-
-      return normalizedShifts;
-    } catch (error) {
-      console.error('[ShiftService] Error fetching history:', error);
-      throw error;
     }
+
+    // Si es un solo objeto shift, convertirlo en array
+    if (
+      !Array.isArray(shiftsArray) &&
+      shiftsArray &&
+      typeof shiftsArray === 'object' &&
+      shiftsArray.id
+    ) {
+      shiftsArray = [shiftsArray];
+    }
+
+    // Normalizar cada turno
+    const normalizedShifts = shiftsArray.map((shift: any) => ({
+      ...shift,
+      // Normalizar status
+      status: (shift.status || shift.shiftStatus || 'CLOSED').toLowerCase() as
+        | 'open'
+        | 'closed',
+      // Asegurar que los IDs sean strings
+      id: String(shift.id),
+      // Asegurar que tenemos las propiedades esperadas
+      openedBy: shift.openedBy || {
+        id: '',
+        firstName: 'Usuario',
+        lastName: 'Desconocido',
+      },
+      closedBy: shift.closedBy || null,
+      // Asegurar números
+      initialCash: Number(shift.initialCash) || 0,
+      finalCash: shift.finalCash !== null ? Number(shift.finalCash) : null,
+      totalSales: shift.totalSales !== null ? Number(shift.totalSales) : null,
+      totalOrders:
+        shift.totalOrders !== null ? Number(shift.totalOrders) : null,
+      globalShiftNumber: Number(shift.globalShiftNumber) || 0,
+      shiftNumber: Number(shift.shiftNumber) || 0,
+    }));
+
+    return normalizedShifts;
   },
 
   /**
@@ -162,7 +154,7 @@ export const shiftService = {
     >();
 
     if (!Array.isArray(orders)) {
-      console.warn('Orders is not an array in calculateShiftSummary');
+      // Orders no es un array en calculateShiftSummary
       return {
         shift,
         ordersCount: 0,
@@ -250,7 +242,7 @@ export const shiftService = {
    */
   formatOrdersForDetail: (orders: Order[]): ShiftOrder[] => {
     if (!Array.isArray(orders)) {
-      console.warn('Orders is not an array:', orders);
+      // Orders no es un array
       return [];
     }
 

@@ -24,19 +24,19 @@ import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic'; // I
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
-type StatusFilter = 'all' | 'active' | 'inactive';
-
 const PrintersScreen: React.FC = () => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
   const [isDiscoveryModalVisible, setIsDiscoveryModalVisible] = useState(false);
   const [discoveredPrinterData, setDiscoveredPrinterData] =
     useState<Partial<CreateThermalPrinterDto> | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [pingingPrinterId, setPingingPrinterId] = useState<string | null>(null);
   const [testPrintingPrinterId, setTestPrintingPrinterId] = useState<
     string | null
@@ -46,12 +46,12 @@ const PrintersScreen: React.FC = () => {
   // --- Lógica CRUD ---
   const queryParams = useMemo(
     () => ({
-      isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
+      isActive: undefined,
       // Añadir otros filtros si son necesarios (ej. name, connectionType)
       page: 1, // O manejar paginación si es necesario
       limit: 50, // Ajustar límite según necesidad
     }),
-    [statusFilter],
+    [],
   );
 
   const {
@@ -174,11 +174,8 @@ const PrintersScreen: React.FC = () => {
   // Filtrar datos según el estado seleccionado
   const filteredData = useMemo(() => {
     if (!printersResponse?.data) return [];
-    if (statusFilter === 'all') return printersResponse.data;
-    return printersResponse.data.filter(
-      (printer) => printer.isActive === (statusFilter === 'active'),
-    );
-  }, [printersResponse?.data, statusFilter]);
+    return printersResponse.data;
+  }, [printersResponse?.data]);
 
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingList,
@@ -187,9 +184,7 @@ const PrintersScreen: React.FC = () => {
     emptyConfig: {
       title: 'No hay impresoras',
       message:
-        statusFilter !== 'all'
-          ? `No hay impresoras ${statusFilter === 'active' ? 'activas' : 'inactivas'} configuradas.`
-          : 'No hay impresoras configuradas. Presiona el botón + para agregar una nueva o descubrir impresoras en la red.',
+        'No hay impresoras configuradas. Presiona el botón + para agregar una nueva o descubrir impresoras en la red.',
       icon: 'printer-outline',
     },
     errorConfig: {
@@ -199,7 +194,6 @@ const PrintersScreen: React.FC = () => {
       onRetry: refetchList,
     },
   });
-
 
   // --- Funcionalidad de Ping ---
   const handlePingPrinter = useCallback(
@@ -318,7 +312,10 @@ const PrintersScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,

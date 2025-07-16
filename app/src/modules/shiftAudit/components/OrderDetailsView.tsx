@@ -13,7 +13,6 @@ import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Receipt } from '@/modules/receipts/types/receipt.types';
-import { formatCurrency } from '@/app/lib/formatters';
 import {
   CustomizationType,
   PizzaHalf,
@@ -178,7 +177,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   const getPaymentStatus = () => {
     if (order?.payments && order.payments.length > 0) {
       const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
-      const totalAmount = typeof order.total === 'string' ? parseFloat(order.total) : (order.total || 0);
+      const totalAmount =
+        typeof order.total === 'string'
+          ? parseFloat(order.total)
+          : order.total || 0;
 
       if (totalPaid >= totalAmount) {
         return { label: 'Pagado', color: '#10B981' };
@@ -372,13 +374,15 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Appbar.Header style={styles.appbarHeader}>
         <Appbar.BackAction onPress={onBack} />
         <Appbar.Content title={`Recibo #${order?.shiftOrderNumber || ''}`} />
-        <Appbar.Action 
-          icon="history" 
-          size={28} 
+        <Appbar.Action
+          icon="history"
+          size={28}
           onPress={onShowHistory}
           disabled={!onShowHistory}
         />
@@ -388,12 +392,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
         <View style={styles.headerInfo}>
           <View style={styles.headerTopRow}>
             <View style={styles.headerLeft}>
-              <Text
-                style={[
-                  styles.orderType,
-                  { color: theme.colors.primary },
-                ]}
-              >
+              <Text style={[styles.orderType, { color: theme.colors.primary }]}>
                 {order ? getOrderTypeLabel(order.orderType) : ''}
               </Text>
             </View>
@@ -435,7 +434,8 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 { color: theme.colors.onSurfaceVariant },
               ]}
             >
-              Creado: {order?.createdAt
+              Creado:{' '}
+              {order?.createdAt
                 ? format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm', {
                     locale: es,
                   })
@@ -443,12 +443,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             </Text>
             {order?.finalizedAt && (
               <Text
-                style={[
-                  styles.headerDate,
-                  { color: theme.colors.primary },
-                ]}
+                style={[styles.headerDate, { color: theme.colors.primary }]}
               >
-                Finalizado: {format(new Date(order.finalizedAt), 'dd/MM/yyyy HH:mm', {
+                Finalizado:{' '}
+                {format(new Date(order.finalizedAt), 'dd/MM/yyyy HH:mm', {
                   locale: es,
                 })}
               </Text>
@@ -466,10 +464,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           {order?.deliveryInfo?.recipientName && (
             <View style={styles.infoRow}>
               <Text
-                style={[
-                  styles.contactText,
-                  { color: theme.colors.onSurface },
-                ]}
+                style={[styles.contactText, { color: theme.colors.onSurface }]}
               >
                 👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
               </Text>
@@ -479,10 +474,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           {order?.deliveryInfo?.recipientPhone && (
             <View style={styles.infoRow}>
               <Text
-                style={[
-                  styles.contactText,
-                  { color: theme.colors.onSurface },
-                ]}
+                style={[styles.contactText, { color: theme.colors.onSurface }]}
               >
                 📞 Teléfono: {order.deliveryInfo.recipientPhone}
               </Text>
@@ -506,10 +498,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           {order?.orderType === 'DINE_IN' && order?.table && (
             <View style={styles.infoRow}>
               <Text
-                style={[
-                  styles.tableText,
-                  { color: theme.colors.onSurface },
-                ]}
+                style={[styles.tableText, { color: theme.colors.onSurface }]}
               >
                 🏛️ Mesa: {order.table.area?.name || 'Sin área'} -{' '}
                 {order.table.number}
@@ -579,13 +568,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                       { color: theme.colors.onSurfaceVariant },
                     ]}
                   >
-                    Total: ${typeof order.total === 'string' ? parseFloat(order.total).toFixed(2) : (order.total || 0).toFixed(2)}
+                    Total: $
+                    {typeof order.total === 'string'
+                      ? parseFloat(order.total).toFixed(2)
+                      : (order.total || 0).toFixed(2)}
                   </Text>
                   <Text
-                    style={[
-                      styles.summaryCompactLabel,
-                      { color: '#10B981' },
-                    ]}
+                    style={[styles.summaryCompactLabel, { color: '#10B981' }]}
                   >
                     Pagado: $
                     {order.payments
@@ -593,7 +582,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                       .toFixed(2)}
                   </Text>
                   {(() => {
-                    const totalAmount = typeof order.total === 'string' ? parseFloat(order.total) : (order.total || 0);
+                    const totalAmount =
+                      typeof order.total === 'string'
+                        ? parseFloat(order.total)
+                        : order.total || 0;
                     const totalPaid = order.payments.reduce(
                       (sum, p) => sum + p.amount,
                       0,
@@ -702,8 +694,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                         styles.paymentStatusBadgeCompact,
                         {
                           backgroundColor:
-                            getPaymentStatusColor(payment.paymentStatus) +
-                            '20',
+                            getPaymentStatusColor(payment.paymentStatus) + '20',
                         },
                       ]}
                     >
@@ -711,9 +702,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                         style={[
                           styles.paymentStatusTextCompact,
                           {
-                            color: getPaymentStatusColor(
-                              payment.paymentStatus,
-                            ),
+                            color: getPaymentStatusColor(payment.paymentStatus),
                           },
                         ]}
                       >
@@ -745,13 +734,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 activeOpacity={0.7}
               >
                 <Text
-                  style={[
-                    styles.sectionTitle,
-                    { color: theme.colors.primary },
-                  ]}
+                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
                 >
-                  🖨️ Historial de Impresiones (
-                  {order.ticketImpressions.length})
+                  🖨️ Historial de Impresiones ({order.ticketImpressions.length})
                 </Text>
                 <IconButton
                   icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
@@ -852,13 +837,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           >
             Total:
           </Text>
-          <Text
-            style={[
-              styles.totalAmount,
-              { color: theme.colors.primary },
-            ]}
-          >
-            ${order ? (typeof order.total === 'string' ? parseFloat(order.total).toFixed(2) : (order.total || 0).toFixed(2)) : '0.00'}
+          <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
+            $
+            {order
+              ? typeof order.total === 'string'
+                ? parseFloat(order.total).toFixed(2)
+                : (order.total || 0).toFixed(2)
+              : '0.00'}
           </Text>
         </View>
         <View
@@ -867,12 +852,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             { backgroundColor: paymentStatus.color },
           ]}
         >
-          <Text style={styles.paymentBadgeText}>
-            💵 {paymentStatus.label}
-          </Text>
+          <Text style={styles.paymentBadgeText}>💵 {paymentStatus.label}</Text>
         </View>
       </View>
-
     </View>
   );
 };

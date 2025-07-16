@@ -149,7 +149,10 @@ class HealthMonitoringService extends EventEmitter {
     // Obtener intervalo de reintento
     const retryInterval =
       NETWORK_CONFIG.HEALTH_RETRY_INTERVALS[
-        Math.min(this.retryCount, NETWORK_CONFIG.HEALTH_RETRY_INTERVALS.length - 1)
+        Math.min(
+          this.retryCount,
+          NETWORK_CONFIG.HEALTH_RETRY_INTERVALS.length - 1,
+        )
       ];
 
     this.retryTimeout = setTimeout(() => {

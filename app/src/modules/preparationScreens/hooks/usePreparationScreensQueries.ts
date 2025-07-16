@@ -138,10 +138,7 @@ export const useUpdatePreparationScreen = () => {
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(
-        `Error updating preparation screen ${variables.id}:`,
-        error,
-      );
+      // Error al actualizar pantalla de preparación
 
       // Revertir caché de detalle
       if (context?.previousDetail) {

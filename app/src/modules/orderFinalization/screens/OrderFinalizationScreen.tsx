@@ -33,7 +33,10 @@ export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
     selectedOrders: new Set(),
@@ -147,7 +150,6 @@ export const OrderFinalizationScreen: React.FC = () => {
     },
     [orders],
   );
-
 
   const ordersNotReady = useMemo(() => {
     if (selectionState.selectedOrders.size === 0) return [];
@@ -545,94 +547,98 @@ export const OrderFinalizationScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: typeof useAppTheme, responsive: typeof useResponsive) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    backgroundColor: 'transparent',
-    elevation: 0,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 0,
-  },
-  filterContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 0,
-  },
-  refreshButtonContainer: {
-    paddingHorizontal: responsive.isTablet ? 6 : 8,
-  },
-  refreshButton: {
-    margin: 0,
-  },
-  filterButton: {
-    flex: 1,
-    height: responsive.isTablet ? 44 : 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 0,
-    elevation: 1,
-    position: 'relative',
-  },
-  filterButtonActive: {
-    elevation: 3,
-  },
-  countBadge: {
-    position: 'absolute',
-    top: responsive.isTablet ? 4 : 6,
-    right: responsive.isTablet ? 4 : 6,
-    minWidth: responsive.isTablet ? 18 : 22,
-    height: responsive.isTablet ? 18 : 22,
-    borderRadius: responsive.isTablet ? 9 : 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: responsive.isTablet ? 4 : 6,
-    borderWidth: 1,
-    elevation: 2,
-  },
-  countBadgeText: {
-    fontSize: responsive.isTablet ? 10 : 12,
-    fontWeight: '700',
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: responsive.isTablet ? 12 : 16,
-    left: responsive.isTablet ? 12 : 16,
-    right: responsive.isTablet ? 12 : 16,
-    borderRadius: responsive.isTablet ? 12 : 16,
-    padding: responsive.isTablet ? 6 : 8,
-    elevation: 8,
-  },
-  finalizeButton: {
-    borderRadius: responsive.isTablet ? 10 : 12,
-    paddingVertical: responsive.isTablet ? 3 : 4,
-  },
-  finalizeButtonLabel: {
-    fontSize: responsive.isTablet ? 14 : 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  content: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: responsive.isTablet ? 8 : 12,
-    fontSize: responsive.isTablet ? 12 : 14,
-  },
-  listContent: {
-    padding: responsive.isTablet ? 6 : 8,
-    paddingBottom: responsive.isTablet ? 80 : 100,
-    flexGrow: 1,
-  },
-});
+const createStyles = (
+  theme: typeof useAppTheme,
+  responsive: typeof useResponsive,
+) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+      backgroundColor: 'transparent',
+      elevation: 0,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 0,
+    },
+    filterContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 0,
+    },
+    refreshButtonContainer: {
+      paddingHorizontal: responsive.isTablet ? 6 : 8,
+    },
+    refreshButton: {
+      margin: 0,
+    },
+    filterButton: {
+      flex: 1,
+      height: responsive.isTablet ? 44 : 52,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 0,
+      elevation: 1,
+      position: 'relative',
+    },
+    filterButtonActive: {
+      elevation: 3,
+    },
+    countBadge: {
+      position: 'absolute',
+      top: responsive.isTablet ? 4 : 6,
+      right: responsive.isTablet ? 4 : 6,
+      minWidth: responsive.isTablet ? 18 : 22,
+      height: responsive.isTablet ? 18 : 22,
+      borderRadius: responsive.isTablet ? 9 : 11,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: responsive.isTablet ? 4 : 6,
+      borderWidth: 1,
+      elevation: 2,
+    },
+    countBadgeText: {
+      fontSize: responsive.isTablet ? 10 : 12,
+      fontWeight: '700',
+    },
+    floatingButton: {
+      position: 'absolute',
+      bottom: responsive.isTablet ? 12 : 16,
+      left: responsive.isTablet ? 12 : 16,
+      right: responsive.isTablet ? 12 : 16,
+      borderRadius: responsive.isTablet ? 12 : 16,
+      padding: responsive.isTablet ? 6 : 8,
+      elevation: 8,
+    },
+    finalizeButton: {
+      borderRadius: responsive.isTablet ? 10 : 12,
+      paddingVertical: responsive.isTablet ? 3 : 4,
+    },
+    finalizeButtonLabel: {
+      fontSize: responsive.isTablet ? 14 : 16,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    content: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: responsive.isTablet ? 8 : 12,
+      fontSize: responsive.isTablet ? 12 : 14,
+    },
+    listContent: {
+      padding: responsive.isTablet ? 6 : 8,
+      paddingBottom: responsive.isTablet ? 80 : 100,
+      flexGrow: 1,
+    },
+  });

@@ -2418,17 +2418,28 @@ export class OrdersService {
     
     printer.drawLine();
     
-    // Título CUENTA
-    printer.setTextSize(1, 1);
+    // Configuración de texto más grande para número de orden y mesa
+    printer.setTextSize(2, 2);
     printer.bold(true);
-    printer.println('CUENTA');
+    
+    // Número de orden con información de mesa/área
+    if (order.table) {
+      // Si hay área, mostrar área y mesa junto al número de orden
+      if (order.table.area) {
+        printer.println(`#${order.shiftOrderNumber} - ${order.table.area.name}`);
+        printer.println(`Mesa: ${order.table.name}`);
+      } else {
+        // Si no hay área, mostrar número de orden y mesa
+        printer.println(`#${order.shiftOrderNumber}`);
+        printer.println(`Mesa: ${order.table.name}`);
+      }
+    } else {
+      // Si no hay mesa, solo mostrar número de orden y tipo
+      printer.println(`#${order.shiftOrderNumber} - ${this.getOrderTypeLabel(order.orderType)}`);
+    }
+    
     printer.bold(false);
     printer.setTextNormal();
-    
-    // Número de orden con tamaño moderado
-    printer.bold(true);
-    printer.println(`#${order.shiftOrderNumber} - ${this.getOrderTypeLabel(order.orderType)}`);
-    printer.bold(false);
     
     printer.drawLine();
     
@@ -2441,14 +2452,6 @@ export class OrdersService {
     if (order.user?.firstName || order.user?.lastName) {
       const userName = [order.user.firstName, order.user.lastName].filter(Boolean).join(' ');
       printer.println(`Atendido por: ${userName}`);
-    }
-    
-    // Mesa o información de cliente según el tipo de orden
-    if (order.table) {
-      printer.println(`Mesa: ${order.table.name}`);
-      if (order.table.area) {
-        printer.println(`Área: ${order.table.area.name}`);
-      }
     }
     
     // Información de cliente para delivery/takeaway

@@ -65,9 +65,9 @@ import {
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 // Importar tipos desde update-order.types.ts
-import type { 
-  OrderItemDtoForBackend, 
-  OrderItemModifierDto 
+import type {
+  OrderItemDtoForBackend,
+  OrderItemModifierDto,
 } from '../types/update-order.types';
 
 // Definir la estructura completa del payload para onConfirmOrder (y exportarla)
@@ -356,97 +356,103 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     : setCartDeliveryInfo;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
 
-  const removeItem = useCallback((itemId: string) => {
-    if (isEditMode) {
-      const item = editItems.find((i) => i.id === itemId);
-      if (!item) return;
+  const removeItem = useCallback(
+    (itemId: string) => {
+      if (isEditMode) {
+        const item = editItems.find((i) => i.id === itemId);
+        if (!item) return;
 
-      // Verificar el estado del item
-      if (
-        item.preparationStatus === 'READY' ||
-        item.preparationStatus === 'DELIVERED'
-      ) {
-        // No permitir eliminar items listos o entregados
-        showSnackbar({
-          message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
-          type: 'error',
-        });
-        return;
-      }
+        // Verificar el estado del item
+        if (
+          item.preparationStatus === 'READY' ||
+          item.preparationStatus === 'DELIVERED'
+        ) {
+          // No permitir eliminar items listos o entregados
+          showSnackbar({
+            message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+            type: 'error',
+          });
+          return;
+        }
 
-      if (item.preparationStatus === 'IN_PROGRESS') {
-        // Pedir confirmación para items en preparación
-        setModifyingItemName(item.productName);
-        setPendingModifyAction(() => () => {
+        if (item.preparationStatus === 'IN_PROGRESS') {
+          // Pedir confirmación para items en preparación
+          setModifyingItemName(item.productName);
+          setPendingModifyAction(() => () => {
+            setEditItems((prev) => prev.filter((i) => i.id !== itemId));
+          });
+          setShowModifyInProgressConfirmation(true);
+        } else {
+          // Permitir eliminar items pendientes o cancelados sin confirmación
           setEditItems((prev) => prev.filter((i) => i.id !== itemId));
-        });
-        setShowModifyInProgressConfirmation(true);
+        }
       } else {
-        // Permitir eliminar items pendientes o cancelados sin confirmación
-        setEditItems((prev) => prev.filter((i) => i.id !== itemId));
+        removeCartItem(itemId);
       }
-    } else {
-      removeCartItem(itemId);
-    }
-  }, [isEditMode, editItems, showSnackbar, removeCartItem]);
+    },
+    [isEditMode, editItems, showSnackbar, removeCartItem],
+  );
 
-  const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
-    if (isEditMode) {
-      if (quantity <= 0) {
-        removeItem(itemId);
-        return;
-      }
+  const updateItemQuantity = useCallback(
+    (itemId: string, quantity: number) => {
+      if (isEditMode) {
+        if (quantity <= 0) {
+          removeItem(itemId);
+          return;
+        }
 
-      const item = editItems.find((i) => i.id === itemId);
-      if (!item) return;
+        const item = editItems.find((i) => i.id === itemId);
+        if (!item) return;
 
-      // Verificar el estado del item
-      if (
-        item.preparationStatus === 'READY' ||
-        item.preparationStatus === 'DELIVERED'
-      ) {
-        // No permitir modificar items listos o entregados
-        showSnackbar({
-          message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
-          type: 'error',
-        });
-        return;
-      }
+        // Verificar el estado del item
+        if (
+          item.preparationStatus === 'READY' ||
+          item.preparationStatus === 'DELIVERED'
+        ) {
+          // No permitir modificar items listos o entregados
+          showSnackbar({
+            message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+            type: 'error',
+          });
+          return;
+        }
 
-      const updateQuantity = () => {
-        setEditItems((prev) =>
-          prev.map((item) => {
-            if (item.id === itemId) {
-              const modifiersPrice = item.modifiers.reduce(
-                (sum, mod) => sum + Number(mod.price || 0),
-                0,
-              );
-              const newTotalPrice =
-                (item.unitPrice + modifiersPrice) * quantity;
-              return {
-                ...item,
-                quantity,
-                totalPrice: newTotalPrice,
-              };
-            }
-            return item;
-          }),
-        );
-      };
+        const updateQuantity = () => {
+          setEditItems((prev) =>
+            prev.map((item) => {
+              if (item.id === itemId) {
+                const modifiersPrice = item.modifiers.reduce(
+                  (sum, mod) => sum + Number(mod.price || 0),
+                  0,
+                );
+                const newTotalPrice =
+                  (item.unitPrice + modifiersPrice) * quantity;
+                return {
+                  ...item,
+                  quantity,
+                  totalPrice: newTotalPrice,
+                };
+              }
+              return item;
+            }),
+          );
+        };
 
-      if (item.preparationStatus === 'IN_PROGRESS') {
-        // Pedir confirmación para items en preparación
-        setModifyingItemName(item.productName);
-        setPendingModifyAction(() => updateQuantity);
-        setShowModifyInProgressConfirmation(true);
+        if (item.preparationStatus === 'IN_PROGRESS') {
+          // Pedir confirmación para items en preparación
+          setModifyingItemName(item.productName);
+          setPendingModifyAction(() => updateQuantity);
+          setShowModifyInProgressConfirmation(true);
+        } else {
+          // Permitir modificar items pendientes o cancelados sin confirmación
+          updateQuantity();
+        }
       } else {
-        // Permitir modificar items pendientes o cancelados sin confirmación
-        updateQuantity();
+        updateCartItemQuantity(itemId, quantity);
       }
-    } else {
-      updateCartItemQuantity(itemId, quantity);
-    }
-  }, [isEditMode, editItems, removeItem, showSnackbar, updateCartItemQuantity]);
+    },
+    [isEditMode, editItems, removeItem, showSnackbar, updateCartItemQuantity],
+  );
 
   // Calcular totales
   const subtotal = useMemo(() => {

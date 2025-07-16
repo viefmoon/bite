@@ -182,7 +182,10 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
   const getPaymentStatus = () => {
     if (receipt?.payments && receipt.payments.length > 0) {
       const totalPaid = receipt.payments.reduce((sum, p) => sum + p.amount, 0);
-      const totalAmount = typeof receipt.total === 'string' ? parseFloat(receipt.total) : (receipt.total || 0);
+      const totalAmount =
+        typeof receipt.total === 'string'
+          ? parseFloat(receipt.total)
+          : receipt.total || 0;
 
       if (totalPaid >= totalAmount) {
         return { label: 'Pagado', color: '#10B981' };
@@ -379,7 +382,10 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                   <View style={styles.headerTopRow}>
                     <View style={styles.headerLeft}>
                       <Text
-                        style={[styles.title, { color: theme.colors.onSurface }]}
+                        style={[
+                          styles.title,
+                          { color: theme.colors.onSurface },
+                        ]}
                       >
                         Recibo #{receipt?.shiftOrderNumber || ''}
                       </Text>
@@ -428,7 +434,9 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                         ]}
                       >
                         <Text style={styles.headerStatusChipText}>
-                          {receipt ? getOrderStatusLabel(receipt.orderStatus) : ''}
+                          {receipt
+                            ? getOrderStatusLabel(receipt.orderStatus)
+                            : ''}
                         </Text>
                       </View>
                       {receipt?.preparationScreens &&
@@ -452,10 +460,15 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                         { color: theme.colors.onSurfaceVariant },
                       ]}
                     >
-                      Creado: {receipt?.createdAt
-                        ? format(new Date(receipt.createdAt), 'dd/MM/yyyy HH:mm', {
-                            locale: es,
-                          })
+                      Creado:{' '}
+                      {receipt?.createdAt
+                        ? format(
+                            new Date(receipt.createdAt),
+                            'dd/MM/yyyy HH:mm',
+                            {
+                              locale: es,
+                            },
+                          )
                         : ''}
                     </Text>
                     {receipt?.finalizedAt && (
@@ -465,9 +478,14 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                           { color: theme.colors.primary },
                         ]}
                       >
-                        Finalizado: {format(new Date(receipt.finalizedAt), 'dd/MM/yyyy HH:mm', {
-                          locale: es,
-                        })}
+                        Finalizado:{' '}
+                        {format(
+                          new Date(receipt.finalizedAt),
+                          'dd/MM/yyyy HH:mm',
+                          {
+                            locale: es,
+                          },
+                        )}
                       </Text>
                     )}
                   </View>
@@ -488,7 +506,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                           { color: theme.colors.onSurface },
                         ]}
                       >
-                        👤 Nombre del Cliente: {receipt.deliveryInfo.recipientName}
+                        👤 Nombre del Cliente:{' '}
+                        {receipt.deliveryInfo.recipientName}
                       </Text>
                     </View>
                   )}
@@ -515,7 +534,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                             { color: theme.colors.onSurfaceVariant },
                           ]}
                         >
-                          📦 Dirección de Entrega: {receipt.deliveryInfo.fullAddress}
+                          📦 Dirección de Entrega:{' '}
+                          {receipt.deliveryInfo.fullAddress}
                         </Text>
                       </View>
                     )}
@@ -558,7 +578,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                           { color: theme.colors.onSurfaceVariant },
                         ]}
                       >
-                        👨‍💼 Atendido por: {receipt.user.firstName} {receipt.user.lastName}
+                        👨‍💼 Atendido por: {receipt.user.firstName}{' '}
+                        {receipt.user.lastName}
                       </Text>
                     </View>
                   )}
@@ -596,7 +617,10 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                               { color: theme.colors.onSurfaceVariant },
                             ]}
                           >
-                            Total: ${typeof receipt.total === 'string' ? parseFloat(receipt.total).toFixed(2) : (receipt.total || 0).toFixed(2)}
+                            Total: $
+                            {typeof receipt.total === 'string'
+                              ? parseFloat(receipt.total).toFixed(2)
+                              : (receipt.total || 0).toFixed(2)}
                           </Text>
                           <Text
                             style={[
@@ -610,7 +634,10 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                               .toFixed(2)}
                           </Text>
                           {(() => {
-                            const totalAmount = typeof receipt.total === 'string' ? parseFloat(receipt.total) : (receipt.total || 0);
+                            const totalAmount =
+                              typeof receipt.total === 'string'
+                                ? parseFloat(receipt.total)
+                                : receipt.total || 0;
                             const totalPaid = receipt.payments.reduce(
                               (sum, p) => sum + p.amount,
                               0,
@@ -719,8 +746,9 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                                 styles.paymentStatusBadgeCompact,
                                 {
                                   backgroundColor:
-                                    getPaymentStatusColor(payment.paymentStatus) +
-                                    '20',
+                                    getPaymentStatusColor(
+                                      payment.paymentStatus,
+                                    ) + '20',
                                 },
                               ]}
                             >
@@ -753,108 +781,124 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                   </>
                 )}
 
-                {receipt?.ticketImpressions && receipt.ticketImpressions.length > 0 && (
-                  <>
-                    <View style={styles.ticketImpressionsSection}>
-                      <TouchableOpacity
-                        style={styles.collapsibleHeader}
-                        onPress={() => setShowPrintHistory(!showPrintHistory)}
-                        activeOpacity={0.7}
-                      >
-                        <Text
-                          style={[
-                            styles.sectionTitle,
-                            { color: theme.colors.primary },
-                          ]}
+                {receipt?.ticketImpressions &&
+                  receipt.ticketImpressions.length > 0 && (
+                    <>
+                      <View style={styles.ticketImpressionsSection}>
+                        <TouchableOpacity
+                          style={styles.collapsibleHeader}
+                          onPress={() => setShowPrintHistory(!showPrintHistory)}
+                          activeOpacity={0.7}
                         >
-                          🖨️ Historial de Impresiones (
-                          {receipt.ticketImpressions.length})
-                        </Text>
-                        <IconButton
-                          icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
-                          size={20}
-                          style={styles.collapseIcon}
-                        />
-                      </TouchableOpacity>
+                          <Text
+                            style={[
+                              styles.sectionTitle,
+                              { color: theme.colors.primary },
+                            ]}
+                          >
+                            🖨️ Historial de Impresiones (
+                            {receipt.ticketImpressions.length})
+                          </Text>
+                          <IconButton
+                            icon={
+                              showPrintHistory ? 'chevron-up' : 'chevron-down'
+                            }
+                            size={20}
+                            style={styles.collapseIcon}
+                          />
+                        </TouchableOpacity>
 
-                      {showPrintHistory && (
-                        <View style={styles.collapsibleContent}>
-                          {receipt.ticketImpressions.map((impression, index) => {
-                            const getTicketTypeLabel = (type: string) => {
-                              switch (type) {
-                                case 'KITCHEN':
-                                  return '🍳 Cocina';
-                                case 'BAR':
-                                  return '🍺 Barra';
-                                case 'BILLING':
-                                  return '💵 Cuenta';
-                                case 'CUSTOMER_COPY':
-                                  return '📄 Copia Cliente';
-                                case 'GENERAL':
-                                  return '📋 General';
-                                default:
-                                  return type;
-                              }
-                            };
+                        {showPrintHistory && (
+                          <View style={styles.collapsibleContent}>
+                            {receipt.ticketImpressions.map(
+                              (impression, index) => {
+                                const getTicketTypeLabel = (type: string) => {
+                                  switch (type) {
+                                    case 'KITCHEN':
+                                      return '🍳 Cocina';
+                                    case 'BAR':
+                                      return '🍺 Barra';
+                                    case 'BILLING':
+                                      return '💵 Cuenta';
+                                    case 'CUSTOMER_COPY':
+                                      return '📄 Copia Cliente';
+                                    case 'GENERAL':
+                                      return '📋 General';
+                                    default:
+                                      return type;
+                                  }
+                                };
 
-                            return (
-                              <View
-                                key={impression.id || index}
-                                style={styles.impressionRow}
-                              >
-                                <View style={styles.impressionLeft}>
-                                  <Text
-                                    style={[
-                                      styles.impressionType,
-                                      { color: theme.colors.onSurface },
-                                    ]}
+                                return (
+                                  <View
+                                    key={impression.id || index}
+                                    style={styles.impressionRow}
                                   >
-                                    {getTicketTypeLabel(impression.ticketType)}
-                                  </Text>
-                                  <View style={styles.impressionDetails}>
-                                    {impression.user && (
+                                    <View style={styles.impressionLeft}>
                                       <Text
                                         style={[
-                                          styles.impressionUser,
-                                          { color: theme.colors.onSurfaceVariant },
+                                          styles.impressionType,
+                                          { color: theme.colors.onSurface },
                                         ]}
                                       >
-                                        por {impression.user.firstName || ''}{' '}
-                                        {impression.user.lastName || ''}
+                                        {getTicketTypeLabel(
+                                          impression.ticketType,
+                                        )}
                                       </Text>
-                                    )}
-                                    {impression.printer && (
-                                      <Text
-                                        style={[
-                                          styles.impressionPrinter,
-                                          { color: theme.colors.onSurfaceVariant },
-                                        ]}
-                                      >
-                                        🖨️ {impression.printer.name}
-                                      </Text>
-                                    )}
+                                      <View style={styles.impressionDetails}>
+                                        {impression.user && (
+                                          <Text
+                                            style={[
+                                              styles.impressionUser,
+                                              {
+                                                color:
+                                                  theme.colors.onSurfaceVariant,
+                                              },
+                                            ]}
+                                          >
+                                            por{' '}
+                                            {impression.user.firstName || ''}{' '}
+                                            {impression.user.lastName || ''}
+                                          </Text>
+                                        )}
+                                        {impression.printer && (
+                                          <Text
+                                            style={[
+                                              styles.impressionPrinter,
+                                              {
+                                                color:
+                                                  theme.colors.onSurfaceVariant,
+                                              },
+                                            ]}
+                                          >
+                                            🖨️ {impression.printer.name}
+                                          </Text>
+                                        )}
+                                      </View>
+                                    </View>
+                                    <Text
+                                      style={[
+                                        styles.impressionTime,
+                                        {
+                                          color: theme.colors.onSurfaceVariant,
+                                        },
+                                      ]}
+                                    >
+                                      {format(
+                                        new Date(impression.impressionTime),
+                                        'HH:mm:ss',
+                                        { locale: es },
+                                      )}
+                                    </Text>
                                   </View>
-                                </View>
-                                <Text
-                                  style={[
-                                    styles.impressionTime,
-                                    { color: theme.colors.onSurfaceVariant },
-                                  ]}
-                                >
-                                  {format(
-                                    new Date(impression.impressionTime),
-                                    'HH:mm:ss',
-                                    { locale: es },
-                                  )}
-                                </Text>
-                              </View>
-                            );
-                          })}
-                        </View>
-                      )}
-                    </View>
-                  </>
-                )}
+                                );
+                              },
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    </>
+                  )}
               </ScrollView>
 
               <Divider style={styles.divider} />
@@ -875,7 +919,12 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                       { color: theme.colors.primary },
                     ]}
                   >
-                    ${receipt ? (typeof receipt.total === 'string' ? parseFloat(receipt.total).toFixed(2) : (receipt.total || 0).toFixed(2)) : '0.00'}
+                    $
+                    {receipt
+                      ? typeof receipt.total === 'string'
+                        ? parseFloat(receipt.total).toFixed(2)
+                        : (receipt.total || 0).toFixed(2)
+                      : '0.00'}
                   </Text>
                 </View>
                 <View

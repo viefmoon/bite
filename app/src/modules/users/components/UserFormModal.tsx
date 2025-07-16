@@ -865,7 +865,10 @@ export function UserFormModal({
   );
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalContainer: {
       margin: responsive.isTablet ? 30 : 20,
@@ -905,9 +908,13 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     formContainer: {
       flex: 1,
-      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.m,
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.m,
       paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
-      paddingBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.s,
+      paddingBottom: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.s,
     },
     sectionContainer: {
       marginBottom: theme.spacing.s,

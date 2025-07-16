@@ -47,7 +47,6 @@ class AuthService {
       const response = await ApiClientWrapper.get(API_PATHS.AUTH_ME);
       return response.status === 200;
     } catch (error) {
-      console.log('[AuthService] Token inválido o expirado');
       return false;
     }
   }

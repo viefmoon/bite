@@ -1,5 +1,12 @@
-import type { OrderStatus, OrderType, Order } from '@/modules/orders/types/orders.types';
-import { OrderStatusEnum, OrderTypeEnum } from '@/modules/orders/types/orders.types';
+import type {
+  OrderStatus,
+  OrderType,
+  Order,
+} from '@/modules/orders/types/orders.types';
+import {
+  OrderStatusEnum,
+  OrderTypeEnum,
+} from '@/modules/orders/types/orders.types';
 import type { OrderOpenList } from '@/modules/orders/types/orders.types';
 import type { OrderForFinalizationList } from '@/modules/orderFinalization/types/orderFinalization.types';
 
@@ -103,7 +110,10 @@ export const formatOrderStatusAlt = (status: string): string => {
  * @param theme - Tema de la aplicación (opcional, para algunos colores)
  * @returns Color hex o referencia al tema
  */
-export const getStatusColor = (status: OrderStatus | string, theme?: any): string => {
+export const getStatusColor = (
+  status: OrderStatus | string,
+  theme?: any,
+): string => {
   switch (status) {
     case OrderStatusEnum.PENDING:
     case 'PENDING':
@@ -134,11 +144,14 @@ export const getPaymentStatus = (
   if (!order) {
     return 'unpaid';
   }
-  
+
   // Si es OrderOpenList o OrderForFinalizationList, usar paymentsSummary
   if ('paymentsSummary' in order) {
     const totalPaid = order.paymentsSummary?.totalPaid || 0;
-    const orderTotal = typeof order.total === 'string' ? parseFloat(order.total) : (order.total || 0);
+    const orderTotal =
+      typeof order.total === 'string'
+        ? parseFloat(order.total)
+        : order.total || 0;
 
     if (totalPaid >= orderTotal) {
       return 'paid';
@@ -159,7 +172,10 @@ export const getPaymentStatus = (
     .filter((payment: any) => payment.paymentStatus === 'COMPLETED')
     .reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0);
 
-  const orderTotal = typeof order.total === 'string' ? parseFloat(order.total) : (order.total || 0);
+  const orderTotal =
+    typeof order.total === 'string'
+      ? parseFloat(order.total)
+      : order.total || 0;
 
   if (totalPaid === 0) {
     return 'unpaid';
@@ -175,7 +191,9 @@ export const getPaymentStatus = (
  * @param paymentStatus - Estado del pago
  * @returns Color hex
  */
-export const getPaymentStatusColor = (paymentStatus: 'unpaid' | 'partial' | 'paid'): string => {
+export const getPaymentStatusColor = (
+  paymentStatus: 'unpaid' | 'partial' | 'paid',
+): string => {
   switch (paymentStatus) {
     case 'paid':
       return '#10B981'; // Green
@@ -193,7 +211,9 @@ export const getPaymentStatusColor = (paymentStatus: 'unpaid' | 'partial' | 'pai
  * @param paymentStatus - Estado del pago
  * @returns Texto formateado con emoji
  */
-export const formatPaymentStatus = (paymentStatus: 'unpaid' | 'partial' | 'paid'): string => {
+export const formatPaymentStatus = (
+  paymentStatus: 'unpaid' | 'partial' | 'paid',
+): string => {
   switch (paymentStatus) {
     case 'paid':
       return '💵 Pagado';

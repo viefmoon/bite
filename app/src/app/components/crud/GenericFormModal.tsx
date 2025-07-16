@@ -41,7 +41,6 @@ import {
   ImageUploadService,
   EntityWithOptionalPhoto,
 } from '../../lib/imageUploadService';
-import { getImageUrl } from '../../lib/imageUtils';
 import { ResponsiveModal } from '../responsive/ResponsiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
 
@@ -207,7 +206,9 @@ const getStyles = (
     modalSurface: {
       padding: 0,
       margin: responsive.spacing(20),
-      marginHorizontal: responsive.isTablet ? responsive.spacing(40) : responsive.spacing(20),
+      marginHorizontal: responsive.isTablet
+        ? responsive.spacing(40)
+        : responsive.spacing(20),
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
@@ -219,15 +220,23 @@ const getStyles = (
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
     },
     formContainer: {
       maxHeight: '100%',
     },
     scrollViewContent: {
-      padding: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet ? responsive.spacing(theme.spacing.l) : responsive.spacing(theme.spacing.xl),
+      padding: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
+      paddingBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.l)
+        : responsive.spacing(theme.spacing.xl),
     },
     modalTitle: {
       color: theme.colors.onPrimary,
@@ -235,7 +244,9 @@ const getStyles = (
       textAlign: 'center',
     },
     input: {
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
     },
@@ -259,13 +270,21 @@ const getStyles = (
     modalActions: {
       flexDirection: 'row',
       justifyContent: 'center',
-      paddingTop: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet ? responsive.spacing(theme.spacing.l) : responsive.spacing(theme.spacing.xl),
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingTop: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
+      paddingBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.l)
+        : responsive.spacing(theme.spacing.xl),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface,
-      gap: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      gap: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
       minHeight: responsive.isTablet ? 70 : 80,
     },
     formButton: {
@@ -371,7 +390,7 @@ const GenericFormModal = <
           },
           {} as DefaultValues<TFormData>,
         );
-        
+
         const resetValues = {
           ...defaultFormValues,
           ...(initialValues as DefaultValues<TFormData>),

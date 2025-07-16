@@ -75,10 +75,14 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
           maxHeight: maxHeightPixels - (footer ? 100 : 20),
         },
         scrollContent: {
-          padding: responsive.isTablet ? responsive.spacing.l : responsive.spacing.m,
+          padding: responsive.isTablet
+            ? responsive.spacing.l
+            : responsive.spacing.m,
         },
         contentPadding: {
-          padding: responsive.isTablet ? responsive.spacing.l : responsive.spacing.m,
+          padding: responsive.isTablet
+            ? responsive.spacing.l
+            : responsive.spacing.m,
           flex: 1,
         },
         footer: {
@@ -97,7 +101,10 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
         <>
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+            contentContainerStyle={[
+              styles.scrollContent,
+              contentContainerStyle,
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
@@ -125,7 +132,7 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
         onDismiss={onDismiss}
         dismissable={dismissable}
         dismissableBackButton={dismissableBackButton}
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           justifyContent: 'center',
           alignItems: 'center',
           flex: 1,

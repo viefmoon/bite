@@ -71,7 +71,10 @@ function ProductFormModal({
 }: ProductFormModalProps): React.ReactElement {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const isEditing = !!productId && !!initialData;
 
@@ -152,7 +155,6 @@ function ProductFormModal({
             try {
               imageUrl = await getImageUrl(initialData.photo.path);
             } catch (error) {
-              console.error('Error al obtener URL de imagen:', error);
               imageUrl = initialData.photo.path; // Fallback al path original
             }
           }
@@ -750,7 +752,9 @@ function ProductFormModal({
                 {isLoadingGroups ? (
                   <ActivityIndicator
                     animating={true}
-                    style={{ marginVertical: responsive.spacing(theme.spacing.m) }}
+                    style={{
+                      marginVertical: responsive.spacing(theme.spacing.m),
+                    }}
                   />
                 ) : allModifierGroups.length === 0 ? (
                   <Text style={styles.noItemsText}>
@@ -878,12 +882,17 @@ function ProductFormModal({
   );
 }
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalSurface: {
       padding: 0,
       margin: responsive.spacing(20),
-      marginHorizontal: responsive.isTablet ? responsive.spacing(40) : responsive.spacing(20),
+      marginHorizontal: responsive.isTablet
+        ? responsive.spacing(40)
+        : responsive.spacing(20),
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
@@ -896,8 +905,12 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
       borderTopLeftRadius: theme.roundness * 2,
       borderTopRightRadius: theme.roundness * 2,
     },
@@ -908,46 +921,70 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
       fontSize: responsive.isTablet ? 20 : 22,
     },
     scrollContent: {
-      padding: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet ? responsive.spacing(theme.spacing.l) : responsive.spacing(theme.spacing.xl),
+      padding: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
+      paddingBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.l)
+        : responsive.spacing(theme.spacing.xl),
     },
     card: {
       backgroundColor: theme.colors.surface,
       elevation: 1,
     },
     input: {
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceVariant,
     },
     switchContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
     },
     label: {
       color: theme.colors.onSurfaceVariant,
       fontSize: responsive.isTablet ? 14 : 16,
-      marginRight: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginRight: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
     },
     divider: {
-      marginVertical: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
     },
     variantsSection: {
-      marginTop: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginTop: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
     },
     variantsHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
     },
     variantCard: {
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
       backgroundColor: theme.colors.elevation.level1,
-      paddingVertical: responsive.isTablet ? 6 : responsive.spacing(theme.spacing.xs),
-      paddingLeft: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
-      paddingRight: responsive.isTablet ? 4 : responsive.spacing(theme.spacing.xs),
+      paddingVertical: responsive.isTablet
+        ? 6
+        : responsive.spacing(theme.spacing.xs),
+      paddingLeft: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
+      paddingRight: responsive.isTablet
+        ? 4
+        : responsive.spacing(theme.spacing.xs),
     },
     variantCardInactive: {
       opacity: 0.7,
@@ -960,7 +997,9 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     },
     variantInfo: {
       flex: 1,
-      marginRight: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginRight: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
     },
     variantHeader: {
       flexDirection: 'row',
@@ -983,10 +1022,14 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     },
     inactiveBadge: {
       backgroundColor: theme.colors.errorContainer,
-      paddingHorizontal: responsive.isTablet ? 6 : responsive.spacing(theme.spacing.xs),
+      paddingHorizontal: responsive.isTablet
+        ? 6
+        : responsive.spacing(theme.spacing.xs),
       paddingVertical: responsive.isTablet ? 1 : 2,
       borderRadius: 4,
-      marginLeft: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.xs),
+      marginLeft: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.xs),
     },
     inactiveBadgeText: {
       fontSize: responsive.isTablet ? 9 : 10,
@@ -1004,33 +1047,51 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     noVariantsText: {
       textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
-      marginVertical: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
       fontStyle: 'italic',
       fontSize: responsive.isTablet ? 13 : 14,
     },
     imagePickerContainer: {
       alignItems: 'center',
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
     },
     modifierGroupSection: {
-      marginTop: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginTop: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
     },
     sectionTitle: {
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
-      marginLeft: responsive.isTablet ? 4 : responsive.spacing(theme.spacing.xs),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
+      marginLeft: responsive.isTablet
+        ? 4
+        : responsive.spacing(theme.spacing.xs),
       fontSize: responsive.isTablet ? 16 : 18,
     },
     noItemsText: {
       textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
-      marginVertical: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
+      marginVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
       fontStyle: 'italic',
       fontSize: responsive.isTablet ? 13 : 14,
     },
     modifierGroupTouchable: {
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
-      marginHorizontal: responsive.isTablet ? -responsive.spacing(theme.spacing.s) : -responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
+      marginHorizontal: responsive.isTablet
+        ? -responsive.spacing(theme.spacing.s)
+        : -responsive.spacing(theme.spacing.m),
     },
     modifierGroupContent: {
       flexDirection: 'row',
@@ -1038,7 +1099,9 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     },
     modifierGroupTextContainer: {
       flex: 1,
-      marginLeft: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      marginLeft: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
     },
     modifierGroupName: {
       fontSize: responsive.isTablet ? 13 : 15,
@@ -1071,16 +1134,24 @@ const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsi
     modalActions: {
       flexDirection: 'row',
       justifyContent: 'center',
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface,
-      gap: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      gap: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
     },
     formButton: {
       borderRadius: theme.roundness * 2,
-      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing(theme.spacing.m)
+        : responsive.spacing(theme.spacing.l),
       minWidth: responsive.isTablet ? 100 : 120,
     },
     cancelButton: {

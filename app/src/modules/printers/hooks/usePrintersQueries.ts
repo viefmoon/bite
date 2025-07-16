@@ -193,12 +193,12 @@ export const usePingPrinterMutation = (): UseMutationResult<
       const type = data.status === 'online' ? 'success' : 'warning';
       showSnackbar({ message, type });
     },
-    onError: (error, printerId) => {
+    onError: (error, _printerId) => {
       showSnackbar({
         message: `Error al hacer ping a la impresora: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      console.error(`Error pinging printer ${printerId}:`, error);
+      // Error al hacer ping a la impresora
     },
   });
 };
@@ -231,7 +231,7 @@ export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
         message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      console.error('Error printing test ticket:', error);
+      // Error al imprimir ticket de prueba
     },
   });
 };
@@ -260,7 +260,7 @@ export const useTestPrintPrinter = (): UseMutationResult<
         message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      console.error('Error printing test ticket:', error);
+      // Error al imprimir ticket de prueba
     },
   });
 };

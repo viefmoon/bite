@@ -12,7 +12,10 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -21,7 +24,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       padding: responsive.isTablet ? responsive.spacing.l : theme.spacing.xl,
     },
     iconContainer: {
-      marginBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.l,
+      marginBottom: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.l,
     },
     title: {
       textAlign: 'center',
@@ -30,9 +35,13 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     message: {
       textAlign: 'center',
-      marginBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.l,
+      marginBottom: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.l,
       color: theme.colors.onSurfaceVariant,
-      paddingHorizontal: responsive.isTablet ? responsive.spacing.l : theme.spacing.xl,
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing.l
+        : theme.spacing.xl,
       fontSize: responsive.isTablet ? 14 : 16,
       lineHeight: responsive.isTablet ? 20 : 24,
     },
@@ -55,7 +64,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Icon source={icon} size={responsive.isTablet ? 56 : 64} color={theme.colors.onSurfaceVariant} />
+        <Icon
+          source={icon}
+          size={responsive.isTablet ? 56 : 64}
+          color={theme.colors.onSurfaceVariant}
+        />
       </View>
       <Text variant="headlineSmall" style={styles.title}>
         {title}

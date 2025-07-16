@@ -131,11 +131,10 @@ const SubcategoriesScreen: React.FC = () => {
             const { getImageUrl } = await import('@/app/lib/imageUtils');
             imageUrl = await getImageUrl(editingItem.photo.path);
           } catch (error) {
-            console.error('Error al obtener URL de imagen:', error);
             imageUrl = editingItem.photo.path;
           }
         }
-        
+
         setFormInitialValues({
           name: editingItem.name,
           description: editingItem.description ?? '',
@@ -155,7 +154,7 @@ const SubcategoriesScreen: React.FC = () => {
         });
       }
     };
-    
+
     loadFormData();
   }, [editingItem, categoryId]);
 

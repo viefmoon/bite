@@ -239,11 +239,10 @@ const CategoriesScreen: React.FC = () => {
             const { getImageUrl } = await import('@/app/lib/imageUtils');
             imageUrl = await getImageUrl(editingCategory.photo.path);
           } catch (error) {
-            console.error('Error al obtener URL de imagen:', error);
             imageUrl = editingCategory.photo.path;
           }
         }
-        
+
         setFormInitialValues({
           name: editingCategory.name,
           description: editingCategory.description ?? null,
@@ -261,7 +260,7 @@ const CategoriesScreen: React.FC = () => {
         });
       }
     };
-    
+
     loadFormData();
   }, [editingCategory]);
 

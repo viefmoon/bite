@@ -7,23 +7,24 @@ interface CartButtonProps {
   onPress: () => void;
 }
 
-const createStyles = (theme: MD3Theme) => StyleSheet.create({
-  cartButton: {
-    margin: 0,
-    backgroundColor: theme.colors.surfaceVariant,
-    zIndex: 999,
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: theme.colors.error,
-    zIndex: 1000,
-  },
-  touchableArea: {
-    padding: 5,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    cartButton: {
+      margin: 0,
+      backgroundColor: theme.colors.surfaceVariant,
+      zIndex: 999,
+    },
+    cartBadge: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      backgroundColor: theme.colors.error,
+      zIndex: 1000,
+    },
+    touchableArea: {
+      padding: 5,
+    },
+  });
 
 const CartButton = React.forwardRef(
   ({ itemCount, onPress }: CartButtonProps, ref) => {

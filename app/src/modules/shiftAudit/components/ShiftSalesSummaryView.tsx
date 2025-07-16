@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Text,
   IconButton,
   Divider,
-  Chip,
   ActivityIndicator,
   DataTable,
   ProgressBar,
@@ -17,13 +11,10 @@ import {
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { formatCurrency } from '@/app/lib/formatters';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useShiftSalesSummary } from '../hooks/useShiftSalesSummary';
-import type { 
-  CategorySalesSummary, 
+import type {
+  CategorySalesSummary,
   SubcategorySalesSummary,
-  ProductSalesSummary 
 } from '../hooks/useShiftSalesSummary';
 
 interface Props {
@@ -32,14 +23,14 @@ interface Props {
   onBack: () => void;
 }
 
-export function ShiftSalesSummaryView({ 
-  shiftId,
-  shiftNumber,
-  onBack 
-}: Props) {
+export function ShiftSalesSummaryView({ shiftId, shiftNumber, onBack }: Props) {
   const theme = useAppTheme();
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedSubcategories, setExpandedSubcategories] = useState<
+    Set<string>
+  >(new Set());
 
   const { data: summary, isLoading, error } = useShiftSalesSummary(shiftId);
 
@@ -66,7 +57,7 @@ export function ShiftSalesSummaryView({
   const renderHeader = () => (
     <Appbar.Header elevated>
       <Appbar.BackAction onPress={onBack} />
-      <Appbar.Content 
+      <Appbar.Content
         title={`Resumen de Ventas - Turno #${shiftNumber || summary?.shiftNumber || 'N/A'}`}
         titleStyle={{ fontSize: 18 }}
       />
@@ -85,7 +76,7 @@ export function ShiftSalesSummaryView({
               {formatCurrency(summary.totalSales)}
             </Text>
           </View>
-          
+
           <View style={styles.summaryCard}>
             <Text style={styles.summaryCardLabel}>ÓRDENES</Text>
             <Text style={styles.summaryCardValue}>
@@ -93,15 +84,13 @@ export function ShiftSalesSummaryView({
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.summaryRow}>
           <View style={styles.summaryCard}>
             <Text style={styles.summaryCardLabel}>PRODUCTOS</Text>
-            <Text style={styles.summaryCardValue}>
-              {summary.totalQuantity}
-            </Text>
+            <Text style={styles.summaryCardValue}>{summary.totalQuantity}</Text>
           </View>
-          
+
           <View style={styles.summaryCard}>
             <Text style={styles.summaryCardLabel}>PROMEDIO</Text>
             <Text style={styles.summaryCardValue}>
@@ -109,7 +98,7 @@ export function ShiftSalesSummaryView({
             </Text>
           </View>
         </View>
-        
+
         <Text style={styles.adjustmentNote}>
           * Los totales incluyen ajustes aplicados (descuentos y cargos)
         </Text>
@@ -119,10 +108,10 @@ export function ShiftSalesSummaryView({
 
   const renderCategoryItem = (category: CategorySalesSummary) => {
     const isExpanded = expandedCategories.has(category.categoryId);
-    
+
     return (
       <View key={category.categoryId}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => toggleCategory(category.categoryId)}
           activeOpacity={0.7}
         >
@@ -130,7 +119,9 @@ export function ShiftSalesSummaryView({
             <View style={styles.categoryHeader}>
               <View style={styles.categoryInfo}>
                 <View style={styles.categoryTitleRow}>
-                  <Text style={styles.categoryName}>{category.categoryName}</Text>
+                  <Text style={styles.categoryName}>
+                    {category.categoryName}
+                  </Text>
                   <Text style={styles.categoryPercentage}>
                     {category.percentage.toFixed(1)}%
                   </Text>
@@ -143,8 +134,8 @@ export function ShiftSalesSummaryView({
                     {formatCurrency(category.totalAmount)}
                   </Text>
                 </View>
-                <ProgressBar 
-                  progress={category.percentage / 100} 
+                <ProgressBar
+                  progress={category.percentage / 100}
                   style={styles.progressBar}
                   color={theme.colors.primary}
                 />
@@ -161,8 +152,8 @@ export function ShiftSalesSummaryView({
 
         {isExpanded && category.subcategories.length > 0 && (
           <View style={styles.subcategoriesContainer}>
-            {category.subcategories.map((subcategory) => 
-              renderSubcategoryItem(subcategory)
+            {category.subcategories.map((subcategory) =>
+              renderSubcategoryItem(subcategory),
             )}
           </View>
         )}
@@ -172,7 +163,7 @@ export function ShiftSalesSummaryView({
 
   const renderSubcategoryItem = (subcategory: SubcategorySalesSummary) => {
     const isExpanded = expandedSubcategories.has(subcategory.subcategoryId);
-    
+
     return (
       <View key={subcategory.subcategoryId}>
         <TouchableOpacity
@@ -182,9 +173,12 @@ export function ShiftSalesSummaryView({
           <View style={styles.subcategoryItem}>
             <View style={styles.subcategoryHeader}>
               <View style={styles.subcategoryInfo}>
-                <Text style={styles.subcategoryName}>{subcategory.subcategoryName}</Text>
+                <Text style={styles.subcategoryName}>
+                  {subcategory.subcategoryName}
+                </Text>
                 <Text style={styles.subcategoryStats}>
-                  {subcategory.quantity} productos • {formatCurrency(subcategory.totalAmount)}
+                  {subcategory.quantity} productos •{' '}
+                  {formatCurrency(subcategory.totalAmount)}
                 </Text>
               </View>
               <IconButton
@@ -202,7 +196,9 @@ export function ShiftSalesSummaryView({
               <View key={product.productId} style={styles.productItem}>
                 <Text style={styles.productName}>{product.productName}</Text>
                 <View style={styles.productStats}>
-                  <Text style={styles.productQuantity}>{product.quantity}x</Text>
+                  <Text style={styles.productQuantity}>
+                    {product.quantity}x
+                  </Text>
                   <Text style={styles.productAmount}>
                     {formatCurrency(product.totalAmount)}
                   </Text>
@@ -227,9 +223,15 @@ export function ShiftSalesSummaryView({
           <DataTable>
             <DataTable.Header>
               <DataTable.Title style={styles.rankColumn}>#</DataTable.Title>
-              <DataTable.Title style={styles.productColumn}>Producto</DataTable.Title>
-              <DataTable.Title numeric style={styles.quantityColumn}>Cant.</DataTable.Title>
-              <DataTable.Title numeric style={styles.amountColumn}>Total</DataTable.Title>
+              <DataTable.Title style={styles.productColumn}>
+                Producto
+              </DataTable.Title>
+              <DataTable.Title numeric style={styles.quantityColumn}>
+                Cant.
+              </DataTable.Title>
+              <DataTable.Title numeric style={styles.amountColumn}>
+                Total
+              </DataTable.Title>
             </DataTable.Header>
 
             {summary.topProducts.slice(0, 10).map((product, index) => (
@@ -269,7 +271,9 @@ export function ShiftSalesSummaryView({
     if (error) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error al cargar el resumen de ventas</Text>
+          <Text style={styles.errorText}>
+            Error al cargar el resumen de ventas
+          </Text>
         </View>
       );
     }
@@ -283,14 +287,14 @@ export function ShiftSalesSummaryView({
     }
 
     return (
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {renderSummaryCards()}
-        
+
         <Divider style={styles.sectionDivider} />
-        
+
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>Ventas por Categoría</Text>
           {summary.categories.map(renderCategoryItem)}

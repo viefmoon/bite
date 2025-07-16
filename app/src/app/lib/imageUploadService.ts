@@ -32,10 +32,7 @@ export class ImageUploadService {
    */
   static async uploadImage(imageFile: FileObject): Promise<ImageUploadResult> {
     if (!imageFile || !imageFile.uri) {
-      console.warn(
-        '[ImageUploadService] Intento de subir imagen inválida:',
-        imageFile,
-      );
+      // Intento de subir imagen inválida
       return {
         success: false,
         error: 'No se proporcionó ninguna imagen válida',
@@ -46,10 +43,7 @@ export class ImageUploadService {
       const uploadResult: FileUploadResponse = await uploadFile(imageFile);
 
       if (!uploadResult || !uploadResult.file || !uploadResult.file.id) {
-        console.error(
-          '[ImageUploadService] Respuesta inválida del fileService:',
-          uploadResult,
-        );
+        // Respuesta inválida del fileService
         return {
           success: false,
           error: 'Respuesta inválida del servidor al subir imagen.',
@@ -61,7 +55,7 @@ export class ImageUploadService {
         photoId: uploadResult.file.id,
       };
     } catch (error) {
-      console.error('Error en ImageUploadService.uploadImage:', error);
+      // Error en ImageUploadService.uploadImage
       let errorMessage = 'Error desconocido al subir la imagen.';
       if (error instanceof ApiError) {
         errorMessage = `Error al subir: ${error.originalMessage || error.code}`;

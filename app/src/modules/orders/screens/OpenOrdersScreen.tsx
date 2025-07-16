@@ -26,12 +26,7 @@ import {
   useUpdateOrderMutation,
   useCancelOrderMutation,
 } from '../hooks/useOrdersQueries';
-import {
-  OrderOpenList,
-  OrderStatusEnum,
-  OrderType,
-  OrderTypeEnum,
-} from '../types/orders.types';
+import { OrderOpenList, OrderType, OrderTypeEnum } from '../types/orders.types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
@@ -52,11 +47,13 @@ type OpenOrdersScreenProps = NativeStackScreenProps<
   'OpenOrders'
 >;
 
-
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [isPrintModalVisible, setIsPrintModalVisible] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<OrderOpenList | null>(null);
@@ -96,7 +93,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     if (selectedOrderType === 'ALL') return ordersData;
     return ordersData.filter((order) => order.orderType === selectedOrderType);
   }, [ordersData, selectedOrderType]);
-
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -141,7 +137,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         }
       }
 
-      const totalAmount = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      const totalAmount =
+        typeof order.total === 'string' ? parseFloat(order.total) : order.total;
       const totalPaid = order.paymentsSummary?.totalPaid || 0;
       const pendingAmount = totalAmount - totalPaid;
 
@@ -173,7 +170,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                       style={[
                         styles.orderPrice,
                         {
-                          color: pendingAmount > 0 ? theme.colors.error : '#10B981',
+                          color:
+                            pendingAmount > 0 ? theme.colors.error : '#10B981',
                         },
                       ]}
                     >
@@ -190,7 +188,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         ]}
                         numberOfLines={1}
                       >
-                        {' • '}{order.notes}
+                        {' • '}
+                        {order.notes}
                       </Text>
                     )}
                   </Text>
@@ -205,10 +204,18 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     </Text>
                     {(() => {
                       const paymentStatus = getPaymentStatus(order);
-                      const color = paymentStatus === 'paid' ? '#10B981' : 
-                                  paymentStatus === 'partial' ? '#F59E0B' : '#EF4444';
-                      const icon = paymentStatus === 'paid' ? '✓' : 
-                                 paymentStatus === 'partial' ? '½' : '•';
+                      const color =
+                        paymentStatus === 'paid'
+                          ? '#10B981'
+                          : paymentStatus === 'partial'
+                            ? '#F59E0B'
+                            : '#EF4444';
+                      const icon =
+                        paymentStatus === 'paid'
+                          ? '✓'
+                          : paymentStatus === 'partial'
+                            ? '½'
+                            : '•';
                       return (
                         <View
                           style={[
@@ -216,50 +223,62 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                             { backgroundColor: color },
                           ]}
                         >
-                          <Text style={styles.miniPaymentText}>
-                            {icon}
-                          </Text>
+                          <Text style={styles.miniPaymentText}>{icon}</Text>
                         </View>
                       );
                     })()}
-                    {order.preparationScreenStatuses && order.preparationScreenStatuses.length > 0 && (
-                      <>
-                        {order.preparationScreenStatuses.map((screen, index) => {
-                          const backgroundColor = 
-                            screen.status === 'READY' ? '#4CAF50' :
-                            screen.status === 'IN_PROGRESS' ? '#FFA000' :
-                            theme.colors.surfaceVariant;
-                          
-                          const textColor = 
-                            screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
-                            theme.colors.onSurfaceVariant;
-                            
-                          return (
-                            <View
-                              key={`${order.id}-screen-${index}`}
-                              style={[
-                                styles.inlinePreparationBadge,
-                                {
-                                  backgroundColor,
-                                  borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.inlinePreparationText,
-                                  { color: textColor },
-                                ]}
-                              >
-                                {screen.status === 'READY' ? '✓ ' : 
-                                 screen.status === 'IN_PROGRESS' ? '⏳ ' : ''}
-                                🍳 {screen.name}
-                              </Text>
-                            </View>
-                          );
-                        })}
-                      </>
-                    )}
+                    {order.preparationScreenStatuses &&
+                      order.preparationScreenStatuses.length > 0 && (
+                        <>
+                          {order.preparationScreenStatuses.map(
+                            (screen, index) => {
+                              const backgroundColor =
+                                screen.status === 'READY'
+                                  ? '#4CAF50'
+                                  : screen.status === 'IN_PROGRESS'
+                                    ? '#FFA000'
+                                    : theme.colors.surfaceVariant;
+
+                              const textColor =
+                                screen.status === 'READY' ||
+                                screen.status === 'IN_PROGRESS'
+                                  ? '#FFFFFF'
+                                  : theme.colors.onSurfaceVariant;
+
+                              return (
+                                <View
+                                  key={`${order.id}-screen-${index}`}
+                                  style={[
+                                    styles.inlinePreparationBadge,
+                                    {
+                                      backgroundColor,
+                                      borderColor:
+                                        backgroundColor ===
+                                        theme.colors.surfaceVariant
+                                          ? theme.colors.outline
+                                          : backgroundColor,
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.inlinePreparationText,
+                                      { color: textColor },
+                                    ]}
+                                  >
+                                    {screen.status === 'READY'
+                                      ? '✓ '
+                                      : screen.status === 'IN_PROGRESS'
+                                        ? '⏳ '
+                                        : ''}
+                                    🍳 {screen.name}
+                                  </Text>
+                                </View>
+                              );
+                            },
+                          )}
+                        </>
+                      )}
                   </View>
                 </View>
 
@@ -276,7 +295,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     compact
                     style={[
                       styles.statusChip,
-                      { backgroundColor: getStatusColor(order.orderStatus, theme) },
+                      {
+                        backgroundColor: getStatusColor(
+                          order.orderStatus,
+                          theme,
+                        ),
+                      },
                     ]}
                     textStyle={styles.statusChipText}
                   >
@@ -305,7 +329,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   </View>
                 </View>
               </View>
-
             </Card.Content>
           </Card>
         </TouchableOpacity>
@@ -391,7 +414,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         // Limpiar estado
         setOrderToPrint(null);
       } catch (error) {
-        console.error('Error al imprimir el ticket:', error);
         showSnackbar({
           message: 'Error al imprimir el ticket',
           type: 'error',
@@ -769,13 +791,15 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
                 // Navegar a añadir productos
                 setTimeout(() => {
-                  const existingProducts = temporaryProducts[editingOrderId!] || [];
+                  const existingProducts =
+                    temporaryProducts[editingOrderId!] || [];
                   navigation.navigate('AddProductsToOrder', {
                     orderId: editingOrderId!,
                     orderNumber: orderNumber!,
                     // Pasar productos temporales existentes si los hay
                     existingTempProducts: existingProducts,
-                    existingOrderItemsCount: existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
+                    existingOrderItemsCount:
+                      existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
                     onProductsAdded: (newProducts) => {
                       // Actualizar productos temporales para esta orden
                       setTemporaryProducts((prev) => ({
@@ -933,7 +957,9 @@ const createStyles = (
     },
     listContentContainer: {
       padding: responsive.isTablet ? theme.spacing.xs : theme.spacing.s,
-      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.l * 2,
+      paddingBottom: responsive.isTablet
+        ? theme.spacing.l
+        : theme.spacing.l * 2,
       flexGrow: 1,
     },
     orderCard: {
@@ -991,7 +1017,9 @@ const createStyles = (
     paidChip: {
       height: responsive.isTablet ? 24 : 28,
       minHeight: responsive.isTablet ? 24 : 28,
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     paidChipText: {
       fontSize: responsive.isTablet ? 11 : 12,
@@ -1053,13 +1081,17 @@ const createStyles = (
       ...theme.fonts.bodyMedium,
       fontSize: responsive.isTablet ? 13 : 14,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     phoneInfo: {
       ...theme.fonts.bodySmall,
       fontSize: responsive.isTablet ? 11 : 12,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     notesInline: {
       fontSize: responsive.isTablet ? 11 : 12,

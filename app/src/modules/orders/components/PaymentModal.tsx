@@ -108,7 +108,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const scrollViewRef = useRef<ScrollView>(null);
   const amountInputRef = useRef<View>(null);
 
@@ -719,7 +722,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalContainer: {
       flex: 1,

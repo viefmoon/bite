@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       set({ accessToken, isAuthenticated: true });
     } catch (error) {
-      console.error('[AuthStore] Error al guardar access token:', error);
+      // Error al guardar access token
     }
   },
 
@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       set({ refreshToken });
     } catch (error) {
-      console.error('[AuthStore] Error al guardar refresh token:', error);
+      // Error al guardar refresh token
     }
   },
 
@@ -86,10 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user });
     } catch (error) {
-      console.error(
-        '[AuthStore] Error al guardar información del usuario:',
-        error,
-      );
+      // Error al guardar información del usuario
     }
   },
 
@@ -105,7 +102,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: false,
       });
     } catch (error) {
-      console.error('[AuthStore] Error durante logout:', error);
+      // Error durante logout
     }
   },
 }));

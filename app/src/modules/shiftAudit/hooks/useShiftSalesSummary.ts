@@ -45,15 +45,17 @@ export function useShiftSalesSummary(shiftId: string | null) {
     queryKey: ['shiftSalesSummary', shiftId],
     queryFn: async () => {
       if (!shiftId) return null;
-      
+
       const response = await apiClient.get(
-        `/api/v1/orders/shift/${shiftId}/sales-summary`
+        `/api/v1/orders/shift/${shiftId}/sales-summary`,
       );
-      
+
       if (!response.ok) {
-        throw new Error(response.problem || 'Error al obtener resumen de ventas');
+        throw new Error(
+          response.problem || 'Error al obtener resumen de ventas',
+        );
       }
-      
+
       return response.data as ShiftSalesSummary;
     },
     enabled: !!shiftId,

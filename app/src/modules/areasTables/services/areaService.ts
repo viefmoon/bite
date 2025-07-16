@@ -29,7 +29,7 @@ export const getAreas = async (
   });
 
   if (!response.ok || !response.data) {
-    console.error('[areaService.getAreas] Failed to fetch areas:', response);
+    // Error al obtener áreas
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -42,10 +42,7 @@ export const getAreaById = async (id: string): Promise<Area> => {
   const response = await ApiClientWrapper.get<Area>(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[areaService.getAreaById] Failed to fetch area ${id}:`,
-      response,
-    );
+    // Error al obtener área por ID
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -58,7 +55,7 @@ export const createArea = async (data: CreateAreaDto): Promise<Area> => {
   const response = await ApiClientWrapper.post<Area>(API_PATHS.AREAS, data);
 
   if (!response.ok || !response.data) {
-    console.error('[areaService.createArea] Failed to create area:', response);
+    // Error al crear área
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -77,10 +74,7 @@ export const updateArea = async (
   );
 
   if (!response.ok || !response.data) {
-    console.error(
-      `[areaService.updateArea] Failed to update area ${id}:`,
-      response,
-    );
+    // Error al actualizar área
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,
@@ -93,10 +87,7 @@ export const deleteArea = async (id: string): Promise<void> => {
   const response = await ApiClientWrapper.delete(`${API_PATHS.AREAS}/${id}`);
 
   if (!response.ok) {
-    console.error(
-      `[areaService.deleteArea] Failed to delete area ${id}:`,
-      response,
-    );
+    // Error al eliminar área
     throw ApiError.fromApiResponse(
       response.data as BackendErrorResponse | undefined,
       response.status,

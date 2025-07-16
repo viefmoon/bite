@@ -114,8 +114,8 @@ const CreateOrderScreen = () => {
     // Para tablets (ancho >= 600px)
     if (responsive.width >= 600) {
       if (responsive.width >= 1200) return 6; // Tablets muy grandes
-      if (responsive.width >= 900) return 5;   // Tablets grandes
-      if (responsive.width >= 768) return 4;   // Tablets medianas
+      if (responsive.width >= 900) return 5; // Tablets grandes
+      if (responsive.width >= 768) return 4; // Tablets medianas
       return 3; // Tablets pequeñas (600-768px)
     }
     // Para móviles (ancho < 600px)
@@ -159,13 +159,16 @@ const CreateOrderScreen = () => {
     return hasVariants || hasModifiers;
   }, []);
 
-  const handleProductSelect = useCallback((product: Product) => {
-    if (productNeedsCustomization(product)) {
-      setSelectedProduct(product);
-    } else {
-      handleAddItem(product, 1);
-    }
-  }, [handleAddItem]);
+  const handleProductSelect = useCallback(
+    (product: Product) => {
+      if (productNeedsCustomization(product)) {
+        setSelectedProduct(product);
+      } else {
+        handleAddItem(product, 1);
+      }
+    },
+    [handleAddItem],
+  );
 
   const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);
@@ -586,7 +589,8 @@ const CreateOrderScreen = () => {
         cardTitle: {
           fontSize: responsive.fontSize(responsive.width >= 600 ? 16 : 15),
           fontWeight: '600',
-          lineHeight: responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
+          lineHeight:
+            responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
           marginBottom: responsive.spacing(2),
         },
         cardHeader: {
@@ -704,11 +708,8 @@ const CreateOrderScreen = () => {
   const blurhash =
     '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-  const renderItem = useCallback(({
-    item,
-  }: {
-    item: Category | SubCategory | Product;
-  }) => {
+  const renderItem = useCallback(
+    ({ item }: { item: Category | SubCategory | Product }) => {
       const imageSource = item.photo ? item.photo.path : null;
       const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
 
@@ -788,7 +789,11 @@ const CreateOrderScreen = () => {
             'price' in item &&
             (item as Product).description ? (
               <View style={styles.cardHeader}>
-                <Title style={[styles.cardTitle, { flex: 1 }]} numberOfLines={2} ellipsizeMode="tail">
+                <Title
+                  style={[styles.cardTitle, { flex: 1 }]}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
                   {item.name}
                 </Title>
                 <IconButton
@@ -799,26 +804,42 @@ const CreateOrderScreen = () => {
                 />
               </View>
             ) : (
-              <Title style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
+              <Title
+                style={styles.cardTitle}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Title>
             )}
             {renderPrice()}
           </View>
         </Card>
       );
-  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect, handleShowProductDescription, styles, blurhash]);
+    },
+    [
+      navigationLevel,
+      handleCategorySelect,
+      handleSubCategorySelect,
+      handleProductSelect,
+      handleShowProductDescription,
+      styles,
+      blurhash,
+    ],
+  );
 
   const getItemsToDisplay = () => {
-      switch (navigationLevel) {
-        case 'categories':
-          return getCategories();
-        case 'subcategories':
-          return getSubcategories();
-        case 'products':
-          return getProducts();
-        default:
-          return [];
-      }
-    };
+    switch (navigationLevel) {
+      case 'categories':
+        return getCategories();
+      case 'subcategories':
+        return getSubcategories();
+      case 'products':
+        return getProducts();
+      default:
+        return [];
+    }
+  };
 
   const itemsToDisplay = getItemsToDisplay();
   const showCartButton = !isCartVisible && !selectedProduct;
@@ -989,7 +1010,7 @@ const CreateOrderScreen = () => {
       </SafeAreaView>
     );
   };
-  
+
   return renderContent();
 };
 

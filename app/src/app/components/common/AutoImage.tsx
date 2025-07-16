@@ -38,21 +38,22 @@ function useAutoImageSize(
   };
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-  },
-  loadingIndicator: {
-    position: 'absolute',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      overflow: 'hidden',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    loadingIndicator: {
+      position: 'absolute',
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+    },
+  });
 
 export const AutoImage: React.FC<AutoImageProps> = ({
   source: originalSourceProp,
@@ -129,11 +130,14 @@ export const AutoImage: React.FC<AutoImageProps> = ({
 
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const containerStyle: StyleProp<ViewStyle> = useMemo(() => [
-    styles.container,
-    { width: width as DimensionValue, height: height as DimensionValue },
-    style,
-  ], [styles, width, height, style]);
+  const containerStyle: StyleProp<ViewStyle> = useMemo(
+    () => [
+      styles.container,
+      { width: width as DimensionValue, height: height as DimensionValue },
+      style,
+    ],
+    [styles, width, height, style],
+  );
 
   const iconSize = useMemo(() => {
     if (typeof width === 'number' && typeof height === 'number') {

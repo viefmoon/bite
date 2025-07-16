@@ -27,7 +27,10 @@ import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 export const AvailabilityScreen: React.FC = () => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<
     'menu' | 'modifiers' | 'pizzaCustomizations'
@@ -276,7 +279,9 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
+            ItemSeparatorComponent={() => (
+              <View style={{ height: responsive.spacing(theme.spacing.s) }} />
+            )}
           />
         ) : viewMode === 'modifiers' ? (
           <FlatList
@@ -297,7 +302,9 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
+            ItemSeparatorComponent={() => (
+              <View style={{ height: responsive.spacing(theme.spacing.s) }} />
+            )}
           />
         ) : (
           <FlatList
@@ -315,7 +322,9 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
+            ItemSeparatorComponent={() => (
+              <View style={{ height: responsive.spacing(theme.spacing.s) }} />
+            )}
           />
         )}
       </View>
@@ -323,7 +332,10 @@ export const AvailabilityScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,

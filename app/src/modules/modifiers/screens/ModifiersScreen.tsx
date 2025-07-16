@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Portal, Button } from 'react-native-paper';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';

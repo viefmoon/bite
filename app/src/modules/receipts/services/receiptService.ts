@@ -2,7 +2,11 @@ import apiClient from '@/app/services/apiClient';
 import type { QueryOptions } from '@tanstack/react-query';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import { ApiError } from '@/app/lib/errors';
-import type { Receipt, ReceiptList, ReceiptsListResponse, ReceiptFilters } from '../types/receipt.types';
+import type {
+  Receipt,
+  ReceiptsListResponse,
+  ReceiptFilters,
+} from '../types/receipt.types';
 import type { Order } from '@/modules/orders/types/orders.types';
 
 export const receiptService = {
@@ -25,7 +29,7 @@ export const receiptService = {
 
     const response = await apiClient.get<ReceiptsListResponse>(
       `${API_PATHS.ORDERS}/receipts-list`,
-      queryParams
+      queryParams,
     );
 
     if (!response.ok || !response.data) {
@@ -36,7 +40,9 @@ export const receiptService = {
   },
 
   getReceiptById: async (id: string): Promise<Receipt> => {
-    const response = await apiClient.get<Receipt>(`${API_PATHS.ORDERS}/receipts/${id}`);
+    const response = await apiClient.get<Receipt>(
+      `${API_PATHS.ORDERS}/receipts/${id}`,
+    );
 
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);

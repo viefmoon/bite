@@ -1,6 +1,5 @@
 import React from 'react';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
-import { useAppTheme } from '@/app/styles/theme';
 import {
   CustomizationType,
   PizzaCustomization,
@@ -23,7 +22,6 @@ export function PizzaCustomizationDetailModal({
   onDelete,
   isDeleting = false,
 }: PizzaCustomizationDetailModalProps) {
-
   if (!customization) return null;
 
   const handleEdit = () => {

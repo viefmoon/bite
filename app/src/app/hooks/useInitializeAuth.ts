@@ -9,7 +9,7 @@ export function useInitializeAuth() {
       try {
         await initializeAuthStore();
       } catch (error) {
-        console.error('Error llamando a initializeAuthStore:', error);
+        // Error al inicializar auth store
       } finally {
         setIsInitializing(false);
       }

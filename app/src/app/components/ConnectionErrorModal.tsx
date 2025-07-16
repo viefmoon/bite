@@ -1,10 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import {
   Text,
   Modal,
@@ -40,11 +35,11 @@ export function ConnectionErrorModal() {
   useEffect(() => {
     const unsubscribe = autoReconnectService.subscribe((state) => {
       setReconnectState(state);
-      
+
       if (!isLoggedIn && state.isReconnecting) {
         setVisible(true);
       }
-      
+
       if (state.status === 'connected') {
         setVisible(false);
         // Notificar al servicio de conexión que verifique la nueva conexión
@@ -248,19 +243,26 @@ export function ConnectionErrorModal() {
       <Modal
         visible={visible}
         onDismiss={() => {
-          if (reconnectState.status === 'connected' || reconnectState.status === 'no-wifi') {
+          if (
+            reconnectState.status === 'connected' ||
+            reconnectState.status === 'no-wifi'
+          ) {
             setVisible(false);
           }
         }}
         contentContainerStyle={styles.modal}
-        dismissable={reconnectState.status === 'connected' || reconnectState.status === 'no-wifi'}
+        dismissable={
+          reconnectState.status === 'connected' ||
+          reconnectState.status === 'no-wifi'
+        }
       >
         <Surface style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
             <Icon source="wifi-sync" size={24} color={theme.colors.primary} />
             <Text style={styles.headerTitle}>Estado de Conexión</Text>
-            {(reconnectState.status === 'connected' || reconnectState.status === 'no-wifi') && (
+            {(reconnectState.status === 'connected' ||
+              reconnectState.status === 'no-wifi') && (
               <IconButton
                 icon="close"
                 size={24}
@@ -274,35 +276,44 @@ export function ConnectionErrorModal() {
           <View style={styles.statusSection}>
             <Text style={styles.title}>{statusInfo.title}</Text>
 
-            {reconnectState.lastError && reconnectState.status !== 'connected' && (
-              <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
-            )}
+            {reconnectState.lastError &&
+              reconnectState.status !== 'connected' && (
+                <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
+              )}
 
-            {reconnectState.attempts > 0 && reconnectState.status !== 'connected' && (
-              <View style={styles.attemptBadge}>
-                <Text style={styles.attemptText}>
-                  Intento #{reconnectState.attempts}
-                </Text>
-              </View>
-            )}
+            {reconnectState.attempts > 0 &&
+              reconnectState.status !== 'connected' && (
+                <View style={styles.attemptBadge}>
+                  <Text style={styles.attemptText}>
+                    Intento #{reconnectState.attempts}
+                  </Text>
+                </View>
+              )}
           </View>
 
           {/* Progress Bar */}
-          {reconnectState.isReconnecting && reconnectState.status !== 'connected' && (
-            <View style={styles.progressContainer}>
-              <ProgressBar 
-                indeterminate 
-                color={statusInfo.color}
-                style={{ height: 4, borderRadius: 2 }}
-              />
-            </View>
-          )}
+          {reconnectState.isReconnecting &&
+            reconnectState.status !== 'connected' && (
+              <View style={styles.progressContainer}>
+                <ProgressBar
+                  indeterminate
+                  color={statusInfo.color}
+                  style={{ height: 4, borderRadius: 2 }}
+                />
+              </View>
+            )}
 
           {/* Logs Section */}
           {reconnectState.logs.length > 0 && (
             <View style={styles.logsContainer}>
               <View style={styles.logsHeader}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
                   <Text style={styles.logsTitle}>
                     DETALLES DEL PROCESO {isPaused ? '(PAUSADO)' : ''}
                   </Text>
@@ -315,27 +326,38 @@ export function ConnectionErrorModal() {
                   />
                 </View>
               </View>
-              <ScrollView 
+              <ScrollView
                 ref={scrollViewRef}
                 style={styles.logsList}
                 showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
               >
-                {(isPaused ? pausedLogs : reconnectState.logs).map((log, index) => {
-                  let logStyle = [styles.logEntry, styles.logInfo];
-                  
-                  if (log.includes('ERROR:') || log.includes('❌') || log.includes('✗')) {
-                    logStyle = [styles.logEntry, styles.logError];
-                  } else if (log.includes('SUCCESS:') || log.includes('✅') || log.includes('✓') || log.includes('🎉')) {
-                    logStyle = [styles.logEntry, styles.logSuccess];
-                  }
-                  
-                  return (
-                    <Text key={index} style={logStyle}>
-                      {log}
-                    </Text>
-                  );
-                })}
+                {(isPaused ? pausedLogs : reconnectState.logs).map(
+                  (log, index) => {
+                    let logStyle = [styles.logEntry, styles.logInfo];
+
+                    if (
+                      log.includes('ERROR:') ||
+                      log.includes('❌') ||
+                      log.includes('✗')
+                    ) {
+                      logStyle = [styles.logEntry, styles.logError];
+                    } else if (
+                      log.includes('SUCCESS:') ||
+                      log.includes('✅') ||
+                      log.includes('✓') ||
+                      log.includes('🎉')
+                    ) {
+                      logStyle = [styles.logEntry, styles.logSuccess];
+                    }
+
+                    return (
+                      <Text key={index} style={logStyle}>
+                        {log}
+                      </Text>
+                    );
+                  },
+                )}
                 <View style={{ height: 10 }} />
               </ScrollView>
             </View>

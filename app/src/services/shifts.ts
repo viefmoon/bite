@@ -102,18 +102,18 @@ class ShiftsService {
     endDate?: string;
   }): Promise<Shift[]> {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.startDate) {
       queryParams.append('startDate', params.startDate);
     }
     if (params?.endDate) {
       queryParams.append('endDate', params.endDate);
     }
-    
-    const url = queryParams.toString() 
+
+    const url = queryParams.toString()
       ? `/api/v1/shifts/history?${queryParams.toString()}`
       : '/api/v1/shifts/history';
-      
+
     const response = await apiClient.get(url);
     return response.data;
   }

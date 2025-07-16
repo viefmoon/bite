@@ -46,11 +46,7 @@ export const modifierService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        'Error fetching modifiers:',
-        response.problem,
-        response.data,
-      );
+      // Error al obtener modificadores
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
@@ -69,7 +65,7 @@ export const modifierService = {
       };
     }
 
-    console.error('Invalid data received for modifiers:', response.data);
+    // Datos inválidos recibidos para modificadores
     throw new Error('Received invalid data format for modifiers.');
   },
 
@@ -82,20 +78,13 @@ export const modifierService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `Error fetching modifier ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al obtener modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        `Invalid data received for modifier ${id}:`,
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos para modificador
       throw new Error(`Received invalid data format for modifier ${id}.`);
     }
     return validationResult.data;
@@ -118,20 +107,13 @@ export const modifierService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `Error fetching modifiers for group ${modifierGroupId}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al obtener modificadores del grupo
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifiersListSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        `Invalid data received for modifiers of group ${modifierGroupId}:`,
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos para modificadores del grupo
       throw new Error(
         `Received invalid data format for modifiers of group ${modifierGroupId}.`,
       );
@@ -146,20 +128,13 @@ export const modifierService = {
     const response = await apiClient.post<unknown>(API_PATHS.MODIFIERS, data);
 
     if (!response.ok || !response.data) {
-      console.error(
-        'Error creating modifier:',
-        response.problem,
-        response.data,
-      );
+      // Error al crear modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        'Invalid data received after creating modifier:',
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos después de crear modificador
       throw new Error('Received invalid data format after creating modifier.');
     }
     return validationResult.data;
@@ -175,20 +150,13 @@ export const modifierService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `Error updating modifier ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al actualizar modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        `Invalid data received after updating modifier ${id}:`,
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos después de actualizar modificador
       throw new Error(
         `Received invalid data format after updating modifier ${id}.`,
       );
@@ -203,11 +171,7 @@ export const modifierService = {
     const response = await apiClient.delete(`${API_PATHS.MODIFIERS}/${id}`);
 
     if (!response.ok) {
-      console.error(
-        `Error deleting modifier ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al eliminar modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
   },

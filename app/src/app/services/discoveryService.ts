@@ -23,14 +23,14 @@ export class DiscoveryService {
   private logCallback: ((message: string) => void) | null = null;
 
   private constructor() {}
-  
+
   /**
    * Establece un callback para logs
    */
   setLogCallback(callback: ((message: string) => void) | null) {
     this.logCallback = callback;
   }
-  
+
   private log(message: string) {
     if (this.logCallback) {
       this.logCallback(message);
@@ -94,7 +94,7 @@ export class DiscoveryService {
     const now = Date.now();
     const timeSinceLastDiscovery = now - this.lastDiscoveryTime;
     if (timeSinceLastDiscovery < NETWORK_CONFIG.MIN_DISCOVERY_INTERVAL) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     const discoveredUrl = await this.discoverBackend();
@@ -135,7 +135,10 @@ export class DiscoveryService {
    */
   private async checkServer(url: string): Promise<boolean> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), NETWORK_CONFIG.DISCOVERY_TIMEOUT);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      NETWORK_CONFIG.DISCOVERY_TIMEOUT,
+    );
 
     try {
       const response = await fetch(`${url}${DISCOVERY_ENDPOINT}`, {
@@ -192,7 +195,9 @@ export class DiscoveryService {
         throw new Error('No hay conexión de red disponible');
       }
 
-      this.log(`🔧 Buscando servidor en puerto ${NETWORK_CONFIG.DISCOVERY_PORT}`);
+      this.log(
+        `🔧 Buscando servidor en puerto ${NETWORK_CONFIG.DISCOVERY_PORT}`,
+      );
 
       const subnets = this.detectCurrentSubnet();
       this.log(`📡 Iniciando búsqueda en redes: ${subnets.join(', ')}`);
@@ -201,19 +206,22 @@ export class DiscoveryService {
       for (const subnet of subnets) {
         this.log(`🔍 Escaneando red ${subnet}.*`);
         const ips = this.generateIpRange(subnet);
-        const chunks = this.chunkArray(ips, NETWORK_CONFIG.MAX_CONCURRENT_REQUESTS);
+        const chunks = this.chunkArray(
+          ips,
+          NETWORK_CONFIG.MAX_CONCURRENT_REQUESTS,
+        );
 
         let totalIpsScanned = 0;
-        
+
         for (let i = 0; i < chunks.length; i++) {
           const currentIps = chunks[i];
-          
+
           const results = await Promise.allSettled(
             currentIps.map((ip) => this.probeServer(ip)),
           );
 
           totalIpsScanned += currentIps.length;
-          
+
           // Buscar si alguna petición fue exitosa
           for (let j = 0; j < results.length; j++) {
             const result = results[j];
@@ -223,19 +231,24 @@ export class DiscoveryService {
               return result.value;
             }
           }
-          
+
           // Mostrar progreso cada 10 IPs
           if (totalIpsScanned % 10 === 0) {
             const lastIp = currentIps[currentIps.length - 1];
-            this.log(`  ▶ Escaneadas ${totalIpsScanned} IPs (última: ${lastIp})`);
+            this.log(
+              `  ▶ Escaneadas ${totalIpsScanned} IPs (última: ${lastIp})`,
+            );
           }
         }
-        
+
         this.log(`  ❌ No encontrado en ${subnet}.*`);
       }
 
       return null;
-    } finally {}
+    } catch (error) {
+      this.log(`❌ Error durante el descubrimiento: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      return null;
+    }
   }
 
   /**
@@ -255,7 +268,7 @@ export class DiscoveryService {
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         signal: controller.signal,
       });
@@ -276,7 +289,8 @@ export class DiscoveryService {
           // No es el servidor que buscamos
         }
       }
-    } catch {} finally {
+    } catch {
+    } finally {
       clearTimeout(timeoutId);
     }
 

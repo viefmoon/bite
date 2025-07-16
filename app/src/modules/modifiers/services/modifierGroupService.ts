@@ -48,11 +48,7 @@ export const modifierGroupService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        'Error fetching modifier groups:',
-        response.problem,
-        response.data,
-      );
+      // Error al obtener grupos de modificadores
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
@@ -73,7 +69,7 @@ export const modifierGroupService = {
       };
     }
 
-    console.error('Invalid data received for modifier groups:', response.data);
+    // Datos inválidos recibidos para grupos de modificadores
     throw new Error('Received invalid data format for modifier groups.');
   },
 
@@ -86,20 +82,13 @@ export const modifierGroupService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `Error fetching modifier group ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al obtener grupo de modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        `Invalid data received for modifier group ${id}:`,
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos para grupo de modificador
       throw new Error(`Received invalid data format for modifier group ${id}.`);
     }
     return validationResult.data;
@@ -115,20 +104,13 @@ export const modifierGroupService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        'Error creating modifier group:',
-        response.problem,
-        response.data,
-      );
+      // Error al crear grupo de modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        'Invalid data received after creating modifier group:',
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos después de crear grupo de modificador
       throw new Error(
         'Received invalid data format after creating modifier group.',
       );
@@ -149,20 +131,13 @@ export const modifierGroupService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        `Error updating modifier group ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al actualizar grupo de modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      console.error(
-        `Invalid data received after updating modifier group ${id}:`,
-        validationResult.error.flatten(),
-      );
+      // Datos inválidos recibidos después de actualizar grupo de modificador
       throw new Error(
         `Received invalid data format after updating modifier group ${id}.`,
       );
@@ -179,11 +154,7 @@ export const modifierGroupService = {
     );
 
     if (!response.ok) {
-      console.error(
-        `Error deleting modifier group ${id}:`,
-        response.problem,
-        response.data,
-      );
+      // Error al eliminar grupo de modificador
       throw ApiError.fromApiResponse(response.data, response.status ?? 500);
     }
   },

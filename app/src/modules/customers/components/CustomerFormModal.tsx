@@ -747,7 +747,10 @@ export default function CustomerFormModal({
   );
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     modalContainer: {
       margin: responsive.isTablet ? 20 : 10,
@@ -767,8 +770,12 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
-      paddingVertical: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      paddingHorizontal: responsive.isTablet
+        ? theme.spacing.m * 0.7
+        : theme.spacing.m,
+      paddingVertical: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     headerLeft: {
       flexDirection: 'row',
@@ -776,7 +783,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       flex: 1,
     },
     headerIcon: {
-      marginRight: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
+      marginRight: responsive.isTablet
+        ? theme.spacing.s * 0.7
+        : theme.spacing.s,
     },
     headerTextContainer: {
       flex: 1,
@@ -787,17 +796,25 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     formContainer: {
       flex: 1,
-      paddingHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
-      paddingTop: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      paddingHorizontal: responsive.isTablet
+        ? theme.spacing.m * 0.7
+        : theme.spacing.m,
+      paddingTop: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.s * 0.7
+        : theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
@@ -819,7 +836,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       fontSize: responsive.isTablet ? 10 : 11,
     },
     inputContainer: {
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
@@ -835,7 +854,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     switchTextContainer: {
       flex: 1,
-      marginRight: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
+      marginRight: responsive.isTablet
+        ? theme.spacing.m * 0.7
+        : theme.spacing.m,
     },
     switchLabel: {
       color: theme.colors.onSurface,
@@ -865,7 +886,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     infoText: {
       flex: 1,
-      marginLeft: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginLeft: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     infoLabel: {
       color: theme.colors.onErrorContainer,
@@ -909,7 +932,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       width: 1,
       height: responsive.isTablet ? 35 : 40,
       backgroundColor: theme.colors.outlineVariant,
-      marginHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
+      marginHorizontal: responsive.isTablet
+        ? theme.spacing.m * 0.7
+        : theme.spacing.m,
     },
     stripeCard: {
       borderRadius: theme.roundness * 2,
@@ -959,7 +984,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     addressCard: {
       borderRadius: theme.roundness * 2,
       padding: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
-      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? theme.spacing.xs * 0.65
+        : theme.spacing.xs,
     },
     addressContent: {
       flexDirection: 'row',
@@ -972,7 +999,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     addressInfo: {
       flex: 1,
-      marginLeft: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
+      marginLeft: responsive.isTablet
+        ? theme.spacing.xs * 0.7
+        : theme.spacing.xs,
     },
     addressName: {
       fontWeight: '600',
@@ -986,14 +1015,18 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     addressDetails: {
       color: theme.colors.onSurfaceVariant,
-      marginTop: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
+      marginTop: responsive.isTablet
+        ? theme.spacing.xs * 0.65
+        : theme.spacing.xs,
       fontSize: responsive.isTablet ? 12 : 13,
     },
     addressActions: {
       flexDirection: 'row',
     },
     defaultChip: {
-      marginTop: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
+      marginTop: responsive.isTablet
+        ? theme.spacing.xs * 0.65
+        : theme.spacing.xs,
       backgroundColor: theme.colors.primaryContainer,
     },
     defaultChipText: {

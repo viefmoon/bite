@@ -110,7 +110,7 @@ export interface OrderOpenList
     status: 'PENDING' | 'IN_PROGRESS' | 'READY';
   }>;
   ticketImpressionCount?: number;
-  
+
   // Información del usuario creador
   createdBy?: {
     username: string;

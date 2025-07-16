@@ -59,13 +59,11 @@ export const useThemeStore = create<ThemeState>()(
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
-            console.error('Error rehydrating theme store:', error);
+            // Error rehydrating theme store
             return;
           }
           if (!state) {
-            console.warn(
-              'State not available during theme rehydration callback',
-            );
+            // State not available during theme rehydration callback
             return;
           }
 

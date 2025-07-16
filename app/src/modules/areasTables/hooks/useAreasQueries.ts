@@ -56,7 +56,7 @@ export const useCreateArea = () => {
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error('Error creating area:', error);
+      // Error al crear área
     },
   });
 };
@@ -111,7 +111,7 @@ export const useUpdateArea = () => {
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error updating area ${variables.id}:`, error);
+      // Error al actualizar área
 
       if (context?.previousAreas) {
         queryClient.setQueryData(areasQueryKeys.lists(), context.previousAreas);
@@ -165,7 +165,7 @@ export const useDeleteArea = () => {
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      console.error(`Error deleting area ${deletedId}:`, error);
+      // Error al eliminar área
 
       if (context?.previousDetail) {
         queryClient.setQueryData(

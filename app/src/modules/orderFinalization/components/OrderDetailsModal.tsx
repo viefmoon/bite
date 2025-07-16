@@ -129,7 +129,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  const styles = React.useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [showPrintHistory, setShowPrintHistory] = useState(false);
 
   if (!order && !isLoading) return null;
@@ -465,75 +468,76 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               contentContainerStyle={styles.scrollContent}
             >
               <View style={styles.infoSection}>
-              {order?.deliveryInfo?.recipientName && (
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.contactText,
-                      { color: theme.colors.onSurface },
-                    ]}
-                  >
-                    👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
-                  </Text>
-                </View>
-              )}
-
-              {order?.deliveryInfo?.recipientPhone && (
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.contactText,
-                      { color: theme.colors.onSurface },
-                    ]}
-                  >
-                    📞 Teléfono: {order.deliveryInfo.recipientPhone}
-                  </Text>
-                </View>
-              )}
-
-              {order?.orderType === 'DELIVERY' &&
-                order?.deliveryInfo?.fullAddress && (
+                {order?.deliveryInfo?.recipientName && (
                   <View style={styles.infoRow}>
                     <Text
                       style={[
-                        styles.addressText,
-                        { color: theme.colors.onSurfaceVariant },
+                        styles.contactText,
+                        { color: theme.colors.onSurface },
                       ]}
                     >
-                      📦 Dirección de Entrega: {order.deliveryInfo.fullAddress}
+                      👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
                     </Text>
                   </View>
                 )}
 
-              {order?.orderType === 'DINE_IN' && order?.table && (
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.tableText,
-                      { color: theme.colors.onSurface },
-                    ]}
-                  >
-                    🏛️ Mesa: {order.table.area?.name || 'Sin área'} -{' '}
-                    {order.table.number}
-                  </Text>
-                </View>
-              )}
+                {order?.deliveryInfo?.recipientPhone && (
+                  <View style={styles.infoRow}>
+                    <Text
+                      style={[
+                        styles.contactText,
+                        { color: theme.colors.onSurface },
+                      ]}
+                    >
+                      📞 Teléfono: {order.deliveryInfo.recipientPhone}
+                    </Text>
+                  </View>
+                )}
 
-              {order?.scheduledAt && (
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.contactText,
-                      { color: theme.colors.primary, fontWeight: '600' },
-                    ]}
-                  >
-                    ⏰ Hora de Entrega Programada:{' '}
-                    {format(new Date(order.scheduledAt), 'HH:mm', {
-                      locale: es,
-                    })}
-                  </Text>
-                </View>
-              )}
+                {order?.orderType === 'DELIVERY' &&
+                  order?.deliveryInfo?.fullAddress && (
+                    <View style={styles.infoRow}>
+                      <Text
+                        style={[
+                          styles.addressText,
+                          { color: theme.colors.onSurfaceVariant },
+                        ]}
+                      >
+                        📦 Dirección de Entrega:{' '}
+                        {order.deliveryInfo.fullAddress}
+                      </Text>
+                    </View>
+                  )}
+
+                {order?.orderType === 'DINE_IN' && order?.table && (
+                  <View style={styles.infoRow}>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { color: theme.colors.onSurface },
+                      ]}
+                    >
+                      🏛️ Mesa: {order.table.area?.name || 'Sin área'} -{' '}
+                      {order.table.number}
+                    </Text>
+                  </View>
+                )}
+
+                {order?.scheduledAt && (
+                  <View style={styles.infoRow}>
+                    <Text
+                      style={[
+                        styles.contactText,
+                        { color: theme.colors.primary, fontWeight: '600' },
+                      ]}
+                    >
+                      ⏰ Hora de Entrega Programada:{' '}
+                      {format(new Date(order.scheduledAt), 'HH:mm', {
+                        locale: es,
+                      })}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <Divider style={styles.divider} />
@@ -547,276 +551,285 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               {order?.payments && order.payments.length > 0 && (
                 <>
                   <View style={styles.paymentsSection}>
-                  <View style={styles.paymentSummaryCompact}>
-                    <View style={styles.summaryCompactRow}>
-                      <Text
-                        style={[
-                          styles.summaryCompactLabel,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        Total: $
-                        {typeof order.total === 'string'
-                          ? parseFloat(order.total).toFixed(2)
-                          : order.total.toFixed(2)}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.summaryCompactLabel,
-                          { color: '#10B981' },
-                        ]}
-                      >
-                        Pagado: $
-                        {order.payments
-                          .reduce((sum, p) => sum + p.amount, 0)
-                          .toFixed(2)}
-                      </Text>
-                      {(() => {
-                        const totalOrder =
-                          typeof order.total === 'string'
-                            ? parseFloat(order.total)
-                            : order.total;
-                        const totalPaid = order.payments.reduce(
-                          (sum, p) => sum + p.amount,
-                          0,
-                        );
-                        const remaining = totalOrder - totalPaid;
-                        if (remaining > 0) {
-                          return (
-                            <Text
-                              style={[
-                                styles.summaryCompactLabel,
-                                {
-                                  color: theme.colors.error,
-                                  fontWeight: '600',
-                                },
-                              ]}
-                            >
-                              Resta: ${remaining.toFixed(2)}
-                            </Text>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </View>
-                  </View>
-
-                  {order.payments.map((payment, index) => {
-                    const getPaymentMethodLabel = (method: string) => {
-                      switch (method) {
-                        case 'CASH':
-                          return 'Efectivo';
-                        case 'CREDIT_CARD':
-                          return 'Tarjeta de Crédito';
-                        case 'DEBIT_CARD':
-                          return 'Tarjeta de Débito';
-                        case 'TRANSFER':
-                          return 'Transferencia';
-                        case 'OTHER':
-                          return 'Otro';
-                        default:
-                          return method;
-                      }
-                    };
-
-                    const getPaymentStatusColor = (status: string) => {
-                      switch (status) {
-                        case 'COMPLETED':
-                          return '#10B981';
-                        case 'PENDING':
-                          return '#F59E0B';
-                        case 'FAILED':
-                          return theme.colors.error;
-                        case 'REFUNDED':
-                          return '#6B7280';
-                        case 'CANCELLED':
-                          return theme.colors.error;
-                        default:
-                          return theme.colors.onSurfaceVariant;
-                      }
-                    };
-
-                    const getPaymentStatusLabel = (status: string) => {
-                      switch (status) {
-                        case 'COMPLETED':
-                          return 'Completado';
-                        case 'PENDING':
-                          return 'Pendiente';
-                        case 'FAILED':
-                          return 'Fallido';
-                        case 'REFUNDED':
-                          return 'Reembolsado';
-                        case 'CANCELLED':
-                          return 'Cancelado';
-                        default:
-                          return status;
-                      }
-                    };
-
-                    return (
-                      <View
-                        key={payment.id || index}
-                        style={styles.paymentRowCompact}
-                      >
+                    <View style={styles.paymentSummaryCompact}>
+                      <View style={styles.summaryCompactRow}>
                         <Text
                           style={[
-                            styles.paymentMethodCompact,
-                            { color: theme.colors.onSurface },
-                          ]}
-                        >
-                          💳 {getPaymentMethodLabel(payment.paymentMethod)}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.paymentDateCompact,
+                            styles.summaryCompactLabel,
                             { color: theme.colors.onSurfaceVariant },
                           ]}
                         >
-                          {format(new Date(payment.createdAt), 'HH:mm', {
-                            locale: es,
-                          })}
+                          Total: $
+                          {typeof order.total === 'string'
+                            ? parseFloat(order.total).toFixed(2)
+                            : order.total.toFixed(2)}
                         </Text>
-                        <View
+                        <Text
                           style={[
-                            styles.paymentStatusBadgeCompact,
-                            {
-                              backgroundColor:
-                                getPaymentStatusColor(payment.paymentStatus) +
-                                '20',
-                            },
+                            styles.summaryCompactLabel,
+                            { color: '#10B981' },
                           ]}
+                        >
+                          Pagado: $
+                          {order.payments
+                            .reduce((sum, p) => sum + p.amount, 0)
+                            .toFixed(2)}
+                        </Text>
+                        {(() => {
+                          const totalOrder =
+                            typeof order.total === 'string'
+                              ? parseFloat(order.total)
+                              : order.total;
+                          const totalPaid = order.payments.reduce(
+                            (sum, p) => sum + p.amount,
+                            0,
+                          );
+                          const remaining = totalOrder - totalPaid;
+                          if (remaining > 0) {
+                            return (
+                              <Text
+                                style={[
+                                  styles.summaryCompactLabel,
+                                  {
+                                    color: theme.colors.error,
+                                    fontWeight: '600',
+                                  },
+                                ]}
+                              >
+                                Resta: ${remaining.toFixed(2)}
+                              </Text>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </View>
+                    </View>
+
+                    {order.payments.map((payment, index) => {
+                      const getPaymentMethodLabel = (method: string) => {
+                        switch (method) {
+                          case 'CASH':
+                            return 'Efectivo';
+                          case 'CREDIT_CARD':
+                            return 'Tarjeta de Crédito';
+                          case 'DEBIT_CARD':
+                            return 'Tarjeta de Débito';
+                          case 'TRANSFER':
+                            return 'Transferencia';
+                          case 'OTHER':
+                            return 'Otro';
+                          default:
+                            return method;
+                        }
+                      };
+
+                      const getPaymentStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'COMPLETED':
+                            return '#10B981';
+                          case 'PENDING':
+                            return '#F59E0B';
+                          case 'FAILED':
+                            return theme.colors.error;
+                          case 'REFUNDED':
+                            return '#6B7280';
+                          case 'CANCELLED':
+                            return theme.colors.error;
+                          default:
+                            return theme.colors.onSurfaceVariant;
+                        }
+                      };
+
+                      const getPaymentStatusLabel = (status: string) => {
+                        switch (status) {
+                          case 'COMPLETED':
+                            return 'Completado';
+                          case 'PENDING':
+                            return 'Pendiente';
+                          case 'FAILED':
+                            return 'Fallido';
+                          case 'REFUNDED':
+                            return 'Reembolsado';
+                          case 'CANCELLED':
+                            return 'Cancelado';
+                          default:
+                            return status;
+                        }
+                      };
+
+                      return (
+                        <View
+                          key={payment.id || index}
+                          style={styles.paymentRowCompact}
                         >
                           <Text
                             style={[
-                              styles.paymentStatusTextCompact,
+                              styles.paymentMethodCompact,
+                              { color: theme.colors.onSurface },
+                            ]}
+                          >
+                            💳 {getPaymentMethodLabel(payment.paymentMethod)}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.paymentDateCompact,
+                              { color: theme.colors.onSurfaceVariant },
+                            ]}
+                          >
+                            {format(new Date(payment.createdAt), 'HH:mm', {
+                              locale: es,
+                            })}
+                          </Text>
+                          <View
+                            style={[
+                              styles.paymentStatusBadgeCompact,
                               {
-                                color: getPaymentStatusColor(
-                                  payment.paymentStatus,
-                                ),
+                                backgroundColor:
+                                  getPaymentStatusColor(payment.paymentStatus) +
+                                  '20',
                               },
                             ]}
                           >
-                            {getPaymentStatusLabel(payment.paymentStatus)}
+                            <Text
+                              style={[
+                                styles.paymentStatusTextCompact,
+                                {
+                                  color: getPaymentStatusColor(
+                                    payment.paymentStatus,
+                                  ),
+                                },
+                              ]}
+                            >
+                              {getPaymentStatusLabel(payment.paymentStatus)}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.paymentAmountCompact,
+                              { color: theme.colors.primary },
+                            ]}
+                          >
+                            ${payment.amount.toFixed(2)}
                           </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.paymentAmountCompact,
-                            { color: theme.colors.primary },
-                          ]}
-                        >
-                          ${payment.amount.toFixed(2)}
-                        </Text>
-                      </View>
-                    );
-                  })}
+                      );
+                    })}
                   </View>
                   <Divider style={styles.divider} />
                 </>
               )}
 
-              {order?.ticketImpressions && order.ticketImpressions.length > 0 && (
-                <>
-                  <View style={styles.ticketImpressionsSection}>
-                  <TouchableOpacity
-                    style={styles.collapsibleHeader}
-                    onPress={() => setShowPrintHistory(!showPrintHistory)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.sectionTitle,
-                        { color: theme.colors.primary },
-                      ]}
-                    >
-                      🖨️ Historial de Impresiones (
-                      {order.ticketImpressions.length})
-                    </Text>
-                    <IconButton
-                      icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
-                      size={20}
-                      style={styles.collapseIcon}
-                    />
-                  </TouchableOpacity>
-
-                  {showPrintHistory && (
-                    <View style={styles.collapsibleContent}>
-                      {order.ticketImpressions.map((impression, index) => {
-                        const getTicketTypeLabel = (type: string) => {
-                          switch (type) {
-                            case 'KITCHEN':
-                              return '🍳 Cocina';
-                            case 'BAR':
-                              return '🍺 Barra';
-                            case 'BILLING':
-                              return '💵 Cuenta';
-                            case 'CUSTOMER_COPY':
-                              return '📄 Copia Cliente';
-                            case 'GENERAL':
-                              return '📋 General';
-                            default:
-                              return type;
+              {order?.ticketImpressions &&
+                order.ticketImpressions.length > 0 && (
+                  <>
+                    <View style={styles.ticketImpressionsSection}>
+                      <TouchableOpacity
+                        style={styles.collapsibleHeader}
+                        onPress={() => setShowPrintHistory(!showPrintHistory)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.sectionTitle,
+                            { color: theme.colors.primary },
+                          ]}
+                        >
+                          🖨️ Historial de Impresiones (
+                          {order.ticketImpressions.length})
+                        </Text>
+                        <IconButton
+                          icon={
+                            showPrintHistory ? 'chevron-up' : 'chevron-down'
                           }
-                        };
+                          size={20}
+                          style={styles.collapseIcon}
+                        />
+                      </TouchableOpacity>
 
-                        return (
-                          <View
-                            key={impression.id || index}
-                            style={styles.impressionRow}
-                          >
-                            <View style={styles.impressionLeft}>
-                              <Text
-                                style={[
-                                  styles.impressionType,
-                                  { color: theme.colors.onSurface },
-                                ]}
+                      {showPrintHistory && (
+                        <View style={styles.collapsibleContent}>
+                          {order.ticketImpressions.map((impression, index) => {
+                            const getTicketTypeLabel = (type: string) => {
+                              switch (type) {
+                                case 'KITCHEN':
+                                  return '🍳 Cocina';
+                                case 'BAR':
+                                  return '🍺 Barra';
+                                case 'BILLING':
+                                  return '💵 Cuenta';
+                                case 'CUSTOMER_COPY':
+                                  return '📄 Copia Cliente';
+                                case 'GENERAL':
+                                  return '📋 General';
+                                default:
+                                  return type;
+                              }
+                            };
+
+                            return (
+                              <View
+                                key={impression.id || index}
+                                style={styles.impressionRow}
                               >
-                                {getTicketTypeLabel(impression.ticketType)}
-                              </Text>
-                              <View style={styles.impressionDetails}>
-                                {impression.user && (
+                                <View style={styles.impressionLeft}>
                                   <Text
                                     style={[
-                                      styles.impressionUser,
-                                      { color: theme.colors.onSurfaceVariant },
+                                      styles.impressionType,
+                                      { color: theme.colors.onSurface },
                                     ]}
                                   >
-                                    por {impression.user.firstName || ''}{' '}
-                                    {impression.user.lastName || ''}
+                                    {getTicketTypeLabel(impression.ticketType)}
                                   </Text>
-                                )}
-                                {impression.printer && (
-                                  <Text
-                                    style={[
-                                      styles.impressionPrinter,
-                                      { color: theme.colors.onSurfaceVariant },
-                                    ]}
-                                  >
-                                    🖨️ {impression.printer.name}
-                                  </Text>
-                                )}
+                                  <View style={styles.impressionDetails}>
+                                    {impression.user && (
+                                      <Text
+                                        style={[
+                                          styles.impressionUser,
+                                          {
+                                            color:
+                                              theme.colors.onSurfaceVariant,
+                                          },
+                                        ]}
+                                      >
+                                        por {impression.user.firstName || ''}{' '}
+                                        {impression.user.lastName || ''}
+                                      </Text>
+                                    )}
+                                    {impression.printer && (
+                                      <Text
+                                        style={[
+                                          styles.impressionPrinter,
+                                          {
+                                            color:
+                                              theme.colors.onSurfaceVariant,
+                                          },
+                                        ]}
+                                      >
+                                        🖨️ {impression.printer.name}
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
+                                <Text
+                                  style={[
+                                    styles.impressionTime,
+                                    { color: theme.colors.onSurfaceVariant },
+                                  ]}
+                                >
+                                  {format(
+                                    new Date(impression.impressionTime),
+                                    'HH:mm:ss',
+                                    { locale: es },
+                                  )}
+                                </Text>
                               </View>
-                            </View>
-                            <Text
-                              style={[
-                                styles.impressionTime,
-                                { color: theme.colors.onSurfaceVariant },
-                              ]}
-                            >
-                              {format(
-                                new Date(impression.impressionTime),
-                                'HH:mm:ss',
-                                { locale: es },
-                              )}
-                            </Text>
-                          </View>
-                        );
-                      })}
+                            );
+                          })}
+                        </View>
+                      )}
                     </View>
-                  )}
-                  </View>
-                </>
-              )}
+                  </>
+                )}
             </ScrollView>
 
             <Divider style={styles.divider} />
@@ -884,363 +897,366 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   );
 };
 
-const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
-  modalContent: {
-    margin: 12,
-    borderRadius: 12,
-    maxHeight: '90%',
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 6,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  headerLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  headerBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  chipsRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  headerSeparator: {
-    fontSize: responsive.fontSize(11),
-    marginHorizontal: 6,
-  },
-  orderType: {
-    fontSize: responsive.fontSize(12),
-    fontWeight: '600',
-  },
-  headerDate: {
-    fontSize: responsive.fontSize(11),
-  },
-  infoSection: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 6,
-    gap: 4,
-  },
-  infoRow: {
-    marginVertical: 2,
-  },
-  contactText: {
-    fontSize: responsive.fontSize(12),
-  },
-  addressText: {
-    fontSize: responsive.fontSize(12),
-    lineHeight: 16,
-  },
-  tableText: {
-    fontSize: responsive.fontSize(12),
-  },
-  screenChip: {
-    height: 20,
-  },
-  screenChipText: {
-    fontSize: responsive.fontSize(10),
-    marginVertical: -2,
-  },
-  paymentBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  paymentBadgeText: {
-    color: 'white',
-    fontSize: responsive.fontSize(12),
-    fontWeight: '600',
-  },
-  totalAmount: {
-    fontSize: responsive.fontSize(16),
-    fontWeight: '700',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
-    backgroundColor: 'inherit',
-  },
-  footerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  totalLabel: {
-    fontSize: responsive.fontSize(14),
-    fontWeight: '600',
-  },
-  divider: {
-    marginVertical: 2,
-  },
-  closeButton: {
-    margin: -8,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  headerStatusChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  headerStatusChipText: {
-    color: 'white',
-    fontSize: responsive.fontSize(11),
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: responsive.fontSize(20),
-    fontWeight: '700',
-  },
-  scrollView: {
-    flexGrow: 0,
-    flexShrink: 1,
-    maxHeight: '70%',
-  },
-  scrollContent: {
-    paddingBottom: 8,
-  },
-  itemsList: {
-    padding: 12,
-    paddingBottom: 16,
-  },
-  itemCard: {
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  itemContent: {
-    padding: 10,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  nameContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  itemQuantity: {
-    fontSize: responsive.fontSize(14),
-    fontWeight: '700',
-    marginRight: 6,
-  },
-  itemName: {
-    fontSize: responsive.fontSize(13),
-    fontWeight: '600',
-    flex: 1,
-    lineHeight: 16,
-  },
-  statusChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  statusChipText: {
-    color: 'white',
-    fontSize: responsive.fontSize(10),
-    fontWeight: '600',
-  },
-  itemDetailsContainer: {
-    marginBottom: 6,
-  },
-  customizationContainer: {
-    marginBottom: 4,
-  },
-  pizzaCustomizationText: {
-    fontSize: responsive.fontSize(11),
-    fontStyle: 'italic',
-    lineHeight: 14,
-  },
-  modifiersContainer: {
-    marginTop: 2,
-  },
-  modifierRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 1,
-  },
-  modifierText: {
-    fontSize: responsive.fontSize(11),
-    flex: 1,
-    lineHeight: 14,
-  },
-  modifierPrice: {
-    fontSize: responsive.fontSize(11),
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  notesContainer: {
-    marginTop: 4,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
-  },
-  notesText: {
-    fontSize: responsive.fontSize(11),
-    fontStyle: 'italic',
-    lineHeight: 14,
-  },
-  priceContainer: {
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  priceLabel: {
-    fontSize: responsive.fontSize(11),
-    opacity: 0.7,
-  },
-  priceValue: {
-    fontSize: responsive.fontSize(12),
-    fontWeight: '600',
-  },
-  totalPrice: {
-    fontSize: responsive.fontSize(14),
-    fontWeight: '700',
-  },
-  paymentsSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  paymentSummaryCompact: {
-    marginBottom: 8,
-  },
-  summaryCompactRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryCompactLabel: {
-    fontSize: responsive.fontSize(12),
-    fontWeight: '500',
-  },
-  paymentRowCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
-  },
-  paymentMethodCompact: {
-    fontSize: responsive.fontSize(11),
-    fontWeight: '500',
-    flex: 1,
-  },
-  paymentDateCompact: {
-    fontSize: responsive.fontSize(10),
-  },
-  paymentAmountCompact: {
-    fontSize: responsive.fontSize(12),
-    fontWeight: '600',
-    minWidth: 50,
-    textAlign: 'right',
-  },
-  paymentStatusBadgeCompact: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 10,
-  },
-  paymentStatusTextCompact: {
-    fontSize: responsive.fontSize(9),
-    fontWeight: '600',
-  },
-  ticketImpressionsSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  collapsibleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 4,
-  },
-  collapseIcon: {
-    margin: -8,
-  },
-  collapsibleContent: {
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: responsive.fontSize(14),
-    fontWeight: '600',
-    marginBottom: 0,
-  },
-  impressionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingLeft: 8,
-  },
-  impressionLeft: {
-    flex: 1,
-    gap: 2,
-  },
-  impressionType: {
-    fontSize: responsive.fontSize(12),
-    fontWeight: '500',
-  },
-  impressionDetails: {
-    gap: 2,
-  },
-  impressionUser: {
-    fontSize: responsive.fontSize(11),
-    opacity: 0.7,
-  },
-  impressionPrinter: {
-    fontSize: responsive.fontSize(11),
-    opacity: 0.7,
-    fontStyle: 'italic',
-  },
-  impressionTime: {
-    fontSize: responsive.fontSize(11),
-    opacity: 0.7,
-  },
-  loadingContainer: {
-    minHeight: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: responsive.fontSize(14),
-  },
-});
+    modalContent: {
+      margin: 12,
+      borderRadius: 12,
+      maxHeight: '90%',
+      elevation: 4,
+      overflow: 'hidden',
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 6,
+    },
+    headerTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    headerLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+    },
+    headerBottomRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    chipsRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexWrap: 'wrap',
+    },
+    headerSeparator: {
+      fontSize: responsive.fontSize(11),
+      marginHorizontal: 6,
+    },
+    orderType: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '600',
+    },
+    headerDate: {
+      fontSize: responsive.fontSize(11),
+    },
+    infoSection: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+      paddingBottom: 6,
+      gap: 4,
+    },
+    infoRow: {
+      marginVertical: 2,
+    },
+    contactText: {
+      fontSize: responsive.fontSize(12),
+    },
+    addressText: {
+      fontSize: responsive.fontSize(12),
+      lineHeight: 16,
+    },
+    tableText: {
+      fontSize: responsive.fontSize(12),
+    },
+    screenChip: {
+      height: 20,
+    },
+    screenChipText: {
+      fontSize: responsive.fontSize(10),
+      marginVertical: -2,
+    },
+    paymentBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    paymentBadgeText: {
+      color: 'white',
+      fontSize: responsive.fontSize(12),
+      fontWeight: '600',
+    },
+    totalAmount: {
+      fontSize: responsive.fontSize(16),
+      fontWeight: '700',
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(0,0,0,0.08)',
+      backgroundColor: 'inherit',
+    },
+    footerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    totalLabel: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '600',
+    },
+    divider: {
+      marginVertical: 2,
+    },
+    closeButton: {
+      margin: -8,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
+    headerStatusChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    headerStatusChipText: {
+      color: 'white',
+      fontSize: responsive.fontSize(11),
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: responsive.fontSize(20),
+      fontWeight: '700',
+    },
+    scrollView: {
+      flexGrow: 0,
+      flexShrink: 1,
+      maxHeight: '70%',
+    },
+    scrollContent: {
+      paddingBottom: 8,
+    },
+    itemsList: {
+      padding: 12,
+      paddingBottom: 16,
+    },
+    itemCard: {
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    itemContent: {
+      padding: 10,
+    },
+    itemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    nameContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 8,
+    },
+    itemQuantity: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '700',
+      marginRight: 6,
+    },
+    itemName: {
+      fontSize: responsive.fontSize(13),
+      fontWeight: '600',
+      flex: 1,
+      lineHeight: 16,
+    },
+    statusChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+    },
+    statusChipText: {
+      color: 'white',
+      fontSize: responsive.fontSize(10),
+      fontWeight: '600',
+    },
+    itemDetailsContainer: {
+      marginBottom: 6,
+    },
+    customizationContainer: {
+      marginBottom: 4,
+    },
+    pizzaCustomizationText: {
+      fontSize: responsive.fontSize(11),
+      fontStyle: 'italic',
+      lineHeight: 14,
+    },
+    modifiersContainer: {
+      marginTop: 2,
+    },
+    modifierRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 1,
+    },
+    modifierText: {
+      fontSize: responsive.fontSize(11),
+      flex: 1,
+      lineHeight: 14,
+    },
+    modifierPrice: {
+      fontSize: responsive.fontSize(11),
+      fontWeight: '500',
+      marginLeft: 4,
+    },
+    notesContainer: {
+      marginTop: 4,
+      paddingTop: 4,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(0,0,0,0.06)',
+    },
+    notesText: {
+      fontSize: responsive.fontSize(11),
+      fontStyle: 'italic',
+      lineHeight: 14,
+    },
+    priceContainer: {
+      marginTop: 6,
+      paddingTop: 6,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(0,0,0,0.06)',
+    },
+    priceRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 2,
+    },
+    priceLabel: {
+      fontSize: responsive.fontSize(11),
+      opacity: 0.7,
+    },
+    priceValue: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '600',
+    },
+    totalPrice: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '700',
+    },
+    paymentsSection: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    paymentSummaryCompact: {
+      marginBottom: 8,
+    },
+    summaryCompactRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    summaryCompactLabel: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '500',
+    },
+    paymentRowCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 6,
+      gap: 8,
+    },
+    paymentMethodCompact: {
+      fontSize: responsive.fontSize(11),
+      fontWeight: '500',
+      flex: 1,
+    },
+    paymentDateCompact: {
+      fontSize: responsive.fontSize(10),
+    },
+    paymentAmountCompact: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '600',
+      minWidth: 50,
+      textAlign: 'right',
+    },
+    paymentStatusBadgeCompact: {
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: 10,
+    },
+    paymentStatusTextCompact: {
+      fontSize: responsive.fontSize(9),
+      fontWeight: '600',
+    },
+    ticketImpressionsSection: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    collapsibleHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingRight: 4,
+    },
+    collapseIcon: {
+      margin: -8,
+    },
+    collapsibleContent: {
+      marginTop: 8,
+    },
+    sectionTitle: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '600',
+      marginBottom: 0,
+    },
+    impressionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+      paddingLeft: 8,
+    },
+    impressionLeft: {
+      flex: 1,
+      gap: 2,
+    },
+    impressionType: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '500',
+    },
+    impressionDetails: {
+      gap: 2,
+    },
+    impressionUser: {
+      fontSize: responsive.fontSize(11),
+      opacity: 0.7,
+    },
+    impressionPrinter: {
+      fontSize: responsive.fontSize(11),
+      opacity: 0.7,
+      fontStyle: 'italic',
+    },
+    impressionTime: {
+      fontSize: responsive.fontSize(11),
+      opacity: 0.7,
+    },
+    loadingContainer: {
+      minHeight: 200,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: responsive.fontSize(14),
+    },
+  });
 
 export default OrderDetailsModal;

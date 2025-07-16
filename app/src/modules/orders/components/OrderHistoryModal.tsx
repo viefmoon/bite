@@ -211,7 +211,6 @@ const formatValue = (field: string, value: any): string => {
   return String(value);
 };
 
-
 // Componente para cada item del historial
 const HistoryItemComponent: React.FC<{
   item: HistoryItem;
@@ -454,7 +453,6 @@ const HistoryItemComponent: React.FC<{
     }
     return null;
   };
-
 
   return (
     <Surface
@@ -1862,60 +1860,56 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Icon
-              name="close"
-              size={24}
-              color={theme.colors.onErrorContainer}
-            />
-          </TouchableOpacity>
-        </View>
+          <Icon name="close" size={24} color={theme.colors.onErrorContainer} />
+        </TouchableOpacity>
+      </View>
 
-        <Divider />
+      <Divider />
 
-        <View style={{ flex: 1 }}>
-          {isError ? (
-            <View style={styles.emptyContainer}>
-              <Icon
-                name="alert-circle"
-                size={48}
-                color={theme.colors.error}
-                style={{ opacity: 0.7 }}
-              />
-              <Text
-                variant="bodyLarge"
-                style={{
-                  color: theme.colors.error,
-                  marginTop: theme.spacing.m,
-                  textAlign: 'center',
-                }}
-              >
-                Error al cargar el historial
-              </Text>
-              <Button
-                onPress={() => refetch()}
-                mode="text"
-                style={{ marginTop: 16 }}
-              >
-                Reintentar
-              </Button>
-            </View>
-          ) : isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>Cargando historial...</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={historyData || []}
-              renderItem={renderHistoryItem}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={renderEmpty}
-              showsVerticalScrollIndicator={false}
+      <View style={{ flex: 1 }}>
+        {isError ? (
+          <View style={styles.emptyContainer}>
+            <Icon
+              name="alert-circle"
+              size={48}
+              color={theme.colors.error}
+              style={{ opacity: 0.7 }}
             />
-          )}
-        </View>
-      </Modal>
+            <Text
+              variant="bodyLarge"
+              style={{
+                color: theme.colors.error,
+                marginTop: theme.spacing.m,
+                textAlign: 'center',
+              }}
+            >
+              Error al cargar el historial
+            </Text>
+            <Button
+              onPress={() => refetch()}
+              mode="text"
+              style={{ marginTop: 16 }}
+            >
+              Reintentar
+            </Button>
+          </View>
+        ) : isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Cargando historial...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={historyData || []}
+            renderItem={renderHistoryItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={renderEmpty}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </Modal>
   );
 };
 

@@ -6,7 +6,13 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Text, Button, Chip, ActivityIndicator, IconButton } from 'react-native-paper';
+import {
+  Text,
+  Button,
+  Chip,
+  ActivityIndicator,
+  IconButton,
+} from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { AdaptiveModal } from '../common/AdaptiveModal';
@@ -118,7 +124,9 @@ const getStyles = (
       marginBottom: responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness * 1.5,
-      padding: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      padding: responsive.isTablet
+        ? responsive.spacing(theme.spacing.s)
+        : responsive.spacing(theme.spacing.m),
       marginHorizontal: responsive.spacing(theme.spacing.m),
       alignSelf: 'center',
       maxWidth: '90%',
@@ -127,8 +135,12 @@ const getStyles = (
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
-      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.xxs) : responsive.spacing(theme.spacing.xs),
+      marginBottom: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xs)
+        : responsive.spacing(theme.spacing.s),
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing(theme.spacing.xxs)
+        : responsive.spacing(theme.spacing.xs),
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
       flexWrap: 'wrap',
@@ -455,7 +467,9 @@ function GenericDetailModal<TItem extends { id: string }>({
           buttonColor={theme.colors.surfaceVariant}
           textColor={theme.colors.onSurfaceVariant}
           labelStyle={{ fontSize: responsive.isTablet ? 14 : 13 }}
-          contentStyle={{ paddingHorizontal: responsive.spacing(theme.spacing.s) }}
+          contentStyle={{
+            paddingHorizontal: responsive.spacing(theme.spacing.s),
+          }}
         >
           {closeButtonLabel}
         </Button>

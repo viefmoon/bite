@@ -44,7 +44,7 @@ interface PizzaCustomizationFormModalProps {
 
 const createStyles = (theme: any, responsive: any) => {
   const isTablet = responsive.isTablet;
-  
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -497,7 +497,10 @@ export function PizzaCustomizationFormModal({
                 }
                 style={styles.button}
                 contentStyle={styles.buttonContent}
-                labelStyle={{ fontSize: responsive.fontSize(16), fontWeight: '600' }}
+                labelStyle={{
+                  fontSize: responsive.fontSize(16),
+                  fontWeight: '600',
+                }}
               >
                 Cancelar
               </Button>
@@ -519,7 +522,10 @@ export function PizzaCustomizationFormModal({
                   { backgroundColor: theme.colors.primary },
                 ]}
                 contentStyle={styles.buttonContent}
-                labelStyle={{ fontSize: responsive.fontSize(16), fontWeight: '600' }}
+                labelStyle={{
+                  fontSize: responsive.fontSize(16),
+                  fontWeight: '600',
+                }}
                 icon={isEditMode ? 'check' : 'plus'}
               >
                 {isEditMode ? 'Guardar' : 'Crear'}

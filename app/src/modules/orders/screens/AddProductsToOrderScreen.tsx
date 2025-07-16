@@ -135,14 +135,17 @@ const AddProductsToOrderScreen = () => {
     return hasVariants || hasModifiers;
   }, []);
 
-  const handleProductSelect = useCallback((product: Product) => {
-    if (productNeedsCustomization(product)) {
-      setSelectedProduct(product);
-    } else {
-      // Añadir producto directamente sin personalización
-      addItemToSelection(product, 1);
-    }
-  }, [productNeedsCustomization, addItemToSelection]);
+  const handleProductSelect = useCallback(
+    (product: Product) => {
+      if (productNeedsCustomization(product)) {
+        setSelectedProduct(product);
+      } else {
+        // Añadir producto directamente sin personalización
+        addItemToSelection(product, 1);
+      }
+    },
+    [productNeedsCustomization, addItemToSelection],
+  );
 
   const addItemToSelection = (
     product: Product,
@@ -357,7 +360,6 @@ const AddProductsToOrderScreen = () => {
     setSelectedProduct(null);
   };
 
-
   const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);
     setEditingItem(null);
@@ -455,8 +457,8 @@ const AddProductsToOrderScreen = () => {
     // Para tablets (ancho >= 600px)
     if (responsive.width >= 600) {
       if (responsive.width >= 1200) return 6; // Tablets muy grandes
-      if (responsive.width >= 900) return 5;   // Tablets grandes
-      if (responsive.width >= 768) return 4;   // Tablets medianas
+      if (responsive.width >= 900) return 5; // Tablets grandes
+      if (responsive.width >= 768) return 4; // Tablets medianas
       return 3; // Tablets pequeñas (600-768px)
     }
     // Para móviles (ancho < 600px)
@@ -527,7 +529,8 @@ const AddProductsToOrderScreen = () => {
         cardTitle: {
           fontSize: responsive.fontSize(responsive.width >= 600 ? 16 : 15),
           fontWeight: '600',
-          lineHeight: responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
+          lineHeight:
+            responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
           marginBottom: responsive.spacing(2),
         },
         cardHeader: {
@@ -592,118 +595,141 @@ const AddProductsToOrderScreen = () => {
   const blurhash =
     '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-  const renderItem = useCallback(({ item }: { item: Category | SubCategory | Product }) => {
-    const imageSource = (() => {
-      const photoPath = item.photo?.path || item.photo;
-      return photoPath || null;
-    })();
-    const isActive = item.isActive !== false;
+  const renderItem = useCallback(
+    ({ item }: { item: Category | SubCategory | Product }) => {
+      const imageSource = (() => {
+        const photoPath = item.photo?.path || item.photo;
+        return photoPath || null;
+      })();
+      const isActive = item.isActive !== false;
 
-    // Verificar si es un producto sin pantalla de preparación
-    const isProductWithoutScreen =
-      navigationLevel === 'products' &&
-      'preparationScreenId' in item &&
-      !item.preparationScreenId;
-
-    const handlePress = () => {
-      if (!isActive || isProductWithoutScreen) return;
-
-      if (navigationLevel === 'categories') {
-        handleCategorySelect(item.id);
-      } else if (navigationLevel === 'subcategories') {
-        handleSubCategorySelect(item.id);
-      } else if ('price' in item) {
-        handleProductSelect(item as Product);
-      }
-    };
-
-    const handleLongPress = () => {
-      if (
+      // Verificar si es un producto sin pantalla de preparación
+      const isProductWithoutScreen =
         navigationLevel === 'products' &&
-        'price' in item &&
-        isActive &&
-        'description' in item &&
-        (item as Product).description &&
-        (item as Product).description.trim() !== ''
-      ) {
-        handleShowProductDescription(item as Product);
-      }
-    };
+        'preparationScreenId' in item &&
+        !item.preparationScreenId;
 
-    const renderPrice = () => {
-      if (
-        navigationLevel === 'products' &&
-        'price' in item &&
-        'hasVariants' in item
-      ) {
-        const productItem = item as Product;
-        if (
-          !productItem.hasVariants &&
-          productItem.price !== null &&
-          productItem.price !== undefined
-        ) {
-          return (
-            <Text style={styles.priceText}>
-              ${Number(productItem.price).toFixed(2)}
-            </Text>
-          );
+      const handlePress = () => {
+        if (!isActive || isProductWithoutScreen) return;
+
+        if (navigationLevel === 'categories') {
+          handleCategorySelect(item.id);
+        } else if (navigationLevel === 'subcategories') {
+          handleSubCategorySelect(item.id);
+        } else if ('price' in item) {
+          handleProductSelect(item as Product);
         }
-      }
-      return null;
-    };
+      };
 
-    return (
-      <Card
-        style={[
-          styles.cardItem,
-          (!isActive || isProductWithoutScreen) && styles.cardItemInactive,
-        ]}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        disabled={!isActive || isProductWithoutScreen}
-      >
-        <AutoImage
-          source={imageSource}
-          style={[
-            styles.itemImage,
-            (!isActive || isProductWithoutScreen) && styles.imageInactive,
-          ]}
-          contentFit="cover"
-          placeholder={blurhash}
-          transition={300}
-          placeholderIcon="image-outline"
-        />
-        <Card.Content style={styles.cardContent}>
-          {navigationLevel === 'products' &&
+      const handleLongPress = () => {
+        if (
+          navigationLevel === 'products' &&
           'price' in item &&
-          (item as Product).description ? (
-            <View style={styles.cardHeader}>
-              <Title style={[styles.cardTitle, { flex: 1 }]} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
-              <IconButton
-                icon="information-outline"
-                size={20}
-                onPress={() => handleShowProductDescription(item as Product)}
-                style={styles.infoButton}
-              />
+          isActive &&
+          'description' in item &&
+          (item as Product).description &&
+          (item as Product).description.trim() !== ''
+        ) {
+          handleShowProductDescription(item as Product);
+        }
+      };
+
+      const renderPrice = () => {
+        if (
+          navigationLevel === 'products' &&
+          'price' in item &&
+          'hasVariants' in item
+        ) {
+          const productItem = item as Product;
+          if (
+            !productItem.hasVariants &&
+            productItem.price !== null &&
+            productItem.price !== undefined
+          ) {
+            return (
+              <Text style={styles.priceText}>
+                ${Number(productItem.price).toFixed(2)}
+              </Text>
+            );
+          }
+        }
+        return null;
+      };
+
+      return (
+        <Card
+          style={[
+            styles.cardItem,
+            (!isActive || isProductWithoutScreen) && styles.cardItemInactive,
+          ]}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+          disabled={!isActive || isProductWithoutScreen}
+        >
+          <AutoImage
+            source={imageSource}
+            style={[
+              styles.itemImage,
+              (!isActive || isProductWithoutScreen) && styles.imageInactive,
+            ]}
+            contentFit="cover"
+            placeholder={blurhash}
+            transition={300}
+            placeholderIcon="image-outline"
+          />
+          <Card.Content style={styles.cardContent}>
+            {navigationLevel === 'products' &&
+            'price' in item &&
+            (item as Product).description ? (
+              <View style={styles.cardHeader}>
+                <Title
+                  style={[styles.cardTitle, { flex: 1 }]}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
+                  {item.name}
+                </Title>
+                <IconButton
+                  icon="information-outline"
+                  size={20}
+                  onPress={() => handleShowProductDescription(item as Product)}
+                  style={styles.infoButton}
+                />
+              </View>
+            ) : (
+              <Title
+                style={styles.cardTitle}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Title>
+            )}
+            {renderPrice()}
+          </Card.Content>
+          {!isActive && (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>No disponible</Text>
             </View>
-          ) : (
-            <Title style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
           )}
-          {renderPrice()}
-        </Card.Content>
-        {!isActive && (
-          <View style={styles.inactiveBadge}>
-            <Text style={styles.inactiveBadgeText}>No disponible</Text>
-          </View>
-        )}
-        {isProductWithoutScreen && (
-          <View style={styles.inactiveBadge}>
-            <Text style={styles.inactiveBadgeText}>SIN PANTALLA</Text>
-          </View>
-        )}
-      </Card>
-    );
-  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect, handleShowProductDescription, styles, blurhash]);
+          {isProductWithoutScreen && (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>SIN PANTALLA</Text>
+            </View>
+          )}
+        </Card>
+      );
+    },
+    [
+      navigationLevel,
+      handleCategorySelect,
+      handleSubCategorySelect,
+      handleProductSelect,
+      handleShowProductDescription,
+      styles,
+      blurhash,
+    ],
+  );
 
   if (isLoading) {
     return (

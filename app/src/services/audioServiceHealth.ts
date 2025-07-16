@@ -110,10 +110,7 @@ class AudioServiceHealthChecker {
         lastChecked: new Date(),
       });
     } catch (error) {
-      // Solo log en modo debug, no en producción
-      if (__DEV__) {
-        console.log('Error checking audio service health:', error);
-      }
+      // Error al verificar servicio de audio en modo desarrollo
 
       let errorMessage = 'Servicio de voz no disponible';
       if (axios.isAxiosError(error)) {

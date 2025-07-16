@@ -319,18 +319,30 @@ export function UsersListScreen() {
           onRefresh={handleRefresh}
           onItemPress={handleViewUser}
           ListEmptyComponent={ListEmptyComponent}
-          listItemStyle={responsive.isTablet ? { 
-            marginVertical: 1,
-            marginHorizontal: responsive.spacing.xs,
-          } : undefined}
-          listItemContentStyle={responsive.isTablet ? {
-            paddingVertical: 2,
-            minHeight: 36,
-          } : undefined}
-          contentContainerStyle={responsive.isTablet ? {
-            paddingTop: 2,
-            paddingBottom: 80,
-          } : undefined}
+          listItemStyle={
+            responsive.isTablet
+              ? {
+                  marginVertical: 1,
+                  marginHorizontal: responsive.spacing.xs,
+                }
+              : undefined
+          }
+          listItemContentStyle={
+            responsive.isTablet
+              ? {
+                  paddingVertical: 2,
+                  minHeight: 36,
+                }
+              : undefined
+          }
+          contentContainerStyle={
+            responsive.isTablet
+              ? {
+                  paddingTop: 2,
+                  paddingBottom: 80,
+                }
+              : undefined
+          }
           renderConfig={{
             titleField: 'displayName' as any,
             descriptionField: 'displayInfo' as any,

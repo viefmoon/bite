@@ -94,10 +94,14 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     outputRange: [finalInactiveLabelColor, finalActiveLabelColor],
   });
 
-  const styles = React.useMemo(() => createStyles(theme, responsive, {
-    disabled,
-    finalInactiveLabelColor,
-  }), [theme, responsive, disabled, finalInactiveLabelColor]);
+  const styles = React.useMemo(
+    () =>
+      createStyles(theme, responsive, {
+        disabled,
+        finalInactiveLabelColor,
+      }),
+    [theme, responsive, disabled, finalInactiveLabelColor],
+  );
 
   const animatedLabelStyle = {
     transform: [{ translateY: labelTranslateY }, { scale: labelScale }],
@@ -188,66 +192,69 @@ const createStyles = (
   props: {
     disabled: boolean;
     finalInactiveLabelColor: string;
-  }
-) => StyleSheet.create({
-  container: {
-    borderWidth: 1,
-    borderRadius: theme.roundness,
-    paddingHorizontal: responsive.spacing(theme.spacing.m),
-    paddingTop: responsive.isTablet ? 16 : 18,
-    paddingBottom: responsive.isTablet ? 4 : 6,
-    position: 'relative',
-    backgroundColor: theme.colors.background,
-    minHeight: responsive.isTablet ? 52 : 58,
-    justifyContent: 'center',
-    flex: 1,
   },
-  outerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  label: {
-    position: 'absolute',
-    left: responsive.spacing(theme.spacing.m),
-    top: responsive.isTablet ? 16 : 18,
-    fontSize: responsive.fontSize(16),
-    color: props.finalInactiveLabelColor,
-    zIndex: 1,
-  },
-  valueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: responsive.isTablet ? 20 : 24,
-  },
-  valueText: {
-    fontSize: responsive.fontSize(16),
-    color: props.disabled ? theme.colors.onSurfaceDisabled : theme.colors.onSurface,
-    flex: 1,
-    marginRight: responsive.spacing(theme.spacing.xs),
-  },
-  loader: {},
-  iconsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  clearButtonContainer: {
-    marginLeft: responsive.spacing(theme.spacing.s),
-    height: responsive.isTablet ? 52 : 58,
-    justifyContent: 'center',
-  },
-  clearButton: {
-    margin: 0,
-  },
-  icon: {},
-  disabledOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.dark
-      ? 'rgba(0, 0, 0, 0.2)'
-      : 'rgba(0, 0, 0, 0.05)',
-    zIndex: 3,
-    borderRadius: theme.roundness,
-  },
-});
+) =>
+  StyleSheet.create({
+    container: {
+      borderWidth: 1,
+      borderRadius: theme.roundness,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.isTablet ? 16 : 18,
+      paddingBottom: responsive.isTablet ? 4 : 6,
+      position: 'relative',
+      backgroundColor: theme.colors.background,
+      minHeight: responsive.isTablet ? 52 : 58,
+      justifyContent: 'center',
+      flex: 1,
+    },
+    outerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    label: {
+      position: 'absolute',
+      left: responsive.spacing(theme.spacing.m),
+      top: responsive.isTablet ? 16 : 18,
+      fontSize: responsive.fontSize(16),
+      color: props.finalInactiveLabelColor,
+      zIndex: 1,
+    },
+    valueContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: responsive.isTablet ? 20 : 24,
+    },
+    valueText: {
+      fontSize: responsive.fontSize(16),
+      color: props.disabled
+        ? theme.colors.onSurfaceDisabled
+        : theme.colors.onSurface,
+      flex: 1,
+      marginRight: responsive.spacing(theme.spacing.xs),
+    },
+    loader: {},
+    iconsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    clearButtonContainer: {
+      marginLeft: responsive.spacing(theme.spacing.s),
+      height: responsive.isTablet ? 52 : 58,
+      justifyContent: 'center',
+    },
+    clearButton: {
+      margin: 0,
+    },
+    icon: {},
+    disabledOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.dark
+        ? 'rgba(0, 0, 0, 0.2)'
+        : 'rgba(0, 0, 0, 0.05)',
+      zIndex: 3,
+      borderRadius: theme.roundness,
+    },
+  });
 
 export default AnimatedLabelSelector;

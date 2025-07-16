@@ -10,7 +10,6 @@ import {
   Button,
   Dialog,
   TextInput,
-  HelperText,
   Icon,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -546,103 +545,151 @@ export function UserDetailModal({
           }}
           style={styles.passwordDialog}
         >
-          <View style={[styles.passwordDialogContainer, { borderColor: theme.colors.primary }]}>
+          <View
+            style={[
+              styles.passwordDialogContainer,
+              { borderColor: theme.colors.primary },
+            ]}
+          >
             <View style={styles.passwordDialogHeader}>
-              <Icon source="lock-reset" size={40} color={theme.colors.primary} />
+              <Icon
+                source="lock-reset"
+                size={40}
+                color={theme.colors.primary}
+              />
               <Dialog.Title style={styles.passwordDialogTitle}>
                 Cambiar Contraseña
               </Dialog.Title>
               <View style={styles.passwordDialogUserInfo}>
-                <Text variant="bodyMedium" style={styles.passwordDialogUserName}>
-                  {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}
+                <Text
+                  variant="bodyMedium"
+                  style={styles.passwordDialogUserName}
+                >
+                  {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+                    user.username}
                 </Text>
-                <Text variant="bodySmall" style={styles.passwordDialogUserDetail}>
+                <Text
+                  variant="bodySmall"
+                  style={styles.passwordDialogUserDetail}
+                >
                   {user.email}
                 </Text>
-                <Text variant="labelSmall" style={styles.passwordDialogUserDetail}>
+                <Text
+                  variant="labelSmall"
+                  style={styles.passwordDialogUserDetail}
+                >
                   @{user.username}
                 </Text>
               </View>
             </View>
-          
-          <Dialog.Content style={styles.passwordDialogContent}>
-            <TextInput
-              label="Nueva contraseña"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              mode="flat"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="new-password"
-              style={styles.passwordInput}
-              contentStyle={styles.passwordInputContent}
-              underlineColor={theme.colors.surfaceVariant}
-              activeUnderlineColor={theme.colors.primary}
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? 'eye-off' : 'eye'}
-                  onPress={() => setShowPassword(!showPassword)}
-                  size={20}
-                  style={styles.passwordInputIcon}
-                />
-              }
-            />
-            
-            <TextInput
-              label="Confirmar contraseña"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              mode="flat"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="new-password"
-              style={styles.passwordInput}
-              contentStyle={styles.passwordInputContent}
-              underlineColor={theme.colors.surfaceVariant}
-              activeUnderlineColor={theme.colors.primary}
-            />
-            
-            {(newPassword.length > 0 || confirmPassword.length > 0) && (
-              <View style={styles.passwordValidation}>
-                <View style={styles.validationItem}>
-                  <Icon 
-                    source={newPassword.length >= 6 ? "check-circle" : "circle-outline"}
-                    size={16} 
-                    color={newPassword.length >= 6 ? theme.colors.primary : theme.colors.onSurfaceVariant}
+
+            <Dialog.Content style={styles.passwordDialogContent}>
+              <TextInput
+                label="Nueva contraseña"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                mode="flat"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="new-password"
+                style={styles.passwordInput}
+                contentStyle={styles.passwordInputContent}
+                underlineColor={theme.colors.surfaceVariant}
+                activeUnderlineColor={theme.colors.primary}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                    size={20}
+                    style={styles.passwordInputIcon}
                   />
-                  <Text 
-                    variant="bodySmall" 
-                    style={[
-                      styles.validationText,
-                      { color: newPassword.length >= 6 ? theme.colors.primary : theme.colors.onSurfaceVariant }
-                    ]}
-                  >
-                    Mínimo 6 caracteres
-                  </Text>
+                }
+              />
+
+              <TextInput
+                label="Confirmar contraseña"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                mode="flat"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="new-password"
+                style={styles.passwordInput}
+                contentStyle={styles.passwordInputContent}
+                underlineColor={theme.colors.surfaceVariant}
+                activeUnderlineColor={theme.colors.primary}
+              />
+
+              {(newPassword.length > 0 || confirmPassword.length > 0) && (
+                <View style={styles.passwordValidation}>
+                  <View style={styles.validationItem}>
+                    <Icon
+                      source={
+                        newPassword.length >= 6
+                          ? 'check-circle'
+                          : 'circle-outline'
+                      }
+                      size={16}
+                      color={
+                        newPassword.length >= 6
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
+                    />
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.validationText,
+                        {
+                          color:
+                            newPassword.length >= 6
+                              ? theme.colors.primary
+                              : theme.colors.onSurfaceVariant,
+                        },
+                      ]}
+                    >
+                      Mínimo 6 caracteres
+                    </Text>
+                  </View>
+
+                  <View style={styles.validationItem}>
+                    <Icon
+                      source={
+                        newPassword === confirmPassword &&
+                        newPassword.length > 0
+                          ? 'check-circle'
+                          : 'circle-outline'
+                      }
+                      size={16}
+                      color={
+                        newPassword === confirmPassword &&
+                        newPassword.length > 0
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
+                    />
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.validationText,
+                        {
+                          color:
+                            newPassword === confirmPassword &&
+                            newPassword.length > 0
+                              ? theme.colors.primary
+                              : theme.colors.onSurfaceVariant,
+                        },
+                      ]}
+                    >
+                      Las contraseñas coinciden
+                    </Text>
+                  </View>
                 </View>
-                
-                <View style={styles.validationItem}>
-                  <Icon 
-                    source={newPassword === confirmPassword && newPassword.length > 0 ? "check-circle" : "circle-outline"}
-                    size={16} 
-                    color={newPassword === confirmPassword && newPassword.length > 0 ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                  />
-                  <Text 
-                    variant="bodySmall" 
-                    style={[
-                      styles.validationText,
-                      { color: newPassword === confirmPassword && newPassword.length > 0 ? theme.colors.primary : theme.colors.onSurfaceVariant }
-                    ]}
-                  >
-                    Las contraseñas coinciden
-                  </Text>
-                </View>
-              </View>
-            )}
-          </Dialog.Content>
-          
+              )}
+            </Dialog.Content>
+
             <Dialog.Actions style={styles.passwordDialogActions}>
               <Button
                 mode="text"
@@ -652,7 +699,10 @@ export function UserDetailModal({
                   setConfirmPassword('');
                   setShowPassword(false);
                 }}
-                style={[styles.passwordDialogButton, styles.passwordDialogCancelButton]}
+                style={[
+                  styles.passwordDialogButton,
+                  styles.passwordDialogCancelButton,
+                ]}
                 labelStyle={styles.passwordDialogButtonLabel}
               >
                 Cancelar
@@ -668,7 +718,7 @@ export function UserDetailModal({
                 }
                 style={[
                   styles.passwordDialogButton,
-                  styles.passwordDialogPrimaryButton
+                  styles.passwordDialogPrimaryButton,
                 ]}
                 labelStyle={styles.passwordDialogButtonLabel}
               >
@@ -722,7 +772,10 @@ export function UserDetailModal({
   );
 }
 
-const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+const getStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+) =>
   StyleSheet.create({
     passwordDialog: {
       backgroundColor: 'transparent',
@@ -831,8 +884,12 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.m,
-      paddingVertical: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.m,
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing.s
+        : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -876,14 +933,20 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
     },
     contentContainer: {
       flex: 1,
-      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.s,
+      paddingHorizontal: responsive.isTablet
+        ? responsive.spacing.m
+        : theme.spacing.s,
       paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
-      paddingBottom: responsive.isTablet ? responsive.spacing.l : theme.spacing.m,
+      paddingBottom: responsive.isTablet
+        ? responsive.spacing.l
+        : theme.spacing.m,
     },
     infoSection: {
       borderRadius: theme.roundness * 2,
       padding: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
-      marginBottom: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      marginBottom: responsive.isTablet
+        ? responsive.spacing.s
+        : theme.spacing.s,
       backgroundColor: theme.colors.elevation.level1,
       borderWidth: 0,
       elevation: 0,
@@ -892,7 +955,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       flexDirection: 'row',
       alignItems: 'center',
       gap: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
-      marginBottom: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
+      marginBottom: responsive.isTablet
+        ? responsive.spacing.xs
+        : theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
@@ -938,7 +1003,9 @@ const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
-      paddingVertical: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
+      paddingVertical: responsive.isTablet
+        ? responsive.spacing.xs
+        : theme.spacing.xs,
     },
     compactContent: {
       flex: 1,

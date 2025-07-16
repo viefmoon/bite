@@ -73,7 +73,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const { colors } = theme;
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [editableDeliveryInfo, setEditableDeliveryInfo] =
     useState<DeliveryInfoData>({});
   const [editableItems, setEditableItems] = useState<AIOrderItem[]>([]);
@@ -93,7 +92,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       setEditableItems(orderData.orderItems);
     }
   }, [orderData?.deliveryInfo, orderData?.orderItems]);
-
 
   const handleConfirm = () => {
     if (editableItems && editableItems.length > 0) {
@@ -415,12 +413,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const renderOrderSummary = () => {
     if (!orderData) return null;
 
-    const {
-      deliveryInfo,
-      scheduledDelivery,
-      orderType,
-      warnings,
-    } = orderData;
+    const { deliveryInfo, scheduledDelivery, orderType, warnings } = orderData;
 
     return (
       <ScrollView

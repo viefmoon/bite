@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Animated,
   Easing,
-  Dimensions,
   Text,
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,8 +19,6 @@ interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;
   onError: (error: string) => void;
 }
-
-const { width } = Dimensions.get('window');
 
 export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   onRecordingComplete,

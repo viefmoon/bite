@@ -247,7 +247,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getStatusColor(orderData.orderStatus, theme),
+                      backgroundColor: getStatusColor(
+                        orderData.orderStatus,
+                        theme,
+                      ),
                     },
                   ]}
                   textStyle={styles.statusChipText}

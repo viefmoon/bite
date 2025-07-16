@@ -1,5 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, FlatList, RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import {
   Text,
   Searchbar,
@@ -14,11 +20,8 @@ import {
   Icon,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import {
-  useReceipts,
-  useRecoverOrder,
-} from '../hooks/useReceiptsQueries';
-import type { Receipt, ReceiptList, ReceiptsListResponse, ReceiptFilters } from '../types/receipt.types';
+import { useReceipts, useRecoverOrder } from '../hooks/useReceiptsQueries';
+import type { Receipt, ReceiptList } from '../types/receipt.types';
 import { getPaymentStatus } from '@/app/utils/orderFormatters';
 import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
@@ -29,7 +32,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { formatOrderTypeShort, getStatusColor } from '@/app/utils/orderFormatters';
+import { formatOrderTypeShort } from '@/app/utils/orderFormatters';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 
@@ -85,36 +88,39 @@ export const ReceiptsScreen: React.FC = () => {
   // Filtrar recibos localmente
   const receipts = useMemo(() => {
     if (!allReceipts) return [];
-    
+
     let filtered = [...allReceipts];
-    
+
     // Filtro por estado
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(receipt => receipt.orderStatus === statusFilter);
+      filtered = filtered.filter(
+        (receipt) => receipt.orderStatus === statusFilter,
+      );
     }
-    
+
     // Filtro por búsqueda
     if (searchQuery.trim()) {
       const search = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(receipt => {
+      filtered = filtered.filter((receipt) => {
         // Buscar por número de orden
         if (receipt.shiftOrderNumber.toString().includes(search)) return true;
-        
+
         // Buscar en información de entrega
         if (receipt.deliveryInfo) {
-          const { recipientName, recipientPhone, fullAddress } = receipt.deliveryInfo;
+          const { recipientName, recipientPhone, fullAddress } =
+            receipt.deliveryInfo;
           if (recipientName?.toLowerCase().includes(search)) return true;
           if (recipientPhone?.includes(search)) return true;
           if (fullAddress?.toLowerCase().includes(search)) return true;
         }
-        
+
         // Buscar en notas
         if (receipt.notes?.toLowerCase().includes(search)) return true;
-        
+
         return false;
       });
     }
-    
+
     return filtered;
   }, [allReceipts, statusFilter, searchQuery]);
 
@@ -125,7 +131,6 @@ export const ReceiptsScreen: React.FC = () => {
       setShowDetailModal(true);
     });
   }, []);
-
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery('');
@@ -152,7 +157,6 @@ export const ReceiptsScreen: React.FC = () => {
       // Error ya manejado por el mutation hook
     }
   }, [orderToRecover, recoverOrderMutation]);
-
 
   // Función específica para el color de estado en recibos
   const getReceiptStatusColor = (status: string) => {
@@ -206,7 +210,8 @@ export const ReceiptsScreen: React.FC = () => {
       }
     }
 
-    const totalAmount = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+    const totalAmount =
+      typeof item.total === 'string' ? parseFloat(item.total) : item.total;
     const totalPaid = item.paymentsSummary?.totalPaid || 0;
     const pendingAmount = totalAmount - totalPaid;
 
@@ -238,7 +243,8 @@ export const ReceiptsScreen: React.FC = () => {
                     style={[
                       styles.orderPrice,
                       {
-                        color: pendingAmount > 0 ? theme.colors.error : '#10B981',
+                        color:
+                          pendingAmount > 0 ? theme.colors.error : '#10B981',
                       },
                     ]}
                   >
@@ -255,25 +261,31 @@ export const ReceiptsScreen: React.FC = () => {
                       ]}
                       numberOfLines={1}
                     >
-                      {' • '}{item.notes}
+                      {' • '}
+                      {item.notes}
                     </Text>
                   )}
                 </Text>
                 <View style={styles.timeAndPaymentRow}>
                   <Text
-                    style={[
-                      styles.orderTime,
-                      { color: theme.colors.primary },
-                    ]}
+                    style={[styles.orderTime, { color: theme.colors.primary }]}
                   >
                     {format(new Date(item.createdAt), 'p', { locale: es })}
                   </Text>
                   {(() => {
                     const paymentStatus = getPaymentStatus(item as any);
-                    const color = paymentStatus === 'paid' ? '#10B981' : 
-                                paymentStatus === 'partial' ? '#F59E0B' : '#EF4444';
-                    const icon = paymentStatus === 'paid' ? '✓' : 
-                               paymentStatus === 'partial' ? '½' : '•';
+                    const color =
+                      paymentStatus === 'paid'
+                        ? '#10B981'
+                        : paymentStatus === 'partial'
+                          ? '#F59E0B'
+                          : '#EF4444';
+                    const icon =
+                      paymentStatus === 'paid'
+                        ? '✓'
+                        : paymentStatus === 'partial'
+                          ? '½'
+                          : '•';
                     return (
                       <View
                         style={[
@@ -281,50 +293,60 @@ export const ReceiptsScreen: React.FC = () => {
                           { backgroundColor: color },
                         ]}
                       >
-                        <Text style={styles.miniPaymentText}>
-                          {icon}
-                        </Text>
+                        <Text style={styles.miniPaymentText}>{icon}</Text>
                       </View>
                     );
                   })()}
-                  {item.preparationScreenStatuses && item.preparationScreenStatuses.length > 0 && (
-                    <>
-                      {item.preparationScreenStatuses.map((screen, index) => {
-                        const backgroundColor = 
-                          screen.status === 'READY' ? '#4CAF50' :
-                          screen.status === 'IN_PROGRESS' ? '#FFA000' :
-                          theme.colors.surfaceVariant;
-                        
-                        const textColor = 
-                          screen.status === 'READY' || screen.status === 'IN_PROGRESS' ? '#FFFFFF' :
-                          theme.colors.onSurfaceVariant;
-                          
-                        return (
-                          <View
-                            key={`${item.id}-screen-${index}`}
-                            style={[
-                              styles.inlinePreparationBadge,
-                              {
-                                backgroundColor,
-                                borderColor: backgroundColor === theme.colors.surfaceVariant ? theme.colors.outline : backgroundColor,
-                              },
-                            ]}
-                          >
-                            <Text
+                  {item.preparationScreenStatuses &&
+                    item.preparationScreenStatuses.length > 0 && (
+                      <>
+                        {item.preparationScreenStatuses.map((screen, index) => {
+                          const backgroundColor =
+                            screen.status === 'READY'
+                              ? '#4CAF50'
+                              : screen.status === 'IN_PROGRESS'
+                                ? '#FFA000'
+                                : theme.colors.surfaceVariant;
+
+                          const textColor =
+                            screen.status === 'READY' ||
+                            screen.status === 'IN_PROGRESS'
+                              ? '#FFFFFF'
+                              : theme.colors.onSurfaceVariant;
+
+                          return (
+                            <View
+                              key={`${item.id}-screen-${index}`}
                               style={[
-                                styles.inlinePreparationText,
-                                { color: textColor },
+                                styles.inlinePreparationBadge,
+                                {
+                                  backgroundColor,
+                                  borderColor:
+                                    backgroundColor ===
+                                    theme.colors.surfaceVariant
+                                      ? theme.colors.outline
+                                      : backgroundColor,
+                                },
                               ]}
                             >
-                              {screen.status === 'READY' ? '✓ ' : 
-                               screen.status === 'IN_PROGRESS' ? '⏳' : ''}
-                              🍳 {screen.name}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </>
-                  )}
+                              <Text
+                                style={[
+                                  styles.inlinePreparationText,
+                                  { color: textColor },
+                                ]}
+                              >
+                                {screen.status === 'READY'
+                                  ? '✓ '
+                                  : screen.status === 'IN_PROGRESS'
+                                    ? '⏳'
+                                    : ''}
+                                🍳 {screen.name}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </>
+                    )}
                 </View>
               </View>
 
@@ -341,7 +363,9 @@ export const ReceiptsScreen: React.FC = () => {
                   compact
                   style={[
                     styles.statusChip,
-                    { backgroundColor: getReceiptStatusColor(item.orderStatus) },
+                    {
+                      backgroundColor: getReceiptStatusColor(item.orderStatus),
+                    },
                   ]}
                   textStyle={styles.statusChipText}
                 >
@@ -365,7 +389,6 @@ export const ReceiptsScreen: React.FC = () => {
                 </View>
               </View>
             </View>
-
           </Card.Content>
         </Card>
       </TouchableOpacity>
@@ -397,16 +420,13 @@ export const ReceiptsScreen: React.FC = () => {
     );
   };
 
-
   return (
     <View style={styles.container}>
       {/* Header con búsqueda y filtros */}
       <Surface style={styles.header} elevation={2}>
         <Surface style={styles.shiftIndicator} elevation={1}>
           <Icon source="cash-register" size={20} color={theme.colors.primary} />
-          <Text style={styles.shiftText}>
-            Recibos del turno actual
-          </Text>
+          <Text style={styles.shiftText}>Recibos del turno actual</Text>
           <View style={styles.shiftBadge}>
             <Text style={styles.shiftBadgeText}>ACTIVO</Text>
           </View>

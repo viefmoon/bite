@@ -11,7 +11,6 @@ import {
 } from 'react-native-paper';
 import { PizzaCustomizationGroupAvailability } from '../types/availability.types';
 import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 interface PizzaCustomizationAvailabilityItemProps {
   group: PizzaCustomizationGroupAvailability;

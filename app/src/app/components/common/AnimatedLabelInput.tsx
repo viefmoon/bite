@@ -105,11 +105,15 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
         ? finalActiveBorderColor
         : finalBorderColor;
 
-    const styles = React.useMemo(() => createStyles(theme, responsive, {
-      multiline,
-      disabled,
-      finalInactiveLabelColor,
-    }), [theme, responsive, multiline, disabled, finalInactiveLabelColor]);
+    const styles = React.useMemo(
+      () =>
+        createStyles(theme, responsive, {
+          multiline,
+          disabled,
+          finalInactiveLabelColor,
+        }),
+      [theme, responsive, multiline, disabled, finalInactiveLabelColor],
+    );
 
     const animatedTranslateY = animation.interpolate({
       inputRange: [0, 1],
@@ -235,40 +239,41 @@ const createStyles = (
     multiline?: boolean;
     disabled: boolean;
     finalInactiveLabelColor: string;
-  }
-) => StyleSheet.create({
-  container: {
-    borderWidth: 1,
-    borderRadius: theme.roundness,
-    paddingHorizontal: responsive.spacing(theme.spacing.m),
-    position: 'relative',
-    backgroundColor: theme.colors.background,
-    minHeight: responsive.isTablet ? 52 : 58,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: props.multiline ? 'flex-start' : 'center',
-    paddingTop: responsive.isTablet ? 16 : 18,
-    paddingBottom: responsive.isTablet ? 4 : 6,
-    minHeight: responsive.isTablet ? 36 : 40,
-  },
-  label: {
-    fontSize: responsive.fontSize(16),
-    color: props.finalInactiveLabelColor,
-  },
-  input: {
-    flex: 1,
-    fontSize: responsive.fontSize(16),
-    color: props.disabled
-      ? theme.colors.onSurfaceDisabled
-      : theme.colors.onSurface,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    margin: 0,
-    borderWidth: 0,
-    backgroundColor: 'transparent',
-    textAlignVertical: props.multiline ? 'top' : 'center',
-  },
-});
+) =>
+  StyleSheet.create({
+    container: {
+      borderWidth: 1,
+      borderRadius: theme.roundness,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      position: 'relative',
+      backgroundColor: theme.colors.background,
+      minHeight: responsive.isTablet ? 52 : 58,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: props.multiline ? 'flex-start' : 'center',
+      paddingTop: responsive.isTablet ? 16 : 18,
+      paddingBottom: responsive.isTablet ? 4 : 6,
+      minHeight: responsive.isTablet ? 36 : 40,
+    },
+    label: {
+      fontSize: responsive.fontSize(16),
+      color: props.finalInactiveLabelColor,
+    },
+    input: {
+      flex: 1,
+      fontSize: responsive.fontSize(16),
+      color: props.disabled
+        ? theme.colors.onSurfaceDisabled
+        : theme.colors.onSurface,
+      paddingVertical: 0,
+      paddingHorizontal: 0,
+      margin: 0,
+      borderWidth: 0,
+      backgroundColor: 'transparent',
+      textAlignVertical: props.multiline ? 'top' : 'center',
+    },
+  });
 
 export default AnimatedLabelInput;

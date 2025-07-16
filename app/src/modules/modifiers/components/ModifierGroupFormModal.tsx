@@ -220,7 +220,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
     onError: (error) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      console.error('Error saving modifier group:', error);
+      // Error al guardar grupo de modificadores
     },
   });
 

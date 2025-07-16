@@ -1,11 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import {
   Text,
@@ -101,7 +100,10 @@ const getOperationLabel = (
 };
 
 // Helper para obtener color del estado
-const getStatusColor = (status: string, theme: ReturnType<typeof useAppTheme>) => {
+const getStatusColor = (
+  status: string,
+  theme: ReturnType<typeof useAppTheme>,
+) => {
   const statusColors: Record<string, string> = {
     PENDING: theme.colors.onSurfaceDisabled,
     IN_PROGRESS: theme.colors.warning || '#FFA500',
@@ -783,7 +785,9 @@ const HistoryItemComponent: React.FC<{
                                       fontWeight: '600',
                                     }}
                                   >
-                                    Precio: ${addedItem.finalPrice || addedItem.basePrice}
+                                    Precio: $
+                                    {addedItem.finalPrice ||
+                                      addedItem.basePrice}
                                   </Text>
                                 </View>
                               ),
@@ -1111,7 +1115,8 @@ const HistoryItemComponent: React.FC<{
                                   fontWeight: '600',
                                 }}
                               >
-                                Precio: ${addedItem.finalPrice || addedItem.basePrice}
+                                Precio: $
+                                {addedItem.finalPrice || addedItem.basePrice}
                               </Text>
                             </View>
                           ),
@@ -1207,10 +1212,7 @@ const HistoryItemComponent: React.FC<{
                               {modifiedItem.changes &&
                                 Object.entries(modifiedItem.changes).map(
                                   ([field, change]: [string, any]) => (
-                                    <View
-                                      key={field}
-                                      style={{ marginTop: 4 }}
-                                    >
+                                    <View key={field} style={{ marginTop: 4 }}>
                                       <Text
                                         variant="labelSmall"
                                         style={{
@@ -1429,7 +1431,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
     queryKey: ['combinedHistory', orderId],
     queryFn: async () => {
       if (!orderId) throw new Error('No order ID');
-      
+
       // Obtener historial consolidado de la orden
       const orderHistoryResponse = await apiClient.get(
         `/api/v1/orders/${orderId}/history`,
@@ -1438,7 +1440,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
           limit: 100,
         },
       );
-      
+
       const orderHistory =
         orderHistoryResponse.ok && orderHistoryResponse.data?.data
           ? orderHistoryResponse.data.data.map((item: any) => ({
@@ -1446,7 +1448,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
               type: 'order' as const,
             }))
           : [];
-      
+
       return orderHistory;
     },
     enabled: !!orderId,
@@ -1491,7 +1493,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
     <View style={styles.container}>
       <Appbar.Header style={styles.header}>
         <Appbar.BackAction onPress={onBack} />
-        <Appbar.Content 
+        <Appbar.Content
           title={`Historial de Orden #${orderNumber || ''}`}
           subtitle={`${historyData?.length || 0} cambios registrados`}
         />

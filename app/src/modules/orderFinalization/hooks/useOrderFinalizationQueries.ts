@@ -26,4 +26,3 @@ export const useOrderForFinalizationDetail = (orderId: string | null) => {
     staleTime: 30000,
   });
 };
-

@@ -10,7 +10,6 @@ import { orderService } from '../services/orderService';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../components/OrderCartDetail';
 import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
-import type { PaginatedResponse } from '../../../app/types/api.types';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
@@ -152,7 +151,6 @@ export const useCompleteOrderMutation = () => {
     },
   });
 };
-
 
 /**
  * Hook optimizado para obtener las órdenes abiertas con campos mínimos.
