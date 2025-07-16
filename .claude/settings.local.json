@@ -55,7 +55,11 @@
       "Bash(del:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm ls:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(for f in assets/*.png)",
+      "Bash(do echo \"$f:\")",
+      "Bash(file:*)",
+      "Bash(done)"
     ],
     "deny": []
   }
