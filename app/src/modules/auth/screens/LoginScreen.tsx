@@ -220,10 +220,10 @@ const LoginScreen = () => {
           marginBottom: responsive.spacingPreset.m,
         },
         logo: {
-          width: 120,
-          height: 120,
+          width: 160,
+          height: 160,
           marginBottom: 16,
-          borderRadius: 60, // Hace el logo circular
+          borderRadius: 80, // Hace el logo circular
           backgroundColor: 'transparent',
           overflow: 'hidden',
         },
@@ -317,7 +317,7 @@ const LoginScreen = () => {
                 <Image
                   source={require('../../../../assets/icon.png')}
                   style={styles.logo}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
                 <Text style={styles.title}>¡Bienvenido!</Text>
                 <Text style={styles.subtitle}>

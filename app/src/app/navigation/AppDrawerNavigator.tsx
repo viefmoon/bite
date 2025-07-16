@@ -67,13 +67,12 @@ export function AppDrawerNavigator() {
     () =>
       StyleSheet.create({
         drawerButtonContainer: {
-          width: responsive.dimensions.iconSize.large + responsive.spacing.s,
-          height: responsive.dimensions.iconSize.large + responsive.spacing.s,
+          width: 56,
+          height: 56,
           justifyContent: 'center',
           alignItems: 'center',
-          marginLeft: responsive.spacing.l,
-          borderRadius:
-            (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
+          marginLeft: 0,
+          borderRadius: 28,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
@@ -131,11 +130,11 @@ export function AppDrawerNavigator() {
             <TouchableOpacity
               style={styles.drawerButtonContainer}
               onPress={() => navigation.openDrawer()}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
             >
               <Icon
                 source="menu"
-                size={responsive.dimensions.iconSize.large}
+                size={32}
                 color={theme.colors.onPrimary}
               />
             </TouchableOpacity>
