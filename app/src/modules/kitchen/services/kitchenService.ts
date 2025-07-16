@@ -72,7 +72,10 @@ class KitchenService {
 
   async completeOrderPreparation(orderId: string): Promise<void> {
     await ApiClientWrapper.patch(
-      API_PATHS.KITCHEN_ORDERS_COMPLETE_PREPARATION.replace(':orderId', orderId),
+      API_PATHS.KITCHEN_ORDERS_COMPLETE_PREPARATION.replace(
+        ':orderId',
+        orderId,
+      ),
     );
   }
 }

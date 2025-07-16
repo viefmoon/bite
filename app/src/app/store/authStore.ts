@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import type { User } from '../../modules/auth/schema/auth.schema'; // Corregida ruta de importación
 import { authService } from '../../modules/auth/services/authService';
 

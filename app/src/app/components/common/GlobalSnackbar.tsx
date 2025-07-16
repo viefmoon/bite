@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import Toast from 'react-native-root-toast';
+import React from 'react';
+import { Snackbar, Portal } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
 import {
   useSnackbarStore,
   SnackbarType,
@@ -10,56 +11,15 @@ const GlobalSnackbar: React.FC = () => {
   const { visible, message, type, duration, hideSnackbar } = useSnackbarStore();
   const theme = useAppTheme();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (visible && message) {
-      const backgroundColor = getBackgroundColor(type);
-      const textColor = getTextColor(type);
+      const timer = setTimeout(() => {
+        hideSnackbar();
+      }, duration || 2500);
 
-      const toast = Toast.show(message, {
-        duration: duration || 2500,
-        position: Toast.positions.BOTTOM,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: backgroundColor,
-        textColor: textColor,
-        shadowColor: theme.colors.shadow,
-        opacity: 0.95,
-        containerStyle: {
-          marginHorizontal: 16,
-          marginBottom: 40,
-          paddingHorizontal: 20,
-          paddingVertical: 14,
-          borderRadius: theme.roundness,
-          minHeight: 56,
-          justifyContent: 'center',
-          zIndex: 99999,
-          elevation: 9999,
-        },
-        textStyle: {
-          fontSize: 16,
-          fontWeight: '500',
-          lineHeight: 24,
-          textAlign: 'center',
-        },
-        onHidden: hideSnackbar,
-      });
-
-      // Limpiar el toast cuando se oculte el componente
-      return () => {
-        Toast.hide(toast);
-      };
+      return () => clearTimeout(timer);
     }
-  }, [
-    visible,
-    message,
-    type,
-    duration,
-    hideSnackbar,
-    theme.colors.shadow,
-    theme.roundness,
-  ]);
+  }, [visible, message, duration, hideSnackbar]);
 
   const getBackgroundColor = (snackbarType: SnackbarType) => {
     switch (snackbarType) {
@@ -97,7 +57,50 @@ const GlobalSnackbar: React.FC = () => {
     }
   };
 
-  return null;
+  const backgroundColor = getBackgroundColor(type);
+  const textColor = getTextColor(type);
+
+  return (
+    <Portal>
+      <Snackbar
+        visible={visible}
+        onDismiss={hideSnackbar}
+        duration={duration || 2500}
+        style={[
+          styles.snackbar,
+          {
+            backgroundColor,
+            marginBottom: 40,
+          },
+        ]}
+        theme={{
+          ...theme,
+          colors: {
+            ...theme.colors,
+            inversePrimary: textColor,
+            inverseOnSurface: textColor,
+          },
+        }}
+      >
+        {message || ''}
+      </Snackbar>
+    </Portal>
+  );
 };
+
+const styles = StyleSheet.create({
+  snackbar: {
+    marginHorizontal: 16,
+    borderRadius: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+  },
+});
 
 export default GlobalSnackbar;

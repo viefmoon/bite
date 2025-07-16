@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import { NETWORK_CONFIG } from '../constants/network';
 import { API_PATHS } from '../constants/apiPaths';
 
@@ -247,7 +247,9 @@ export class DiscoveryService {
 
       return null;
     } catch (error) {
-      this.log(`❌ Error durante el descubrimiento: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      this.log(
+        `❌ Error durante el descubrimiento: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      );
       return null;
     }
   }

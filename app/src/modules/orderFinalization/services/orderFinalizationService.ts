@@ -41,6 +41,9 @@ export const orderFinalizationService = {
     orderId: string,
     params: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
   ): Promise<void> {
-    await apiClient.post(API_PATHS.ORDERS_PRINT_TICKET.replace(':orderId', orderId), params);
+    await apiClient.post(
+      API_PATHS.ORDERS_PRINT_TICKET.replace(':orderId', orderId),
+      params,
+    );
   },
 };

@@ -4,7 +4,7 @@ import axios, {
   AxiosResponse,
 } from 'axios';
 import { create as createApisauceInstance } from 'apisauce';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import { useAuthStore } from '../store/authStore';
 import { ApiError } from '../lib/errors';
 import axiosRetry from 'axios-retry';

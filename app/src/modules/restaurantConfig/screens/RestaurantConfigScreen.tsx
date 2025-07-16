@@ -6,6 +6,9 @@ import {
   useWindowDimensions,
   BackHandler,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -29,7 +32,7 @@ import {
 } from '../types/restaurantConfig.types';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import TimeZoneSelector from '../components/TimeZoneSelector';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+// Removed KeyboardAwareScrollView - using native KeyboardAvoidingView instead
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useNavigation } from '@react-navigation/native';
@@ -844,15 +847,21 @@ const RestaurantConfigScreen: React.FC = () => {
       </View>
 
       {/* Content */}
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        extraScrollHeight={100}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        {activeTab === 'basic' && renderBasicInfo()}
-        {activeTab === 'operation' && renderOperationConfig()}
-        {activeTab === 'schedule' && renderSchedule()}
-      </KeyboardAwareScrollView>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {activeTab === 'basic' && renderBasicInfo()}
+          {activeTab === 'operation' && renderOperationConfig()}
+          {activeTab === 'schedule' && renderSchedule()}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>

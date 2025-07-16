@@ -1,7 +1,7 @@
 import React from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import { useColorScheme, Appearance } from 'react-native';
 
 import {

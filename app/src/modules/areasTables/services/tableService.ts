@@ -101,7 +101,9 @@ export const updateTable = async (
 };
 
 export const deleteTable = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(API_PATHS.TABLES_BY_ID.replace(':id', id));
+  const response = await ApiClientWrapper.delete(
+    API_PATHS.TABLES_BY_ID.replace(':id', id),
+  );
 
   if (!response.ok) {
     throw ApiError.fromApiResponse(

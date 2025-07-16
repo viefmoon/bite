@@ -898,9 +898,7 @@ const getStyles = (
       paddingHorizontal: responsive.isTablet
         ? theme.spacing.l
         : theme.spacing.m,
-      paddingVertical: responsive.isTablet
-        ? theme.spacing.m
-        : theme.spacing.s,
+      paddingVertical: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -948,16 +946,12 @@ const getStyles = (
         ? theme.spacing.l
         : theme.spacing.m,
       paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      paddingBottom: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.m,
+      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
     },
     infoSection: {
       borderRadius: theme.roundness * 2,
       padding: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      marginBottom: responsive.isTablet
-        ? theme.spacing.m
-        : theme.spacing.s,
+      marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       backgroundColor: theme.colors.elevation.level1,
       borderWidth: 0,
       elevation: 0,
@@ -966,9 +960,7 @@ const getStyles = (
       flexDirection: 'row',
       alignItems: 'center',
       gap: responsive.isTablet ? theme.spacing.xs : theme.spacing.xs,
-      marginBottom: responsive.isTablet
-        ? theme.spacing.s
-        : theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
@@ -1014,9 +1006,7 @@ const getStyles = (
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: responsive.isTablet ? theme.spacing.s : theme.spacing.s,
-      paddingVertical: responsive.isTablet
-        ? theme.spacing.s
-        : theme.spacing.xs,
+      paddingVertical: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
     },
     compactContent: {
       flex: 1,

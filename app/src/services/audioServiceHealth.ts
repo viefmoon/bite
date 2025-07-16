@@ -93,15 +93,18 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      const apiUrl = connectionState.serverUrl.endsWith('/') 
-        ? connectionState.serverUrl.slice(0, -1) 
+      const apiUrl = connectionState.serverUrl.endsWith('/')
+        ? connectionState.serverUrl.slice(0, -1)
         : connectionState.serverUrl;
-      const response = await axios.get(`${apiUrl}${API_PATHS.AUDIO_ORDERS_HEALTH}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const response = await axios.get(
+        `${apiUrl}${API_PATHS.AUDIO_ORDERS_HEALTH}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          timeout: 5000,
         },
-        timeout: 5000,
-      });
+      );
 
       const { available, status, message } = response.data;
 

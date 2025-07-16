@@ -47,7 +47,10 @@ export const prepaymentService = {
     orderId: string,
   ): Promise<Payment> => {
     const response = await apiClient.patch<Payment>(
-      API_PATHS.PAYMENTS_ASSOCIATE.replace(':paymentId', paymentId).replace(':orderId', orderId),
+      API_PATHS.PAYMENTS_ASSOCIATE.replace(':paymentId', paymentId).replace(
+        ':orderId',
+        orderId,
+      ),
     );
     return handleApiResponse(response);
   },

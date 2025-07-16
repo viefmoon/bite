@@ -3,7 +3,6 @@ import { ActivityIndicator, View } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { RootSiblingParent } from 'react-native-root-siblings';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   useThemeStore,
@@ -71,15 +70,13 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <RootSiblingParent>
-        <SafeAreaProvider>
-          <QueryClientProvider client={queryClient}>
-            <PaperProvider theme={activeTheme}>
-              <AppContent />
-            </PaperProvider>
-          </QueryClientProvider>
-        </SafeAreaProvider>
-      </RootSiblingParent>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <PaperProvider theme={activeTheme}>
+            <AppContent />
+          </PaperProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

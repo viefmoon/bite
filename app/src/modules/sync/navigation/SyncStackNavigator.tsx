@@ -1,12 +1,12 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SyncStatusScreen } from '../screens/SyncStatusScreen';
 
 export type SyncStackParamList = {
   SyncStatus: undefined;
 };
 
-const Stack = createStackNavigator<SyncStackParamList>();
+const Stack = createNativeStackNavigator<SyncStackParamList>();
 
 export const SyncStackNavigator: React.FC = () => {
   return (

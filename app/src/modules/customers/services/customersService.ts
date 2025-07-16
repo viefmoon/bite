@@ -47,7 +47,9 @@ async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(API_PATHS.CUSTOMERS_BY_ID.replace(':id', id));
+  const response = await apiClient.delete(
+    API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
+  );
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }

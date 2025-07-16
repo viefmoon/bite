@@ -168,7 +168,9 @@ export const modifierService = {
    * Elimina un modificador.
    */
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(API_PATHS.MODIFIERS_BY_ID.replace(':id', id));
+    const response = await apiClient.delete(
+      API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
+    );
 
     if (!response.ok) {
       // Error al eliminar modificador

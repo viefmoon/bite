@@ -46,7 +46,9 @@ export const usersApiService = {
   },
 
   async findOne(id: string): Promise<User> {
-    const response = await apiClient.get(API_PATHS.USERS_BY_ID.replace(':id', id));
+    const response = await apiClient.get(
+      API_PATHS.USERS_BY_ID.replace(':id', id),
+    );
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -62,7 +64,10 @@ export const usersApiService = {
   },
 
   async update(id: string, data: UpdateUserDto): Promise<User> {
-    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), data);
+    const response = await apiClient.patch(
+      API_PATHS.USERS_BY_ID.replace(':id', id),
+      data,
+    );
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -70,16 +75,21 @@ export const usersApiService = {
   },
 
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(API_PATHS.USERS_BY_ID.replace(':id', id));
+    const response = await apiClient.delete(
+      API_PATHS.USERS_BY_ID.replace(':id', id),
+    );
     if (!response.ok) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
   },
 
   async resetPassword(id: string, newPassword: string): Promise<User> {
-    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), {
-      password: newPassword,
-    });
+    const response = await apiClient.patch(
+      API_PATHS.USERS_BY_ID.replace(':id', id),
+      {
+        password: newPassword,
+      },
+    );
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -87,9 +97,12 @@ export const usersApiService = {
   },
 
   async toggleActive(id: string, isActive: boolean): Promise<User> {
-    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), {
-      isActive,
-    });
+    const response = await apiClient.patch(
+      API_PATHS.USERS_BY_ID.replace(':id', id),
+      {
+        isActive,
+      },
+    );
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }

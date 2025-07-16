@@ -39,7 +39,9 @@ export const getAreas = async (
 };
 
 export const getAreaById = async (id: string): Promise<Area> => {
-  const response = await ApiClientWrapper.get<Area>(API_PATHS.AREAS_BY_ID.replace(':id', id));
+  const response = await ApiClientWrapper.get<Area>(
+    API_PATHS.AREAS_BY_ID.replace(':id', id),
+  );
 
   if (!response.ok || !response.data) {
     // Error al obtener área por ID
@@ -84,7 +86,9 @@ export const updateArea = async (
 };
 
 export const deleteArea = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(API_PATHS.AREAS_BY_ID.replace(':id', id));
+  const response = await ApiClientWrapper.delete(
+    API_PATHS.AREAS_BY_ID.replace(':id', id),
+  );
 
   if (!response.ok) {
     // Error al eliminar área

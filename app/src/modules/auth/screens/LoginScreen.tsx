@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, IconButton, Surface, TouchableRipple } from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';

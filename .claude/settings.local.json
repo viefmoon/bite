@@ -52,7 +52,10 @@
       "Bash(del \"C:\\Users\\Leonel\\Desktop\\bite\\app\\src\\modules\\orders\\screens\\OpenOrdersScreenCompact.tsx\")",
       "Bash(del srcutilslogging.ts)",
       "Bash(del RegisterScreen.tsx)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   }

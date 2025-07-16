@@ -7,11 +7,8 @@ import {
 } from '../types/sync.types';
 
 class SyncService {
-
   async getSyncStatus(): Promise<SyncStatusInfo> {
-    const response = await apiClient.get<SyncStatusInfo>(
-      API_PATHS.SYNC_STATUS,
-    );
+    const response = await apiClient.get<SyncStatusInfo>(API_PATHS.SYNC_STATUS);
     if (!response.data) {
       throw new Error('No se pudo obtener el estado de sincronización');
     }

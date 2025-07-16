@@ -35,7 +35,9 @@ async function findAll(
 }
 
 async function findOne(id: string): Promise<Product> {
-  const response = await apiClient.get<Product>(API_PATHS.PRODUCTS_BY_ID.replace(':id', id));
+  const response = await apiClient.get<Product>(
+    API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
+  );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -91,7 +93,9 @@ async function update(
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(API_PATHS.PRODUCTS_BY_ID.replace(':id', id));
+  const response = await apiClient.delete(
+    API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
+  );
   if (!response.ok) {
     // No esperamos 'data' en un 204 No Content, pero sí puede haber error
     throw ApiError.fromApiResponse(response.data, response.status);

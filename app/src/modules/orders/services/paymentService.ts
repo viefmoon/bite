@@ -51,7 +51,9 @@ class PaymentService {
   }
 
   async deletePayment(id: string): Promise<void> {
-    await ApiClientWrapper.delete(API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id));
+    await ApiClientWrapper.delete(
+      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
+    );
   }
 }
 

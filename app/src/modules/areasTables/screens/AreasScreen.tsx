@@ -101,7 +101,10 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   };
 
   const handleNavigateToTables = (area: Area) => {
-    navigation.navigate(NAVIGATION_PATHS.TABLES_LIST, { areaId: area.id, areaName: area.name });
+    navigation.navigate(NAVIGATION_PATHS.TABLES_LIST, {
+      areaId: area.id,
+      areaName: area.name,
+    });
   };
 
   const listRenderConfig: RenderItemConfig<Area> = {

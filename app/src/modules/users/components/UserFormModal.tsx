@@ -898,7 +898,9 @@ const getStyles = (
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
+      paddingHorizontal: responsive.isTablet
+        ? theme.spacing.l
+        : theme.spacing.m,
       paddingVertical: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
@@ -923,9 +925,7 @@ const getStyles = (
         ? theme.spacing.l
         : theme.spacing.m,
       paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      paddingBottom: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.s,
+      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.s,
     },
     sectionContainer: {
       marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
