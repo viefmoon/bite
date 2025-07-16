@@ -3,7 +3,8 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Surface, Text, IconButton, Switch, Divider } from 'react-native-paper';
 import { CategoryAvailability } from '../types/availability.types';
 import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface CategoryAvailabilityItemProps {
   category: CategoryAvailability;
@@ -14,6 +15,8 @@ export const CategoryAvailabilityItem: React.FC<
   CategoryAvailabilityItemProps
 > = ({ category, onRefresh: _onRefresh }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();
 
@@ -241,101 +244,102 @@ export const CategoryAvailabilityItem: React.FC<
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  categoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  categoryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  categorySubtitle: {
-    fontSize: 12,
-    opacity: 0.8,
-  },
-  categoryRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categorySwitch: {
-    marginHorizontal: 8,
-  },
-  expandedContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  divider: {
-    marginVertical: 12,
-    marginHorizontal: 8,
-  },
-  subcategoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  subcategoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  subcategoryTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  productsContainer: {
-    marginLeft: 24,
-  },
-  productItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  productLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  productDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 12,
-  },
-  productTitle: {
-    fontSize: 13,
-    flex: 1,
-  },
-});
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+  StyleSheet.create({
+    container: {
+      marginHorizontal: responsive.spacing(theme.spacing.m),
+      borderRadius: 16,
+      overflow: 'hidden',
+    },
+    categoryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: responsive.spacing(theme.spacing.m),
+    },
+    categoryLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    categoryIcon: {
+      width: responsive.isTablet ? 32 : 40,
+      height: responsive.isTablet ? 32 : 40,
+      borderRadius: responsive.isTablet ? 16 : 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: responsive.spacing(theme.spacing.m),
+    },
+    categoryInfo: {
+      flex: 1,
+    },
+    categoryTitle: {
+      fontSize: responsive.fontSize(16),
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    categorySubtitle: {
+      fontSize: responsive.fontSize(12),
+      opacity: 0.8,
+    },
+    categoryRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    categorySwitch: {
+      marginHorizontal: responsive.spacing(theme.spacing.s),
+    },
+    expandedContent: {
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.m),
+    },
+    divider: {
+      marginVertical: responsive.spacing(theme.spacing.m),
+      marginHorizontal: responsive.spacing(theme.spacing.s),
+    },
+    subcategoryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      borderRadius: 8,
+      marginBottom: responsive.spacing(theme.spacing.s),
+    },
+    subcategoryLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    subcategoryTitle: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '500',
+    },
+    productsContainer: {
+      marginLeft: responsive.spacing(theme.spacing.l),
+    },
+    productItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: responsive.spacing(theme.spacing.s),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      borderRadius: 6,
+      marginBottom: responsive.spacing(theme.spacing.xs),
+    },
+    productLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    productDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: responsive.spacing(theme.spacing.m),
+    },
+    productTitle: {
+      fontSize: responsive.fontSize(13),
+      flex: 1,
+    },
+  });

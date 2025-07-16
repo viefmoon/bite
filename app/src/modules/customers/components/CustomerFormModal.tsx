@@ -17,6 +17,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { Customer, Address } from '../types/customer.types';
 import {
   CustomerFormInputs,
@@ -48,7 +49,8 @@ export default function CustomerFormModal({
   isSubmitting,
 }: CustomerFormModalProps) {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = getStyles(theme, responsive);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
@@ -745,25 +747,28 @@ export default function CustomerFormModal({
   );
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     modalContainer: {
-      margin: 10,
+      margin: responsive.isTablet ? 20 : 10,
       justifyContent: 'center',
+      alignItems: 'center',
     },
     modalContent: {
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
       maxHeight: '95%',
-      minHeight: '80%',
+      minHeight: responsive.isTablet ? 600 : '80%',
+      width: responsive.isTablet ? '85%' : '100%',
+      maxWidth: responsive.isTablet ? 800 : undefined,
       overflow: 'hidden',
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
+      paddingVertical: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     headerLeft: {
       flexDirection: 'row',
@@ -771,56 +776,57 @@ const getStyles = (theme: AppTheme) =>
       flex: 1,
     },
     headerIcon: {
-      marginRight: theme.spacing.s,
+      marginRight: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     headerTextContainer: {
       flex: 1,
     },
     modalTitle: {
       fontWeight: '700',
+      fontSize: responsive.isTablet ? 16 : 18,
     },
     formContainer: {
       flex: 1,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.xs,
+      paddingHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
+      paddingTop: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 14,
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     requiredChip: {
       backgroundColor: theme.colors.errorContainer,
     },
     requiredChipText: {
       color: theme.colors.onErrorContainer,
-      fontSize: 11,
+      fontSize: responsive.isTablet ? 10 : 11,
     },
     optionalChip: {
       backgroundColor: theme.colors.surfaceVariant,
     },
     optionalChipText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
+      fontSize: responsive.isTablet ? 10 : 11,
     },
     inputContainer: {
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
     },
     switchContainer: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.xs,
+      padding: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     switchContent: {
       flexDirection: 'row',
@@ -829,26 +835,28 @@ const getStyles = (theme: AppTheme) =>
     },
     switchTextContainer: {
       flex: 1,
-      marginRight: theme.spacing.m,
+      marginRight: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
     },
     switchLabel: {
       color: theme.colors.onSurface,
       fontWeight: '500',
+      fontSize: responsive.isTablet ? 14 : 16,
     },
     switchDescription: {
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
+      fontSize: responsive.isTablet ? 12 : 14,
     },
     bannedContainer: {
-      marginTop: theme.spacing.s,
+      marginTop: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     banReasonContainer: {
-      marginTop: theme.spacing.s,
+      marginTop: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     infoCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
-      marginTop: theme.spacing.s,
+      padding: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
+      marginTop: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
       backgroundColor: theme.colors.errorContainer,
     },
     infoCardContent: {
@@ -857,19 +865,21 @@ const getStyles = (theme: AppTheme) =>
     },
     infoText: {
       flex: 1,
-      marginLeft: theme.spacing.xs,
+      marginLeft: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     infoLabel: {
       color: theme.colors.onErrorContainer,
       opacity: 0.8,
+      fontSize: responsive.isTablet ? 11 : 12,
     },
     infoValue: {
       color: theme.colors.onErrorContainer,
       fontWeight: '500',
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     whatsappCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
+      padding: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
       backgroundColor: theme.colors.primaryContainer + '20',
     },
     whatsappRow: {
@@ -880,56 +890,58 @@ const getStyles = (theme: AppTheme) =>
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     whatsappStatContent: {
       flex: 1,
     },
     whatsappLabel: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 11 : 12,
     },
     whatsappValue: {
       color: theme.colors.onSurface,
       fontWeight: '600',
       marginTop: 2,
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     whatsappDivider: {
       width: 1,
-      height: 40,
+      height: responsive.isTablet ? 35 : 40,
       backgroundColor: theme.colors.outlineVariant,
-      marginHorizontal: theme.spacing.m,
+      marginHorizontal: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
     },
     stripeCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.m,
+      padding: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
       backgroundColor: theme.colors.surfaceVariant,
     },
     stripeContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.m,
+      gap: responsive.isTablet ? theme.spacing.m * 0.7 : theme.spacing.m,
     },
     stripeInfo: {
       flex: 1,
     },
     stripeLabel: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      marginBottom: 4,
+      fontSize: responsive.isTablet ? 11 : 12,
+      marginBottom: responsive.isTablet ? 3 : 4,
     },
     stripeValue: {
       color: theme.colors.onSurface,
       fontWeight: '500',
       fontFamily: 'monospace',
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      padding: theme.spacing.s,
+      padding: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
-      gap: theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
       borderBottomLeftRadius: theme.roundness * 2,
       borderBottomRightRadius: theme.roundness * 2,
     },
@@ -942,12 +954,12 @@ const getStyles = (theme: AppTheme) =>
     },
     confirmButton: {},
     addressList: {
-      gap: theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
     },
     addressCard: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
+      padding: responsive.isTablet ? theme.spacing.s * 0.7 : theme.spacing.s,
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
     },
     addressContent: {
       flexDirection: 'row',
@@ -960,38 +972,42 @@ const getStyles = (theme: AppTheme) =>
     },
     addressInfo: {
       flex: 1,
-      marginLeft: theme.spacing.xs,
+      marginLeft: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     addressName: {
       fontWeight: '600',
       color: theme.colors.primary,
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     addressStreet: {
       fontWeight: '500',
       color: theme.colors.onSurface,
+      fontSize: responsive.isTablet ? 13 : 14,
     },
     addressDetails: {
       color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
+      fontSize: responsive.isTablet ? 12 : 13,
     },
     addressActions: {
       flexDirection: 'row',
     },
     defaultChip: {
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.isTablet ? theme.spacing.xs * 0.65 : theme.spacing.xs,
       backgroundColor: theme.colors.primaryContainer,
     },
     defaultChipText: {
       color: theme.colors.onPrimaryContainer,
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
     },
     emptyAddressContainer: {
-      padding: theme.spacing.l,
+      padding: responsive.isTablet ? theme.spacing.l * 0.7 : theme.spacing.l,
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surfaceVariant,
       alignItems: 'center',
     },
     emptyAddressText: {
       color: theme.colors.onSurfaceVariant,
+      fontSize: responsive.isTablet ? 13 : 14,
     },
   });

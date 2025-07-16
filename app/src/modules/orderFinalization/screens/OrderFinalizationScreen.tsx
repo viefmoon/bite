@@ -25,12 +25,15 @@ import {
 import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { orderFinalizationService } from '../services/orderFinalizationService';
 
 export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
     selectedOrders: new Set(),
@@ -308,7 +311,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="moped"
-                size={26}
+                size={responsive.isTablet ? 22 : 26}
                 color={
                   filter === 'delivery'
                     ? theme.colors.primary
@@ -362,7 +365,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="bag-personal"
-                size={26}
+                size={responsive.isTablet ? 22 : 26}
                 color={
                   filter === 'take_away'
                     ? theme.colors.primary
@@ -416,7 +419,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             >
               <Icon
                 source="silverware-fork-knife"
-                size={26}
+                size={responsive.isTablet ? 22 : 26}
                 color={
                   filter === 'dine_in'
                     ? theme.colors.primary
@@ -459,7 +462,7 @@ export const OrderFinalizationScreen: React.FC = () => {
           <View style={styles.refreshButtonContainer}>
             <IconButton
               icon="refresh"
-              size={24}
+              size={responsive.isTablet ? 20 : 24}
               mode="contained"
               containerColor={theme.colors.surfaceVariant}
               iconColor={theme.colors.onSurfaceVariant}
@@ -542,7 +545,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: typeof useAppTheme, responsive: typeof useResponsive) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -563,14 +566,14 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   refreshButtonContainer: {
-    paddingHorizontal: 8,
+    paddingHorizontal: responsive.isTablet ? 6 : 8,
   },
   refreshButton: {
     margin: 0,
   },
   filterButton: {
     flex: 1,
-    height: 52,
+    height: responsive.isTablet ? 44 : 52,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 0,
@@ -582,36 +585,36 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
+    top: responsive.isTablet ? 4 : 6,
+    right: responsive.isTablet ? 4 : 6,
+    minWidth: responsive.isTablet ? 18 : 22,
+    height: responsive.isTablet ? 18 : 22,
+    borderRadius: responsive.isTablet ? 9 : 11,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: responsive.isTablet ? 4 : 6,
     borderWidth: 1,
     elevation: 2,
   },
   countBadgeText: {
-    fontSize: 12,
+    fontSize: responsive.isTablet ? 10 : 12,
     fontWeight: '700',
   },
   floatingButton: {
     position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    borderRadius: 16,
-    padding: 8,
+    bottom: responsive.isTablet ? 12 : 16,
+    left: responsive.isTablet ? 12 : 16,
+    right: responsive.isTablet ? 12 : 16,
+    borderRadius: responsive.isTablet ? 12 : 16,
+    padding: responsive.isTablet ? 6 : 8,
     elevation: 8,
   },
   finalizeButton: {
-    borderRadius: 12,
-    paddingVertical: 4,
+    borderRadius: responsive.isTablet ? 10 : 12,
+    paddingVertical: responsive.isTablet ? 3 : 4,
   },
   finalizeButtonLabel: {
-    fontSize: 16,
+    fontSize: responsive.isTablet ? 14 : 16,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
@@ -624,12 +627,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 14,
+    marginTop: responsive.isTablet ? 8 : 12,
+    fontSize: responsive.isTablet ? 12 : 14,
   },
   listContent: {
-    padding: 8,
-    paddingBottom: 100,
+    padding: responsive.isTablet ? 6 : 8,
+    paddingBottom: responsive.isTablet ? 80 : 100,
     flexGrow: 1,
   },
 });

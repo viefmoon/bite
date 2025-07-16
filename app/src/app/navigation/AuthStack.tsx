@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppTheme } from '../styles/theme';
 
 import LoginScreen from '../../modules/auth/screens/LoginScreen';
-import RegisterScreen from '../../modules/auth/screens/RegisterScreen';
 import type { AuthStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -29,14 +28,6 @@ export function AuthStack() {
         options={{
           title: 'Iniciar Sesión',
           headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{
-          title: 'Registro',
-          headerShown: true,
         }}
       />
     </Stack.Navigator>

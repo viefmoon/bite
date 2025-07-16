@@ -252,6 +252,9 @@ export class OrdersRelationalRepository implements OrderRepository {
         'shift',
         'orderItems',
         'orderItems.product',
+        'orderItems.product.preparationScreen',
+        'orderItems.product.subcategory',
+        'orderItems.product.subcategory.category',
         'orderItems.productVariant',
         'orderItems.productModifiers',
         'orderItems.preparedBy',
@@ -261,6 +264,50 @@ export class OrdersRelationalRepository implements OrderRepository {
         'adjustments',
         'deliveryInfo',
       ],
+      order: {
+        shiftOrderNumber: 'ASC',
+      },
+    });
+    return entities
+      .map((order) => this.orderMapper.toDomain(order))
+      .filter((order): order is Order => order !== null);
+  }
+
+  async findByShiftIdForSummary(shiftId: Order['shiftId']): Promise<Order[]> {
+    const entities = await this.ordersRepository.find({
+      where: { shiftId },
+      relations: [
+        'orderItems',
+        'orderItems.product',
+        'orderItems.product.subcategory',
+        'orderItems.product.subcategory.category',
+        'orderItems.productVariant',
+      ],
+      select: {
+        id: true,
+        orderStatus: true,
+        total: true,
+        orderItems: {
+          id: true,
+          finalPrice: true,
+          product: {
+            id: true,
+            name: true,
+            subcategory: {
+              id: true,
+              name: true,
+              category: {
+                id: true,
+                name: true,
+              }
+            }
+          },
+          productVariant: {
+            id: true,
+            name: true,
+          }
+        }
+      },
       order: {
         shiftOrderNumber: 'ASC',
       },

@@ -20,13 +20,15 @@ import {
 import { Table, CreateTableDto, UpdateTableDto } from '../schema/table.schema';
 import { TablesListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => getStyles(theme, responsive), [theme, responsive]);
   const { areaId, areaName } = route.params;
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
@@ -234,7 +236,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   );
 };
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -244,12 +246,13 @@ const getStyles = (theme: AppTheme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
+      padding: responsive.spacing(theme.spacing.l),
     },
     fieldValueText: {
       flexShrink: 1,
       textAlign: 'right',
       color: theme.colors.onSurface,
+      fontSize: responsive.fontSize(14),
     },
   });
 

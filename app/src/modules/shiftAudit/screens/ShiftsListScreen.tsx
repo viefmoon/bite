@@ -12,7 +12,6 @@ import {
   Chip,
   Card,
   Divider,
-  Surface,
   Button,
   Menu,
   Avatar,
@@ -23,24 +22,21 @@ import { FlashList } from '@shopify/flash-list';
 import {
   format,
   parseISO,
-  isToday,
-  isYesterday,
   subDays,
-  isWithinInterval,
+  startOfDay,
+  endOfDay,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { useShifts } from '../hooks/useShifts';
 import { formatCurrency } from '@/app/lib/formatters';
 import type { Shift } from '../types';
-import type { ShiftAuditStackNavigationProp } from '../navigation/types';
-import { useNavigation } from '@react-navigation/native';
+import { ShiftOrdersModal, ShiftSalesSummaryView } from '../components';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export function ShiftsListScreen() {
   const theme = useAppTheme();
-  const navigation = useNavigation<ShiftAuditStackNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<
     'today' | 'yesterday' | 'last7' | 'custom'
@@ -58,11 +54,45 @@ export function ShiftsListScreen() {
     'start',
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+  const [selectedShiftNumber, setSelectedShiftNumber] = useState<number | undefined>();
+  const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [showSalesSummaryView, setShowSalesSummaryView] = useState(false);
 
-  const limit = 30;
-  const offset = 0;
+  const dateParams = useMemo(() => {
+    const now = new Date();
+    
+    switch (dateFilter) {
+      case 'today':
+        return {
+          startDate: format(startOfDay(now), 'yyyy-MM-dd'),
+          endDate: format(endOfDay(now), 'yyyy-MM-dd'),
+        };
+      case 'yesterday':
+        const yesterday = subDays(now, 1);
+        return {
+          startDate: format(startOfDay(yesterday), 'yyyy-MM-dd'),
+          endDate: format(endOfDay(yesterday), 'yyyy-MM-dd'),
+        };
+      case 'last7':
+        return {
+          startDate: format(startOfDay(subDays(now, 7)), 'yyyy-MM-dd'),
+          endDate: format(endOfDay(now), 'yyyy-MM-dd'),
+        };
+      case 'custom':
+        return {
+          startDate: format(startOfDay(customDateRange.start), 'yyyy-MM-dd'),
+          endDate: format(endOfDay(customDateRange.end), 'yyyy-MM-dd'),
+        };
+      default:
+        return {
+          startDate: format(startOfDay(subDays(now, 7)), 'yyyy-MM-dd'),
+          endDate: format(endOfDay(now), 'yyyy-MM-dd'),
+        };
+    }
+  }, [dateFilter, customDateRange]);
 
-  const { data: shifts, isLoading, error, refetch } = useShifts(limit, offset);
+  const { data: shifts, isLoading, error, refetch, isRefetching } = useShifts(dateParams);
 
   useRefreshModuleOnFocus('shifts');
 
@@ -77,48 +107,33 @@ export function ShiftsListScreen() {
       return [];
     }
 
-    const filtered = shifts.filter((shift) => {
-      // Filtro por fecha
-      if (shift.openedAt) {
-        try {
-          const shiftDate = parseISO(shift.openedAt);
-          const now = new Date();
-
-          switch (dateFilter) {
-            case 'today': {
-              if (!isToday(shiftDate)) return false;
-              break;
-            }
-            case 'yesterday': {
-              if (!isYesterday(shiftDate)) return false;
-              break;
-            }
-            case 'last7': {
-              const sevenDaysAgo = subDays(now, 7);
-              if (shiftDate < sevenDaysAgo) return false;
-              break;
-            }
-            case 'custom': {
-              if (
-                !isWithinInterval(shiftDate, {
-                  start: customDateRange.start,
-                  end: customDateRange.end,
-                })
-              ) {
-                return false;
-              }
-              break;
-            }
-          }
-        } catch (e) {
-          return false;
+    return shifts.filter((shift) => {
+      if (!shift.openedAt) return false;
+      
+      try {
+        const shiftDate = parseISO(shift.openedAt);
+        const shiftDateOnly = format(shiftDate, 'yyyy-MM-dd');
+        
+        switch (dateFilter) {
+          case 'today':
+            return shiftDateOnly === format(new Date(), 'yyyy-MM-dd');
+          case 'yesterday':
+            return shiftDateOnly === format(subDays(new Date(), 1), 'yyyy-MM-dd');
+          case 'last7':
+            const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+            const today = format(new Date(), 'yyyy-MM-dd');
+            return shiftDateOnly >= sevenDaysAgo && shiftDateOnly <= today;
+          case 'custom':
+            const customStart = format(customDateRange.start, 'yyyy-MM-dd');
+            const customEnd = format(customDateRange.end, 'yyyy-MM-dd');
+            return shiftDateOnly >= customStart && shiftDateOnly <= customEnd;
+          default:
+            return true;
         }
+      } catch (e) {
+        return false;
       }
-
-      return true;
     });
-
-    return filtered;
   }, [shifts, dateFilter, customDateRange]);
 
   const getDateFilterLabel = () => {
@@ -152,10 +167,19 @@ export function ShiftsListScreen() {
     setShowDateMenu(false);
     setShowDateRangePicker(true);
   };
-
-  const handleShiftPress = (shift: Shift) => {
-    navigation.navigate('ShiftDetail', { shiftId: String(shift.id) });
+  
+  const handleViewOrders = (shift: Shift) => {
+    setSelectedShiftId(String(shift.id));
+    setSelectedShiftNumber(shift.globalShiftNumber || shift.shiftNumber);
+    setShowOrdersModal(true);
   };
+
+  const handleViewSalesSummary = (shift: Shift) => {
+    setSelectedShiftId(String(shift.id));
+    setSelectedShiftNumber(shift.globalShiftNumber || shift.shiftNumber);
+    setShowSalesSummaryView(true);
+  };
+
 
   const formatShiftDate = (dateString: string) => {
     try {
@@ -193,16 +217,13 @@ export function ShiftsListScreen() {
 
   const renderShiftItem = ({ item: shift }: { item: Shift }) => {
     const isOpen = shift.status === 'open';
-    const isCurrent = false;
 
     return (
       <Card
         style={[
           styles.shiftCard,
           isOpen && styles.openShiftCard,
-          isCurrent && { borderColor: theme.colors.primary, borderWidth: 2 },
         ]}
-        onPress={() => handleShiftPress(shift)}
         mode="contained"
       >
         <Card.Content>
@@ -211,17 +232,6 @@ export function ShiftsListScreen() {
               <Text style={styles.shiftNumber}>
                 Turno #{shift.globalShiftNumber || shift.shiftNumber || 'N/A'}
               </Text>
-              {isCurrent && (
-                <Chip
-                  mode="flat"
-                  icon="cash-register"
-                  style={styles.currentChip}
-                  textStyle={styles.currentChipText}
-                  compact
-                >
-                  Actual
-                </Chip>
-              )}
               <Chip
                 mode="flat"
                 icon={isOpen ? 'lock-open' : 'lock'}
@@ -339,6 +349,32 @@ export function ShiftsListScreen() {
                   {shift.closedBy.lastName || ''}
                 </Text>
               )}
+            </View>
+
+            {/* Botones de acciones */}
+            <View style={styles.actionButtonsContainer}>
+              <Button
+                mode="contained-tonal"
+                onPress={() => handleViewOrders(shift)}
+                icon="receipt"
+                style={[styles.actionButton, styles.ordersButton]}
+                labelStyle={styles.actionButtonLabel}
+                contentStyle={styles.actionButtonContent}
+                compact
+              >
+                Órdenes ({shift.totalOrders || 0})
+              </Button>
+              <Button
+                mode="contained-tonal"
+                onPress={() => handleViewSalesSummary(shift)}
+                icon="chart-bar"
+                style={[styles.actionButton, styles.summaryButton]}
+                labelStyle={styles.actionButtonLabel}
+                contentStyle={styles.actionButtonContent}
+                compact
+              >
+                Resumen
+              </Button>
             </View>
           </View>
         </Card.Content>
@@ -776,14 +812,6 @@ export function ShiftsListScreen() {
       fontSize: 13,
       color: theme.colors.onSurfaceVariant,
     },
-    currentChip: {
-      backgroundColor: theme.colors.tertiaryContainer,
-    },
-    currentChipText: {
-      color: theme.colors.onTertiaryContainer,
-      fontWeight: '600',
-      fontSize: 11,
-    },
     statusChip: {
       marginLeft: 'auto',
     },
@@ -876,6 +904,28 @@ export function ShiftsListScreen() {
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
+    actionButtonsContainer: {
+      flexDirection: 'row',
+      marginTop: theme.spacing.s,
+      gap: theme.spacing.s,
+    },
+    actionButton: {
+      flex: 1,
+      borderRadius: theme.roundness,
+    },
+    ordersButton: {
+      // Estilo específico para el botón de órdenes si es necesario
+    },
+    summaryButton: {
+      // Estilo específico para el botón de resumen si es necesario
+    },
+    actionButtonLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    actionButtonContent: {
+      paddingHorizontal: theme.spacing.xs,
+    },
     emptyContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -928,7 +978,7 @@ export function ShiftsListScreen() {
   });
 
   // Renderizado principal
-  if (isLoading && !shifts) {
+  if ((isLoading || isRefetching) && !shifts) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         {renderLoading()}
@@ -968,6 +1018,38 @@ export function ShiftsListScreen() {
               />
             }
           />
+        )}
+        
+        {/* Modal de órdenes del turno */}
+        {selectedShiftId && !showSalesSummaryView && (
+          <ShiftOrdersModal
+            visible={showOrdersModal}
+            onClose={() => {
+              setShowOrdersModal(false);
+              setSelectedShiftId(null);
+              setSelectedShiftNumber(undefined);
+            }}
+            shiftId={selectedShiftId}
+          />
+        )}
+        
+        {/* Vista de resumen de ventas */}
+        {showSalesSummaryView && selectedShiftId && (
+          <Modal
+            visible={showSalesSummaryView}
+            animationType="slide"
+            presentationStyle="fullScreen"
+          >
+            <ShiftSalesSummaryView
+              shiftId={selectedShiftId}
+              shiftNumber={selectedShiftNumber}
+              onBack={() => {
+                setShowSalesSummaryView(false);
+                setSelectedShiftId(null);
+                setSelectedShiftNumber(undefined);
+              }}
+            />
+          </Modal>
         )}
       </View>
     </SafeAreaView>

@@ -14,6 +14,7 @@ import {
   Surface,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../../app/navigation/types';
 import { useAuthStore } from '../../../app/store/authStore';
@@ -54,7 +55,8 @@ type OpenOrdersScreenProps = NativeStackScreenProps<
 
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
-  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [isPrintModalVisible, setIsPrintModalVisible] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<OrderOpenList | null>(null);
@@ -863,7 +865,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 };
 
 const createStyles = (
-  theme: AppTheme, // Usar AppTheme directamente
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
     container: {
@@ -876,8 +879,9 @@ const createStyles = (
       alignItems: 'center',
     },
     loadingText: {
-      marginTop: theme.spacing.m,
+      marginTop: responsive.isTablet ? theme.spacing.s : theme.spacing.m,
       color: theme.colors.onSurfaceVariant,
+      fontSize: responsive.isTablet ? 14 : 16,
     },
     header: {
       paddingHorizontal: 0,
@@ -897,7 +901,7 @@ const createStyles = (
     },
     filterButton: {
       flex: 1,
-      height: 52,
+      height: responsive.isTablet ? 44 : 52,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 0,
@@ -909,34 +913,36 @@ const createStyles = (
     },
     countBadge: {
       position: 'absolute',
-      top: 6,
-      right: 6,
-      minWidth: 22,
-      height: 22,
-      borderRadius: 11,
+      top: responsive.isTablet ? 3 : 6,
+      right: responsive.isTablet ? 3 : 6,
+      minWidth: responsive.isTablet ? 18 : 22,
+      height: responsive.isTablet ? 18 : 22,
+      borderRadius: responsive.isTablet ? 9 : 11,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 6,
+      paddingHorizontal: responsive.isTablet ? 4 : 6,
       borderWidth: 1,
       elevation: 2,
     },
     countBadgeText: {
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 10 : 12,
       fontWeight: '700',
     },
     listContainer: {
       flex: 1,
     },
     listContentContainer: {
-      padding: theme.spacing.s,
-      paddingBottom: theme.spacing.l * 2,
+      padding: responsive.isTablet ? theme.spacing.xs : theme.spacing.s,
+      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.l * 2,
       flexGrow: 1,
     },
     orderCard: {
-      marginBottom: 8,
+      marginBottom: responsive.isTablet ? 6 : 8,
     },
     cardContent: {
-      paddingBottom: 8,
+      paddingBottom: responsive.isTablet ? 6 : 8,
+      paddingHorizontal: responsive.isTablet ? 12 : 16,
+      paddingTop: responsive.isTablet ? 12 : 16,
     },
     mainContainer: {
       flexDirection: 'row',
@@ -945,61 +951,61 @@ const createStyles = (
     },
     leftContainer: {
       flex: 1,
-      paddingRight: 8,
+      paddingRight: responsive.isTablet ? 6 : 8,
     },
     rightContainer: {
       alignItems: 'flex-end',
       justifyContent: 'space-between',
-      minWidth: 140,
-      gap: 8,
+      minWidth: responsive.isTablet ? 120 : 140,
+      gap: responsive.isTablet ? 6 : 8,
     },
     actionsContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      gap: 4,
+      gap: responsive.isTablet ? 2 : 4,
     },
     orderNumber: {
-      fontSize: 16,
+      fontSize: responsive.isTablet ? 14 : 16,
       fontWeight: 'bold',
-      lineHeight: 22,
-      marginBottom: 4,
+      lineHeight: responsive.isTablet ? 20 : 22,
+      marginBottom: responsive.isTablet ? 2 : 4,
     },
     orderPrice: {
-      fontSize: 15,
+      fontSize: responsive.isTablet ? 13 : 15,
       fontWeight: '700',
     },
     statusChip: {
-      minHeight: 24,
+      minHeight: responsive.isTablet ? 22 : 24,
       alignSelf: 'flex-end',
-      paddingVertical: 2,
+      paddingVertical: responsive.isTablet ? 1 : 2,
     },
     statusChipText: {
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 11 : 12,
       fontWeight: '600',
       color: 'white',
-      lineHeight: 14,
+      lineHeight: responsive.isTablet ? 13 : 14,
       marginVertical: 0,
       paddingVertical: 0,
     },
     paidChip: {
-      height: 28,
-      minHeight: 28,
-      marginBottom: theme.spacing.xs,
+      height: responsive.isTablet ? 24 : 28,
+      minHeight: responsive.isTablet ? 24 : 28,
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     paidChipText: {
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 11 : 12,
       fontWeight: '600',
       color: 'white',
-      lineHeight: 16,
+      lineHeight: responsive.isTablet ? 14 : 16,
     },
     orderTime: {
-      fontSize: 16,
+      fontSize: responsive.isTablet ? 14 : 16,
       fontWeight: '600',
     },
     estimatedTime: {
-      fontSize: 14,
-      marginLeft: 4,
+      fontSize: responsive.isTablet ? 12 : 14,
+      marginLeft: responsive.isTablet ? 3 : 4,
     },
     timeAndPaymentRow: {
       flexDirection: 'row',
@@ -1007,19 +1013,19 @@ const createStyles = (
       gap: 0,
     },
     paymentBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
+      paddingHorizontal: responsive.isTablet ? 6 : 8,
+      paddingVertical: responsive.isTablet ? 1 : 2,
+      borderRadius: responsive.isTablet ? 10 : 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
     paymentBadgeText: {
-      fontSize: 11,
+      fontSize: responsive.isTablet ? 10 : 11,
       fontWeight: '600',
-      lineHeight: 14,
+      lineHeight: responsive.isTablet ? 12 : 14,
     },
     printButton: {
-      margin: -4,
+      margin: responsive.isTablet ? -6 : -4,
     },
     printContainer: {
       position: 'relative',
@@ -1031,98 +1037,102 @@ const createStyles = (
       top: 0,
       right: 0,
       backgroundColor: '#3B82F6',
-      borderRadius: 10,
-      minWidth: 20,
-      height: 20,
-      paddingHorizontal: 4,
+      borderRadius: responsive.isTablet ? 8 : 10,
+      minWidth: responsive.isTablet ? 18 : 20,
+      height: responsive.isTablet ? 18 : 20,
+      paddingHorizontal: responsive.isTablet ? 3 : 4,
       alignItems: 'center',
       justifyContent: 'center',
     },
     printCountText: {
       color: '#FFFFFF',
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       fontWeight: 'bold',
     },
     customerInfo: {
       ...theme.fonts.bodyMedium,
+      fontSize: responsive.isTablet ? 13 : 14,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.xs, // Reducido de theme.spacing.s
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     phoneInfo: {
       ...theme.fonts.bodySmall,
+      fontSize: responsive.isTablet ? 11 : 12,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.xs * 0.7 : theme.spacing.xs,
     },
     notesInline: {
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 11 : 12,
       fontStyle: 'italic',
     },
     inlinePreparationBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 10,
+      paddingHorizontal: responsive.isTablet ? 4 : 6,
+      paddingVertical: responsive.isTablet ? 1 : 2,
+      borderRadius: responsive.isTablet ? 8 : 10,
       borderWidth: 0.5,
-      marginLeft: 4,
+      marginLeft: responsive.isTablet ? 3 : 4,
     },
     inlinePreparationText: {
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       fontWeight: '500',
     },
     miniPaymentBadge: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
+      width: responsive.isTablet ? 18 : 20,
+      height: responsive.isTablet ? 18 : 20,
+      borderRadius: responsive.isTablet ? 9 : 10,
       alignItems: 'center',
       justifyContent: 'center',
-      marginLeft: 6,
+      marginLeft: responsive.isTablet ? 4 : 6,
     },
     miniPaymentText: {
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       fontWeight: 'bold',
       color: '#FFFFFF',
     },
     miniPreparationBadge: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
+      width: responsive.isTablet ? 18 : 20,
+      height: responsive.isTablet ? 18 : 20,
+      borderRadius: responsive.isTablet ? 9 : 10,
       alignItems: 'center',
       justifyContent: 'center',
-      marginLeft: 4,
+      marginLeft: responsive.isTablet ? 3 : 4,
     },
     miniPreparationText: {
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       fontWeight: '600',
       color: '#FFFFFF',
     },
     moreIndicator: {
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       color: theme.colors.onSurfaceVariant,
-      marginLeft: 4,
+      marginLeft: responsive.isTablet ? 3 : 4,
     },
     createdByText: {
-      fontSize: 10,
+      fontSize: responsive.isTablet ? 9 : 10,
       color: theme.colors.onSurfaceVariant,
-      marginBottom: 4,
+      marginBottom: responsive.isTablet ? 3 : 4,
       textAlign: 'right',
     },
     emptyStateContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
+      padding: responsive.isTablet ? theme.spacing.m : theme.spacing.l,
     },
     emptyStateTitle: {
-      marginTop: theme.spacing.l,
-      marginBottom: theme.spacing.m,
+      marginTop: responsive.isTablet ? theme.spacing.m : theme.spacing.l,
+      marginBottom: responsive.isTablet ? theme.spacing.s : theme.spacing.m,
       textAlign: 'center',
       color: theme.colors.onSurface,
       fontWeight: '600',
+      fontSize: responsive.isTablet ? 20 : 24,
     },
     emptyStateText: {
       textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
-      maxWidth: 320,
-      lineHeight: 24,
+      maxWidth: responsive.isTablet ? 280 : 320,
+      lineHeight: responsive.isTablet ? 20 : 24,
+      fontSize: responsive.isTablet ? 14 : 16,
     },
   });
 

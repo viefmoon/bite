@@ -41,6 +41,7 @@ import {
   ImageUploadService,
   EntityWithOptionalPhoto,
 } from '../../lib/imageUploadService';
+import { getImageUrl } from '../../lib/imageUtils';
 import { ResponsiveModal } from '../responsive/ResponsiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
 
@@ -205,24 +206,28 @@ const getStyles = (
   StyleSheet.create({
     modalSurface: {
       padding: 0,
-      margin: responsive.spacing.l,
+      margin: responsive.spacing(20),
+      marginHorizontal: responsive.isTablet ? responsive.spacing(40) : responsive.spacing(20),
       borderRadius: theme.roundness * 2,
       elevation: 4,
       backgroundColor: theme.colors.background,
-      maxHeight: '90%',
+      maxHeight: responsive.isTablet ? '92%' : '90%',
+      maxWidth: responsive.isTablet ? 600 : 500,
+      alignSelf: 'center',
+      width: responsive.isTablet ? '85%' : '90%',
       overflow: 'hidden',
     },
     modalHeader: {
       backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.spacing.m,
-      paddingHorizontal: responsive.spacing.l,
+      paddingVertical: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
     },
     formContainer: {
       maxHeight: '100%',
     },
     scrollViewContent: {
-      padding: responsive.spacing.l,
-      paddingBottom: responsive.spacing.xl,
+      padding: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingBottom: responsive.isTablet ? responsive.spacing(theme.spacing.l) : responsive.spacing(theme.spacing.xl),
     },
     modalTitle: {
       color: theme.colors.onPrimary,
@@ -230,44 +235,45 @@ const getStyles = (
       textAlign: 'center',
     },
     input: {
-      marginBottom: responsive.spacing.m,
+      marginBottom: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
     },
     switchLabel: {
       color: theme.colors.onSurfaceVariant,
-      marginRight: responsive.spacing.m,
-      fontSize: 16,
+      marginRight: responsive.spacing(theme.spacing.m),
+      fontSize: responsive.isTablet ? 14 : 16,
       flexShrink: 1,
     },
     switchComponentContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-start',
-      marginBottom: responsive.spacing.m,
-      paddingVertical: responsive.spacing.s,
+      marginBottom: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.s),
     },
     imagePickerContainer: {
       alignItems: 'center',
-      marginBottom: responsive.spacing.l,
+      marginBottom: responsive.spacing(theme.spacing.l),
     },
     modalActions: {
       flexDirection: 'row',
       justifyContent: 'center',
-      paddingVertical: responsive.spacing.m,
-      paddingHorizontal: responsive.spacing.l,
+      paddingTop: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
+      paddingBottom: responsive.isTablet ? responsive.spacing(theme.spacing.l) : responsive.spacing(theme.spacing.xl),
+      paddingHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.m) : responsive.spacing(theme.spacing.l),
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface,
-      gap: responsive.spacing.m,
-      minHeight: 60,
+      gap: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
+      minHeight: responsive.isTablet ? 70 : 80,
     },
     formButton: {
       borderRadius: theme.roundness,
-      paddingHorizontal: responsive.spacing.xs,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
       flex: 1,
       maxWidth: 200,
-      minWidth: 140,
+      minWidth: responsive.isTablet ? 120 : 140,
     },
     cancelButton: {},
     loadingOverlay: {
@@ -279,8 +285,8 @@ const getStyles = (
       zIndex: 10,
     },
     helperText: {
-      marginTop: -responsive.spacing.s,
-      marginBottom: responsive.spacing.s,
+      marginTop: -responsive.spacing(theme.spacing.s),
+      marginBottom: responsive.spacing(theme.spacing.s),
     },
   });
 
@@ -351,35 +357,40 @@ const GenericFormModal = <
     typeof watchedImageUri === 'string' ? watchedImageUri : null;
 
   useEffect(() => {
-    const justOpened = visible && !prevVisibleRef.current;
-    const itemChanged =
-      visible && editingItem?.id !== prevEditingItemIdRef.current;
+    const loadInitialData = async () => {
+      const justOpened = visible && !prevVisibleRef.current;
+      const itemChanged =
+        visible && editingItem?.id !== prevEditingItemIdRef.current;
 
-    if (visible) {
-      const defaultFormValues = formFields.reduce(
-        (acc: DefaultValues<TFormData>, field) => {
-          acc[field.name] =
-            field.defaultValue ?? getDefaultValueForType(field.type);
-          return acc;
-        },
-        {} as DefaultValues<TFormData>,
-      );
-      const resetValues = {
-        ...defaultFormValues,
-        ...(initialValues as DefaultValues<TFormData>),
-      };
+      if (visible) {
+        const defaultFormValues = formFields.reduce(
+          (acc: DefaultValues<TFormData>, field) => {
+            acc[field.name] =
+              field.defaultValue ?? getDefaultValueForType(field.type);
+            return acc;
+          },
+          {} as DefaultValues<TFormData>,
+        );
+        
+        const resetValues = {
+          ...defaultFormValues,
+          ...(initialValues as DefaultValues<TFormData>),
+        };
 
-      reset(resetValues, { keepDirtyValues: !justOpened && !itemChanged });
+        reset(resetValues, { keepDirtyValues: !justOpened && !itemChanged });
 
-      if (justOpened || itemChanged) {
-        setLocalSelectedFile(null);
-        onFileSelected?.(null);
-        setIsInternalImageUploading(false);
+        if (justOpened || itemChanged) {
+          setLocalSelectedFile(null);
+          onFileSelected?.(null);
+          setIsInternalImageUploading(false);
+        }
       }
-    }
 
-    prevVisibleRef.current = visible;
-    prevEditingItemIdRef.current = editingItem?.id;
+      prevVisibleRef.current = visible;
+      prevEditingItemIdRef.current = editingItem?.id;
+    };
+
+    loadInitialData();
   }, [
     visible,
     editingItem?.id,
@@ -387,6 +398,7 @@ const GenericFormModal = <
     formFields,
     initialValues,
     onFileSelected,
+    imagePickerConfig,
   ]);
 
   const handleImageSelected = useCallback(

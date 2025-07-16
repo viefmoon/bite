@@ -2,13 +2,17 @@ import { useQuery } from '@tanstack/react-query';
 import { shiftService } from '../services/shiftService';
 import type { Shift } from '../types';
 
-export const useShifts = (limit = 30, offset = 0) => {
+export const useShifts = (params?: {
+  startDate?: string;
+  endDate?: string;
+}) => {
   return useQuery<Shift[], Error>({
-    queryKey: ['shifts', 'history', limit, offset],
-    queryFn: () => shiftService.getHistory({ limit, offset }),
-    staleTime: 60000,
+    queryKey: ['shifts', 'history', params],
+    queryFn: () => shiftService.getHistory(params),
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
   });
 };
 

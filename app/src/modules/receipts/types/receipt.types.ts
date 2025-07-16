@@ -62,6 +62,7 @@ export interface Receipt {
     id: string;
     firstName?: string;
     lastName?: string;
+    username?: string;
   };
   table?: {
     id: string;
@@ -96,9 +97,10 @@ export interface Receipt {
     latitude?: number;
     longitude?: number;
   };
+  preparationScreens?: string[];
   orderItems: Array<{
     id: string;
-    quantity: number;
+    quantity?: number;
     basePrice: number;
     finalPrice: number;
     preparationNotes?: string;
@@ -119,6 +121,7 @@ export interface Receipt {
       name: string;
       price: number;
     }>;
+    selectedPizzaCustomizations?: Array<any>;
   }>;
   payments?: Array<{
     id: string;

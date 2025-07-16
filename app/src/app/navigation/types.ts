@@ -18,7 +18,6 @@ import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigati
 
 export type AuthStackParamList = {
   Login: undefined;
-  Register: undefined;
 };
 
 export type OrdersStackParamList = {

@@ -23,7 +23,7 @@ import {
 } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
-import { useGetFullMenu } from '@/modules/orders/hooks/useMenuQueries';
+import { useGetOrderMenu } from '@/modules/orders/hooks/useMenuQueries';
 import type {
   AIOrderItem,
   DeliveryInfoData,
@@ -81,7 +81,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
 
-  const { data: menu } = useGetFullMenu();
+  const { data: menu } = useGetOrderMenu();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Sincronizar la información cuando cambie orderData

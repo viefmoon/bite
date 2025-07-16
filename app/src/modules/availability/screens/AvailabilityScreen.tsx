@@ -20,11 +20,14 @@ import {
 } from '../hooks/useAvailabilityQueries';
 import { usePizzaCustomizationsAvailability } from '../hooks/usePizzaCustomizationsAvailability';
 import EmptyState from '@/app/components/common/EmptyState';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export const AvailabilityScreen: React.FC = () => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<
     'menu' | 'modifiers' | 'pizzaCustomizations'
@@ -273,7 +276,7 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
           />
         ) : viewMode === 'modifiers' ? (
           <FlatList
@@ -294,7 +297,7 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
           />
         ) : (
           <FlatList
@@ -312,7 +315,7 @@ export const AvailabilityScreen: React.FC = () => {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: responsive.spacing(theme.spacing.s) }} />}
           />
         )}
       </View>
@@ -320,49 +323,50 @@ export const AvailabilityScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  searchbar: {
-    flex: 1,
-    borderRadius: 12,
-    height: 48,
-  },
-  filterButtonContainer: {
-    position: 'relative',
-  },
-  filterIconButton: {
-    margin: 0,
-  },
-  menuContent: {
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-  },
-  listContent: {
-    paddingVertical: 12,
-  },
-});
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.m),
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: responsive.spacing(theme.spacing.s),
+    },
+    searchbar: {
+      flex: 1,
+      borderRadius: 12,
+      height: responsive.isTablet ? 42 : 48,
+    },
+    filterButtonContainer: {
+      position: 'relative',
+    },
+    filterIconButton: {
+      margin: 0,
+    },
+    menuContent: {
+      marginTop: responsive.spacing(4),
+    },
+    content: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: responsive.spacing(theme.spacing.m),
+      fontSize: responsive.fontSize(14),
+    },
+    listContent: {
+      paddingVertical: responsive.spacing(theme.spacing.m),
+    },
+  });

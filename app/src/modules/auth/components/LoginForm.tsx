@@ -66,30 +66,33 @@ const LoginForm: React.FC<LoginFormProps> = ({
           width: '100%',
         },
         input: {
-          marginBottom: responsive.spacing.s,
-          fontSize: responsive.fontSize.m,
+          marginBottom: responsive.spacingPreset.s,
+          fontSize: responsive.fontSizePreset.m,
+        },
+        firstInput: {
+          marginTop: responsive.spacingPreset.xs,
         },
         button: {
-          marginTop: responsive.spacing.m,
-          paddingVertical: responsive.spacing.xs,
+          marginTop: responsive.spacingPreset.m,
+          paddingVertical: responsive.spacingPreset.xs,
         },
         helperText: {
-          marginBottom: responsive.spacing.s,
-          fontSize: responsive.fontSize.s,
+          marginBottom: responsive.spacingPreset.xs,
+          fontSize: responsive.fontSizePreset.s,
         },
         checkboxContainer: {
           flexDirection: 'row',
           alignItems: 'center',
-          marginTop: responsive.spacing.s,
-          marginBottom: responsive.spacing.s,
+          marginTop: responsive.spacingPreset.s,
+          marginBottom: responsive.spacingPreset.s,
         },
         checkbox: {},
         checkboxLabel: {
           color: theme.colors.onSurface,
-          marginLeft: responsive.spacing.s,
+          marginLeft: responsive.spacingPreset.s,
           flex: 1,
           flexShrink: 1,
-          fontSize: responsive.fontSize.m,
+          fontSize: responsive.fontSizePreset.m,
         },
       }),
     [theme, responsive],
@@ -109,7 +112,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               onChangeText={onChange}
               value={value}
               error={!!errors.emailOrUsername}
-              style={styles.input}
+              style={[styles.input, styles.firstInput]}
               autoCapitalize="none"
               keyboardType="email-address"
               disabled={isLoading}
@@ -195,7 +198,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
         style={styles.button}
         contentStyle={{ height: responsive.getResponsiveDimension(48, 56) }}
-        labelStyle={{ fontSize: responsive.fontSize.m }}
+        labelStyle={{ fontSize: responsive.fontSizePreset.m }}
       >
         {isLoading ? 'Ingresando...' : 'Ingresar'}
       </Button>

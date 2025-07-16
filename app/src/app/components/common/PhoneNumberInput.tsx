@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Menu, Button, HelperText } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface Country {
   code: string;
@@ -61,7 +62,8 @@ export default function PhoneNumberInput({
   placeholder = 'Teléfono',
 }: PhoneNumberInputProps) {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => getStyles(theme, responsive), [theme, responsive]);
 
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -168,34 +170,34 @@ export default function PhoneNumberInput({
   );
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.spacing(theme.spacing.s),
     },
     countryButton: {
-      minWidth: 90,
-      height: 56,
+      minWidth: responsive.isTablet ? 85 : 90,
+      height: responsive.isTablet ? 48 : 56,
       justifyContent: 'center',
     },
     countryButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
     },
     menuContent: {
-      maxHeight: 350,
+      maxHeight: responsive.isTablet ? 400 : 350,
       backgroundColor: theme.colors.surface,
     },
     menuScrollView: {
-      maxHeight: 340,
+      maxHeight: responsive.isTablet ? 390 : 340,
     },
     menuItem: {
-      fontSize: 14,
+      fontSize: responsive.fontSize(14),
     },
     input: {
       flex: 1,
-      height: 56,
+      height: responsive.isTablet ? 48 : 56,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,

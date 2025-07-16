@@ -31,6 +31,7 @@ import { ConnectionIndicator } from '../../../app/components/ConnectionIndicator
 import { useResponsive } from '../../../app/hooks/useResponsive';
 import { ConnectionErrorModal } from '../../../app/components/ConnectionErrorModal';
 import { useServerConnection } from '../../../app/hooks/useServerConnection';
+import { RegisterModal } from '../components/RegisterForm';
 
 const LoginScreen = () => {
   const theme = useAppTheme();
@@ -50,6 +51,7 @@ const LoginScreen = () => {
   );
   const [initialRememberMe, setInitialRememberMe] = useState(false);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   type LoginMutationVariables = LoginFormInputs & { rememberMe: boolean };
 
@@ -198,6 +200,12 @@ const LoginScreen = () => {
     setThemePreference(theme.dark ? 'light' : 'dark');
   };
 
+  const handleRegisterSuccess = (username: string, password: string) => {
+    setInitialEmailOrUsername(username);
+    setInitialPassword(password);
+    setInitialRememberMe(false);
+  };
+
   const styles = React.useMemo(
     () =>
       StyleSheet.create({
@@ -210,13 +218,13 @@ const LoginScreen = () => {
         },
         container: {
           flex: 1,
-          padding: 24,
+          padding: responsive.spacingPreset.l,
           justifyContent: 'space-between',
         },
         logoContainer: {
           alignItems: 'center',
-          marginTop: 30,
-          marginBottom: 5,
+          marginTop: responsive.spacingPreset.xl,
+          marginBottom: responsive.spacingPreset.m,
         },
         logo: {
           width: 120,
@@ -234,30 +242,25 @@ const LoginScreen = () => {
           textAlign: 'center',
         },
         subtitle: {
-          fontSize: 16,
+          fontSize: responsive.fontSizePreset.m,
           color: theme.colors.onSurfaceVariant,
-          marginBottom: 20,
+          marginBottom: responsive.spacingPreset.xl,
           textAlign: 'center',
-          paddingHorizontal: 20,
+          paddingHorizontal: responsive.spacingPreset.l,
         },
         formContainer: {
           backgroundColor: theme.colors.surface,
           borderRadius: 16,
-          padding: 24,
+          padding: responsive.spacingPreset.m,
           elevation: 2,
-          marginBottom: 16,
-        },
-        forgotPassword: {
-          color: theme.colors.primary,
-          textAlign: 'right',
-          marginTop: 8,
-          marginBottom: 16,
+          marginBottom: responsive.spacingPreset.m,
+          paddingVertical: responsive.spacingPreset.l,
         },
         registerContainer: {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 20,
+          marginTop: responsive.spacingPreset.xl,
         },
         registerText: {
           color: theme.colors.onSurfaceVariant,
@@ -292,6 +295,11 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ConnectionErrorModal />
+      <RegisterModal
+        visible={showRegisterModal}
+        onDismiss={() => setShowRegisterModal(false)}
+        onRegisterSuccess={handleRegisterSuccess}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -333,19 +341,13 @@ const LoginScreen = () => {
                   initialRememberMe={initialRememberMe}
                 />
               </Surface>
-
-              <TouchableRipple onPress={() => {}}>
-                <Text style={styles.forgotPassword}>
-                  ¿Olvidaste tu contraseña?
-                </Text>
-              </TouchableRipple>
             </View>
 
             <View>
               <View style={styles.registerContainer}>
                 <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
                 <TouchableRipple
-                  onPress={() => navigation.navigate('Register')}
+                  onPress={() => setShowRegisterModal(true)}
                 >
                   <Text style={styles.registerLink}>Regístrate</Text>
                 </TouchableRipple>

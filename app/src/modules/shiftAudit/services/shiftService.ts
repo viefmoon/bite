@@ -4,24 +4,32 @@ import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Shift, ShiftSummary, ShiftOrder } from '../types';
 import type { Order } from '@/app/schemas/domain/order.schema';
 
-interface ShiftHistoryParams {
-  limit?: number;
-  offset?: number;
-}
 
 export const shiftService = {
   /**
-   * Obtiene el historial de turnos con paginación
+   * Obtiene el historial de turnos
    */
-  getHistory: async (params: ShiftHistoryParams = {}): Promise<Shift[]> => {
+  getHistory: async (params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Shift[]> => {
     try {
-      const { limit = 30, offset = 0 } = params;
-      const response = await apiClient.get<any>(API_PATHS.SHIFTS_HISTORY, {
-        params: { limit, offset },
-      });
+      const queryParams = new URLSearchParams();
+      
+      if (params?.startDate) {
+        queryParams.append('startDate', params.startDate);
+      }
+      if (params?.endDate) {
+        queryParams.append('endDate', params.endDate);
+      }
+      
+      const url = queryParams.toString() 
+        ? `${API_PATHS.SHIFTS_HISTORY}?${queryParams.toString()}`
+        : API_PATHS.SHIFTS_HISTORY;
+        
+      const response = await apiClient.get<any>(url);
 
       const rawData = handleApiResponse(response);
-      console.log('[ShiftService] Raw history response:', rawData);
 
       // Asegurar que siempre trabajamos con un array
       let shiftsArray: any[] = [];
@@ -47,7 +55,6 @@ export const shiftService = {
           for (const key in rawData) {
             if (Array.isArray(rawData[key])) {
               shiftsArray = rawData[key];
-              console.log(`[ShiftService] Found array in property: ${key}`);
               break;
             }
           }
@@ -63,8 +70,6 @@ export const shiftService = {
       ) {
         shiftsArray = [shiftsArray];
       }
-
-      console.log('[ShiftService] Shifts array:', shiftsArray);
 
       // Normalizar cada turno
       const normalizedShifts = shiftsArray.map((shift: any) => ({
@@ -94,7 +99,6 @@ export const shiftService = {
         shiftNumber: Number(shift.shiftNumber) || 0,
       }));
 
-      console.log('[ShiftService] Normalized shifts:', normalizedShifts);
       return normalizedShifts;
     } catch (error) {
       console.error('[ShiftService] Error fetching history:', error);

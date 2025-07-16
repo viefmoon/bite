@@ -67,13 +67,13 @@ export function AppDrawerNavigator() {
     () =>
       StyleSheet.create({
         drawerButtonContainer: {
-          width: responsive.dimensions.iconSize.large + responsive.spacing.m,
-          height: responsive.dimensions.iconSize.large + responsive.spacing.m,
+          width: responsive.dimensions.iconSize.large + responsive.spacing.s,
+          height: responsive.dimensions.iconSize.large + responsive.spacing.s,
           justifyContent: 'center',
           alignItems: 'center',
-          marginLeft: responsive.spacing.s,
+          marginLeft: responsive.spacing.l,
           borderRadius:
-            (responsive.dimensions.iconSize.large + responsive.spacing.m) / 2,
+            (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
@@ -84,7 +84,7 @@ export function AppDrawerNavigator() {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
-          fontSize: responsive.fontSize.xl,
+          fontSize: responsive.fontSize(responsive.isTablet ? 18 : 20),
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
@@ -117,10 +117,10 @@ export function AppDrawerNavigator() {
             fontSize: responsive.fontSize.m,
           },
           drawerItemStyle: {
-            marginVertical: responsive.spacing.xs,
+            marginVertical: responsive.spacing.xxs,
             borderRadius: theme.roundness * 2,
-            paddingVertical: responsive.spacing.xs,
-            paddingHorizontal: responsive.spacing.s,
+            paddingVertical: responsive.spacing.xxs,
+            paddingHorizontal: responsive.spacing.xs,
           },
           headerShown: true,
           drawerType: 'front',

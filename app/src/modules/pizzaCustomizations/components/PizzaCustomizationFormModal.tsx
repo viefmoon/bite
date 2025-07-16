@@ -23,6 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import {
   pizzaCustomizationFormSchema,
   PizzaCustomizationFormInputs,
@@ -41,6 +42,124 @@ interface PizzaCustomizationFormModalProps {
   onSuccess?: () => void;
 }
 
+const createStyles = (theme: any, responsive: any) => {
+  const isTablet = responsive.isTablet;
+  
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 28,
+      maxHeight: isTablet ? '90%' : '85%',
+      minHeight: isTablet ? 600 : undefined,
+      maxWidth: isTablet ? 650 : 500,
+      width: '100%',
+      alignSelf: 'center',
+      overflow: 'hidden',
+      elevation: 24,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 12,
+      },
+      shadowOpacity: 0.58,
+      shadowRadius: 16.0,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.spacing(theme.spacing.l),
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    headerTitle: {
+      fontSize: responsive.fontSize(18),
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    closeButton: {
+      margin: -responsive.spacing(theme.spacing.xs),
+    },
+    scrollContent: {
+      padding: responsive.spacing(theme.spacing.l),
+      paddingTop: responsive.spacing(theme.spacing.m),
+    },
+    formGroup: {
+      marginBottom: responsive.spacing(theme.spacing.l),
+    },
+    label: {
+      fontSize: responsive.fontSize(12),
+      fontWeight: '600',
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      marginLeft: responsive.spacing(theme.spacing.xs),
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    segmentedButtons: {
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      borderRadius: 16,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: responsive.spacing(theme.spacing.m),
+      marginBottom: responsive.spacing(theme.spacing.l),
+    },
+    halfWidth: {
+      flex: 1,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.spacing(theme.spacing.l),
+      backgroundColor: theme.colors.secondaryContainer,
+      borderRadius: 16,
+      marginBottom: responsive.spacing(theme.spacing.l),
+    },
+    switchLabel: {
+      fontSize: responsive.fontSize(16),
+      fontWeight: '500',
+      color: theme.colors.onSecondaryContainer,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      padding: responsive.spacing(theme.spacing.l),
+      paddingTop: responsive.spacing(theme.spacing.m),
+      gap: responsive.spacing(theme.spacing.m),
+      backgroundColor: theme.colors.elevation.level1,
+    },
+    button: {
+      borderRadius: 24,
+      flex: 1,
+      maxWidth: isTablet ? 180 : 160,
+    },
+    buttonContent: {
+      paddingVertical: responsive.spacing(theme.spacing.xs),
+    },
+    loadingContainer: {
+      padding: responsive.spacing(theme.spacing.xl * 2),
+      alignItems: 'center',
+    },
+    inputStyle: {
+      backgroundColor: theme.colors.elevation.level1,
+    },
+  });
+};
+
 export function PizzaCustomizationFormModal({
   visible,
   onDismiss,
@@ -48,7 +167,9 @@ export function PizzaCustomizationFormModal({
   onSuccess,
 }: PizzaCustomizationFormModalProps) {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const isEditMode = !!customizationId;
+  const styles = createStyles(theme, responsive);
 
   const { data: customization, isLoading: isLoadingCustomization } =
     usePizzaCustomization(customizationId || '');
@@ -130,119 +251,6 @@ export function PizzaCustomizationFormModal({
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: theme.spacing.m,
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 28,
-      maxHeight: '85%',
-      maxWidth: 500,
-      width: '100%',
-      alignSelf: 'center',
-      overflow: 'hidden',
-      elevation: 24,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 12,
-      },
-      shadowOpacity: 0.58,
-      shadowRadius: 16.0,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outlineVariant,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    closeButton: {
-      margin: -theme.spacing.xs,
-    },
-    scrollContent: {
-      padding: theme.spacing.l,
-      paddingTop: theme.spacing.m,
-    },
-    formGroup: {
-      marginBottom: theme.spacing.l,
-    },
-    label: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.xs,
-      marginLeft: theme.spacing.xs,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    segmentedButtons: {
-      marginBottom: theme.spacing.xs,
-      borderRadius: 16,
-    },
-    row: {
-      flexDirection: 'row',
-      gap: theme.spacing.m,
-      marginBottom: theme.spacing.l,
-    },
-    halfWidth: {
-      flex: 1,
-    },
-    switchRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
-      backgroundColor: theme.colors.secondaryContainer,
-      borderRadius: 16,
-      marginBottom: theme.spacing.l,
-    },
-    switchLabel: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: theme.colors.onSecondaryContainer,
-    },
-    footer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      padding: theme.spacing.l,
-      paddingTop: theme.spacing.m,
-      gap: theme.spacing.m,
-      backgroundColor: theme.colors.elevation.level1,
-    },
-    button: {
-      borderRadius: 24,
-      flex: 1,
-      maxWidth: 160,
-    },
-    buttonContent: {
-      paddingVertical: theme.spacing.xs,
-    },
-    loadingContainer: {
-      padding: theme.spacing.xl * 2,
-      alignItems: 'center',
-    },
-    inputStyle: {
-      backgroundColor: theme.colors.elevation.level1,
-    },
-  });
-
   if (isLoadingCustomization && isEditMode) {
     return (
       <Portal>
@@ -258,7 +266,7 @@ export function PizzaCustomizationFormModal({
               <Text
                 variant="bodyLarge"
                 style={{
-                  marginTop: theme.spacing.m,
+                  marginTop: responsive.spacing(theme.spacing.m),
                   color: theme.colors.onSurfaceVariant,
                 }}
               >
@@ -489,7 +497,7 @@ export function PizzaCustomizationFormModal({
                 }
                 style={styles.button}
                 contentStyle={styles.buttonContent}
-                labelStyle={{ fontSize: 16, fontWeight: '600' }}
+                labelStyle={{ fontSize: responsive.fontSize(16), fontWeight: '600' }}
               >
                 Cancelar
               </Button>
@@ -511,7 +519,7 @@ export function PizzaCustomizationFormModal({
                   { backgroundColor: theme.colors.primary },
                 ]}
                 contentStyle={styles.buttonContent}
-                labelStyle={{ fontSize: 16, fontWeight: '600' }}
+                labelStyle={{ fontSize: responsive.fontSize(16), fontWeight: '600' }}
                 icon={isEditMode ? 'check' : 'plus'}
               >
                 {isEditMode ? 'Guardar' : 'Crear'}

@@ -9,6 +9,7 @@ import { UserDetailModal } from '../components/UserDetailModal';
 import { useListState } from '@/app/hooks/useListState';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useGetUsers, useDeleteUser } from '../hooks';
 import type { User, UsersQuery } from '../types';
 import { RoleEnum } from '../types';
@@ -16,6 +17,7 @@ import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export function UsersListScreen() {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const drawerStatus = useDrawerStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -257,49 +259,53 @@ export function UsersListScreen() {
     },
     titleContainer: {
       flex: 1,
-      paddingRight: theme.spacing.s,
+      paddingRight: responsive.isTablet ? theme.spacing.xs : theme.spacing.s,
     },
     title: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 16,
-      lineHeight: 22,
+      fontSize: responsive.isTablet ? 14 : 16,
+      lineHeight: responsive.isTablet ? 18 : 22,
     },
     descriptionContainer: {
       flex: 1,
-      gap: theme.spacing.xs / 2,
-      paddingTop: theme.spacing.xs / 2,
+      gap: responsive.isTablet ? 2 : theme.spacing.xs / 2,
+      paddingTop: responsive.isTablet ? 2 : theme.spacing.xs / 2,
     },
     userInfoRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.xs : theme.spacing.s,
       flexWrap: 'wrap',
     },
     username: {
-      fontSize: 14,
+      fontSize: responsive.isTablet ? 12 : 14,
       color: theme.colors.onSurfaceVariant,
       fontWeight: '500',
     },
     email: {
-      fontSize: 13,
+      fontSize: responsive.isTablet ? 11 : 13,
       color: theme.colors.onSurfaceVariant,
       opacity: 0.8,
     },
     screenInfo: {
-      fontSize: 13,
+      fontSize: responsive.isTablet ? 11 : 13,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
     roleChipInDescription: {
-      height: 28,
+      minHeight: responsive.isTablet ? 20 : 28,
+      height: 'auto',
       borderRadius: theme.roundness * 2,
-      paddingHorizontal: theme.spacing.s,
+      paddingHorizontal: responsive.isTablet ? 6 : responsive.spacing.s,
+      paddingVertical: responsive.isTablet ? 1 : 4,
     },
     roleChipText: {
-      fontSize: 12,
+      fontSize: responsive.isTablet ? 10 : 12,
       fontWeight: '600',
-      lineHeight: 16,
+      lineHeight: responsive.isTablet ? 12 : 16,
+      marginVertical: 0,
+      paddingVertical: 0,
     },
   });
 
@@ -313,6 +319,18 @@ export function UsersListScreen() {
           onRefresh={handleRefresh}
           onItemPress={handleViewUser}
           ListEmptyComponent={ListEmptyComponent}
+          listItemStyle={responsive.isTablet ? { 
+            marginVertical: 1,
+            marginHorizontal: responsive.spacing.xs,
+          } : undefined}
+          listItemContentStyle={responsive.isTablet ? {
+            paddingVertical: 2,
+            minHeight: 36,
+          } : undefined}
+          contentContainerStyle={responsive.isTablet ? {
+            paddingTop: 2,
+            paddingBottom: 80,
+          } : undefined}
           renderConfig={{
             titleField: 'displayName' as any,
             descriptionField: 'displayInfo' as any,

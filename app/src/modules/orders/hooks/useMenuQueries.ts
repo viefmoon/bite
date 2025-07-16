@@ -1,25 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-// Importar desde el servicio de categorías correcto
-import { getFullMenu } from '@/modules/menu/services/categoryService';
+// Importar desde el servicio de categorías
+import { getOrderMenu } from '@/modules/menu/services/categoryService';
 // Importar el tipo de menú completo con relaciones anidadas
 import type { FullMenuCategory } from '@/modules/orders/types/orders.types';
 import { ApiError } from '@/app/lib/errors';
 import { prefetchMenuImages } from '@/app/lib/imageCache';
 
-// Define una clave única para esta query
-const queryKey = ['fullMenu'];
+// Define clave única para la query
+const orderMenuQueryKey = ['orderMenu'];
 
 /**
- * Hook personalizado para obtener el menú completo usando React Query.
- * Gestiona el fetching, caching, estado de carga y errores.
- * Incluye polling para mantener precios y disponibilidad actualizados.
- * Con prefetching automático de imágenes.
+ * Hook para obtener el menú en pantallas de creación y edición de órdenes.
+ * Devuelve solo los campos necesarios para mejorar el rendimiento.
  */
-export function useGetFullMenu() {
+export function useGetOrderMenu() {
   const query = useQuery<FullMenuCategory[], ApiError>({
-    queryKey: queryKey,
-    queryFn: getFullMenu,
+    queryKey: orderMenuQueryKey,
+    queryFn: getOrderMenu,
     refetchInterval: 10000, // Actualizar cada 10 segundos
     refetchIntervalInBackground: false, // No actualizar cuando la app está en background
     refetchOnWindowFocus: true,

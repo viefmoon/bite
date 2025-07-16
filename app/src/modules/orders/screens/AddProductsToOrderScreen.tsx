@@ -17,7 +17,7 @@ import {
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useGetFullMenu } from '../hooks/useMenuQueries';
+import { useGetOrderMenu } from '../hooks/useMenuQueries';
 import { Product, Category, SubCategory } from '../types/orders.types';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
@@ -84,7 +84,7 @@ const AddProductsToOrderScreen = () => {
     existingTempProducts || [],
   );
 
-  const { data: menu, isLoading } = useGetFullMenu();
+  const { data: menu, isLoading } = useGetOrderMenu();
 
   // Calcular total de items (incluir items existentes de la orden)
   const totalItemsCount = useMemo(() => {
@@ -110,18 +110,18 @@ const AddProductsToOrderScreen = () => {
     }
   }, []);
 
-  const handleCategorySelect = (categoryId: string) => {
+  const handleCategorySelect = useCallback((categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(null);
     setNavigationLevel('subcategories');
-  };
+  }, []);
 
-  const handleSubCategorySelect = (subcategoryId: string) => {
+  const handleSubCategorySelect = useCallback((subcategoryId: string) => {
     setSelectedSubcategoryId(subcategoryId);
     setNavigationLevel('products');
-  };
+  }, []);
 
-  const productNeedsCustomization = (product: Product): boolean => {
+  const productNeedsCustomization = useCallback((product: Product): boolean => {
     if (!product) return false;
     const hasVariants =
       product.hasVariants &&
@@ -133,16 +133,16 @@ const AddProductsToOrderScreen = () => {
       Array.isArray(product.modifierGroups) &&
       product.modifierGroups.length > 0;
     return hasVariants || hasModifiers;
-  };
+  }, []);
 
-  const handleProductSelect = (product: Product) => {
+  const handleProductSelect = useCallback((product: Product) => {
     if (productNeedsCustomization(product)) {
       setSelectedProduct(product);
     } else {
       // Añadir producto directamente sin personalización
       addItemToSelection(product, 1);
     }
-  };
+  }, [productNeedsCustomization, addItemToSelection]);
 
   const addItemToSelection = (
     product: Product,
@@ -450,6 +450,31 @@ const AddProductsToOrderScreen = () => {
     setSelectedProductForDescription(null);
   };
 
+  // Calcular número de columnas dinámicamente
+  const numColumns = useMemo(() => {
+    // Para tablets (ancho >= 600px)
+    if (responsive.width >= 600) {
+      if (responsive.width >= 1200) return 6; // Tablets muy grandes
+      if (responsive.width >= 900) return 5;   // Tablets grandes
+      if (responsive.width >= 768) return 4;   // Tablets medianas
+      return 3; // Tablets pequeñas (600-768px)
+    }
+    // Para móviles (ancho < 600px)
+    if (responsive.width >= 480) return 3; // Móviles grandes
+    if (responsive.width >= 360) return 2; // Móviles estándar
+    return 2; // Móviles pequeños
+  }, [responsive.width]);
+
+  // Calcular ancho de items basado en columnas
+  const itemWidth = useMemo(() => {
+    const padding = responsive.spacing(theme.spacing.m);
+    const totalPadding = padding * 2;
+    const gap = responsive.spacing(8);
+    const totalGaps = gap * (numColumns - 1);
+    const availableWidth = responsive.width - totalPadding - totalGaps;
+    return Math.floor(availableWidth / numColumns);
+  }, [responsive.width, numColumns, theme.spacing.m]);
+
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -464,39 +489,46 @@ const AddProductsToOrderScreen = () => {
           flex: 1,
         },
         gridContainer: {
-          padding: responsive.spacing.m,
+          padding: responsive.spacing(theme.spacing.m),
           paddingBottom: 60,
         },
         row: {
           justifyContent: 'flex-start',
+          paddingHorizontal: 0,
+          marginBottom: responsive.spacing(8),
+          gap: responsive.spacing(8),
         },
         cardItem: {
-          width: '48%',
-          marginHorizontal: '1%',
-          marginVertical: 4,
+          width: itemWidth,
+          marginHorizontal: 0,
+          marginVertical: 0,
           overflow: 'hidden',
-          borderRadius: 8,
+          borderRadius: theme.roundness * 2,
           elevation: 2,
+          backgroundColor: colors.surface,
+          aspectRatio: 0.85,
         },
         cardItemInactive: {
           opacity: 0.5,
         },
         itemImage: {
           width: '100%',
-          height: responsive.getResponsiveDimension(120, 160),
+          height: itemWidth * 0.65,
         },
         imageInactive: {
           opacity: 0.6,
         },
         cardContent: {
-          paddingHorizontal: responsive.spacing.s,
-          paddingVertical: responsive.spacing.xs,
+          paddingHorizontal: responsive.spacing(theme.spacing.s),
+          paddingVertical: responsive.spacing(theme.spacing.xs),
+          height: itemWidth * 0.35,
+          justifyContent: 'center',
         },
         cardTitle: {
-          fontSize: responsive.fontSize.m,
+          fontSize: responsive.fontSize(responsive.width >= 600 ? 16 : 15),
           fontWeight: '600',
-          lineHeight: responsive.fontSize.m * 1.2,
-          marginBottom: responsive.spacing.xs,
+          lineHeight: responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
+          marginBottom: responsive.spacing(2),
         },
         cardHeader: {
           flexDirection: 'row',
@@ -511,7 +543,7 @@ const AddProductsToOrderScreen = () => {
         priceText: {
           color: theme.colors.primary,
           fontWeight: '600',
-          fontSize: responsive.fontSize.s,
+          fontSize: responsive.fontSize(responsive.width >= 600 ? 14 : 13),
           marginTop: 2,
         },
         noItemsText: {
@@ -554,13 +586,13 @@ const AddProductsToOrderScreen = () => {
           fontWeight: '600',
         },
       }),
-    [colors, fonts],
+    [colors, fonts, theme, responsive, itemWidth],
   );
 
   const blurhash =
     '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-  const renderItem = ({ item }: { item: Category | SubCategory | Product }) => {
+  const renderItem = useCallback(({ item }: { item: Category | SubCategory | Product }) => {
     const imageSource = (() => {
       const photoPath = item.photo?.path || item.photo;
       return photoPath || null;
@@ -646,7 +678,7 @@ const AddProductsToOrderScreen = () => {
           'price' in item &&
           (item as Product).description ? (
             <View style={styles.cardHeader}>
-              <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
+              <Title style={[styles.cardTitle, { flex: 1 }]} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
               <IconButton
                 icon="information-outline"
                 size={20}
@@ -655,7 +687,7 @@ const AddProductsToOrderScreen = () => {
               />
             </View>
           ) : (
-            <Title style={styles.cardTitle}>{item.name}</Title>
+            <Title style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
           )}
           {renderPrice()}
         </Card.Content>
@@ -671,7 +703,7 @@ const AddProductsToOrderScreen = () => {
         )}
       </Card>
     );
-  };
+  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect, handleShowProductDescription, styles, blurhash]);
 
   if (isLoading) {
     return (
@@ -721,9 +753,10 @@ const AddProductsToOrderScreen = () => {
               data={currentData}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
-              numColumns={2}
+              numColumns={numColumns}
+              key={numColumns}
               contentContainerStyle={styles.gridContainer}
-              columnWrapperStyle={styles.row}
+              columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
               showsVerticalScrollIndicator={false}
             />
           )}

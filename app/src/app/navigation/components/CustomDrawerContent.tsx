@@ -13,7 +13,8 @@ import {
 import { useThemeStore } from '../../store/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
 import { useAuthStore } from '../../store/authStore';
-import { useAppTheme } from '../../styles/theme';
+import { useAppTheme, AppTheme } from '../../styles/theme';
+import { useResponsive } from '../../hooks/useResponsive';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
 import {
@@ -41,86 +42,93 @@ const getRoleTranslation = (roleId?: number): string => {
   return ROLE_TRANSLATIONS[roleId] || 'Desconocido';
 };
 
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+  StyleSheet.create({
+        container: {
+          flex: 1,
+        },
+        userInfoSection: {
+          padding: responsive.spacing(theme.spacing.m),
+        },
+        title: {
+          ...theme.fonts.titleMedium,
+          fontSize: responsive.fontSize(theme.fonts.titleMedium.fontSize),
+          color: theme.colors.onSurface,
+          marginBottom: responsive.spacing(4),
+        },
+        caption: {
+          ...theme.fonts.bodySmall,
+          fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
+          color: theme.colors.onSurfaceVariant,
+          marginBottom: responsive.spacing(2),
+        },
+        drawerSection: {
+          marginTop: responsive.spacing(theme.spacing.s),
+        },
+        bottomDrawerSection: {
+          marginBottom: responsive.spacing(theme.spacing.m),
+          marginTop: 'auto',
+          borderTopColor: theme.colors.outlineVariant,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          paddingTop: responsive.spacing(theme.spacing.s),
+        },
+        preference: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingVertical: responsive.spacing(theme.spacing.s),
+          paddingHorizontal: responsive.spacing(theme.spacing.m),
+          alignItems: 'center',
+          marginHorizontal: responsive.spacing(theme.spacing.xs),
+          borderRadius: theme.roundness * 2,
+        },
+        drawerItemLabel: {
+          ...theme.fonts.labelLarge,
+          fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
+        },
+        drawerItemContainer: {
+          paddingHorizontal: responsive.spacing(theme.spacing.m),
+          paddingVertical: responsive.spacing(theme.spacing.m),
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderRadius: theme.roundness * 2,
+          marginHorizontal: responsive.spacing(theme.spacing.xs),
+          marginVertical: responsive.spacing(theme.spacing.xxs),
+        },
+        drawerItemActive: {
+          backgroundColor: theme.colors.primaryContainer,
+        },
+        drawerItemIconContainer: {
+          marginRight: responsive.spacing(theme.spacing.l),
+          width: responsive.isTablet ? 20 : theme.spacing.l,
+          alignItems: 'center',
+        },
+        divider: {
+          marginVertical: responsive.spacing(theme.spacing.s),
+          marginHorizontal: responsive.spacing(theme.spacing.m),
+        },
+
+        configSubheader: {
+          ...theme.fonts.labelLarge,
+          fontSize: responsive.fontSize(theme.fonts.labelLarge.fontSize),
+          color: theme.colors.onSurfaceVariant,
+          paddingLeft: responsive.spacing(theme.spacing.l),
+          paddingRight: responsive.spacing(theme.spacing.m),
+          paddingTop: responsive.spacing(theme.spacing.s),
+          paddingBottom: responsive.spacing(theme.spacing.xxs),
+        },
+      });
+
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const logout = useAuthStore((state) => state.logout);
   const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const styles = React.useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-        },
-        userInfoSection: {
-          padding: theme.spacing.l,
-        },
-        title: {
-          ...theme.fonts.titleMedium,
-          color: theme.colors.onSurface,
-          marginBottom: 4,
-        },
-        caption: {
-          ...theme.fonts.bodySmall,
-          color: theme.colors.onSurfaceVariant,
-          marginBottom: 2,
-        },
-        drawerSection: {
-          marginTop: theme.spacing.s,
-        },
-        bottomDrawerSection: {
-          marginBottom: theme.spacing.m,
-          marginTop: 'auto',
-          borderTopColor: theme.colors.outlineVariant,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          paddingTop: theme.spacing.s,
-        },
-        preference: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          alignItems: 'center',
-          marginHorizontal: theme.spacing.s,
-          borderRadius: theme.roundness * 2,
-        },
-        drawerItemLabel: {
-          ...theme.fonts.labelLarge,
-        },
-        drawerItemContainer: {
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderRadius: theme.roundness * 2,
-          marginHorizontal: theme.spacing.s,
-          marginVertical: 2,
-        },
-        drawerItemActive: {
-          backgroundColor: theme.colors.primaryContainer,
-        },
-        drawerItemIconContainer: {
-          marginRight: 32,
-          width: 24,
-          alignItems: 'center',
-        },
-        divider: {
-          marginVertical: theme.spacing.s,
-          marginHorizontal: theme.spacing.m,
-        },
-
-        configSubheader: {
-          ...theme.fonts.labelLarge,
-          color: theme.colors.onSurfaceVariant,
-          paddingLeft: 25,
-          paddingRight: 16,
-          paddingTop: theme.spacing.m,
-          paddingBottom: theme.spacing.xs,
-        },
-      }),
-    [theme],
+    () => createStyles(theme, responsive),
+    [theme, responsive],
   );
 
   const getItemActive = (routeName: string) => {
@@ -159,7 +167,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={styles.drawerItemIconContainer}>
-            <Icon source={iconName} size={24} color={getItemColor(routeName)} />
+            <Icon source={iconName} size={responsive.isTablet ? 20 : 24} color={getItemColor(routeName)} />
           </View>
           <Text
             style={[styles.drawerItemLabel, { color: getItemColor(routeName) }]}
@@ -341,7 +349,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
               <View style={styles.drawerItemIconContainer}>
                 <Icon
                   source={theme.dark ? 'weather-night' : 'white-balance-sunny'}
-                  size={24}
+                  size={responsive.isTablet ? 20 : 24}
                   color={theme.colors.onSurfaceVariant}
                 />
               </View>
@@ -369,7 +377,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="broom"
-                size={24}
+                size={responsive.isTablet ? 20 : 24}
                 color={theme.colors.onSurfaceVariant}
               />
             </View>
@@ -393,7 +401,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={styles.drawerItemIconContainer}>
-              <Icon source="logout" size={24} color={theme.colors.error} />
+              <Icon source="logout" size={responsive.isTablet ? 20 : 24} color={theme.colors.error} />
             </View>
             <Text
               style={[styles.drawerItemLabel, { color: theme.colors.error }]}

@@ -11,6 +11,7 @@ import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator'
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { useAppTheme } from '../styles/theme';
 import { Icon, Surface, Text, Checkbox } from 'react-native-paper';
+import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
 import { RefreshButton } from '../../modules/kitchen/components/RefreshButton';
@@ -54,30 +55,33 @@ function KitchenOnlyNavigatorContent() {
     return () => backHandler.remove();
   }, []);
 
+  const responsive = useResponsive();
+  
   const styles = React.useMemo(
     () =>
       StyleSheet.create({
         drawerButtonContainer: {
-          width: 48,
-          height: 48,
+          width: responsive.dimensions.iconSize.large + responsive.spacing.s,
+          height: responsive.dimensions.iconSize.large + responsive.spacing.s,
           justifyContent: 'center',
           alignItems: 'center',
-          marginLeft: 8,
-          borderRadius: 24,
+          marginLeft: responsive.spacing.xs,
+          borderRadius: (responsive.dimensions.iconSize.large + responsive.spacing.s) / 2,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
-          height: 56,
+          height: responsive.dimensions.headerHeight,
           elevation: 2,
         },
         headerTitleStyle: {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
+          fontSize: responsive.fontSize(responsive.isTablet ? 18 : 20),
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
-          width: 320,
+          width: responsive.dimensions.drawerWidth,
           borderTopRightRadius: theme.roundness * 2,
           borderBottomRightRadius: theme.roundness * 2,
         },
@@ -91,7 +95,7 @@ function KitchenOnlyNavigatorContent() {
           opacity: 0.9,
         },
       }),
-    [theme],
+    [theme, responsive],
   );
 
   return (
@@ -112,10 +116,13 @@ function KitchenOnlyNavigatorContent() {
           drawerInactiveTintColor: theme.colors.onSurfaceVariant,
           drawerLabelStyle: {
             ...theme.fonts.labelLarge,
+            fontSize: responsive.fontSize.m,
           },
           drawerItemStyle: {
-            marginVertical: theme.spacing.xs,
+            marginVertical: responsive.spacing.xxs,
             borderRadius: theme.roundness * 2,
+            paddingVertical: responsive.spacing.xxs,
+            paddingHorizontal: responsive.spacing.xs,
           },
           headerShown: true,
           drawerType: 'front',
@@ -130,7 +137,7 @@ function KitchenOnlyNavigatorContent() {
               onPress={() => navigation.openDrawer()}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon source="menu" size={28} color={theme.colors.onPrimary} />
+              <Icon source="menu" size={responsive.dimensions.iconSize.large} color={theme.colors.onPrimary} />
             </TouchableOpacity>
           ),
           headerTitle: () => (
@@ -191,8 +198,8 @@ function KitchenOnlyNavigatorContent() {
                 <Text
                   style={{
                     color: theme.colors.onPrimary,
-                    fontSize: 14,
-                    marginLeft: 4,
+                    fontSize: responsive.fontSize.m,
+                    marginLeft: responsive.spacing.xs,
                     fontWeight: filters.showPrepared ? 'bold' : 'normal',
                   }}
                 >

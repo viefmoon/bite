@@ -50,7 +50,8 @@
       "Bash(timeout 30 npm run start:dev)",
       "Bash(taskkill:*)",
       "Bash(del \"C:\\Users\\Leonel\\Desktop\\bite\\app\\src\\modules\\orders\\screens\\OpenOrdersScreenCompact.tsx\")",
-      "Bash(del srcutilslogging.ts)"
+      "Bash(del srcutilslogging.ts)",
+      "Bash(del RegisterScreen.tsx)"
     ],
     "deny": []
   }

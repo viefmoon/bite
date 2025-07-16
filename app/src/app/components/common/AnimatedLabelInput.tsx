@@ -11,7 +11,8 @@ import {
   TouchableWithoutFeedback,
   Easing,
 } from 'react-native';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface AnimatedLabelInputProps extends TextInputProps {
   label: string;
@@ -52,6 +53,7 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
     ref,
   ) => {
     const theme = useAppTheme();
+    const responsive = useResponsive();
     const [isFocused, setIsFocused] = useState(false);
     const animation = useRef(new Animated.Value(value ? 1 : 0)).current;
 
@@ -103,40 +105,11 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
         ? finalActiveBorderColor
         : finalBorderColor;
 
-    const styles = StyleSheet.create({
-      container: {
-        borderWidth: 1,
-        borderRadius: theme.roundness,
-        paddingHorizontal: 12,
-        position: 'relative',
-        backgroundColor: theme.colors.background,
-        minHeight: 58,
-      },
-      inputContainer: {
-        flexDirection: 'row',
-        alignItems: multiline ? 'flex-start' : 'center',
-        paddingTop: 18,
-        paddingBottom: 6,
-        minHeight: 40,
-      },
-      label: {
-        fontSize: 16,
-        color: finalInactiveLabelColor,
-      },
-      input: {
-        flex: 1,
-        fontSize: 16,
-        color: disabled
-          ? theme.colors.onSurfaceDisabled
-          : theme.colors.onSurface, // Aplicar color si está deshabilitado
-        paddingVertical: 0,
-        paddingHorizontal: 0,
-        margin: 0,
-        borderWidth: 0,
-        backgroundColor: 'transparent',
-        textAlignVertical: multiline ? 'top' : 'center',
-      },
-    });
+    const styles = React.useMemo(() => createStyles(theme, responsive, {
+      multiline,
+      disabled,
+      finalInactiveLabelColor,
+    }), [theme, responsive, multiline, disabled, finalInactiveLabelColor]);
 
     const animatedTranslateY = animation.interpolate({
       inputRange: [0, 1],
@@ -254,5 +227,48 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
 );
 
 AnimatedLabelInput.displayName = 'AnimatedLabelInput';
+
+const createStyles = (
+  theme: AppTheme,
+  responsive: ReturnType<typeof useResponsive>,
+  props: {
+    multiline?: boolean;
+    disabled: boolean;
+    finalInactiveLabelColor: string;
+  }
+) => StyleSheet.create({
+  container: {
+    borderWidth: 1,
+    borderRadius: theme.roundness,
+    paddingHorizontal: responsive.spacing(theme.spacing.m),
+    position: 'relative',
+    backgroundColor: theme.colors.background,
+    minHeight: responsive.isTablet ? 52 : 58,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: props.multiline ? 'flex-start' : 'center',
+    paddingTop: responsive.isTablet ? 16 : 18,
+    paddingBottom: responsive.isTablet ? 4 : 6,
+    minHeight: responsive.isTablet ? 36 : 40,
+  },
+  label: {
+    fontSize: responsive.fontSize(16),
+    color: props.finalInactiveLabelColor,
+  },
+  input: {
+    flex: 1,
+    fontSize: responsive.fontSize(16),
+    color: props.disabled
+      ? theme.colors.onSurfaceDisabled
+      : theme.colors.onSurface,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    margin: 0,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    textAlignVertical: props.multiline ? 'top' : 'center',
+  },
+});
 
 export default AnimatedLabelInput;

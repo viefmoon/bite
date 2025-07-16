@@ -97,10 +97,24 @@ class ShiftsService {
   /**
    * Obtener historial de turnos
    */
-  async getHistory(limit = 30, offset = 0): Promise<Shift[]> {
-    const response = await apiClient.get('/api/v1/shifts/history', {
-      params: { limit, offset },
-    });
+  async getHistory(params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Shift[]> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.startDate) {
+      queryParams.append('startDate', params.startDate);
+    }
+    if (params?.endDate) {
+      queryParams.append('endDate', params.endDate);
+    }
+    
+    const url = queryParams.toString() 
+      ? `/api/v1/shifts/history?${queryParams.toString()}`
+      : '/api/v1/shifts/history';
+      
+    const response = await apiClient.get(url);
     return response.data;
   }
 

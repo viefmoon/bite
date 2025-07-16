@@ -87,9 +87,10 @@ export const deleteCategory = async (id: string): Promise<void> => {
   }
 };
 
-export async function getFullMenu(): Promise<Category[]> {
+// Menú para pantallas de creación de órdenes
+export async function getOrderMenu(): Promise<Category[]> {
   const response = await ApiClientWrapper.get<Category[]>(
-    `${API_PATHS.CATEGORIES}/full-menu`,
+    `${API_PATHS.CATEGORIES}/order-menu`,
   );
 
   if (!response.ok || !response.data) {
@@ -105,7 +106,7 @@ const categoryService = {
   createCategory,
   updateCategory,
   deleteCategory,
-  getFullMenu,
+  getOrderMenu,
 };
 
 export default categoryService;

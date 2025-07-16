@@ -18,13 +18,12 @@ import {
   useReceipts,
   useRecoverOrder,
 } from '../hooks/useReceiptsQueries';
-import { Order } from '@/app/schemas/domain/order.schema';
 import type { Receipt, ReceiptList, ReceiptsListResponse, ReceiptFilters } from '../types/receipt.types';
 import { getPaymentStatus } from '@/app/utils/orderFormatters';
 import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
-import { ReceiptDetailModal } from '../components/ReceiptDetailModal';
+import { ReceiptDetailsModal } from '../components/ReceiptDetailsModal';
 import { ConfirmRecoverModal } from '../components/ConfirmRecoverModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -47,11 +46,11 @@ export const ReceiptsScreen: React.FC = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   // Estado para el modal de detalle
-  const [selectedReceipt, setSelectedReceipt] = useState<Order | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Estado para recuperación de orden
-  const [orderToRecover, setOrderToRecover] = useState<Order | null>(null);
+  const [orderToRecover, setOrderToRecover] = useState<any>(null);
   const [showRecoverConfirm, setShowRecoverConfirm] = useState(false);
 
   // Mutation para recuperar orden
@@ -121,7 +120,6 @@ export const ReceiptsScreen: React.FC = () => {
 
   // Handlers
   const handleReceiptPress = useCallback((receipt: ReceiptList) => {
-    // Fetch full order details when opening modal
     receiptService.getReceiptById(receipt.id).then((fullOrder) => {
       setSelectedReceipt(fullOrder);
       setShowDetailModal(true);
@@ -137,9 +135,8 @@ export const ReceiptsScreen: React.FC = () => {
   }, []);
 
   const handleRecoverPress = useCallback((receipt: ReceiptList) => {
-    // Fetch full order details before recovering
     receiptService.getReceiptById(receipt.id).then((fullOrder) => {
-      setOrderToRecover(fullOrder);
+      setOrderToRecover(fullOrder as any);
       setShowRecoverConfirm(true);
     });
   }, []);
@@ -546,13 +543,13 @@ export const ReceiptsScreen: React.FC = () => {
       />
 
       {/* Modal de detalle */}
-      <ReceiptDetailModal
+      <ReceiptDetailsModal
         visible={showDetailModal}
-        onClose={() => {
+        onDismiss={() => {
           setShowDetailModal(false);
           setSelectedReceipt(null);
         }}
-        order={selectedReceipt}
+        receipt={selectedReceipt}
       />
 
       {/* Modal de confirmación de recuperación */}

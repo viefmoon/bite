@@ -814,8 +814,65 @@ export class OrdersService {
   }
 
   async findByShiftId(shiftId: string): Promise<Order[]> {
-    return this.orderRepository.findByShiftId(shiftId);
+    const orders = await this.orderRepository.findByShiftId(shiftId);
+    
+    return orders.map(order => {
+      const preparationScreensMap = new Map<string, any>();
+      
+      if (order.orderItems) {
+        order.orderItems.forEach((item) => {
+          const screenName = item.product?.preparationScreen?.name;
+          
+          if (screenName) {
+            if (!preparationScreensMap.has(screenName)) {
+              preparationScreensMap.set(screenName, {
+                name: screenName,
+                items: []
+              });
+            }
+            preparationScreensMap.get(screenName)!.items.push(item);
+          }
+        });
+      }
+      
+      const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+        const items = screen.items;
+        const allReady = items.every((item: any) => 
+          item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+        );
+        const someInProgress = items.some((item: any) => 
+          item.preparationStatus === 'IN_PROGRESS'
+        );
+        
+        let status: string;
+        if (allReady) {
+          status = 'READY';
+        } else if (someInProgress) {
+          status = 'IN_PROGRESS';
+        } else {
+          status = 'PENDING';
+        }
+        
+        return {
+          name: screen.name,
+          status
+        };
+      });
+      
+      const totalPaid = order.payments?.reduce((sum, payment) => 
+        sum + (payment.amount || 0), 0
+      ) || 0;
+      
+      return {
+        ...order,
+        preparationScreenStatuses: preparationScreenStatuses.length > 0 ? preparationScreenStatuses : undefined,
+        paymentsSummary: {
+          totalPaid
+        }
+      };
+    });
   }
+
 
   async findOpenOrders(): Promise<Order[]> {
     // Obtener el turno actual
@@ -1459,6 +1516,133 @@ export class OrdersService {
     };
 
     return orderDto;
+  }
+
+  async getReceiptDetail(id: string): Promise<any> {
+    const order = await this.dataSource.getRepository(OrderEntity).findOne({
+      where: { 
+        id,
+        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])
+      },
+      relations: [
+        'user',
+        'table',
+        'table.area',
+        'deliveryInfo',
+        'orderItems',
+        'orderItems.product',
+        'orderItems.product.preparationScreen',
+        'orderItems.productVariant',
+        'orderItems.selectedPizzaCustomizations',
+        'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+        'orderItems.productModifiers',
+        'payments',
+        'ticketImpressions',
+        'ticketImpressions.user',
+        'ticketImpressions.printer',
+      ],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Recibo no encontrado');
+    }
+
+    const preparationScreens = new Set<string>();
+    if (order.orderItems) {
+      order.orderItems.forEach((item: any) => {
+        if (item.product?.preparationScreen?.name) {
+          preparationScreens.add(item.product.preparationScreen.name);
+        }
+      });
+    }
+
+    return {
+      id: order.id,
+      shiftOrderNumber: order.shiftOrderNumber,
+      orderType: order.orderType,
+      orderStatus: order.orderStatus,
+      total: Number(order.total),
+      subtotal: Number(order.subtotal),
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      finalizedAt: order.finalizedAt || undefined,
+      scheduledAt: order.scheduledAt || undefined,
+      notes: order.notes || undefined,
+      user: order.user ? {
+        id: order.user.id,
+        firstName: order.user.firstName || undefined,
+        lastName: order.user.lastName || undefined,
+        username: order.user.username,
+      } : undefined,
+      table: order.table ? {
+        id: order.table.id,
+        number: order.table.name,
+        name: order.table.name,
+        isTemporary: order.table.isTemporary,
+        area: order.table.area ? {
+          id: order.table.area.id,
+          name: order.table.area.name,
+        } : undefined,
+      } : undefined,
+      deliveryInfo: order.deliveryInfo || undefined,
+      preparationScreens: Array.from(preparationScreens).sort(),
+      orderItems: order.orderItems?.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        basePrice: Number(item.basePrice),
+        finalPrice: Number(item.finalPrice),
+        preparationNotes: item.preparationNotes || undefined,
+        preparationStatus: item.preparationStatus || undefined,
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          description: item.product.description || undefined,
+          price: Number(item.product.price),
+        },
+        productVariant: item.productVariant ? {
+          id: item.productVariant.id,
+          name: item.productVariant.name,
+          price: Number(item.productVariant.price),
+        } : undefined,
+        productModifiers: item.productModifiers?.map((mod: any) => ({
+          id: mod.id,
+          name: mod.name,
+          price: Number(mod.price),
+        })) || undefined,
+        selectedPizzaCustomizations: item.selectedPizzaCustomizations?.map((custom: any) => ({
+          pizzaCustomizationId: custom.pizzaCustomizationId,
+          half: custom.half,
+          action: custom.action,
+          pizzaCustomization: custom.pizzaCustomization ? {
+            id: custom.pizzaCustomization.id,
+            name: custom.pizzaCustomization.name,
+            type: custom.pizzaCustomization.type,
+          } : undefined,
+        })) || undefined,
+      })) || [],
+      payments: order.payments?.map((payment: any) => ({
+        id: payment.id,
+        amount: Number(payment.amount),
+        paymentMethod: payment.paymentMethod,
+        paymentStatus: payment.paymentStatus,
+        createdAt: payment.createdAt,
+        updatedAt: payment.updatedAt,
+      })) || undefined,
+      ticketImpressions: order.ticketImpressions?.map((impression: any) => ({
+        id: impression.id,
+        ticketType: impression.ticketType,
+        impressionTime: impression.impressionTime,
+        user: impression.user ? {
+          id: impression.user.id,
+          firstName: impression.user.firstName || undefined,
+          lastName: impression.user.lastName || undefined,
+        } : undefined,
+        printer: impression.printer ? {
+          id: impression.printer.id,
+          name: impression.printer.name,
+        } : undefined,
+      })) || undefined,
+    };
   }
 
   private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
@@ -2542,5 +2726,178 @@ export class OrdersService {
       case OrderType.DINE_IN: return 'MESA';
       default: return orderType;
     }
+  }
+
+  /**
+   * Obtiene el resumen de ventas de un turno
+   */
+  async getShiftSalesSummary(shiftId: string): Promise<any> {
+    // Obtener información del turno
+    const shift = await this.shiftsService.getShiftSummary(shiftId);
+    if (!shift) {
+      throw new NotFoundException('Turno no encontrado');
+    }
+
+    // Obtener todas las órdenes del turno (optimizado para resumen)
+    const orders = await this.orderRepository.findByShiftIdForSummary(shiftId);
+    
+    // Filtrar solo órdenes completadas/cobradas
+    const completedOrders = orders.filter(
+      order => order.orderStatus === OrderStatus.COMPLETED || 
+               order.orderStatus === OrderStatus.DELIVERED
+    );
+    
+
+    // Estructura para acumular datos
+    const categoriesMap = new Map<string, {
+      categoryId: string;
+      categoryName: string;
+      quantity: number;
+      totalAmount: number;
+      subcategories: Map<string, {
+        subcategoryId: string;
+        subcategoryName: string;
+        quantity: number;
+        totalAmount: number;
+        products: Map<string, {
+          productId: string;
+          productName: string;
+          quantity: number;
+          totalAmount: number;
+        }>;
+      }>;
+    }>();
+
+    let totalQuantity = 0;
+    let totalSales = 0;
+    const productSalesMap = new Map<string, {
+      productId: string;
+      productName: string;
+      quantity: number;
+      totalAmount: number;
+    }>();
+
+    // Procesar cada orden
+    for (const order of completedOrders) {
+      if (!order.orderItems) continue;
+
+      for (const item of order.orderItems) {
+        const product = item.product;
+        if (!product || !product.subcategory) continue;
+
+        const subcategory = product.subcategory;
+        const category = subcategory.category;
+        if (!category) continue;
+
+        const quantity = 1;
+        const itemPrice = Number(item.finalPrice) || 0;
+        const amount = itemPrice;
+        
+        if (itemPrice === 0) continue;
+        
+        totalQuantity += quantity;
+        totalSales += amount;
+
+        // Actualizar categoría
+        if (!categoriesMap.has(category.id)) {
+          categoriesMap.set(category.id, {
+            categoryId: category.id,
+            categoryName: category.name,
+            quantity: 0,
+            totalAmount: 0,
+            subcategories: new Map(),
+          });
+        }
+        const categoryData = categoriesMap.get(category.id)!;
+        categoryData.quantity += quantity;
+        categoryData.totalAmount += amount;
+
+        // Actualizar subcategoría
+        if (!categoryData.subcategories.has(subcategory.id)) {
+          categoryData.subcategories.set(subcategory.id, {
+            subcategoryId: subcategory.id,
+            subcategoryName: subcategory.name,
+            quantity: 0,
+            totalAmount: 0,
+            products: new Map(),
+          });
+        }
+        const subcategoryData = categoryData.subcategories.get(subcategory.id)!;
+        subcategoryData.quantity += quantity;
+        subcategoryData.totalAmount += amount;
+
+        // Actualizar producto
+        const productKey = item.productVariant 
+          ? `${product.id}-${item.productVariant.id}`
+          : product.id;
+        const productName = item.productVariant
+          ? `${product.name} - ${item.productVariant.name}`
+          : product.name;
+
+        if (!subcategoryData.products.has(productKey)) {
+          subcategoryData.products.set(productKey, {
+            productId: productKey,
+            productName: productName,
+            quantity: 0,
+            totalAmount: 0,
+          });
+        }
+        const productData = subcategoryData.products.get(productKey)!;
+        productData.quantity += quantity;
+        productData.totalAmount += amount;
+
+        // Actualizar mapa de productos totales
+        if (!productSalesMap.has(productKey)) {
+          productSalesMap.set(productKey, {
+            productId: productKey,
+            productName: productName,
+            quantity: 0,
+            totalAmount: 0,
+          });
+        }
+        const totalProductData = productSalesMap.get(productKey)!;
+        totalProductData.quantity += quantity;
+        totalProductData.totalAmount += amount;
+      }
+    }
+
+    // Convertir mapas a arrays y calcular porcentajes
+    const categories = Array.from(categoriesMap.values()).map(cat => ({
+      ...cat,
+      percentage: totalSales > 0 ? (cat.totalAmount / totalSales) * 100 : 0,
+      subcategories: Array.from(cat.subcategories.values()).map(sub => ({
+        ...sub,
+        products: Array.from(sub.products.values())
+          .sort((a, b) => b.totalAmount - a.totalAmount)
+          .map(prod => ({
+            ...prod,
+            averagePrice: prod.quantity > 0 ? prod.totalAmount / prod.quantity : 0,
+          })),
+      })).sort((a, b) => b.totalAmount - a.totalAmount),
+    })).sort((a, b) => b.totalAmount - a.totalAmount);
+
+    // Top 10 productos más vendidos
+    const topProducts = Array.from(productSalesMap.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10)
+      .map(prod => ({
+        ...prod,
+        averagePrice: prod.quantity > 0 ? prod.totalAmount / prod.quantity : 0,
+      }));
+
+    
+    return {
+      shiftId: shift.id,
+      shiftNumber: shift.shiftNumber,
+      date: shift.date,
+      totalSales,
+      totalQuantity,
+      completedOrders: completedOrders.length,
+      averageTicket: completedOrders.length > 0 ? totalSales / completedOrders.length : 0,
+      categories,
+      topProducts,
+      startTime: shift.openedAt,
+      endTime: shift.closedAt,
+    };
   }
 }

@@ -123,25 +123,40 @@ const SubcategoriesScreen: React.FC = () => {
 
   // Efecto para cargar valores iniciales incluyendo la imagen
   useEffect(() => {
-    if (editingItem) {
-      setFormInitialValues({
-        name: editingItem.name,
-        description: editingItem.description ?? '',
-        isActive: editingItem.isActive,
-        categoryId: editingItem.categoryId,
-        sortOrder: editingItem.sortOrder ?? 0,
-        imageUri: editingItem.photo?.path || null,
-      });
-    } else {
-      setFormInitialValues({
-        name: '',
-        description: '',
-        isActive: true,
-        categoryId: categoryId,
-        sortOrder: 0,
-        imageUri: null,
-      });
-    }
+    const loadFormData = async () => {
+      if (editingItem) {
+        let imageUrl = null;
+        if (editingItem.photo?.path) {
+          try {
+            const { getImageUrl } = await import('@/app/lib/imageUtils');
+            imageUrl = await getImageUrl(editingItem.photo.path);
+          } catch (error) {
+            console.error('Error al obtener URL de imagen:', error);
+            imageUrl = editingItem.photo.path;
+          }
+        }
+        
+        setFormInitialValues({
+          name: editingItem.name,
+          description: editingItem.description ?? '',
+          isActive: editingItem.isActive,
+          categoryId: editingItem.categoryId,
+          sortOrder: editingItem.sortOrder ?? 0,
+          imageUri: imageUrl,
+        });
+      } else {
+        setFormInitialValues({
+          name: '',
+          description: '',
+          isActive: true,
+          categoryId: categoryId,
+          sortOrder: 0,
+          imageUri: null,
+        });
+      }
+    };
+    
+    loadFormData();
   }, [editingItem, categoryId]);
 
   useFocusEffect(

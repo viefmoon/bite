@@ -61,6 +61,7 @@ interface GenericListProps<TItem extends { id: string }> {
   ListEmptyComponent: React.ComponentType<any> | React.ReactElement | null;
   isLoading?: boolean;
   listItemStyle?: StyleProp<ViewStyle>;
+  listItemContentStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ViewStyle>;
   itemActionsContainerStyle?: StyleProp<ViewStyle>;
@@ -94,21 +95,21 @@ const getStyles = (
   theme: AppTheme,
   responsive: ReturnType<typeof useResponsive>,
 ) => {
-  const listItemHorizontalMargin = responsive.spacing.m;
+  const listItemHorizontalMargin = responsive.spacing(theme.spacing.m);
   return StyleSheet.create({
     listContainer: {
       flex: 1,
     },
     searchbarContainer: {
-      paddingHorizontal: listItemHorizontalMargin - responsive.spacing.xs,
-      paddingTop: responsive.spacing.xs,
-      paddingBottom: responsive.spacing.xxs,
+      paddingHorizontal: listItemHorizontalMargin - responsive.spacing(theme.spacing.xs),
+      paddingTop: responsive.spacing(theme.spacing.xs),
+      paddingBottom: responsive.spacing(theme.spacing.s),
       backgroundColor: theme.colors.background,
     },
     searchRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: responsive.spacing.s,
+      gap: responsive.spacing(theme.spacing.s),
     },
     searchbar: {
       flex: 1,
@@ -132,12 +133,12 @@ const getStyles = (
     },
     menuContent: {
       backgroundColor: theme.colors.elevation.level3,
-      marginTop: responsive.spacing.xs,
+      marginTop: responsive.spacing(theme.spacing.xs),
     },
     listItem: {
       backgroundColor: theme.colors.surface,
-      marginVertical: responsive.spacing.xxs,
-      marginHorizontal: responsive.spacing.m,
+      marginVertical: responsive.isTablet ? responsive.spacing(3) : responsive.spacing(4),
+      marginHorizontal: responsive.isTablet ? responsive.spacing(theme.spacing.s) : responsive.spacing(theme.spacing.m),
       borderRadius: theme.roundness * 1.5,
       elevation: 1,
       overflow: 'hidden',
@@ -145,40 +146,40 @@ const getStyles = (
     gridListItem: {
       backgroundColor: theme.colors.surface,
       flex: 1,
-      marginHorizontal: responsive.spacing.xs,
-      marginVertical: responsive.spacing.xs,
+      marginHorizontal: responsive.spacing(theme.spacing.xs),
+      marginVertical: responsive.spacing(theme.spacing.xs),
       borderRadius: theme.roundness * 2,
       elevation: 2,
       overflow: 'hidden',
     },
     listItemContent: {
-      paddingVertical: responsive.spacing.s,
-      paddingHorizontal: responsive.spacing.xs,
-      minHeight: responsive.isTablet ? 64 : 56,
+      paddingVertical: responsive.isTablet ? 4 : responsive.spacing(theme.spacing.s),
+      paddingHorizontal: responsive.spacing(theme.spacing.xs),
+      minHeight: responsive.isTablet ? 40 : 56,
       flexWrap: 'wrap',
       alignItems: 'flex-start',
     },
     listItemImage: {
-      width: responsive.isTablet ? 44 : 40,
-      height: responsive.isTablet ? 44 : 40,
+      width: responsive.isTablet ? 36 : 40,
+      height: responsive.isTablet ? 36 : 40,
       borderRadius: theme.roundness,
-      marginLeft: responsive.spacing.xs,
-      marginRight: responsive.spacing.s,
+      marginLeft: responsive.spacing(theme.spacing.xs),
+      marginRight: responsive.isTablet ? responsive.spacing(theme.spacing.xs) : responsive.spacing(theme.spacing.s),
       backgroundColor: theme.colors.surfaceDisabled,
     },
     gridItemImage: {
       width: responsive.scaleWidth(64),
       height: responsive.scaleWidth(64),
       borderRadius: theme.roundness,
-      marginLeft: responsive.spacing.s,
-      marginRight: responsive.spacing.m,
+      marginLeft: responsive.spacing(theme.spacing.s),
+      marginRight: responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceDisabled,
     },
     statusChip: {
       borderRadius: theme.roundness * 1.5,
       height: responsive.isTablet ? 32 : 28,
       alignSelf: 'center',
-      paddingHorizontal: responsive.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.s),
     },
     title: {
       fontWeight: '600',
@@ -195,21 +196,21 @@ const getStyles = (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: responsive.spacing.l,
+      padding: responsive.spacing(theme.spacing.l),
     },
     defaultContentContainer: {
       paddingBottom: 80,
-      paddingTop: responsive.spacing.xxs,
+      paddingTop: responsive.spacing(theme.spacing.xs),
     },
     itemActionsContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingLeft: responsive.spacing.xs,
+      paddingLeft: responsive.spacing(theme.spacing.xs),
     },
     filtersOuterContainer: {
-      paddingTop: responsive.spacing.s,
-      paddingBottom: responsive.spacing.xs,
-      paddingHorizontal: responsive.spacing.xs,
+      paddingTop: responsive.spacing(theme.spacing.s),
+      paddingBottom: responsive.spacing(theme.spacing.xs),
+      paddingHorizontal: responsive.spacing(theme.spacing.xs),
       backgroundColor: theme.colors.background,
     },
     segmentedButtons: {
@@ -219,12 +220,12 @@ const getStyles = (
     },
     filterButton: {
       borderWidth: 0,
-      paddingVertical: responsive.spacing.xs,
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     filterButtonLabel: {
       fontSize: 15,
       letterSpacing: 0.15,
-      paddingVertical: responsive.spacing.xs,
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     fab: {
       position: 'absolute',
@@ -243,6 +244,7 @@ const GenericList = <TItem extends { id: string }>({
   isRefreshing,
   ListEmptyComponent,
   listItemStyle,
+  listItemContentStyle,
   contentContainerStyle,
   imageStyle,
   renderItemActions,
@@ -331,8 +333,8 @@ const GenericList = <TItem extends { id: string }>({
     if (!enableGrid) return 1;
 
     if (minItemWidth) {
-      const gap = itemSpacing || responsive.spacing.m;
-      const padding = responsive.spacing.m;
+      const gap = itemSpacing || responsive.spacing(theme.spacing.m);
+      const padding = responsive.spacing(theme.spacing.m);
       return responsive.getGridColumns(minItemWidth, gap, padding);
     }
 
@@ -560,7 +562,7 @@ const GenericList = <TItem extends { id: string }>({
               </View>
             )}
             onPress={() => onItemPress(item)}
-            style={styles.listItemContent}
+            style={[styles.listItemContent, listItemContentStyle]}
           />
         </Surface>
       );
@@ -571,6 +573,7 @@ const GenericList = <TItem extends { id: string }>({
       onItemPress,
       styles,
       listItemStyle,
+      listItemContentStyle,
       imageStyle,
       renderItemActions,
       itemActionsContainerStyle,
@@ -694,7 +697,7 @@ const GenericList = <TItem extends { id: string }>({
         ItemSeparatorComponent={
           enableGrid && numColumns > 1
             ? () => (
-                <View style={{ height: itemSpacing || responsive.spacing.m }} />
+                <View style={{ height: itemSpacing || responsive.spacing(theme.spacing.m) }} />
               )
             : undefined
         }

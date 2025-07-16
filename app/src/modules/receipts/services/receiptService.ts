@@ -6,7 +6,6 @@ import type { Receipt, ReceiptList, ReceiptsListResponse, ReceiptFilters } from 
 import type { Order } from '@/modules/orders/types/orders.types';
 
 export const receiptService = {
-  // Obtener lista optimizada de recibos del turno actual
   getReceiptsList: async (
     params: ReceiptFilters = {},
   ): Promise<ReceiptsListResponse> => {
@@ -14,7 +13,6 @@ export const receiptService = {
 
     const queryParams: Record<string, any> = {};
 
-    // Agregar filtros opcionales
     if (startDate) {
       queryParams.startDate = startDate;
     }
@@ -31,44 +29,29 @@ export const receiptService = {
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        '[receiptService.getReceipts] Failed to fetch receipts:',
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
-    // El nuevo endpoint devuelve un array directo
     return response.data;
   },
 
-  // Obtener detalles de un recibo específico
-  getReceiptById: async (id: string): Promise<Order> => {
-    const response = await apiClient.get<Order>(`${API_PATHS.ORDERS}/${id}`);
+  getReceiptById: async (id: string): Promise<Receipt> => {
+    const response = await apiClient.get<Receipt>(`${API_PATHS.ORDERS}/receipts/${id}`);
 
     if (!response.ok || !response.data) {
-      console.error(
-        '[receiptService.getReceiptById] Failed to fetch receipt:',
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
     return response.data;
   },
 
-  // Recuperar una orden completada o cancelada
   recoverOrder: async (id: string): Promise<Order> => {
     const response = await apiClient.post<Order>(
       `${API_PATHS.ORDERS}/${id}/recover`,
-      {}, // Body vacío ya que no necesitamos parámetros
+      {},
     );
 
     if (!response.ok || !response.data) {
-      console.error(
-        '[receiptService.recoverOrder] Failed to recover order:',
-        response,
-      );
       throw ApiError.fromApiResponse(response.data, response.status);
     }
 
@@ -76,7 +59,6 @@ export const receiptService = {
   },
 };
 
-// Query options para React Query
 export const receiptQueryOptions = {
   receipts: (
     params: ReceiptFilters = {},
@@ -87,7 +69,7 @@ export const receiptQueryOptions = {
     refetchOnMount: true,
   }),
 
-  receipt: (id: string): QueryOptions<Order, Error> => ({
+  receipt: (id: string): QueryOptions<Receipt, Error> => ({
     queryKey: ['receipt', id],
     queryFn: () => receiptService.getReceiptById(id),
   }),

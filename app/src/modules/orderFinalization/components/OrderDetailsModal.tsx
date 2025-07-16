@@ -14,7 +14,8 @@ import {
   OrderForFinalization,
   OrderItemForFinalization,
 } from '../types/orderFinalization.types';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import {
   CustomizationType,
   PizzaHalf,
@@ -127,6 +128,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onPrintPress,
 }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const [showPrintHistory, setShowPrintHistory] = useState(false);
 
   if (!order && !isLoading) return null;
@@ -456,7 +459,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               </View>
             </View>
 
-            <View style={styles.infoSection}>
+            <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              <View style={styles.infoSection}>
               {order?.deliveryInfo?.recipientName && (
                 <View style={styles.infoRow}>
                   <Text
@@ -526,24 +534,19 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   </Text>
                 </View>
               )}
-            </View>
+              </View>
 
-            <Divider style={styles.divider} />
+              <Divider style={styles.divider} />
 
-            <ScrollView
-              style={styles.scrollView}
-              showsVerticalScrollIndicator={false}
-            >
               <View style={styles.itemsList}>
                 {order?.orderItems?.map((item) => renderItem(item)) || []}
               </View>
-            </ScrollView>
 
-            <Divider style={styles.divider} />
+              <Divider style={styles.divider} />
 
-            {order?.payments && order.payments.length > 0 && (
-              <>
-                <View style={styles.paymentsSection}>
+              {order?.payments && order.payments.length > 0 && (
+                <>
+                  <View style={styles.paymentsSection}>
                   <View style={styles.paymentSummaryCompact}>
                     <View style={styles.summaryCompactRow}>
                       <Text
@@ -707,14 +710,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       </View>
                     );
                   })}
-                </View>
-                <Divider style={styles.divider} />
-              </>
-            )}
+                  </View>
+                  <Divider style={styles.divider} />
+                </>
+              )}
 
-            {order?.ticketImpressions && order.ticketImpressions.length > 0 && (
-              <>
-                <View style={styles.ticketImpressionsSection}>
+              {order?.ticketImpressions && order.ticketImpressions.length > 0 && (
+                <>
+                  <View style={styles.ticketImpressionsSection}>
                   <TouchableOpacity
                     style={styles.collapsibleHeader}
                     onPress={() => setShowPrintHistory(!showPrintHistory)}
@@ -811,10 +814,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       })}
                     </View>
                   )}
-                </View>
-                <Divider style={styles.divider} />
-              </>
-            )}
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <Divider style={styles.divider} />
 
             <View style={styles.footer}>
               <View style={styles.footerLeft}>
@@ -879,7 +884,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+  StyleSheet.create({
   modalContent: {
     margin: 12,
     borderRadius: 12,
@@ -917,15 +923,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   headerSeparator: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     marginHorizontal: 6,
   },
   orderType: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '600',
   },
   headerDate: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
   },
   infoSection: {
     paddingHorizontal: 16,
@@ -937,20 +943,20 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   contactText: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
   },
   addressText: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     lineHeight: 16,
   },
   tableText: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
   },
   screenChip: {
     height: 20,
   },
   screenChipText: {
-    fontSize: 10,
+    fontSize: responsive.fontSize(10),
     marginVertical: -2,
   },
   paymentBadge: {
@@ -960,11 +966,11 @@ const styles = StyleSheet.create({
   },
   paymentBadgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '600',
   },
   totalAmount: {
-    fontSize: 16,
+    fontSize: responsive.fontSize(16),
     fontWeight: '700',
   },
   footer: {
@@ -975,6 +981,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'inherit',
   },
   footerLeft: {
     flexDirection: 'row',
@@ -982,7 +989,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   totalLabel: {
-    fontSize: 14,
+    fontSize: responsive.fontSize(14),
     fontWeight: '600',
   },
   divider: {
@@ -994,6 +1001,7 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
   headerStatusChip: {
     paddingHorizontal: 8,
@@ -1002,16 +1010,20 @@ const styles = StyleSheet.create({
   },
   headerStatusChipText: {
     color: 'white',
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     fontWeight: '600',
   },
   title: {
-    fontSize: 20,
+    fontSize: responsive.fontSize(20),
     fontWeight: '700',
   },
   scrollView: {
     flexGrow: 0,
     flexShrink: 1,
+    maxHeight: '70%',
+  },
+  scrollContent: {
+    paddingBottom: 8,
   },
   itemsList: {
     padding: 12,
@@ -1037,12 +1049,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   itemQuantity: {
-    fontSize: 14,
+    fontSize: responsive.fontSize(14),
     fontWeight: '700',
     marginRight: 6,
   },
   itemName: {
-    fontSize: 13,
+    fontSize: responsive.fontSize(13),
     fontWeight: '600',
     flex: 1,
     lineHeight: 16,
@@ -1054,7 +1066,7 @@ const styles = StyleSheet.create({
   },
   statusChipText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: responsive.fontSize(10),
     fontWeight: '600',
   },
   itemDetailsContainer: {
@@ -1064,7 +1076,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   pizzaCustomizationText: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     fontStyle: 'italic',
     lineHeight: 14,
   },
@@ -1078,12 +1090,12 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   modifierText: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     flex: 1,
     lineHeight: 14,
   },
   modifierPrice: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     fontWeight: '500',
     marginLeft: 4,
   },
@@ -1094,7 +1106,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(0,0,0,0.06)',
   },
   notesText: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     fontStyle: 'italic',
     lineHeight: 14,
   },
@@ -1111,15 +1123,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   priceLabel: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     opacity: 0.7,
   },
   priceValue: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '600',
   },
   totalPrice: {
-    fontSize: 14,
+    fontSize: responsive.fontSize(14),
     fontWeight: '700',
   },
   paymentsSection: {
@@ -1135,7 +1147,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryCompactLabel: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '500',
   },
   paymentRowCompact: {
@@ -1145,15 +1157,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   paymentMethodCompact: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     fontWeight: '500',
     flex: 1,
   },
   paymentDateCompact: {
-    fontSize: 10,
+    fontSize: responsive.fontSize(10),
   },
   paymentAmountCompact: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '600',
     minWidth: 50,
     textAlign: 'right',
@@ -1164,7 +1176,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   paymentStatusTextCompact: {
-    fontSize: 9,
+    fontSize: responsive.fontSize(9),
     fontWeight: '600',
   },
   ticketImpressionsSection: {
@@ -1184,7 +1196,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: responsive.fontSize(14),
     fontWeight: '600',
     marginBottom: 0,
   },
@@ -1200,23 +1212,23 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   impressionType: {
-    fontSize: 12,
+    fontSize: responsive.fontSize(12),
     fontWeight: '500',
   },
   impressionDetails: {
     gap: 2,
   },
   impressionUser: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     opacity: 0.7,
   },
   impressionPrinter: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     opacity: 0.7,
     fontStyle: 'italic',
   },
   impressionTime: {
-    fontSize: 11,
+    fontSize: responsive.fontSize(11),
     opacity: 0.7,
   },
   loadingContainer: {
@@ -1227,6 +1239,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 14,
+    fontSize: responsive.fontSize(14),
   },
 });
+
+export default OrderDetailsModal;

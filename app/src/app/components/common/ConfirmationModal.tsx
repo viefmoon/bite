@@ -1,6 +1,7 @@
 import React from 'react';
 import { Portal, Dialog, Paragraph, Button } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { StyleSheet } from 'react-native';
 
 interface ConfirmationModalProps {
@@ -27,6 +28,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmButtonColor,
 }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
 
   const styles = React.useMemo(
     () =>
@@ -51,15 +53,15 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         },
         button: {
           flex: 1,
-          minHeight: 48,
+          minHeight: responsive.isTablet ? 38 : 44,
         },
         buttonContent: {
-          minHeight: 48,
-          paddingHorizontal: 12,
+          minHeight: responsive.isTablet ? 38 : 44,
+          paddingHorizontal: responsive.spacing.s,
         },
         buttonLabel: {
-          fontSize: 13,
-          lineHeight: 18,
+          fontSize: responsive.isTablet ? 12 : 13,
+          lineHeight: responsive.isTablet ? 16 : 18,
           textAlign: 'center',
         },
         cancelButton: {
@@ -67,7 +69,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         },
         confirmButton: {},
       }),
-    [theme],
+    [theme, responsive],
   );
 
   return (

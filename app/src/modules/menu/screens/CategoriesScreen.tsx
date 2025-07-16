@@ -231,23 +231,38 @@ const CategoriesScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    if (editingCategory) {
-      setFormInitialValues({
-        name: editingCategory.name,
-        description: editingCategory.description ?? null,
-        isActive: editingCategory.isActive,
-        sortOrder: editingCategory.sortOrder ?? 0,
-        imageUri: editingCategory.photo?.path || null,
-      });
-    } else {
-      setFormInitialValues({
-        name: '',
-        description: null,
-        isActive: true,
-        sortOrder: 0,
-        imageUri: null,
-      });
-    }
+    const loadFormData = async () => {
+      if (editingCategory) {
+        let imageUrl = null;
+        if (editingCategory.photo?.path) {
+          try {
+            const { getImageUrl } = await import('@/app/lib/imageUtils');
+            imageUrl = await getImageUrl(editingCategory.photo.path);
+          } catch (error) {
+            console.error('Error al obtener URL de imagen:', error);
+            imageUrl = editingCategory.photo.path;
+          }
+        }
+        
+        setFormInitialValues({
+          name: editingCategory.name,
+          description: editingCategory.description ?? null,
+          isActive: editingCategory.isActive,
+          sortOrder: editingCategory.sortOrder ?? 0,
+          imageUri: imageUrl,
+        });
+      } else {
+        setFormInitialValues({
+          name: '',
+          description: null,
+          isActive: true,
+          sortOrder: 0,
+          imageUri: null,
+        });
+      }
+    };
+    
+    loadFormData();
   }, [editingCategory]);
 
   const selectedCategoryMapped = useMemo(() => {

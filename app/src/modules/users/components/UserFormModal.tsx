@@ -19,6 +19,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useCreateUser, useUpdateUser } from '../hooks';
 import type { User } from '../types';
 
@@ -81,7 +82,8 @@ export function UserFormModal({
   user,
 }: UserFormModalProps) {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = getStyles(theme, responsive);
   const [showPassword, setShowPassword] = useState(false);
 
   const createUserMutation = useCreateUser();
@@ -863,15 +865,19 @@ export function UserFormModal({
   );
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     modalContainer: {
-      margin: 20,
+      margin: responsive.isTablet ? 30 : 20,
+      maxWidth: responsive.isTablet ? 650 : '100%',
+      alignSelf: 'center',
+      width: responsive.isTablet ? '85%' : '100%',
     },
     modalContent: {
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
-      maxHeight: '90%',
+      maxHeight: responsive.isTablet ? '90%' : '90%',
+      minHeight: responsive.isTablet ? 600 : 400,
       overflow: 'hidden',
     },
     headerContainer: {
@@ -898,9 +904,10 @@ const getStyles = (theme: AppTheme) =>
       fontWeight: '700',
     },
     formContainer: {
-      maxHeight: 500,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.s,
+      flex: 1,
+      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.m,
+      paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      paddingBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.s,
     },
     sectionContainer: {
       marginBottom: theme.spacing.s,

@@ -102,4 +102,101 @@ export class CategoriesRelationalRepository extends BaseRelationalRepository<
 
     return domainResults;
   }
+
+  // Método para obtener el menú usado en la creación de órdenes
+  async findOrderMenu(): Promise<Category[]> {
+    const queryBuilder = this.ormRepo
+      .createQueryBuilder('category')
+      .select([
+        // Categorías - solo campos necesarios
+        'category.id',
+        'category.name',
+        'category.isActive',
+        'category.sortOrder',
+      ])
+      // Subcategorías
+      .leftJoin('category.subcategories', 'subcategory')
+      .addSelect([
+        'subcategory.id',
+        'subcategory.name',
+        'subcategory.isActive',
+        'subcategory.sortOrder',
+      ])
+      // Productos
+      .leftJoin('subcategory.products', 'product')
+      .addSelect([
+        'product.id',
+        'product.name',
+        'product.price',
+        'product.description',
+        'product.hasVariants',
+        'product.isActive',
+        'product.isPizza',
+        'product.preparationScreenId',
+        'product.sortOrder',
+      ])
+      // Variantes
+      .leftJoin('product.variants', 'productVariant')
+      .addSelect([
+        'productVariant.id',
+        'productVariant.name',
+        'productVariant.price',
+        'productVariant.isActive',
+        'productVariant.sortOrder',
+      ])
+      // Grupos de modificadores
+      .leftJoin('product.modifierGroups', 'modifierGroup')
+      .addSelect([
+        'modifierGroup.id',
+        'modifierGroup.name',
+        'modifierGroup.description',
+        'modifierGroup.minSelections',
+        'modifierGroup.maxSelections',
+        'modifierGroup.isRequired',
+        'modifierGroup.allowMultipleSelections',
+        'modifierGroup.sortOrder',
+      ])
+      // Modificadores
+      .leftJoin('modifierGroup.productModifiers', 'modifier')
+      .addSelect([
+        'modifier.id',
+        'modifier.name',
+        'modifier.price',
+        'modifier.isDefault',
+        'modifier.isActive',
+        'modifier.sortOrder',
+      ])
+      // Pizza customizations (solo si es pizza)
+      .leftJoinAndSelect('product.pizzaCustomizations', 'pizzaCustomization')
+      // Pizza configuration (solo si es pizza)
+      .leftJoinAndSelect('product.pizzaConfiguration', 'pizzaConfiguration')
+      // Fotos - solo la ruta
+      .leftJoin('category.photo', 'categoryPhoto')
+      .addSelect(['categoryPhoto.path'])
+      .leftJoin('subcategory.photo', 'subcategoryPhoto')
+      .addSelect(['subcategoryPhoto.path'])
+      .leftJoin('product.photo', 'productPhoto')
+      .addSelect(['productPhoto.path'])
+      // Ordenamiento
+      .orderBy('category.sortOrder', 'ASC')
+      .addOrderBy('category.name', 'ASC')
+      .addOrderBy('subcategory.sortOrder', 'ASC')
+      .addOrderBy('subcategory.name', 'ASC')
+      .addOrderBy('product.sortOrder', 'ASC')
+      .addOrderBy('product.name', 'ASC')
+      .addOrderBy('productVariant.sortOrder', 'ASC')
+      .addOrderBy('productVariant.name', 'ASC')
+      .addOrderBy('modifierGroup.sortOrder', 'ASC')
+      .addOrderBy('modifierGroup.name', 'ASC')
+      .addOrderBy('modifier.sortOrder', 'ASC')
+      .addOrderBy('modifier.name', 'ASC');
+
+    const entities = await queryBuilder.getMany();
+
+    const domainResults = entities
+      .map((entity) => this.mapper.toDomain(entity))
+      .filter((item): item is Category => item !== null);
+
+    return domainResults;
+  }
 }

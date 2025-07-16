@@ -5,8 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import { StyleSheet, View, FlatList } from 'react-native';
 import {
   Text,
   Portal,
@@ -18,7 +17,7 @@ import {
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useGetFullMenu } from '../hooks/useMenuQueries';
+import { useGetOrderMenu } from '../hooks/useMenuQueries';
 import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries';
 import { useCart, CartProvider, CartItem } from '../context/CartContext';
 import { CartItemModifier } from '../context/CartContext';
@@ -108,30 +107,45 @@ const CreateOrderScreen = () => {
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | undefined>();
 
-  const { data: menu, isLoading } = useGetFullMenu();
+  const { data: menu, isLoading } = useGetOrderMenu();
 
-  // Calcular número de columnas para el grid
+  // Calcular número de columnas dinámicamente
   const numColumns = useMemo(() => {
-    const minItemWidth = 150; // Ancho mínimo de cada tarjeta
-    return responsive.getGridColumns(
-      minItemWidth,
-      responsive.spacing.xs * 2,
-      responsive.spacing.m,
-    );
-  }, [responsive]);
+    // Para tablets (ancho >= 600px)
+    if (responsive.width >= 600) {
+      if (responsive.width >= 1200) return 6; // Tablets muy grandes
+      if (responsive.width >= 900) return 5;   // Tablets grandes
+      if (responsive.width >= 768) return 4;   // Tablets medianas
+      return 3; // Tablets pequeñas (600-768px)
+    }
+    // Para móviles (ancho < 600px)
+    if (responsive.width >= 480) return 3; // Móviles grandes
+    if (responsive.width >= 360) return 2; // Móviles estándar
+    return 2; // Móviles pequeños
+  }, [responsive.width]);
 
-  const handleCategorySelect = (categoryId: string) => {
+  // Calcular ancho de items basado en columnas
+  const itemWidth = useMemo(() => {
+    const padding = responsive.spacing(theme.spacing.m);
+    const totalPadding = padding * 2;
+    const gap = responsive.spacing(8);
+    const totalGaps = gap * (numColumns - 1);
+    const availableWidth = responsive.width - totalPadding - totalGaps;
+    return Math.floor(availableWidth / numColumns);
+  }, [responsive.width, numColumns, theme.spacing.m, responsive]);
+
+  const handleCategorySelect = useCallback((categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(null);
     setNavigationLevel('subcategories');
-  };
+  }, []);
 
-  const handleSubCategorySelect = (subcategoryId: string) => {
+  const handleSubCategorySelect = useCallback((subcategoryId: string) => {
     setSelectedSubcategoryId(subcategoryId);
     setNavigationLevel('products');
-  };
+  }, []);
 
-  const productNeedsCustomization = (product: Product): boolean => {
+  const productNeedsCustomization = useCallback((product: Product): boolean => {
     if (!product) return false;
     const hasVariants =
       product.hasVariants &&
@@ -143,15 +157,15 @@ const CreateOrderScreen = () => {
       Array.isArray(product.modifierGroups) &&
       product.modifierGroups.length > 0;
     return hasVariants || hasModifiers;
-  };
+  }, []);
 
-  const handleProductSelect = (product: Product) => {
+  const handleProductSelect = useCallback((product: Product) => {
     if (productNeedsCustomization(product)) {
       setSelectedProduct(product);
     } else {
       handleAddItem(product, 1);
     }
-  };
+  }, [handleAddItem]);
 
   const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);
@@ -534,37 +548,46 @@ const CreateOrderScreen = () => {
           flex: 1,
         },
         gridContainer: {
-          padding: responsive.spacing.m,
+          padding: responsive.spacing(theme.spacing.m),
           paddingBottom: 60,
         },
         row: {
           justifyContent: 'flex-start',
+          paddingHorizontal: 0,
+          marginBottom: responsive.spacing(8),
+          gap: responsive.spacing(8),
         },
         cardItem: {
-          flex: 1,
-          marginHorizontal: responsive.spacing.xs,
-          marginVertical: responsive.spacing.xs,
+          width: itemWidth,
+          marginHorizontal: 0,
+          marginVertical: 0,
           overflow: 'hidden',
-          borderRadius: theme.roundness,
+          borderRadius: theme.roundness * 2,
           elevation: 2,
+          backgroundColor: colors.surface,
+          aspectRatio: 0.85,
         },
         cardItemInactive: {
           opacity: 0.5,
         },
         itemImage: {
           width: '100%',
-          height: responsive.getResponsiveDimension(100, 140),
+          height: itemWidth * 0.65,
         },
         imageInactive: {
           opacity: 0.6,
         },
         cardContent: {
-          padding: responsive.spacing.m,
+          paddingHorizontal: responsive.spacing(theme.spacing.s),
+          paddingVertical: responsive.spacing(theme.spacing.xs),
+          height: itemWidth * 0.35,
+          justifyContent: 'center',
         },
         cardTitle: {
-          fontSize: responsive.fontSize.m,
+          fontSize: responsive.fontSize(responsive.width >= 600 ? 16 : 15),
           fontWeight: '600',
-          marginBottom: responsive.spacing.xs,
+          lineHeight: responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
+          marginBottom: responsive.spacing(2),
         },
         cardHeader: {
           flexDirection: 'row',
@@ -577,9 +600,10 @@ const CreateOrderScreen = () => {
           marginRight: -12,
         },
         priceText: {
-          color: '#2e7d32',
-          fontWeight: 'bold',
-          marginTop: 4,
+          color: theme.colors.primary,
+          fontWeight: '600',
+          fontSize: responsive.fontSize(responsive.width >= 600 ? 14 : 13),
+          marginTop: 2,
         },
         noItemsText: {
           textAlign: 'center',
@@ -640,7 +664,7 @@ const CreateOrderScreen = () => {
           lineHeight: 24,
         },
       }),
-    [colors, fonts],
+    [colors, fonts, theme, responsive, itemWidth],
   );
 
   const handleConfirmExit = () => {
@@ -677,41 +701,14 @@ const CreateOrderScreen = () => {
     setSelectedProductForDescription(null);
   };
 
-  const renderContent = () => {
-    if (isCartVisible) {
-      return (
-        <SafeAreaView
-          style={styles.safeArea}
-          edges={['left', 'right', 'bottom']}
-        >
-          <Appbar.Header style={styles.appBar}>
-            <Appbar.BackAction onPress={handleCloseCart} />
-            <Appbar.Content
-              title="Carrito de Compras"
-              titleStyle={styles.appBarTitle}
-              style={styles.appBarContent}
-            />
-            <View style={styles.spacer} />
-          </Appbar.Header>
-          <OrderCartDetail
-            visible={isCartVisible}
-            onClose={handleCloseCart}
-            onConfirmOrder={handleConfirmOrder}
-            onEditItem={handleEditItem}
-            isEditMode={false}
-          />
-        </SafeAreaView>
-      );
-    }
+  const blurhash =
+    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-    const blurhash =
-      '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
-
-    const renderItem = ({
-      item,
-    }: {
-      item: Category | SubCategory | Product;
-    }) => {
+  const renderItem = useCallback(({
+    item,
+  }: {
+    item: Category | SubCategory | Product;
+  }) => {
       const imageSource = item.photo ? item.photo.path : null;
       const isActive = item.isActive !== false; // Por defecto true si no existe la propiedad
 
@@ -791,7 +788,7 @@ const CreateOrderScreen = () => {
             'price' in item &&
             (item as Product).description ? (
               <View style={styles.cardHeader}>
-                <Title style={[styles.cardTitle, { flex: 1 }]}>
+                <Title style={[styles.cardTitle, { flex: 1 }]} numberOfLines={2} ellipsizeMode="tail">
                   {item.name}
                 </Title>
                 <IconButton
@@ -802,15 +799,15 @@ const CreateOrderScreen = () => {
                 />
               </View>
             ) : (
-              <Title style={styles.cardTitle}>{item.name}</Title>
+              <Title style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">{item.name}</Title>
             )}
             {renderPrice()}
           </View>
         </Card>
       );
-    };
+  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect, handleShowProductDescription, styles, blurhash]);
 
-    const getItemsToDisplay = () => {
+  const getItemsToDisplay = () => {
       switch (navigationLevel) {
         case 'categories':
           return getCategories();
@@ -823,14 +820,41 @@ const CreateOrderScreen = () => {
       }
     };
 
-    const itemsToDisplay = getItemsToDisplay();
-    const showCartButton = !isCartVisible && !selectedProduct;
+  const itemsToDisplay = getItemsToDisplay();
+  const showCartButton = !isCartVisible && !selectedProduct;
 
-    const backAction = selectedProduct
-      ? handleCloseProductModal
-      : navigationLevel === 'categories'
-        ? () => handleAttemptExit(() => navigation.goBack())
-        : handleGoBackInternal;
+  const backAction = selectedProduct
+    ? handleCloseProductModal
+    : navigationLevel === 'categories'
+      ? () => handleAttemptExit(() => navigation.goBack())
+      : handleGoBackInternal;
+
+  const renderContent = () => {
+    if (isCartVisible) {
+      return (
+        <SafeAreaView
+          style={styles.safeArea}
+          edges={['left', 'right', 'bottom']}
+        >
+          <Appbar.Header style={styles.appBar}>
+            <Appbar.BackAction onPress={handleCloseCart} />
+            <Appbar.Content
+              title="Carrito de Compras"
+              titleStyle={styles.appBarTitle}
+              style={styles.appBarContent}
+            />
+            <View style={styles.spacer} />
+          </Appbar.Header>
+          <OrderCartDetail
+            visible={isCartVisible}
+            onClose={handleCloseCart}
+            onConfirmOrder={handleConfirmOrder}
+            onEditItem={handleEditItem}
+            isEditMode={false}
+          />
+        </SafeAreaView>
+      );
+    }
 
     // Verificar turno antes de renderizar
     if (!shiftLoading && (!shift || shift.status !== 'OPEN')) {
@@ -893,18 +917,15 @@ const CreateOrderScreen = () => {
               <Text>Cargando...</Text>
             </View>
           ) : itemsToDisplay.length > 0 ? (
-            <FlashList
+            <FlatList
               data={itemsToDisplay}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.gridContainer}
               numColumns={numColumns}
-              estimatedItemSize={200}
-              initialNumToRender={6}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              removeClippedSubviews={true}
-              key={`grid-${numColumns}`} // Key para forzar re-render cuando cambian las columnas
+              key={numColumns}
+              contentContainerStyle={styles.gridContainer}
+              columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
+              showsVerticalScrollIndicator={false}
             />
           ) : (
             <Text style={styles.noItemsText}>
@@ -968,6 +989,7 @@ const CreateOrderScreen = () => {
       </SafeAreaView>
     );
   };
+  
   return renderContent();
 };
 

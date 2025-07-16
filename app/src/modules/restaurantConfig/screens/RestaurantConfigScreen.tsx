@@ -21,6 +21,7 @@ import {
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries';
 import {
   UpdateRestaurantConfigDto,
@@ -39,11 +40,12 @@ type TabType = 'basic' | 'operation' | 'schedule';
 
 const RestaurantConfigScreen: React.FC = () => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const { width, height } = useWindowDimensions();
   const navigation = useNavigation();
   const styles = React.useMemo(
-    () => createStyles(theme, width, height),
-    [theme, width, height],
+    () => createStyles(theme, responsive, width, height),
+    [theme, responsive, width, height],
   );
 
   const { useGetConfig, useUpdateConfig } = useRestaurantConfigQueries();
@@ -1138,19 +1140,19 @@ const RestaurantConfigScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: AppTheme, width: number, height: number) =>
+const createStyles = (theme: AppTheme, responsive: any, width: number, height: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
     scrollContent: {
-      paddingBottom: theme.spacing.xl,
+      paddingBottom: responsive.spacing(theme.spacing.xl),
     },
     deliveryContent: {
       flex: 1,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.m),
     },
     loadingContainer: {
       flex: 1,
@@ -1161,10 +1163,10 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.xl,
+      padding: responsive.spacing(theme.spacing.xl),
     },
     errorText: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       color: theme.colors.error,
       textAlign: 'center',
     },
@@ -1177,22 +1179,22 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     tabsContainer: {
       flexDirection: 'row',
-      height: 48,
+      height: responsive.scaleHeight(48),
     },
     tab: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.m,
-      gap: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      gap: responsive.spacing(theme.spacing.xs),
     },
     tabActive: {
       borderBottomWidth: 2,
       borderBottomColor: theme.colors.primary,
     },
     tabText: {
-      fontSize: 14,
+      fontSize: responsive.fontSize(14),
       fontWeight: '500',
       color: theme.colors.onSurfaceVariant,
     },
@@ -1201,32 +1203,32 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       fontWeight: '600',
     },
     tabContent: {
-      padding: theme.spacing.m,
-      gap: theme.spacing.m,
+      padding: responsive.spacing(theme.spacing.m),
+      gap: responsive.spacing(theme.spacing.m),
     },
     // Section styles
     section: {
       borderRadius: 16,
-      padding: theme.spacing.m,
+      padding: responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surface,
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: theme.spacing.m,
+      marginBottom: responsive.spacing(theme.spacing.m),
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: responsive.fontSize(18),
       fontWeight: '600',
       color: theme.colors.onSurface,
-      marginLeft: theme.spacing.s,
+      marginLeft: responsive.spacing(theme.spacing.s),
     },
     sectionContent: {
-      gap: theme.spacing.m,
+      gap: responsive.spacing(theme.spacing.m),
     },
     deliveryInfo: {
-      paddingHorizontal: theme.spacing.m,
-      marginBottom: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      marginBottom: responsive.spacing(theme.spacing.s),
     },
     // Input styles
     input: {
@@ -1237,7 +1239,7 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     row: {
       flexDirection: 'row',
-      gap: theme.spacing.s,
+      gap: responsive.spacing(theme.spacing.s),
     },
     halfInput: {
       flex: 1,
@@ -1250,28 +1252,28 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     statusInfo: {
       flex: 1,
-      marginRight: theme.spacing.m,
+      marginRight: responsive.spacing(theme.spacing.m),
     },
     statusLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '500',
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.spacing(theme.spacing.xs),
     },
     statusDescription: {
-      fontSize: 14,
+      fontSize: responsive.fontSize(14),
       color: theme.colors.onSurfaceVariant,
     },
     // Time input styles
     timeInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.spacing(theme.spacing.s),
     },
     timeIconWrapper: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: responsive.scaleWidth(40),
+      height: responsive.scaleWidth(40),
+      borderRadius: responsive.scaleWidth(20),
       backgroundColor: theme.colors.surfaceVariant,
       justifyContent: 'center',
       alignItems: 'center',
@@ -1281,23 +1283,23 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       backgroundColor: theme.colors.surface,
     },
     infoChip: {
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.spacing(theme.spacing.xs),
     },
     chip: {
       backgroundColor: theme.colors.secondaryContainer,
     },
     chipText: {
-      fontSize: 12,
+      fontSize: responsive.fontSize(12),
     },
     // Delivery styles
     deliveryInfo: {
-      marginTop: theme.spacing.m,
+      marginTop: responsive.spacing(theme.spacing.m),
       alignItems: 'center',
     },
     // Action styles
     actionContainer: {
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.l,
+      marginHorizontal: responsive.spacing(theme.spacing.m),
+      marginTop: responsive.spacing(theme.spacing.l),
       alignItems: 'center',
     },
     editButton: {
@@ -1306,18 +1308,18 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       alignSelf: 'stretch',
     },
     editButtonContent: {
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     editButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '600',
     },
     editActions: {
       flexDirection: 'row',
-      gap: theme.spacing.l,
+      gap: responsive.spacing(theme.spacing.l),
       width: '100%',
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
     },
     cancelButton: {
       flex: 1,
@@ -1329,38 +1331,38 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       elevation: 2,
     },
     buttonContent: {
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     // Info Card styles
     infoCard: {
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.m,
+      marginHorizontal: responsive.spacing(theme.spacing.m),
+      marginTop: responsive.spacing(theme.spacing.m),
       borderRadius: 12,
-      padding: theme.spacing.m,
+      padding: responsive.spacing(theme.spacing.m),
       backgroundColor: theme.colors.surfaceVariant,
     },
     infoContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.s,
+      gap: responsive.spacing(theme.spacing.s),
     },
     infoTextContainer: {
       flex: 1,
     },
     infoTitle: {
-      fontSize: 12,
+      fontSize: responsive.fontSize(12),
       color: theme.colors.onSurfaceVariant,
       opacity: 0.7,
     },
     infoText: {
-      fontSize: 14,
+      fontSize: responsive.fontSize(14),
       fontWeight: '500',
       color: theme.colors.onSurfaceVariant,
     },
     deliveryContainer: {
       flex: 1,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.m),
     },
     deliveryActions: {
       position: 'absolute',
@@ -1377,12 +1379,12 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       right: 0,
     },
     mapSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingBottom: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.m),
     },
     // Estilos para el botón de área de cobertura
     deliveryButtonContainer: {
-      marginTop: theme.spacing.l,
+      marginTop: responsive.spacing(theme.spacing.l),
       alignItems: 'center',
     },
     deliveryButton: {
@@ -1390,16 +1392,16 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       width: '100%',
     },
     deliveryButtonContent: {
-      paddingVertical: theme.spacing.s,
+      paddingVertical: responsive.spacing(theme.spacing.s),
     },
     deliveryButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '500',
     },
     deliveryStatusText: {
-      fontSize: 12,
+      fontSize: responsive.fontSize(12),
       color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
+      marginTop: responsive.spacing(theme.spacing.xs),
       fontStyle: 'italic',
     },
     deliveryStatusWarning: {
@@ -1422,13 +1424,13 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       shadowRadius: 12,
     },
     deliveryDialogContent: {
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.m),
     },
     deliveryMapWrapper: {
       borderRadius: 12,
-      padding: theme.spacing.xs,
+      padding: responsive.spacing(theme.spacing.xs),
       backgroundColor: theme.colors.surfaceVariant,
     },
     deliveryMapContainer: {
@@ -1438,29 +1440,29 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
       overflow: 'hidden',
     },
     deliveryDialogActions: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.m,
-      paddingBottom: theme.spacing.l,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.m),
+      paddingBottom: responsive.spacing(theme.spacing.l),
     },
     deliveryDialogButtonsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      gap: theme.spacing.m,
+      gap: responsive.spacing(theme.spacing.m),
     },
     deliveryDialogButton: {
       flex: 1,
       borderRadius: 12,
     },
     deliveryButtonContent: {
-      paddingVertical: theme.spacing.s,
+      paddingVertical: responsive.spacing(theme.spacing.s),
     },
     deliveryButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '600',
     },
     cancelButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '500',
       color: theme.colors.onSurface,
     },
@@ -1475,55 +1477,55 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     },
     validationIconContainer: {
       alignItems: 'center',
-      marginTop: theme.spacing.m,
-      marginBottom: theme.spacing.s,
+      marginTop: responsive.spacing(theme.spacing.m),
+      marginBottom: responsive.spacing(theme.spacing.s),
     },
     validationIconWrapper: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
+      width: responsive.scaleWidth(64),
+      height: responsive.scaleWidth(64),
+      borderRadius: responsive.scaleWidth(32),
       backgroundColor: theme.colors.errorContainer,
       justifyContent: 'center',
       alignItems: 'center',
     },
     validationTitle: {
       textAlign: 'center',
-      fontSize: 18,
+      fontSize: responsive.fontSize(18),
       fontWeight: '600',
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.m,
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
     },
     validationMessage: {
       textAlign: 'center',
-      fontSize: 15,
+      fontSize: responsive.fontSize(15),
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.s,
-      lineHeight: 21,
-      paddingHorizontal: theme.spacing.s,
+      marginBottom: responsive.spacing(theme.spacing.s),
+      lineHeight: responsive.fontSize(21),
+      paddingHorizontal: responsive.spacing(theme.spacing.s),
     },
     validationHint: {
       textAlign: 'center',
-      fontSize: 13,
+      fontSize: responsive.fontSize(13),
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
-      lineHeight: 18,
-      paddingHorizontal: theme.spacing.s,
+      lineHeight: responsive.fontSize(18),
+      paddingHorizontal: responsive.spacing(theme.spacing.s),
     },
     validationActions: {
-      paddingBottom: theme.spacing.m,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.xs,
+      paddingBottom: responsive.spacing(theme.spacing.m),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.xs),
     },
     validationButton: {
       borderRadius: 12,
       minWidth: 120,
     },
     validationButtonContent: {
-      paddingVertical: theme.spacing.s,
+      paddingVertical: responsive.spacing(theme.spacing.s),
     },
     validationButtonLabel: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       fontWeight: '600',
     },
   });

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Icon } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../styles/theme';
+import { useResponsive } from '../../hooks/useResponsive';
 
 interface EmptyStateProps {
   icon?: string;
@@ -11,16 +12,16 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.xl,
+      padding: responsive.isTablet ? responsive.spacing.l : theme.spacing.xl,
     },
     iconContainer: {
-      marginBottom: theme.spacing.l,
+      marginBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.l,
     },
     title: {
       textAlign: 'center',
@@ -29,12 +30,14 @@ const getStyles = (theme: AppTheme) =>
     },
     message: {
       textAlign: 'center',
-      marginBottom: theme.spacing.l,
+      marginBottom: responsive.isTablet ? responsive.spacing.m : theme.spacing.l,
       color: theme.colors.onSurfaceVariant,
-      paddingHorizontal: theme.spacing.xl,
+      paddingHorizontal: responsive.isTablet ? responsive.spacing.l : theme.spacing.xl,
+      fontSize: responsive.isTablet ? 14 : 16,
+      lineHeight: responsive.isTablet ? 20 : 24,
     },
     button: {
-      marginTop: theme.spacing.m,
+      marginTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.m,
     },
   });
 
@@ -46,12 +49,13 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
 }) => {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = getStyles(theme, responsive);
 
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Icon source={icon} size={64} color={theme.colors.onSurfaceVariant} />
+        <Icon source={icon} size={responsive.isTablet ? 56 : 64} color={theme.colors.onSurfaceVariant} />
       </View>
       <Text variant="headlineSmall" style={styles.title}>
         {title}

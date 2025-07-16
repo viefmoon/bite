@@ -20,13 +20,15 @@ import {
 import { Area, CreateAreaDto, UpdateAreaDto } from '../schema/area.schema';
 import { AreasListScreenProps } from '../navigation/types';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => getStyles(theme, responsive), [theme, responsive]);
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
@@ -140,7 +142,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const renderItemActions = (item: Area) => (
     <IconButton
       icon="format-list-bulleted"
-      size={28}
+      size={responsive.isTablet ? 24 : 28}
       onPress={() => handleNavigateToTables(item)}
       iconColor={theme.colors.primary}
     />
@@ -215,7 +217,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   );
 };
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -225,7 +227,7 @@ const getStyles = (theme: AppTheme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.l,
+      padding: responsive.spacing(theme.spacing.l),
     },
   });
 

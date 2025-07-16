@@ -21,6 +21,7 @@ import {
   Surface,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import {
   PaymentMethodEnum,
   PaymentStatusEnum,
@@ -106,7 +107,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onPrepaymentDeleted,
 }) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const scrollViewRef = useRef<ScrollView>(null);
   const amountInputRef = useRef<View>(null);
 
@@ -246,7 +248,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      // Error ya manejado por el mutation hook
     } finally {
       setIsCreatingPrepayment(false);
     }
@@ -321,7 +323,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setShowDeletePrepaymentConfirm(false);
       onDismiss();
     } catch (error) {
-      console.error('Error eliminando pre-pago:', error);
+      // Error manejado en el servicio
     } finally {
       setIsCreatingPrepayment(false);
     }
@@ -717,24 +719,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     modalContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.m,
+      padding: responsive.spacing(theme.spacing.m, theme.spacing.s),
     },
     modalWrapper: {
       width: '100%',
-      maxWidth: 600,
-      maxHeight: '85%',
+      maxWidth: responsive.isTablet ? 700 : 600,
+      maxHeight: responsive.isTablet ? '90%' : '85%',
     },
     modalContent: {
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
       width: '100%',
       maxHeight: '100%',
+      minHeight: responsive.isTablet ? 550 : undefined,
       overflow: 'hidden',
       borderWidth: 2,
       borderColor: theme.colors.outline,
@@ -743,40 +746,42 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingVertical: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     headerTextContainer: {
       flex: 1,
     },
     title: {
       ...theme.fonts.headlineSmall,
+      fontSize: responsive.fontSize(theme.fonts.headlineSmall.fontSize),
       color: theme.colors.onSurface,
       fontWeight: 'bold',
     },
     orderNumber: {
       ...theme.fonts.bodyMedium,
+      fontSize: responsive.fontSize(theme.fonts.bodyMedium.fontSize),
       color: theme.colors.onSurfaceVariant,
     },
     scrollView: {
-      maxHeight: 500,
+      maxHeight: responsive.isTablet ? 600 : 500,
     },
     scrollViewContent: {
-      paddingBottom: theme.spacing.m,
+      paddingBottom: responsive.spacing(theme.spacing.m, theme.spacing.s),
     },
     scrollViewWithKeyboard: {
-      maxHeight: 250,
+      maxHeight: responsive.isTablet ? 350 : 250,
     },
     summaryContainer: {
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
       backgroundColor: theme.colors.primaryContainer,
-      paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
-      marginHorizontal: theme.spacing.m,
-      marginTop: theme.spacing.s,
-      marginBottom: theme.spacing.m,
+      paddingVertical: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      marginHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      marginTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      marginBottom: responsive.spacing(theme.spacing.m, theme.spacing.s),
       borderRadius: theme.roundness,
     },
     summaryItem: {
@@ -785,12 +790,14 @@ const createStyles = (theme: AppTheme) =>
     },
     summaryLabel: {
       ...theme.fonts.bodySmall,
+      fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
       color: theme.colors.onPrimaryContainer,
       opacity: 0.8,
       marginBottom: 2,
     },
     summaryAmount: {
       ...theme.fonts.titleSmall,
+      fontSize: responsive.fontSize(theme.fonts.titleSmall.fontSize),
       fontWeight: 'bold',
       color: theme.colors.onPrimaryContainer,
     },
@@ -799,26 +806,27 @@ const createStyles = (theme: AppTheme) =>
       height: '80%',
       backgroundColor: theme.colors.onPrimaryContainer,
       opacity: 0.2,
-      marginHorizontal: theme.spacing.xs,
+      marginHorizontal: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     loader: {
-      marginVertical: theme.spacing.xl,
+      marginVertical: responsive.spacing(theme.spacing.xl, theme.spacing.l),
     },
     paymentsSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingBottom: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingBottom: responsive.spacing(theme.spacing.s, theme.spacing.xs),
     },
     sectionTitle: {
       ...theme.fonts.titleSmall,
+      fontSize: responsive.fontSize(theme.fonts.titleSmall.fontSize),
       color: theme.colors.onSurface,
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
       fontWeight: '600',
     },
     paymentItem: {
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
-      padding: theme.spacing.xs,
-      marginBottom: theme.spacing.xs,
+      padding: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -829,7 +837,7 @@ const createStyles = (theme: AppTheme) =>
     paymentRightInfo: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.xs,
+      gap: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     paymentMethodRow: {
       flexDirection: 'row',
@@ -837,49 +845,52 @@ const createStyles = (theme: AppTheme) =>
     },
     paymentMethodCompact: {
       ...theme.fonts.bodyMedium,
+      fontSize: responsive.fontSize(theme.fonts.bodyMedium.fontSize),
       fontWeight: '500',
       color: theme.colors.onSurface,
     },
     paymentAmountCompact: {
       ...theme.fonts.bodyMedium,
+      fontSize: responsive.fontSize(theme.fonts.bodyMedium.fontSize),
       fontWeight: 'bold',
       color: theme.colors.primary,
-      minWidth: 70,
+      minWidth: responsive.isTablet ? 60 : 70,
       textAlign: 'right',
     },
     paymentDateCompact: {
       ...theme.fonts.bodySmall,
+      fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     statusChipCompact: {
-      height: 26,
-      minWidth: 90,
+      height: responsive.isTablet ? 24 : 26,
+      minWidth: responsive.isTablet ? 80 : 90,
     },
     statusChipTextCompact: {
-      fontSize: 11,
+      fontSize: responsive.fontSize(11),
       fontWeight: '600',
       color: 'white',
-      lineHeight: 14,
+      lineHeight: responsive.isTablet ? 12 : 14,
     },
     deleteIconButton: {
       margin: 0,
-      width: 36,
-      height: 36,
+      width: responsive.isTablet ? 32 : 36,
+      height: responsive.isTablet ? 32 : 36,
     },
     formSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingBottom: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     methodsContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: responsive.spacing(theme.spacing.s, theme.spacing.xs),
     },
     methodCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
+      paddingVertical: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      paddingHorizontal: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
       borderRadius: theme.roundness,
       borderWidth: 1,
       borderColor: theme.colors.outline,
@@ -891,8 +902,9 @@ const createStyles = (theme: AppTheme) =>
     },
     methodText: {
       ...theme.fonts.bodyLarge,
+      fontSize: responsive.fontSize(theme.fonts.bodyLarge.fontSize),
       color: theme.colors.onSurface,
-      marginLeft: theme.spacing.xs,
+      marginLeft: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     methodTextSelected: {
       color: theme.colors.onPrimaryContainer,
@@ -904,23 +916,24 @@ const createStyles = (theme: AppTheme) =>
     },
     methodLabelContainer: {
       flex: 1,
-      marginLeft: theme.spacing.xs,
+      marginLeft: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
     },
     methodTextDisabled: {
       color: theme.colors.onSurfaceDisabled,
     },
     comingSoonText: {
       ...theme.fonts.bodySmall,
+      fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
       marginTop: 2,
     },
     amountContainer: {
-      marginTop: theme.spacing.s,
+      marginTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
     },
     amountRow: {
       flexDirection: 'row',
-      gap: theme.spacing.xs,
+      gap: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
       alignItems: 'flex-start',
     },
     amountInput: {
@@ -929,37 +942,37 @@ const createStyles = (theme: AppTheme) =>
     },
     totalPendingButton: {
       marginTop: 4, // Alinear con el input que tiene un label
-      height: 56, // Misma altura que el TextInput con outlined
+      height: responsive.isTablet ? 48 : 56, // Misma altura que el TextInput con outlined
       borderColor: theme.colors.primary,
       justifyContent: 'center',
     },
     totalPendingButtonContent: {
       height: '100%',
       paddingVertical: 0,
-      paddingHorizontal: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.s, theme.spacing.xs),
     },
     totalPendingButtonLabel: {
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: responsive.fontSize(13),
+      lineHeight: responsive.isTablet ? 18 : 20,
       textAlignVertical: 'center',
     },
     footer: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: theme.spacing.m,
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.m,
-      paddingTop: theme.spacing.s,
+      gap: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingVertical: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
       backgroundColor: theme.colors.surface,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
     },
     footerButton: {
-      minWidth: 120,
+      minWidth: responsive.isTablet ? 110 : 120,
     },
     footerButtonContent: {
-      height: 40,
+      height: responsive.isTablet ? 36 : 40,
     },
     cancelButton: {
       borderColor: theme.colors.outline,

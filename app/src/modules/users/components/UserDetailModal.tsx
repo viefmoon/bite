@@ -14,6 +14,7 @@ import {
   Icon,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useResetPassword, useDeleteUser } from '../hooks';
 import type { User } from '../types';
 
@@ -31,7 +32,8 @@ export function UserDetailModal({
   onEdit,
 }: UserDetailModalProps) {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = getStyles(theme, responsive);
 
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -132,7 +134,7 @@ export function UserDetailModal({
           onDismiss={onDismiss}
           contentContainerStyle={styles.modalContainer}
         >
-          <Surface style={styles.modalContent} elevation={5}>
+          <Surface style={styles.modalContent} elevation={3}>
             {/* Header */}
             <View
               style={[
@@ -191,7 +193,7 @@ export function UserDetailModal({
               showsVerticalScrollIndicator={false}
             >
               {/* Contact Information */}
-              <Surface style={styles.infoSection} elevation={1}>
+              <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="contacts"
@@ -226,10 +228,10 @@ export function UserDetailModal({
                     </Text>
                   </View>
                 </View>
-              </Surface>
+              </View>
 
               {/* Personal Information */}
-              <Surface style={styles.infoSection} elevation={1}>
+              <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="account-details"
@@ -345,10 +347,10 @@ export function UserDetailModal({
                     </View>
                   </View>
                 )}
-              </Surface>
+              </View>
 
               {/* Address Information */}
-              <Surface style={styles.infoSection} elevation={1}>
+              <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="map-marker"
@@ -423,10 +425,10 @@ export function UserDetailModal({
                     </Text>
                   </View>
                 </View>
-              </Surface>
+              </View>
 
               {/* Emergency Contact */}
-              <Surface style={styles.infoSection} elevation={1}>
+              <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="alert-circle"
@@ -485,7 +487,7 @@ export function UserDetailModal({
                     </Text>
                   </View>
                 </View>
-              </Surface>
+              </View>
 
               {/* Actions */}
               <View style={styles.actionsContainer}>
@@ -494,6 +496,9 @@ export function UserDetailModal({
                   onPress={() => onEdit(user)}
                   icon="pencil"
                   style={styles.actionButton}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
+                  compact
                 >
                   Editar Usuario
                 </Button>
@@ -503,7 +508,10 @@ export function UserDetailModal({
                   onPress={() => setShowPasswordDialog(true)}
                   icon="lock-reset"
                   style={styles.actionButton}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
                   buttonColor={theme.colors.secondaryContainer}
+                  compact
                 >
                   Cambiar Contraseña
                 </Button>
@@ -513,7 +521,10 @@ export function UserDetailModal({
                   onPress={() => setShowDeleteDialog(true)}
                   icon="delete"
                   style={[styles.actionButton, styles.deleteButton]}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
                   textColor={theme.colors.error}
+                  compact
                 >
                   Eliminar Usuario
                 </Button>
@@ -531,73 +542,140 @@ export function UserDetailModal({
             setShowPasswordDialog(false);
             setNewPassword('');
             setConfirmPassword('');
+            setShowPassword(false);
           }}
+          style={styles.passwordDialog}
         >
-          <Dialog.Title>Cambiar Contraseña</Dialog.Title>
-          <Dialog.Content>
-            <Text
-              variant="bodyMedium"
-              style={{ marginBottom: theme.spacing.m }}
-            >
-              Ingresa la nueva contraseña para el usuario {user.username}
-            </Text>
-
+          <View style={[styles.passwordDialogContainer, { borderColor: theme.colors.primary }]}>
+            <View style={styles.passwordDialogHeader}>
+              <Icon source="lock-reset" size={40} color={theme.colors.primary} />
+              <Dialog.Title style={styles.passwordDialogTitle}>
+                Cambiar Contraseña
+              </Dialog.Title>
+              <View style={styles.passwordDialogUserInfo}>
+                <Text variant="bodyMedium" style={styles.passwordDialogUserName}>
+                  {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}
+                </Text>
+                <Text variant="bodySmall" style={styles.passwordDialogUserDetail}>
+                  {user.email}
+                </Text>
+                <Text variant="labelSmall" style={styles.passwordDialogUserDetail}>
+                  @{user.username}
+                </Text>
+              </View>
+            </View>
+          
+          <Dialog.Content style={styles.passwordDialogContent}>
             <TextInput
               label="Nueva contraseña"
               value={newPassword}
               onChangeText={setNewPassword}
-              mode="outlined"
+              mode="flat"
               secureTextEntry={!showPassword}
-              style={{ marginBottom: theme.spacing.s }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="new-password"
+              style={styles.passwordInput}
+              contentStyle={styles.passwordInputContent}
+              underlineColor={theme.colors.surfaceVariant}
+              activeUnderlineColor={theme.colors.primary}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off' : 'eye'}
                   onPress={() => setShowPassword(!showPassword)}
+                  size={20}
+                  style={styles.passwordInputIcon}
                 />
               }
             />
-            {newPassword.length > 0 && newPassword.length < 6 && (
-              <HelperText type="error" visible>
-                La contraseña debe tener al menos 6 caracteres
-              </HelperText>
-            )}
-
+            
             <TextInput
               label="Confirmar contraseña"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              mode="outlined"
+              mode="flat"
               secureTextEntry={!showPassword}
-              style={{ marginBottom: theme.spacing.s }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="new-password"
+              style={styles.passwordInput}
+              contentStyle={styles.passwordInputContent}
+              underlineColor={theme.colors.surfaceVariant}
+              activeUnderlineColor={theme.colors.primary}
             />
-            {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-              <HelperText type="error" visible>
-                Las contraseñas no coinciden
-              </HelperText>
+            
+            {(newPassword.length > 0 || confirmPassword.length > 0) && (
+              <View style={styles.passwordValidation}>
+                <View style={styles.validationItem}>
+                  <Icon 
+                    source={newPassword.length >= 6 ? "check-circle" : "circle-outline"}
+                    size={16} 
+                    color={newPassword.length >= 6 ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  <Text 
+                    variant="bodySmall" 
+                    style={[
+                      styles.validationText,
+                      { color: newPassword.length >= 6 ? theme.colors.primary : theme.colors.onSurfaceVariant }
+                    ]}
+                  >
+                    Mínimo 6 caracteres
+                  </Text>
+                </View>
+                
+                <View style={styles.validationItem}>
+                  <Icon 
+                    source={newPassword === confirmPassword && newPassword.length > 0 ? "check-circle" : "circle-outline"}
+                    size={16} 
+                    color={newPassword === confirmPassword && newPassword.length > 0 ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  />
+                  <Text 
+                    variant="bodySmall" 
+                    style={[
+                      styles.validationText,
+                      { color: newPassword === confirmPassword && newPassword.length > 0 ? theme.colors.primary : theme.colors.onSurfaceVariant }
+                    ]}
+                  >
+                    Las contraseñas coinciden
+                  </Text>
+                </View>
+              </View>
             )}
           </Dialog.Content>
-          <Dialog.Actions>
-            <Button
-              onPress={() => {
-                setShowPasswordDialog(false);
-                setNewPassword('');
-                setConfirmPassword('');
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onPress={handleResetPassword}
-              loading={resetPasswordMutation.isPending}
-              disabled={
-                resetPasswordMutation.isPending ||
-                newPassword.length < 6 ||
-                newPassword !== confirmPassword
-              }
-            >
-              Cambiar
-            </Button>
-          </Dialog.Actions>
+          
+            <Dialog.Actions style={styles.passwordDialogActions}>
+              <Button
+                mode="text"
+                onPress={() => {
+                  setShowPasswordDialog(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setShowPassword(false);
+                }}
+                style={[styles.passwordDialogButton, styles.passwordDialogCancelButton]}
+                labelStyle={styles.passwordDialogButtonLabel}
+              >
+                Cancelar
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleResetPassword}
+                loading={resetPasswordMutation.isPending}
+                disabled={
+                  resetPasswordMutation.isPending ||
+                  newPassword.length < 6 ||
+                  newPassword !== confirmPassword
+                }
+                style={[
+                  styles.passwordDialogButton,
+                  styles.passwordDialogPrimaryButton
+                ]}
+                labelStyle={styles.passwordDialogButtonLabel}
+              >
+                Cambiar
+              </Button>
+            </Dialog.Actions>
+          </View>
         </Dialog>
       </Portal>
 
@@ -644,23 +722,117 @@ export function UserDetailModal({
   );
 }
 
-const getStyles = (theme: AppTheme) =>
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
+    passwordDialog: {
+      backgroundColor: 'transparent',
+    },
+    passwordDialogContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.roundness * 4,
+      borderWidth: 2,
+      overflow: 'hidden',
+    },
+    passwordDialogHeader: {
+      alignItems: 'center',
+      paddingTop: theme.spacing.l,
+      paddingBottom: theme.spacing.s,
+      backgroundColor: theme.colors.elevation.level1,
+    },
+    passwordDialogTitle: {
+      textAlign: 'center',
+      fontSize: 20,
+      fontWeight: '600',
+      marginTop: theme.spacing.s,
+      marginBottom: theme.spacing.s,
+    },
+    passwordDialogUserInfo: {
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.l,
+      marginBottom: theme.spacing.xs,
+    },
+    passwordDialogUserName: {
+      textAlign: 'center',
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      marginBottom: theme.spacing.xs,
+    },
+    passwordDialogUserDetail: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: 2,
+    },
+    passwordDialogContent: {
+      paddingTop: theme.spacing.m,
+      paddingBottom: theme.spacing.s,
+    },
+    passwordInput: {
+      backgroundColor: 'transparent',
+      marginBottom: theme.spacing.m,
+    },
+    passwordInputContent: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness * 2,
+      paddingHorizontal: theme.spacing.m,
+      paddingRight: theme.spacing.m,
+    },
+    passwordInputIcon: {
+      marginRight: -theme.spacing.xs,
+    },
+    passwordValidation: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness * 2,
+      padding: theme.spacing.m,
+      gap: theme.spacing.s,
+    },
+    validationItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    validationText: {
+      fontSize: 12,
+    },
+    passwordDialogActions: {
+      justifyContent: 'center',
+      paddingBottom: theme.spacing.m,
+      paddingHorizontal: theme.spacing.l,
+      gap: theme.spacing.s,
+    },
+    passwordDialogButton: {
+      minWidth: 100,
+      borderRadius: theme.roundness * 3,
+    },
+    passwordDialogCancelButton: {
+      marginRight: theme.spacing.s,
+    },
+    passwordDialogPrimaryButton: {
+      elevation: 0,
+    },
+    passwordDialogButtonLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      letterSpacing: 0.1,
+    },
     modalContainer: {
-      margin: 20,
+      margin: responsive.isTablet ? 30 : 20,
+      maxWidth: responsive.isTablet ? 650 : '100%',
+      alignSelf: 'center',
+      width: responsive.isTablet ? '85%' : '100%',
     },
     modalContent: {
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
-      maxHeight: '90%',
+      maxHeight: responsive.isTablet ? '90%' : '90%',
+      minHeight: responsive.isTablet ? 600 : 400,
       overflow: 'hidden',
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.m,
+      paddingVertical: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -677,45 +849,55 @@ const getStyles = (theme: AppTheme) =>
     modalTitle: {
       fontWeight: '600',
       marginRight: theme.spacing.xs,
+      fontSize: responsive.isTablet ? 15 : 16,
     },
     modalSubtitle: {
       marginTop: 2,
+      fontSize: responsive.isTablet ? 12 : 14,
     },
     headerRoleChip: {
-      height: 26,
+      minHeight: 28,
+      height: 'auto',
       borderRadius: theme.roundness * 2,
       borderWidth: 1,
       borderColor: theme.colors.outlineVariant,
-      paddingHorizontal: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing.s,
+      paddingVertical: 3,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     headerRoleChipText: {
       fontSize: 12,
-      fontWeight: '500',
-      lineHeight: 14,
+      fontWeight: '600',
+      lineHeight: 16,
+      marginVertical: 0,
+      paddingVertical: 0,
+      includeFontPadding: false,
     },
     contentContainer: {
-      maxHeight: 500,
-      paddingHorizontal: theme.spacing.s,
-      paddingTop: theme.spacing.s,
+      flex: 1,
+      paddingHorizontal: responsive.isTablet ? responsive.spacing.m : theme.spacing.s,
+      paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      paddingBottom: responsive.isTablet ? responsive.spacing.l : theme.spacing.m,
     },
     infoSection: {
       borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
-      marginBottom: theme.spacing.s,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.outlineVariant,
+      padding: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      marginBottom: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      backgroundColor: theme.colors.elevation.level1,
+      borderWidth: 0,
+      elevation: 0,
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.xs,
-      marginBottom: theme.spacing.xs,
+      gap: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
+      marginBottom: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
     },
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 14,
+      fontSize: responsive.isTablet ? 14 : 14,
     },
     listItemTitle: {
       color: theme.colors.onSurface,
@@ -727,14 +909,26 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 11,
     },
     actionsContainer: {
-      gap: theme.spacing.xs,
-      marginBottom: theme.spacing.m,
-      marginTop: theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.xs : theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.m,
+      marginTop: responsive.isTablet ? theme.spacing.s : theme.spacing.s,
+      paddingHorizontal: 0,
     },
     actionButton: {
       borderRadius: theme.roundness * 2,
       elevation: 0,
-      height: 40,
+      height: responsive.isTablet ? 36 : 40,
+    },
+    buttonContent: {
+      height: responsive.isTablet ? 36 : 40,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    buttonLabel: {
+      fontSize: responsive.isTablet ? 13 : 14,
+      lineHeight: responsive.isTablet ? 18 : 20,
+      marginVertical: responsive.isTablet ? 6 : 8,
+      includeFontPadding: false,
     },
     deleteButton: {
       borderColor: theme.colors.error,
@@ -743,21 +937,21 @@ const getStyles = (theme: AppTheme) =>
     compactRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: theme.spacing.s,
-      paddingVertical: theme.spacing.xs,
+      gap: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      paddingVertical: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
     },
     compactContent: {
       flex: 1,
     },
     compactLabel: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-      lineHeight: 14,
+      fontSize: responsive.isTablet ? 11 : 11,
+      lineHeight: responsive.isTablet ? 14 : 14,
     },
     compactValue: {
       color: theme.colors.onSurface,
-      fontSize: 13,
+      fontSize: responsive.isTablet ? 13 : 13,
       fontWeight: '500',
-      lineHeight: 16,
+      lineHeight: responsive.isTablet ? 16 : 16,
     },
   });

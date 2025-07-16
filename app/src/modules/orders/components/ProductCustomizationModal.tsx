@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Modal,
@@ -37,7 +37,7 @@ import {
   PizzaHalf,
   CustomizationAction,
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
-import PizzaCustomizationSectionV2 from './PizzaCustomizationSectionV2';
+import PizzaCustomizationSection from './PizzaCustomizationSection';
 
 interface ProductCustomizationModalProps {
   visible: boolean;
@@ -70,7 +70,7 @@ interface NotesFormData extends FieldValues {
   preparationNotes: string;
 }
 
-const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
+const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
   ({ visible, onDismiss, product, editingItem, onAddToCart, onUpdateItem }) => {
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
@@ -98,6 +98,17 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
     const selectedModifiers = useMemo(() => {
       return Object.values(selectedModifiersByGroup).flat();
     }, [selectedModifiersByGroup]);
+
+    // Pre-calcular si el producto tiene variantes o modificadores
+    const hasVariants = useMemo(() => 
+      product?.variants && Array.isArray(product.variants) && product.variants.length > 0,
+      [product?.variants]
+    );
+    
+    const hasModifiers = useMemo(() => 
+      product?.modifierGroups && Array.isArray(product.modifierGroups) && product.modifierGroups.length > 0,
+      [product?.modifierGroups]
+    );
     const [quantity, setQuantity] = useState(1);
     const [showExitConfirmation, setShowExitConfirmation] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
@@ -113,6 +124,7 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
       useState<PizzaConfiguration | null>(null);
     const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
       useState<SelectedPizzaCustomization[]>([]);
+
 
     // Función para calcular el precio extra de las pizzas
     const calculatePizzaExtraCost = useCallback(() => {
@@ -319,9 +331,9 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
       setValidationErrors(errors);
     }, [product, selectedModifiersByGroup]);
 
-    const handleVariantSelect = (variantId: string) => {
+    const handleVariantSelect = useCallback((variantId: string) => {
       setSelectedVariantId(variantId);
-    };
+    }, []);
 
     const handleModifierToggle = (
       modifier: Modifier,
@@ -463,37 +475,39 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
       onDismiss();
     };
 
-    const increaseQuantity = () => setQuantity((prev) => prev + 1);
-    const decreaseQuantity = () =>
-      setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+    const increaseQuantity = useCallback(() => setQuantity((prev) => prev + 1), []);
+    const decreaseQuantity = useCallback(() =>
+      setQuantity((prev) => (prev > 1 ? prev - 1 : 1)), []);
 
-    const handleDismiss = () => {
+    const handleDismiss = useCallback(() => {
       if (editingItem && hasChanges) {
         setShowExitConfirmation(true);
       } else {
         onDismiss();
       }
-    };
+    }, [editingItem, hasChanges, onDismiss]);
 
-    const handleConfirmExit = () => {
+    const handleConfirmExit = useCallback(() => {
       setShowExitConfirmation(false);
       onDismiss();
-    };
+    }, [onDismiss]);
 
-    const handleCancelExit = () => {
+    const handleCancelExit = useCallback(() => {
       setShowExitConfirmation(false);
-    };
+    }, []);
 
-    if (!product) {
+    if (!product || !visible) {
       return null;
     }
 
-    const selectedVariant =
-      product.variants && Array.isArray(product.variants)
+    const selectedVariant = useMemo(() =>
+      hasVariants
         ? product.variants.find(
             (variant: ProductVariant) => variant.id === selectedVariantId,
           )
-        : undefined;
+        : undefined,
+      [hasVariants, product?.variants, selectedVariantId]
+    );
 
     const basePrice = selectedVariant
       ? Number(selectedVariant.price)
@@ -505,13 +519,18 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
     const pizzaExtraCost = calculatePizzaExtraCost();
     const totalPrice = (basePrice + modifiersPrice + pizzaExtraCost) * quantity;
 
+    if (!visible) {
+      return null;
+    }
+
     return (
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={handleDismiss}
-          contentContainerStyle={styles.modalContent}
-        >
+      <>
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={handleDismiss}
+            contentContainerStyle={styles.modalContent}
+          >
           {/* Encabezado Refactorizado con Appbar */}
           <Appbar.Header style={styles.appBar} elevated>
             <Appbar.BackAction
@@ -531,6 +550,8 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
             style={styles.scrollView}
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
           >
             {product.hasVariants &&
               product.variants &&
@@ -613,7 +634,7 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
 
             {/* Sección de Personalización de Pizza - Después de variantes */}
             {product.isPizza && (
-              <PizzaCustomizationSectionV2
+              <PizzaCustomizationSection
                 pizzaCustomizations={pizzaCustomizations}
                 pizzaConfiguration={pizzaConfiguration}
                 selectedPizzaCustomizations={selectedPizzaCustomizations}
@@ -713,15 +734,16 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
                                   style={styles.modifierTouchable}
                                 >
                                   <View style={styles.modifierRow}>
-                                    <Checkbox
+                                    <RadioButton
+                                      value={modifier.id}
                                       status={
                                         isSelected ? 'checked' : 'unchecked'
                                       }
+                                      disabled={!modifier.isActive}
                                       onPress={() =>
                                         modifier.isActive &&
                                         handleModifierToggle(modifier, group)
                                       }
-                                      disabled={!modifier.isActive}
                                     />
                                     <Text
                                       style={[
@@ -800,6 +822,10 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
                                           isSelected ? 'checked' : 'unchecked'
                                         }
                                         disabled={!modifier.isActive}
+                                        onPress={() =>
+                                          modifier.isActive &&
+                                          handleModifierToggle(modifier, group)
+                                        }
                                       />
                                       <Text
                                         style={[
@@ -939,10 +965,8 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
             <Button
               mode="contained"
               onPress={handleAddToCart}
-              style={styles.confirmButton} // Usar estilo de OrderCartDetail
+              style={styles.confirmButton}
               icon={editingItem ? 'cart-check' : 'cart-plus'}
-              // Podrías agregar lógica de disabled si es necesario
-              // disabled={!isValidSelection()}
             >
               {editingItem
                 ? `Actualizar Item - $${totalPrice.toFixed(2)}`
@@ -951,6 +975,10 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
           </View>
         </Modal>
 
+      </Portal>
+      
+      {/* ConfirmationModal fuera del Portal principal */}
+      <Portal>
         <ConfirmationModal
           visible={showExitConfirmation}
           onDismiss={handleCancelExit}
@@ -962,6 +990,7 @@ const ProductCustomizationModal = React.memo<ProductCustomizationModalProps>(
           confirmButtonColor={theme.colors.error}
         />
       </Portal>
+      </>
     );
   },
 );
@@ -1045,14 +1074,6 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: '500',
       marginTop: 2,
     },
-    // title: { // Estilo obsoleto, reemplazado por appBarTitle
-    //   flex: 1,
-    //   fontSize: 22,
-    //   textAlign: "center",
-    //   fontWeight: "bold",
-    //   color: theme.colors.primary,
-    //   marginHorizontal: 40,
-    // },
     productImage: {
       height: 150,
       borderRadius: theme.roundness,
@@ -1269,26 +1290,21 @@ const createStyles = (theme: AppTheme) =>
     quantityContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      alignItems: 'center', // Mantener una sola instancia
-      // alignItems: "center", // Eliminar duplicado
-      marginVertical: theme.spacing.s, // Añadir espacio vertical
+      alignItems: 'center',
+      marginVertical: theme.spacing.s,
     },
     quantityIconButton: {
-      // Estilo para IconButton de cantidad
-      margin: 0, // Quitar margen por defecto
-      // backgroundColor: theme.colors.surfaceVariant, // Fondo sutil opcional - Eliminado para mayor consistencia si no se usa en OrderCartDetail
-      borderRadius: 18, // Hacerlo circular
+      margin: 0,
+      borderRadius: 18,
     },
     quantityText: {
-      // Estilo consistente con OrderCartDetail
-      fontSize: 18, // Tamaño de fuente
+      fontSize: 18,
       fontWeight: 'bold',
-      minWidth: 40, // Ancho mínimo
+      minWidth: 40,
       textAlign: 'center',
-      marginHorizontal: theme.spacing.s, // Margen horizontal
+      marginHorizontal: theme.spacing.s,
       color: theme.colors.onSurface,
     },
-    // Estilos de Resumen - Consistentes con OrderCartDetail
     summaryRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

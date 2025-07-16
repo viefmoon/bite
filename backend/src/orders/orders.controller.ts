@@ -22,6 +22,7 @@ import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
 import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
 import { OrderOpenListDto } from './dto/order-open-list.dto';
 import { ReceiptListDto } from './dto/receipt-list.dto';
+import { ReceiptDetailDto } from './dto/receipt-detail.dto';
 import { OrderType } from './domain/enums/order-type.enum';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -153,6 +154,23 @@ export class OrdersController {
     }
 
     return this.ordersService.getReceiptsList(filterOptions);
+  }
+
+  @Get('receipts/:id')
+  @ApiOperation({ summary: 'Obtener detalle completo de un recibo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalle completo del recibo con todos los datos necesarios.',
+    type: ReceiptDetailDto,
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
+  @HttpCode(HttpStatus.OK)
+  async getReceiptDetail(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ReceiptDetailDto> {
+    return this.ordersService.getReceiptDetail(id);
   }
 
   @Get('for-finalization/list')
@@ -312,10 +330,10 @@ export class OrdersController {
   }
 
   @Get('shift/:shiftId')
-  @ApiOperation({ summary: 'Get all orders for a specific shift' })
+  @ApiOperation({ summary: 'Get all orders for a specific shift with preparation status summary' })
   @ApiResponse({
     status: 200,
-    description: 'Return all orders for the specified shift.',
+    description: 'Return all orders for the specified shift with calculated preparation screen statuses.',
     type: [Order],
   })
   @ApiBearerAuth()
@@ -323,7 +341,7 @@ export class OrdersController {
   @Roles(RoleEnum.admin)
   findByShiftId(
     @Param('shiftId', ParseUUIDPipe) shiftId: string,
-  ): Promise<Order[]> {
+  ): Promise<any[]> {
     return this.ordersService.findByShiftId(shiftId);
   }
 
@@ -618,5 +636,70 @@ export class OrdersController {
     @CurrentUser('id') userId: string,
   ): Promise<void> {
     await this.ordersService.printOrderTicket(id, printTicketDto.printerId, printTicketDto.ticketType, userId);
+  }
+
+  @Get('shift/:shiftId/sales-summary')
+  @ApiOperation({ 
+    summary: 'Obtener resumen de ventas de un turno',
+    description: 'Obtiene un resumen detallado de las ventas de un turno, agrupado por categorías, subcategorías y productos'
+  })
+  @ApiParam({ 
+    name: 'shiftId', 
+    type: 'string', 
+    description: 'ID del turno',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Resumen de ventas del turno',
+    schema: {
+      type: 'object',
+      properties: {
+        shiftId: { type: 'string' },
+        shiftNumber: { type: 'number' },
+        date: { type: 'string', format: 'date' },
+        totalSales: { type: 'number' },
+        totalQuantity: { type: 'number' },
+        completedOrders: { type: 'number' },
+        averageTicket: { type: 'number' },
+        categories: { 
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              categoryId: { type: 'string' },
+              categoryName: { type: 'string' },
+              quantity: { type: 'number' },
+              totalAmount: { type: 'number' },
+              percentage: { type: 'number' },
+              subcategories: { type: 'array' }
+            }
+          }
+        },
+        topProducts: { 
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              productId: { type: 'string' },
+              productName: { type: 'string' },
+              quantity: { type: 'number' },
+              totalAmount: { type: 'number' },
+              averagePrice: { type: 'number' }
+            }
+          }
+        },
+        startTime: { type: 'string', format: 'date-time' },
+        endTime: { type: 'string', format: 'date-time', nullable: true }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.manager)
+  async getShiftSalesSummary(
+    @Param('shiftId', ParseUUIDPipe) shiftId: string,
+  ) {
+    return this.ordersService.getShiftSalesSummary(shiftId);
   }
 }

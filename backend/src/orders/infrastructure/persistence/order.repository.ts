@@ -34,6 +34,7 @@ export abstract class OrderRepository {
   abstract findByUserId(userId: Order['userId']): Promise<Order[]>;
   abstract findByTableId(tableId: Order['tableId']): Promise<Order[]>;
   abstract findByShiftId(shiftId: Order['shiftId']): Promise<Order[]>;
+  abstract findByShiftIdForSummary(shiftId: Order['shiftId']): Promise<Order[]>;
   abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
   abstract findOrderForFinalizationById(id: string): Promise<Order | null>;
   abstract findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;

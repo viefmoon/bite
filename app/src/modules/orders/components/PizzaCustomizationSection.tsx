@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useMemo, useCallback, memo } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Text,
   Checkbox,
@@ -9,6 +9,7 @@ import {
   Switch,
   IconButton,
   TouchableRipple,
+  RadioButton,
 } from 'react-native-paper';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import type {
@@ -30,7 +31,82 @@ interface PizzaCustomizationSectionProps {
   loading?: boolean;
 }
 
-const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
+interface FlavorItemProps {
+  flavor: PizzaCustomization;
+  isSelected: boolean;
+  isDisabled: boolean;
+  onToggle: (flavorId: string) => void;
+  styles: any;
+  theme: any;
+}
+
+const FlavorItem = memo<FlavorItemProps>(({ flavor, isSelected, isDisabled, onToggle, styles, theme }) => (
+  <Surface
+    style={[
+      styles.flavorChip,
+      isSelected && styles.flavorChipSelected,
+      isDisabled && styles.flavorChipDisabled,
+    ]}
+    elevation={isSelected ? 2 : 0}
+  >
+    <TouchableRipple
+      onPress={() => !isDisabled && onToggle(flavor.id)}
+      disabled={isDisabled}
+      style={{
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <RadioButton
+          value={flavor.id}
+          status={isSelected ? 'checked' : 'unchecked'}
+          disabled={isDisabled}
+          onPress={() => !isDisabled && onToggle(flavor.id)}
+        />
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Text
+              style={[
+                styles.flavorLabel,
+                isDisabled && styles.flavorLabelDisabled,
+              ]}
+            >
+              {flavor.name}
+            </Text>
+            <Text
+              style={[
+                styles.toppingValue,
+                isDisabled && styles.flavorLabelDisabled,
+              ]}
+            >
+              ({flavor.toppingValue})
+            </Text>
+          </View>
+          {flavor.ingredients && (
+            <Text
+              style={[
+                styles.ingredientsText,
+                isDisabled && styles.flavorLabelDisabled,
+              ]}
+            >
+              {flavor.ingredients}
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableRipple>
+  </Surface>
+));
+
+const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(({
   pizzaCustomizations,
   pizzaConfiguration,
   selectedPizzaCustomizations,
@@ -66,7 +142,7 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
     [pizzaCustomizations],
   );
 
-  // Obtener sabores seleccionados - DEBE estar antes de los returns condicionales
+  // Obtener sabores seleccionados
   const selectedFlavors = useMemo(
     () =>
       selectedPizzaCustomizations.filter(
@@ -77,34 +153,17 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
     [selectedPizzaCustomizations, flavors],
   );
 
-  // Determinar si mostrar modo mitades (2 sabores o modo manual activado)
-  const showHalvesMode =
-    selectedFlavors.length === 2 ||
-    (manualHalvesMode && selectedFlavors.length <= 1);
-
-  // Returns condicionales al final, después de todos los hooks
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator animating size="large" />
-        <Text style={styles.loadingText}>Cargando opciones de pizza...</Text>
-      </View>
-    );
-  }
-
-  if (!pizzaConfiguration || pizzaCustomizations.length === 0) {
-    return null;
-  }
-
   // Obtener el nombre del sabor por ID
-  const getFlavorName = (flavorId: string) => {
+  const getFlavorName = useCallback((flavorId: string) => {
     const flavor = flavors.find((f) => f.id === flavorId);
     return flavor?.name || '';
-  };
+  }, [flavors]);
 
-  const handleFlavorToggle = (flavorId: string) => {
-    const isSelected = selectedFlavors.some(
-      (sf) => sf.pizzaCustomizationId === flavorId,
+  const handleFlavorToggle = useCallback((flavorId: string) => {
+    const isSelected = selectedPizzaCustomizations.some(
+      (sc) =>
+        sc.pizzaCustomizationId === flavorId &&
+        sc.action === CustomizationAction.ADD
     );
 
     if (isSelected) {
@@ -145,9 +204,14 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
       }
     } else {
       // Seleccionar
-      if (selectedFlavors.length >= 2) {
-        // Ya hay 2 sabores seleccionados, no permitir más
-        return;
+      const currentFlavors = selectedPizzaCustomizations.filter(
+        (sc) =>
+          sc.action === CustomizationAction.ADD &&
+          flavors.some((f) => f.id === sc.pizzaCustomizationId),
+      );
+      
+      if (currentFlavors.length >= 2) {
+        return; // No permitir más de 2
       }
 
       const nonFlavorSelections = selectedPizzaCustomizations.filter(
@@ -156,7 +220,7 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
           sc.action !== CustomizationAction.ADD,
       );
 
-      if (selectedFlavors.length === 0) {
+      if (currentFlavors.length === 0) {
         // Primer sabor - va completo o a mitad 1 si está el modo manual
         if (manualHalvesMode) {
           onCustomizationChange([
@@ -177,9 +241,9 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
             },
           ]);
         }
-      } else if (selectedFlavors.length === 1) {
+      } else if (currentFlavors.length === 1) {
         // Segundo sabor - convertir a mitades
-        const existingFlavor = selectedFlavors[0];
+        const existingFlavor = currentFlavors[0];
 
         // Cambiar el sabor existente a mitad 1
         nonFlavorSelections.push({
@@ -198,9 +262,9 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
         onCustomizationChange(nonFlavorSelections);
       }
     }
-  };
+  }, [selectedPizzaCustomizations, flavors, onCustomizationChange, manualHalvesMode]);
 
-  const toggleIngredient = (
+  const toggleIngredient = useCallback((
     ingredientId: string,
     half: PizzaHalf,
     action: CustomizationAction,
@@ -232,9 +296,9 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
     }
 
     onCustomizationChange(newSelections);
-  };
+  }, [selectedPizzaCustomizations, onCustomizationChange]);
 
-  const isIngredientSelected = (
+  const isIngredientSelected = useCallback((
     ingredientId: string,
     half: PizzaHalf,
     action: CustomizationAction,
@@ -245,7 +309,26 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
         sc.half === half &&
         sc.action === action,
     );
-  };
+  }, [selectedPizzaCustomizations]);
+
+  // Determinar si mostrar modo mitades (2 sabores o modo manual activado)
+  const showHalvesMode =
+    selectedFlavors.length === 2 ||
+    (manualHalvesMode && selectedFlavors.length <= 1);
+
+  // Returns condicionales al final, después de todos los hooks
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator animating size="large" />
+        <Text style={styles.loadingText}>Cargando opciones de pizza...</Text>
+      </View>
+    );
+  }
+
+  if (!pizzaConfiguration || pizzaCustomizations.length === 0) {
+    return null;
+  }
 
   // Renderizar sección de personalización
   const renderCustomizationSection = (
@@ -438,7 +521,8 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
                               </Text>
                             </View>
                           )}
-                          <Checkbox
+                          <RadioButton
+                            value={ingredient.id}
                             status={isSelected ? 'checked' : 'unchecked'}
                             onPress={() => {
                               if (isSelected) {
@@ -558,70 +642,15 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
                 const isDisabled = selectedFlavors.length >= 2 && !isSelected;
 
                 return (
-                  <Surface
+                  <FlavorItem
                     key={flavor.id}
-                    style={[
-                      styles.flavorChip,
-                      isSelected && styles.flavorChipSelected,
-                      isDisabled && styles.flavorChipDisabled,
-                    ]}
-                  >
-                    <TouchableRipple
-                      onPress={() => handleFlavorToggle(flavor.id)}
-                      disabled={isDisabled}
-                      style={{
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
-                        borderRadius: 8,
-                      }}
-                    >
-                      <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                      >
-                        <Checkbox
-                          status={isSelected ? 'checked' : 'unchecked'}
-                          onPress={() => handleFlavorToggle(flavor.id)}
-                          disabled={isDisabled}
-                        />
-                        <View style={{ flex: 1, marginLeft: 8 }}>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 8,
-                            }}
-                          >
-                            <Text
-                              style={[
-                                styles.flavorLabel,
-                                isDisabled && styles.flavorLabelDisabled,
-                              ]}
-                            >
-                              {flavor.name}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.toppingValue,
-                                isDisabled && styles.flavorLabelDisabled,
-                              ]}
-                            >
-                              ({flavor.toppingValue})
-                            </Text>
-                          </View>
-                          {flavor.ingredients && (
-                            <Text
-                              style={[
-                                styles.ingredientsText,
-                                isDisabled && styles.flavorLabelDisabled,
-                              ]}
-                            >
-                              {flavor.ingredients}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    </TouchableRipple>
-                  </Surface>
+                    flavor={flavor}
+                    isSelected={isSelected}
+                    isDisabled={isDisabled}
+                    onToggle={handleFlavorToggle}
+                    styles={styles}
+                    theme={theme}
+                  />
                 );
               })}
             </View>
@@ -660,7 +689,7 @@ const PizzaCustomizationSectionV2: React.FC<PizzaCustomizationSectionProps> = ({
       )}
     </View>
   );
-};
+});
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
@@ -730,6 +759,7 @@ const createStyles = (theme: any) =>
       borderWidth: 1,
       borderColor: theme.colors.outline,
       elevation: 0,
+      overflow: 'hidden',
     },
     flavorChipSelected: {
       backgroundColor: theme.colors.primaryContainer,
@@ -808,4 +838,6 @@ const createStyles = (theme: any) =>
     },
   });
 
-export default PizzaCustomizationSectionV2;
+PizzaCustomizationSection.displayName = 'PizzaCustomizationSection';
+
+export default PizzaCustomizationSection;

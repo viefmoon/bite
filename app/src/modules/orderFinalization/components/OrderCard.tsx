@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Text, Checkbox, Chip, IconButton, Icon } from 'react-native-paper';
 import { OrderForFinalizationList } from '../types/orderFinalization.types';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -24,6 +25,8 @@ interface OrderCardProps {
 export const OrderCard = React.memo<OrderCardProps>(
   ({ order, isSelected, onToggleSelection, onShowDetails, onPrintPress }) => {
     const theme = useAppTheme();
+    const responsive = useResponsive();
+    const styles = React.useMemo(() => createStyles(responsive), [responsive]);
 
     let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
@@ -263,12 +266,14 @@ export const OrderCard = React.memo<OrderCardProps>(
 
 OrderCard.displayName = 'OrderCard';
 
-const styles = StyleSheet.create({
+const createStyles = (responsive: ReturnType<typeof useResponsive>) => StyleSheet.create({
   orderCard: {
-    marginBottom: 8,
+    marginBottom: responsive.isTablet ? 6 : 8,
   },
   cardContent: {
-    paddingBottom: 8,
+    paddingBottom: responsive.isTablet ? 6 : 8,
+    paddingTop: responsive.isTablet ? 8 : 12,
+    paddingHorizontal: responsive.isTablet ? 12 : 16,
   },
   mainContainer: {
     flexDirection: 'row',
@@ -282,8 +287,8 @@ const styles = StyleSheet.create({
   rightContainer: {
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    minWidth: 140,
-    gap: 8,
+    minWidth: responsive.isTablet ? 120 : 140,
+    gap: responsive.isTablet ? 4 : 8,
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -292,13 +297,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   orderNumber: {
-    fontSize: 16,
+    fontSize: responsive.isTablet ? 14 : 16,
     fontWeight: 'bold',
-    lineHeight: 22,
-    marginBottom: 4,
+    lineHeight: responsive.isTablet ? 18 : 22,
+    marginBottom: responsive.isTablet ? 2 : 4,
   },
   orderPrice: {
-    fontSize: 15,
+    fontSize: responsive.isTablet ? 13 : 15,
     fontWeight: '700',
   },
   statusChip: {
@@ -307,15 +312,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   statusChipText: {
-    fontSize: 12,
+    fontSize: responsive.isTablet ? 10 : 12,
     fontWeight: '600',
     color: 'white',
-    lineHeight: 14,
+    lineHeight: responsive.isTablet ? 12 : 14,
     marginVertical: 0,
     paddingVertical: 0,
   },
   orderTime: {
-    fontSize: 16,
+    fontSize: responsive.isTablet ? 13 : 16,
     fontWeight: '600',
   },
   estimatedTime: {

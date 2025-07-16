@@ -68,4 +68,9 @@ export class CategoriesService extends BaseCrudService<
   async getFullMenu(): Promise<Category[]> {
     return (this.repo as CategoryRepository).findFullMenu();
   }
+
+  // Menú para la creación de órdenes
+  async getOrderMenu(): Promise<Category[]> {
+    return (this.repo as CategoryRepository).findOrderMenu();
+  }
 }

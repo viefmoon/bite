@@ -25,6 +25,7 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface InlineDatePickerProps {
   visible: boolean;
@@ -63,7 +64,8 @@ export default function InlineDatePicker({
   validRange,
 }: InlineDatePickerProps) {
   const theme = useTheme<AppTheme>();
-  const styles = getStyles(theme);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => getStyles(theme, responsive), [theme, responsive]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(date || new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(date || new Date());
@@ -319,7 +321,7 @@ export default function InlineDatePicker({
   );
 }
 
-const getStyles = (theme: AppTheme) => {
+const getStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) => {
   const { width } = Dimensions.get('window');
 
   return StyleSheet.create({
@@ -333,8 +335,8 @@ const getStyles = (theme: AppTheme) => {
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
     surface: {
-      width: Math.min(width * 0.9, 360),
-      maxHeight: '80%',
+      width: responsive.isTablet ? Math.min(width * 0.6, 450) : Math.min(width * 0.9, 360),
+      maxHeight: responsive.isTablet ? '85%' : '80%',
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
       overflow: 'hidden',
@@ -343,33 +345,35 @@ const getStyles = (theme: AppTheme) => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingLeft: theme.spacing.m,
-      paddingRight: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
+      paddingLeft: responsive.spacing(theme.spacing.m),
+      paddingRight: responsive.spacing(theme.spacing.xs),
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     title: {
       fontWeight: '600',
       color: theme.colors.onSurface,
+      fontSize: responsive.fontSize(20),
     },
     monthNavigation: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: responsive.spacing(theme.spacing.xs),
+      paddingVertical: responsive.spacing(theme.spacing.xs),
     },
     monthText: {
       fontWeight: '500',
       color: theme.colors.onSurface,
+      fontSize: responsive.fontSize(16),
     },
     monthYearButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.s),
     },
     yearToggleIcon: {
       margin: 0,
-      marginLeft: -theme.spacing.xs,
+      marginLeft: -responsive.spacing(theme.spacing.xs),
     },
     yearPickerContainer: {
       maxHeight: 200,
@@ -378,11 +382,11 @@ const getStyles = (theme: AppTheme) => {
       borderColor: theme.colors.surfaceVariant,
     },
     yearScrollView: {
-      paddingHorizontal: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
     },
     yearItem: {
-      paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.m,
+      paddingVertical: responsive.spacing(theme.spacing.s),
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
       alignItems: 'center',
     },
     selectedYearItem: {
@@ -390,7 +394,7 @@ const getStyles = (theme: AppTheme) => {
       borderRadius: theme.roundness,
     },
     yearItemText: {
-      fontSize: 16,
+      fontSize: responsive.fontSize(16),
       color: theme.colors.onSurface,
     },
     selectedYearItemText: {
@@ -398,20 +402,20 @@ const getStyles = (theme: AppTheme) => {
       color: theme.colors.primary,
     },
     calendar: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.s),
     },
     weekDays: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      marginBottom: theme.spacing.s,
+      marginBottom: responsive.spacing(theme.spacing.s),
     },
     weekDayCell: {
-      width: 36,
+      width: responsive.isTablet ? 42 : 36,
       alignItems: 'center',
     },
     weekDayText: {
-      fontSize: 12,
+      fontSize: responsive.fontSize(12),
       fontWeight: '600',
       color: theme.colors.onSurfaceVariant,
     },
@@ -432,7 +436,7 @@ const getStyles = (theme: AppTheme) => {
       borderRadius: 999,
     },
     dayText: {
-      fontSize: 14,
+      fontSize: responsive.fontSize(14),
       color: theme.colors.onSurface,
     },
     selectedDay: {
@@ -457,30 +461,32 @@ const getStyles = (theme: AppTheme) => {
       color: theme.colors.onSurfaceVariant,
     },
     selectedDateContainer: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.s),
       alignItems: 'center',
       borderTopWidth: 1,
       borderTopColor: theme.colors.surfaceVariant,
     },
     selectedDateLabel: {
       color: theme.colors.onSurfaceVariant,
-      marginBottom: theme.spacing.xs,
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      fontSize: responsive.fontSize(14),
     },
     selectedDateText: {
       color: theme.colors.primary,
       fontWeight: '500',
+      fontSize: responsive.fontSize(16),
     },
     actions: {
       flexDirection: 'row',
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.m,
-      gap: theme.spacing.m,
+      paddingHorizontal: responsive.spacing(theme.spacing.m),
+      paddingVertical: responsive.spacing(theme.spacing.m),
+      gap: responsive.spacing(theme.spacing.m),
     },
     actionButton: {
       flex: 1,
-      maxWidth: 150,
+      maxWidth: responsive.isTablet ? 180 : 150,
     },
     cancelButton: {
       borderColor: theme.colors.outline,

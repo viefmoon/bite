@@ -50,7 +50,8 @@ interface ResponsiveInfo {
   getResponsiveDimension: (mobile: number, tablet: number) => number;
 
   // Spacing responsive
-  spacing: {
+  spacing: (value: number) => number;
+  spacingPreset: {
     xxxs: number;
     xxs: number;
     xs: number;
@@ -62,7 +63,8 @@ interface ResponsiveInfo {
   };
 
   // Tamaños de fuente responsive
-  fontSize: {
+  fontSize: (value: number) => number;
+  fontSizePreset: {
     xs: number;
     s: number;
     m: number;
@@ -188,7 +190,7 @@ export const useResponsive = (): ResponsiveInfo => {
   );
 
   // Spacing responsive
-  const spacing = useMemo(
+  const spacingPreset = useMemo(
     () => ({
       xxxs: RESPONSIVE_SPACING.xxxs(dimensions.width),
       xxs: RESPONSIVE_SPACING.xxs(dimensions.width),
@@ -202,8 +204,20 @@ export const useResponsive = (): ResponsiveInfo => {
     [dimensions.width],
   );
 
+  // Función de spacing que escala valores arbitrarios
+  const spacing = useCallback(
+    (value: number) => {
+      // Para tablets, reducir el spacing en un 25-35%
+      if (isTablet) {
+        return Math.round(value * 0.7); // 30% menos
+      }
+      return value;
+    },
+    [isTablet],
+  );
+
   // Tamaños de fuente responsive
-  const fontSize = useMemo(
+  const fontSizePreset = useMemo(
     () => ({
       xs: RESPONSIVE_FONT_SIZES.xs(dimensions.width),
       s: RESPONSIVE_FONT_SIZES.s(dimensions.width),
@@ -214,6 +228,18 @@ export const useResponsive = (): ResponsiveInfo => {
       xxxl: RESPONSIVE_FONT_SIZES.xxxl(dimensions.width),
     }),
     [dimensions.width],
+  );
+
+  // Función de fontSize que escala valores arbitrarios
+  const fontSize = useCallback(
+    (value: number) => {
+      // Para tablets, reducir las fuentes en un 10-15%
+      if (isTablet) {
+        return Math.round(value * 0.87); // 13% menos
+      }
+      return value;
+    },
+    [isTablet],
   );
 
   // Dimensiones comunes
@@ -297,7 +323,9 @@ export const useResponsive = (): ResponsiveInfo => {
 
     // Spacing y dimensiones
     spacing,
+    spacingPreset,
     fontSize,
+    fontSizePreset,
     dimensions: commonDimensions,
 
     // Utilidades

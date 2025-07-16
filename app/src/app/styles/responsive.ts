@@ -99,27 +99,27 @@ export const getResponsiveDimension = (
   return isTablet(width) ? tablet : mobile;
 };
 
-// Escalas de spacing responsive
+// Escalas de spacing responsive (más espacioso en tablets para mejor legibilidad)
 export const RESPONSIVE_SPACING = {
-  xxxs: (width: number = screenWidth) => scaleWidth(1, width), // Apenas perceptible
-  xxs: (width: number = screenWidth) => scaleWidth(2, width), // Muy pequeño
-  xs: (width: number = screenWidth) => scaleWidth(4, width),
-  s: (width: number = screenWidth) => scaleWidth(8, width),
-  m: (width: number = screenWidth) => scaleWidth(16, width),
-  l: (width: number = screenWidth) => scaleWidth(24, width),
-  xl: (width: number = screenWidth) => scaleWidth(32, width),
-  xxl: (width: number = screenWidth) => scaleWidth(40, width),
+  xxxs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(2, width) : scaleWidth(1, width),
+  xxs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(4, width) : scaleWidth(2, width),
+  xs: (width: number = screenWidth) => isTablet(width) ? scaleWidth(6, width) : scaleWidth(4, width),
+  s: (width: number = screenWidth) => isTablet(width) ? scaleWidth(10, width) : scaleWidth(8, width),
+  m: (width: number = screenWidth) => isTablet(width) ? scaleWidth(16, width) : scaleWidth(16, width),
+  l: (width: number = screenWidth) => isTablet(width) ? scaleWidth(24, width) : scaleWidth(24, width),
+  xl: (width: number = screenWidth) => isTablet(width) ? scaleWidth(32, width) : scaleWidth(32, width),
+  xxl: (width: number = screenWidth) => isTablet(width) ? scaleWidth(40, width) : scaleWidth(40, width),
 } as const;
 
-// Tamaños de fuente responsive
+// Tamaños de fuente responsive (optimizadas para tablets)
 export const RESPONSIVE_FONT_SIZES = {
-  xs: (width: number = screenWidth) => scaleWithLimits(10, 0.9, 1.1, width),
-  s: (width: number = screenWidth) => scaleWithLimits(12, 0.9, 1.1, width),
-  m: (width: number = screenWidth) => scaleWithLimits(14, 0.9, 1.2, width),
-  l: (width: number = screenWidth) => scaleWithLimits(16, 0.9, 1.2, width),
-  xl: (width: number = screenWidth) => scaleWithLimits(20, 0.9, 1.3, width),
-  xxl: (width: number = screenWidth) => scaleWithLimits(24, 0.9, 1.3, width),
-  xxxl: (width: number = screenWidth) => scaleWithLimits(32, 0.9, 1.4, width),
+  xs: (width: number = screenWidth) => isTablet(width) ? 10 : scaleWithLimits(10, 0.9, 1.1, width),
+  s: (width: number = screenWidth) => isTablet(width) ? 12 : scaleWithLimits(12, 0.9, 1.1, width),
+  m: (width: number = screenWidth) => isTablet(width) ? 14 : scaleWithLimits(14, 0.9, 1.2, width),
+  l: (width: number = screenWidth) => isTablet(width) ? 16 : scaleWithLimits(16, 0.9, 1.2, width),
+  xl: (width: number = screenWidth) => isTablet(width) ? 18 : scaleWithLimits(20, 0.9, 1.3, width),
+  xxl: (width: number = screenWidth) => isTablet(width) ? 22 : scaleWithLimits(24, 0.9, 1.3, width),
+  xxxl: (width: number = screenWidth) => isTablet(width) ? 28 : scaleWithLimits(32, 0.9, 1.4, width),
 } as const;
 
 // Dimensiones comunes responsive
@@ -128,8 +128,9 @@ export const RESPONSIVE_DIMENSIONS = {
   drawerWidth: (width: number = screenWidth) => {
     if (width < BREAKPOINTS.sm) return 280;
     if (width < BREAKPOINTS.md) return 300;
-    if (width < BREAKPOINTS.lg) return 320;
-    return 360;
+    if (width < BREAKPOINTS.lg) return 340;
+    if (width < BREAKPOINTS.xl) return 360;
+    return 380;
   },
 
   // Modales
@@ -147,25 +148,25 @@ export const RESPONSIVE_DIMENSIONS = {
 
   // Botones
   buttonHeight: (width: number = screenWidth) => {
-    return getResponsiveDimension(48, 56, width);
+    return getResponsiveDimension(48, 44, width);
   },
 
   // Iconos
   iconSize: {
     small: (width: number = screenWidth) =>
-      getResponsiveDimension(16, 20, width),
+      getResponsiveDimension(16, 16, width),
     medium: (width: number = screenWidth) =>
-      getResponsiveDimension(24, 28, width),
+      getResponsiveDimension(24, 24, width),
     large: (width: number = screenWidth) =>
-      getResponsiveDimension(32, 40, width),
+      getResponsiveDimension(32, 32, width),
   },
 
   // Imágenes de productos
   productImageSize: (width: number = screenWidth) => {
     if (width < BREAKPOINTS.sm) return 80;
     if (width < BREAKPOINTS.md) return 100;
-    if (width < BREAKPOINTS.lg) return 120;
-    return 150;
+    if (width < BREAKPOINTS.lg) return 90;
+    return 100; // Más compacto en tablets
   },
 
   // Cards
@@ -251,4 +252,34 @@ export const normalizeDPI = (size: number): number => {
 // Utilidad para obtener dimensiones de pantalla actualizadas
 export const getScreenDimensions = () => {
   return Dimensions.get('window');
+};
+
+// Multiplicador de densidad para tablets (más compacto)
+export const TABLET_DENSITY_MULTIPLIER = 0.75;
+
+// Helper para obtener tamaño compacto en tablets
+export const getCompactSize = (
+  mobileSize: number,
+  width: number = screenWidth,
+  compactRatio: number = TABLET_DENSITY_MULTIPLIER
+): number => {
+  return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
+};
+
+// Helper para obtener tamaño de fuente compacto
+export const getCompactFontSize = (
+  mobileSize: number,
+  width: number = screenWidth,
+  compactRatio: number = 0.85
+): number => {
+  return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
+};
+
+// Helper para obtener spacing compacto
+export const getCompactSpacing = (
+  mobileSpacing: number,
+  width: number = screenWidth,
+  compactRatio: number = 0.65
+): number => {
+  return isTablet(width) ? Math.round(mobileSpacing * compactRatio) : mobileSpacing;
 };

@@ -46,7 +46,7 @@ import { useCart, CartItem, CartItemModifier } from '../context/CartContext'; //
 import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
 import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
-import { useGetFullMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
+import { useGetOrderMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
 import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subcategorías
 import OrderHistoryModal from './OrderHistoryModal'; // Modal de historial
 import { OrderDetailModal } from './OrderDetailModal'; // Modal de detalles
@@ -231,7 +231,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   });
 
   // Query para obtener el menú completo (para poder editar productos)
-  const { data: menu } = useGetFullMenu();
+  const { data: menu } = useGetOrderMenu();
 
   // Query para obtener los pagos de la orden (solo en modo edición)
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {

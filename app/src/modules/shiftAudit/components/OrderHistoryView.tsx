@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,14 +8,13 @@ import {
   Platform,
 } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   Divider,
   Chip,
   Button,
   Avatar,
   Surface,
+  Appbar,
 } from 'react-native-paper';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -50,11 +49,10 @@ interface HistoryItem {
   type: 'order' | 'item';
 }
 
-interface OrderHistoryModalProps {
-  visible: boolean;
-  onDismiss: () => void;
+interface OrderHistoryViewProps {
   orderId: string | null;
   orderNumber?: number;
+  onBack: () => void;
 }
 
 // Helper para obtener el icono de la operación
@@ -102,23 +100,15 @@ const getOperationLabel = (
   return operationMap[operation] || operation;
 };
 
-// Helper para obtener el color del status
-const getStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case 'PENDING':
-      return theme.colors.error;
-    case 'IN_PROGRESS':
-    case 'IN_PREPARATION':
-      return theme.colors.warning;
-    case 'READY':
-    case 'DELIVERED':
-    case 'COMPLETED':
-      return theme.colors.success;
-    case 'CANCELLED':
-      return theme.colors.onSurfaceVariant;
-    default:
-      return theme.colors.onSurface;
-  }
+// Helper para obtener color del estado
+const getStatusColor = (status: string, theme: ReturnType<typeof useAppTheme>) => {
+  const statusColors: Record<string, string> = {
+    PENDING: theme.colors.onSurfaceDisabled,
+    IN_PROGRESS: theme.colors.warning || '#FFA500',
+    READY: theme.colors.success || '#4CAF50',
+    CANCELLED: theme.colors.error,
+  };
+  return statusColors[status] || theme.colors.onSurfaceDisabled;
 };
 
 // Helper para formatear nombres de campos
@@ -130,37 +120,37 @@ const formatFieldName = (field: string): string => {
     table: 'Mesa',
     notes: 'Notas',
     deliveryInfo: 'Información de entrega',
-    scheduledAt: 'Programado para',
+    customerName: 'Nombre del cliente',
+    customerPhone: 'Teléfono del cliente',
+    recipientName: 'Nombre del destinatario',
+    recipientPhone: 'Teléfono del destinatario',
+    deliveryAddress: 'Dirección de entrega',
+    fullAddress: 'Dirección',
+    estimatedDeliveryTime: 'Tiempo estimado de entrega',
+    preparationStatus: 'Estado de preparación',
+    preparationNotes: 'Notas de preparación',
     customerId: 'Cliente',
-    isFromWhatsApp: 'Orden de WhatsApp',
-    // Campos dentro de deliveryInfo
-    recipientName: 'Destinatario',
-    recipientPhone: 'Teléfono',
-    fullAddress: 'Dirección completa',
-    deliveryInstructions: 'Instrucciones de entrega',
-    street: 'Calle',
-    number: 'Número',
-    neighborhood: 'Colonia',
-    city: 'Ciudad',
-    state: 'Estado',
-    zipCode: 'Código postal',
+    scheduledAt: 'Fecha programada',
+    total: 'Total',
+    subtotal: 'Subtotal',
+    finalizedAt: 'Finalizado',
   };
   return fieldMap[field] || field;
 };
 
 // Helper para formatear valores
 const formatValue = (field: string, value: any): string => {
-  if (value === null || value === undefined) return 'Sin valor';
+  if (value === null || value === undefined) {
+    return 'No especificado';
+  }
 
-  if (field === 'orderStatus' || field === 'preparationStatus') {
+  if (field === 'orderStatus') {
     const statusMap: Record<string, string> = {
       PENDING: 'Pendiente',
       IN_PROGRESS: 'En Progreso',
-      IN_PREPARATION: 'En Preparación',
-      READY: 'Lista',
-      DELIVERED: 'Entregada',
       COMPLETED: 'Completada',
       CANCELLED: 'Cancelada',
+      DELIVERED: 'Entregada',
     };
     return statusMap[value] || value;
   }
@@ -174,28 +164,34 @@ const formatValue = (field: string, value: any): string => {
     return typeMap[value] || value;
   }
 
-  if (field === 'table' || field === 'tableId') {
-    if (typeof value === 'object' && value !== null) {
-      return value.name || 'Sin mesa';
+  if (field === 'preparationStatus') {
+    const statusMap: Record<string, string> = {
+      PENDING: 'Pendiente',
+      IN_PROGRESS: 'En Preparación',
+      READY: 'Listo',
+      CANCELLED: 'Cancelado',
+    };
+    return statusMap[value] || value;
+  }
+
+  if (field === 'tableId' && typeof value === 'object' && value.name) {
+    return value.name;
+  }
+
+  if (
+    field === 'estimatedDeliveryTime' ||
+    field === 'scheduledAt' ||
+    field === 'finalizedAt'
+  ) {
+    try {
+      return format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es });
+    } catch {
+      return value;
     }
-    return value || 'Sin mesa';
   }
 
-  // Para datos de entrega
-  if (field === 'recipientName') {
-    return value || 'Sin nombre';
-  }
-
-  if (field === 'recipientPhone') {
-    return value || 'Sin teléfono';
-  }
-
-  if (field === 'fullAddress') {
-    return value || 'Sin dirección';
-  }
-
-  if (field === 'isFromWhatsApp') {
-    return value ? 'Sí' : 'No';
+  if (field === 'total' || field === 'subtotal') {
+    return `$${parseFloat(value).toFixed(2)}`;
   }
 
   if (field === 'customerId') {
@@ -211,8 +207,7 @@ const formatValue = (field: string, value: any): string => {
   return String(value);
 };
 
-
-// Componente para cada item del historial
+// Componente para cada item del historial (copiado de OrderHistoryModal)
 const HistoryItemComponent: React.FC<{
   item: HistoryItem;
   theme: ReturnType<typeof useAppTheme>;
@@ -287,7 +282,6 @@ const HistoryItemComponent: React.FC<{
           </View>
         );
       }
-
       // Formato horizontal para cambios cortos
       return (
         <View style={styles.changeDetail}>
@@ -340,7 +334,6 @@ const HistoryItemComponent: React.FC<{
       // Para el formato de array [antes, después] - usado en cambios de orden
       const oldVal = formatValue(fieldName || '', change[0]);
       const newVal = formatValue(fieldName || '', change[1]);
-
       // Para campos largos o especiales, usar formato vertical
       if (
         fieldName &&
@@ -402,7 +395,6 @@ const HistoryItemComponent: React.FC<{
           </View>
         );
       }
-
       // Formato horizontal para cambios cortos
       return (
         <View style={styles.changeDetail}>
@@ -454,7 +446,6 @@ const HistoryItemComponent: React.FC<{
     }
     return null;
   };
-
 
   return (
     <Surface
@@ -516,7 +507,6 @@ const HistoryItemComponent: React.FC<{
                 />
               </View>
             </View>
-
             <View
               style={{
                 flexDirection: 'row',
@@ -561,7 +551,6 @@ const HistoryItemComponent: React.FC<{
                   {getOperationLabel(item.operation, item.type)}
                 </Text>
               </View>
-
               {item.preparationStatus && (
                 <Chip
                   mode="flat"
@@ -577,7 +566,6 @@ const HistoryItemComponent: React.FC<{
                   {formatValue('preparationStatus', item.preparationStatus)}
                 </Chip>
               )}
-
               <Text variant="labelSmall" style={{ opacity: 0.6, fontSize: 10 }}>
                 {format(new Date(item.changedAt), 'dd/MM/yyyy HH:mm', {
                   locale: es,
@@ -587,11 +575,9 @@ const HistoryItemComponent: React.FC<{
           </View>
         </View>
       </TouchableOpacity>
-
       {expanded && (
         <View style={styles.expandedContent}>
           <Divider style={{ marginBottom: 8 }} />
-
           {/* Contenido para órdenes */}
           {item.type === 'order' && (
             <View style={styles.changesContainer}>
@@ -792,12 +778,12 @@ const HistoryItemComponent: React.FC<{
                                   <Text
                                     variant="labelSmall"
                                     style={{
-                                      marginTop: 2,
-                                      fontWeight: '600',
+                                      marginTop: 4,
                                       color: theme.colors.primary,
+                                      fontWeight: '600',
                                     }}
                                   >
-                                    Precio: ${addedItem.price}
+                                    Precio: ${addedItem.finalPrice || addedItem.basePrice}
                                   </Text>
                                 </View>
                               ),
@@ -805,97 +791,186 @@ const HistoryItemComponent: React.FC<{
                           </>
                         )}
                     </>
+                  ) : item.formattedChanges ? (
+                    // Si hay formattedChanges (formato nuevo)
+                    Object.entries(item.formattedChanges).map(
+                      ([section, changes]) => {
+                        if (section === 'Resumen') {
+                          return (
+                            <Text
+                              key={section}
+                              variant="bodySmall"
+                              style={{
+                                color: theme.colors.primary,
+                                fontWeight: '600',
+                                marginBottom: 8,
+                                fontStyle: 'italic',
+                              }}
+                            >
+                              {changes as string}
+                            </Text>
+                          );
+                        }
+                        return (
+                          <View key={section} style={{ marginBottom: 12 }}>
+                            <Text
+                              variant="labelSmall"
+                              style={{
+                                color: theme.colors.primary,
+                                fontWeight: '600',
+                                marginBottom: 6,
+                              }}
+                            >
+                              {section}:
+                            </Text>
+                            {typeof changes === 'object' &&
+                              Object.entries(changes).map(([field, change]) => (
+                                <View
+                                  key={field}
+                                  style={{ marginBottom: 4, marginLeft: 8 }}
+                                >
+                                  <Text
+                                    variant="labelSmall"
+                                    style={{
+                                      color: theme.colors.onSurfaceVariant,
+                                      marginBottom: 2,
+                                    }}
+                                  >
+                                    {field}:
+                                  </Text>
+                                  {renderChangeDetail(change, field)}
+                                </View>
+                              ))}
+                          </View>
+                        );
+                      },
+                    )
                   ) : (
-                    // Fallback al formato anterior si no hay diff
-                    <>
-                      <Text
-                        variant="bodySmall"
-                        style={{
-                          color: theme.colors.primary,
-                          fontWeight: '600',
-                          marginBottom: 8,
-                        }}
-                      >
-                        Nueva orden creada
-                      </Text>
-                      {item.snapshot && (
-                        <View
-                          style={{
-                            backgroundColor: theme.colors.surface,
-                            padding: 8,
-                            borderRadius: 6,
-                          }}
-                        >
-                          {item.snapshot.orderType && (
-                            <Text
-                              variant="bodySmall"
-                              style={{ marginBottom: 4 }}
-                            >
-                              <Text style={{ fontWeight: '600' }}>Tipo:</Text>{' '}
-                              {formatValue(
-                                'orderType',
-                                item.snapshot.orderType,
-                              )}
-                            </Text>
-                          )}
-                          {item.snapshot.tableId && (
-                            <Text
-                              variant="bodySmall"
-                              style={{ marginBottom: 4 }}
-                            >
-                              <Text style={{ fontWeight: '600' }}>Mesa:</Text>{' '}
-                              {item.snapshot.table?.name ||
-                                'Mesa ' + item.snapshot.tableId}
-                            </Text>
-                          )}
-                          {item.snapshot.notes && (
-                            <Text variant="bodySmall">
-                              <Text style={{ fontWeight: '600' }}>Notas:</Text>{' '}
-                              {item.snapshot.notes}
-                            </Text>
-                          )}
-                        </View>
-                      )}
-                    </>
+                    // Formato original (legacy)
+                    <Text
+                      variant="bodySmall"
+                      style={{ fontWeight: '600', marginBottom: 8 }}
+                    >
+                      Nueva orden creada
+                      {item.snapshot?.orderType &&
+                        ` - ${formatValue('orderType', item.snapshot.orderType)}`}
+                    </Text>
                   )}
                 </>
               )}
 
               {item.operation === 'UPDATE' &&
-                item.diff &&
                 (() => {
-                  const relevantChanges = Object.entries(item.diff)
-                    .filter(([field]) => {
-                      // Solo mostrar campos que rastreamos en el backend
-                      const allowedFields = [
+                  // Para formato nuevo con formattedChanges
+                  if (item.formattedChanges) {
+                    return Object.entries(item.formattedChanges).map(
+                      ([section, changes]) => {
+                        if (section === 'Resumen') {
+                          return (
+                            <Text
+                              key={section}
+                              variant="bodySmall"
+                              style={{
+                                color: theme.colors.primary,
+                                fontWeight: '600',
+                                marginBottom: 8,
+                                fontStyle: 'italic',
+                              }}
+                            >
+                              {changes as string}
+                            </Text>
+                          );
+                        }
+                        return (
+                          <View key={section} style={{ marginBottom: 12 }}>
+                            <Text
+                              variant="labelSmall"
+                              style={{
+                                color: theme.colors.primary,
+                                fontWeight: '600',
+                                marginBottom: 6,
+                              }}
+                            >
+                              {section}:
+                            </Text>
+                            {typeof changes === 'object' &&
+                              Object.entries(changes).map(([field, change]) => (
+                                <View
+                                  key={field}
+                                  style={{ marginBottom: 4, marginLeft: 8 }}
+                                >
+                                  <Text
+                                    variant="labelSmall"
+                                    style={{
+                                      color: theme.colors.onSurfaceVariant,
+                                      marginBottom: 2,
+                                    }}
+                                  >
+                                    {field}:
+                                  </Text>
+                                  {renderChangeDetail(change, field)}
+                                </View>
+                              ))}
+                          </View>
+                        );
+                      },
+                    );
+                  }
+
+                  // Para formato con diff
+                  if (item.diff) {
+                    return (
+                      <>
+                        {item.diff.summary && (
+                          <Text
+                            variant="bodySmall"
+                            style={{
+                              color: theme.colors.primary,
+                              fontWeight: '600',
+                              marginBottom: 8,
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            {item.diff.summary}
+                          </Text>
+                        )}
+                        {item.diff.order?.fields &&
+                          Object.entries(item.diff.order.fields).map(
+                            ([field, values]) => (
+                              <View key={field} style={{ marginBottom: 8 }}>
+                                <Text
+                                  variant="labelSmall"
+                                  style={{
+                                    color: theme.colors.onSurfaceVariant,
+                                    fontWeight: '600',
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  {formatFieldName(field)}:
+                                </Text>
+                                {renderChangeDetail(values, field)}
+                              </View>
+                            ),
+                          )}
+                      </>
+                    );
+                  }
+
+                  // Formato legacy
+                  const relevantChanges = Object.entries(item.snapshot || {})
+                    .filter(([field]) =>
+                      [
                         'orderStatus',
                         'orderType',
-                        'notes',
                         'tableId',
-                        'customerId',
-                        'scheduledAt',
+                        'notes',
                         'deliveryInfo',
-                        'isFromWhatsApp',
-                      ];
-                      return allowedFields.includes(field);
-                    })
-                    .flatMap(([field, change]) => {
-                      // Si es deliveryInfo y es un objeto, expandir sus propiedades
-                      if (
-                        field === 'deliveryInfo' &&
-                        change &&
-                        typeof change === 'object' &&
-                        !Array.isArray(change)
-                      ) {
-                        return Object.entries(change).map(
-                          ([subField, subChange]) => ({
-                            field: subField,
-                            change: subChange,
-                          }),
-                        );
-                      }
-                      return [{ field, change }];
-                    });
+                        'estimatedDeliveryTime',
+                        'scheduledAt',
+                        'customerId',
+                      ].includes(field),
+                    )
+                    .map(([field, value]) => ({ field, change: value }));
 
                   if (relevantChanges.length === 0) {
                     return (
@@ -967,231 +1042,23 @@ const HistoryItemComponent: React.FC<{
                   </Text>
                 )}
 
-                {/* Cambios en la orden */}
-                {item.diff.order?.fields && (
+                {/* Cambios en items (agregados/modificados/eliminados) */}
+                {item.diff.items && (
                   <>
-                    <Text
-                      variant="bodySmall"
-                      style={{
-                        color: theme.colors.primary,
-                        fontWeight: '600',
-                        marginBottom: 8,
-                      }}
-                    >
-                      Cambios en la orden:
-                    </Text>
-                    {Object.entries(item.diff.order.fields).map(
-                      ([field, change]) => (
-                        <View key={field} style={{ marginBottom: 8 }}>
-                          <Text
-                            variant="labelSmall"
-                            style={{
-                              color: theme.colors.onSurfaceVariant,
-                              fontWeight: '600',
-                              marginBottom: 4,
-                              textTransform: 'capitalize',
-                            }}
-                          >
-                            {formatFieldName(field)}:
-                          </Text>
-                          {renderChangeDetail(change, field)}
-                        </View>
-                      ),
-                    )}
-                  </>
-                )}
-
-                {/* Cambios en información de entrega */}
-                {item.diff.order?.deliveryInfo && (
-                  <>
-                    <Text
-                      variant="bodySmall"
-                      style={{
-                        color: theme.colors.primary,
-                        fontWeight: '600',
-                        marginBottom: 8,
-                      }}
-                    >
-                      Cambios en información de entrega:
-                    </Text>
-                    {Object.entries(item.diff.order.deliveryInfo).map(
-                      ([field, change]) => (
-                        <View key={field} style={{ marginBottom: 8 }}>
-                          <Text
-                            variant="labelSmall"
-                            style={{
-                              color: theme.colors.onSurfaceVariant,
-                              fontWeight: '600',
-                              marginBottom: 4,
-                              textTransform: 'capitalize',
-                            }}
-                          >
-                            {formatFieldName(field)}:
-                          </Text>
-                          {renderChangeDetail(change, field)}
-                        </View>
-                      ),
-                    )}
-                  </>
-                )}
-
-                {/* Usar formattedChanges si está disponible para mostrar cambios simplificados */}
-                {item.formattedChanges &&
-                  item.formattedChanges['Cambios en productos'] && (
-                    <>
-                      <Text
-                        variant="bodySmall"
-                        style={{
-                          color: theme.colors.primary,
-                          fontWeight: '600',
-                          marginBottom: 8,
-                        }}
-                      >
-                        Cambios en productos:
-                      </Text>
-
-                      {/* Productos modificados - diseño mejorado */}
-                      {item.formattedChanges['Cambios en productos'][
-                        'Productos modificados'
-                      ] && (
-                        <View style={{ marginTop: 8 }}>
-                          {item.formattedChanges['Cambios en productos'][
-                            'Productos modificados'
-                          ].map((modItem: any, idx: number) => (
-                            <View
-                              key={`mod-${idx}`}
-                              style={{
-                                marginBottom: 12,
-                                backgroundColor: theme.colors.surfaceVariant,
-                                borderRadius: theme.roundness * 2,
-                                overflow: 'hidden',
-                              }}
-                            >
-                              {/* Header del cambio */}
-                              <View
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  backgroundColor: theme.colors.warning + '20',
-                                  paddingHorizontal: 12,
-                                  paddingVertical: 8,
-                                  borderBottomWidth: 1,
-                                  borderBottomColor:
-                                    theme.colors.warning + '30',
-                                }}
-                              >
-                                <Icon
-                                  name="pencil"
-                                  size={16}
-                                  color={theme.colors.warning}
-                                  style={{ marginRight: 8 }}
-                                />
-                                <Text
-                                  variant="labelMedium"
-                                  style={{
-                                    color: theme.colors.warning,
-                                    fontWeight: '600',
-                                    flex: 1,
-                                  }}
-                                >
-                                  Producto modificado
-                                </Text>
-                              </View>
-
-                              {/* Contenido del cambio */}
-                              <View style={{ padding: 12 }}>
-                                <View
-                                  style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    backgroundColor: theme.colors.surface,
-                                    borderRadius: theme.roundness,
-                                    padding: 10,
-                                  }}
-                                >
-                                  {/* Antes */}
-                                  <View
-                                    style={{
-                                      flex: 1,
-                                      paddingRight: 8,
-                                    }}
-                                  >
-                                    <Text
-                                      variant="labelSmall"
-                                      style={{
-                                        color: theme.colors.error,
-                                        marginBottom: 4,
-                                        opacity: 0.8,
-                                      }}
-                                    >
-                                      Antes
-                                    </Text>
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.onSurfaceVariant,
-                                        textDecorationLine: 'line-through',
-                                        opacity: 0.7,
-                                      }}
-                                    >
-                                      {modItem.antes}
-                                    </Text>
-                                  </View>
-
-                                  {/* Flecha */}
-                                  <View
-                                    style={{
-                                      paddingHorizontal: 8,
-                                    }}
-                                  >
-                                    <Icon
-                                      name="arrow-right-thick"
-                                      size={24}
-                                      color={theme.colors.primary}
-                                    />
-                                  </View>
-
-                                  {/* Después */}
-                                  <View
-                                    style={{
-                                      flex: 1,
-                                      paddingLeft: 8,
-                                    }}
-                                  >
-                                    <Text
-                                      variant="labelSmall"
-                                      style={{
-                                        color: theme.colors.primary,
-                                        marginBottom: 4,
-                                      }}
-                                    >
-                                      Después
-                                    </Text>
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.primary,
-                                        fontWeight: '600',
-                                      }}
-                                    >
-                                      {modItem.después}
-                                    </Text>
-                                  </View>
-                                </View>
-                              </View>
-                            </View>
-                          ))}
-                        </View>
-                      )}
-
-                      {/* Productos agregados - formato simplificado */}
-                      {item.formattedChanges['Cambios en productos'][
-                        'Productos agregados'
-                      ] && (
-                        <>
-                          {item.formattedChanges['Cambios en productos'][
-                            'Productos agregados'
-                          ].map((product: string, idx: number) => (
+                    {item.diff.items.added?.length > 0 && (
+                      <>
+                        <Text
+                          variant="labelSmall"
+                          style={{
+                            color: theme.colors.success,
+                            fontWeight: '600',
+                            marginBottom: 6,
+                          }}
+                        >
+                          Productos agregados:
+                        </Text>
+                        {item.diff.items.added.map(
+                          (addedItem: any, idx: number) => (
                             <View
                               key={`added-${idx}`}
                               style={{
@@ -1199,51 +1066,74 @@ const HistoryItemComponent: React.FC<{
                                 paddingLeft: 8,
                                 borderLeftWidth: 2,
                                 borderLeftColor: theme.colors.success + '50',
+                                backgroundColor: theme.colors.surface,
+                                padding: 8,
+                                marginLeft: 4,
+                                borderRadius: 4,
                               }}
                             >
-                              <View
+                              <Text
+                                variant="bodySmall"
+                                style={{ fontWeight: '600' }}
+                              >
+                                {addedItem.productName}
+                                {addedItem.variantName
+                                  ? ` - ${addedItem.variantName}`
+                                  : ''}
+                              </Text>
+                              {(addedItem.modifiers?.length > 0 ||
+                                addedItem.customizations?.length > 0 ||
+                                addedItem.notes) && (
+                                <Text
+                                  variant="labelSmall"
+                                  style={{
+                                    marginTop: 2,
+                                    color: theme.colors.onSurfaceVariant,
+                                  }}
+                                >
+                                  {[
+                                    addedItem.modifiers?.length > 0 &&
+                                      `Modificadores: ${addedItem.modifiers.join(', ')}`,
+                                    addedItem.customizations?.length > 0 &&
+                                      `Personalizaciones: ${addedItem.customizations.join(', ')}`,
+                                    addedItem.notes &&
+                                      `Notas: ${addedItem.notes}`,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' • ')}
+                                </Text>
+                              )}
+                              <Text
+                                variant="labelSmall"
                                 style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'flex-start',
+                                  marginTop: 4,
+                                  color: theme.colors.primary,
+                                  fontWeight: '600',
                                 }}
                               >
-                                <Icon
-                                  name="plus-circle"
-                                  size={14}
-                                  color={theme.colors.success}
-                                  style={{ marginRight: 6, marginTop: 2 }}
-                                />
-                                <View style={{ flex: 1 }}>
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{
-                                      color: theme.colors.success,
-                                      fontWeight: '600',
-                                    }}
-                                  >
-                                    Producto agregado
-                                  </Text>
-                                  <Text
-                                    variant="bodySmall"
-                                    style={{ marginTop: 2 }}
-                                  >
-                                    {product}
-                                  </Text>
-                                </View>
-                              </View>
+                                Precio: ${addedItem.finalPrice || addedItem.basePrice}
+                              </Text>
                             </View>
-                          ))}
-                        </>
-                      )}
+                          ),
+                        )}
+                      </>
+                    )}
 
-                      {/* Productos eliminados - formato simplificado */}
-                      {item.formattedChanges['Cambios en productos'][
-                        'Productos eliminados'
-                      ] && (
-                        <>
-                          {item.formattedChanges['Cambios en productos'][
-                            'Productos eliminados'
-                          ].map((product: string, idx: number) => (
+                    {item.diff.items.removed?.length > 0 && (
+                      <>
+                        <Text
+                          variant="labelSmall"
+                          style={{
+                            color: theme.colors.error,
+                            fontWeight: '600',
+                            marginBottom: 6,
+                            marginTop: 8,
+                          }}
+                        >
+                          Productos eliminados:
+                        </Text>
+                        {item.diff.items.removed.map(
+                          (removedItem: any, idx: number) => (
                             <View
                               key={`removed-${idx}`}
                               style={{
@@ -1251,306 +1141,107 @@ const HistoryItemComponent: React.FC<{
                                 paddingLeft: 8,
                                 borderLeftWidth: 2,
                                 borderLeftColor: theme.colors.error + '50',
+                                backgroundColor: theme.colors.surface,
+                                padding: 8,
+                                marginLeft: 4,
+                                borderRadius: 4,
                               }}
                             >
-                              <View
+                              <Text
+                                variant="bodySmall"
                                 style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'flex-start',
+                                  textDecorationLine: 'line-through',
+                                  color: theme.colors.error,
                                 }}
                               >
-                                <Icon
-                                  name="delete"
-                                  size={14}
-                                  color={theme.colors.error}
-                                  style={{ marginRight: 6, marginTop: 2 }}
-                                />
-                                <View style={{ flex: 1 }}>
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{
-                                      color: theme.colors.error,
-                                      fontWeight: '600',
-                                    }}
-                                  >
-                                    Producto eliminado
-                                  </Text>
-                                  <Text
-                                    variant="bodySmall"
-                                    style={{ marginTop: 2 }}
-                                  >
-                                    {product}
-                                  </Text>
-                                </View>
-                              </View>
+                                {removedItem.productName}
+                                {removedItem.variantName
+                                  ? ` - ${removedItem.variantName}`
+                                  : ''}
+                              </Text>
                             </View>
-                          ))}
-                        </>
-                      )}
-                    </>
-                  )}
+                          ),
+                        )}
+                      </>
+                    )}
 
-                {/* Cambios en items - formato JSON crudo (fallback si no hay formattedChanges) */}
-                {item.diff.items &&
-                  !item.formattedChanges?.['Cambios en productos'] && (
-                    <>
-                      <Text
-                        variant="bodySmall"
-                        style={{
-                          color: theme.colors.primary,
-                          fontWeight: '600',
-                          marginBottom: 8,
-                        }}
-                      >
-                        Cambios en productos:
-                      </Text>
-
-                      {/* Items agregados */}
-                      {item.diff.items.added?.map(
-                        (addedItem: any, idx: number) => (
-                          <View
-                            key={`added-${idx}`}
-                            style={{
-                              marginBottom: 8,
-                              paddingLeft: 8,
-                              borderLeftWidth: 2,
-                              borderLeftColor: theme.colors.success + '50',
-                            }}
-                          >
+                    {item.diff.items.modified?.length > 0 && (
+                      <>
+                        <Text
+                          variant="labelSmall"
+                          style={{
+                            color: theme.colors.warning || theme.colors.primary,
+                            fontWeight: '600',
+                            marginBottom: 6,
+                            marginTop: 8,
+                          }}
+                        >
+                          Productos modificados:
+                        </Text>
+                        {item.diff.items.modified.map(
+                          (modifiedItem: any, idx: number) => (
                             <View
+                              key={`modified-${idx}`}
                               style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
+                                marginBottom: 8,
+                                paddingLeft: 8,
+                                borderLeftWidth: 2,
+                                borderLeftColor:
+                                  (theme.colors.warning ||
+                                    theme.colors.primary) + '50',
+                                backgroundColor: theme.colors.surface,
+                                padding: 8,
+                                marginLeft: 4,
+                                borderRadius: 4,
                               }}
                             >
-                              <Icon
-                                name="plus-circle"
-                                size={14}
-                                color={theme.colors.success}
-                                style={{ marginRight: 6, marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.success,
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  Producto agregado
-                                </Text>
-                                <Text
-                                  variant="bodySmall"
-                                  style={{ marginTop: 2 }}
-                                >
-                                  {addedItem.productName}
-                                  {addedItem.variantName
-                                    ? ` - ${addedItem.variantName}`
-                                    : ''}
-                                </Text>
-                                {addedItem.modifiers?.length > 0 && (
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{
-                                      marginTop: 2,
-                                      color: theme.colors.onSurfaceVariant,
-                                    }}
-                                  >
-                                    Modificadores:{' '}
-                                    {addedItem.modifiers.join(', ')}
-                                  </Text>
-                                )}
-                                {addedItem.price && (
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{ marginTop: 2, fontWeight: '600' }}
-                                  >
-                                    Precio: ${addedItem.price}
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-                          </View>
-                        ),
-                      )}
-
-                      {/* Items modificados - Solo mostrar antes y después */}
-                      {item.diff.items.modified?.map(
-                        (modItem: any, idx: number) => (
-                          <View
-                            key={`mod-${idx}`}
-                            style={{
-                              marginBottom: 8,
-                              paddingLeft: 8,
-                              borderLeftWidth: 2,
-                              borderLeftColor: theme.colors.warning + '50',
-                            }}
-                          >
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
-                              }}
-                            >
-                              <Icon
-                                name="pencil"
-                                size={14}
-                                color={theme.colors.warning}
-                                style={{ marginRight: 6, marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.warning,
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  Producto modificado
-                                </Text>
-                                <View
-                                  style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    flexWrap: 'wrap',
-                                    marginTop: 4,
-                                  }}
-                                >
-                                  <View
-                                    style={{
-                                      backgroundColor:
-                                        theme.colors.errorContainer,
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 4,
-                                      borderRadius: 4,
-                                      marginRight: 6,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.onErrorContainer,
-                                      }}
+                              <Text
+                                variant="bodySmall"
+                                style={{ fontWeight: '600' }}
+                              >
+                                {modifiedItem.productName}
+                                {modifiedItem.variantName
+                                  ? ` - ${modifiedItem.variantName}`
+                                  : ''}
+                              </Text>
+                              {modifiedItem.changes &&
+                                Object.entries(modifiedItem.changes).map(
+                                  ([field, change]: [string, any]) => (
+                                    <View
+                                      key={field}
+                                      style={{ marginTop: 4 }}
                                     >
-                                      {modItem.before.productName}
-                                      {modItem.before.variantName
-                                        ? ` - ${modItem.before.variantName}`
-                                        : ''}
-                                    </Text>
-                                  </View>
-                                  <Icon
-                                    name="arrow-right"
-                                    size={16}
-                                    color={theme.colors.onSurfaceVariant}
-                                    style={{
-                                      marginHorizontal: 4,
-                                      marginTop: 4,
-                                    }}
-                                  />
-                                  <View
-                                    style={{
-                                      backgroundColor:
-                                        theme.colors.primaryContainer,
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 4,
-                                      borderRadius: 4,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.onPrimaryContainer,
-                                      }}
-                                    >
-                                      {modItem.after.productName}
-                                      {modItem.after.variantName
-                                        ? ` - ${modItem.after.variantName}`
-                                        : ''}
-                                    </Text>
-                                  </View>
-                                </View>
-                              </View>
-                            </View>
-                          </View>
-                        ),
-                      )}
-
-                      {/* Items eliminados */}
-                      {item.diff.items.removed?.map(
-                        (removedItem: any, idx: number) => (
-                          <View
-                            key={`removed-${idx}`}
-                            style={{
-                              marginBottom: 8,
-                              paddingLeft: 8,
-                              borderLeftWidth: 2,
-                              borderLeftColor: theme.colors.error + '50',
-                            }}
-                          >
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
-                              }}
-                            >
-                              <Icon
-                                name="delete"
-                                size={14}
-                                color={theme.colors.error}
-                                style={{ marginRight: 6, marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.error,
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  Producto eliminado
-                                </Text>
-                                <Text
-                                  variant="bodySmall"
-                                  style={{ marginTop: 2 }}
-                                >
-                                  {removedItem.productName}
-                                  {removedItem.variantName
-                                    ? ` - ${removedItem.variantName}`
-                                    : ''}
-                                </Text>
-                                {removedItem.price && (
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{ marginTop: 2, fontWeight: '600' }}
-                                  >
-                                    Precio: ${removedItem.price}
-                                  </Text>
+                                      <Text
+                                        variant="labelSmall"
+                                        style={{
+                                          color: theme.colors.onSurfaceVariant,
+                                        }}
+                                      >
+                                        {formatFieldName(field)}:
+                                      </Text>
+                                      {renderChangeDetail(change, field)}
+                                    </View>
+                                  ),
                                 )}
-                              </View>
                             </View>
-                          </View>
-                        ),
-                      )}
-                    </>
-                  )}
+                          ),
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
               </View>
             )}
 
-          {/* Contenido para items individuales (legacy) */}
-          {item.type === 'item' && item.operation !== 'BATCH' && (
+          {/* Contenido para items individuales */}
+          {item.type === 'item' && (
             <View style={styles.changesContainer}>
               {item.operation === 'INSERT' && (
                 <Text
                   variant="bodySmall"
-                  style={{
-                    color: theme.colors.primary,
-                    fontWeight: '600',
-                    marginBottom: 8,
-                  }}
+                  style={{ color: theme.colors.success, marginBottom: 8 }}
                 >
-                  Nuevo item agregado:
+                  Item agregado:
                 </Text>
               )}
               {item.operation === 'UPDATE' && item.formattedChanges && (
@@ -1563,23 +1254,11 @@ const HistoryItemComponent: React.FC<{
                       marginBottom: 8,
                     }}
                   >
-                    Item modificado:
+                    Cambios en el item:
                   </Text>
-                  {Object.entries(item.formattedChanges)
-                    .filter(([fieldName]) => {
-                      // Solo mostrar campos relevantes (no precios)
-                      const allowedFields = [
-                        'Descripción del Item',
-                        'Estado',
-                        'Notas de preparación',
-                        'Producto',
-                        'Variante',
-                        'Modificadores',
-                      ];
-                      return allowedFields.includes(fieldName);
-                    })
-                    .map(([fieldName, change]) => (
-                      <View key={fieldName} style={{ marginBottom: 8 }}>
+                  {Object.entries(item.formattedChanges).map(
+                    ([field, change]) => (
+                      <View key={field} style={{ marginBottom: 8 }}>
                         <Text
                           variant="labelSmall"
                           style={{
@@ -1588,11 +1267,12 @@ const HistoryItemComponent: React.FC<{
                             marginBottom: 4,
                           }}
                         >
-                          {fieldName}:
+                          {field}:
                         </Text>
-                        {renderChangeDetail(change, fieldName)}
+                        {renderChangeDetail(change, field)}
                       </View>
-                    ))}
+                    ),
+                  )}
                 </>
               )}
               {item.operation === 'DELETE' && (
@@ -1697,26 +1377,24 @@ const HistoryItemComponent: React.FC<{
                                 'Descripción',
                                 'Estado',
                                 'Notas de preparación',
-                                'Producto',
-                                'Variante',
-                                'Modificadores',
                                 'Estado de preparación',
                               ];
-                              return allowedFields.includes(fieldName);
+                              return allowedFields.some((allowed) =>
+                                fieldName.includes(allowed),
+                              );
                             })
-                            .map(([fieldName, change]) => (
-                              <View key={fieldName} style={{ marginBottom: 4 }}>
+                            .map(([field, change]) => (
+                              <View key={field} style={{ marginBottom: 4 }}>
                                 <Text
                                   variant="labelSmall"
                                   style={{
                                     color: theme.colors.onSurfaceVariant,
-                                    fontWeight: '500',
                                     fontSize: 11,
                                   }}
                                 >
-                                  {fieldName}:
+                                  {field}:
                                 </Text>
-                                {renderChangeDetail(change, fieldName)}
+                                {renderChangeDetail(change, field)}
                               </View>
                             ))}
                         </View>
@@ -1733,11 +1411,10 @@ const HistoryItemComponent: React.FC<{
   );
 };
 
-export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
-  visible,
-  onDismiss,
+export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
   orderId,
   orderNumber,
+  onBack,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -1752,7 +1429,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     queryKey: ['combinedHistory', orderId],
     queryFn: async () => {
       if (!orderId) throw new Error('No order ID');
-
+      
       // Obtener historial consolidado de la orden
       const orderHistoryResponse = await apiClient.get(
         `/api/v1/orders/${orderId}/history`,
@@ -1761,7 +1438,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
           limit: 100,
         },
       );
-
+      
       const orderHistory =
         orderHistoryResponse.ok && orderHistoryResponse.data?.data
           ? orderHistoryResponse.data.data.map((item: any) => ({
@@ -1769,193 +1446,120 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
               type: 'order' as const,
             }))
           : [];
-
-      // Ya no necesitamos consultar el historial de items por separado
-      // Todo está consolidado en el historial de la orden
-
-      // No es necesario agrupar ya que cada registro ya contiene cambios consolidados
+      
       return orderHistory;
     },
-    enabled: visible && !!orderId,
+    enabled: !!orderId,
     staleTime: 30000,
   });
 
-  // Refrescar cuando se abre el modal
-  useEffect(() => {
-    if (visible && orderId) {
-      refetch();
-    }
-  }, [visible, orderId, refetch]);
-
-  const renderHistoryItem = useCallback(
-    ({ item }: { item: HistoryItem }) => {
-      return <HistoryItemComponent item={item} theme={theme} />;
-    },
-    [theme],
-  );
+  const renderHistoryItem = ({ item }: { item: HistoryItem }) => {
+    return <HistoryItemComponent item={item} theme={theme} />;
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Icon
         name="history"
         size={48}
-        color={theme.colors.onSurfaceVariant}
+        color={theme.colors.onSurfaceDisabled}
         style={{ opacity: 0.5 }}
       />
       <Text
         variant="bodyLarge"
         style={{
-          color: theme.colors.onSurfaceVariant,
+          color: theme.colors.onSurfaceDisabled,
           marginTop: theme.spacing.m,
         }}
       >
         No hay historial disponible
       </Text>
+      <Text
+        variant="bodySmall"
+        style={{
+          color: theme.colors.onSurfaceVariant,
+          marginTop: theme.spacing.s,
+          textAlign: 'center',
+        }}
+      >
+        Los cambios realizados en esta orden aparecerán aquí
+      </Text>
     </View>
   );
 
   return (
-    <Modal
-      visible={visible}
-      onDismiss={onDismiss}
-      contentContainerStyle={styles.modalContainer}
-      dismissable={true}
-      dismissableBackButton={false}
-    >
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text
-            variant="titleMedium"
-            style={{
-              color: theme.colors.onSurface,
-              fontSize: 18,
-              fontWeight: '600',
-            }}
-            numberOfLines={1}
-          >
-            Historial de Orden #{orderNumber || ''}
-          </Text>
-          <Text
-            variant="bodySmall"
-            style={{
-              color: theme.colors.onSurfaceVariant,
-              marginTop: 2,
-            }}
-          >
-            {historyData?.length || 0} cambios registrados
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={onDismiss}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: theme.colors.errorContainer,
-            alignItems: 'center',
-            justifyContent: 'center',
-            elevation: 2,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          }}
-          activeOpacity={0.8}
-        >
-          <Icon
-              name="close"
-              size={24}
-              color={theme.colors.onErrorContainer}
-            />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <Appbar.Header style={styles.header}>
+        <Appbar.BackAction onPress={onBack} />
+        <Appbar.Content 
+          title={`Historial de Orden #${orderNumber || ''}`}
+          subtitle={`${historyData?.length || 0} cambios registrados`}
+        />
+      </Appbar.Header>
 
-        <Divider />
-
-        <View style={{ flex: 1 }}>
-          {isError ? (
-            <View style={styles.emptyContainer}>
-              <Icon
-                name="alert-circle"
-                size={48}
-                color={theme.colors.error}
-                style={{ opacity: 0.7 }}
-              />
-              <Text
-                variant="bodyLarge"
-                style={{
-                  color: theme.colors.error,
-                  marginTop: theme.spacing.m,
-                  textAlign: 'center',
-                }}
-              >
-                Error al cargar el historial
-              </Text>
-              <Button
-                onPress={() => refetch()}
-                mode="text"
-                style={{ marginTop: 16 }}
-              >
-                Reintentar
-              </Button>
-            </View>
-          ) : isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>Cargando historial...</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={historyData || []}
-              renderItem={renderHistoryItem}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={renderEmpty}
-              showsVerticalScrollIndicator={false}
+      <View style={styles.content}>
+        {isError ? (
+          <View style={styles.emptyContainer}>
+            <Icon
+              name="alert-circle"
+              size={48}
+              color={theme.colors.error}
+              style={{ opacity: 0.7 }}
             />
-          )}
-        </View>
-      </Modal>
+            <Text
+              variant="bodyLarge"
+              style={{
+                color: theme.colors.error,
+                marginTop: theme.spacing.m,
+                textAlign: 'center',
+              }}
+            >
+              Error al cargar el historial
+            </Text>
+            <Button
+              onPress={() => refetch()}
+              mode="text"
+              style={{ marginTop: 16 }}
+            >
+              Reintentar
+            </Button>
+          </View>
+        ) : isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Cargando historial...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={historyData || []}
+            renderItem={renderHistoryItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={renderEmpty}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </View>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) => {
   return StyleSheet.create({
-    modalContainer: {
-      backgroundColor: theme.colors.surface,
-      margin: 20,
-      marginVertical: Platform.OS === 'ios' ? 60 : 40,
-      borderRadius: theme.roundness * 3,
-      height: '80%',
-      maxHeight: 600,
-      width: '90%',
-      maxWidth: 500,
-      alignSelf: 'center',
-      elevation: 24,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.58,
-      shadowRadius: 16.0,
-      overflow: 'hidden',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: theme.spacing.l,
-      paddingVertical: theme.spacing.m,
-      backgroundColor: theme.colors.elevation.level2,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outlineVariant,
-      minHeight: 64,
-    },
-    scrollView: {
+    container: {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
+    header: {
+      backgroundColor: theme.colors.surface,
+      elevation: 2,
+    },
+    content: {
+      flex: 1,
+    },
     listContent: {
       padding: theme.spacing.m,
-      paddingBottom: theme.spacing.xl * 2, // Más espacio al final para evitar superposición
+      paddingBottom: theme.spacing.xl * 2,
     },
     loadingContainer: {
       flex: 1,
@@ -1982,43 +1586,26 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) => {
       elevation: 2,
     },
     historyHeader: {
-      // Cambio a estructura vertical para evitar encimamiento
-    },
-    userInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-      minWidth: 0,
-    },
-    userDetails: {
-      marginLeft: theme.spacing.s,
-      flex: 1,
-      minWidth: 0,
+      // Estructura vertical para evitar encimamiento
     },
     expandedContent: {
-      marginTop: theme.spacing.m,
-      backgroundColor: theme.colors.background,
-      marginHorizontal: -theme.spacing.s,
-      padding: theme.spacing.m,
-      borderBottomLeftRadius: theme.roundness,
-      borderBottomRightRadius: theme.roundness,
+      marginTop: theme.spacing.s,
+      paddingTop: theme.spacing.s,
     },
     changesContainer: {
-      paddingTop: theme.spacing.xs,
+      marginTop: theme.spacing.xs,
     },
     changeDetail: {
       flexDirection: 'row',
       alignItems: 'center',
+      marginTop: 4,
       flexWrap: 'wrap',
-      marginBottom: 4,
     },
     emptyContainer: {
       flex: 1,
-      padding: theme.spacing.xl,
       alignItems: 'center',
       justifyContent: 'center',
+      padding: theme.spacing.xl,
     },
   });
 };
-
-export default OrderHistoryModal;

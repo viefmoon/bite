@@ -12,4 +12,5 @@ export interface CategoryRepository
     UpdateCategoryDto
   > {
   findFullMenu(): Promise<Category[]>;
+  findOrderMenu(): Promise<Category[]>;
 }

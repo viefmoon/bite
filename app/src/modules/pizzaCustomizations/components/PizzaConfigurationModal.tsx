@@ -10,7 +10,8 @@ import {
   HelperText,
   Divider,
 } from 'react-native-paper';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,12 +34,123 @@ const configurationSchema = z.object({
 
 type ConfigurationFormData = z.infer<typeof configurationSchema>;
 
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
+  StyleSheet.create({
+    modal: {
+      backgroundColor: theme.colors.background,
+      margin: responsive.spacing(theme.spacing.l),
+      borderRadius: theme.roundness * 2,
+      maxHeight: responsive.isTablet ? '85%' : '80%',
+      maxWidth: responsive.isTablet ? 650 : 500,
+      width: responsive.isTablet ? '85%' : '100%',
+      alignSelf: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: responsive.spacing(theme.spacing.m),
+      paddingBottom: 0,
+    },
+    title: {
+      fontSize: responsive.fontSize(20),
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    closeButton: {
+      margin: 0,
+    },
+    content: {
+      padding: responsive.spacing(theme.spacing.m),
+    },
+    productInfo: {
+      backgroundColor: theme.colors.surfaceVariant,
+      padding: responsive.spacing(theme.spacing.m),
+      borderRadius: theme.roundness,
+      marginBottom: responsive.spacing(theme.spacing.l),
+    },
+    productName: {
+      fontWeight: '600',
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      fontSize: responsive.fontSize(16),
+    },
+    section: {
+      marginBottom: responsive.spacing(theme.spacing.l),
+    },
+    sectionTitle: {
+      marginBottom: responsive.spacing(theme.spacing.m),
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+      fontSize: responsive.fontSize(16),
+    },
+    input: {
+      marginBottom: responsive.spacing(theme.spacing.m),
+      backgroundColor: theme.colors.surface,
+    },
+    helperText: {
+      marginTop: -responsive.spacing(theme.spacing.s),
+      marginBottom: responsive.spacing(theme.spacing.m),
+      fontSize: responsive.fontSize(12),
+    },
+    infoBox: {
+      backgroundColor: theme.colors.primaryContainer,
+      padding: responsive.spacing(theme.spacing.m),
+      borderRadius: theme.roundness,
+      marginBottom: responsive.spacing(theme.spacing.m),
+    },
+    infoText: {
+      color: theme.colors.onPrimaryContainer,
+      fontSize: responsive.fontSize(12),
+    },
+    example: {
+      marginTop: responsive.spacing(theme.spacing.m),
+      padding: responsive.spacing(theme.spacing.m),
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness,
+    },
+    exampleTitle: {
+      fontWeight: '600',
+      marginBottom: responsive.spacing(theme.spacing.xs),
+      fontSize: responsive.fontSize(14),
+    },
+    exampleText: {
+      fontSize: responsive.fontSize(12),
+      color: theme.colors.onSurfaceVariant,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: responsive.spacing(theme.spacing.m),
+      paddingTop: responsive.spacing(theme.spacing.s),
+      gap: responsive.spacing(theme.spacing.m),
+    },
+    actionButton: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      maxWidth: responsive.isTablet ? 180 : 160,
+    },
+    cancelButton: {
+      borderColor: theme.colors.outlineVariant,
+    },
+    saveButton: {
+      borderWidth: 0,
+    },
+    buttonLabel: {
+      fontSize: responsive.fontSize(14),
+      fontWeight: '600',
+    },
+  });
+
 export function PizzaConfigurationModal({
   visible,
   onDismiss,
   product,
 }: PizzaConfigurationModalProps) {
   const theme = useAppTheme();
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -142,102 +254,6 @@ export function PizzaConfigurationModal({
   const onSubmit = (data: ConfigurationFormData) => {
     saveMutation.mutate(data);
   };
-
-  const styles = StyleSheet.create({
-    modal: {
-      backgroundColor: theme.colors.background,
-      margin: theme.spacing.l,
-      borderRadius: theme.roundness * 2,
-      maxHeight: '80%',
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: theme.spacing.m,
-      paddingBottom: 0,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    closeButton: {
-      margin: 0,
-    },
-    content: {
-      padding: theme.spacing.m,
-    },
-    productInfo: {
-      backgroundColor: theme.colors.surfaceVariant,
-      padding: theme.spacing.m,
-      borderRadius: theme.roundness,
-      marginBottom: theme.spacing.l,
-    },
-    productName: {
-      fontWeight: '600',
-      marginBottom: theme.spacing.xs,
-    },
-    section: {
-      marginBottom: theme.spacing.l,
-    },
-    sectionTitle: {
-      marginBottom: theme.spacing.m,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    input: {
-      marginBottom: theme.spacing.m,
-      backgroundColor: theme.colors.surface,
-    },
-    helperText: {
-      marginTop: -theme.spacing.s,
-      marginBottom: theme.spacing.m,
-    },
-    infoBox: {
-      backgroundColor: theme.colors.primaryContainer,
-      padding: theme.spacing.m,
-      borderRadius: theme.roundness,
-      marginBottom: theme.spacing.m,
-    },
-    infoText: {
-      color: theme.colors.onPrimaryContainer,
-      fontSize: 12,
-    },
-    example: {
-      marginTop: theme.spacing.m,
-      padding: theme.spacing.m,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-    },
-    exampleTitle: {
-      fontWeight: '600',
-      marginBottom: theme.spacing.xs,
-    },
-    exampleText: {
-      fontSize: 12,
-      color: theme.colors.onSurfaceVariant,
-    },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.m,
-      paddingTop: theme.spacing.s,
-      gap: theme.spacing.m,
-    },
-    actionButton: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-    },
-    cancelButton: {
-      borderColor: theme.colors.outlineVariant,
-    },
-    saveButton: {
-      borderWidth: 0,
-    },
-  });
 
   if (!product) return null;
 
@@ -421,7 +437,8 @@ export function PizzaConfigurationModal({
               }
             }}
             style={[styles.actionButton, styles.cancelButton]}
-            contentStyle={{ paddingVertical: 6 }}
+            contentStyle={{ paddingVertical: responsive.isTablet ? 4 : 6 }}
+            labelStyle={styles.buttonLabel}
           >
             Cancelar
           </Button>
@@ -430,7 +447,8 @@ export function PizzaConfigurationModal({
             onPress={handleSubmit(onSubmit)}
             loading={saveMutation.isPending}
             style={[styles.actionButton, styles.saveButton]}
-            contentStyle={{ paddingVertical: 6 }}
+            contentStyle={{ paddingVertical: responsive.isTablet ? 4 : 6 }}
+            labelStyle={styles.buttonLabel}
           >
             Guardar
           </Button>

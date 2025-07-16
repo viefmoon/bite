@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Portal, ActivityIndicator, IconButton, FAB } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
 import PrinterDiscoveryModal from '../components/PrinterDiscoveryModal';
 import PrinterFormModal from '../components/PrinterFormModal';
 import PrinterListItem from '../components/PrinterListItem';
@@ -27,7 +28,8 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 
 const PrintersScreen: React.FC = () => {
   const theme = useAppTheme();
-  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const responsive = useResponsive();
+  const styles = React.useMemo(() => createStyles(theme, responsive), [theme, responsive]);
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
@@ -316,7 +318,7 @@ const PrintersScreen: React.FC = () => {
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (theme: AppTheme, responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -325,17 +327,17 @@ const createStyles = (theme: AppTheme) =>
     // Eliminar estilos de headerButtons
     listPadding: {
       paddingBottom: 80, // Espacio para que el FAB no tape el último item
-      paddingTop: theme.spacing.s,
+      paddingTop: responsive.spacing(theme.spacing.s),
     },
     emptyListContainer: {
       flex: 1,
-      minHeight: 400,
+      minHeight: responsive.isTablet ? 350 : 400,
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.xl,
+      padding: responsive.spacing(theme.spacing.xl),
     },
     itemActionsContainer: {
       // Contenedor para los botones de acción de cada item
@@ -347,25 +349,26 @@ const createStyles = (theme: AppTheme) =>
       // Estilo base para botones de acción en la lista
       margin: 0,
       padding: 0,
-      width: 52, // Ancho más grande para el icono más grande
-      height: 52, // Alto más grande para el icono más grande
-      borderRadius: 26, // Redondeado perfecto (la mitad de width/height)
+      width: responsive.isTablet ? 44 : 52, // Más pequeño en tablet
+      height: responsive.isTablet ? 44 : 52, // Más pequeño en tablet
+      borderRadius: responsive.isTablet ? 22 : 26, // Redondeado perfecto
       backgroundColor: theme.colors.surfaceVariant, // Fondo para hacerlo más atractivo
       elevation: 2, // Sombra sutil para darle profundidad
     },
     pingIndicator: {
       // Estilo para el indicador de carga del ping
-      width: 52, // Mismo ancho que el botón para mantener alineación
-      height: 52, // Mismo alto
+      width: responsive.isTablet ? 44 : 52, // Mismo ancho que el botón
+      height: responsive.isTablet ? 44 : 52, // Mismo alto
       justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: 26, // Redondeado perfecto
+      borderRadius: responsive.isTablet ? 22 : 26, // Redondeado perfecto
       backgroundColor: theme.colors.primaryContainer, // Fondo de color primario
       elevation: 2, // Sombra sutil
     },
     errorText: {
       color: theme.colors.error,
       textAlign: 'center',
+      fontSize: responsive.fontSize(14),
     },
   });
 
