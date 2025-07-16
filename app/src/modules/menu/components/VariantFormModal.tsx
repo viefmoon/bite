@@ -11,7 +11,7 @@ import {
   HelperText,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/app/lib/zodResolver';
 import { ProductVariant } from '../schema/products.schema';
 import { z } from 'zod';
 import { useAppTheme } from '@/app/styles/theme';

@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/app/lib/zodResolver';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAppTheme, AppTheme } from '@/app/styles/theme';

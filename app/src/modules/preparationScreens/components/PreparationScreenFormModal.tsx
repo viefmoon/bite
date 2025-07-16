@@ -13,7 +13,7 @@ import {
   Divider,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { User, RoleEnum } from '@/modules/users/types/user.types';
 import { useGetUsers } from '@/modules/users/hooks/useUsers';

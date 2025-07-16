@@ -11,7 +11,7 @@ import {
   RadioButton,
 } from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@/app/lib/zodResolver';
 
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import {
