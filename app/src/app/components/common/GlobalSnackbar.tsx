@@ -1,5 +1,5 @@
 import React from 'react';
-import { Snackbar, Portal } from 'react-native-paper';
+import { Snackbar, Portal, Text } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import {
   useSnackbarStore,
@@ -82,7 +82,7 @@ const GlobalSnackbar: React.FC = () => {
           },
         }}
       >
-        {message || ''}
+        <Text style={styles.messageText}>{message || ''}</Text>
       </Snackbar>
     </Portal>
   );
@@ -100,6 +100,10 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
+  },
+  messageText: {
+    textAlign: 'center',
+    width: '100%',
   },
 });
 
