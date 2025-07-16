@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Configuración base para producción - Solo HTTPS por defecto -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Permitir tráfico cleartext SOLO para redes locales (auto-descubrimiento) -->
+    <!-- Esto es necesario para el sistema de discovery del servidor -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Redes privadas IPv4 (RFC 1918) -->
+        <domain>10.0.0.0/8</domain>
+        <domain>172.16.0.0/12</domain>
+        <domain>192.168.0.0/16</domain>
+        
+        <!-- Localhost y loopback -->
+        <domain>localhost</domain>
+        <domain>127.0.0.1</domain>
+        <domain>10.0.2.2</domain> <!-- Emulador Android -->
+        
+        <!-- Patrón para IPs locales comunes -->
+        <domain includeSubdomains="false">192.168.1.*</domain>
+        <domain includeSubdomains="false">192.168.0.*</domain>
+        <domain includeSubdomains="false">10.0.0.*</domain>
+        <domain includeSubdomains="false">172.16.*.*</domain>
+    </domain-config>
+    
+    <!-- Configuración específica para tu dominio de producción -->
+    <!-- TODO: Reemplaza "tu-dominio.com" con tu dominio real de producción -->
+    <domain-config>
+        <domain includeSubdomains="true">tu-dominio.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        
+        <!-- Certificate Pinning (opcional pero recomendado para producción) -->
+        <!-- TODO: Descomentar y actualizar con los hashes SHA-256 de tu certificado
+        <pin-set expiration="2026-01-01">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+        -->
+    </domain-config>
+    
+    <!-- Solo para desarrollo - Se ignora en builds de producción -->
+    <debug-overrides>
+        <trust-anchors>
+            <!-- Permite certificados del sistema -->
+            <certificates src="system" />
+            <!-- Permite certificados instalados por el usuario (ej: Charles Proxy) -->
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

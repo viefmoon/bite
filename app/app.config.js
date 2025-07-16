@@ -29,7 +29,9 @@ export default {
             compileSdkVersion: 35,
             targetSdkVersion: 34,
             buildToolsVersion: "35.0.0",
-            usesCleartextTraffic: true,
+            // Solo permitir cleartext en desarrollo, no en producción
+            // La configuración de network_security_config.xml maneja las excepciones para redes locales
+            usesCleartextTraffic: process.env.EAS_BUILD_PROFILE !== 'production',
             newArchEnabled: true
           },
           ios: {
