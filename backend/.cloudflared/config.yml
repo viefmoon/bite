@@ -1,0 +1,9 @@
+tunnel: d4a06053-91ba-414e-a0fd-310377381098
+credentials-file: C:\Users\Leonel\.cloudflared\d4a06053-91ba-414e-a0fd-310377381098.json
+
+ingress:
+  - hostname: api.pizzatototlan.store
+    service: http://localhost:3737
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404

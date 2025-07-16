@@ -9,6 +9,8 @@ interface DiscoveryResponse {
   port: number;
   features: string[];
   timestamp: number;
+  remoteUrl?: string;
+  tunnelEnabled?: boolean;
 }
 
 @ApiTags('Discovery')
@@ -40,10 +42,16 @@ export class DiscoveryController {
           example: ['orders', 'thermal-printing', 'voice-orders', 'sync'],
         },
         timestamp: { type: 'number', example: 1234567890123 },
+        remoteUrl: { type: 'string', example: 'https://api.ejemplo.com' },
+        tunnelEnabled: { type: 'boolean', example: true },
       },
+      required: ['type', 'name', 'version', 'port', 'features', 'timestamp'],
     },
   })
   identify(): DiscoveryResponse {
+    const remoteUrl = this.configService.get('app.remoteUrl');
+    const tunnelEnabled = !!remoteUrl;
+
     return {
       type: 'cloudbite-api',
       name: this.configService.get('app.name', 'CloudBite Restaurant API'),
@@ -60,6 +68,7 @@ export class DiscoveryController {
         'sync',
       ],
       timestamp: Date.now(),
+      ...(tunnelEnabled && { remoteUrl, tunnelEnabled }),
     };
   }
 }
