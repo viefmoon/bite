@@ -1,4 +1,5 @@
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   SyncStatusInfo,
   TriggerSyncResponse,
@@ -6,11 +7,10 @@ import {
 } from '../types/sync.types';
 
 class SyncService {
-  private readonly baseUrl = '/api/v1/sync-local';
 
   async getSyncStatus(): Promise<SyncStatusInfo> {
     const response = await apiClient.get<SyncStatusInfo>(
-      `${this.baseUrl}/status`,
+      API_PATHS.SYNC_STATUS,
     );
     if (!response.data) {
       throw new Error('No se pudo obtener el estado de sincronización');
@@ -20,7 +20,7 @@ class SyncService {
 
   async triggerSync(): Promise<TriggerSyncResponse> {
     const response = await apiClient.post<TriggerSyncResponse>(
-      `${this.baseUrl}/trigger`,
+      API_PATHS.SYNC_TRIGGER,
     );
     if (!response.data) {
       throw new Error('No se pudo ejecutar la sincronización');
@@ -32,7 +32,7 @@ class SyncService {
     limit: number = 20,
   ): Promise<{ data: SyncLog[]; count: number }> {
     const response = await apiClient.get<{ data: SyncLog[]; count: number }>(
-      `${this.baseUrl}/history`,
+      API_PATHS.SYNC_HISTORY,
       { params: { limit } },
     );
     if (!response.data) {
@@ -50,7 +50,7 @@ class SyncService {
       accepted: number;
       failed: number;
       message: string;
-    }>(`${this.baseUrl}/orders/accept`, { orderIds });
+    }>(API_PATHS.SYNC_ORDERS_ACCEPT, { orderIds });
     return response.data!;
   }
 

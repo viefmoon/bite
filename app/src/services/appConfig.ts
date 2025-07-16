@@ -1,4 +1,5 @@
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface AppConfig {
   maps: {
@@ -15,7 +16,7 @@ class AppConfigService {
     }
 
     try {
-      const response = await apiClient.get<AppConfig>('/api/v1/app-config');
+      const response = await apiClient.get<AppConfig>(API_PATHS.APP_CONFIG);
       this.config = response.data;
       return this.config;
     } catch (error) {

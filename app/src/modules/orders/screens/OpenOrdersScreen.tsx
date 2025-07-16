@@ -21,6 +21,7 @@ import { useAuthStore } from '../../../app/store/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import {
   useGetOpenOrdersListQuery,
   useUpdateOrderMutation,
@@ -793,7 +794,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 setTimeout(() => {
                   const existingProducts =
                     temporaryProducts[editingOrderId!] || [];
-                  navigation.navigate('AddProductsToOrder', {
+                  navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
                     orderId: editingOrderId!,
                     orderNumber: orderNumber!,
                     // Pasar productos temporales existentes si los hay

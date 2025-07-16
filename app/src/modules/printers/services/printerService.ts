@@ -22,7 +22,7 @@ const discoverPrinters = async (
   duration: number = 10000,
 ): Promise<DiscoveredPrinter[]> => {
   const response = await ApiClientWrapper.get<DiscoveredPrinter[]>(
-    `${API_PATHS.THERMAL_PRINTERS}/discover`,
+    API_PATHS.THERMAL_PRINTERS_DISCOVER,
     { duration },
   );
 
@@ -85,7 +85,7 @@ const findAllPrinters = async (
 
 const findOnePrinter = async (id: string): Promise<ThermalPrinter> => {
   const response = await ApiClientWrapper.get<ThermalPrinter>(
-    `${API_PATHS.THERMAL_PRINTERS}/${id}`,
+    API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
   );
   if (!response.ok || !response.data) {
     handleApiError(response);
@@ -111,7 +111,7 @@ const updatePrinter = async (
   data: UpdateThermalPrinterDto,
 ): Promise<ThermalPrinter> => {
   const response = await ApiClientWrapper.patch<ThermalPrinter>(
-    `${API_PATHS.THERMAL_PRINTERS}/${id}`,
+    API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
     data,
   );
   if (!response.ok || !response.data) {
@@ -122,7 +122,7 @@ const updatePrinter = async (
 
 const deletePrinter = async (id: string): Promise<void> => {
   const response = await ApiClientWrapper.delete(
-    `${API_PATHS.THERMAL_PRINTERS}/${id}`,
+    API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
   );
   if (!response.ok) {
     handleApiError(response);
@@ -131,7 +131,7 @@ const deletePrinter = async (id: string): Promise<void> => {
 
 const pingPrinter = async (id: string): Promise<{ status: string }> => {
   const response = await ApiClientWrapper.get<{ status: string }>(
-    `${API_PATHS.THERMAL_PRINTERS}/${id}/ping`,
+    API_PATHS.THERMAL_PRINTERS_PING.replace(':id', id),
   );
 
   if (
@@ -150,7 +150,7 @@ const testPrintDiscoveredPrinter = async (
   const response = await ApiClientWrapper.post<{
     success: boolean;
     message?: string;
-  }>(`${API_PATHS.THERMAL_PRINTERS}/test-print`, {
+  }>(API_PATHS.THERMAL_PRINTERS_TEST_PRINT, {
     ip: printer.ip,
     port: printer.port,
     connectionType: 'NETWORK',
@@ -184,7 +184,7 @@ const testPrintPrinter = async (
   const response = await ApiClientWrapper.post<{
     success: boolean;
     message?: string;
-  }>(`${API_PATHS.THERMAL_PRINTERS}/test-print`, printerInfo);
+  }>(API_PATHS.THERMAL_PRINTERS_TEST_PRINT, printerInfo);
 
   if (!response.ok || !response.data) {
     handleApiError(response);

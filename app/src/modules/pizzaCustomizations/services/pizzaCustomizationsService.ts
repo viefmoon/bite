@@ -35,7 +35,7 @@ async function findAll(
 
 async function findOne(id: string): Promise<PizzaCustomization> {
   const response = await apiClient.get<PizzaCustomization>(
-    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
+    API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -65,7 +65,7 @@ async function update(
   data: Partial<PizzaCustomizationFormInputs>,
 ): Promise<PizzaCustomization> {
   const response = await apiClient.patch<PizzaCustomization>(
-    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
+    API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
     data,
   );
 
@@ -78,7 +78,7 @@ async function update(
 
 async function remove(id: string): Promise<void> {
   const response = await apiClient.delete(
-    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/${id}`,
+    API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
   );
 
   if (!response.ok) {
@@ -90,7 +90,7 @@ async function updateSortOrder(
   updates: { id: string; sortOrder: number }[],
 ): Promise<void> {
   const response = await apiClient.patch(
-    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/sort-order`,
+    API_PATHS.PIZZA_CUSTOMIZATIONS_SORT_ORDER,
     { updates },
   );
 

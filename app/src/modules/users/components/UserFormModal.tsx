@@ -871,24 +871,35 @@ const getStyles = (
 ) =>
   StyleSheet.create({
     modalContainer: {
-      margin: responsive.isTablet ? 30 : 20,
-      maxWidth: responsive.isTablet ? 650 : '100%',
+      margin: responsive.isTablet ? theme.spacing.xl : theme.spacing.m,
+      maxWidth: responsive.isTablet ? 700 : 420,
       alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '100%',
+      width: responsive.isTablet ? '85%' : '92%',
+      paddingHorizontal: 0,
+      height: responsive.isTablet ? '85%' : '80%',
+      maxHeight: responsive.isTablet ? '90%' : '85%',
+      justifyContent: 'center',
     },
     modalContent: {
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
-      maxHeight: responsive.isTablet ? '90%' : '90%',
-      minHeight: responsive.isTablet ? 600 : 400,
+      height: '100%',
+      flex: 1,
       overflow: 'hidden',
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
+      paddingVertical: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -909,15 +920,15 @@ const getStyles = (
     formContainer: {
       flex: 1,
       paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.m
+        ? theme.spacing.l
         : theme.spacing.m,
-      paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       paddingBottom: responsive.isTablet
-        ? responsive.spacing.m
+        ? theme.spacing.l
         : theme.spacing.s,
     },
     sectionContainer: {
-      marginBottom: theme.spacing.s,
+      marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -1058,14 +1069,14 @@ const getStyles = (
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      padding: theme.spacing.s,
+      padding: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       gap: theme.spacing.s,
     },
     button: {
       flex: 1,
-      maxWidth: 150,
+      maxWidth: responsive.isTablet ? 180 : 150,
     },
     cancelButton: {
       backgroundColor: theme.colors.secondaryContainer,

@@ -1,8 +1,9 @@
 import NetInfo from '@react-native-community/netinfo';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { NETWORK_CONFIG } from '../constants/network';
+import { API_PATHS } from '../constants/apiPaths';
 
-const DISCOVERY_ENDPOINT = 'api/v1/discovery';
+const DISCOVERY_ENDPOINT = API_PATHS.DISCOVERY.substring(1); // Quitar / inicial
 const STORAGE_KEY = 'last_known_api_url';
 
 interface DiscoveryResponse {
@@ -256,7 +257,7 @@ export class DiscoveryService {
    */
   private async probeServer(ip: string): Promise<string | null> {
     const url = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}/`;
-    const fullUrl = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}/${DISCOVERY_ENDPOINT}`;
+    const fullUrl = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}${API_PATHS.DISCOVERY}`;
 
     // Crear AbortController para timeout real
     const controller = new AbortController();

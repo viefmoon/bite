@@ -11,7 +11,7 @@ async function findByProductId(
   productId: string,
 ): Promise<PizzaConfiguration | null> {
   const response = await apiClient.get<PizzaConfiguration>(
-    `${API_PATHS.PIZZA_CONFIGURATIONS}/product/${productId}`,
+    API_PATHS.PIZZA_CONFIGURATIONS + '/product/' + productId,
   );
 
   if (response.status === 404) {
@@ -45,7 +45,7 @@ async function update(
   data: UpdatePizzaConfigurationInputs,
 ): Promise<PizzaConfiguration> {
   const response = await apiClient.patch<PizzaConfiguration>(
-    `${API_PATHS.PIZZA_CONFIGURATIONS}/${id}`,
+    API_PATHS.PIZZA_CONFIGURATIONS_BY_ID.replace(':id', id),
     data,
   );
 
@@ -58,7 +58,7 @@ async function update(
 
 async function remove(id: string): Promise<void> {
   const response = await apiClient.delete(
-    `${API_PATHS.PIZZA_CONFIGURATIONS}/${id}`,
+    API_PATHS.PIZZA_CONFIGURATIONS_BY_ID.replace(':id', id),
   );
 
   if (!response.ok) {

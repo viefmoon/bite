@@ -19,7 +19,7 @@ export const prepaymentService = {
    */
   createPrepayment: async (data: CreatePrepaymentDto): Promise<Payment> => {
     const response = await apiClient.post<Payment>(
-      `${API_PATHS.PAYMENTS}/prepayment`,
+      API_PATHS.PAYMENTS_PREPAYMENT,
       data,
     );
     return handleApiResponse(response);
@@ -33,7 +33,7 @@ export const prepaymentService = {
     data: UpdatePrepaymentDto,
   ): Promise<Payment> => {
     const response = await apiClient.patch<Payment>(
-      `${API_PATHS.PAYMENTS}/${paymentId}`,
+      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', paymentId),
       data,
     );
     return handleApiResponse(response);
@@ -47,7 +47,7 @@ export const prepaymentService = {
     orderId: string,
   ): Promise<Payment> => {
     const response = await apiClient.patch<Payment>(
-      `${API_PATHS.PAYMENTS}/${paymentId}/associate/${orderId}`,
+      API_PATHS.PAYMENTS_ASSOCIATE.replace(':paymentId', paymentId).replace(':orderId', orderId),
     );
     return handleApiResponse(response);
   },
@@ -57,7 +57,7 @@ export const prepaymentService = {
    */
   deletePrepayment: async (paymentId: string): Promise<void> => {
     const response = await apiClient.delete(
-      `${API_PATHS.PAYMENTS}/${paymentId}`,
+      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', paymentId),
     );
     handleApiResponseVoid(response);
   },

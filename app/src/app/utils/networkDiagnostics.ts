@@ -1,6 +1,7 @@
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
 import { serverConnectionService } from '@/app/services/serverConnectionService';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 interface NetworkDiagnosticResult {
   timestamp: Date;
@@ -68,7 +69,8 @@ export async function runNetworkDiagnostics(): Promise<NetworkDiagnosticResult> 
   const apiStartTime = Date.now();
   try {
     // Probando conexión a API
-    const response = await axios.get(`${apiUrl}api/v1/health`, {
+    const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+    const response = await axios.get(`${baseUrl}${API_PATHS.HEALTH}`, {
       timeout: 5000,
       validateStatus: () => true, // Aceptar cualquier status
     });

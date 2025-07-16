@@ -63,7 +63,7 @@ export const findAllSubcategories = async (
 
 export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
   const response = await ApiClientWrapper.get<SubCategory>(
-    `${API_PATHS.SUBCATEGORIES}/${id}`,
+    API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -76,7 +76,7 @@ export const updateSubcategory = async (
   data: UpdateSubCategoryDto,
 ): Promise<SubCategory> => {
   const response = await ApiClientWrapper.patch<SubCategory>(
-    `${API_PATHS.SUBCATEGORIES}/${id}`,
+    API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
     data,
   );
   if (!response.ok || !response.data) {
@@ -87,7 +87,7 @@ export const updateSubcategory = async (
 
 export const removeSubcategory = async (id: string): Promise<void> => {
   const response = await ApiClientWrapper.delete(
-    `${API_PATHS.SUBCATEGORIES}/${id}`,
+    API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
   );
   if (!response.ok) {
     if (response.data) {

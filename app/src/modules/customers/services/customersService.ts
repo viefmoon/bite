@@ -19,7 +19,7 @@ async function findAll(params?: FindAllCustomersQuery): Promise<Customer[]> {
 
 async function findOne(id: string): Promise<Customer> {
   const response = await apiClient.get<Customer>(
-    `${API_PATHS.CUSTOMERS}/${id}`,
+    API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -37,7 +37,7 @@ async function create(data: CreateCustomerDto): Promise<Customer> {
 
 async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
-    `${API_PATHS.CUSTOMERS}/${id}`,
+    API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
     data,
   );
   if (!response.ok || !response.data) {
@@ -47,7 +47,7 @@ async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(`${API_PATHS.CUSTOMERS}/${id}`);
+  const response = await apiClient.delete(API_PATHS.CUSTOMERS_BY_ID.replace(':id', id));
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -59,7 +59,7 @@ async function appendChatMessage(
   message: Omit<ChatMessage, 'timestamp'>,
 ): Promise<Customer> {
   const response = await apiClient.post<Customer>(
-    `${API_PATHS.CUSTOMERS}/${customerId}/chat-message`,
+    API_PATHS.CUSTOMERS_CHAT_MESSAGE.replace(':customerId', customerId),
     message,
   );
   if (!response.ok || !response.data) {
@@ -73,7 +73,7 @@ async function updateRelevantChatHistory(
   relevantHistory: ChatMessage[],
 ): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
-    `${API_PATHS.CUSTOMERS}/${customerId}/relevant-chat-history`,
+    API_PATHS.CUSTOMERS_CHAT_HISTORY.replace(':customerId', customerId),
     { relevantHistory },
   );
   if (!response.ok || !response.data) {
@@ -87,7 +87,7 @@ async function updateCustomerStats(
   stats: { totalOrders?: number; totalSpent?: number },
 ): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
-    `${API_PATHS.CUSTOMERS}/${customerId}/stats`,
+    API_PATHS.CUSTOMERS_STATS.replace(':customerId', customerId),
     stats,
   );
   if (!response.ok || !response.data) {
@@ -100,7 +100,7 @@ async function getActiveWithRecentInteraction(
   daysAgo: number = 30,
 ): Promise<Customer[]> {
   const response = await apiClient.get<Customer[]>(
-    `${API_PATHS.CUSTOMERS}/active/recent`,
+    API_PATHS.CUSTOMERS_ACTIVE_RECENT,
     { daysAgo },
   );
   if (!response.ok || !response.data) {

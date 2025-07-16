@@ -1,4 +1,5 @@
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 interface PrintTicketPayload {
   printerId: string;
@@ -11,7 +12,7 @@ export const orderPrintService = {
    */
   printTicket: async (orderId: string, payload: PrintTicketPayload) => {
     const response = await apiClient.post(
-      `/api/v1/orders/${orderId}/print-ticket`,
+      API_PATHS.ORDERS_PRINT_TICKET.replace(':orderId', orderId),
       payload,
     );
     return response.data;

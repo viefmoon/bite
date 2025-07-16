@@ -30,7 +30,7 @@ class PaymentService {
 
   async getPaymentById(id: string): Promise<Payment> {
     const { data } = await ApiClientWrapper.get<Payment>(
-      `${API_PATHS.PAYMENTS}/${id}`,
+      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
     );
     return data;
   }
@@ -44,14 +44,14 @@ class PaymentService {
 
   async updatePayment(id: string, dto: UpdatePaymentDto): Promise<Payment> {
     const { data } = await ApiClientWrapper.patch<Payment>(
-      `${API_PATHS.PAYMENTS}/${id}`,
+      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
       dto,
     );
     return data;
   }
 
   async deletePayment(id: string): Promise<void> {
-    await ApiClientWrapper.delete(`${API_PATHS.PAYMENTS}/${id}`);
+    await ApiClientWrapper.delete(API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id));
   }
 }
 

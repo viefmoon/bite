@@ -94,7 +94,7 @@ export const orderService = {
    */
   getOpenOrdersList: async (): Promise<OrderOpenList[]> => {
     const response = await apiClient.get<OrderOpenList[]>(
-      `${API_PATHS.ORDERS}/open-orders-list`,
+      API_PATHS.ORDERS_OPEN_ORDERS_LIST,
     );
     return handleApiResponse(response);
   },
@@ -129,7 +129,7 @@ export const orderService = {
    */
   getOrderById: async (orderId: string): Promise<Order> => {
     const response = await apiClient.get<Order>(
-      `${API_PATHS.ORDERS}/${orderId}`,
+      API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
     );
 
     if (!response.ok || !response.data) {
@@ -150,7 +150,7 @@ export const orderService = {
     payload: UpdateOrderPayload,
   ): Promise<Order> => {
     const response = await apiClient.patch<Order>(
-      `${API_PATHS.ORDERS}/${orderId}`,
+      API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
       payload,
     );
 
@@ -173,7 +173,7 @@ export const orderService = {
     };
 
     const response = await apiClient.patch<Order>(
-      `${API_PATHS.ORDERS}/${orderId}`,
+      API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
       payload,
     );
 

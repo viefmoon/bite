@@ -2,6 +2,7 @@ import axios from 'axios';
 import { serverConnectionService } from '@/app/services/serverConnectionService';
 import { useAuthStore } from '@/app/store/authStore';
 import NetInfo from '@react-native-community/netinfo';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface AudioServiceHealthStatus {
   isAvailable: boolean;
@@ -92,8 +93,10 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      const apiUrl = connectionState.serverUrl;
-      const response = await axios.get(`${apiUrl}api/v1/audio-orders/health`, {
+      const apiUrl = connectionState.serverUrl.endsWith('/') 
+        ? connectionState.serverUrl.slice(0, -1) 
+        : connectionState.serverUrl;
+      const response = await axios.get(`${apiUrl}${API_PATHS.AUDIO_ORDERS_HEALTH}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

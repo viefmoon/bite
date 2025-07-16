@@ -28,7 +28,7 @@ export const receiptService = {
     }
 
     const response = await apiClient.get<ReceiptsListResponse>(
-      `${API_PATHS.ORDERS}/receipts-list`,
+      API_PATHS.ORDERS_RECEIPTS_LIST,
       queryParams,
     );
 
@@ -41,7 +41,7 @@ export const receiptService = {
 
   getReceiptById: async (id: string): Promise<Receipt> => {
     const response = await apiClient.get<Receipt>(
-      `${API_PATHS.ORDERS}/receipts/${id}`,
+      API_PATHS.ORDERS_RECEIPTS_BY_ID.replace(':id', id),
     );
 
     if (!response.ok || !response.data) {
@@ -53,7 +53,7 @@ export const receiptService = {
 
   recoverOrder: async (id: string): Promise<Order> => {
     const response = await apiClient.post<Order>(
-      `${API_PATHS.ORDERS}/${id}/recover`,
+      API_PATHS.ORDERS_RECOVER.replace(':id', id),
       {},
     );
 

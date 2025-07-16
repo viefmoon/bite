@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}image-cache/`;
 const MAX_CACHE_SIZE_MB = 500;
@@ -73,7 +74,7 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
 
   // Si la URL es de nuestra API, incluir el host en el hash para evitar conflictos
   // cuando cambia la IP del servidor
-  if (remoteUrl.includes('/api/v1/files/')) {
+  if (remoteUrl.includes(API_PATHS.FILES_CHECK)) {
     try {
       const parsedUrl = new URL(remoteUrl);
       // Incluir host + pathname para diferenciar entre diferentes servidores

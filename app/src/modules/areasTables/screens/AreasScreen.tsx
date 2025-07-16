@@ -24,6 +24,7 @@ import { useResponsive } from '../../../app/hooks/useResponsive';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useListState } from '../../../app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
@@ -100,7 +101,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   };
 
   const handleNavigateToTables = (area: Area) => {
-    navigation.navigate('TablesList', { areaId: area.id, areaName: area.name });
+    navigation.navigate(NAVIGATION_PATHS.TABLES_LIST, { areaId: area.id, areaName: area.name });
   };
 
   const listRenderConfig: RenderItemConfig<Area> = {

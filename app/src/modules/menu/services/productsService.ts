@@ -35,7 +35,7 @@ async function findAll(
 }
 
 async function findOne(id: string): Promise<Product> {
-  const response = await apiClient.get<Product>(`${API_PATHS.PRODUCTS}/${id}`);
+  const response = await apiClient.get<Product>(API_PATHS.PRODUCTS_BY_ID.replace(':id', id));
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
   }
@@ -68,7 +68,7 @@ async function update(
   data: Partial<ProductFormInputs>,
 ): Promise<Product> {
   const response = await apiClient.patch<Product>(
-    `${API_PATHS.PRODUCTS}/${id}`,
+    API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
     data,
   );
 
@@ -91,7 +91,7 @@ async function update(
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(`${API_PATHS.PRODUCTS}/${id}`);
+  const response = await apiClient.delete(API_PATHS.PRODUCTS_BY_ID.replace(':id', id));
   if (!response.ok) {
     // No esperamos 'data' en un 204 No Content, pero sí puede haber error
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -104,7 +104,7 @@ async function assignModifierGroups(
   data: AssignModifierGroupsInput,
 ): Promise<Product> {
   const response = await apiClient.post<Product>(
-    `${API_PATHS.PRODUCTS}/${productId}/modifier-groups`,
+    API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
     data,
   );
   if (!response.ok || !response.data) {
@@ -115,7 +115,7 @@ async function assignModifierGroups(
 
 async function getModifierGroups(productId: string): Promise<Product> {
   const response = await apiClient.get<Product>(
-    `${API_PATHS.PRODUCTS}/${productId}/modifier-groups`,
+    API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -128,7 +128,7 @@ async function removeModifierGroups(
   data: AssignModifierGroupsInput,
 ): Promise<Product> {
   const response = await apiClient.delete<Product>(
-    `${API_PATHS.PRODUCTS}/${productId}/modifier-groups`,
+    API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
     data,
   );
   if (!response.ok || !response.data) {
@@ -147,7 +147,7 @@ async function findAllPizzas(): Promise<Product[]> {
 
 async function getPizzaCustomizations(productId: string): Promise<any[]> {
   const response = await apiClient.get<any[]>(
-    `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
+    API_PATHS.PRODUCTS_PIZZA_CUSTOMIZATIONS.replace(':productId', productId),
   );
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(response.data, response.status);
@@ -160,7 +160,7 @@ async function updatePizzaCustomizations(
   pizzaCustomizationIds: string[],
 ): Promise<Product> {
   const response = await apiClient.put<Product>(
-    `${API_PATHS.PRODUCTS}/${productId}/pizza-customizations`,
+    API_PATHS.PRODUCTS_PIZZA_CUSTOMIZATIONS.replace(':productId', productId),
     pizzaCustomizationIds, // Enviar el array directamente
   );
   if (!response.ok || !response.data) {
@@ -173,7 +173,7 @@ async function bulkUpdatePizzaCustomizations(
   updates: Array<{ productId: string; customizationIds: string[] }>,
 ): Promise<void> {
   const response = await apiClient.put(
-    `${API_PATHS.PRODUCTS}/pizzas/customizations/bulk`,
+    API_PATHS.PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK,
     { updates },
   );
   if (!response.ok) {

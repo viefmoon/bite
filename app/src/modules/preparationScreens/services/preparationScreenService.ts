@@ -71,7 +71,7 @@ export const getPreparationScreenById = async (
   id: string,
 ): Promise<PreparationScreen> => {
   const response = await ApiClientWrapper.get<PreparationScreen>(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}`,
+    API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -124,7 +124,7 @@ export const updatePreparationScreen = async (
   data: UpdatePreparationScreenDto,
 ): Promise<PreparationScreen> => {
   const response = await ApiClientWrapper.patch<PreparationScreen>(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}`,
+    API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
     data,
   );
 
@@ -145,7 +145,7 @@ export const updatePreparationScreen = async (
  */
 export const deletePreparationScreen = async (id: string): Promise<void> => {
   const response = await ApiClientWrapper.delete(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}`,
+    API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
   );
 
   if (!response.ok) {
@@ -166,7 +166,7 @@ export const getPreparationScreenProducts = async (
   id: string,
 ): Promise<any[]> => {
   const response = await ApiClientWrapper.get<any[]>(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}/products`,
+    API_PATHS.PREPARATION_SCREENS_PRODUCTS.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -186,7 +186,7 @@ export const getPreparationScreenProducts = async (
  */
 export const getMenuWithAssociations = async (id: string): Promise<any> => {
   const response = await ApiClientWrapper.get<any>(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}/menu-with-associations`,
+    API_PATHS.PREPARATION_SCREENS_MENU_WITH_ASSOCIATIONS.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -210,7 +210,7 @@ export const associateProducts = async (
   productIds: string[],
 ): Promise<PreparationScreen> => {
   const response = await ApiClientWrapper.post<PreparationScreen>(
-    `${API_PATHS.PREPARATION_SCREENS}/${id}/products`,
+    API_PATHS.PREPARATION_SCREENS_PRODUCTS.replace(':id', id),
     { productIds },
   );
 

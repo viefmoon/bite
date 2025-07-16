@@ -31,7 +31,7 @@ export const orderFinalizationService = {
     orderIds: string[],
   ): Promise<{ message: string; ordersWithWarnings: string[] }> {
     const response = await apiClient.post(
-      '/api/v1/orders/quick-finalize-multiple',
+      API_PATHS.ORDERS_QUICK_FINALIZE_MULTIPLE,
       { orderIds },
     );
     return response.data;
@@ -41,6 +41,6 @@ export const orderFinalizationService = {
     orderId: string,
     params: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
   ): Promise<void> {
-    await apiClient.post(`/api/v1/orders/${orderId}/print-ticket`, params);
+    await apiClient.post(API_PATHS.ORDERS_PRINT_TICKET.replace(':orderId', orderId), params);
   },
 };

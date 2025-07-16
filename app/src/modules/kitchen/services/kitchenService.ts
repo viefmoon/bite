@@ -60,19 +60,19 @@ class KitchenService {
 
   async startOrderPreparation(orderId: string): Promise<void> {
     await ApiClientWrapper.patch(
-      `${API_PATHS.KITCHEN_ORDERS}/${orderId}/start-preparation`,
+      API_PATHS.KITCHEN_ORDERS_START_PREPARATION.replace(':orderId', orderId),
     );
   }
 
   async cancelOrderPreparation(orderId: string): Promise<void> {
     await ApiClientWrapper.patch(
-      `${API_PATHS.KITCHEN_ORDERS}/${orderId}/cancel-preparation`,
+      API_PATHS.KITCHEN_ORDERS_CANCEL_PREPARATION.replace(':orderId', orderId),
     );
   }
 
   async completeOrderPreparation(orderId: string): Promise<void> {
     await ApiClientWrapper.patch(
-      `${API_PATHS.KITCHEN_ORDERS}/${orderId}/complete-preparation`,
+      API_PATHS.KITCHEN_ORDERS_COMPLETE_PREPARATION.replace(':orderId', orderId),
     );
   }
 }

@@ -15,7 +15,7 @@ export const ShiftIndicator: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
 
-  const { data: shift, isLoading: loading } = useGlobalShift();
+  const { data: shift, isLoading: loading, refetch } = useGlobalShift();
 
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [openShiftModalVisible, setOpenShiftModalVisible] = useState(false);
@@ -25,6 +25,7 @@ export const ShiftIndicator: React.FC = () => {
   const isShiftOpen = shift && shift.status === 'OPEN';
 
   const handlePress = () => {
+    // No refrescamos aquí porque ya se actualiza automáticamente
     setStatusModalVisible(true);
   };
 

@@ -74,7 +74,7 @@ export const modifierService = {
    */
   async findOne(id: string): Promise<Modifier> {
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIERS}/${id}`,
+      API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
     );
 
     if (!response.ok || !response.data) {
@@ -102,7 +102,7 @@ export const modifierService = {
       ...(params.search && { search: params.search }),
     };
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIERS}/by-group/${modifierGroupId}`,
+      API_PATHS.MODIFIERS_BY_GROUP.replace(':modifierGroupId', modifierGroupId),
       queryParams,
     );
 
@@ -145,7 +145,7 @@ export const modifierService = {
    */
   async update(id: string, data: UpdateModifierInput): Promise<Modifier> {
     const response = await apiClient.patch<unknown>(
-      `${API_PATHS.MODIFIERS}/${id}`,
+      API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
       data,
     );
 
@@ -168,7 +168,7 @@ export const modifierService = {
    * Elimina un modificador.
    */
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(`${API_PATHS.MODIFIERS}/${id}`);
+    const response = await apiClient.delete(API_PATHS.MODIFIERS_BY_ID.replace(':id', id));
 
     if (!response.ok) {
       // Error al eliminar modificador

@@ -38,7 +38,7 @@ export const getCategories = async (params?: {
 
 export const getCategory = async (id: string): Promise<Category> => {
   const response = await ApiClientWrapper.get<Category>(
-    `${API_PATHS.CATEGORIES}/${id}`,
+    API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -66,7 +66,7 @@ export const updateCategory = async (
   data: UpdateCategoryDto,
 ): Promise<Category> => {
   const response = await ApiClientWrapper.patch<Category>(
-    `${API_PATHS.CATEGORIES}/${id}`,
+    API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
     data,
   );
 
@@ -79,7 +79,7 @@ export const updateCategory = async (
 
 export const deleteCategory = async (id: string): Promise<void> => {
   const response = await ApiClientWrapper.delete(
-    `${API_PATHS.CATEGORIES}/${id}`,
+    API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
   );
 
   if (!response.ok) {
@@ -90,7 +90,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
 // Menú para pantallas de creación de órdenes
 export async function getOrderMenu(): Promise<Category[]> {
   const response = await ApiClientWrapper.get<Category[]>(
-    `${API_PATHS.CATEGORIES}/order-menu`,
+    API_PATHS.CATEGORIES_ORDER_MENU,
   );
 
   if (!response.ok || !response.data) {

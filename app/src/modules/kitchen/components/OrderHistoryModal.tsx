@@ -19,6 +19,7 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -61,7 +62,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     queryKey: ['orderHistory', orderId],
     queryFn: async () => {
       const response = await apiClient.get(
-        `/api/v1/orders/${orderId}/history?limit=50`,
+        `${API_PATHS.ORDERS_HISTORY.replace(':orderId', orderId)}?limit=50`,
       );
       return response.data?.data || [];
     },

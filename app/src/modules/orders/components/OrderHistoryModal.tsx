@@ -22,6 +22,7 @@ import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface HistoryItem {
@@ -1753,7 +1754,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 
       // Obtener historial consolidado de la orden
       const orderHistoryResponse = await apiClient.get(
-        `/api/v1/orders/${orderId}/history`,
+        API_PATHS.ORDERS_HISTORY.replace(':orderId', orderId),
         {
           page: 1,
           limit: 100,

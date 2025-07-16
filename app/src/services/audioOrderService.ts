@@ -1,5 +1,6 @@
 import ApiClientWrapper from '../app/services/apiClientWrapper';
 import * as FileSystem from 'expo-file-system';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface AIOrderItem {
   productId: string;
@@ -69,7 +70,7 @@ class AudioOrderService {
 
       // Enviar al backend que se comunicará con el servidor remoto
       const response = await ApiClientWrapper.post(
-        '/api/audio-orders/process',
+        API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
       );
 

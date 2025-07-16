@@ -868,27 +868,38 @@ const getStyles = (
       letterSpacing: 0.1,
     },
     modalContainer: {
-      margin: responsive.isTablet ? 30 : 20,
-      maxWidth: responsive.isTablet ? 650 : '100%',
+      margin: responsive.isTablet ? theme.spacing.xl : theme.spacing.m,
+      maxWidth: responsive.isTablet ? 700 : 420,
       alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '100%',
+      width: responsive.isTablet ? '85%' : '92%',
+      paddingHorizontal: 0,
+      height: responsive.isTablet ? '80%' : '80%',
+      maxHeight: responsive.isTablet ? '85%' : '92%',
+      justifyContent: 'center',
     },
     modalContent: {
       borderRadius: theme.roundness * 3,
       backgroundColor: theme.colors.surface,
-      maxHeight: responsive.isTablet ? '90%' : '90%',
-      minHeight: responsive.isTablet ? 600 : 400,
+      height: '100%',
+      flex: 1,
       overflow: 'hidden',
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     headerContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.m
+        ? theme.spacing.l
         : theme.spacing.m,
       paddingVertical: responsive.isTablet
-        ? responsive.spacing.s
+        ? theme.spacing.m
         : theme.spacing.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
@@ -913,12 +924,12 @@ const getStyles = (
       fontSize: responsive.isTablet ? 12 : 14,
     },
     headerRoleChip: {
-      minHeight: 28,
+      minHeight: responsive.isTablet ? 32 : 28,
       height: 'auto',
       borderRadius: theme.roundness * 2,
       borderWidth: 1,
       borderColor: theme.colors.outlineVariant,
-      paddingHorizontal: responsive.spacing.s,
+      paddingHorizontal: theme.spacing.s,
       paddingVertical: 3,
       alignItems: 'center',
       justifyContent: 'center',
@@ -934,18 +945,18 @@ const getStyles = (
     contentContainer: {
       flex: 1,
       paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.m
-        : theme.spacing.s,
-      paddingTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+        ? theme.spacing.l
+        : theme.spacing.m,
+      paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       paddingBottom: responsive.isTablet
-        ? responsive.spacing.l
+        ? theme.spacing.l
         : theme.spacing.m,
     },
     infoSection: {
       borderRadius: theme.roundness * 2,
-      padding: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      padding: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       marginBottom: responsive.isTablet
-        ? responsive.spacing.s
+        ? theme.spacing.m
         : theme.spacing.s,
       backgroundColor: theme.colors.elevation.level1,
       borderWidth: 0,
@@ -954,9 +965,9 @@ const getStyles = (
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: responsive.isTablet ? responsive.spacing.xs : theme.spacing.xs,
+      gap: responsive.isTablet ? theme.spacing.xs : theme.spacing.xs,
       marginBottom: responsive.isTablet
-        ? responsive.spacing.xs
+        ? theme.spacing.s
         : theme.spacing.xs,
     },
     sectionTitle: {
@@ -974,9 +985,9 @@ const getStyles = (
       fontSize: 11,
     },
     actionsContainer: {
-      gap: responsive.isTablet ? theme.spacing.xs : theme.spacing.xs,
-      marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.m,
-      marginTop: responsive.isTablet ? theme.spacing.s : theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      marginBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
+      marginTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
       paddingHorizontal: 0,
     },
     actionButton: {
@@ -1002,9 +1013,9 @@ const getStyles = (
     compactRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: responsive.isTablet ? responsive.spacing.s : theme.spacing.s,
+      gap: responsive.isTablet ? theme.spacing.s : theme.spacing.s,
       paddingVertical: responsive.isTablet
-        ? responsive.spacing.xs
+        ? theme.spacing.s
         : theme.spacing.xs,
     },
     compactContent: {

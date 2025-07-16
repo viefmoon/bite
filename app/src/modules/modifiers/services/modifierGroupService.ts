@@ -78,7 +78,7 @@ export const modifierGroupService = {
    */
   async findOne(id: string): Promise<ModifierGroup> {
     const response = await apiClient.get<unknown>(
-      `${API_PATHS.MODIFIER_GROUPS}/${id}`,
+      API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
     );
 
     if (!response.ok || !response.data) {
@@ -126,7 +126,7 @@ export const modifierGroupService = {
     data: UpdateModifierGroupInput,
   ): Promise<ModifierGroup> {
     const response = await apiClient.patch<unknown>(
-      `${API_PATHS.MODIFIER_GROUPS}/${id}`,
+      API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
       data,
     );
 
@@ -150,7 +150,7 @@ export const modifierGroupService = {
    */
   async remove(id: string): Promise<void> {
     const response = await apiClient.delete(
-      `${API_PATHS.MODIFIER_GROUPS}/${id}`,
+      API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
     );
 
     if (!response.ok) {

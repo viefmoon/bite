@@ -45,7 +45,7 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(`${API_PATHS.TABLES}/area/${areaId}`);
+  }>(API_PATHS.TABLES_BY_AREA.replace(':areaId', areaId));
 
   if (!response.ok || !response.data) {
     throw ApiError.fromApiResponse(
@@ -58,7 +58,7 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
 
 export const getTableById = async (id: string): Promise<Table> => {
   const response = await ApiClientWrapper.get<Table>(
-    `${API_PATHS.TABLES}/${id}`,
+    API_PATHS.TABLES_BY_ID.replace(':id', id),
   );
 
   if (!response.ok || !response.data) {
@@ -87,7 +87,7 @@ export const updateTable = async (
   data: UpdateTableDto,
 ): Promise<Table> => {
   const response = await ApiClientWrapper.patch<Table>(
-    `${API_PATHS.TABLES}/${id}`,
+    API_PATHS.TABLES_BY_ID.replace(':id', id),
     data,
   );
 
@@ -101,7 +101,7 @@ export const updateTable = async (
 };
 
 export const deleteTable = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(`${API_PATHS.TABLES}/${id}`);
+  const response = await ApiClientWrapper.delete(API_PATHS.TABLES_BY_ID.replace(':id', id));
 
   if (!response.ok) {
     throw ApiError.fromApiResponse(

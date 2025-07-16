@@ -2,6 +2,7 @@ import axios from 'axios';
 import { discoveryService } from '@/app/services/discoveryService';
 import EventEmitter from 'eventemitter3';
 import { NETWORK_CONFIG } from '@/app/constants/network';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export type HealthStatus = 'ok' | 'error' | 'checking';
 
@@ -89,9 +90,9 @@ class HealthMonitoringService extends EventEmitter {
         return false;
       }
 
-      // Asegurar que la URL termine con /
-      const baseUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
-      const healthUrl = `${baseUrl}api/v1/health`;
+      // Asegurar que la URL NO termine con /
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const healthUrl = `${baseUrl}${API_PATHS.HEALTH}`;
 
       const response = await axios.get(healthUrl, {
         timeout: NETWORK_CONFIG.HEALTH_CHECK_TIMEOUT,

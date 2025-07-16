@@ -1,5 +1,6 @@
 import apiClient from '@/app/services/apiClient';
 import { ApiError } from '@/app/lib/errors';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import type {
   User,
   CreateUserDto,
@@ -34,7 +35,7 @@ export const usersApiService = {
     }
 
     const response = await apiClient.get(
-      `/api/v1/users?${queryParams.toString()}`,
+      `${API_PATHS.USERS}?${queryParams.toString()}`,
     );
 
     if (!response.ok || !response.data) {
@@ -45,7 +46,7 @@ export const usersApiService = {
   },
 
   async findOne(id: string): Promise<User> {
-    const response = await apiClient.get(`/api/v1/users/${id}`);
+    const response = await apiClient.get(API_PATHS.USERS_BY_ID.replace(':id', id));
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -53,7 +54,7 @@ export const usersApiService = {
   },
 
   async create(data: CreateUserDto): Promise<User> {
-    const response = await apiClient.post('/api/v1/users', data);
+    const response = await apiClient.post(API_PATHS.USERS, data);
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -61,7 +62,7 @@ export const usersApiService = {
   },
 
   async update(id: string, data: UpdateUserDto): Promise<User> {
-    const response = await apiClient.patch(`/api/v1/users/${id}`, data);
+    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), data);
     if (!response.ok || !response.data) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
@@ -69,14 +70,14 @@ export const usersApiService = {
   },
 
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(`/api/v1/users/${id}`);
+    const response = await apiClient.delete(API_PATHS.USERS_BY_ID.replace(':id', id));
     if (!response.ok) {
       throw ApiError.fromApiResponse(response.data, response.status);
     }
   },
 
   async resetPassword(id: string, newPassword: string): Promise<User> {
-    const response = await apiClient.patch(`/api/v1/users/${id}`, {
+    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), {
       password: newPassword,
     });
     if (!response.ok || !response.data) {
@@ -86,7 +87,7 @@ export const usersApiService = {
   },
 
   async toggleActive(id: string, isActive: boolean): Promise<User> {
-    const response = await apiClient.patch(`/api/v1/users/${id}`, {
+    const response = await apiClient.patch(API_PATHS.USERS_BY_ID.replace(':id', id), {
       isActive,
     });
     if (!response.ok || !response.data) {

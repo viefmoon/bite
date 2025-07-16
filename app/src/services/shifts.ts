@@ -1,4 +1,5 @@
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface ShiftStatus {
   OPEN: 'OPEN';
@@ -50,7 +51,7 @@ class ShiftsService {
    */
   async getCurrentShift(): Promise<Shift | null> {
     try {
-      const response = await apiClient.get('/api/v1/shifts/current');
+      const response = await apiClient.get(API_PATHS.SHIFTS_CURRENT);
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -64,7 +65,7 @@ class ShiftsService {
    * Abrir un nuevo turno
    */
   async openShift(data: OpenShiftDto): Promise<Shift> {
-    const response = await apiClient.post('/api/v1/shifts/open', data);
+    const response = await apiClient.post(API_PATHS.SHIFTS_OPEN, data);
 
     if (!response.ok) {
       throw (
@@ -81,7 +82,7 @@ class ShiftsService {
    * Cerrar el turno actual
    */
   async closeShift(data: CloseShiftDto): Promise<Shift> {
-    const response = await apiClient.post('/api/v1/shifts/close', data);
+    const response = await apiClient.post(API_PATHS.SHIFTS_CLOSE, data);
 
     if (!response.ok) {
       throw (
@@ -111,8 +112,8 @@ class ShiftsService {
     }
 
     const url = queryParams.toString()
-      ? `/api/v1/shifts/history?${queryParams.toString()}`
-      : '/api/v1/shifts/history';
+      ? `${API_PATHS.SHIFTS_HISTORY}?${queryParams.toString()}`
+      : API_PATHS.SHIFTS_HISTORY;
 
     const response = await apiClient.get(url);
     return response.data;
@@ -122,7 +123,7 @@ class ShiftsService {
    * Obtener un turno por ID
    */
   async getById(id: string): Promise<Shift> {
-    const response = await apiClient.get(`/api/v1/shifts/${id}`);
+    const response = await apiClient.get(API_PATHS.SHIFTS_DETAIL.replace(':id', id));
     return response.data;
   }
 

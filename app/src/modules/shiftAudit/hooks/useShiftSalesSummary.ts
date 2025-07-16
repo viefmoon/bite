@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface ProductSalesSummary {
   productId: string;
@@ -47,7 +48,7 @@ export function useShiftSalesSummary(shiftId: string | null) {
       if (!shiftId) return null;
 
       const response = await apiClient.get(
-        `/api/v1/orders/shift/${shiftId}/sales-summary`,
+        API_PATHS.ORDERS_BY_SHIFT_SALES_SUMMARY.replace(':shiftId', shiftId),
       );
 
       if (!response.ok) {

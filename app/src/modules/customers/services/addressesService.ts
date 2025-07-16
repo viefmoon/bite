@@ -12,7 +12,7 @@ async function create(
   data: CreateAddressDto,
 ): Promise<Address> {
   const response = await apiClient.post<Address>(
-    `${API_PATHS.CUSTOMERS}/${customerId}/addresses`,
+    API_PATHS.ADDRESSES_BY_CUSTOMER.replace(':customerId', customerId),
     data,
   );
   if (!response.ok || !response.data) {
@@ -26,7 +26,7 @@ async function update(
   data: UpdateAddressDto,
 ): Promise<Address> {
   const response = await apiClient.patch<Address>(
-    `${API_PATHS.ADDRESSES}/${addressId}`,
+    API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),
     data,
   );
   if (!response.ok || !response.data) {
@@ -37,7 +37,7 @@ async function update(
 
 async function remove(addressId: string): Promise<void> {
   const response = await apiClient.delete(
-    `${API_PATHS.ADDRESSES}/${addressId}`,
+    API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),
   );
   if (!response.ok) {
     throw ApiError.fromApiResponse(response.data, response.status);

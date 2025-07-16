@@ -12,7 +12,7 @@ export const adjustmentService = {
     adjustments: OrderAdjustmentDto[],
   ): Promise<Adjustment[]> => {
     const response = await apiClient.post<Adjustment[]>(
-      `${API_PATHS.ADJUSTMENTS}/bulk`,
+      API_PATHS.ADJUSTMENTS + '/bulk',
       adjustments,
     );
     return handleApiResponse(response);
@@ -23,7 +23,7 @@ export const adjustmentService = {
    */
   getOrderAdjustments: async (orderId: string): Promise<Adjustment[]> => {
     const response = await apiClient.get<Adjustment[]>(
-      `${API_PATHS.ADJUSTMENTS}/order/${orderId}`,
+      API_PATHS.ADJUSTMENTS + '/order/' + orderId,
     );
     return handleApiResponse(response);
   },
@@ -33,7 +33,7 @@ export const adjustmentService = {
    */
   deleteAdjustment: async (adjustmentId: string): Promise<void> => {
     const response = await apiClient.delete<void>(
-      `${API_PATHS.ADJUSTMENTS}/${adjustmentId}`,
+      API_PATHS.ADJUSTMENTS_BY_ID.replace(':id', adjustmentId),
     );
     return handleApiResponse(response);
   },
@@ -45,7 +45,7 @@ export const adjustmentService = {
     orderId: string,
   ): Promise<{ total: number }> => {
     const response = await apiClient.get<{ total: number }>(
-      `${API_PATHS.ADJUSTMENTS}/order/${orderId}/total`,
+      API_PATHS.ADJUSTMENTS + '/order/' + orderId + '/total',
     );
     return handleApiResponse(response);
   },
