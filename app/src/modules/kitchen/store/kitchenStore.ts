@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import { KitchenFilters } from '../types/kitchen.types';
 
-const KITCHEN_FILTERS_STORAGE_KEY = 'kitchen-filters-preferences';
+const KITCHEN_FILTERS_STORAGE_KEY = 'kitchen_filters_preferences';
 
 interface KitchenStore {
   filters: KitchenFilters;

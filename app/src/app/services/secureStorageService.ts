@@ -66,12 +66,14 @@ class SecureStorageService {
     // expo-secure-store no tiene un método clear()
     // Necesitamos eliminar las claves conocidas manualmente
     const keysToRemove = [
-      'access_token',
+      'auth_token',
       'refresh_token',
-      'user_data',
-      'api_url',
-      'kitchen_filter_screens',
-      'theme_mode',
+      'user_info',
+      'last_known_api_url',
+      'kitchen_filters_preferences',
+      'app_theme_preference',
+      'user_credentials',
+      'remember_me_preference',
     ];
 
     for (const key of keysToRemove) {
