@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Animated } from 'react-native';
 import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -7,123 +7,96 @@ import {
   useStartOrderPreparation,
   useCancelOrderPreparation,
   useCompleteOrderPreparation,
-} from '../hooks/useKitchenOrders';
+} from '../hooks/useKitchenOrdersEfficient';
 import { useKitchenStore } from '../store/kitchenStore';
 import { OrderCard } from '../components/OrderCard';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useKitchenContext } from '../context/KitchenContext';
 import { OrderType } from '../types/kitchen.types';
 
-export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
+export default function KitchenOrdersScreen() {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const { filters, setFilters: _setFilters } = useKitchenStore();
+  const { filters } = useKitchenStore();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isSwipingCard, setIsSwipingCard] = useState(false);
-  const flatListRef = useRef<ScrollView>(null);
   const { refetchRef } = useKitchenContext();
 
   const {
     data: orders,
     isLoading,
     refetch,
-    isRefetching: _isRefetching,
   } = useKitchenOrders(filters);
   const startOrderPreparation = useStartOrderPreparation();
   const cancelOrderPreparation = useCancelOrderPreparation();
   const completeOrderPreparation = useCompleteOrderPreparation();
 
-  // Conectar la función de refetch al contexto
   useEffect(() => {
     refetchRef.current = refetch;
   }, [refetch, refetchRef]);
 
-  // Crear estilos responsive
-  const styles = createStyles(theme, responsive);
+  const hasOrders = !!orders?.length;
 
-  // Forzar orientación horizontal para pantallas de preparación
+  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
+  
+  const cardWidth = useMemo(() => 
+    responsive.isTablet
+      ? responsive.getResponsiveDimension(280, 320)
+      : responsive.getResponsiveDimension(240, 280),
+    [responsive.isTablet]
+  );
+
+  const handleStartPreparation = useCallback((orderId: string) => {
+    startOrderPreparation.mutate(orderId);
+  }, [startOrderPreparation]);
+
+  const handleCancelPreparation = useCallback((orderId: string) => {
+    cancelOrderPreparation.mutate(orderId);
+  }, [cancelOrderPreparation]);
+
+  const handleCompletePreparation = useCallback((orderId: string) => {
+    completeOrderPreparation.mutate(orderId);
+  }, [completeOrderPreparation]);
+
   useEffect(() => {
-    const setLandscape = async () => {
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE,
-      );
-    };
-    setLandscape();
+    if (Platform.OS !== 'web') {
+      const setLandscape = async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE,
+        );
+      };
+      setLandscape();
 
-    return () => {
-      ScreenOrientation.unlockAsync();
-    };
+      return () => {
+        ScreenOrientation.unlockAsync();
+      };
+    }
   }, []);
 
-  // El drawer está desactivado globalmente en KitchenOnlyNavigator
-
-  // Animación de pulso para el icono vacío
   useEffect(() => {
-    const hasOrders = orders && orders.length > 0;
     if (!hasOrders) {
-      Animated.loop(
+      const animation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 1000,
+            toValue: 1.2,
+            duration: 1500,
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 1000,
+            duration: 1500,
             useNativeDriver: true,
           }),
         ]),
-      ).start();
+      );
+      animation.start();
+      return () => animation.stop();
     }
-  }, [orders, pulseAnim]);
+  }, [hasOrders, pulseAnim]);
 
-  const handleStartPreparation = (orderId: string) => {
-    startOrderPreparation.mutate(orderId);
-  };
-
-  const handleCancelPreparation = (orderId: string) => {
-    cancelOrderPreparation.mutate(orderId);
-  };
-
-  const handleCompletePreparation = (orderId: string) => {
-    completeOrderPreparation.mutate(orderId);
-  };
-
-  if (isLoading) {
-    return (
-      <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text
-          variant="bodyLarge"
-          style={{
-            marginTop: theme.spacing.m,
-            color: theme.colors.onBackground,
-          }}
-        >
-          Cargando pedidos...
-        </Text>
-      </View>
-    );
-  }
-
-  const hasOrders = orders && orders.length > 0;
-
-  // Calcular ancho de las tarjetas para lista horizontal
-  const cardWidth = responsive.isTablet
-    ? responsive.getResponsiveDimension(280, 320)
-    : responsive.getResponsiveDimension(240, 280);
-
-  // Generar mensaje contextual según filtros activos
-  const getEmptyMessage = () => {
+  const emptyMessage = useMemo(() => {
     const activeFilters = [];
 
     if (filters.orderType) {
@@ -156,21 +129,42 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
       subtitle: 'Los nuevos pedidos aparecerán aquí automáticamente',
       hint: 'Presiona el botón de recargar para verificar nuevos pedidos',
     };
-  };
+  }, [filters]);
+
+  const handleSwipeStart = useCallback(() => setIsSwipingCard(true), []);
+  const handleSwipeEnd = useCallback(() => {
+    setTimeout(() => setIsSwipingCard(false), 100);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text
+          variant="bodyLarge"
+          style={{
+            marginTop: theme.spacing.m,
+            color: theme.colors.onBackground,
+          }}
+        >
+          Cargando pedidos...
+        </Text>
+      </View>
+    );
+  }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {hasOrders ? (
           <ScrollView
-            ref={flatListRef}
             horizontal
             scrollEnabled={!isSwipingCard}
             showsHorizontalScrollIndicator={false}
             pagingEnabled={false}
             contentContainerStyle={styles.horizontalListContainer}
+            snapToInterval={cardWidth + responsive.spacing.m}
+            decelerationRate="fast"
+            snapToAlignment="start"
           >
             {orders.map((item, index) => (
               <View
@@ -188,31 +182,19 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
                   onStartPreparation={handleStartPreparation}
                   onCancelPreparation={handleCancelPreparation}
                   onCompletePreparation={handleCompletePreparation}
-                  onSwipeStart={() => {
-                    setIsSwipingCard(true);
-                  }}
-                  onSwipeEnd={() => {
-                    setTimeout(() => {
-                      setIsSwipingCard(false);
-                    }, 100);
-                  }}
+                  onSwipeStart={handleSwipeStart}
+                  onSwipeEnd={handleSwipeEnd}
                 />
               </View>
             ))}
           </ScrollView>
         ) : (
           <View
-            style={[
-              styles.emptyStateContainer,
-              { backgroundColor: theme.colors.background },
-            ]}
+            style={styles.emptyStateContainer}
           >
             <Surface
-              style={[
-                styles.emptyCard,
-                { backgroundColor: theme.colors.surface },
-              ]}
-              elevation={2}
+              style={styles.emptyCard}
+              elevation={4}
             >
               <Animated.View
                 style={[
@@ -228,8 +210,8 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
                       ? 'filter-remove'
                       : 'chef-hat'
                   }
-                  size={responsive.getResponsiveDimension(24, 32)}
-                  color={theme.colors.onSurfaceVariant}
+                  size={responsive.getResponsiveDimension(32, 40)}
+                  color={theme.colors.primary}
                 />
               </Animated.View>
               <Text
@@ -238,7 +220,7 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
                 numberOfLines={2}
                 adjustsFontSizeToFit
               >
-                {getEmptyMessage().title}
+                {emptyMessage.title}
               </Text>
               <Text
                 variant="bodyMedium"
@@ -249,7 +231,7 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
                 numberOfLines={2}
                 adjustsFontSizeToFit
               >
-                {getEmptyMessage().subtitle}
+                {emptyMessage.subtitle}
               </Text>
               <Text
                 variant="bodySmall"
@@ -260,41 +242,33 @@ export default function KitchenOrdersScreen({ navigation: _navigation }: any) {
                 numberOfLines={2}
                 adjustsFontSizeToFit
               >
-                {getEmptyMessage().hint}
+                {emptyMessage.hint}
               </Text>
             </Surface>
           </View>
         )}
-      </View>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 
-// Mover estilos antes del componente para usar responsive
 const createStyles = (theme: any, responsive: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
+      position: 'relative',
     },
     centerContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    ordersContainer: {
-      paddingHorizontal: responsive.spacing.m,
-      paddingTop: responsive.spacing.s,
-      paddingBottom: responsive.spacing.m,
-      gap: responsive.spacing.s,
-    },
-    gridContainer: {
-      flex: 1,
-      padding: responsive.spacing.m,
+      backgroundColor: theme.colors.background,
     },
     horizontalListContainer: {
       paddingLeft: responsive.spacing.xxs,
       paddingRight: responsive.spacing.xs,
       paddingVertical: responsive.spacing.xxs,
+      minHeight: '100%',
+      alignItems: 'center',
     },
     emptyStateContainer: {
       flex: 1,
@@ -302,51 +276,64 @@ const createStyles = (theme: any, responsive: any) =>
       alignItems: 'center',
       paddingHorizontal: responsive.spacing.m,
       paddingVertical: responsive.spacing.xs,
+      backgroundColor: theme.colors.background,
     },
     emptyCard: {
       paddingHorizontal: responsive.spacing.m,
-      paddingVertical: responsive.spacing.xs,
+      paddingVertical: responsive.spacing.m,
       borderRadius: theme.roundness * 2,
       alignItems: 'center',
-      maxHeight: '85%',
-      width: responsive.getResponsiveDimension(300, 400),
-      opacity: 0.9,
+      maxHeight: '70%',
+      width: responsive.getResponsiveDimension(280, 320),
+      backgroundColor: theme.colors.surface,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
     },
     emptyIconContainer: {
-      marginBottom: responsive.spacing.xs,
-      opacity: 0.5,
-      padding: responsive.spacing.xs,
-      backgroundColor: theme.colors.surfaceVariant,
+      marginBottom: responsive.spacing.s,
+      padding: responsive.spacing.s,
+      backgroundColor: theme.colors.primaryContainer,
       borderRadius: theme.roundness,
     },
     emptyText: {
       textAlign: 'center',
-      marginBottom: responsive.spacing.xxs,
+      marginBottom: responsive.spacing.xs,
       fontWeight: '600',
       fontSize: responsive.fontSize.s,
       paddingHorizontal: responsive.spacing.xs,
       maxWidth: '100%',
+      color: theme.colors.onSurface,
     },
     emptySubtext: {
       textAlign: 'center',
       lineHeight: responsive.getResponsiveDimension(16, 18),
       opacity: 0.7,
-      marginBottom: responsive.spacing.xs,
+      marginBottom: responsive.spacing.s,
       fontSize: responsive.fontSize.xs,
       paddingHorizontal: responsive.spacing.xs,
       maxWidth: '100%',
+      fontWeight: '400',
+      color: theme.colors.onSurfaceVariant,
     },
     emptyHint: {
       textAlign: 'center',
       opacity: 0.5,
       fontStyle: 'italic',
-      fontSize: responsive.fontSize.xxs,
+      fontSize: responsive.fontSize.xs - 1,
       paddingHorizontal: responsive.spacing.xs,
       maxWidth: '100%',
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
-      paddingTop: responsive.spacing.xs,
-      marginTop: responsive.spacing.xxs,
-      width: '90%',
+      paddingTop: responsive.spacing.s,
+      marginTop: responsive.spacing.xs,
+      width: '80%',
+      fontWeight: '400',
+      color: theme.colors.onSurfaceVariant,
     },
   });

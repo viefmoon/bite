@@ -71,6 +71,8 @@ async function initializeApiClient(providedUrl?: string) {
         axiosInstance: axiosInstance as any,
       });
 
+      // Cliente inicializado con interceptores
+
       // Agregar transforms
       addResponseTransforms(apiClient);
     } catch (error) {
@@ -89,6 +91,14 @@ export async function getApiClient(url?: string) {
     await initializeApiClient(url);
   }
   return apiClient;
+}
+
+// Función para obtener el axios instance directamente (para debugging)
+export async function getAxiosInstance() {
+  if (!axiosInstance) {
+    await initializeApiClient();
+  }
+  return axiosInstance;
 }
 
 // Función para reinicializar el cliente (útil si cambia la IP del servidor)
@@ -138,46 +148,50 @@ let failedQueue: Array<{
 }> = [];
 
 const processQueue = (error: Error | null, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else if (token) {
-      prom.resolve(token);
-    }
-  });
+  const queue = [...failedQueue];
   failedQueue = [];
+  
+  queue.forEach((prom) => {
+    error ? prom.reject(error) : prom.resolve(token!);
+  });
 };
 
 async function refreshToken(): Promise<string> {
   try {
-    const currentRefreshToken =
-      await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
+    const [currentRefreshToken, authStore] = await Promise.all([
+      EncryptedStorage.getItem(REFRESH_TOKEN_KEY),
+      Promise.resolve(useAuthStore.getState()),
+    ]);
+
     if (!currentRefreshToken) {
       throw new Error('No refresh token available.');
     }
 
-    const baseURL = await discoveryService.getApiUrl();
-    const response = await axios.post<{ token: string; refreshToken?: string }>(
+    // Obtener base URL del cliente o discovery
+    const baseURL = axiosInstance?.defaults?.baseURL || 
+                   await discoveryService.getApiUrl() || 
+                   await initializeApiClient().then(() => axiosInstance?.defaults?.baseURL);
+    
+    if (!baseURL) {
+      throw new Error('No base URL available');
+    }
+    
+    const { data } = await axios.post<{ token: string; refreshToken?: string }>(
       `${baseURL}${API_PATHS.AUTH_REFRESH}`,
       {},
       { headers: { Authorization: `Bearer ${currentRefreshToken}` } },
     );
 
-    const newAccessToken = response.data.token;
-    const newRefreshToken = response.data.refreshToken;
-
-    // Actualizar tokens en el store
-    const authStore = useAuthStore.getState();
-
-    // Si viene un nuevo refresh token, actualizarlo primero
-    if (newRefreshToken && newRefreshToken !== currentRefreshToken) {
-      await authStore.setRefreshToken(newRefreshToken);
+    // Actualizar tokens en paralelo si es necesario
+    const updates = [authStore.setAccessToken(data.token)];
+    
+    if (data.refreshToken && data.refreshToken !== currentRefreshToken) {
+      updates.push(authStore.setRefreshToken(data.refreshToken));
     }
+    
+    await Promise.all(updates);
 
-    // Luego actualizar el access token
-    await authStore.setAccessToken(newAccessToken);
-
-    return newAccessToken;
+    return data.token;
   } catch (error: any) {
     if (error.response?.status === 401 || error.response?.status === 404) {
       await useAuthStore.getState().logout();
@@ -199,19 +213,15 @@ function configureInterceptors() {
       }
 
       // Configurar timeouts específicos según el tipo de operación
-      if (config.method === 'get') {
-        // GETs con timeout uniforme
-        config.timeout = 5000; // 5 segundos para todas las consultas
-      } else if (
-        config.method === 'post' &&
-        config.url?.includes('/files/upload')
-      ) {
-        // Uploads necesitan más tiempo
-        config.timeout = 30000; // 30 segundos para uploads
-      } else if (config.method === 'post' || config.method === 'put') {
-        // POSTs y PUTs normales
-        config.timeout = 5000; // 5 segundos para guardar
-      }
+      const timeouts = {
+        get: 5000,
+        post: config.url?.includes('/files/upload') ? 30000 : 5000,
+        put: 5000,
+        patch: 5000,
+        delete: 5000,
+      };
+      
+      config.timeout = timeouts[config.method as keyof typeof timeouts] || 5000;
 
       return config;
     },
@@ -280,15 +290,20 @@ function configureInterceptors() {
 
       // --- Manejo del 401 ---
       if (isRefreshing) {
-        // Encolar petición
+        // Encolar petición para reintentar después del refresh
         return new Promise((resolve, reject) => {
           failedQueue.push({
-            resolve: (token) => {
+            resolve: async (token) => {
               originalRequest.headers['Authorization'] = `Bearer ${token}`;
               originalRequest._retry = true;
-              resolve(axiosInstance(originalRequest));
+              try {
+                const response = await axiosInstance(originalRequest);
+                resolve(response);
+              } catch (err) {
+                reject(ApiError.fromAxiosError(err as AxiosError));
+              }
             },
-            reject: (err) => reject(ApiError.fromAxiosError(err as AxiosError)),
+            reject,
           });
         });
       }

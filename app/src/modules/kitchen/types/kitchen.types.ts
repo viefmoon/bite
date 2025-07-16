@@ -23,7 +23,7 @@ export interface KitchenOrderItem {
   productName: string;
   variantName?: string;
   modifiers: string[];
-  pizzaCustomizations: Array<{
+  pizzaCustomizations?: Array<{
     customizationName: string;
     action: string;
     half?: string;
@@ -31,12 +31,10 @@ export interface KitchenOrderItem {
   preparationNotes?: string;
   preparationStatus: PreparationStatus;
   preparedAt?: string;
-  preparedBy?: string;
   preparedByUser?: {
     firstName: string;
     lastName: string;
   };
-  createdAt?: string;
   quantity: number;
   belongsToMyScreen: boolean;
 }
@@ -45,12 +43,6 @@ export interface PreparationScreenStatusInfo {
   screenId: string;
   screenName: string;
   status: PreparationScreenStatus;
-  startedAt?: string;
-  completedAt?: string;
-  startedBy?: {
-    firstName: string;
-    lastName: string;
-  };
 }
 
 export interface KitchenOrder {

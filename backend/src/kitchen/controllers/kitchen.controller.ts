@@ -24,6 +24,7 @@ import { KitchenService } from '../services/kitchen.service';
 import { KitchenOrderFilterDto } from '../dto/kitchen-order-filter.dto';
 import { MarkItemPreparedDto } from '../dto/mark-item-prepared.dto';
 import { KitchenOrderDto } from '../dto/kitchen-order-response.dto';
+import { KitchenOrderOptimizedDto } from '../dto/kitchen-order-optimized.dto';
 
 @ApiTags('Cocina')
 @Controller({
@@ -44,14 +45,14 @@ export class KitchenController {
   @ApiResponse({
     status: 200,
     description: 'Lista de órdenes para preparación',
-    type: [KitchenOrderDto],
+    type: [KitchenOrderOptimizedDto],
   })
   @Roles(RoleEnum.kitchen, RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   async getKitchenOrders(
     @CurrentUser('id') userId: string,
     @Query() filters: KitchenOrderFilterDto,
-  ): Promise<KitchenOrderDto[]> {
+  ): Promise<KitchenOrderOptimizedDto[]> {
     return this.kitchenService.getKitchenOrders(userId, filters);
   }
 
@@ -96,6 +97,31 @@ export class KitchenController {
     @CurrentUser('id') userId: string,
   ): Promise<void> {
     await this.kitchenService.markItemPrepared(itemId, userId, false);
+  }
+
+  @Get('orders/:orderId/history')
+  @ApiOperation({
+    summary: 'Obtener historial de cambios de una orden',
+    description:
+      'Retorna el historial completo de cambios de una orden específica',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Historial de cambios de la orden',
+  })
+  @Roles(RoleEnum.kitchen, RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  async getOrderHistory(
+    @Param('orderId') orderId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    // Este endpoint debería conectarse al servicio de historial de órdenes
+    // Por ahora, retornaremos un placeholder
+    return {
+      orderId,
+      history: [],
+      message: 'El historial de órdenes se implementará próximamente',
+    };
   }
 
   @Get('my-screen')

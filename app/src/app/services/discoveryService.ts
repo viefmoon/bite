@@ -2,6 +2,7 @@ import NetInfo from '@react-native-community/netinfo';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import { NETWORK_CONFIG } from '../constants/network';
 import { API_PATHS } from '../constants/apiPaths';
+import { Platform } from 'react-native';
 
 const DISCOVERY_ENDPOINT = API_PATHS.DISCOVERY.substring(1); // Quitar / inicial
 const STORAGE_KEY = 'last_known_api_url';
@@ -13,6 +14,8 @@ interface DiscoveryResponse {
   port: number;
   features: string[];
   timestamp: number;
+  remoteUrl?: string;
+  tunnelEnabled?: boolean;
 }
 
 export class DiscoveryService {
@@ -22,6 +25,7 @@ export class DiscoveryService {
   private discoveryPromise: Promise<string | null> | null = null;
   private lastDiscoveryTime = 0;
   private logCallback: ((message: string) => void) | null = null;
+  private manualUrl: string | null = null;
 
   private constructor() {}
 
@@ -51,6 +55,16 @@ export class DiscoveryService {
    * @returns string si encuentra una URL válida, null si no encuentra ninguna
    */
   async getApiUrl(): Promise<string | null> {
+    // Si hay URL manual configurada, usarla
+    if (this.manualUrl) {
+      return this.manualUrl;
+    }
+
+    // En web, no hay auto-descubrimiento - solo manual
+    if (Platform.OS === 'web') {
+      return null;
+    }
+
     // Si ya tenemos una URL en cache, verificar que siga funcionando
     if (this.cachedUrl) {
       // Hacer una verificación rápida
@@ -189,6 +203,11 @@ export class DiscoveryService {
 
   private async performDiscovery(): Promise<string | null> {
     try {
+      // En web no podemos hacer descubrimiento
+      if (Platform.OS === 'web') {
+        return null;
+      }
+
       // Obtener información de red
       const netInfo = await NetInfo.fetch();
 
@@ -258,7 +277,7 @@ export class DiscoveryService {
    * Prueba si una IP específica tiene el servidor CloudBite
    */
   private async probeServer(ip: string): Promise<string | null> {
-    const url = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}/`;
+    const url = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}`;
     const fullUrl = `http://${ip}:${NETWORK_CONFIG.DISCOVERY_PORT}${API_PATHS.DISCOVERY}`;
 
     // Crear AbortController para timeout real
@@ -333,6 +352,60 @@ export class DiscoveryService {
     try {
       await EncryptedStorage.setItem(STORAGE_KEY, url);
     } catch {}
+  }
+
+  /**
+   * Establece una URL manual para el servidor
+   */
+  async setManualUrl(url: string | null): Promise<void> {
+    this.manualUrl = url;
+    if (url) {
+      // Guardar como última URL conocida
+      await this.saveUrl(url);
+      this.cachedUrl = url;
+    }
+  }
+
+  /**
+   * Establece la URL del API (para compatibilidad)
+   */
+  async setApiUrl(url: string): Promise<void> {
+    this.cachedUrl = url;
+    await this.saveUrl(url);
+  }
+
+  /**
+   * Descubre el servidor (público para serverConnectionService)
+   */
+  async discoverServer(): Promise<string | null> {
+    return this.discoverBackend();
+  }
+
+
+  /**
+   * Obtiene información del servidor incluyendo URL remota si está disponible
+   */
+  async getServerInfo(): Promise<DiscoveryResponse | null> {
+    const url = await this.getApiUrl();
+    if (!url) return null;
+
+    try {
+      const response = await fetch(`${url}${DISCOVERY_ENDPOINT}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data: DiscoveryResponse = await response.json();
+        return data;
+      }
+    } catch (error) {
+      console.error('Error getting server info:', error);
+    }
+
+    return null;
   }
 }
 

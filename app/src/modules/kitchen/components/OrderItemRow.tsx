@@ -44,7 +44,7 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
         allCustoms.push(...item.modifiers);
       }
 
-      if (item.pizzaCustomizations.length > 0) {
+      if (item.pizzaCustomizations && item.pizzaCustomizations.length > 0) {
         const customizations = item.pizzaCustomizations.map((pc) => {
           let text = pc.customizationName;
           if (pc.action) text += ` (${pc.action})`;
@@ -69,13 +69,17 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       container: {
         paddingHorizontal: responsive.spacing.s,
         paddingVertical: responsive.spacing.xs,
+        minHeight: responsive.isTablet ? 40 : 36,
+        display: 'flex',
+        justifyContent: 'center',
       },
       disabled: {
         opacity: 0.5,
       },
       row: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
+        flex: 1,
       },
       content: {
         flex: 1,
@@ -91,18 +95,14 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       },
       itemName: {
         fontWeight: '500',
-        fontSize: responsive.isTablet
-          ? responsive.fontSize.s
-          : responsive.fontSize.xs - 1,
-        lineHeight: responsive.isTablet ? 18 : 14,
+        fontSize: responsive.isTablet ? 13 : 14,
+        lineHeight: responsive.isTablet ? 18 : 20,
       },
       detail: {
         color: theme.colors.onSurfaceVariant,
         marginTop: -1,
-        fontSize: responsive.isTablet
-          ? responsive.fontSize.xs - 1
-          : responsive.fontSize.xs - 2,
-        lineHeight: responsive.isTablet ? 14 : 12,
+        fontSize: responsive.isTablet ? 11 : 12,
+        lineHeight: responsive.isTablet ? 14 : 16,
       },
       strikethrough: {
         textDecorationLine: 'line-through',
@@ -153,23 +153,6 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
               >
                 {buildItemName()}
               </Text>
-              {!item.belongsToMyScreen && (
-                <Chip
-                  compact
-                  mode="flat"
-                  style={{
-                    backgroundColor: theme.colors.surfaceVariant,
-                    height: 20,
-                  }}
-                  textStyle={{
-                    fontSize: 10,
-                    marginVertical: 0,
-                    marginHorizontal: 6,
-                  }}
-                >
-                  Otra pantalla
-                </Chip>
-              )}
             </View>
             {buildItemDetails().map((detail, index) => (
               <Text

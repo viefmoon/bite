@@ -15,6 +15,11 @@ import {
   KitchenOrderDto,
   KitchenOrderItemDto,
 } from '../dto/kitchen-order-response.dto';
+import {
+  KitchenOrderOptimizedDto,
+  KitchenOrderItemOptimizedDto,
+  ScreenStatusOptimizedDto,
+} from '../dto/kitchen-order-optimized.dto';
 import { OrderStatus } from '../../orders/domain/enums/order-status.enum';
 import { PreparationStatus } from '../../orders/domain/order-item';
 import { OrderType } from '../../orders/domain/enums/order-type.enum';
@@ -38,7 +43,7 @@ export class KitchenService {
   async getKitchenOrders(
     userId: string,
     filters: KitchenOrderFilterDto,
-  ): Promise<KitchenOrderDto[]> {
+  ): Promise<KitchenOrderOptimizedDto[]> {
     // Obtener la pantalla de preparación del usuario
     let userScreenId: string | null = null;
 
@@ -134,9 +139,9 @@ export class KitchenService {
       }
     });
 
-    // Transformar a DTOs con información de estados por pantalla
+    // Transformar a DTOs optimizados con información de estados por pantalla
     return filteredOrders.map((order) =>
-      this.transformToKitchenOrder(
+      this.transformToKitchenOrderOptimized(
         order,
         userScreenId!,
         filters,
@@ -174,6 +179,126 @@ export class KitchenService {
     return statusMap;
   }
 
+  private transformToKitchenOrderOptimized(
+    order: OrderEntity,
+    userScreenId: string,
+    filters: KitchenOrderFilterDto,
+    screenStatuses: Map<string, any>,
+  ): KitchenOrderOptimizedDto {
+    const dto = new KitchenOrderOptimizedDto();
+    dto.id = order.id;
+    dto.shiftOrderNumber = order.shiftOrderNumber;
+    dto.orderType = order.orderType;
+    dto.orderStatus = order.orderStatus;
+    dto.createdAt = order.createdAt;
+    dto.orderNotes = order.notes || undefined;
+
+    // Agregar información específica según tipo
+    switch (order.orderType) {
+      case OrderType.DELIVERY:
+        if (order.deliveryInfo) {
+          dto.deliveryAddress = order.deliveryInfo.fullAddress;
+          dto.deliveryPhone = order.deliveryInfo.recipientPhone;
+        }
+        break;
+      case OrderType.TAKE_AWAY:
+        if (order.customer) {
+          dto.receiptName =
+            `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() ||
+            'Cliente';
+          dto.customerPhone = order.customer.whatsappPhoneNumber;
+        }
+        break;
+      case OrderType.DINE_IN:
+        dto.areaName = order.table?.area?.name;
+        dto.tableName = order.table?.name;
+        break;
+    }
+
+    // Procesar items
+    const itemGroups = this.groupOrderItems(
+      order.orderItems || [],
+      filters.ungroupProducts || false,
+    );
+
+    dto.items = itemGroups
+      .map((group) => {
+        const item = group.items[0]; // Usar el primer item como referencia
+
+        if (!item.product) {
+          return null;
+        }
+
+        const itemDto = new KitchenOrderItemOptimizedDto();
+
+        itemDto.id = group.items.map((i) => i.id).join(','); // IDs concatenados para grupo
+        itemDto.productName = item.product.name;
+        itemDto.variantName = item.productVariant?.name;
+        itemDto.modifiers = item.productModifiers?.map((m) => m.name) || [];
+        
+        // Solo incluir pizzaCustomizations si existen
+        if (item.selectedPizzaCustomizations?.length) {
+          itemDto.pizzaCustomizations =
+            item.selectedPizzaCustomizations.map((pc) => ({
+              customizationName: pc.pizzaCustomization.name,
+              action: pc.action,
+              half: pc.half,
+            }));
+        }
+        
+        itemDto.preparationNotes = item.preparationNotes || undefined;
+        itemDto.preparationStatus = item.preparationStatus;
+        itemDto.preparedAt = item.preparedAt || undefined;
+        
+        // Solo incluir preparedByUser si existe
+        if (item.preparedBy) {
+          itemDto.preparedByUser = {
+            firstName: item.preparedBy.firstName || '',
+            lastName: item.preparedBy.lastName || '',
+          };
+        }
+        
+        itemDto.quantity = group.items.length;
+        itemDto.belongsToMyScreen = userScreenId
+          ? item.product.preparationScreenId === userScreenId
+          : true;
+
+        return itemDto;
+      })
+      .filter((item): item is KitchenOrderItemOptimizedDto => item !== null);
+
+    // Filtrar items según configuración
+    if (!filters.showAllProducts) {
+      dto.items = dto.items.filter((item) => item.belongsToMyScreen);
+    }
+
+    dto.hasPendingItems = dto.items.some(
+      (item) =>
+        item.belongsToMyScreen &&
+        item.preparationStatus !== PreparationStatus.READY,
+    );
+
+    // Agregar información optimizada de estados por pantalla
+    dto.screenStatuses = [];
+    for (const [, status] of screenStatuses) {
+      if (status.preparationScreen) {
+        const screenStatusDto = new ScreenStatusOptimizedDto();
+        screenStatusDto.screenId = status.preparationScreenId;
+        screenStatusDto.screenName = status.preparationScreen.name;
+        screenStatusDto.status = status.status;
+        dto.screenStatuses.push(screenStatusDto);
+      }
+    }
+
+    // Agregar el estado de mi pantalla
+    const myScreenStatus = screenStatuses.get(userScreenId);
+    dto.myScreenStatus =
+      myScreenStatus?.status || PreparationScreenStatus.PENDING;
+
+    return dto;
+  }
+
+  // Mantener el método original para compatibilidad si es necesario
   private transformToKitchenOrder(
     order: OrderEntity,
     userScreenId: string,

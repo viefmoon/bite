@@ -113,94 +113,66 @@ export const OrderDetailContent: React.FC<{
           {/* Información General - Simplificada */}
           <View style={styles.infoHeader}>
             <View style={styles.infoHeaderRow}>
-              <Text style={styles.infoHeaderLabel}>Creada:</Text>
+              <Text style={styles.infoHeaderLabel}>Hora de creación:</Text>
               <Text style={styles.infoHeaderValue}>
                 {format(new Date(orderData.createdAt), 'HH:mm', { locale: es })}
-              </Text>
-            </View>
-            <View style={styles.infoHeaderRow}>
-              <Text style={styles.infoHeaderLabel}>Total:</Text>
-              <Text style={[styles.infoHeaderValue, styles.totalAmount]}>
-                ${Number(orderData.total || 0).toFixed(2)}
               </Text>
             </View>
           </View>
 
           {/* Items de la Orden */}
           <Card style={styles.itemsCard}>
-            <Card.Content>
+            <Card.Content style={styles.cardContentCompact}>
               <Text style={styles.sectionTitle}>
                 Artículos ({orderData.orderItems?.length || 0})
               </Text>
 
               {orderData.orderItems?.map((item: any, index: number) => (
                 <View key={item.id || index} style={styles.itemRow}>
-                  <View style={styles.itemContent}>
-                    <View style={styles.itemHeader}>
-                      <Text style={styles.itemName}>
-                        {item.product?.name || 'Producto desconocido'}
-                      </Text>
-                      {item.preparedAt && (
-                        <Text style={styles.preparedTime}>
-                          {format(new Date(item.preparedAt), 'HH:mm', {
-                            locale: es,
-                          })}
+                  <View style={styles.itemCompactRow}>
+                    <View style={styles.itemMainInfo}>
+                      <View style={styles.itemTitleRow}>
+                        <Text style={styles.itemName}>
+                          {item.product?.name || 'Producto desconocido'}
+                          {item.productVariant && ` - ${item.productVariant.name}`}
+                        </Text>
+                        <Chip
+                          mode="flat"
+                          compact
+                          style={[
+                            styles.preparationChip,
+                            {
+                              backgroundColor:
+                                getPreparationStatusColor(
+                                  item.preparationStatus,
+                                  theme,
+                                ) + '20',
+                            },
+                          ]}
+                          textStyle={[
+                            styles.preparationChipText,
+                            {
+                              color: getPreparationStatusColor(
+                                item.preparationStatus,
+                                theme,
+                              ),
+                            },
+                          ]}
+                        >
+                          {getPreparationStatusLabel(item.preparationStatus)}
+                        </Chip>
+                      </View>
+                      {item.preparationNotes && (
+                        <Text style={styles.itemNotes}>
+                          📝 {item.preparationNotes}
                         </Text>
                       )}
                     </View>
-                    {item.productVariant && (
-                      <Text style={styles.itemVariant}>
-                        {item.productVariant.name}
+                    {item.preparedAt && (
+                      <Text style={styles.preparedTime}>
+                        {format(new Date(item.preparedAt), 'HH:mm')}
                       </Text>
                     )}
-                    {item.preparationNotes && (
-                      <Text style={styles.itemNotes}>
-                        📝 {item.preparationNotes}
-                      </Text>
-                    )}
-                    <View style={styles.itemFooter}>
-                      <Chip
-                        mode="flat"
-                        compact
-                        style={[
-                          styles.preparationChip,
-                          {
-                            backgroundColor:
-                              getPreparationStatusColor(
-                                item.preparationStatus,
-                                theme,
-                              ) + '20',
-                          },
-                        ]}
-                        textStyle={[
-                          styles.preparationChipText,
-                          {
-                            color: getPreparationStatusColor(
-                              item.preparationStatus,
-                              theme,
-                            ),
-                          },
-                        ]}
-                      >
-                        {getPreparationStatusLabel(item.preparationStatus)}
-                      </Chip>
-                      <View style={styles.itemTimesContainer}>
-                        {item.createdAt && (
-                          <Text style={styles.itemCreatedTime}>
-                            Creado:{' '}
-                            {format(new Date(item.createdAt), 'HH:mm', {
-                              locale: es,
-                            })}
-                          </Text>
-                        )}
-                        {item.preparedById && item.preparedBy && (
-                          <Text style={styles.preparedByText}>
-                            Preparado por: {item.preparedBy.firstName}{' '}
-                            {item.preparedBy.lastName}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
                   </View>
                   {index < orderData.orderItems.length - 1 && (
                     <Divider style={styles.itemDivider} />
@@ -260,10 +232,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               )}
             </View>
             <IconButton
-              icon="close"
-              size={24}
+              icon="close-circle"
+              size={32}
               onPress={onDismiss}
               style={styles.closeButton}
+              iconColor={theme.colors.error}
             />
           </View>
 
@@ -284,11 +257,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 const createStyles = (theme: any) =>
   StyleSheet.create({
     modalContainer: {
-      padding: 20,
+      padding: 12,
       maxWidth: 600,
-      width: '90%',
+      width: '95%',
       alignSelf: 'center',
-      maxHeight: '90%',
+      maxHeight: '92%',
     },
     surface: {
       borderRadius: theme.roundness * 2,
@@ -298,7 +271,7 @@ const createStyles = (theme: any) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingVertical: 8,
       minHeight: 56,
     },
@@ -307,6 +280,7 @@ const createStyles = (theme: any) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
+      marginRight: 8,
     },
     title: {
       fontSize: 20,
@@ -314,15 +288,22 @@ const createStyles = (theme: any) =>
       color: theme.colors.onSurface,
     },
     statusChip: {
-      height: 28,
+      minHeight: 28,
+      height: 'auto',
+      paddingVertical: 4,
     },
     statusChipText: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600',
       color: 'white',
+      lineHeight: 18,
+      includeFontPadding: false,
+      textAlignVertical: 'center',
     },
     closeButton: {
-      margin: 0,
+      margin: -4,
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 20,
     },
     content: {
       maxHeight: 600,
@@ -346,10 +327,10 @@ const createStyles = (theme: any) =>
     infoHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       backgroundColor: theme.colors.surfaceVariant,
-      marginBottom: 8,
+      marginBottom: 4,
     },
     infoHeaderRow: {
       flexDirection: 'row',
@@ -366,17 +347,36 @@ const createStyles = (theme: any) =>
       color: theme.colors.onSurface,
     },
     infoCard: {
-      margin: 16,
-      marginBottom: 8,
+      margin: 8,
+      marginBottom: 4,
     },
     itemsCard: {
-      marginHorizontal: 16,
-      marginTop: 8,
-      marginBottom: 16,
+      marginHorizontal: 8,
+      marginTop: 4,
+      marginBottom: 8,
       flex: 1,
     },
     itemRow: {
-      paddingVertical: 12,
+      paddingVertical: 3,
+    },
+    itemCompactRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 8,
+    },
+    itemMainInfo: {
+      flex: 1,
+    },
+    itemTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'nowrap',
+    },
+    itemStatusInfo: {
+      alignItems: 'flex-end',
+      gap: 2,
     },
     itemContent: {
       flex: 1,
@@ -385,7 +385,7 @@ const createStyles = (theme: any) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 4,
+      marginBottom: 2,
     },
     itemFooter: {
       flexDirection: 'row',
@@ -394,7 +394,8 @@ const createStyles = (theme: any) =>
       marginTop: 8,
     },
     itemDivider: {
-      marginTop: 12,
+      marginTop: 2,
+      marginBottom: 1,
       backgroundColor: theme.colors.outlineVariant,
     },
     sectionTitle: {
@@ -403,16 +404,12 @@ const createStyles = (theme: any) =>
       color: theme.colors.onSurface,
       marginBottom: 12,
     },
-    totalAmount: {
-      fontSize: 16,
-      color: theme.colors.primary,
-      fontWeight: '700',
-    },
     itemName: {
       fontWeight: '600',
-      fontSize: 15,
+      fontSize: 13,
       color: theme.colors.onSurface,
       flex: 1,
+      flexShrink: 1,
     },
     itemVariant: {
       fontSize: 13,
@@ -420,23 +417,32 @@ const createStyles = (theme: any) =>
       marginTop: 2,
     },
     itemNotes: {
-      fontSize: 12,
+      fontSize: 10,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
-      marginTop: 2,
+      marginTop: 0,
     },
     preparationChip: {
-      height: 28,
-      paddingHorizontal: 12,
+      minHeight: 26,
+      height: 'auto',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
     },
     preparationChipText: {
       fontSize: 12,
       fontWeight: '600',
+      lineHeight: 16,
+      includeFontPadding: false,
+      textAlignVertical: 'center',
     },
     preparedTime: {
       fontSize: 12,
       color: theme.colors.primary,
       fontWeight: '600',
+      minWidth: 40,
+      textAlign: 'right',
+      alignSelf: 'center',
+      lineHeight: 16,
     },
     itemTimesContainer: {
       flex: 1,
@@ -455,6 +461,10 @@ const createStyles = (theme: any) =>
     notPrepared: {
       fontSize: 12,
       color: theme.colors.onSurfaceDisabled,
+    },
+    cardContentCompact: {
+      paddingVertical: 6,
+      paddingHorizontal: 10,
     },
   });
 
