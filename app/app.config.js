@@ -29,7 +29,11 @@ export default {
             compileSdkVersion: 35,
             targetSdkVersion: 34,
             buildToolsVersion: "35.0.0",
-            usesCleartextTraffic: true
+            usesCleartextTraffic: true,
+            newArchEnabled: true
+          },
+          ios: {
+            newArchEnabled: true
           }
         }
       ],
