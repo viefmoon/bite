@@ -35,6 +35,7 @@ export interface RestaurantConfig {
   openingGracePeriod: number;
   closingGracePeriod: number;
   timeZone: string;
+  scheduledOrdersLeadTime: number;
 
   // Configuración de delivery
   deliveryCoverageArea: DeliveryCoveragePoint[] | null;
@@ -65,6 +66,7 @@ export interface UpdateRestaurantConfigDto {
   openingGracePeriod?: number;
   closingGracePeriod?: number;
   timeZone?: string;
+  scheduledOrdersLeadTime?: number;
 
   // Configuración de delivery
   deliveryCoverageArea?: DeliveryCoveragePoint[] | null;

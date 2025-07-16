@@ -15,13 +15,22 @@ const infrastructurePersistenceModule =
 
 @Module({
   imports: [
-    infrastructurePersistenceModule, 
-    AuthModule, 
+    infrastructurePersistenceModule,
+    AuthModule,
     forwardRef(() => OrdersModule),
-    forwardRef(() => RestaurantConfigModule)
+    forwardRef(() => RestaurantConfigModule),
   ],
   controllers: [ThermalPrintersController, PrintingController],
-  providers: [ThermalPrintersService, PrintingService, DiscoveryService, AutomaticPrintingService],
-  exports: [ThermalPrintersService, infrastructurePersistenceModule, AutomaticPrintingService],
+  providers: [
+    ThermalPrintersService,
+    PrintingService,
+    DiscoveryService,
+    AutomaticPrintingService,
+  ],
+  exports: [
+    ThermalPrintersService,
+    infrastructurePersistenceModule,
+    AutomaticPrintingService,
+  ],
 })
 export class ThermalPrintersModule {}

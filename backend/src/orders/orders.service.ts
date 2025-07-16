@@ -354,7 +354,6 @@ export class OrdersService {
     return this.orderItemRepository.save(orderItem);
   }
 
-
   async findOne(id: string): Promise<Order> {
     const order = await this.orderRepository.findById(id);
     if (!order) {
@@ -423,10 +422,7 @@ export class OrdersService {
       updateOrderDto.userId !== existingOrder.userId
     )
       updatePayload.userId = updateOrderDto.userId;
-    if (
-      newTableId !== undefined &&
-      newTableId !== existingOrder.tableId
-    ) {
+    if (newTableId !== undefined && newTableId !== existingOrder.tableId) {
       updatePayload.tableId = newTableId;
 
       // Manejar cambio de mesa: liberar la anterior y ocupar la nueva
@@ -512,7 +508,6 @@ export class OrdersService {
     ) {
       updatePayload.orderType = updateOrderDto.orderType;
 
-
       // Si se cambia de DINE_IN a otro tipo, liberar la mesa
       if (
         existingOrder.orderType === OrderType.DINE_IN &&
@@ -520,7 +515,7 @@ export class OrdersService {
       ) {
         // Limpiar tableId cuando se cambia de DINE_IN a otro tipo
         updatePayload.tableId = null;
-        
+
         // Solo intentar liberar la mesa si existe y la orden no está terminada
         if (
           existingOrder.tableId &&
@@ -529,7 +524,9 @@ export class OrdersService {
         ) {
           try {
             // Verificar si es mesa temporal
-            const table = await this.tablesService.findOne(existingOrder.tableId);
+            const table = await this.tablesService.findOne(
+              existingOrder.tableId,
+            );
 
             if (table.isTemporary) {
               // Eliminar mesa temporal
@@ -541,15 +538,19 @@ export class OrdersService {
               });
             }
           } catch (error) {
-            this.logger.error(`Error al liberar mesa ${existingOrder.tableId}:`, error);
+            this.logger.error(
+              `Error al liberar mesa ${existingOrder.tableId}:`,
+              error,
+            );
             // Continuar con la actualización aunque haya error con la mesa
           }
         }
       }
-      
+
       // Si se cambia de DELIVERY/TAKEAWAY a DINE_IN, asegurar que tableId se maneje correctamente
       if (
-        (existingOrder.orderType === OrderType.DELIVERY || existingOrder.orderType === OrderType.TAKE_AWAY) &&
+        (existingOrder.orderType === OrderType.DELIVERY ||
+          existingOrder.orderType === OrderType.TAKE_AWAY) &&
         updateOrderDto.orderType === OrderType.DINE_IN
       ) {
         // El tableId se maneja en la lógica general de actualización
@@ -581,20 +582,23 @@ export class OrdersService {
 
     // Manejar delivery_info de forma centralizada y robusta
     const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
-    
+
     if (finalOrderType === OrderType.DINE_IN) {
       // Si es DINE_IN, siempre eliminar delivery_info
       updatePayload.deliveryInfo = null;
     } else if (deliveryInfoInPayload || (existingOrder as any).deliveryInfo) {
       // Si hay datos nuevos o existentes, procesarlos con el método centralizado
-      const deliveryData = deliveryInfoInPayload 
-        ? { ...(existingOrder as any).deliveryInfo, ...updateOrderDto.deliveryInfo }
+      const deliveryData = deliveryInfoInPayload
+        ? {
+            ...(existingOrder as any).deliveryInfo,
+            ...updateOrderDto.deliveryInfo,
+          }
         : (existingOrder as any).deliveryInfo;
-      
+
       updatePayload.deliveryInfo = await this.handleDeliveryInfo(
         id,
         deliveryData,
-        finalOrderType
+        finalOrderType,
       );
     }
 
@@ -722,11 +726,14 @@ export class OrdersService {
     }
 
     // Manejar ajustes si se proporcionaron
-    if (updateOrderDto.adjustments !== undefined && updateOrderDto.adjustments !== null) {
+    if (
+      updateOrderDto.adjustments !== undefined &&
+      updateOrderDto.adjustments !== null
+    ) {
       await this.dataSource.manager.transaction(async (manager) => {
         // Eliminar todos los ajustes existentes de la orden
         await manager.delete('adjustment', { orderId: id });
-        
+
         // Crear los nuevos ajustes
         for (const adj of updateOrderDto.adjustments!) {
           if (!adj.isDeleted) {
@@ -737,7 +744,8 @@ export class OrdersService {
               value: adj.value || 0,
               amount: adj.amount || 0,
               appliedAt: new Date(),
-              appliedById: updateOrderDto.userId || existingOrder.userId || 'system',
+              appliedById:
+                updateOrderDto.userId || existingOrder.userId || 'system',
             });
           }
         }
@@ -815,35 +823,39 @@ export class OrdersService {
 
   async findByShiftId(shiftId: string): Promise<Order[]> {
     const orders = await this.orderRepository.findByShiftId(shiftId);
-    
-    return orders.map(order => {
+
+    return orders.map((order) => {
       const preparationScreensMap = new Map<string, any>();
-      
+
       if (order.orderItems) {
         order.orderItems.forEach((item) => {
           const screenName = item.product?.preparationScreen?.name;
-          
+
           if (screenName) {
             if (!preparationScreensMap.has(screenName)) {
               preparationScreensMap.set(screenName, {
                 name: screenName,
-                items: []
+                items: [],
               });
             }
             preparationScreensMap.get(screenName)!.items.push(item);
           }
         });
       }
-      
-      const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+
+      const preparationScreenStatuses = Array.from(
+        preparationScreensMap.values(),
+      ).map((screen) => {
         const items = screen.items;
-        const allReady = items.every((item: any) => 
-          item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+        const allReady = items.every(
+          (item: any) =>
+            item.preparationStatus === 'READY' ||
+            item.preparationStatus === 'DELIVERED',
         );
-        const someInProgress = items.some((item: any) => 
-          item.preparationStatus === 'IN_PROGRESS'
+        const someInProgress = items.some(
+          (item: any) => item.preparationStatus === 'IN_PROGRESS',
         );
-        
+
         let status: string;
         if (allReady) {
           status = 'READY';
@@ -852,27 +864,31 @@ export class OrdersService {
         } else {
           status = 'PENDING';
         }
-        
+
         return {
           name: screen.name,
-          status
+          status,
         };
       });
-      
-      const totalPaid = order.payments?.reduce((sum, payment) => 
-        sum + (payment.amount || 0), 0
-      ) || 0;
-      
+
+      const totalPaid =
+        order.payments?.reduce(
+          (sum, payment) => sum + (payment.amount || 0),
+          0,
+        ) || 0;
+
       return {
         ...order,
-        preparationScreenStatuses: preparationScreenStatuses.length > 0 ? preparationScreenStatuses : undefined,
+        preparationScreenStatuses:
+          preparationScreenStatuses.length > 0
+            ? preparationScreenStatuses
+            : undefined,
         paymentsSummary: {
-          totalPaid
-        }
+          totalPaid,
+        },
       };
     });
   }
-
 
   async findOpenOrders(): Promise<Order[]> {
     // Obtener el turno actual
@@ -910,7 +926,7 @@ export class OrdersService {
     );
 
     // Mapear a DTO con el campo createdBy
-    return orders.map(order => this.mapToOpenListDto(order));
+    return orders.map((order) => this.mapToOpenListDto(order));
   }
 
   // OrderItem methods
@@ -942,50 +958,87 @@ export class OrdersService {
   ): any {
     const result: any = {};
     const allFields = [
-      'fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
-      'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
-      'recipientName', 'recipientPhone', 'deliveryInstructions'
+      'fullAddress',
+      'street',
+      'number',
+      'interiorNumber',
+      'neighborhood',
+      'city',
+      'state',
+      'zipCode',
+      'country',
+      'latitude',
+      'longitude',
+      'recipientName',
+      'recipientPhone',
+      'deliveryInstructions',
     ];
 
     if (orderType === OrderType.DINE_IN) {
-      allFields.forEach(field => result[field] = undefined);
+      allFields.forEach((field) => (result[field] = undefined));
       return result;
     }
 
     const getValue = (field: keyof DeliveryInfo) => {
       const value = deliveryInfo[field];
-      return (value !== undefined && value !== null && value !== '') ? value : undefined;
+      return value !== undefined && value !== null && value !== ''
+        ? value
+        : undefined;
     };
 
     if (orderType === OrderType.TAKE_AWAY) {
       result.recipientName = getValue('recipientName');
       result.recipientPhone = getValue('recipientPhone');
       result.deliveryInstructions = getValue('deliveryInstructions');
-      
-      ['fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
-       'city', 'state', 'zipCode', 'country', 'latitude', 'longitude'].forEach(
-        field => result[field] = null
-      );
-      
+
+      [
+        'fullAddress',
+        'street',
+        'number',
+        'interiorNumber',
+        'neighborhood',
+        'city',
+        'state',
+        'zipCode',
+        'country',
+        'latitude',
+        'longitude',
+      ].forEach((field) => (result[field] = null));
+
       return result;
     }
 
     if (orderType === OrderType.DELIVERY) {
-      ['fullAddress', 'street', 'number', 'interiorNumber', 'neighborhood',
-       'city', 'state', 'zipCode', 'country', 'deliveryInstructions', 'recipientPhone'].forEach(
-        field => result[field] = getValue(field as keyof DeliveryInfo)
+      [
+        'fullAddress',
+        'street',
+        'number',
+        'interiorNumber',
+        'neighborhood',
+        'city',
+        'state',
+        'zipCode',
+        'country',
+        'deliveryInstructions',
+        'recipientPhone',
+      ].forEach(
+        (field) => (result[field] = getValue(field as keyof DeliveryInfo)),
       );
-      
-      result.latitude = deliveryInfo.latitude !== undefined && deliveryInfo.latitude !== null 
-        ? deliveryInfo.latitude : undefined;
-      result.longitude = deliveryInfo.longitude !== undefined && deliveryInfo.longitude !== null 
-        ? deliveryInfo.longitude : undefined;
+
+      result.latitude =
+        deliveryInfo.latitude !== undefined && deliveryInfo.latitude !== null
+          ? deliveryInfo.latitude
+          : undefined;
+      result.longitude =
+        deliveryInfo.longitude !== undefined && deliveryInfo.longitude !== null
+          ? deliveryInfo.longitude
+          : undefined;
       result.recipientName = null;
-      
+
       return result;
     }
 
-    allFields.forEach(field => result[field] = undefined);
+    allFields.forEach((field) => (result[field] = undefined));
     return result;
   }
 
@@ -1287,8 +1340,9 @@ export class OrdersService {
     return this.update(id, updateData);
   }
 
-
-  async findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
+  async findOrdersForFinalizationList(): Promise<
+    OrderForFinalizationListDto[]
+  > {
     // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
     if (!currentShift) {
@@ -1362,9 +1416,11 @@ export class OrdersService {
     return orders.map((order) => this.mapToFinalizationListDto(order));
   }
 
-  async findOrderForFinalizationById(id: string): Promise<OrderForFinalizationDto> {
+  async findOrderForFinalizationById(
+    id: string,
+  ): Promise<OrderForFinalizationDto> {
     const order = await this.orderRepository.findOrderForFinalizationById(id);
-    
+
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
@@ -1480,14 +1536,15 @@ export class OrdersService {
       deliveryInfo: order.deliveryInfo || undefined,
       isFromWhatsApp: order.isFromWhatsApp,
       preparationScreens: Array.from(preparationScreens).sort(),
-      payments: order.payments?.map((payment) => ({
-        id: payment.id,
-        amount: payment.amount,
-        paymentMethod: payment.paymentMethod,
-        paymentStatus: payment.paymentStatus,
-        createdAt: payment.createdAt,
-        updatedAt: payment.updatedAt,
-      })) || undefined,
+      payments:
+        order.payments?.map((payment) => ({
+          id: payment.id,
+          amount: payment.amount,
+          paymentMethod: payment.paymentMethod,
+          paymentStatus: payment.paymentStatus,
+          createdAt: payment.createdAt,
+          updatedAt: payment.updatedAt,
+        })) || undefined,
       preparationScreenStatuses: order.preparationScreenStatusesFull?.map(
         (status) => ({
           id: status.id,
@@ -1499,20 +1556,25 @@ export class OrdersService {
           completedAt: status.completedAt,
         }),
       ),
-      ticketImpressions: order.ticketImpressions?.map((impression) => ({
-        id: impression.id,
-        ticketType: impression.ticketType,
-        impressionTime: impression.impressionTime,
-        user: impression.user ? {
-          id: impression.user.id,
-          firstName: impression.user.firstName || undefined,
-          lastName: impression.user.lastName || undefined,
-        } : undefined,
-        printer: impression.printer ? {
-          id: impression.printer.id,
-          name: impression.printer.name,
-        } : undefined,
-      })) || undefined,
+      ticketImpressions:
+        order.ticketImpressions?.map((impression) => ({
+          id: impression.id,
+          ticketType: impression.ticketType,
+          impressionTime: impression.impressionTime,
+          user: impression.user
+            ? {
+                id: impression.user.id,
+                firstName: impression.user.firstName || undefined,
+                lastName: impression.user.lastName || undefined,
+              }
+            : undefined,
+          printer: impression.printer
+            ? {
+                id: impression.printer.id,
+                name: impression.printer.name,
+              }
+            : undefined,
+        })) || undefined,
     };
 
     return orderDto;
@@ -1520,9 +1582,9 @@ export class OrdersService {
 
   async getReceiptDetail(id: string): Promise<any> {
     const order = await this.dataSource.getRepository(OrderEntity).findOne({
-      where: { 
+      where: {
         id,
-        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])
+        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
       },
       relations: [
         'user',
@@ -1568,92 +1630,118 @@ export class OrdersService {
       finalizedAt: order.finalizedAt || undefined,
       scheduledAt: order.scheduledAt || undefined,
       notes: order.notes || undefined,
-      user: order.user ? {
-        id: order.user.id,
-        firstName: order.user.firstName || undefined,
-        lastName: order.user.lastName || undefined,
-        username: order.user.username,
-      } : undefined,
-      table: order.table ? {
-        id: order.table.id,
-        number: order.table.name,
-        name: order.table.name,
-        isTemporary: order.table.isTemporary,
-        area: order.table.area ? {
-          id: order.table.area.id,
-          name: order.table.area.name,
-        } : undefined,
-      } : undefined,
+      user: order.user
+        ? {
+            id: order.user.id,
+            firstName: order.user.firstName || undefined,
+            lastName: order.user.lastName || undefined,
+            username: order.user.username,
+          }
+        : undefined,
+      table: order.table
+        ? {
+            id: order.table.id,
+            number: order.table.name,
+            name: order.table.name,
+            isTemporary: order.table.isTemporary,
+            area: order.table.area
+              ? {
+                  id: order.table.area.id,
+                  name: order.table.area.name,
+                }
+              : undefined,
+          }
+        : undefined,
       deliveryInfo: order.deliveryInfo || undefined,
       preparationScreens: Array.from(preparationScreens).sort(),
-      orderItems: order.orderItems?.map((item: any) => ({
-        id: item.id,
-        quantity: item.quantity,
-        basePrice: Number(item.basePrice),
-        finalPrice: Number(item.finalPrice),
-        preparationNotes: item.preparationNotes || undefined,
-        preparationStatus: item.preparationStatus || undefined,
-        product: {
-          id: item.product.id,
-          name: item.product.name,
-          description: item.product.description || undefined,
-          price: Number(item.product.price),
-        },
-        productVariant: item.productVariant ? {
-          id: item.productVariant.id,
-          name: item.productVariant.name,
-          price: Number(item.productVariant.price),
-        } : undefined,
-        productModifiers: item.productModifiers?.map((mod: any) => ({
-          id: mod.id,
-          name: mod.name,
-          price: Number(mod.price),
+      orderItems:
+        order.orderItems?.map((item: any) => ({
+          id: item.id,
+          quantity: item.quantity,
+          basePrice: Number(item.basePrice),
+          finalPrice: Number(item.finalPrice),
+          preparationNotes: item.preparationNotes || undefined,
+          preparationStatus: item.preparationStatus || undefined,
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            description: item.product.description || undefined,
+            price: Number(item.product.price),
+          },
+          productVariant: item.productVariant
+            ? {
+                id: item.productVariant.id,
+                name: item.productVariant.name,
+                price: Number(item.productVariant.price),
+              }
+            : undefined,
+          productModifiers:
+            item.productModifiers?.map((mod: any) => ({
+              id: mod.id,
+              name: mod.name,
+              price: Number(mod.price),
+            })) || undefined,
+          selectedPizzaCustomizations:
+            item.selectedPizzaCustomizations?.map((custom: any) => ({
+              pizzaCustomizationId: custom.pizzaCustomizationId,
+              half: custom.half,
+              action: custom.action,
+              pizzaCustomization: custom.pizzaCustomization
+                ? {
+                    id: custom.pizzaCustomization.id,
+                    name: custom.pizzaCustomization.name,
+                    type: custom.pizzaCustomization.type,
+                  }
+                : undefined,
+            })) || undefined,
+        })) || [],
+      payments:
+        order.payments?.map((payment: any) => ({
+          id: payment.id,
+          amount: Number(payment.amount),
+          paymentMethod: payment.paymentMethod,
+          paymentStatus: payment.paymentStatus,
+          createdAt: payment.createdAt,
+          updatedAt: payment.updatedAt,
         })) || undefined,
-        selectedPizzaCustomizations: item.selectedPizzaCustomizations?.map((custom: any) => ({
-          pizzaCustomizationId: custom.pizzaCustomizationId,
-          half: custom.half,
-          action: custom.action,
-          pizzaCustomization: custom.pizzaCustomization ? {
-            id: custom.pizzaCustomization.id,
-            name: custom.pizzaCustomization.name,
-            type: custom.pizzaCustomization.type,
-          } : undefined,
+      ticketImpressions:
+        order.ticketImpressions?.map((impression: any) => ({
+          id: impression.id,
+          ticketType: impression.ticketType,
+          impressionTime: impression.impressionTime,
+          user: impression.user
+            ? {
+                id: impression.user.id,
+                firstName: impression.user.firstName || undefined,
+                lastName: impression.user.lastName || undefined,
+              }
+            : undefined,
+          printer: impression.printer
+            ? {
+                id: impression.printer.id,
+                name: impression.printer.name,
+              }
+            : undefined,
         })) || undefined,
-      })) || [],
-      payments: order.payments?.map((payment: any) => ({
-        id: payment.id,
-        amount: Number(payment.amount),
-        paymentMethod: payment.paymentMethod,
-        paymentStatus: payment.paymentStatus,
-        createdAt: payment.createdAt,
-        updatedAt: payment.updatedAt,
-      })) || undefined,
-      ticketImpressions: order.ticketImpressions?.map((impression: any) => ({
-        id: impression.id,
-        ticketType: impression.ticketType,
-        impressionTime: impression.impressionTime,
-        user: impression.user ? {
-          id: impression.user.id,
-          firstName: impression.user.firstName || undefined,
-          lastName: impression.user.lastName || undefined,
-        } : undefined,
-        printer: impression.printer ? {
-          id: impression.printer.id,
-          name: impression.printer.name,
-        } : undefined,
-      })) || undefined,
     };
   }
 
   private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
-    const totalPaid = order.payments?.reduce((sum: number, payment: any) => sum + Number(payment.amount), 0) || 0;
+    const totalPaid =
+      order.payments?.reduce(
+        (sum: number, payment: any) => sum + Number(payment.amount),
+        0,
+      ) || 0;
 
     // Recopilar pantallas de preparación únicas y calcular sus estados
-    const preparationScreensMap = new Map<string, { 
-      items: any[], 
-      name: string 
-    }>();
-    
+    const preparationScreensMap = new Map<
+      string,
+      {
+        items: any[];
+        name: string;
+      }
+    >();
+
     if (order.orderItems) {
       order.orderItems.forEach((item: any) => {
         if (item.product?.preparationScreen?.name) {
@@ -1661,7 +1749,7 @@ export class OrdersService {
           if (!preparationScreensMap.has(screenName)) {
             preparationScreensMap.set(screenName, {
               name: screenName,
-              items: []
+              items: [],
             });
           }
           preparationScreensMap.get(screenName)!.items.push(item);
@@ -1669,15 +1757,19 @@ export class OrdersService {
       });
     }
 
-    const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+    const preparationScreenStatuses = Array.from(
+      preparationScreensMap.values(),
+    ).map((screen) => {
       const items = screen.items;
-      const allReady = items.every((item: any) => 
-        item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+      const allReady = items.every(
+        (item: any) =>
+          item.preparationStatus === 'READY' ||
+          item.preparationStatus === 'DELIVERED',
       );
-      const someInProgress = items.some((item: any) => 
-        item.preparationStatus === 'IN_PROGRESS'
+      const someInProgress = items.some(
+        (item: any) => item.preparationStatus === 'IN_PROGRESS',
       );
-      
+
       let status: string;
       if (allReady) {
         status = 'READY';
@@ -1686,10 +1778,10 @@ export class OrdersService {
       } else {
         status = 'PENDING';
       }
-      
+
       return {
         name: screen.name,
-        status
+        status,
       };
     });
 
@@ -1707,16 +1799,18 @@ export class OrdersService {
     };
 
     if (preparationScreenStatuses.length > 0) {
-      dto.preparationScreens = preparationScreenStatuses.map(s => s.name);
+      dto.preparationScreens = preparationScreenStatuses.map((s) => s.name);
       dto.preparationScreenStatuses = preparationScreenStatuses;
     }
 
     if (order.table) {
       dto.table = {
         number: order.table.name,
-        area: order.table.area ? {
-          name: order.table.area.name,
-        } : undefined,
+        area: order.table.area
+          ? {
+              name: order.table.area.name,
+            }
+          : undefined,
       };
     }
 
@@ -1731,7 +1825,7 @@ export class OrdersService {
     if (order.ticketImpressions && order.ticketImpressions.length > 0) {
       dto.ticketImpressionCount = order.ticketImpressions.length;
     }
-    
+
     if (order.notes) {
       dto.notes = order.notes;
     }
@@ -1741,7 +1835,7 @@ export class OrdersService {
       dto.createdBy = {
         username: order.user.username,
         firstName: order.user.firstName,
-        lastName: order.user.lastName
+        lastName: order.user.lastName,
       };
     }
 
@@ -1749,15 +1843,24 @@ export class OrdersService {
   }
 
   private mapToReceiptListDto(order: any): ReceiptListDto {
-    const totalPaid = order.payments?.reduce((sum: number, payment: any) => 
-      payment.paymentStatus === 'COMPLETED' ? sum + Number(payment.amount) : sum, 0) || 0;
+    const totalPaid =
+      order.payments?.reduce(
+        (sum: number, payment: any) =>
+          payment.paymentStatus === 'COMPLETED'
+            ? sum + Number(payment.amount)
+            : sum,
+        0,
+      ) || 0;
 
     // Recopilar pantallas de preparación únicas y calcular sus estados
-    const preparationScreensMap = new Map<string, { 
-      items: any[], 
-      name: string 
-    }>();
-    
+    const preparationScreensMap = new Map<
+      string,
+      {
+        items: any[];
+        name: string;
+      }
+    >();
+
     if (order.orderItems) {
       order.orderItems.forEach((item: any) => {
         if (item.product?.preparationScreen?.name) {
@@ -1765,7 +1868,7 @@ export class OrdersService {
           if (!preparationScreensMap.has(screenName)) {
             preparationScreensMap.set(screenName, {
               name: screenName,
-              items: []
+              items: [],
             });
           }
           preparationScreensMap.get(screenName)!.items.push(item);
@@ -1774,15 +1877,19 @@ export class OrdersService {
     }
 
     // Calcular el estado de cada pantalla
-    const preparationScreenStatuses = Array.from(preparationScreensMap.values()).map(screen => {
+    const preparationScreenStatuses = Array.from(
+      preparationScreensMap.values(),
+    ).map((screen) => {
       const items = screen.items;
-      const allReady = items.every((item: any) => 
-        item.preparationStatus === 'READY' || item.preparationStatus === 'DELIVERED'
+      const allReady = items.every(
+        (item: any) =>
+          item.preparationStatus === 'READY' ||
+          item.preparationStatus === 'DELIVERED',
       );
-      const someInProgress = items.some((item: any) => 
-        item.preparationStatus === 'IN_PROGRESS'
+      const someInProgress = items.some(
+        (item: any) => item.preparationStatus === 'IN_PROGRESS',
       );
-      
+
       let status: string;
       if (allReady) {
         status = 'READY';
@@ -1791,10 +1898,10 @@ export class OrdersService {
       } else {
         status = 'PENDING';
       }
-      
+
       return {
         name: screen.name,
-        status
+        status,
       };
     });
 
@@ -1823,9 +1930,11 @@ export class OrdersService {
         number: order.table.number || order.table.name,
         name: order.table.name,
         isTemporary: order.table.isTemporary || false,
-        area: order.table.area ? {
-          name: order.table.area.name,
-        } : undefined,
+        area: order.table.area
+          ? {
+              name: order.table.area.name,
+            }
+          : undefined,
       };
     }
 
@@ -1841,7 +1950,7 @@ export class OrdersService {
     if (order.ticketImpressions && order.ticketImpressions.length > 0) {
       dto.ticketImpressionCount = order.ticketImpressions.length;
     }
-    
+
     // Agregar notas si existen
     if (order.notes) {
       dto.notes = order.notes;
@@ -1852,7 +1961,7 @@ export class OrdersService {
       dto.createdBy = {
         username: order.user.username,
         firstName: order.user.firstName,
-        lastName: order.user.lastName
+        lastName: order.user.lastName,
       };
     }
 
@@ -1881,9 +1990,11 @@ export class OrdersService {
         number: order.table.name, // En el dominio Table, 'name' contiene el número
         name: order.table.name,
         isTemporary: order.table.isTemporary,
-        area: order.table.area ? {
-          name: order.table.area.name
-        } : undefined,
+        area: order.table.area
+          ? {
+              name: order.table.area.name,
+            }
+          : undefined,
       };
     }
 
@@ -1901,20 +2012,18 @@ export class OrdersService {
       dto.createdBy = {
         username: order.user.username,
         firstName: order.user.firstName,
-        lastName: order.user.lastName
+        lastName: order.user.lastName,
       };
     }
 
     return dto;
   }
 
-  async getReceiptsList(
-    filterOptions?: {
-      startDate?: Date;
-      endDate?: Date;
-      orderType?: OrderType;
-    },
-  ): Promise<ReceiptListDto[]> {
+  async getReceiptsList(filterOptions?: {
+    startDate?: Date;
+    endDate?: Date;
+    orderType?: OrderType;
+  }): Promise<ReceiptListDto[]> {
     // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
     if (!currentShift) {
@@ -1926,9 +2035,13 @@ export class OrdersService {
         shiftId: currentShift.id,
         orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
         ...(filterOptions?.orderType && { orderType: filterOptions.orderType }),
-        ...(filterOptions?.startDate && filterOptions?.endDate && {
-          finalizedAt: Between(filterOptions.startDate, filterOptions.endDate),
-        }),
+        ...(filterOptions?.startDate &&
+          filterOptions?.endDate && {
+            finalizedAt: Between(
+              filterOptions.startDate,
+              filterOptions.endDate,
+            ),
+          }),
       },
       relations: [
         'user',
@@ -2191,8 +2304,11 @@ export class OrdersService {
       return null;
     }
 
-    const cleanedData = this.cleanDeliveryInfoByOrderType(deliveryData, orderType);
-    
+    const cleanedData = this.cleanDeliveryInfoByOrderType(
+      deliveryData,
+      orderType,
+    );
+
     const hasValidFields = Object.entries(cleanedData).some(
       ([key, value]) => value !== undefined,
     );
@@ -2201,11 +2317,15 @@ export class OrdersService {
       return null;
     }
 
-    const DeliveryInfoEntity = await import('./infrastructure/persistence/relational/entities/delivery-info.entity');
-    const DeliveryInfoRepo = this.dataSource.getRepository(DeliveryInfoEntity.DeliveryInfoEntity);
-    
+    const DeliveryInfoEntity = await import(
+      './infrastructure/persistence/relational/entities/delivery-info.entity'
+    );
+    const DeliveryInfoRepo = this.dataSource.getRepository(
+      DeliveryInfoEntity.DeliveryInfoEntity,
+    );
+
     let existingDeliveryInfo = await DeliveryInfoRepo.findOne({
-      where: { orderId }
+      where: { orderId },
     });
 
     if (existingDeliveryInfo) {
@@ -2226,13 +2346,16 @@ export class OrdersService {
     }
   }
 
-  async quickFinalizeMultipleOrders(orderIds: string[], userId: string): Promise<{ ordersWithWarnings: string[] }> {
+  async quickFinalizeMultipleOrders(
+    orderIds: string[],
+    userId: string,
+  ): Promise<{ ordersWithWarnings: string[] }> {
     const ordersWithWarnings: string[] = [];
 
     for (const orderId of orderIds) {
       try {
         const order = await this.findOne(orderId);
-        
+
         // Si la orden no está en estado READY, la agregamos a las advertencias
         if (order.orderStatus !== OrderStatus.READY) {
           ordersWithWarnings.push(orderId);
@@ -2241,7 +2364,9 @@ export class OrdersService {
         await this.quickFinalizeOrder(orderId, userId);
       } catch (error) {
         // Si hay un error con una orden específica, continuamos con las demás
-        this.logger.error(`Error finalizando orden ${orderId}: ${error.message}`);
+        this.logger.error(
+          `Error finalizando orden ${orderId}: ${error.message}`,
+        );
       }
     }
 
@@ -2258,16 +2383,21 @@ export class OrdersService {
     }
 
     // Verificar que la orden no esté ya completada o cancelada
-    if (order.orderStatus === OrderStatus.COMPLETED || order.orderStatus === OrderStatus.CANCELLED) {
+    if (
+      order.orderStatus === OrderStatus.COMPLETED ||
+      order.orderStatus === OrderStatus.CANCELLED
+    ) {
       throw new BadRequestException('La orden ya está finalizada o cancelada');
     }
 
     // Calcular el monto pendiente de pago
-    const totalPaid = order.payments?.reduce((sum, payment) => {
-      return sum + Number(payment.amount);
-    }, 0) || 0;
-    
-    const totalOrder = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+    const totalPaid =
+      order.payments?.reduce((sum, payment) => {
+        return sum + Number(payment.amount);
+      }, 0) || 0;
+
+    const totalOrder =
+      typeof order.total === 'string' ? parseFloat(order.total) : order.total;
     const pendingAmount = totalOrder - totalPaid;
 
     // Si hay monto pendiente, crear un pago en efectivo
@@ -2286,7 +2416,7 @@ export class OrdersService {
     // Si la orden tiene mesa asignada, liberarla
     if (order.tableId) {
       const table = await this.tablesService.findOne(order.tableId);
-      
+
       if (table.isTemporary) {
         // Eliminar mesa temporal
         await this.tablesService.remove(order.tableId);
@@ -2330,7 +2460,7 @@ export class OrdersService {
     userId: string,
   ): Promise<void> {
     const order = await this.findOne(orderId);
-    
+
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
@@ -2338,8 +2468,11 @@ export class OrdersService {
     const restaurantConfig = await this.restaurantConfigService.getConfig();
 
     // Importar las clases necesarias
-    const { ThermalPrinter: ThermalPrinterLib, PrinterTypes } = require('node-thermal-printer');
-    
+    const {
+      ThermalPrinter: ThermalPrinterLib,
+      PrinterTypes,
+    } = require('node-thermal-printer');
+
     const printer = new ThermalPrinterLib({
       type: PrinterTypes.EPSON,
       interface: `tcp://${printerDetails.ipAddress}:${printerDetails.port}`,
@@ -2350,11 +2483,13 @@ export class OrdersService {
     try {
       const isConnected = await printer.isPrinterConnected();
       if (!isConnected) {
-        throw new Error(`No se pudo conectar a la impresora ${printerDetails.name}`);
+        throw new Error(
+          `No se pudo conectar a la impresora ${printerDetails.name}`,
+        );
       }
 
       await this.printBillingTicket(printer, order, restaurantConfig);
-      
+
       // Añadir líneas de avance según configuración
       for (let i = 0; i < printerDetails.feedLines; i++) {
         printer.newLine();
@@ -2364,7 +2499,7 @@ export class OrdersService {
       if (printerDetails.cutPaper) {
         printer.cut();
       }
-      
+
       await printer.execute();
       printer.clear();
     } catch (error) {
@@ -2373,60 +2508,72 @@ export class OrdersService {
     }
 
     // Registrar la impresión
-    await this.registerTicketImpression(
-      orderId,
-      userId,
-      TicketType.BILLING,
-    );
+    await this.registerTicketImpression(orderId, userId, TicketType.BILLING);
   }
 
-  private async printBillingTicket(printer: any, order: Order, restaurantConfig: any): Promise<void> {
+  private async printBillingTicket(
+    printer: any,
+    order: Order,
+    restaurantConfig: any,
+  ): Promise<void> {
     // Importar TicketFormatter
-    const { TicketFormatter } = require('../thermal-printers/utils/ticket-formatter');
+    const {
+      TicketFormatter,
+    } = require('../thermal-printers/utils/ticket-formatter');
     const formatter = new TicketFormatter(80); // Asumiendo papel de 80mm para billing
-    
+
     // Encabezado del ticket - Primero el restaurante
     printer.alignCenter();
-    
+
     // Nombre del restaurante con tamaño más grande
     printer.setTextSize(1, 1);
     printer.bold(true);
     printer.println(restaurantConfig.restaurantName || 'Restaurant');
     printer.bold(false);
     printer.setTextNormal();
-    
+
     // Dirección del restaurante
     if (restaurantConfig.address) {
       printer.println(restaurantConfig.address);
-      if (restaurantConfig.city || restaurantConfig.state || restaurantConfig.postalCode) {
+      if (
+        restaurantConfig.city ||
+        restaurantConfig.state ||
+        restaurantConfig.postalCode
+      ) {
         const cityStateParts = [
           restaurantConfig.city,
           restaurantConfig.state,
-          restaurantConfig.postalCode
-        ].filter(Boolean).join(', ');
+          restaurantConfig.postalCode,
+        ]
+          .filter(Boolean)
+          .join(', ');
         printer.println(cityStateParts);
       }
     }
-    
+
     // Teléfonos
     if (restaurantConfig.phoneMain || restaurantConfig.phoneSecondary) {
       const phones: string[] = [];
-      if (restaurantConfig.phoneMain) phones.push(`Tel: ${restaurantConfig.phoneMain}`);
-      if (restaurantConfig.phoneSecondary) phones.push(`Tel 2: ${restaurantConfig.phoneSecondary}`);
+      if (restaurantConfig.phoneMain)
+        phones.push(`Tel: ${restaurantConfig.phoneMain}`);
+      if (restaurantConfig.phoneSecondary)
+        phones.push(`Tel 2: ${restaurantConfig.phoneSecondary}`);
       printer.println(phones.join(' - '));
     }
-    
+
     printer.drawLine();
-    
+
     // Configuración de texto más grande para número de orden y mesa
     printer.setTextSize(2, 2);
     printer.bold(true);
-    
+
     // Número de orden con información de mesa/área
     if (order.table) {
       // Si hay área, mostrar área y mesa junto al número de orden
       if (order.table.area) {
-        printer.println(`#${order.shiftOrderNumber} - ${order.table.area.name}`);
+        printer.println(
+          `#${order.shiftOrderNumber} - ${order.table.area.name}`,
+        );
         printer.println(`Mesa: ${order.table.name}`);
       } else {
         // Si no hay área, mostrar número de orden y mesa
@@ -2435,25 +2582,31 @@ export class OrdersService {
       }
     } else {
       // Si no hay mesa, solo mostrar número de orden y tipo
-      printer.println(`#${order.shiftOrderNumber} - ${this.getOrderTypeLabel(order.orderType)}`);
+      printer.println(
+        `#${order.shiftOrderNumber} - ${this.getOrderTypeLabel(order.orderType)}`,
+      );
     }
-    
+
     printer.bold(false);
     printer.setTextNormal();
-    
+
     printer.drawLine();
-    
+
     // Información de la orden
     printer.alignLeft();
-    printer.println(`Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', { 
-      timeZone: 'America/Mexico_City' 
-    })}`);
-    
+    printer.println(
+      `Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', {
+        timeZone: 'America/Mexico_City',
+      })}`,
+    );
+
     if (order.user?.firstName || order.user?.lastName) {
-      const userName = [order.user.firstName, order.user.lastName].filter(Boolean).join(' ');
+      const userName = [order.user.firstName, order.user.lastName]
+        .filter(Boolean)
+        .join(' ');
       printer.println(`Atendido por: ${userName}`);
     }
-    
+
     // Información de cliente para delivery/takeaway
     if (order.deliveryInfo && order.deliveryInfo.recipientName) {
       printer.println(`Cliente: ${order.deliveryInfo.recipientName}`);
@@ -2461,16 +2614,18 @@ export class OrdersService {
         printer.println(`Tel: ${order.deliveryInfo.recipientPhone}`);
       }
     }
-    
+
     // Items de la orden
     printer.drawLine();
     printer.bold(true);
     printer.println('DETALLE DE CONSUMO');
     printer.bold(false);
-    
+
     // Agrupar items idénticos usando el mismo método que el ticket general
-    const groupedItems = this.groupIdenticalItemsForBilling(order.orderItems || []);
-    
+    const groupedItems = this.groupIdenticalItemsForBilling(
+      order.orderItems || [],
+    );
+
     // Calcular el ancho máximo necesario para los precios
     let maxPriceWidth = 0;
     for (const item of groupedItems) {
@@ -2478,29 +2633,29 @@ export class OrdersService {
       maxPriceWidth = Math.max(maxPriceWidth, priceStr.length);
     }
     const dynamicPriceColumnWidth = maxPriceWidth + 2;
-    
+
     // Usar fuente normal para los productos (más conservador que el general)
     for (const item of groupedItems) {
       // Título del producto
       const productTitle = `${item.quantity}x ${item.variantName || item.productName}`;
-      
+
       // Imprimir producto principal
       const productLines = formatter.formatProductTable(
-        productTitle, 
+        productTitle,
         this.formatMoney(item.totalPrice),
         'normal', // Fuente normal en lugar de expanded
-        dynamicPriceColumnWidth
+        dynamicPriceColumnWidth,
       );
-      
+
       for (const line of productLines) {
         printer.println(line);
       }
-      
+
       // Personalizaciones de pizza (si las hay)
       if (item.pizzaCustomizations) {
         printer.println(`  ${item.pizzaCustomizations}`);
       }
-      
+
       // Modificadores
       if (item.modifiers && item.modifiers.length > 0) {
         for (const modifier of item.modifiers) {
@@ -2517,43 +2672,46 @@ export class OrdersService {
           printer.println(`  ${modifierText}`);
         }
       }
-      
+
       // Notas de preparación
       if (item.preparationNotes) {
-        const wrappedNotes = formatter.wrapText(`  Notas: ${item.preparationNotes}`, 'normal');
+        const wrappedNotes = formatter.wrapText(
+          `  Notas: ${item.preparationNotes}`,
+          'normal',
+        );
         for (const line of wrappedNotes) {
           printer.println(line);
         }
       }
     }
-    
+
     // Totales
     printer.drawLine();
-    
+
     // Calcular totales
     const subtotal = Number(order.subtotal || order.total);
     const total = Number(order.total);
     const subtotalStr = this.formatMoney(subtotal);
     const totalStr = this.formatMoney(total);
     const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
-    
+
     // Subtotal
     const subtotalLines = formatter.formatProductTable(
-      'Subtotal:', 
+      'Subtotal:',
       subtotalStr,
       'normal',
-      maxTotalWidth
+      maxTotalWidth,
     );
     for (const line of subtotalLines) {
       printer.println(line);
     }
-    
+
     // Total con fuente ligeramente más grande
     const totalLines = formatter.formatProductTable(
-      'TOTAL:', 
+      'TOTAL:',
       totalStr,
       'normal',
-      maxTotalWidth
+      maxTotalWidth,
     );
     printer.setTextSize(1, 1);
     printer.bold(true);
@@ -2562,37 +2720,38 @@ export class OrdersService {
     }
     printer.setTextNormal();
     printer.bold(false);
-    
+
     // Sección de pagos
     if (order.payments && order.payments.length > 0) {
       printer.drawLine();
       printer.bold(true);
       printer.println('DETALLE DE PAGOS');
       printer.bold(false);
-      
+
       let totalPaid = 0;
-      order.payments.forEach(payment => {
+      order.payments.forEach((payment) => {
         const amount = payment.amount;
         totalPaid += amount;
         const paymentLines = formatter.formatProductTable(
           this.getPaymentMethodLabel(payment.paymentMethod),
           this.formatMoney(amount),
           'normal',
-          maxTotalWidth
+          maxTotalWidth,
         );
         for (const line of paymentLines) {
           printer.println(line);
         }
       });
-      
+
       const remaining = total - totalPaid;
-      if (remaining > 0.01) { // Usar 0.01 para evitar problemas de precisión de punto flotante
+      if (remaining > 0.01) {
+        // Usar 0.01 para evitar problemas de precisión de punto flotante
         printer.println('');
         const remainingLines = formatter.formatProductTable(
           'POR PAGAR:',
           this.formatMoney(remaining),
           'normal',
-          maxTotalWidth
+          maxTotalWidth,
         );
         printer.bold(true);
         for (const line of remainingLines) {
@@ -2601,7 +2760,7 @@ export class OrdersService {
         printer.bold(false);
       }
     }
-    
+
     // Notas adicionales
     if (order.notes) {
       printer.drawLine();
@@ -2613,34 +2772,34 @@ export class OrdersService {
         printer.println(line);
       }
     }
-    
+
     // Pie del ticket
     printer.drawLine();
     printer.alignCenter();
     printer.println('¡Gracias por su preferencia!');
     printer.println('');
-    
+
     // RFC y datos fiscales si están configurados
     if (restaurantConfig.rfc) {
       printer.println(`RFC: ${restaurantConfig.rfc}`);
     }
-    
+
     printer.println('');
   }
 
   private getItemDescription(item: OrderItem): string {
     if (!item.product) return 'Producto desconocido';
     let description = item.product.name;
-    
+
     if (item.productVariant) {
       description += ' - ' + item.productVariant.name;
     }
-    
+
     if (item.productModifiers && item.productModifiers.length > 0) {
-      const modifiers = item.productModifiers.map(m => m.name).join(', ');
+      const modifiers = item.productModifiers.map((m) => m.name).join(', ');
       description += ' (' + modifiers + ')';
     }
-    
+
     return description;
   }
 
@@ -2688,7 +2847,9 @@ export class OrdersService {
             price: Number(mod.price) || 0,
           })),
           preparationNotes: item.preparationNotes || undefined,
-          pizzaCustomizations: this.formatPizzaCustomizationsForBilling(item.selectedPizzaCustomizations),
+          pizzaCustomizations: this.formatPizzaCustomizationsForBilling(
+            item.selectedPizzaCustomizations,
+          ),
         };
         groupedMap.set(groupKey, groupedItem);
       }
@@ -2697,37 +2858,48 @@ export class OrdersService {
     return Array.from(groupedMap.values());
   }
 
-  private formatPizzaCustomizationsForBilling(customizations: any[]): string | undefined {
+  private formatPizzaCustomizationsForBilling(
+    customizations: any[],
+  ): string | undefined {
     if (!customizations || customizations.length === 0) return undefined;
-    
+
     // Simplificar el formato para billing
     const parts: string[] = [];
-    
-    customizations.forEach(cust => {
+
+    customizations.forEach((cust) => {
       if (cust.pizzaCustomization?.name) {
         parts.push(cust.pizzaCustomization.name);
       }
     });
-    
+
     return parts.length > 0 ? parts.join(', ') : undefined;
   }
 
   private getPaymentMethodLabel(method: string): string {
     switch (method) {
-      case 'CASH': return 'Efectivo';
-      case 'CREDIT_CARD': return 'T. Crédito';
-      case 'DEBIT_CARD': return 'T. Débito';
-      case 'TRANSFER': return 'Transferencia';
-      default: return method;
+      case 'CASH':
+        return 'Efectivo';
+      case 'CREDIT_CARD':
+        return 'T. Crédito';
+      case 'DEBIT_CARD':
+        return 'T. Débito';
+      case 'TRANSFER':
+        return 'Transferencia';
+      default:
+        return method;
     }
   }
 
   private getOrderTypeLabel(orderType: OrderType): string {
     switch (orderType) {
-      case OrderType.DELIVERY: return 'DOMICILIO';
-      case OrderType.TAKE_AWAY: return 'PARA LLEVAR';
-      case OrderType.DINE_IN: return 'MESA';
-      default: return orderType;
+      case OrderType.DELIVERY:
+        return 'DOMICILIO';
+      case OrderType.TAKE_AWAY:
+        return 'PARA LLEVAR';
+      case OrderType.DINE_IN:
+        return 'MESA';
+      default:
+        return orderType;
     }
   }
 
@@ -2743,42 +2915,54 @@ export class OrdersService {
 
     // Obtener todas las órdenes del turno (optimizado para resumen)
     const orders = await this.orderRepository.findByShiftIdForSummary(shiftId);
-    
+
     // Filtrar solo órdenes completadas/cobradas
     const completedOrders = orders.filter(
-      order => order.orderStatus === OrderStatus.COMPLETED || 
-               order.orderStatus === OrderStatus.DELIVERED
+      (order) =>
+        order.orderStatus === OrderStatus.COMPLETED ||
+        order.orderStatus === OrderStatus.DELIVERED,
     );
-    
 
     // Estructura para acumular datos
-    const categoriesMap = new Map<string, {
-      categoryId: string;
-      categoryName: string;
-      quantity: number;
-      totalAmount: number;
-      subcategories: Map<string, {
-        subcategoryId: string;
-        subcategoryName: string;
+    const categoriesMap = new Map<
+      string,
+      {
+        categoryId: string;
+        categoryName: string;
         quantity: number;
         totalAmount: number;
-        products: Map<string, {
-          productId: string;
-          productName: string;
-          quantity: number;
-          totalAmount: number;
-        }>;
-      }>;
-    }>();
+        subcategories: Map<
+          string,
+          {
+            subcategoryId: string;
+            subcategoryName: string;
+            quantity: number;
+            totalAmount: number;
+            products: Map<
+              string,
+              {
+                productId: string;
+                productName: string;
+                quantity: number;
+                totalAmount: number;
+              }
+            >;
+          }
+        >;
+      }
+    >();
 
     let totalQuantity = 0;
     let totalSales = 0;
-    const productSalesMap = new Map<string, {
-      productId: string;
-      productName: string;
-      quantity: number;
-      totalAmount: number;
-    }>();
+    const productSalesMap = new Map<
+      string,
+      {
+        productId: string;
+        productName: string;
+        quantity: number;
+        totalAmount: number;
+      }
+    >();
 
     // Procesar cada orden
     for (const order of completedOrders) {
@@ -2795,9 +2979,9 @@ export class OrdersService {
         const quantity = 1;
         const itemPrice = Number(item.finalPrice) || 0;
         const amount = itemPrice;
-        
+
         if (itemPrice === 0) continue;
-        
+
         totalQuantity += quantity;
         totalSales += amount;
 
@@ -2830,7 +3014,7 @@ export class OrdersService {
         subcategoryData.totalAmount += amount;
 
         // Actualizar producto
-        const productKey = item.productVariant 
+        const productKey = item.productVariant
           ? `${product.id}-${item.productVariant.id}`
           : product.id;
         const productName = item.productVariant
@@ -2865,30 +3049,34 @@ export class OrdersService {
     }
 
     // Convertir mapas a arrays y calcular porcentajes
-    const categories = Array.from(categoriesMap.values()).map(cat => ({
-      ...cat,
-      percentage: totalSales > 0 ? (cat.totalAmount / totalSales) * 100 : 0,
-      subcategories: Array.from(cat.subcategories.values()).map(sub => ({
-        ...sub,
-        products: Array.from(sub.products.values())
-          .sort((a, b) => b.totalAmount - a.totalAmount)
-          .map(prod => ({
-            ...prod,
-            averagePrice: prod.quantity > 0 ? prod.totalAmount / prod.quantity : 0,
-          })),
-      })).sort((a, b) => b.totalAmount - a.totalAmount),
-    })).sort((a, b) => b.totalAmount - a.totalAmount);
+    const categories = Array.from(categoriesMap.values())
+      .map((cat) => ({
+        ...cat,
+        percentage: totalSales > 0 ? (cat.totalAmount / totalSales) * 100 : 0,
+        subcategories: Array.from(cat.subcategories.values())
+          .map((sub) => ({
+            ...sub,
+            products: Array.from(sub.products.values())
+              .sort((a, b) => b.totalAmount - a.totalAmount)
+              .map((prod) => ({
+                ...prod,
+                averagePrice:
+                  prod.quantity > 0 ? prod.totalAmount / prod.quantity : 0,
+              })),
+          }))
+          .sort((a, b) => b.totalAmount - a.totalAmount),
+      }))
+      .sort((a, b) => b.totalAmount - a.totalAmount);
 
     // Top 10 productos más vendidos
     const topProducts = Array.from(productSalesMap.values())
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10)
-      .map(prod => ({
+      .map((prod) => ({
         ...prod,
         averagePrice: prod.quantity > 0 ? prod.totalAmount / prod.quantity : 0,
       }));
 
-    
     return {
       shiftId: shift.id,
       shiftNumber: shift.shiftNumber,
@@ -2896,7 +3084,8 @@ export class OrdersService {
       totalSales,
       totalQuantity,
       completedOrders: completedOrders.length,
-      averageTicket: completedOrders.length > 0 ? totalSales / completedOrders.length : 0,
+      averageTicket:
+        completedOrders.length > 0 ? totalSales / completedOrders.length : 0,
       categories,
       topProducts,
       startTime: shift.openedAt,

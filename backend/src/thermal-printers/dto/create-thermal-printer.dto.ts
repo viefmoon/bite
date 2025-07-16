@@ -121,7 +121,8 @@ export class CreateThermalPrinterDto {
   @ApiPropertyOptional({
     type: Boolean,
     example: false,
-    description: 'Habilita la impresión automática para órdenes de pickup (take away)',
+    description:
+      'Habilita la impresión automática para órdenes de pickup (take away)',
     default: false,
   })
   @IsOptional()
@@ -163,7 +164,8 @@ export class CreateThermalPrinterDto {
   @ApiPropertyOptional({
     type: Number,
     example: 3,
-    description: 'Líneas en blanco a añadir al final del ticket antes del corte',
+    description:
+      'Líneas en blanco a añadir al final del ticket antes del corte',
     default: 3,
   })
   @IsOptional()

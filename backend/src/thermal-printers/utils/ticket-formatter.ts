@@ -12,18 +12,26 @@ export class TicketFormatter {
   /**
    * Obtiene el número de caracteres por línea según el ancho del papel y el tamaño de fuente
    */
-  getCharactersPerLine(fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): number {
+  getCharactersPerLine(
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): number {
     if (this.paperWidth === 80) {
       switch (fontSize) {
-        case 'compressed': return 64;
-        case 'expanded': return 24;
-        default: return 48;
+        case 'compressed':
+          return 64;
+        case 'expanded':
+          return 24;
+        default:
+          return 48;
       }
     } else {
       switch (fontSize) {
-        case 'compressed': return 42;
-        case 'expanded': return 16;
-        default: return 32;
+        case 'compressed':
+          return 42;
+        case 'expanded':
+          return 16;
+        default:
+          return 32;
       }
     }
   }
@@ -31,7 +39,10 @@ export class TicketFormatter {
   /**
    * Centra el texto añadiendo espacios a los lados
    */
-  centerText(text: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string {
+  centerText(
+    text: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string {
     const maxChars = this.getCharactersPerLine(fontSize);
     const padding = Math.max(0, Math.floor((maxChars - text.length) / 2));
     return ' '.repeat(padding) + text;
@@ -40,7 +51,11 @@ export class TicketFormatter {
   /**
    * Formatea una línea con texto a la izquierda y derecha
    */
-  formatLine(left: string, right: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string {
+  formatLine(
+    left: string,
+    right: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string {
     const maxChars = this.getCharactersPerLine(fontSize);
     const totalLength = left.length + right.length;
     const spaces = Math.max(1, maxChars - totalLength);
@@ -51,16 +66,20 @@ export class TicketFormatter {
    * Formatea una línea de producto con precio, respetando espacio vertical para precios
    * Si el nombre del producto es muy largo, lo corta para dejar espacio al precio
    */
-  formatProductLine(productName: string, price: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string {
+  formatProductLine(
+    productName: string,
+    price: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string {
     const maxChars = this.getCharactersPerLine(fontSize);
     const priceSpace = price.length + 2; // Espacio para el precio más margen
     const maxProductLength = maxChars - priceSpace;
-    
+
     // Si el nombre del producto es muy largo, lo cortamos
     if (productName.length > maxProductLength) {
       productName = productName.substring(0, maxProductLength - 3) + '...';
     }
-    
+
     const spaces = maxChars - productName.length - price.length;
     return productName + ' '.repeat(spaces) + price;
   }
@@ -69,22 +88,26 @@ export class TicketFormatter {
    * Formatea líneas de producto con columnas fijas
    * La columna de precio siempre ocupa un espacio fijo a la derecha
    */
-  formatProductLines(productName: string, price: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string[] {
+  formatProductLines(
+    productName: string,
+    price: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string[] {
     const maxChars = this.getCharactersPerLine(fontSize);
-    
+
     // Reservar espacio fijo para la columna de precios (10 caracteres mínimo)
     const priceColumnWidth = Math.max(10, price.length + 1);
     const productColumnWidth = maxChars - priceColumnWidth - 1; // -1 para separación
-    
+
     // Dividir el nombre del producto en líneas que quepan en la columna de productos
     const productLines = this.wrapTextInColumn(productName, productColumnWidth);
-    
+
     // Formatear cada línea
     const formattedLines: string[] = [];
     for (let i = 0; i < productLines.length; i++) {
       const isLastLine = i === productLines.length - 1;
       const productText = productLines[i];
-      
+
       if (isLastLine) {
         // En la última línea, agregar el precio alineado a la derecha
         const paddedProduct = productText.padEnd(productColumnWidth);
@@ -98,7 +121,7 @@ export class TicketFormatter {
         formattedLines.push(paddedProduct + emptyPriceColumn);
       }
     }
-    
+
     return formattedLines;
   }
 
@@ -112,7 +135,7 @@ export class TicketFormatter {
 
     for (const word of words) {
       const testLine = currentLine ? currentLine + ' ' + word : word;
-      
+
       if (testLine.length <= columnWidth) {
         currentLine = testLine;
       } else {
@@ -120,7 +143,7 @@ export class TicketFormatter {
         if (currentLine) {
           lines.push(currentLine);
         }
-        
+
         // Si una sola palabra es más larga que el ancho de columna, cortarla
         if (word.length > columnWidth) {
           let remainingWord = word;
@@ -134,19 +157,22 @@ export class TicketFormatter {
         }
       }
     }
-    
+
     // Agregar la última línea si existe
     if (currentLine) {
       lines.push(currentLine);
     }
-    
+
     return lines.length > 0 ? lines : [''];
   }
 
   /**
    * Divide texto largo en múltiples líneas
    */
-  wrapText(text: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string[] {
+  wrapText(
+    text: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string[] {
     const maxChars = this.getCharactersPerLine(fontSize);
     const words = text.split(' ');
     const lines: string[] = [];
@@ -160,7 +186,7 @@ export class TicketFormatter {
         currentLine = word;
       }
     }
-    
+
     if (currentLine) lines.push(currentLine);
     return lines;
   }
@@ -168,7 +194,10 @@ export class TicketFormatter {
   /**
    * Crea una línea divisoria con caracteres
    */
-  createDivider(char: string = '-', fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string {
+  createDivider(
+    char: string = '-',
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string {
     const maxChars = this.getCharactersPerLine(fontSize);
     return char.repeat(maxChars);
   }
@@ -176,7 +205,10 @@ export class TicketFormatter {
   /**
    * Formatea una tabla simple
    */
-  formatTable(rows: Array<{ col1: string; col2: string; col3?: string }>, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string[] {
+  formatTable(
+    rows: Array<{ col1: string; col2: string; col3?: string }>,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string[] {
     const maxChars = this.getCharactersPerLine(fontSize);
     const lines: string[] = [];
 
@@ -189,7 +221,9 @@ export class TicketFormatter {
       for (const row of rows) {
         const col1 = row.col1.substring(0, col1Width).padEnd(col1Width);
         const col2 = row.col2.substring(0, col2Width).padEnd(col2Width);
-        const col3 = (row.col3 || '').substring(0, col3Width).padStart(col3Width);
+        const col3 = (row.col3 || '')
+          .substring(0, col3Width)
+          .padStart(col3Width);
         lines.push(col1 + col2 + col3);
       }
     } else {
@@ -224,15 +258,20 @@ export class TicketFormatter {
    * Garantiza que el precio SIEMPRE esté en su columna sin invasión de texto
    * @param dynamicPriceWidth - Ancho opcional calculado dinámicamente para la columna de precios
    */
-  formatProductTable(productName: string, price: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal', dynamicPriceWidth?: number): string[] {
+  formatProductTable(
+    productName: string,
+    price: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+    dynamicPriceWidth?: number,
+  ): string[] {
     const maxChars = this.getCharactersPerLine(fontSize);
-    
+
     // Definir anchos de columna fijos con separador
     // Reservamos más espacio para precios para asegurar separación clara
     let productColumnWidth: number;
     let priceColumnWidth: number;
     let separatorWidth = 1; // Espacio entre columnas
-    
+
     // Si se proporciona un ancho dinámico, usarlo
     if (dynamicPriceWidth && dynamicPriceWidth > 0) {
       priceColumnWidth = dynamicPriceWidth;
@@ -259,11 +298,11 @@ export class TicketFormatter {
         }
       }
     }
-    
+
     // Dividir el texto del producto en líneas que respeten el ancho de columna
     const lines: string[] = [];
     let remainingText = productName;
-    
+
     while (remainingText.length > 0) {
       if (remainingText.length <= productColumnWidth) {
         // Última línea - agregar el precio
@@ -281,36 +320,47 @@ export class TicketFormatter {
             break;
           }
         }
-        
+
         // Si no hay espacios, cortar en el límite de columna
-        if (cutPoint === productColumnWidth && remainingText[cutPoint] !== ' ') {
+        if (
+          cutPoint === productColumnWidth &&
+          remainingText[cutPoint] !== ' '
+        ) {
           // Buscar si hay un espacio cercano hacia adelante
-          for (let i = productColumnWidth; i < remainingText.length && i < productColumnWidth + 5; i++) {
+          for (
+            let i = productColumnWidth;
+            i < remainingText.length && i < productColumnWidth + 5;
+            i++
+          ) {
             if (remainingText[i] === ' ') {
               cutPoint = i;
               break;
             }
           }
-          
+
           // Si aún no hay espacio, cortar con guión
           if (cutPoint === productColumnWidth) {
             cutPoint = productColumnWidth - 1;
             const productPart = remainingText.substring(0, cutPoint) + '-';
             const paddedProduct = productPart.padEnd(productColumnWidth);
-            lines.push(paddedProduct + ' '.repeat(separatorWidth + priceColumnWidth));
+            lines.push(
+              paddedProduct + ' '.repeat(separatorWidth + priceColumnWidth),
+            );
             remainingText = remainingText.substring(cutPoint);
             continue;
           }
         }
-        
+
         // Extraer la línea y continuar
         const productPart = remainingText.substring(0, cutPoint).trim();
         const paddedProduct = productPart.padEnd(productColumnWidth);
-        lines.push(paddedProduct + ' '.repeat(separatorWidth + priceColumnWidth));
+        lines.push(
+          paddedProduct + ' '.repeat(separatorWidth + priceColumnWidth),
+        );
         remainingText = remainingText.substring(cutPoint).trim();
       }
     }
-    
+
     // Si no se generaron líneas (caso edge), agregar una línea con el precio
     if (lines.length === 0) {
       const productPart = ''.padEnd(productColumnWidth);
@@ -318,30 +368,33 @@ export class TicketFormatter {
       const pricePart = price.padStart(priceColumnWidth);
       lines.push(productPart + separator + pricePart);
     }
-    
+
     return lines;
   }
 
   /**
    * Crea un recuadro alrededor del texto
    */
-  createBox(text: string, fontSize: 'normal' | 'compressed' | 'expanded' = 'normal'): string[] {
+  createBox(
+    text: string,
+    fontSize: 'normal' | 'compressed' | 'expanded' = 'normal',
+  ): string[] {
     const maxChars = this.getCharactersPerLine(fontSize);
     const lines: string[] = [];
-    
+
     // Línea superior
     lines.push('┌' + '─'.repeat(maxChars - 2) + '┐');
-    
+
     // Contenido
     const wrappedText = this.wrapText(text, fontSize);
     for (const line of wrappedText) {
       const padding = maxChars - line.length - 2;
       lines.push('│' + line + ' '.repeat(padding) + '│');
     }
-    
+
     // Línea inferior
     lines.push('└' + '─'.repeat(maxChars - 2) + '┘');
-    
+
     return lines;
   }
 }

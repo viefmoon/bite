@@ -30,10 +30,13 @@ export class OrderForFinalizationListDto {
   @ApiProperty({ description: 'Fecha de finalización', required: false })
   finalizedAt?: Date;
 
-  @ApiProperty({ description: 'Fecha y hora de entrega programada', required: false })
+  @ApiProperty({
+    description: 'Fecha y hora de entrega programada',
+    required: false,
+  })
   scheduledAt?: Date;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Resumen de pagos para calcular el monto pendiente',
     required: false,
   })
@@ -41,9 +44,9 @@ export class OrderForFinalizationListDto {
     totalPaid: number;
   };
 
-  @ApiProperty({ 
-    description: 'Información básica de la mesa para órdenes DINE_IN', 
-    required: false 
+  @ApiProperty({
+    description: 'Información básica de la mesa para órdenes DINE_IN',
+    required: false,
   })
   table?: {
     number: string;
@@ -52,9 +55,10 @@ export class OrderForFinalizationListDto {
     };
   };
 
-  @ApiProperty({ 
-    description: 'Información básica de entrega para órdenes DELIVERY/TAKE_AWAY', 
-    required: false 
+  @ApiProperty({
+    description:
+      'Información básica de entrega para órdenes DELIVERY/TAKE_AWAY',
+    required: false,
   })
   deliveryInfo?: {
     recipientName?: string;
@@ -62,47 +66,47 @@ export class OrderForFinalizationListDto {
     fullAddress?: string;
   };
 
-  @ApiProperty({ 
-    description: 'Pantallas de preparación únicas de los productos en la orden', 
+  @ApiProperty({
+    description: 'Pantallas de preparación únicas de los productos en la orden',
     required: false,
-    type: [String]
+    type: [String],
   })
   preparationScreens?: string[];
 
-  @ApiProperty({ 
-    type: 'array', 
-    items: { 
+  @ApiProperty({
+    type: 'array',
+    items: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] }
-      }
+        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] },
+      },
     },
     required: false,
-    description: 'Estados de las pantallas de preparación'
+    description: 'Estados de las pantallas de preparación',
   })
   preparationScreenStatuses?: Array<{ name: string; status: string }>;
 
-  @ApiProperty({ 
-    description: 'Cantidad de tickets impresos para esta orden', 
-    required: false
+  @ApiProperty({
+    description: 'Cantidad de tickets impresos para esta orden',
+    required: false,
   })
   ticketImpressionCount?: number;
 
-  @ApiProperty({ 
-    description: 'Notas de la orden', 
-    required: false
+  @ApiProperty({
+    description: 'Notas de la orden',
+    required: false,
   })
   notes?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     required: false,
     description: 'Usuario que creó la orden',
     example: {
       username: 'john.doe',
       firstName: 'John',
-      lastName: 'Doe'
-    }
+      lastName: 'Doe',
+    },
   })
   createdBy?: {
     username: string;

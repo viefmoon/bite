@@ -30,6 +30,7 @@ export class RestaurantConfigMapper {
     domainEntity.openingGracePeriod = raw.openingGracePeriod;
     domainEntity.closingGracePeriod = raw.closingGracePeriod;
     domainEntity.timeZone = raw.timeZone;
+    domainEntity.scheduledOrdersLeadTime = raw.scheduledOrdersLeadTime;
 
     // Configuración de delivery
     domainEntity.deliveryCoverageArea = raw.deliveryCoverageArea;
@@ -70,6 +71,8 @@ export class RestaurantConfigMapper {
     persistenceEntity.openingGracePeriod = domainEntity.openingGracePeriod;
     persistenceEntity.closingGracePeriod = domainEntity.closingGracePeriod;
     persistenceEntity.timeZone = domainEntity.timeZone;
+    persistenceEntity.scheduledOrdersLeadTime =
+      domainEntity.scheduledOrdersLeadTime;
 
     // Configuración de delivery
     persistenceEntity.deliveryCoverageArea = domainEntity.deliveryCoverageArea;

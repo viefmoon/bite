@@ -542,7 +542,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-
   // Método para aceptar órdenes de WhatsApp (cambiar de PENDING a IN_PROGRESS)
   async acceptWhatsAppOrders(orderIds: string[]): Promise<{
     accepted: number;

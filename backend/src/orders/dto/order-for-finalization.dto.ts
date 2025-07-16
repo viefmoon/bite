@@ -101,7 +101,10 @@ export class OrderForFinalizationDto {
   @ApiProperty({ description: 'Fecha de finalización', required: false })
   finalizedAt?: Date;
 
-  @ApiProperty({ description: 'Fecha y hora de entrega programada', required: false })
+  @ApiProperty({
+    description: 'Fecha y hora de entrega programada',
+    required: false,
+  })
   scheduledAt?: Date;
 
   @ApiProperty({ description: 'ID de la mesa', required: false })

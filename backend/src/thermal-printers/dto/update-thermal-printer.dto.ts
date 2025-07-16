@@ -118,7 +118,8 @@ export class UpdateThermalPrinterDto {
   @ApiPropertyOptional({
     type: Boolean,
     example: false,
-    description: 'Habilita la impresión automática para órdenes de pickup (take away)',
+    description:
+      'Habilita la impresión automática para órdenes de pickup (take away)',
   })
   @IsOptional()
   @IsBoolean()
@@ -156,7 +157,8 @@ export class UpdateThermalPrinterDto {
   @ApiPropertyOptional({
     type: Number,
     example: 3,
-    description: 'Líneas en blanco a añadir al final del ticket antes del corte',
+    description:
+      'Líneas en blanco a añadir al final del ticket antes del corte',
   })
   @IsOptional()
   @IsInt()

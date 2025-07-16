@@ -42,7 +42,7 @@ export class ShiftsController {
   @ApiOperation({
     summary: 'Abrir un nuevo turno',
     description:
-      'Abre un nuevo turno. Solo puede haber un turno abierto a la vez.'
+      'Abre un nuevo turno. Solo puede haber un turno abierto a la vez.',
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -67,7 +67,7 @@ export class ShiftsController {
   @ApiOperation({
     summary: 'Cerrar el turno actual',
     description:
-      'Cierra el turno actual, registrando el efectivo final y calculando diferencias.'
+      'Cierra el turno actual, registrando el efectivo final y calculando diferencias.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -95,7 +95,7 @@ export class ShiftsController {
   @ApiOperation({
     summary: 'Obtener el turno actual',
     description:
-      'Devuelve el turno actualmente abierto, o null si no hay ninguno.'
+      'Devuelve el turno actualmente abierto, o null si no hay ninguno.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -125,7 +125,7 @@ export class ShiftsController {
   @ApiOperation({
     summary: 'Obtener historial de turnos',
     description:
-      'Devuelve el historial de turnos cerrados, ordenados por fecha descendente.'
+      'Devuelve el historial de turnos cerrados, ordenados por fecha descendente.',
   })
   @ApiQuery({
     name: 'limit',
@@ -158,7 +158,7 @@ export class ShiftsController {
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener un turno por ID',
-    description: 'Devuelve los detalles de un turno específico.'
+    description: 'Devuelve los detalles de un turno específico.',
   })
   @ApiResponse({
     status: HttpStatus.OK,

@@ -1,13 +1,11 @@
-import {
-  Injectable,
-  Inject,
-  Logger,
-  forwardRef,
-} from '@nestjs/common';
+import { Injectable, Inject, Logger, forwardRef } from '@nestjs/common';
 import { OrdersService } from '../orders/orders.service';
 import { ThermalPrintersService } from './thermal-printers.service';
 import { PrinterTypes, ThermalPrinter } from 'node-thermal-printer';
-import { PrinterConnectionType, ThermalPrinter as ThermalPrinterEntity } from './domain/thermal-printer';
+import {
+  PrinterConnectionType,
+  ThermalPrinter as ThermalPrinterEntity,
+} from './domain/thermal-printer';
 import { Order } from '../orders/domain/order';
 import { OrderType } from '../orders/domain/enums/order-type.enum';
 import { TicketType } from '../orders/domain/enums/ticket-type.enum';
@@ -145,8 +143,12 @@ export class AutomaticPrintingService {
         return parts.join(' - ');
       };
 
-      const half1 = groupedByHalf.HALF_1 ? formatHalf(groupedByHalf.HALF_1) : '';
-      const half2 = groupedByHalf.HALF_2 ? formatHalf(groupedByHalf.HALF_2) : '';
+      const half1 = groupedByHalf.HALF_1
+        ? formatHalf(groupedByHalf.HALF_1)
+        : '';
+      const half2 = groupedByHalf.HALF_2
+        ? formatHalf(groupedByHalf.HALF_2)
+        : '';
 
       return half1 && half2 ? `(${half1} / ${half2})` : half1 || half2;
     }
@@ -197,7 +199,8 @@ export class AutomaticPrintingService {
             price: Number(mod.price) || 0,
           })),
           preparationNotes: item.preparationNotes || undefined,
-          selectedPizzaCustomizations: item.selectedPizzaCustomizations || undefined,
+          selectedPizzaCustomizations:
+            item.selectedPizzaCustomizations || undefined,
           preparationStatus: item.preparationStatus || 'PENDING',
         };
         groupedMap.set(groupKey, groupedItem);
@@ -219,11 +222,21 @@ export class AutomaticPrintingService {
   /**
    * Imprime automáticamente las órdenes de delivery y pickup si hay una impresora configurada
    */
-  async printOrderAutomatically(orderId: string, orderType: OrderType, userId: string | null, isReprint: boolean = false): Promise<void> {
+  async printOrderAutomatically(
+    orderId: string,
+    orderType: OrderType,
+    userId: string | null,
+    isReprint: boolean = false,
+  ): Promise<void> {
     try {
       // Solo procesar órdenes de DELIVERY o TAKE_AWAY
-      if (orderType !== OrderType.DELIVERY && orderType !== OrderType.TAKE_AWAY) {
-        this.logger.log(`Orden ${orderId} es de tipo ${orderType}, no requiere impresión automática.`);
+      if (
+        orderType !== OrderType.DELIVERY &&
+        orderType !== OrderType.TAKE_AWAY
+      ) {
+        this.logger.log(
+          `Orden ${orderId} es de tipo ${orderType}, no requiere impresión automática.`,
+        );
         return;
       }
 
@@ -235,7 +248,7 @@ export class AutomaticPrintingService {
         {
           page: 1,
           limit: 100,
-        }
+        },
       );
 
       // Si no hay impresoras, salir
@@ -245,7 +258,7 @@ export class AutomaticPrintingService {
       }
 
       // Filtrar impresoras según el tipo de orden
-      const eligiblePrinters = printers.filter(printer => {
+      const eligiblePrinters = printers.filter((printer) => {
         if (orderType === OrderType.DELIVERY && printer.autoDeliveryPrint) {
           return true;
         }
@@ -256,12 +269,14 @@ export class AutomaticPrintingService {
       });
 
       if (eligiblePrinters.length === 0) {
-        this.logger.log(`No hay impresoras configuradas para impresión automática de ${orderType}.`);
+        this.logger.log(
+          `No hay impresoras configuradas para impresión automática de ${orderType}.`,
+        );
         return;
       }
 
       // Usar la primera impresora elegible o la marcada como predeterminada
-      const defaultPrinter = eligiblePrinters.find(p => p.isDefaultPrinter);
+      const defaultPrinter = eligiblePrinters.find((p) => p.isDefaultPrinter);
       const printerToUse = defaultPrinter || eligiblePrinters[0];
 
       this.logger.log(
@@ -269,8 +284,12 @@ export class AutomaticPrintingService {
       );
 
       // Imprimir el ticket
-      await this.printDeliveryPickupTicket(orderId, printerToUse, userId, isReprint);
-
+      await this.printDeliveryPickupTicket(
+        orderId,
+        printerToUse,
+        userId,
+        isReprint,
+      );
     } catch (error) {
       // No lanzar error para no interrumpir la creación de la orden
       this.logger.error(
@@ -318,92 +337,112 @@ export class AutomaticPrintingService {
       }
 
       // Inicializar formateador con la configuración de la impresora
-      const formatter = new TicketFormatter(printerDetails.paperWidth as 58 | 80);
+      const formatter = new TicketFormatter(
+        printerDetails.paperWidth as 58 | 80,
+      );
 
       // Encabezado del ticket
       printer.alignCenter();
-      
+
       // Número de orden y tipo con separador claro (primero)
       printer.setTextSize(1, 2);
       printer.bold(true);
-      
+
       // Construir el título con indicadores
       let orderTitle = `#${order.shiftOrderNumber} - `;
-      
+
       // Tipo de orden (comprimido)
       if (order.orderType === OrderType.DELIVERY) {
         orderTitle += 'DOMICILIO';
       } else {
         orderTitle += 'PARA LLEVAR';
       }
-      
+
       // Agregar indicadores
       if (order.scheduledAt) {
         orderTitle += ' (P)'; // P para pedido Programado
       }
-      
+
       if (isReprint) {
         orderTitle += ' *'; // Asterisco para reimpresión/edición
       }
-      
+
       printer.println(orderTitle);
-      
+
       printer.bold(false);
       printer.setTextNormal();
-      
+
       printer.drawLine();
-      
+
       // Información del restaurante (después del número de orden)
       printer.alignCenter();
-      
+
       // Nombre del restaurante
       printer.setTextSize(1, 1);
       printer.bold(true);
       printer.println(restaurantConfig.restaurantName || 'Restaurant');
       printer.bold(false);
       printer.setTextNormal();
-      
+
       // Dirección del restaurante
       if (restaurantConfig.address) {
         printer.println(restaurantConfig.address);
-        if (restaurantConfig.city || restaurantConfig.state || restaurantConfig.postalCode) {
+        if (
+          restaurantConfig.city ||
+          restaurantConfig.state ||
+          restaurantConfig.postalCode
+        ) {
           const cityStateParts = [
             restaurantConfig.city,
             restaurantConfig.state,
-            restaurantConfig.postalCode
-          ].filter(Boolean).join(', ');
+            restaurantConfig.postalCode,
+          ]
+            .filter(Boolean)
+            .join(', ');
           printer.println(cityStateParts);
         }
       }
-      
+
       // Teléfonos
       if (restaurantConfig.phoneMain || restaurantConfig.phoneSecondary) {
         const phones: string[] = [];
-        if (restaurantConfig.phoneMain) phones.push(`Tel: ${restaurantConfig.phoneMain}`);
-        if (restaurantConfig.phoneSecondary) phones.push(`Tel 2: ${restaurantConfig.phoneSecondary}`);
+        if (restaurantConfig.phoneMain)
+          phones.push(`Tel: ${restaurantConfig.phoneMain}`);
+        if (restaurantConfig.phoneSecondary)
+          phones.push(`Tel 2: ${restaurantConfig.phoneSecondary}`);
         printer.println(phones.join(' - '));
       }
-      
+
       printer.drawLine();
 
       // Información de la orden (fecha creación, actualización y quien atendió)
       printer.alignLeft();
-      printer.println(`Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', { 
-        timeZone: 'America/Mexico_City' 
-      })}`);
-      
+      printer.println(
+        `Fecha: ${new Date(order.createdAt).toLocaleString('es-MX', {
+          timeZone: 'America/Mexico_City',
+        })}`,
+      );
+
       // Mostrar fecha de actualización si es diferente a la creación
-      if (order.updatedAt && new Date(order.updatedAt).getTime() !== new Date(order.createdAt).getTime()) {
-        printer.println(`Actualizada: ${new Date(order.updatedAt).toLocaleString('es-MX', { 
-          timeZone: 'America/Mexico_City' 
-        })}`);
+      if (
+        order.updatedAt &&
+        new Date(order.updatedAt).getTime() !==
+          new Date(order.createdAt).getTime()
+      ) {
+        printer.println(
+          `Actualizada: ${new Date(order.updatedAt).toLocaleString('es-MX', {
+            timeZone: 'America/Mexico_City',
+          })}`,
+        );
       }
-      
+
       if (order.user?.firstName || order.user?.lastName) {
-        const userName = [order.user.firstName, order.user.lastName].filter(Boolean).join(' ');
+        const userName = [order.user.firstName, order.user.lastName]
+          .filter(Boolean)
+          .join(' ');
         printer.println(`Atendido por: ${userName}`);
       }
-      
+
       // Mostrar notas de orden y hora programada si existen y no se mostrarán en secciones específicas
       if ((order.notes || order.scheduledAt) && !order.deliveryInfo) {
         if (order.notes) {
@@ -413,12 +452,17 @@ export class AutomaticPrintingService {
         }
         if (order.scheduledAt) {
           printer.setTextSize(0, 1); // Fuente intermedia
-          printer.println(`Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
-            timeZone: 'America/Mexico_City',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          })}`);
+          printer.println(
+            `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString(
+              'es-MX',
+              {
+                timeZone: 'America/Mexico_City',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              },
+            )}`,
+          );
           printer.setTextNormal(); // Volver a fuente normal
         }
       }
@@ -429,10 +473,10 @@ export class AutomaticPrintingService {
         printer.bold(true);
         printer.println('INFORMACION DE ENTREGA:');
         printer.bold(false);
-        
+
         // Usar fuente más grande para información de entrega
         printer.setTextSize(1, 1);
-        
+
         if (order.deliveryInfo.recipientName) {
           printer.println(`Cliente: ${order.deliveryInfo.recipientName}`);
         }
@@ -442,32 +486,47 @@ export class AutomaticPrintingService {
           const addressParts = [
             order.deliveryInfo.street,
             order.deliveryInfo.number,
-            order.deliveryInfo.interiorNumber ? `Int. ${order.deliveryInfo.interiorNumber}` : '',
+            order.deliveryInfo.interiorNumber
+              ? `Int. ${order.deliveryInfo.interiorNumber}`
+              : '',
             order.deliveryInfo.neighborhood,
             order.deliveryInfo.city,
-          ].filter(Boolean).join(', ');
+          ]
+            .filter(Boolean)
+            .join(', ');
           printer.println(`Direccion: ${addressParts}`);
         }
-        
+
         if (order.deliveryInfo.deliveryInstructions) {
-          printer.println(`Instrucciones: ${order.deliveryInfo.deliveryInstructions}`);
+          printer.println(
+            `Instrucciones: ${order.deliveryInfo.deliveryInstructions}`,
+          );
         }
-        
+
         // Combinar teléfono, notas y hora programada en líneas optimizadas
         printer.setTextSize(0, 1); // Fuente intermedia
-        
-        const phone = order.deliveryInfo.recipientPhone ? `Tel: ${order.deliveryInfo.recipientPhone}` : null;
+
+        const phone = order.deliveryInfo.recipientPhone
+          ? `Tel: ${order.deliveryInfo.recipientPhone}`
+          : null;
         const notes = order.notes ? `Notas: ${order.notes}` : null;
-        const scheduledTime = order.scheduledAt ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
-          timeZone: 'America/Mexico_City',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })}` : null;
-        
+        const scheduledTime = order.scheduledAt
+          ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString(
+              'es-MX',
+              {
+                timeZone: 'America/Mexico_City',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              },
+            )}`
+          : null;
+
         // Combinar campos disponibles
-        const fields: string[] = [phone, notes, scheduledTime].filter((field): field is string => field !== null);
-        
+        const fields: string[] = [phone, notes, scheduledTime].filter(
+          (field): field is string => field !== null,
+        );
+
         if (fields.length === 3) {
           // Si hay 3 campos, imprimir teléfono solo, y notas + hora juntas
           printer.println(fields[0]); // Teléfono
@@ -479,46 +538,55 @@ export class AutomaticPrintingService {
           // Si hay solo 1 campo, imprimirlo solo
           printer.println(fields[0]);
         }
-        
+
         printer.setTextSize(1, 1); // Volver a fuente de información de entrega
-        
+
         // Volver a fuente normal
         printer.setTextNormal();
       }
-      
+
       // Para pedidos pickup, mostrar información de recolección de deliveryInfo
       if (order.orderType === OrderType.TAKE_AWAY && order.deliveryInfo) {
         printer.drawLine();
         printer.bold(true);
         printer.println('RECOLECCION:');
         printer.bold(false);
-        
+
         // Usar fuente más grande para información de recolección
         printer.setTextSize(1, 1);
-        
+
         if (order.deliveryInfo.recipientName) {
           printer.println(`Nombre: ${order.deliveryInfo.recipientName}`);
         }
-        
+
         if (order.deliveryInfo.deliveryInstructions) {
           printer.println(`Notas: ${order.deliveryInfo.deliveryInstructions}`);
         }
-        
+
         // Combinar teléfono, notas y hora programada en líneas optimizadas
         printer.setTextSize(0, 1); // Fuente intermedia
-        
-        const phone = order.deliveryInfo.recipientPhone ? `Tel: ${order.deliveryInfo.recipientPhone}` : null;
+
+        const phone = order.deliveryInfo.recipientPhone
+          ? `Tel: ${order.deliveryInfo.recipientPhone}`
+          : null;
         const notes = order.notes ? `Notas: ${order.notes}` : null;
-        const scheduledTime = order.scheduledAt ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString('es-MX', { 
-          timeZone: 'America/Mexico_City',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })}` : null;
-        
+        const scheduledTime = order.scheduledAt
+          ? `Hora programada: ${new Date(order.scheduledAt).toLocaleTimeString(
+              'es-MX',
+              {
+                timeZone: 'America/Mexico_City',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              },
+            )}`
+          : null;
+
         // Combinar campos disponibles
-        const fields: string[] = [phone, notes, scheduledTime].filter((field): field is string => field !== null);
-        
+        const fields: string[] = [phone, notes, scheduledTime].filter(
+          (field): field is string => field !== null,
+        );
+
         if (fields.length === 3) {
           // Si hay 3 campos, imprimir teléfono solo, y notas + hora juntas
           printer.println(fields[0]); // Teléfono
@@ -530,9 +598,9 @@ export class AutomaticPrintingService {
           // Si hay solo 1 campo, imprimirlo solo
           printer.println(fields[0]);
         }
-        
+
         printer.setTextSize(1, 1); // Volver a fuente de información de recolección
-        
+
         // Volver a fuente normal
         printer.setTextNormal();
       }
@@ -557,28 +625,33 @@ export class AutomaticPrintingService {
 
       // Usar fuente más grande para los productos
       printer.setTextSize(1, 1); // Fuente ligeramente más grande
-      
+
       for (const item of groupedItems) {
         // Crear título del producto igual que en OrderCartDetail.tsx
         const productTitle = this.createProductTitle(item);
-        
+
         // Imprimir producto principal con formato de tabla estricto
         // IMPORTANTE: Usar 'expanded' porque estamos usando setTextSize(1,1)
         const productLines = formatter.formatProductTable(
-          productTitle, 
+          productTitle,
           formatter.formatMoney(item.totalPrice),
           'expanded', // Cambiado a expanded para coincidir con el tamaño de fuente
-          dynamicPriceColumnWidth // Pasar el ancho de columna calculado dinámicamente
+          dynamicPriceColumnWidth, // Pasar el ancho de columna calculado dinámicamente
         );
-        
+
         // Imprimir todas las líneas del producto
         for (const line of productLines) {
           printer.println(line);
         }
 
         // Personalizaciones de pizza (fuente intermedia)
-        if (item.selectedPizzaCustomizations && item.selectedPizzaCustomizations.length > 0) {
-          const pizzaCustomizations = this.formatPizzaCustomizations(item.selectedPizzaCustomizations);
+        if (
+          item.selectedPizzaCustomizations &&
+          item.selectedPizzaCustomizations.length > 0
+        ) {
+          const pizzaCustomizations = this.formatPizzaCustomizations(
+            item.selectedPizzaCustomizations,
+          );
           if (pizzaCustomizations) {
             printer.setTextSize(0, 1); // Fuente intermedia para personalizaciones
             printer.println(`  ${pizzaCustomizations}`);
@@ -609,7 +682,10 @@ export class AutomaticPrintingService {
         // Notas de preparación con wrap (fuente intermedia)
         if (item.preparationNotes) {
           printer.setTextSize(0, 1); // Fuente intermedia para notas
-          const wrappedNotes = formatter.wrapText(`  Notas: ${item.preparationNotes}`, 'normal');
+          const wrappedNotes = formatter.wrapText(
+            `  Notas: ${item.preparationNotes}`,
+            'normal',
+          );
           for (const line of wrappedNotes) {
             printer.println(line);
           }
@@ -623,29 +699,29 @@ export class AutomaticPrintingService {
       // Total
       printer.drawLine();
       printer.alignLeft();
-      
+
       // Calcular el ancho máximo necesario para los totales
       const subtotalStr = formatter.formatMoney(Number(order.subtotal));
       const totalStr = formatter.formatMoney(Number(order.total));
       const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
-      
+
       // Subtotal
       const subtotalLines = formatter.formatProductTable(
-        'Subtotal:', 
+        'Subtotal:',
         subtotalStr,
         'normal',
-        maxTotalWidth
+        maxTotalWidth,
       );
       for (const line of subtotalLines) {
         printer.println(line);
       }
-      
+
       // Total con fuente grande
       const totalLines = formatter.formatProductTable(
-        'TOTAL:', 
+        'TOTAL:',
         totalStr,
         'expanded', // Usamos expanded porque vamos a usar fuente grande
-        maxTotalWidth
+        maxTotalWidth,
       );
       printer.setTextSize(1, 2);
       printer.bold(true);
@@ -654,7 +730,6 @@ export class AutomaticPrintingService {
       }
       printer.setTextNormal();
       printer.bold(false);
-
 
       // Notas adicionales (solo si no se mostraron en información de entrega)
       if (order.notes && !order.deliveryInfo) {
@@ -684,9 +759,10 @@ export class AutomaticPrintingService {
       await printer.execute();
 
       // Registrar la impresión
-      const ticketType = order.orderType === OrderType.DELIVERY 
-        ? TicketType.GENERAL 
-        : TicketType.GENERAL;
+      const ticketType =
+        order.orderType === OrderType.DELIVERY
+          ? TicketType.GENERAL
+          : TicketType.GENERAL;
 
       // Solo registrar impresión si hay un userId válido
       if (userId) {

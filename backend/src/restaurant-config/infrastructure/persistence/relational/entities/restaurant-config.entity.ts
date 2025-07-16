@@ -63,6 +63,9 @@ export class RestaurantConfigEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 50, default: 'America/Mexico_City' })
   timeZone: string;
 
+  @Column({ type: 'int', default: 60 })
+  scheduledOrdersLeadTime: number;
+
   // Configuración de delivery
   @Column({ type: 'jsonb', nullable: true })
   deliveryCoverageArea: any | null;

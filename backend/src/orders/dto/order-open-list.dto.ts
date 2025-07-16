@@ -99,16 +99,16 @@ export class OrderOpenListDto {
   @Expose()
   preparationScreens?: string[];
 
-  @ApiProperty({ 
-    type: 'array', 
-    items: { 
+  @ApiProperty({
+    type: 'array',
+    items: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] }
-      }
+        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] },
+      },
     },
-    required: false 
+    required: false,
   })
   @Expose()
   preparationScreenStatuses?: Array<{ name: string; status: string }>;
@@ -117,14 +117,14 @@ export class OrderOpenListDto {
   @Expose()
   ticketImpressionCount?: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     required: false,
     description: 'Usuario que creó la orden',
     example: {
       username: 'john.doe',
       firstName: 'John',
-      lastName: 'Doe'
-    }
+      lastName: 'Doe',
+    },
   })
   @Expose()
   createdBy?: {

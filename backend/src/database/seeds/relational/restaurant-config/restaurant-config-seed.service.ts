@@ -35,6 +35,7 @@ export class RestaurantConfigSeedService {
           openingGracePeriod: 30,
           closingGracePeriod: 30,
           timeZone: 'America/Mexico_City',
+          scheduledOrdersLeadTime: 60,
           deliveryCoverageArea: [
             { lat: 20.552083014344916, lng: -102.80691765951832 },
             { lat: 20.533011128610994, lng: -102.80691765951832 },

@@ -11,6 +11,7 @@ import axiosRetry from 'axios-retry';
 import { discoveryService } from './discoveryService';
 import { useSnackbarStore } from '../store/snackbarStore';
 import { API_PATHS } from '../constants/apiPaths';
+import { certificateValidator } from './certificateValidator';
 
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
@@ -36,6 +37,16 @@ async function initializeApiClient(providedUrl?: string) {
       const baseURL = providedUrl || (await discoveryService.getApiUrl());
       currentBaseURL = baseURL;
 
+      // Validar la seguridad de la conexión
+      try {
+        certificateValidator.validateConnection(baseURL);
+      } catch (error) {
+        console.warn('Advertencia de seguridad:', error.message);
+      }
+
+      // Obtener configuración de seguridad
+      const securityConfig = certificateValidator.getAxiosSecurityConfig();
+
       // Crear instancia de Axios
       axiosInstance = axios.create({
         baseURL,
@@ -45,6 +56,7 @@ async function initializeApiClient(providedUrl?: string) {
           'Content-Type': 'application/json',
         },
         timeout: 5000, // Reducido a 5 segundos por defecto
+        ...securityConfig, // Aplicar configuración de seguridad
       });
 
       // Configurar retry automático

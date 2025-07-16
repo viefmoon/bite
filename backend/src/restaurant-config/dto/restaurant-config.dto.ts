@@ -90,6 +90,13 @@ export class RestaurantConfigDto {
 
   @ApiProperty({
     type: Number,
+    example: 25,
+    description: 'Tiempo estimado para servir en mesa en minutos',
+  })
+  estimatedDineInTime: number;
+
+  @ApiProperty({
+    type: Number,
     example: 30,
     description: 'Minutos después de abrir antes de aceptar pedidos',
   })
@@ -108,6 +115,14 @@ export class RestaurantConfigDto {
     description: 'Zona horaria del restaurante',
   })
   timeZone: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 60,
+    description:
+      'Minutos antes de la hora programada para mostrar órdenes en preparación',
+  })
+  scheduledOrdersLeadTime: number;
 
   // Configuración de delivery
   @ApiPropertyOptional({

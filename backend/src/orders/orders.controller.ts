@@ -111,7 +111,8 @@ export class OrdersController {
   @ApiOperation({ summary: 'Obtener lista optimizada de órdenes abiertas' })
   @ApiResponse({
     status: 200,
-    description: 'Lista optimizada de órdenes abiertas con campos mínimos necesarios.',
+    description:
+      'Lista optimizada de órdenes abiertas con campos mínimos necesarios.',
     type: [OrderOpenListDto],
   })
   @ApiBearerAuth()
@@ -123,10 +124,14 @@ export class OrdersController {
   }
 
   @Get('receipts-list')
-  @ApiOperation({ summary: 'Obtener lista optimizada de recibos del turno actual (órdenes completadas/canceladas)' })
+  @ApiOperation({
+    summary:
+      'Obtener lista optimizada de recibos del turno actual (órdenes completadas/canceladas)',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Lista optimizada de recibos del turno actual con campos mínimos necesarios.',
+    description:
+      'Lista optimizada de recibos del turno actual con campos mínimos necesarios.',
     type: [ReceiptListDto],
   })
   @ApiQuery({ name: 'startDate', required: false, type: String })
@@ -142,7 +147,7 @@ export class OrdersController {
     @Query('orderType') orderType?: OrderType,
   ): Promise<ReceiptListDto[]> {
     const filterOptions: any = {};
-    
+
     if (startDate) {
       filterOptions.startDate = new Date(startDate);
     }
@@ -184,7 +189,9 @@ export class OrdersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
-  async findOrdersForFinalizationList(): Promise<OrderForFinalizationListDto[]> {
+  async findOrdersForFinalizationList(): Promise<
+    OrderForFinalizationListDto[]
+  > {
     return this.ordersService.findOrdersForFinalizationList();
   }
 
@@ -222,9 +229,10 @@ export class OrdersController {
   }
 
   @Post('quick-finalize-multiple')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Finalización rápida de múltiples órdenes',
-    description: 'Finaliza múltiples órdenes de forma rápida, registrando automáticamente un pago en efectivo por el monto pendiente de cada una y cambiando su estado a COMPLETED.'
+    description:
+      'Finaliza múltiples órdenes de forma rápida, registrando automáticamente un pago en efectivo por el monto pendiente de cada una y cambiando su estado a COMPLETED.',
   })
   @ApiResponse({
     status: 200,
@@ -242,10 +250,13 @@ export class OrdersController {
     @Body() dto: { orderIds: string[] },
     @CurrentUser('id') userId: string,
   ): Promise<{ message: string; ordersWithWarnings: string[] }> {
-    const result = await this.ordersService.quickFinalizeMultipleOrders(dto.orderIds, userId);
-    return { 
+    const result = await this.ordersService.quickFinalizeMultipleOrders(
+      dto.orderIds,
+      userId,
+    );
+    return {
       message: 'Órdenes finalizadas exitosamente',
-      ordersWithWarnings: result.ordersWithWarnings 
+      ordersWithWarnings: result.ordersWithWarnings,
     };
   }
 
@@ -281,10 +292,13 @@ export class OrdersController {
   }
 
   @Get('for-finalization/:id')
-  @ApiOperation({ summary: 'Obtener detalle completo de una orden para finalización' })
+  @ApiOperation({
+    summary: 'Obtener detalle completo de una orden para finalización',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Detalle completo de la orden con todos sus items y relaciones.',
+    description:
+      'Detalle completo de la orden con todos sus items y relaciones.',
     type: OrderForFinalizationDto,
   })
   @ApiBearerAuth()
@@ -330,10 +344,14 @@ export class OrdersController {
   }
 
   @Get('shift/:shiftId')
-  @ApiOperation({ summary: 'Get all orders for a specific shift with preparation status summary' })
+  @ApiOperation({
+    summary:
+      'Get all orders for a specific shift with preparation status summary',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Return all orders for the specified shift with calculated preparation screen statuses.',
+    description:
+      'Return all orders for the specified shift with calculated preparation screen statuses.',
     type: [Order],
   })
   @ApiBearerAuth()
@@ -456,7 +474,6 @@ export class OrdersController {
     return this.ordersService.findOrderItemsByOrderId(orderId);
   }
 
-
   @Get(':id/history')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get history for a specific order' })
@@ -489,7 +506,6 @@ export class OrdersController {
     );
     return infinityPagination(data, paginationOptions);
   }
-
 
   @Patch(':id/start-preparation')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -617,10 +633,10 @@ export class OrdersController {
       type: 'object',
       properties: {
         printerId: { type: 'string', description: 'ID de la impresora' },
-        ticketType: { 
-          type: 'string', 
+        ticketType: {
+          type: 'string',
           enum: ['GENERAL', 'BILLING'],
-          description: 'Tipo de ticket a imprimir' 
+          description: 'Tipo de ticket a imprimir',
         },
       },
       required: ['printerId', 'ticketType'],
@@ -632,22 +648,29 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   async printTicket(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() printTicketDto: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
+    @Body()
+    printTicketDto: { printerId: string; ticketType: 'GENERAL' | 'BILLING' },
     @CurrentUser('id') userId: string,
   ): Promise<void> {
-    await this.ordersService.printOrderTicket(id, printTicketDto.printerId, printTicketDto.ticketType, userId);
+    await this.ordersService.printOrderTicket(
+      id,
+      printTicketDto.printerId,
+      printTicketDto.ticketType,
+      userId,
+    );
   }
 
   @Get('shift/:shiftId/sales-summary')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener resumen de ventas de un turno',
-    description: 'Obtiene un resumen detallado de las ventas de un turno, agrupado por categorías, subcategorías y productos'
+    description:
+      'Obtiene un resumen detallado de las ventas de un turno, agrupado por categorías, subcategorías y productos',
   })
-  @ApiParam({ 
-    name: 'shiftId', 
-    type: 'string', 
+  @ApiParam({
+    name: 'shiftId',
+    type: 'string',
     description: 'ID del turno',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -662,7 +685,7 @@ export class OrdersController {
         totalQuantity: { type: 'number' },
         completedOrders: { type: 'number' },
         averageTicket: { type: 'number' },
-        categories: { 
+        categories: {
           type: 'array',
           items: {
             type: 'object',
@@ -672,11 +695,11 @@ export class OrdersController {
               quantity: { type: 'number' },
               totalAmount: { type: 'number' },
               percentage: { type: 'number' },
-              subcategories: { type: 'array' }
-            }
-          }
+              subcategories: { type: 'array' },
+            },
+          },
         },
-        topProducts: { 
+        topProducts: {
           type: 'array',
           items: {
             type: 'object',
@@ -685,21 +708,19 @@ export class OrdersController {
               productName: { type: 'string' },
               quantity: { type: 'number' },
               totalAmount: { type: 'number' },
-              averagePrice: { type: 'number' }
-            }
-          }
+              averagePrice: { type: 'number' },
+            },
+          },
         },
         startTime: { type: 'string', format: 'date-time' },
-        endTime: { type: 'string', format: 'date-time', nullable: true }
-      }
-    }
+        endTime: { type: 'string', format: 'date-time', nullable: true },
+      },
+    },
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager)
-  async getShiftSalesSummary(
-    @Param('shiftId', ParseUUIDPipe) shiftId: string,
-  ) {
+  async getShiftSalesSummary(@Param('shiftId', ParseUUIDPipe) shiftId: string) {
     return this.ordersService.getShiftSalesSummary(shiftId);
   }
 }

@@ -113,7 +113,6 @@ const createStyles = (theme: AppTheme) =>
     },
     listContentContainer: {
       paddingBottom: theme.spacing.m,
-      flexGrow: 1,
     },
     centeredView: {
       flex: 1,

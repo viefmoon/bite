@@ -57,8 +57,7 @@ export class CategoriesController {
 
   @Get('order-menu')
   @ApiOperation({
-    summary:
-      'Obtener el menú para creación de órdenes',
+    summary: 'Obtener el menú para creación de órdenes',
     description:
       'Endpoint optimizado que devuelve solo los campos necesarios para la creación y edición de órdenes, ' +
       'excluyendo timestamps y otros campos innecesarios para reducir el ancho de banda.',

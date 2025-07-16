@@ -99,36 +99,36 @@ export class ReceiptListDto {
   @Expose()
   deliveryInfo?: DeliveryInfoSummaryDto;
 
-  @ApiProperty({ 
-    type: 'array', 
-    items: { 
+  @ApiProperty({
+    type: 'array',
+    items: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] }
-      }
+        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] },
+      },
     },
     required: false,
-    description: 'Estados de las pantallas de preparación'
+    description: 'Estados de las pantallas de preparación',
   })
   @Expose()
   preparationScreenStatuses?: Array<{ name: string; status: string }>;
 
-  @ApiProperty({ 
-    description: 'Cantidad de tickets impresos para esta orden', 
-    required: false
+  @ApiProperty({
+    description: 'Cantidad de tickets impresos para esta orden',
+    required: false,
   })
   @Expose()
   ticketImpressionCount?: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     required: false,
     description: 'Usuario que creó la orden',
     example: {
       username: 'john.doe',
       firstName: 'John',
-      lastName: 'Doe'
-    }
+      lastName: 'Doe',
+    },
   })
   @Expose()
   createdBy?: {

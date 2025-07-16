@@ -163,6 +163,17 @@ export class UpdateRestaurantConfigDto {
   @MaxLength(50)
   timeZone?: string;
 
+  @ApiPropertyOptional({
+    type: Number,
+    example: 60,
+    description:
+      'Minutos antes de la hora programada para mostrar órdenes en preparación',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  scheduledOrdersLeadTime?: number;
+
   // Configuración de delivery
   @ApiPropertyOptional({
     type: 'object',

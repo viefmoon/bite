@@ -512,7 +512,6 @@ const createStyles = (theme: AppTheme) =>
     listContent: {
       padding: theme.spacing.s,
       paddingBottom: theme.spacing.l * 2,
-      flexGrow: 1,
     },
     orderCard: {
       marginBottom: 8,

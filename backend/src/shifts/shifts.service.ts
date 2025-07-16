@@ -126,11 +126,12 @@ export class ShiftsService {
 
     // Obtener todas las órdenes del turno
     const orders = await this.orderRepository.findByShiftId(currentShift.id);
-    
+
     // Para ventas totales, solo contar las órdenes completadas/cobradas
     const completedOrders = orders.filter(
-      (order) => order.orderStatus === OrderStatus.COMPLETED ||
-                 order.orderStatus === OrderStatus.DELIVERED
+      (order) =>
+        order.orderStatus === OrderStatus.COMPLETED ||
+        order.orderStatus === OrderStatus.DELIVERED,
     );
 
     // Calcular total de ventas
@@ -183,7 +184,6 @@ export class ShiftsService {
     return this.shiftRepository.findCurrent();
   }
 
-
   /**
    * Verifica si hay un turno abierto
    */
@@ -216,11 +216,12 @@ export class ShiftsService {
     // Si está abierto, calcular totales en tiempo real
     // Obtener TODAS las órdenes del turno
     const orders = await this.orderRepository.findByShiftId(shift.id);
-    
+
     // Para ventas totales, solo contar las órdenes completadas/cobradas
     const completedOrders = orders.filter(
-      (order) => order.orderStatus === OrderStatus.COMPLETED ||
-                 order.orderStatus === OrderStatus.DELIVERED
+      (order) =>
+        order.orderStatus === OrderStatus.COMPLETED ||
+        order.orderStatus === OrderStatus.DELIVERED,
     );
 
     // Calcular total de ventas (solo de órdenes completadas)
@@ -228,7 +229,7 @@ export class ShiftsService {
       (sum, order) => sum + Number(order.total),
       0,
     );
-    
+
     // Contar TODAS las órdenes (incluyendo las en progreso)
     shift.totalOrders = orders.length;
 
@@ -240,39 +241,44 @@ export class ShiftsService {
    */
   async getHistory(limit: number = 30, offset: number = 0): Promise<Shift[]> {
     // Obtener todos los turnos (abiertos y cerrados)
-    const openShifts = await this.shiftRepository.findByStatus(ShiftStatus.OPEN);
-    const closedShifts = await this.shiftRepository.findByStatus(ShiftStatus.CLOSED);
-    
+    const openShifts = await this.shiftRepository.findByStatus(
+      ShiftStatus.OPEN,
+    );
+    const closedShifts = await this.shiftRepository.findByStatus(
+      ShiftStatus.CLOSED,
+    );
+
     // Para los turnos abiertos, calcular estadísticas en tiempo real
     const openShiftsWithStats = await Promise.all(
       openShifts.map(async (shift) => {
         const shiftStart = shift.openedAt;
         const shiftEnd = new Date();
-        
+
         // Obtener TODAS las órdenes del turno (no solo las completadas)
         const orders = await this.orderRepository.findByShiftId(shift.id);
-        
+
         // Para ventas totales, solo contar las órdenes completadas/cobradas
         const completedOrders = orders.filter(
-          (order) => order.orderStatus === OrderStatus.COMPLETED ||
-                     order.orderStatus === OrderStatus.DELIVERED
+          (order) =>
+            order.orderStatus === OrderStatus.COMPLETED ||
+            order.orderStatus === OrderStatus.DELIVERED,
         );
-        
+
         shift.totalSales = completedOrders.reduce(
           (sum, order) => sum + Number(order.total),
           0,
         );
         shift.totalOrders = orders.length; // Contar TODAS las órdenes
-        
+
         return shift;
-      })
+      }),
     );
-    
+
     // Combinar y ordenar por fecha descendente
-    const allShifts = [...openShiftsWithStats, ...closedShifts].sort((a, b) => 
-      b.openedAt.getTime() - a.openedAt.getTime()
+    const allShifts = [...openShiftsWithStats, ...closedShifts].sort(
+      (a, b) => b.openedAt.getTime() - a.openedAt.getTime(),
     );
-    
+
     return allShifts.slice(offset, offset + limit);
   }
 

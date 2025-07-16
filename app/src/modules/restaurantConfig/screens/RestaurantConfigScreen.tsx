@@ -138,7 +138,8 @@ const RestaurantConfigScreen: React.FC = () => {
       formData.estimatedDineInTime !== config.estimatedDineInTime ||
       formData.openingGracePeriod !== config.openingGracePeriod ||
       formData.closingGracePeriod !== config.closingGracePeriod ||
-      formData.timeZone !== config.timeZone;
+      formData.timeZone !== config.timeZone ||
+      formData.scheduledOrdersLeadTime !== config.scheduledOrdersLeadTime;
 
     // Comparar área de cobertura
     const deliveryAreaChanged =
@@ -231,6 +232,7 @@ const RestaurantConfigScreen: React.FC = () => {
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
         timeZone: config.timeZone || 'America/Mexico_City',
+        scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         // Configuración de delivery
         deliveryCoverageArea: config.deliveryCoverageArea,
         // Horarios
@@ -337,6 +339,7 @@ const RestaurantConfigScreen: React.FC = () => {
         openingGracePeriod: config.openingGracePeriod,
         closingGracePeriod: config.closingGracePeriod,
         timeZone: config.timeZone || 'America/Mexico_City',
+        scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         deliveryCoverageArea: config.deliveryCoverageArea,
         businessHours: initialBusinessHours,
       });
@@ -680,6 +683,32 @@ const RestaurantConfigScreen: React.FC = () => {
                 setFormData({
                   ...formData,
                   closingGracePeriod: parseInt(text) || 0,
+                })
+              }
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="calendar-clock"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Anticipación órdenes programadas"
+              value={formData.scheduledOrdersLeadTime?.toString() || ''}
+              onChangeText={(text) =>
+                setFormData({
+                  ...formData,
+                  scheduledOrdersLeadTime: parseInt(text) || 0,
                 })
               }
               keyboardType="numeric"

@@ -639,6 +639,5 @@ const createStyles = (
     listContent: {
       padding: responsive.isTablet ? 6 : 8,
       paddingBottom: responsive.isTablet ? 80 : 100,
-      flexGrow: 1,
     },
   });

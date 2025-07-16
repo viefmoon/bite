@@ -299,14 +299,14 @@ export class OrdersRelationalRepository implements OrderRepository {
               category: {
                 id: true,
                 name: true,
-              }
-            }
+              },
+            },
           },
           productVariant: {
             id: true,
             name: true,
-          }
-        }
+          },
+        },
       },
       order: {
         shiftOrderNumber: 'ASC',
@@ -389,11 +389,7 @@ export class OrdersRelationalRepository implements OrderRepository {
     if (!existingDomain) {
       throw new Error('Failed to map existing order entity to domain');
     }
-    const {
-      shiftOrderNumber,
-      shiftId,
-      ...updateData
-    } = payload;
+    const { shiftOrderNumber, shiftId, ...updateData } = payload;
 
     // Manejar actualización/eliminación de deliveryInfo de forma simplificada
     // El servicio ya se encarga de buscar y manejar delivery_info existente
@@ -412,7 +408,7 @@ export class OrdersRelationalRepository implements OrderRepository {
       ...existingDomain,
       ...updateData,
     };
-    
+
     const persistenceModel = this.orderMapper.toEntity(updatedDomain);
     if (!persistenceModel) {
       throw new Error('Failed to map updated order domain to entity');
@@ -430,21 +426,22 @@ export class OrdersRelationalRepository implements OrderRepository {
       // Si se debe eliminar delivery_info, establecer la relación a null
       entity.deliveryInfo = null;
     }
-    
+
     // Usar merge en lugar de create para preservar la instancia original
     // y permitir que el subscriber detecte correctamente la actualización
     const mergedEntity = this.ordersRepository.merge(entity, persistenceModel);
-    
+
     // Si tableId está en updateData, aplicarlo directamente a la entidad
     if ('tableId' in updateData) {
-      mergedEntity.tableId = updateData.tableId === undefined ? null : updateData.tableId;
-      
+      mergedEntity.tableId =
+        updateData.tableId === undefined ? null : updateData.tableId;
+
       // Si estamos estableciendo tableId a null, también limpiar la relación table
       if (updateData.tableId === null) {
         mergedEntity.table = null;
       }
     }
-    
+
     const updatedEntity = await this.ordersRepository.save(mergedEntity);
     const completeEntity = await this.ordersRepository.findOne({
       where: { id: updatedEntity.id },
@@ -474,7 +471,7 @@ export class OrdersRelationalRepository implements OrderRepository {
     if (!finalDomainResult) {
       throw new Error('Failed to map final updated order entity to domain');
     }
-    
+
     return finalDomainResult;
   }
   async remove(id: Order['id']): Promise<void> {
@@ -553,7 +550,7 @@ export class OrdersRelationalRepository implements OrderRepository {
           .createQueryBuilder('o')
           .select([
             'COALESCE(SUM(CASE WHEN p.paymentStatus = :completed THEN p.amount ELSE 0 END), 0) as totalPaid',
-            'COUNT(DISTINCT ti.id) as impressionCount'
+            'COUNT(DISTINCT ti.id) as impressionCount',
           ])
           .leftJoin('o.payments', 'p')
           .leftJoin('o.ticketImpressions', 'ti')
@@ -571,7 +568,7 @@ export class OrdersRelationalRepository implements OrderRepository {
               WHEN COUNT(oi.id) = COUNT(CASE WHEN oi.preparationStatus IN ('READY', 'DELIVERED') THEN 1 END) THEN 'READY'
               WHEN COUNT(CASE WHEN oi.preparationStatus = 'IN_PROGRESS' THEN 1 END) > 0 THEN 'IN_PROGRESS'
               ELSE 'PENDING'
-            END as "status"`
+            END as "status"`,
           ])
           .leftJoin('o.orderItems', 'oi')
           .leftJoin('oi.product', 'p')
@@ -581,10 +578,12 @@ export class OrdersRelationalRepository implements OrderRepository {
           .groupBy('ps.id, ps.name')
           .getRawMany();
 
-        const preparationScreenStatuses = preparationScreensResult.map(r => ({
-          name: r.screenName,
-          status: r.status
-        })).filter(s => s.name);
+        const preparationScreenStatuses = preparationScreensResult
+          .map((r) => ({
+            name: r.screenName,
+            status: r.status,
+          }))
+          .filter((s) => s.name);
 
         const order = this.orderMapper.toDomain(entity);
         if (order) {
@@ -605,7 +604,9 @@ export class OrdersRelationalRepository implements OrderRepository {
             paymentsSummary: {
               totalPaid: parseFloat(aggregateResult?.totalpaid || '0'),
             },
-            ticketImpressionCount: parseInt(aggregateResult?.impressioncount || '0'),
+            ticketImpressionCount: parseInt(
+              aggregateResult?.impressioncount || '0',
+            ),
             preparationScreenStatuses: preparationScreenStatuses,
             // Campos requeridos pero vacíos para la vista de lista
             userId: order.userId,
@@ -628,10 +629,12 @@ export class OrdersRelationalRepository implements OrderRepository {
           return optimizedOrder;
         }
         return null;
-      })
+      }),
     );
 
-    return ordersWithAggregates.filter((order): order is Order => order !== null);
+    return ordersWithAggregates.filter(
+      (order): order is Order => order !== null,
+    );
   }
 
   async findByStatus(statuses: string[]): Promise<Order[]> {

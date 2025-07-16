@@ -961,7 +961,6 @@ const createStyles = (
       paddingBottom: responsive.isTablet
         ? theme.spacing.l
         : theme.spacing.l * 2,
-      flexGrow: 1,
     },
     orderCard: {
       marginBottom: responsive.isTablet ? 6 : 8,

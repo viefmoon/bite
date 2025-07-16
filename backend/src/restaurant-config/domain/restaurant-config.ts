@@ -20,6 +20,7 @@ export class RestaurantConfig {
   openingGracePeriod: number; // Minutos después de abrir antes de aceptar pedidos
   closingGracePeriod: number; // Minutos antes de cerrar para dejar de aceptar pedidos
   timeZone: string; // Zona horaria del restaurante
+  scheduledOrdersLeadTime: number; // Minutos antes de la hora programada para mostrar órdenes en preparación
 
   // Configuración de delivery
   deliveryCoverageArea: any | null; // Polígono de cobertura

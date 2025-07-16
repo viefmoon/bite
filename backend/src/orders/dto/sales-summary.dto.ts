@@ -21,13 +21,13 @@ export class ProductSalesSummaryDto {
 
   @ApiProperty({
     description: 'Total vendido del producto',
-    example: 1500.00,
+    example: 1500.0,
   })
   totalAmount: number;
 
   @ApiProperty({
     description: 'Precio promedio por unidad',
-    example: 150.00,
+    example: 150.0,
   })
   averagePrice: number;
 }
@@ -53,7 +53,7 @@ export class SubcategorySalesSummaryDto {
 
   @ApiProperty({
     description: 'Total vendido en la subcategoría',
-    example: 3750.00,
+    example: 3750.0,
   })
   totalAmount: number;
 
@@ -85,7 +85,7 @@ export class CategorySalesSummaryDto {
 
   @ApiProperty({
     description: 'Total vendido en la categoría',
-    example: 7500.00,
+    example: 7500.0,
   })
   totalAmount: number;
 
@@ -123,7 +123,7 @@ export class ShiftSalesSummaryDto {
 
   @ApiProperty({
     description: 'Total general de ventas',
-    example: 15000.00,
+    example: 15000.0,
   })
   totalSales: number;
 
@@ -141,7 +141,7 @@ export class ShiftSalesSummaryDto {
 
   @ApiProperty({
     description: 'Ticket promedio',
-    example: 600.00,
+    example: 600.0,
   })
   averageTicket: number;
 

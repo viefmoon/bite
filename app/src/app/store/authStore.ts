@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import type { User } from '../../modules/auth/schema/auth.schema'; // Corregida ruta de importación
-import { authService } from '../../modules/auth/services/authService';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -144,23 +143,8 @@ export const initializeAuthStore = async () => {
         isAuthenticated: true,
       });
 
-      // Verificamos si el token es válido con el backend actual
-      const isTokenValid = await authService.verifyToken();
-
-      if (isTokenValid) {
-        // Token is valid, authentication state is already set
-      } else {
-        // Si el token no es válido, limpiamos todo
-        await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
-        await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
-        await EncryptedStorage.removeItem(USER_INFO_KEY);
-        useAuthStore.setState({
-          accessToken: null,
-          refreshToken: null,
-          user: null,
-          isAuthenticated: false,
-        });
-      }
+      // La verificación del token se hará de manera lazy cuando sea necesario
+      // Esto evita el ciclo de dependencias con authService
     } else {
       useAuthStore.setState({
         accessToken: null,

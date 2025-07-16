@@ -12,9 +12,7 @@ export class TicketImpressionMapper extends BaseMapper<
   TicketImpressionEntity,
   TicketImpression
 > {
-  constructor(
-    private readonly userMapper: UserMapper,
-  ) {
+  constructor(private readonly userMapper: UserMapper) {
     super();
   }
 
@@ -34,26 +32,28 @@ export class TicketImpressionMapper extends BaseMapper<
     // Solo mantener el orderId que ya tenemos
     domain.user = entity.user ? this.userMapper.toDomain(entity.user) : null;
     // Mapear la impresora de forma simple sin usar mapper
-    domain.printer = entity.printer ? {
-      id: entity.printer.id,
-      name: entity.printer.name,
-      ipAddress: entity.printer.ipAddress,
-      port: entity.printer.port,
-      connectionType: entity.printer.connectionType,
-      isActive: entity.printer.isActive,
-      isDefaultPrinter: entity.printer.isDefaultPrinter,
-      paperWidth: entity.printer.paperWidth,
-      feedLines: entity.printer.feedLines,
-      cutPaper: entity.printer.cutPaper,
-      autoPickupPrint: entity.printer.autoPickupPrint,
-      autoDeliveryPrint: entity.printer.autoDeliveryPrint,
-      path: entity.printer.path || null,
-      macAddress: entity.printer.macAddress || null,
-      charactersPerLine: entity.printer.charactersPerLine || 48,
-      createdAt: entity.printer.createdAt,
-      updatedAt: entity.printer.updatedAt,
-      deletedAt: entity.printer.deletedAt,
-    } : null;
+    domain.printer = entity.printer
+      ? {
+          id: entity.printer.id,
+          name: entity.printer.name,
+          ipAddress: entity.printer.ipAddress,
+          port: entity.printer.port,
+          connectionType: entity.printer.connectionType,
+          isActive: entity.printer.isActive,
+          isDefaultPrinter: entity.printer.isDefaultPrinter,
+          paperWidth: entity.printer.paperWidth,
+          feedLines: entity.printer.feedLines,
+          cutPaper: entity.printer.cutPaper,
+          autoPickupPrint: entity.printer.autoPickupPrint,
+          autoDeliveryPrint: entity.printer.autoDeliveryPrint,
+          path: entity.printer.path || null,
+          macAddress: entity.printer.macAddress || null,
+          charactersPerLine: entity.printer.charactersPerLine || 48,
+          createdAt: entity.printer.createdAt,
+          updatedAt: entity.printer.updatedAt,
+          deletedAt: entity.printer.deletedAt,
+        }
+      : null;
 
     return domain;
   }
