@@ -67,7 +67,9 @@
       "Bash(set PLATFORM=web)",
       "Bash(npx create-expo-webpack-config:*)",
       "Bash(npx expo export:*)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(docker compose:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

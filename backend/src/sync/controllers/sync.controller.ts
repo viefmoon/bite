@@ -3,18 +3,23 @@ import {
   Post,
   Get,
   HttpStatus,
-  HttpCode,
   Body,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiBody,
 } from '@nestjs/swagger';
 import { LocalSyncService } from '../services/local-sync.service';
-import { SyncStatusService } from '../services/sync-status.service';
+import { PullChangesResponseDto } from '../dto/pull-changes-response.dto';
+import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
+import { UpdateOrderStatusResponseDto } from '../dto/update-order-status-response.dto';
+import { RestaurantDataResponseDto } from '../dto/restaurant-data-response.dto';
+import { RestaurantDataQueryDto } from '../dto/restaurant-data-query.dto';
+import { SyncActivityEntity } from '../infrastructure/persistence/relational/entities/sync-activity.entity';
+import { PullChangesRequestDto } from '../dto/pull-changes-request.dto';
 
 @ApiTags('Sync')
 @ApiBearerAuth()
@@ -25,132 +30,125 @@ import { SyncStatusService } from '../services/sync-status.service';
 export class SyncController {
   constructor(
     private readonly localSyncService: LocalSyncService,
-    private readonly syncStatusService: SyncStatusService,
   ) {}
 
-  @Post('trigger')
-  @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Disparar sincronización manual' })
-  @ApiResponse({
-    status: HttpStatus.ACCEPTED,
-    description: 'Sincronización iniciada',
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: 'Ya hay una sincronización en progreso',
-  })
-  triggerSync() {
-    if (this.syncStatusService.isCurrentlySyncing()) {
-      return {
-        message: 'Ya hay una sincronización en progreso',
-        status: 'in_progress',
-      };
-    }
-
-    // Ejecutar sincronización de forma asíncrona
-    this.localSyncService.triggerSync().catch(() => {});
-
-    return {
-      message: 'Sincronización iniciada',
-      status: 'started',
-    };
-  }
 
   @Get('status')
-  @ApiOperation({ summary: 'Obtener estado de sincronización' })
+  @ApiOperation({ summary: 'Obtener información del servicio de sincronización' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Estado actual de sincronización',
+    description: 'Estado del servicio de sincronización',
     schema: {
       type: 'object',
       properties: {
-        isCurrentlySyncing: { type: 'boolean' },
-        lastSync: {
-          type: 'object',
-          nullable: true,
-          properties: {
-            type: { type: 'string' },
-            status: { type: 'string' },
-            completedAt: {
-              type: 'string',
-              format: 'date-time',
-              nullable: true,
-            },
-            itemsSynced: { type: 'number' },
-            itemsFailed: { type: 'number' },
-            duration: { type: 'number', nullable: true },
-          },
-        },
-        syncHistory: {
-          type: 'array',
-          items: { type: 'object' },
-        },
-        errors: {
-          type: 'array',
-          nullable: true,
-          items: { type: 'object' },
-        },
+        enabled: { type: 'boolean' },
+        webSocketEnabled: { type: 'boolean' },
+        remoteUrl: { type: 'string', nullable: true },
+        mode: { type: 'string', example: 'pull' },
       },
     },
   })
   async getSyncStatus() {
-    return await this.syncStatusService.getStatus();
-  }
-
-  @Get('history')
-  @ApiOperation({ summary: 'Obtener historial de sincronizaciones' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Historial de sincronizaciones',
-  })
-  async getSyncHistory() {
-    const { data, count } = await this.syncStatusService[
-      'syncLogRepository'
-    ].findAll({
-      limit: 20,
-    });
-
+    const syncConfig = this.localSyncService['syncConfig'];
+    const webSocketStatus = this.localSyncService.getWebSocketStatus();
+    
     return {
-      data,
-      count,
+      enabled: syncConfig.enabled,
+      webSocketEnabled: syncConfig.webSocketEnabled,
+      webSocketConnected: webSocketStatus.connected,
+      webSocketFailed: webSocketStatus.failed,
+      remoteUrl: syncConfig.cloudApiUrl || null,
+      mode: 'pull',
     };
   }
 
-  @Post('orders/accept')
-  @ApiOperation({ summary: 'Aceptar órdenes de WhatsApp' })
-  @ApiBody({
+
+  @Post('pull-changes')
+  @ApiOperation({ 
+    summary: 'Obtener cambios pendientes y confirmar procesados',
+    description: 'Obtiene pedidos pendientes y clientes actualizados. Opcionalmente confirma IDs procesados exitosamente del pull anterior.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Cambios pendientes obtenidos exitosamente',
+    type: PullChangesResponseDto,
+  })
+  async pullChanges(@Body() confirmDto: PullChangesRequestDto): Promise<PullChangesResponseDto> {
+    return await this.localSyncService.pullChanges(confirmDto);
+  }
+
+  @Post('order-status')
+  @ApiOperation({ 
+    summary: 'Notificar cambio de estado de orden a la nube',
+    description: 'Notifica al backend en la nube cuando el restaurante acepta, rechaza o actualiza el estado de un pedido'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Estado actualizado exitosamente en la nube',
+    type: UpdateOrderStatusResponseDto,
+  })
+  async updateOrderStatus(
+    @Body() updateDto: UpdateOrderStatusDto,
+  ): Promise<UpdateOrderStatusResponseDto> {
+    return await this.localSyncService.updateOrderStatus(updateDto);
+  }
+
+  @Get('restaurant-data')
+  @ApiOperation({ 
+    summary: 'Obtener datos completos del restaurante',
+    description: 'Endpoint para que el backend remoto obtenga el menú completo y la configuración del restaurante. ' +
+                 'Soporta validación de cambios mediante if_modified_since.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Datos del restaurante obtenidos exitosamente',
+    type: RestaurantDataResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_MODIFIED,
+    description: 'No hay cambios desde la fecha especificada',
+  })
+  async getRestaurantData(@Query() query: RestaurantDataQueryDto) {
+    const ifModifiedSince = query.if_modified_since 
+      ? new Date(query.if_modified_since)
+      : undefined;
+    
+    const data = await this.localSyncService.getRestaurantData(ifModifiedSince);
+    
+    if (!data && ifModifiedSince) {
+      // No hay cambios desde la fecha especificada
+      return {
+        statusCode: HttpStatus.NOT_MODIFIED,
+        message: 'No hay cambios desde la fecha especificada',
+      };
+    }
+    
+    return data;
+  }
+
+  @Get('activity')
+  @ApiOperation({ 
+    summary: 'Obtener actividad reciente de sincronización',
+    description: 'Devuelve las últimas 20 actividades de sincronización ordenadas por fecha descendente'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Actividades de sincronización obtenidas exitosamente',
     schema: {
-      type: 'object',
-      properties: {
-        orderIds: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'IDs de las órdenes a aceptar',
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          type: { type: 'string', enum: ['PULL_CHANGES', 'RESTAURANT_DATA', 'ORDER_STATUS'] },
+          direction: { type: 'string', enum: ['IN', 'OUT'] },
+          success: { type: 'boolean' },
+          timestamp: { type: 'string', format: 'date-time' },
         },
       },
-      required: ['orderIds'],
     },
   })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Órdenes aceptadas exitosamente',
-    schema: {
-      type: 'object',
-      properties: {
-        accepted: { type: 'number' },
-        failed: { type: 'number' },
-        message: { type: 'string' },
-      },
-    },
-  })
-  async acceptWhatsAppOrders(@Body() body: { orderIds: string[] }) {
-    const result = await this.localSyncService.acceptWhatsAppOrders(
-      body.orderIds,
-    );
-
-    return {
-      ...result,
-      message: `${result.accepted} órdenes aceptadas, ${result.failed} fallidas`,
-    };
+  async getSyncActivity(): Promise<SyncActivityEntity[]> {
+    return await this.localSyncService.getRecentActivity();
   }
 }

@@ -1,64 +1,43 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import {
-  SyncStatusInfo,
-  TriggerSyncResponse,
-  SyncLog,
-} from '../types/sync.types';
+import { SyncStatus, SyncActivity } from '../types/sync.types';
 
 class SyncService {
-  async getSyncStatus(): Promise<SyncStatusInfo> {
-    const response = await apiClient.get<SyncStatusInfo>(API_PATHS.SYNC_STATUS);
+  /**
+   * Obtiene el estado actual del servicio de sincronización
+   */
+  async getSyncStatus(): Promise<SyncStatus> {
+    const response = await apiClient.get<SyncStatus>(API_PATHS.SYNC_STATUS);
     if (!response.data) {
       throw new Error('No se pudo obtener el estado de sincronización');
     }
     return response.data;
   }
 
-  async triggerSync(): Promise<TriggerSyncResponse> {
-    const response = await apiClient.post<TriggerSyncResponse>(
-      API_PATHS.SYNC_TRIGGER,
-    );
-    if (!response.data) {
-      throw new Error('No se pudo ejecutar la sincronización');
-    }
-    return response.data;
-  }
-
-  async getSyncHistory(
-    limit: number = 20,
-  ): Promise<{ data: SyncLog[]; count: number }> {
-    const response = await apiClient.get<{ data: SyncLog[]; count: number }>(
-      API_PATHS.SYNC_HISTORY,
+  /**
+   * Obtiene el historial de actividad reciente de sincronización
+   * @param limit Número máximo de registros (por defecto 20)
+   */
+  async getSyncActivity(limit: number = 20): Promise<SyncActivity[]> {
+    const response = await apiClient.get<SyncActivity[]>(
+      API_PATHS.SYNC_ACTIVITY,
       { params: { limit } },
     );
     if (!response.data) {
-      throw new Error('No se pudo obtener el historial de sincronización');
+      throw new Error('No se pudo obtener la actividad de sincronización');
     }
     return response.data;
   }
 
-  async acceptWhatsAppOrders(orderIds: string[]): Promise<{
-    accepted: number;
-    failed: number;
-    message: string;
-  }> {
-    const response = await apiClient.post<{
-      accepted: number;
-      failed: number;
-      message: string;
-    }>(API_PATHS.SYNC_ORDERS_ACCEPT, { orderIds });
-    return response.data!;
-  }
-
-  // Método para verificar la conexión con el backend remoto
-  async checkRemoteConnection(): Promise<boolean> {
+  /**
+   * Verifica si el servicio de sincronización está disponible
+   */
+  async checkSyncAvailability(): Promise<boolean> {
     try {
-      await this.getSyncStatus();
-      // Si podemos obtener el estado, significa que el backend local está funcionando
-      // El backend local nos dirá si está conectado al remoto
-      return true;
+      const status = await this.getSyncStatus();
+      return status.enabled;
     } catch (error) {
+      console.error('Error verificando disponibilidad de sincronización:', error);
       return false;
     }
   }

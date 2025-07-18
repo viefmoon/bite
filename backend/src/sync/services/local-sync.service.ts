@@ -9,12 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import { io, Socket } from 'socket.io-client';
 import { firstValueFrom } from 'rxjs';
 import { SyncConfig } from '../config/sync-config.type';
-import { SyncStatusService } from './sync-status.service';
-import { SyncType } from '../domain/sync-log';
-import { OrdersService } from '../../orders/orders.service';
-import { CustomersService } from '../../customers/customers.service';
 import { CategoriesService } from '../../categories/categories.service';
-import { ProductsService } from '../../products/products.service';
 import { RestaurantConfigService } from '../../restaurant-config/restaurant-config.service';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -25,30 +20,28 @@ import { CustomerEntity } from '../../customers/infrastructure/persistence/relat
 import { OrderItemEntity } from '../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { DeliveryInfoEntity } from '../../orders/infrastructure/persistence/relational/entities/delivery-info.entity';
 import { AddressEntity } from '../../customers/infrastructure/persistence/relational/entities/address.entity';
-
-interface RemoteOrder {
-  id: string;
-  customer: any;
-  orderItems: any[];
-  deliveryInfo: any;
-  [key: string]: any;
-}
+import { PullChangesResponseDto } from '../dto/pull-changes-response.dto';
+import { Order } from '../../orders/domain/order';
+import { Customer } from '../../customers/domain/customer';
+import { PreparationStatus } from '../../orders/domain/order-item';
+import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
+import { UpdateOrderStatusResponseDto } from '../dto/update-order-status-response.dto';
+import { RestaurantDataResponseDto } from '../dto/restaurant-data-response.dto';
+import { SyncActivityEntity, SyncActivityType } from '../infrastructure/persistence/relational/entities/sync-activity.entity';
+import { PullChangesRequestDto } from '../dto/pull-changes-request.dto';
 
 @Injectable()
 export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(LocalSyncService.name);
   private socket: Socket | null = null;
-  private syncInterval: NodeJS.Timeout | null = null;
   private readonly syncConfig: SyncConfig;
+  private isWebSocketConnected = false;
+  private webSocketFailed = false;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    private readonly syncStatusService: SyncStatusService,
-    private readonly ordersService: OrdersService,
-    private readonly customersService: CustomersService,
     private readonly categoriesService: CategoriesService,
-    private readonly productsService: ProductsService,
     private readonly restaurantConfigService: RestaurantConfigService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {
@@ -69,66 +62,101 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    await this.initialize();
+    // Solo inicializar WebSocket para notificaciones en tiempo real
+    if (this.syncConfig.webSocketEnabled) {
+      await this.connectWebSocket();
+    }
+
+    this.logger.log('🔄 Servicio de sincronización iniciado (modo pull)');
   }
 
   onModuleDestroy() {
     this.disconnect();
   }
 
-  async initialize() {
-    try {
-      if (this.syncConfig.webSocketEnabled) {
-        await this.connectWebSocket();
-      }
-
-      await this.runFullSync();
-      const intervalMs = this.syncConfig.intervalMinutes * 60 * 1000;
-      this.syncInterval = setInterval(async () => {
-        await this.runFullSync();
-      }, intervalMs) as unknown as NodeJS.Timeout;
-
-      this.logger.log(
-        `🔄 Sincronización iniciada. Intervalo: ${this.syncConfig.intervalMinutes} minutos`,
-      );
-    } catch (error) {
-      this.logger.error('Error al inicializar sincronización:', error);
-    }
-  }
 
   private connectWebSocket() {
     if (this.socket) {
       this.socket.disconnect();
     }
 
-    const wsUrl = `${this.syncConfig.cloudApiUrl}/sync`;
-    this.logger.log(`🔌 Conectando a WebSocket: ${wsUrl}`);
+    const wsUrl = `${this.syncConfig.cloudApiUrl}`;
+    this.logger.log(`🔌 Intentando conectar a WebSocket: ${wsUrl}`);
 
     this.socket = io(wsUrl, {
       auth: { apiKey: this.syncConfig.cloudApiKey },
       reconnection: true,
-      reconnectionDelay: 5000,
-      reconnectionAttempts: 10,
-      transports: ['websocket'],
+      reconnectionDelay: 5000, // 5 segundos inicial
+      reconnectionDelayMax: 30000, // Máximo 30 segundos entre intentos
+      reconnectionAttempts: Infinity, // Intentar indefinidamente
+      transports: ['polling', 'websocket'], // Permitir polling primero, luego upgrade a websocket
+      timeout: 20000, // Timeout de conexión inicial de 20 segundos
+      path: '/socket.io/', // Path explícito para socket.io
     });
 
-    this.socket.on('connect', () => {
-      this.logger.log('✅ Conectado al Backend en la Nube vía WebSocket');
-    });
 
     this.socket.on('disconnect', (reason) => {
       this.logger.warn(`❌ Desconectado del Backend en la Nube: ${reason}`);
+      this.isWebSocketConnected = false;
     });
 
+    let errorCount = 0;
+    let lastErrorLog = 0;
     this.socket.on('connect_error', (error) => {
-      this.logger.error('Error de conexión WebSocket:', error.message);
+      errorCount++;
+      this.isWebSocketConnected = false;
+      
+      const now = Date.now();
+      // Mostrar log solo cada 30 segundos para reducir spam
+      if (now - lastErrorLog > 30000) {
+        lastErrorLog = now;
+        this.logger.warn(
+          `WebSocket: Aún intentando conectar (${errorCount} intentos). ` +
+          `Servidor: ${this.syncConfig.cloudApiUrl}`
+        );
+      }
+    });
+    
+    // Eventos de reconexión
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      if (attemptNumber === 1) {
+        this.logger.log('🔄 WebSocket: Intentando reconectar...');
+      }
+    });
+    
+    this.socket.on('reconnect', (attemptNumber) => {
+      this.logger.log(`✅ WebSocket: Reconectado después de ${attemptNumber} intentos`);
+    });
+    
+    // Socket.io maneja el heartbeat automáticamente
+    // El servidor debe estar configurado con pingInterval y pingTimeout
+
+    // Con reconnectionAttempts: Infinity, este evento no se disparará
+    // pero lo dejamos por si cambia la configuración
+    this.socket.on('reconnect_failed', () => {
+      this.webSocketFailed = true;
+      this.isWebSocketConnected = false;
+      this.logger.error(
+        'WebSocket: Conexión fallida definitivamente.'
+      );
+    });
+    
+    // Resetear el estado de fallo si se logra conectar
+    this.socket.on('connect', () => {
+      this.logger.log('✅ Conectado al Backend en la Nube vía WebSocket');
+      this.isWebSocketConnected = true;
+      this.webSocketFailed = false;
+      errorCount = 0; // Resetear contador de errores
     });
 
-    this.socket.on('order:new', async (data: { orderId: string }) => {
+    // Evento genérico para cualquier cambio pendiente en la nube
+    this.socket.on('changes:pending', async () => {
       this.logger.log(
-        `🆕 Notificación de nueva orden recibida: ${data.orderId}`,
+        `🔔 Notificación de cambios pendientes recibida`,
       );
-      await this.pullPendingOrders();
+      // Ejecutar pull de cambios
+      // Esto obtendrá todos los cambios pendientes (órdenes, clientes, etc.)
+      await this.pullChanges();
     });
   }
 
@@ -137,465 +165,529 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       this.socket.disconnect();
       this.socket = null;
     }
-
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-      this.syncInterval = null;
-    }
   }
 
-  async runFullSync(): Promise<void> {
-    if (this.syncStatusService.isCurrentlySyncing()) {
-      this.logger.warn('Sincronización ya en progreso, omitiendo ejecución');
-      return;
-    }
 
-    const syncLog = await this.syncStatusService.startSync(SyncType.FULL);
-    this.logger.log('⚙️  Iniciando sincronización completa...');
-
-    let totalSynced = 0;
-    let totalFailed = 0;
-    const errors: Record<string, any> = {};
-
-    try {
-      // 1. PULL: Descargar órdenes pendientes desde remoto
-      const ordersResult = await this.pullPendingOrders();
-      totalSynced += ordersResult.synced;
-      totalFailed += ordersResult.failed;
-      if (ordersResult.error) errors.orders = ordersResult.error;
-
-      // 2. PULL: Sincronizar clientes y direcciones desde remoto
-      const customersResult = await this.pullCustomers();
-      totalSynced += customersResult.synced;
-      totalFailed += customersResult.failed;
-      if (customersResult.error) errors.customers = customersResult.error;
-
-      // 3. PUSH: Enviar menú y configuración al remoto
-      const menuResult = await this.pushMenuAndConfig();
-      totalSynced += menuResult.synced;
-      totalFailed += menuResult.failed;
-      if (menuResult.error) errors.menu = menuResult.error;
-
-      // 4. PUSH: Enviar actualizaciones de clientes al remoto
-      const customerUpdatesResult = await this.pushCustomerUpdates();
-      totalSynced += customerUpdatesResult.synced;
-      totalFailed += customerUpdatesResult.failed;
-      if (customerUpdatesResult.error)
-        errors.customerUpdates = customerUpdatesResult.error;
-
-      await this.syncStatusService.completeSync(
-        syncLog.id,
-        totalSynced,
-        totalFailed,
-        Object.keys(errors).length > 0 ? errors : undefined,
-      );
-
-      this.logger.log(
-        `✅ Sincronización completa. Sincronizados: ${totalSynced}, Fallidos: ${totalFailed}`,
-      );
-    } catch (error) {
-      this.logger.error('❌ Error en sincronización completa:', error);
-      await this.syncStatusService.failSync(syncLog.id, error);
-    }
-  }
-
-  // PUSH: Enviar menú y configuración al backend remoto
-  private async pushMenuAndConfig(): Promise<{
-    synced: number;
-    failed: number;
-    error?: any;
-  }> {
+  // Nuevo método unificado para pull de cambios
+  async pullChanges(confirmDto?: PullChangesRequestDto): Promise<PullChangesResponseDto> {
     try {
       const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
-      let synced = 0;
-      let failed = 0;
-      const errors: any[] = [];
+      
+      const url = `${this.syncConfig.cloudApiUrl}/api/sync/pull-changes`;
 
-      this.logger.log('📤 Enviando menú y configuración al backend remoto...');
-
-      // 1. Obtener y enviar el menú completo
-      try {
-        // Obtener el menú completo con todas las relaciones
-        const fullMenu = await this.categoriesService.getFullMenu();
-
-        const menuPayload = { categories: fullMenu };
-
-        await firstValueFrom(
-          this.httpService.post(
-            `${this.syncConfig.cloudApiUrl}/api/sync/menu`,
-            menuPayload,
-            { headers },
-          ),
-        );
-        synced++;
-        this.logger.log('✅ Menú enviado correctamente');
-      } catch (error) {
-        failed++;
-        errors.push({ menu: error.message || error });
-        this.logger.error('Error al enviar menú:', error);
-      }
-
-      // 2. Obtener y enviar la configuración del restaurante
-      try {
-        const config = await this.restaurantConfigService.getConfig();
-        if (config) {
-          const configPayload = { config };
-
-          await firstValueFrom(
-            this.httpService.post(
-              `${this.syncConfig.cloudApiUrl}/api/sync/config`,
-              configPayload,
-              { headers },
-            ),
-          );
-          synced++;
-          this.logger.log('✅ Configuración enviada correctamente');
-        }
-      } catch (error) {
-        failed++;
-        errors.push({ config: error.message || error });
-        this.logger.error('Error al enviar configuración:', error);
-      }
-
-      return {
-        synced,
-        failed,
-        error: errors.length > 0 ? errors : undefined,
-      };
-    } catch (error) {
-      this.logger.error('Error general al enviar menú y configuración:', error);
-      return { synced: 0, failed: 2, error: error.message || error };
-    }
-  }
-
-  // PULL: Descargar órdenes pendientes desde el backend remoto
-  async pullPendingOrders(): Promise<{
-    synced: number;
-    failed: number;
-    error?: any;
-  }> {
-    try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
-
-      // Descargar órdenes pendientes
+      // Hacer la petición al backend en la nube, incluyendo confirmaciones si existen
       const response = await firstValueFrom(
-        this.httpService.get<{ data: RemoteOrder[] }>(
-          `${this.syncConfig.cloudApiUrl}/api/sync/orders/pending`,
-          { headers },
-        ),
+        this.httpService.post<PullChangesResponseDto>(url, confirmDto || {}, { headers }),
       );
 
-      const remoteOrders: RemoteOrder[] = response.data.data || [];
-      if (remoteOrders.length === 0) {
-        return { synced: 0, failed: 0 };
-      }
+      const pullData = response.data;
+      
+      // Registrar actividad de sincronización exitosa
+      await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', true);
 
       this.logger.log(
-        `📦 Descargando ${remoteOrders.length} órdenes pendientes de WhatsApp...`,
+        `📥 Recibidos: ${pullData.pending_orders?.length || 0} pedidos, ${
+          pullData.updated_customers?.length || 0
+        } clientes actualizados`,
       );
 
-      const orderUpdates: { orderId: string; shiftOrderNumber: number }[] = [];
-      let synced = 0;
-      let failed = 0;
+      // Si no hay cambios pendientes, retornar inmediatamente
+      if (
+        (!pullData.pending_orders || pullData.pending_orders.length === 0) &&
+        (!pullData.updated_customers || pullData.updated_customers.length === 0)
+      ) {
+        return pullData;
+      }
 
-      // Usar transacción para garantizar integridad
+      // Procesar los cambios en una transacción
       await this.dataSource.transaction(async (manager) => {
-        for (const remoteOrder of remoteOrders) {
-          try {
-            // Verificar si la orden ya existe
-            const existingOrder = await manager.findOne('orders', {
-              where: { id: remoteOrder.id },
-            });
-
-            if (!existingOrder) {
-              // Asignar número de orden del turno (implementación temporal)
-              const shiftOrderNumber = 1;
-
-              // Primero, guardar o actualizar el cliente si existe
-              let customer: CustomerEntity | null = null;
-              if (remoteOrder.customer) {
-                // Buscar cliente existente por email o teléfono
-                customer = await manager.findOne(CustomerEntity, {
-                  where: [
-                    { email: remoteOrder.customer.email },
-                    {
-                      whatsappPhoneNumber:
-                        remoteOrder.customer.phoneNumber ||
-                        remoteOrder.customer.whatsappPhoneNumber,
-                    },
-                  ],
-                });
-
-                if (!customer) {
-                  // Crear nuevo cliente
-                  customer = await manager.save(CustomerEntity, {
-                    firstName: remoteOrder.customer.firstName,
-                    lastName: remoteOrder.customer.lastName,
-                    email: remoteOrder.customer.email,
-                    whatsappPhoneNumber:
-                      remoteOrder.customer.phoneNumber ||
-                      remoteOrder.customer.whatsappPhoneNumber,
-                  });
-                }
-              }
-
-              // Crear la orden con estado PENDING y isFromWhatsApp = true
-              const subtotal = remoteOrder.subtotal || 0;
-              const order = await manager.save(OrderEntity, {
-                id: remoteOrder.id,
-                customer,
-                shiftOrderNumber,
-                isFromWhatsApp: true,
-                orderStatus: OrderStatus.PENDING,
-                orderType: remoteOrder.orderType || OrderType.DELIVERY,
-                subtotal: subtotal,
-                total: subtotal, // Por ahora total = subtotal
-                notes: remoteOrder.notes,
-                scheduledAt: remoteOrder.scheduledAt,
-                estimatedDeliveryTime: remoteOrder.estimatedDeliveryTime,
-              });
-
-              // Guardar delivery info si existe
-              if (remoteOrder.deliveryInfo) {
-                // Crear o buscar dirección del cliente
-                let address: AddressEntity | null = null;
-                if (customer && remoteOrder.deliveryInfo.address) {
-                  const addressData = remoteOrder.deliveryInfo.address;
-                  address = await manager.save(AddressEntity, {
-                    customer,
-                    name: addressData.name || 'Dirección de entrega',
-                    street: addressData.street || addressData.addressLine1,
-                    number: addressData.number || 'S/N',
-                    interiorNumber:
-                      addressData.interiorNumber || addressData.addressLine2,
-                    neighborhood: addressData.neighborhood,
-                    city: addressData.city,
-                    state: addressData.state,
-                    zipCode: addressData.zipCode,
-                    country: addressData.country || 'México',
-                    latitude: addressData.latitude,
-                    longitude: addressData.longitude,
-                    deliveryInstructions: addressData.deliveryInstructions,
-                    isDefault: false,
-                  });
-                }
-
-                await manager.save(DeliveryInfoEntity, {
-                  order,
-                  recipientName: remoteOrder.deliveryInfo.recipientName,
-                  recipientPhone: remoteOrder.deliveryInfo.recipientPhone,
-                  deliveryInstructions:
-                    remoteOrder.deliveryInfo.deliveryInstructions,
-                  // Campos de dirección desde la dirección del cliente o los datos directos
-                  fullAddress: remoteOrder.deliveryInfo.fullAddress,
-                  street: address?.street || remoteOrder.deliveryInfo.street,
-                  number: address?.number || remoteOrder.deliveryInfo.number,
-                  interiorNumber:
-                    address?.interiorNumber ||
-                    remoteOrder.deliveryInfo.interiorNumber,
-                  neighborhood:
-                    address?.neighborhood ||
-                    remoteOrder.deliveryInfo.neighborhood,
-                  city: address?.city || remoteOrder.deliveryInfo.city,
-                  state: address?.state || remoteOrder.deliveryInfo.state,
-                  zipCode: address?.zipCode || remoteOrder.deliveryInfo.zipCode,
-                  country: address?.country || remoteOrder.deliveryInfo.country,
-                  latitude:
-                    address?.latitude || remoteOrder.deliveryInfo.latitude,
-                  longitude:
-                    address?.longitude || remoteOrder.deliveryInfo.longitude,
-                });
-              }
-
-              // Guardar order items
-              if (remoteOrder.orderItems && remoteOrder.orderItems.length > 0) {
-                for (const item of remoteOrder.orderItems) {
-                  await manager.save(OrderItemEntity, {
-                    order,
-                    productId: item.product?.id,
-                    productVariantId: item.productVariant?.id,
-                    quantity: item.quantity,
-                    unitPrice: item.unitPrice,
-                    subtotal: item.subtotal,
-                    notes: item.notes,
-                    // Los modificadores se manejarían aquí si fuera necesario
-                  });
-                }
-              }
-
-              this.logger.log(
-                `✅ Orden ${remoteOrder.id} guardada con número de turno: ${shiftOrderNumber}`,
-              );
-              orderUpdates.push({ orderId: remoteOrder.id, shiftOrderNumber });
-              synced++;
-            } else {
-              this.logger.log(
-                `⚠️ Orden ${remoteOrder.id} ya existe localmente`,
+        // 1. Procesar pedidos pendientes
+        if (pullData.pending_orders && pullData.pending_orders.length > 0) {
+          for (const remoteOrder of pullData.pending_orders) {
+            try {
+              await this.processRemoteOrder(manager, remoteOrder);
+            } catch (error) {
+              this.logger.error(
+                `Error procesando pedido ${remoteOrder.id}:`,
+                error,
               );
             }
-          } catch (error) {
-            this.logger.error(
-              `Error al procesar orden ${remoteOrder.id}:`,
-              error,
-            );
-            failed++;
+          }
+        }
+
+        // 2. Procesar clientes actualizados
+        if (pullData.updated_customers && pullData.updated_customers.length > 0) {
+          for (const remoteCustomer of pullData.updated_customers) {
+            try {
+              await this.processRemoteCustomer(manager, remoteCustomer);
+            } catch (error) {
+              this.logger.error(
+                `Error procesando cliente ${remoteCustomer.id}:`,
+                error,
+              );
+            }
           }
         }
       });
 
-      // Confirmar órdenes sincronizadas al backend remoto
-      if (orderUpdates.length > 0) {
-        await firstValueFrom(
-          this.httpService.post(
-            `${this.syncConfig.cloudApiUrl}/api/sync/orders/confirm`,
-            { orderUpdates },
-            { headers },
-          ),
-        );
-        this.logger.log(
-          `✅ ${orderUpdates.length} órdenes confirmadas en el backend remoto`,
-        );
-      }
-
-      return { synced, failed };
+      this.logger.log('✅ Cambios procesados correctamente');
+      return pullData;
     } catch (error) {
-      this.logger.error('Error al sincronizar órdenes pendientes:', error);
-      return { synced: 0, failed: 1, error: error.message || error };
+      this.logger.error('Error en pullChanges:', error);
+      // Registrar actividad de sincronización fallida
+      await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', false);
+      throw error;
     }
   }
 
-  // PULL: Sincronizar clientes y direcciones desde el backend remoto
-  private async pullCustomers(): Promise<{
-    synced: number;
-    failed: number;
-    error?: any;
-  }> {
-    try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
-
-      // Obtener fecha de última sincronización de clientes
-      const lastCustomerSync = await this.syncStatusService[
-        'syncLogRepository'
-      ].findLatestByType(SyncType.CUSTOMERS);
-      const since =
-        lastCustomerSync?.completedAt?.toISOString() ||
-        new Date(0).toISOString();
-
-      const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(
-          `${this.syncConfig.cloudApiUrl}/api/sync/customers/changes?since=${since}`,
-          { headers },
-        ),
-      );
-
-      const remoteCustomers = response.data.data || [];
-      this.logger.log(
-        `📥 Sincronizando ${remoteCustomers.length} clientes desde el backend remoto...`,
-      );
-
-      // Implementar lógica de guardado/actualización de clientes
-      // Considerar conflictos si el cliente fue modificado localmente
-
-      return { synced: remoteCustomers.length, failed: 0 };
-    } catch (error) {
-      this.logger.error('Error al sincronizar clientes:', error);
-      return { synced: 0, failed: 1, error: error.message || error };
-    }
-  }
-
-  // PUSH: Enviar actualizaciones de clientes al backend remoto
-  private async pushCustomerUpdates(): Promise<{
-    synced: number;
-    failed: number;
-    error?: any;
-  }> {
-    try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
-
-      // Obtener clientes modificados localmente desde la última sincronización
-      // Filtrar por lastSyncedAt < updatedAt
-
-      const modifiedCustomers = [];
-
-      if (modifiedCustomers.length === 0) {
-        return { synced: 0, failed: 0 };
-      }
-
-      this.logger.log(
-        `📤 Enviando ${modifiedCustomers.length} actualizaciones de clientes...`,
-      );
-
-      await firstValueFrom(
-        this.httpService.post(
-          `${this.syncConfig.cloudApiUrl}/api/sync/customers/bulk`,
-          { customers: modifiedCustomers },
-          { headers },
-        ),
-      );
-
-      // Actualizar lastSyncedAt de los clientes enviados
-
-      return { synced: modifiedCustomers.length, failed: 0 };
-    } catch (error) {
-      this.logger.error('Error al enviar actualizaciones de clientes:', error);
-      return { synced: 0, failed: 1, error: error.message || error };
-    }
-  }
-
-  // Método para aceptar órdenes de WhatsApp (cambiar de PENDING a IN_PROGRESS)
-  async acceptWhatsAppOrders(orderIds: string[]): Promise<{
-    accepted: number;
-    failed: number;
-  }> {
-    let accepted = 0;
-    let failed = 0;
-
-    // Usar transacción para garantizar integridad
-    await this.dataSource.transaction(async (manager) => {
-      for (const orderId of orderIds) {
-        try {
-          // Buscar la orden
-          const order = await manager.findOne(OrderEntity, {
-            where: { id: orderId, isFromWhatsApp: true },
-          });
-
-          if (!order) {
-            this.logger.warn(
-              `Orden ${orderId} no encontrada o no es de WhatsApp`,
-            );
-            failed++;
-            continue;
-          }
-
-          if (order.orderStatus !== OrderStatus.PENDING) {
-            this.logger.warn(`Orden ${orderId} no está en estado PENDING`);
-            failed++;
-            continue;
-          }
-
-          // Actualizar el estado de la orden
-          await manager.update(
-            OrderEntity,
-            { id: orderId },
-            {
-              orderStatus: OrderStatus.IN_PROGRESS,
-            },
-          );
-
-          this.logger.log(`✅ Orden ${orderId} aceptada`);
-          accepted++;
-        } catch (error) {
-          this.logger.error(`Error al aceptar orden ${orderId}:`, error);
-          failed++;
-        }
-      }
+  // Método auxiliar para procesar un pedido remoto
+  private async processRemoteOrder(
+    manager: any,
+    remoteOrder: Order,
+  ): Promise<void> {
+    // Verificar si la orden ya existe
+    const existingOrder = await manager.findOne(OrderEntity, {
+      where: { id: remoteOrder.id },
     });
 
-    return { accepted, failed };
+    if (existingOrder) {
+      this.logger.log(`⚠️ Orden ${remoteOrder.id} ya existe localmente`);
+      return;
+    }
+
+    // Obtener el número de orden del turno
+    const shiftOrderNumber = await this.getNextShiftOrderNumber(manager, remoteOrder.shiftId || await this.getCurrentShiftId(manager));
+
+    // Procesar cliente si existe
+    let customer: CustomerEntity | null = null;
+    if (remoteOrder.customer) {
+      customer = await this.findOrCreateCustomer(
+        manager,
+        remoteOrder.customer,
+      );
+    }
+
+    // Crear la orden con todos los campos relevantes
+    const order = await manager.save(OrderEntity, {
+      id: remoteOrder.id,
+      customer,
+      customerId: customer?.id || remoteOrder.customerId || null,
+      shiftOrderNumber,
+      shiftId: remoteOrder.shiftId || await this.getCurrentShiftId(manager),
+      userId: remoteOrder.userId || remoteOrder.user?.id || null,
+      tableId: remoteOrder.tableId || remoteOrder.table?.id || null,
+      isFromWhatsApp: true,
+      orderStatus: remoteOrder.orderStatus || OrderStatus.PENDING,
+      orderType: remoteOrder.orderType || OrderType.DELIVERY,
+      subtotal: remoteOrder.subtotal || 0,
+      total: remoteOrder.total || remoteOrder.subtotal || 0,
+      notes: remoteOrder.notes || null,
+      scheduledAt: remoteOrder.scheduledAt || null,
+      estimatedDeliveryTime: remoteOrder.estimatedDeliveryTime || null,
+      finalizedAt: remoteOrder.finalizedAt || null,
+    });
+
+    // Guardar delivery info si existe
+    if (remoteOrder.deliveryInfo) {
+      await this.saveDeliveryInfo(manager, order, remoteOrder.deliveryInfo, customer);
+    }
+
+    // Guardar order items con todas sus relaciones
+    if (remoteOrder.orderItems && remoteOrder.orderItems.length > 0) {
+      for (const item of remoteOrder.orderItems) {
+        const orderItem = await manager.save(OrderItemEntity, {
+          order,
+          productId: item.productId || item.product?.id,
+          productVariantId: item.productVariantId || item.productVariant?.id,
+          basePrice: item.basePrice || 0,
+          finalPrice: item.finalPrice || 0,
+          preparationStatus: item.preparationStatus || PreparationStatus.PENDING,
+          statusChangedAt: new Date(),
+          preparationNotes: item.preparationNotes || null,
+          preparedAt: item.preparedAt || null,
+          preparedById: item.preparedById || item.preparedBy?.id || null,
+        });
+
+        // Guardar product modifiers si existen
+        if (item.productModifiers && item.productModifiers.length > 0) {
+          const modifierIds = item.productModifiers.map(
+            (mod) => mod.id || mod
+          ).filter(Boolean);
+          
+          if (modifierIds.length > 0) {
+            await manager
+              .createQueryBuilder()
+              .insert()
+              .into('order_item_product_modifiers')
+              .values(
+                modifierIds.map((modifierId) => ({
+                  order_item_id: orderItem.id,
+                  product_modifier_id: modifierId,
+                }))
+              )
+              .execute();
+          }
+        }
+
+        // Guardar pizza customizations si existen
+        if (item.selectedPizzaCustomizations && item.selectedPizzaCustomizations.length > 0) {
+          for (const customization of item.selectedPizzaCustomizations) {
+            await manager.save('selected_pizza_customization', {
+              orderItemId: orderItem.id,
+              pizzaCustomizationId: customization.pizzaCustomizationId || customization.pizzaCustomization?.id,
+              half: customization.half,
+              action: customization.action,
+            });
+          }
+        }
+
+        // Guardar adjustments si existen
+        if (item.adjustments && item.adjustments.length > 0) {
+          for (const adjustment of item.adjustments) {
+            await manager.save('adjustment', {
+              orderItemId: orderItem.id,
+              name: adjustment.name,
+              isPercentage: adjustment.isPercentage,
+              value: adjustment.value,
+              amount: adjustment.amount,
+              appliedById: adjustment.appliedById || adjustment.appliedBy?.id,
+              appliedAt: adjustment.appliedAt || new Date(),
+            });
+          }
+        }
+      }
+    }
+
+    this.logger.log(
+      `✅ Orden ${remoteOrder.id} guardada con número de turno: ${shiftOrderNumber}`,
+    );
   }
 
-  // Método público para forzar sincronización desde el controlador
-  async triggerSync(): Promise<void> {
-    await this.runFullSync();
+  // Método auxiliar para procesar un cliente remoto
+  private async processRemoteCustomer(
+    manager: any,
+    remoteCustomer: Customer,
+  ): Promise<void> {
+    // Buscar cliente existente
+    const existingCustomer = await manager.findOne(CustomerEntity, {
+      where: { id: remoteCustomer.id },
+    });
+
+    if (existingCustomer) {
+      // Actualizar cliente existente
+      await manager.update(CustomerEntity, { id: remoteCustomer.id }, {
+        firstName: remoteCustomer.firstName,
+        lastName: remoteCustomer.lastName,
+        email: remoteCustomer.email,
+        whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber,
+      });
+      this.logger.log(`✅ Cliente ${remoteCustomer.id} actualizado`);
+    } else {
+      // Crear nuevo cliente
+      await manager.save(CustomerEntity, {
+        id: remoteCustomer.id,
+        firstName: remoteCustomer.firstName,
+        lastName: remoteCustomer.lastName,
+        email: remoteCustomer.email,
+        whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber,
+      });
+      this.logger.log(`✅ Cliente ${remoteCustomer.id} creado`);
+    }
+
+    // Procesar direcciones del cliente si existen
+    if (remoteCustomer.addresses && remoteCustomer.addresses.length > 0) {
+      for (const address of remoteCustomer.addresses) {
+        const existingAddress = await manager.findOne(AddressEntity, {
+          where: { id: address.id },
+        });
+
+        if (!existingAddress) {
+          await manager.save(AddressEntity, {
+            id: address.id,
+            customer: { id: remoteCustomer.id },
+            name: address.name,
+            street: address.street,
+            number: address.number,
+            interiorNumber: address.interiorNumber,
+            neighborhood: address.neighborhood,
+            city: address.city,
+            state: address.state,
+            zipCode: address.zipCode,
+            country: address.country,
+            latitude: address.latitude,
+            longitude: address.longitude,
+            deliveryInstructions: address.deliveryInstructions,
+            isDefault: address.isDefault,
+          });
+        }
+      }
+    }
+  }
+
+  // Método auxiliar para encontrar o crear un cliente
+  private async findOrCreateCustomer(
+    manager: any,
+    customerData: any,
+  ): Promise<CustomerEntity> {
+    // Buscar cliente existente por email o teléfono
+    let customer = await manager.findOne(CustomerEntity, {
+      where: [
+        { email: customerData.email },
+        {
+          whatsappPhoneNumber:
+            customerData.phoneNumber || customerData.whatsappPhoneNumber,
+        },
+      ],
+    });
+
+    if (!customer) {
+      // Crear nuevo cliente
+      customer = await manager.save(CustomerEntity, {
+        id: customerData.id,
+        firstName: customerData.firstName,
+        lastName: customerData.lastName,
+        email: customerData.email,
+        whatsappPhoneNumber:
+          customerData.phoneNumber || customerData.whatsappPhoneNumber,
+      });
+    }
+
+    return customer;
+  }
+
+  // Método auxiliar para guardar delivery info
+  private async saveDeliveryInfo(
+    manager: any,
+    order: OrderEntity,
+    deliveryInfo: any,
+    customer: CustomerEntity | null,
+  ): Promise<void> {
+    // Crear o buscar dirección del cliente
+    let address: AddressEntity | null = null;
+    if (customer && deliveryInfo.address) {
+      const addressData = deliveryInfo.address;
+      address = await manager.save(AddressEntity, {
+        customer,
+        name: addressData.name || 'Dirección de entrega',
+        street: addressData.street || addressData.addressLine1,
+        number: addressData.number || 'S/N',
+        interiorNumber: addressData.interiorNumber || addressData.addressLine2,
+        neighborhood: addressData.neighborhood,
+        city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
+        country: addressData.country || 'México',
+        latitude: addressData.latitude,
+        longitude: addressData.longitude,
+        deliveryInstructions: addressData.deliveryInstructions,
+        isDefault: false,
+      });
+    }
+
+    await manager.save(DeliveryInfoEntity, {
+      order,
+      recipientName: deliveryInfo.recipientName,
+      recipientPhone: deliveryInfo.recipientPhone,
+      deliveryInstructions: deliveryInfo.deliveryInstructions,
+      fullAddress: deliveryInfo.fullAddress,
+      street: address?.street || deliveryInfo.street,
+      number: address?.number || deliveryInfo.number,
+      interiorNumber: address?.interiorNumber || deliveryInfo.interiorNumber,
+      neighborhood: address?.neighborhood || deliveryInfo.neighborhood,
+      city: address?.city || deliveryInfo.city,
+      state: address?.state || deliveryInfo.state,
+      zipCode: address?.zipCode || deliveryInfo.zipCode,
+      country: address?.country || deliveryInfo.country,
+      latitude: address?.latitude || deliveryInfo.latitude,
+      longitude: address?.longitude || deliveryInfo.longitude,
+    });
+  }
+
+  // Método para notificar cambios de estado de orden a la nube
+  async updateOrderStatus(
+    updateDto: UpdateOrderStatusDto,
+  ): Promise<UpdateOrderStatusResponseDto> {
+    try {
+      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
+      
+      this.logger.log(
+        `📤 Notificando cambio de estado: Orden ${updateDto.orderId} -> ${updateDto.newStatus}`,
+      );
+
+      // Hacer la petición al backend en la nube
+      const response = await firstValueFrom(
+        this.httpService.post<UpdateOrderStatusResponseDto>(
+          `${this.syncConfig.cloudApiUrl}/api/sync/order-status`,
+          updateDto,
+          { headers },
+        ),
+      );
+
+      const result = response.data;
+      
+      this.logger.log(
+        `✅ Estado actualizado en la nube. Cliente notificado: ${result.customerNotified}`,
+      );
+
+      // Registrar actividad exitosa
+      await this.logSyncActivity(SyncActivityType.ORDER_STATUS, 'OUT', true);
+      
+      return result;
+    } catch (error) {
+      this.logger.error('Error al actualizar estado en la nube:', error);
+      
+      // Registrar actividad fallida
+      await this.logSyncActivity(SyncActivityType.ORDER_STATUS, 'OUT', false);
+      
+      // Si falla la sincronización, devolver una respuesta indicando el fallo
+      // pero no lanzar error para no interrumpir el flujo local
+      return {
+        success: false,
+        message: `Error al sincronizar con la nube: ${error.message}`,
+        updatedAt: new Date().toISOString(),
+        customerNotified: false,
+      };
+    }
+  }
+
+  // Método auxiliar para obtener el siguiente número de orden del turno
+  private async getNextShiftOrderNumber(manager: any, shiftId: string): Promise<number> {
+    const lastOrder = await manager.findOne(OrderEntity, {
+      where: { shiftId },
+      order: { shiftOrderNumber: 'DESC' },
+      select: ['shiftOrderNumber'],
+    });
+
+    return lastOrder ? lastOrder.shiftOrderNumber + 1 : 1;
+  }
+
+  // Método auxiliar para obtener el shift actual
+  private async getCurrentShiftId(manager: any): Promise<string> {
+    // Buscar el shift activo actual
+    const activeShift = await manager.findOne('shift', {
+      where: { isActive: true },
+      order: { startedAt: 'DESC' },
+    });
+
+    if (activeShift) {
+      return activeShift.id;
+    }
+
+    // Si no hay shift activo, crear uno temporal
+    const newShift = await manager.save('shift', {
+      isActive: true,
+      startedAt: new Date(),
+      openingCash: 0,
+    });
+
+    return newShift.id;
+  }
+
+  // Método para que el backend remoto obtenga los datos del restaurante
+  async getRestaurantData(ifModifiedSince?: Date): Promise<RestaurantDataResponseDto | null> {
+    try {
+      // Obtener el menú completo
+      const categories = await this.categoriesService.getFullMenu();
+      
+      // Obtener la configuración del restaurante
+      const config = await this.restaurantConfigService.getConfig();
+      
+      // Calcular la última actualización del menú
+      let menuLastUpdated = new Date(0);
+      for (const category of categories) {
+        if (category.updatedAt && category.updatedAt > menuLastUpdated) {
+          menuLastUpdated = category.updatedAt;
+        }
+        // Revisar también las subcategorías
+        if (category.subcategories) {
+          for (const subcategory of category.subcategories) {
+            if (subcategory.updatedAt && subcategory.updatedAt > menuLastUpdated) {
+              menuLastUpdated = subcategory.updatedAt;
+            }
+            // Revisar productos dentro de subcategorías
+            if (subcategory.products) {
+              for (const product of subcategory.products) {
+                if (product.updatedAt && product.updatedAt > menuLastUpdated) {
+                  menuLastUpdated = product.updatedAt;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Última actualización de la configuración
+      const configLastUpdated = config?.updatedAt || new Date();
+      
+      // Si se especificó ifModifiedSince, verificar si hay cambios
+      if (ifModifiedSince) {
+        const lastModified = menuLastUpdated > configLastUpdated ? menuLastUpdated : configLastUpdated;
+        if (lastModified <= ifModifiedSince) {
+          // No hay cambios desde la fecha especificada
+          return null;
+        }
+      }
+      
+      // Construir la respuesta
+      const response: RestaurantDataResponseDto = {
+        menu: {
+          categories,
+          lastUpdated: menuLastUpdated,
+        },
+        config: {
+          restaurantConfig: config,
+          businessHours: config?.businessHours || [],
+          lastUpdated: configLastUpdated,
+        },
+        timestamp: new Date(),
+      };
+      
+      this.logger.log(
+        `📤 Datos del restaurante preparados para sincronización (${categories.length} categorías)`,
+      );
+      
+      // Registrar actividad de sincronización
+      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', true);
+      
+      return response;
+    } catch (error) {
+      this.logger.error('Error al obtener datos del restaurante:', error);
+      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', false);
+      throw error;
+    }
+  }
+
+  // Método auxiliar para registrar actividad de sincronización
+  private async logSyncActivity(
+    type: SyncActivityType,
+    direction: 'IN' | 'OUT',
+    success: boolean,
+  ): Promise<void> {
+    try {
+      await this.dataSource.manager.save(SyncActivityEntity, {
+        type,
+        direction,
+        success,
+      });
+    } catch (error) {
+      // No fallar si no se puede registrar la actividad
+      this.logger.warn('No se pudo registrar actividad de sincronización:', error);
+    }
+  }
+
+  // Método para obtener actividad reciente
+  async getRecentActivity(limit: number = 20): Promise<SyncActivityEntity[]> {
+    return await this.dataSource.manager.find(SyncActivityEntity, {
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
+  }
+
+  // Método para obtener el estado real del WebSocket
+  getWebSocketStatus(): { connected: boolean; failed: boolean } {
+    return {
+      connected: this.isWebSocketConnected && this.socket?.connected === true,
+      failed: this.webSocketFailed,
+    };
   }
 }

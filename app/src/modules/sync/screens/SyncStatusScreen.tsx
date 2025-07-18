@@ -1,574 +1,443 @@
 import React, { useState } from 'react';
-import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { ScrollView, RefreshControl, View, useWindowDimensions } from 'react-native';
 import {
-  Text,
   Card,
-  Button,
-  Chip,
-  ActivityIndicator,
   List,
+  Text,
+  ActivityIndicator,
   Divider,
-  Banner,
+  Icon,
+  Chip,
+  Surface,
 } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, formatDistanceToNow } from 'date-fns';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-
 import { syncService } from '../services/syncService';
-import { SyncStatus, SyncType } from '../types/sync.types';
+import {
+  SyncActivity,
+  SyncStatus,
+  SyncActivityType,
+  SYNC_TYPE_LABELS,
+  SYNC_DIRECTION_LABELS,
+} from '../types/sync.types';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { StyleSheet } from 'react-native';
 import { useAppTheme } from '@/app/styles/theme';
-import { discoveryService } from '@/app/services/discoveryService';
+import { useResponsive } from '@/app/hooks/useResponsive';
 
-export const SyncStatusScreen: React.FC = () => {
+export function SyncStatusScreen() {
   const theme = useAppTheme();
-  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const { isTablet, deviceType } = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const queryClient = useQueryClient();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [apiUrl, setApiUrl] = useState<string>('');
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Ajustar padding según el dispositivo
+  const contentPadding = isTablet ? theme.spacing.l : theme.spacing.m;
 
-  // Query para obtener el estado de sincronización
+  // Query para el estado del servicio
   const {
     data: syncStatus,
-    isLoading,
-    error,
-    refetch,
+    isLoading: isLoadingStatus,
+    error: statusError,
+    refetch: refetchStatus,
   } = useQuery({
-    queryKey: ['syncStatus'],
+    queryKey: ['sync-status'],
     queryFn: () => syncService.getSyncStatus(),
-    refetchInterval: 5000, // Actualizar cada 5 segundos
+    refetchInterval: 30000, // Actualizar cada 30 segundos
   });
 
-  // Mutation para disparar sincronización manual
-  const triggerSyncMutation = useMutation({
-    mutationFn: () => syncService.triggerSync(),
-    onSuccess: (data) => {
-      showSnackbar({
-        message: data.message,
-        type: 'success',
-      });
-      queryClient.invalidateQueries({ queryKey: ['syncStatus'] });
-    },
-    onError: (error: any) => {
-      showSnackbar({
-        message:
-          error.response?.data?.message || 'Error al iniciar sincronización',
-        type: 'error',
-      });
-    },
+  // Query para la actividad reciente
+  const {
+    data: syncActivity,
+    isLoading: isLoadingActivity,
+    error: activityError,
+    refetch: refetchActivity,
+  } = useQuery({
+    queryKey: ['sync-activity'],
+    queryFn: () => syncService.getSyncActivity(20),
+    refetchInterval: 30000,
   });
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-  };
-
-  // Obtener la URL del API al cargar el componente
-  React.useEffect(() => {
-    discoveryService
-      .getApiUrl()
-      .then((url) => setApiUrl(url))
-      .catch(() => setApiUrl('URL no configurada'));
-  }, []);
-
-  const getStatusColor = (status: SyncStatus) => {
-    switch (status) {
-      case SyncStatus.COMPLETED:
-        return theme.colors.success || theme.colors.primary;
-      case SyncStatus.IN_PROGRESS:
-      case SyncStatus.PENDING:
-        return theme.colors.secondary;
-      case SyncStatus.FAILED:
-        return theme.colors.error;
-      case SyncStatus.PARTIAL:
-        return theme.colors.tertiary;
-      default:
-        return theme.colors.onSurfaceVariant;
+    setRefreshing(true);
+    try {
+      await Promise.all([refetchStatus(), refetchActivity()]);
+    } catch (error) {
+      showSnackbar('Error al actualizar información', 'error');
+    } finally {
+      setRefreshing(false);
     }
   };
 
-  const getStatusIcon = (status: SyncStatus) => {
-    switch (status) {
-      case SyncStatus.COMPLETED:
-        return 'check-circle';
-      case SyncStatus.IN_PROGRESS:
-        return 'sync';
-      case SyncStatus.PENDING:
-        return 'clock-outline';
-      case SyncStatus.FAILED:
-        return 'alert-circle';
-      case SyncStatus.PARTIAL:
-        return 'alert';
-      default:
-        return 'help-circle';
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), {
+        addSuffix: true,
+        locale: es,
+      });
+    } catch {
+      return 'Fecha inválida';
     }
   };
 
-  const getSyncTypeLabel = (type: SyncType) => {
+  const getActivityIcon = (type: SyncActivityType) => {
     switch (type) {
-      case SyncType.MENU:
-        return 'Menú';
-      case SyncType.CONFIG:
-        return 'Configuración';
-      case SyncType.ORDERS:
-        return 'Órdenes';
-      case SyncType.CUSTOMERS:
-        return 'Clientes';
-      case SyncType.FULL:
-        return 'Completa';
+      case SyncActivityType.PULL_CHANGES:
+        return 'cloud-download';
+      case SyncActivityType.RESTAURANT_DATA:
+        return 'store';
+      case SyncActivityType.ORDER_STATUS:
+        return 'check-circle';
       default:
-        return type;
+        return 'sync';
     }
   };
 
-  const getStatusLabel = (status: SyncStatus) => {
-    switch (status) {
-      case SyncStatus.COMPLETED:
-        return 'Completado';
-      case SyncStatus.IN_PROGRESS:
-        return 'En Progreso';
-      case SyncStatus.PENDING:
-        return 'Pendiente';
-      case SyncStatus.FAILED:
-        return 'Fallido';
-      case SyncStatus.PARTIAL:
-        return 'Parcial';
-      default:
-        return status;
-    }
+  const getStatusColor = (success: boolean) => {
+    return success ? theme.colors.success : theme.colors.error;
   };
 
-  // Estilos dinámicos basados en el tema
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      paddingBottom: insets.bottom + 16,
-    },
-    centerContent: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    card: {
-      marginHorizontal: 16,
-      marginVertical: 8,
-      elevation: 2,
-    },
-    cardTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-    },
-    rowBetween: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginVertical: 4,
-    },
-    serverInfo: {
-      paddingLeft: 8,
-      marginTop: 4,
-    },
-    serverUrl: {
-      color: theme.colors.onSurfaceVariant,
-      fontStyle: 'italic',
-      fontSize: 12,
-    },
-    configVar: {
-      fontFamily: 'monospace',
-      marginVertical: 2,
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-    },
-    statusChip: {
-      paddingHorizontal: 8,
-    },
-    errorCard: {
-      borderColor: theme.colors.error,
-      borderWidth: 1,
-      backgroundColor: theme.colors.errorContainer,
-    },
-    errorTitle: {
-      color: theme.colors.error,
-    },
-    syncButton: {
-      marginTop: 8,
-    },
-    historyItem: {
-      paddingVertical: 12,
-    },
-    banner: {
-      backgroundColor: theme.colors.errorContainer,
-    },
-    emptyStateText: {
-      textAlign: 'center',
-      padding: 16,
-      color: theme.colors.onSurfaceVariant,
-    },
-    sectionTitle: {
-      marginTop: 8,
-      marginBottom: 4,
-      fontWeight: '500',
-    },
-    syncingContainer: {
-      alignItems: 'center',
-      padding: 20,
-    },
-    syncingText: {
-      marginTop: 12,
-      fontSize: 16,
-    },
-    textStyle: {
-      color: theme.colors.onSurface,
-    },
-    secondaryTextStyle: {
-      color: theme.colors.onSurfaceVariant,
-    },
-  });
+  // Crear estilos dinámicos con el tema
+  const styles = React.useMemo(() => createStyles(theme, isTablet), [theme, isTablet]);
 
-  if (isLoading) {
+  if (isLoadingStatus || isLoadingActivity) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text variant="bodyLarge" style={[styles.textStyle, { marginTop: 16 }]}>
-          Cargando estado de sincronización...
-        </Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Cargando información...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  if (error) {
+  if (statusError || activityError) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Banner
-          visible
-          icon="alert"
-          style={styles.banner}
-          actions={[
-            {
-              label: 'Reintentar',
-              onPress: () => refetch(),
-            },
-          ]}
-        >
-          Error al conectar con el servidor local
-        </Banner>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Icon source="alert-circle" size={48} color={theme.colors.error} />
+          <Text style={styles.errorText}>
+            Error al cargar información de sincronización
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={handleRefresh}
-          colors={[theme.colors.primary]}
-          tintColor={theme.colors.primary}
-        />
-      }
-    >
-      <Card style={styles.card} mode="elevated">
-        <Card.Title
-          title="Estado de Conexión"
-          titleStyle={styles.cardTitle}
-          left={(props: any) => (
-            <MaterialCommunityIcons
-              {...props}
-              name="cloud-check"
-              size={24}
-              color={theme.colors.primary}
-            />
-          )}
-        />
-        <Card.Content>
-          <View style={styles.rowBetween}>
-            <Text variant="bodyMedium">Backend Local</Text>
-            <Chip
-              icon="check-circle"
-              textStyle={{ fontSize: 12 }}
-              style={[
-                styles.statusChip,
-                { backgroundColor: theme.colors.primaryContainer },
-              ]}
-            >
-              Conectado
-            </Chip>
-          </View>
-          <View style={[styles.serverInfo, { marginTop: 4 }]}>
-            <Text variant="bodySmall" style={styles.serverUrl}>
-              {apiUrl || 'URL no configurada'}
-            </Text>
-          </View>
-
-          <View style={[styles.rowBetween, { marginTop: 12 }]}>
-            <Text variant="bodyMedium">Backend Nube</Text>
-            <Chip
-              icon={syncStatus?.lastSync ? 'check-circle' : 'alert-circle'}
-              textStyle={{ fontSize: 12 }}
-              style={[
-                styles.statusChip,
-                {
-                  backgroundColor: syncStatus?.lastSync
-                    ? theme.colors.primaryContainer
-                    : theme.colors.errorContainer,
-                },
-              ]}
-            >
-              {syncStatus?.lastSync ? 'Sincronizado' : 'Desconectado'}
-            </Chip>
-          </View>
-          {syncStatus?.remoteUrl ? (
-            <View style={[styles.serverInfo, { marginTop: 4 }]}>
-              <Text variant="bodySmall" style={styles.serverUrl}>
-                {syncStatus.remoteUrl}
-              </Text>
-            </View>
-          ) : null}
-        </Card.Content>
-      </Card>
-
-      {!syncStatus?.isConfigured ? (
-        <Card style={[styles.card, styles.errorCard]} mode="elevated">
-          <Card.Title
-            title="Configuración Requerida"
-            titleStyle={[styles.cardTitle, styles.errorTitle]}
-            left={(props: any) => (
-              <MaterialCommunityIcons
-                {...props}
-                name="alert-circle"
-                size={24}
-                color={theme.colors.error}
-              />
-            )}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
           />
-          <Card.Content>
-            <Text variant="bodyMedium" style={{ marginBottom: 8 }}>
-              Para habilitar la sincronización, configura las siguientes
-              variables en el backend:
-            </Text>
-            <Text variant="bodySmall" style={styles.configVar}>
-              • SYNC_ENABLED=true
-            </Text>
-            <Text variant="bodySmall" style={styles.configVar}>
-              • CLOUD_API_URL=https://tu-servidor.com
-            </Text>
-            <Text variant="bodySmall" style={styles.configVar}>
-              • CLOUD_API_KEY=tu_api_key
-            </Text>
-            <Text variant="bodySmall" style={styles.configVar}>
-              • SYNC_INTERVAL_MINUTES=5
-            </Text>
-            <Text variant="bodySmall" style={styles.configVar}>
-              • SYNC_WEBSOCKET_ENABLED=true (opcional)
-            </Text>
-          </Card.Content>
-        </Card>
-      ) : null}
-
-      <Card style={styles.card} mode="elevated">
-        <Card.Title
-          title="Sincronización Actual"
-          titleStyle={styles.cardTitle}
-          left={(props: any) => (
-            <MaterialCommunityIcons
-              {...props}
-              name={syncStatus?.isCurrentlySyncing ? 'sync' : 'sync-off'}
-              size={24}
-              color={
-                syncStatus?.isCurrentlySyncing
-                  ? theme.colors.secondary
-                  : theme.colors.onSurfaceVariant
-              }
-            />
-          )}
-        />
-        <Card.Content>
-          {syncStatus?.isCurrentlySyncing ? (
-            <View style={styles.syncingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.secondary} />
-              <Text variant="bodyLarge" style={styles.syncingText}>
-                Sincronización en progreso...
-              </Text>
-            </View>
-          ) : (
-            <View>
-              {syncStatus?.lastSync ? (
-                <View>
-                  <View style={styles.rowBetween}>
-                    <Text variant="bodyMedium" style={styles.sectionTitle}>
-                      Última sincronización
-                    </Text>
-                    <Text variant="bodySmall" style={styles.secondaryTextStyle}>
-                      {syncStatus.lastSync.completedAt
-                        ? formatDistanceToNow(
-                            new Date(syncStatus.lastSync.completedAt),
-                            {
-                              addSuffix: true,
-                              locale: es,
-                            },
-                          )
-                        : 'Nunca'}
-                    </Text>
-                  </View>
-                  <View style={[styles.rowBetween, { marginTop: 8 }]}>
-                    <Text variant="bodyMedium" style={styles.sectionTitle}>
-                      Estado
-                    </Text>
-                    <Chip
-                      icon={getStatusIcon(syncStatus.lastSync.status)}
-                      textStyle={{ fontSize: 12 }}
-                      style={[
-                        styles.statusChip,
-                        {
-                          backgroundColor:
-                            getStatusColor(syncStatus.lastSync.status) + '20',
-                        },
-                      ]}
-                    >
-                      {getStatusLabel(syncStatus.lastSync.status)}
-                    </Chip>
-                  </View>
-                  <View style={[styles.rowBetween, { marginTop: 8 }]}>
-                    <Text variant="bodyMedium" style={styles.sectionTitle}>
-                      Items sincronizados
-                    </Text>
-                    <Text variant="bodySmall" style={styles.secondaryTextStyle}>
-                      {`${syncStatus.lastSync.itemsSynced} exitosos, ${syncStatus.lastSync.itemsFailed} fallidos`}
-                    </Text>
-                  </View>
-                  {syncStatus.lastSync.duration ? (
-                    <View style={[styles.rowBetween, { marginTop: 8 }]}>
-                      <Text variant="bodyMedium" style={styles.sectionTitle}>
-                        Duración
-                      </Text>
-                      <Text
-                        variant="bodySmall"
-                        style={styles.secondaryTextStyle}
-                      >
-                        {`${syncStatus.lastSync.duration}s`}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              ) : (
-                <Text variant="bodyMedium" style={styles.emptyStateText}>
-                  No hay sincronizaciones previas
-                </Text>
-              )}
-            </View>
-          )}
-        </Card.Content>
-        <Card.Actions>
-          <Button
-            mode="contained"
-            onPress={() => triggerSyncMutation.mutate()}
-            loading={triggerSyncMutation.isPending}
-            disabled={
-              syncStatus?.isCurrentlySyncing || !syncStatus?.isConfigured
-            }
-            icon="sync"
-            style={styles.syncButton}
-            contentStyle={{ paddingHorizontal: 16 }}
-          >
-            Sincronizar Ahora
-          </Button>
-        </Card.Actions>
-      </Card>
-
-      {syncStatus?.syncHistory && syncStatus.syncHistory.length > 0 ? (
+        }
+        contentContainerStyle={[
+          styles.scrollContent,
+          { padding: contentPadding },
+          isTablet && styles.scrollContentTablet,
+        ]}
+      >
+        {/* Estado del Servicio */}
         <Card style={styles.card} mode="elevated">
           <Card.Title
-            title="Historial Reciente"
-            titleStyle={styles.cardTitle}
-            left={(props: any) => (
-              <MaterialCommunityIcons
-                {...props}
-                name="history"
-                size={24}
-                color={theme.colors.primary}
-              />
-            )}
-          />
-          <Card.Content style={{ paddingHorizontal: 0 }}>
-            {syncStatus.syncHistory.slice(0, 5).map((sync, index) => (
-              <React.Fragment key={sync.id}>
-                <List.Item
-                  title={`${getSyncTypeLabel(sync.syncType)} - ${getStatusLabel(sync.status)}`}
-                  description={`${sync.itemsSynced} items • ${
-                    sync.createdAt
-                      ? format(new Date(sync.createdAt), 'dd/MM/yyyy HH:mm', {
-                          locale: es,
-                        })
-                      : ''
-                  }`}
-                  style={styles.historyItem}
-                  titleStyle={styles.textStyle}
-                  descriptionStyle={styles.secondaryTextStyle}
-                  left={(props: any) => (
-                    <List.Icon
-                      {...props}
-                      icon={getStatusIcon(sync.status)}
-                      color={getStatusColor(sync.status)}
-                    />
-                  )}
-                  right={() =>
-                    sync.duration ? (
-                      <Text
-                        variant="bodySmall"
-                        style={[
-                          styles.secondaryTextStyle,
-                          { alignSelf: 'center' },
-                        ]}
-                      >
-                        {`${sync.duration}s`}
-                      </Text>
-                    ) : null
-                  }
-                />
-                {index < syncStatus.syncHistory.length - 1 ? <Divider /> : null}
-              </React.Fragment>
-            ))}
-          </Card.Content>
-        </Card>
-      ) : null}
-
-      {syncStatus?.errors && syncStatus.errors.length > 0 ? (
-        <Card style={[styles.card, styles.errorCard]} mode="elevated">
-          <Card.Title
-            title="Errores Recientes"
-            titleStyle={[styles.cardTitle, styles.errorTitle]}
-            left={(props: any) => (
-              <MaterialCommunityIcons
-                {...props}
-                name="alert-circle"
-                size={24}
-                color={theme.colors.error}
-              />
-            )}
+            title="Estado del Servicio"
+            titleVariant="headlineSmall"
+            left={(props) => <Icon {...props} source="information" />}
           />
           <Card.Content>
-            {syncStatus.errors.map((error, index) => (
-              <Text
-                key={index}
-                variant="bodySmall"
-                style={{ color: theme.colors.error }}
-              >
-                {`• ${JSON.stringify(error)}`}
-              </Text>
-            ))}
+            <List.Item
+              title="Sincronización"
+              titleStyle={styles.listItemTitle}
+              description={syncStatus?.enabled ? 'Habilitada' : 'Deshabilitada'}
+              descriptionStyle={styles.listItemDescription}
+              left={(props) => (
+                <List.Icon
+                  {...props}
+                  icon={syncStatus?.enabled ? 'check-circle' : 'close-circle'}
+                  color={syncStatus?.enabled ? theme.colors.success : theme.colors.error}
+                />
+              )}
+            />
+            <List.Item
+              title="WebSocket"
+              titleStyle={styles.listItemTitle}
+              description={
+                syncStatus?.webSocketEnabled 
+                  ? syncStatus?.webSocketConnected 
+                    ? 'Conectado'
+                    : syncStatus?.webSocketFailed
+                    ? 'Conexión fallida'
+                    : 'Intentando conectar...'
+                  : 'Deshabilitado'
+              }
+              descriptionStyle={[
+                styles.listItemDescription,
+                syncStatus?.webSocketFailed && { color: theme.colors.error }
+              ]}
+              left={(props) => (
+                <List.Icon
+                  {...props}
+                  icon={
+                    syncStatus?.webSocketFailed 
+                      ? 'access-point-off'
+                      : 'access-point'
+                  }
+                  color={
+                    syncStatus?.webSocketConnected
+                      ? theme.colors.success
+                      : syncStatus?.webSocketFailed
+                      ? theme.colors.error
+                      : syncStatus?.webSocketEnabled
+                      ? theme.colors.warning
+                      : theme.colors.outline
+                  }
+                />
+              )}
+            />
+            {syncStatus?.remoteUrl && (
+              <List.Item
+                title="Servidor Remoto"
+                titleStyle={styles.listItemTitle}
+                description={syncStatus.remoteUrl}
+                descriptionStyle={styles.listItemDescription}
+                left={(props) => <List.Icon {...props} icon="server" />}
+              />
+            )}
+            <List.Item
+              title="Modo"
+              titleStyle={styles.listItemTitle}
+              description="Pull (bajo demanda)"
+              descriptionStyle={styles.listItemDescription}
+              left={(props) => <List.Icon {...props} icon="download" />}
+            />
           </Card.Content>
         </Card>
-      ) : null}
-    </ScrollView>
+
+        {/* Actividad Reciente */}
+        <Card style={styles.card} mode="elevated">
+          <Card.Title
+            title="Actividad Reciente"
+            titleVariant="headlineSmall"
+            subtitle={`Últimas ${syncActivity?.length || 0} sincronizaciones`}
+            left={(props) => <Icon {...props} source="history" />}
+          />
+          <Card.Content>
+            {syncActivity && syncActivity.length > 0 ? (
+              syncActivity.map((activity, index) => (
+                <React.Fragment key={activity.id}>
+                  <Surface
+                    style={[
+                      styles.activityItem,
+                      !activity.success && styles.activityItemError,
+                    ]}
+                    elevation={0}
+                  >
+                    <View style={styles.activityHeader}>
+                      <View style={styles.activityLeft}>
+                        <Icon
+                          source={getActivityIcon(activity.type)}
+                          size={24}
+                          color={getStatusColor(activity.success)}
+                        />
+                        <View style={styles.activityInfo}>
+                          <Text variant="bodyMedium" style={styles.activityType}>
+                            {SYNC_TYPE_LABELS[activity.type]}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.activityTime}>
+                            {formatTimestamp(activity.timestamp)}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.activityRight}>
+                        <Chip
+                          compact
+                          mode="flat"
+                          textStyle={[styles.chipText, {
+                            color: activity.direction === 'IN' 
+                              ? theme.colors.onInfoContainer 
+                              : theme.colors.onSuccessContainer
+                          }]}
+                          style={[
+                            styles.directionChip,
+                            activity.direction === 'IN'
+                              ? styles.chipIn
+                              : styles.chipOut,
+                          ]}
+                        >
+                          {SYNC_DIRECTION_LABELS[activity.direction]}
+                        </Chip>
+                        <Icon
+                          source={activity.success ? 'check' : 'close'}
+                          size={20}
+                          color={getStatusColor(activity.success)}
+                        />
+                      </View>
+                    </View>
+                  </Surface>
+                  {index < syncActivity.length - 1 && (
+                    <Divider style={styles.divider} />
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Icon
+                  source="cloud-off-outline"
+                  size={48}
+                  color={theme.colors.outline}
+                />
+                <Text
+                  variant="bodyMedium"
+                  style={[styles.emptyText, { color: theme.colors.outline }]}
+                >
+                  No hay actividad reciente
+                </Text>
+              </View>
+            )}
+          </Card.Content>
+        </Card>
+
+        {/* Información adicional */}
+        <Card style={[styles.card, styles.infoCard]} mode="contained">
+          <Card.Content>
+            <View style={styles.infoRow}>
+              <Icon source="information-outline" size={20} color={theme.colors.onInfoContainer} />
+              <Text variant="bodySmall" style={styles.infoText}>
+                La sincronización se ejecuta automáticamente cuando hay cambios pendientes.
+                No es necesaria ninguna acción manual.
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    </SafeAreaView>
   );
-};
+}
+
+const createStyles = (theme: ReturnType<typeof useAppTheme>, isTablet: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xl,
+  },
+  scrollContentTablet: {
+    maxWidth: 800,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: theme.spacing.m,
+    color: theme.colors.onSurfaceVariant,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  errorText: {
+    marginTop: theme.spacing.m,
+    textAlign: 'center',
+    color: theme.colors.onSurfaceVariant,
+  },
+  card: {
+    marginBottom: theme.spacing.m,
+    elevation: 2,
+  },
+  listItemTitle: {
+    fontSize: isTablet ? 16 : 14,
+    color: theme.colors.onSurface,
+  },
+  listItemDescription: {
+    fontSize: isTablet ? 14 : 12,
+    color: theme.colors.onSurfaceVariant,
+  },
+  activityItem: {
+    padding: theme.spacing.m,
+    borderRadius: theme.roundness,
+    marginVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.surfaceVariant,
+  },
+  activityItemError: {
+    backgroundColor: theme.colors.errorContainer,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  activityInfo: {
+    marginLeft: theme.spacing.m,
+    flex: 1,
+  },
+  activityType: {
+    fontWeight: '500',
+    color: theme.colors.onSurface,
+  },
+  activityTime: {
+    opacity: 0.7,
+    marginTop: 2,
+    color: theme.colors.onSurfaceVariant,
+  },
+  activityRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.s,
+  },
+  directionChip: {
+    height: 24,
+  },
+  chipText: {
+    fontSize: isTablet ? 12 : 11,
+    marginVertical: 0,
+    marginHorizontal: theme.spacing.s,
+  },
+  chipIn: {
+    backgroundColor: theme.colors.infoContainer,
+  },
+  chipOut: {
+    backgroundColor: theme.colors.successContainer,
+  },
+  divider: {
+    marginVertical: theme.spacing.xs,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  emptyText: {
+    marginTop: theme.spacing.m,
+  },
+  infoCard: {
+    backgroundColor: theme.colors.infoContainer,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  infoText: {
+    marginLeft: theme.spacing.s,
+    flex: 1,
+    lineHeight: 20,
+    color: theme.colors.onInfoContainer,
+  },
+});

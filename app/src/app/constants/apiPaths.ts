@@ -119,9 +119,7 @@ export const API_PATHS = {
 
   // Sync
   SYNC_STATUS: '/api/v1/sync-local/status',
-  SYNC_TRIGGER: '/api/v1/sync-local/trigger',
-  SYNC_HISTORY: '/api/v1/sync-local/history',
-  SYNC_ORDERS_ACCEPT: '/api/v1/sync-local/orders/accept',
+  SYNC_ACTIVITY: '/api/v1/sync-local/activity',
 
   // Order operations
   ORDERS_HISTORY: '/api/v1/orders/:orderId/history',
