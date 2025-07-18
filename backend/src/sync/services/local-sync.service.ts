@@ -37,6 +37,12 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   private readonly syncConfig: SyncConfig;
   private isWebSocketConnected = false;
   private webSocketFailed = false;
+  private pullInterval: NodeJS.Timeout | null = null;
+  private lastPullTime: Date | null = null;
+  private nextPullTime: Date | null = null;
+  private pullCount = 0;
+  private successfulPulls = 0;
+  private failedPulls = 0;
 
   constructor(
     private readonly configService: ConfigService,
@@ -58,20 +64,33 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     if (!this.syncConfig.enabled) {
-      this.logger.warn('Sincronización deshabilitada por configuración');
       return;
     }
+
+    this.logger.log('🚀 Iniciando servicio de sincronización...');
+    this.logger.log(`⏰ Intervalo: ${this.syncConfig.intervalMinutes} minuto(s)`);
+    this.logger.log(`🌐 URL: ${this.syncConfig.cloudApiUrl}`);
+
+    // Inicializar pull automático
+    this.startAutomaticPull();
 
     // Solo inicializar WebSocket para notificaciones en tiempo real
     if (this.syncConfig.webSocketEnabled) {
       await this.connectWebSocket();
     }
 
-    this.logger.log('🔄 Servicio de sincronización iniciado (modo pull)');
+    // Hacer un pull inicial (con manejo de errores para no crashear el app)
+    try {
+      this.logger.log('🔄 Ejecutando sincronización inicial...');
+      await this.pullChanges();
+    } catch (error) {
+      this.logger.error('❌ Error en sincronización inicial:', error.message);
+    }
   }
 
   onModuleDestroy() {
     this.disconnect();
+    this.stopAutomaticPull();
   }
 
 
@@ -81,7 +100,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     }
 
     const wsUrl = `${this.syncConfig.cloudApiUrl}`;
-    this.logger.log(`🔌 Intentando conectar a WebSocket: ${wsUrl}`);
 
     this.socket = io(wsUrl, {
       auth: { apiKey: this.syncConfig.cloudApiKey },
@@ -96,7 +114,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
 
     this.socket.on('disconnect', (reason) => {
-      this.logger.warn(`❌ Desconectado del Backend en la Nube: ${reason}`);
       this.isWebSocketConnected = false;
     });
 
@@ -107,26 +124,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       this.isWebSocketConnected = false;
       
       const now = Date.now();
-      // Mostrar log solo cada 30 segundos para reducir spam
-      if (now - lastErrorLog > 30000) {
-        lastErrorLog = now;
-        this.logger.warn(
-          `WebSocket: Aún intentando conectar (${errorCount} intentos). ` +
-          `Servidor: ${this.syncConfig.cloudApiUrl}`
-        );
-      }
+      // Actualizar contador sin mostrar logs
     });
     
     // Eventos de reconexión
-    this.socket.on('reconnect_attempt', (attemptNumber) => {
-      if (attemptNumber === 1) {
-        this.logger.log('🔄 WebSocket: Intentando reconectar...');
-      }
-    });
-    
-    this.socket.on('reconnect', (attemptNumber) => {
-      this.logger.log(`✅ WebSocket: Reconectado después de ${attemptNumber} intentos`);
-    });
+    // Eventos de reconexión sin logs
     
     // Socket.io maneja el heartbeat automáticamente
     // El servidor debe estar configurado con pingInterval y pingTimeout
@@ -136,14 +138,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     this.socket.on('reconnect_failed', () => {
       this.webSocketFailed = true;
       this.isWebSocketConnected = false;
-      this.logger.error(
-        'WebSocket: Conexión fallida definitivamente.'
-      );
+      // Conexión fallida
     });
     
     // Resetear el estado de fallo si se logra conectar
     this.socket.on('connect', () => {
-      this.logger.log('✅ Conectado al Backend en la Nube vía WebSocket');
       this.isWebSocketConnected = true;
       this.webSocketFailed = false;
       errorCount = 0; // Resetear contador de errores
@@ -151,12 +150,13 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
     // Evento genérico para cualquier cambio pendiente en la nube
     this.socket.on('changes:pending', async () => {
-      this.logger.log(
-        `🔔 Notificación de cambios pendientes recibida`,
-      );
       // Ejecutar pull de cambios
       // Esto obtendrá todos los cambios pendientes (órdenes, clientes, etc.)
-      await this.pullChanges();
+      try {
+        await this.pullChanges();
+      } catch (error) {
+        // El error ya se registra en sync_activity dentro de pullChanges
+      }
     });
   }
 
@@ -167,23 +167,62 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private startAutomaticPull() {
+    const intervalMs = this.syncConfig.intervalMinutes * 60 * 1000;
+    
+    this.logger.log(`⏱️ Pull automático configurado cada ${this.syncConfig.intervalMinutes} minuto(s)`);
+    
+    this.pullInterval = setInterval(async () => {
+      this.pullCount++;
+      this.logger.log(`🔄 Ejecutando pull automático #${this.pullCount}...`);
+      try {
+        await this.pullChanges();
+      } catch (error) {
+        this.logger.error(`❌ Error en pull automático #${this.pullCount}:`, error.message);
+      }
+    }, intervalMs);
+
+    // Calcular próximo pull
+    this.updateNextPullTime();
+  }
+
+  private stopAutomaticPull() {
+    if (this.pullInterval) {
+      clearInterval(this.pullInterval);
+      this.pullInterval = null;
+    }
+  }
+
+  private updateNextPullTime() {
+    const intervalMs = this.syncConfig.intervalMinutes * 60 * 1000;
+    this.nextPullTime = new Date(Date.now() + intervalMs);
+  }
+
 
   // Nuevo método unificado para pull de cambios
   async pullChanges(confirmDto?: PullChangesRequestDto): Promise<PullChangesResponseDto> {
+    this.lastPullTime = new Date();
+    this.updateNextPullTime();
+    
+    // Primero hacer push de los datos del restaurante
+    await this.pushRestaurantData();
+    
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
+      const headers = { 'X-API-Key': this.syncConfig.cloudApiKey };
       
       const url = `${this.syncConfig.cloudApiUrl}/api/sync/pull-changes`;
 
       // Hacer la petición al backend en la nube, incluyendo confirmaciones si existen
+      const body = confirmDto || { confirmedOrders: [], confirmedCustomerIds: [] };
       const response = await firstValueFrom(
-        this.httpService.post<PullChangesResponseDto>(url, confirmDto || {}, { headers }),
+        this.httpService.post<PullChangesResponseDto>(url, body, { headers }),
       );
 
       const pullData = response.data;
       
       // Registrar actividad de sincronización exitosa
       await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', true);
+      this.successfulPulls++;
 
       this.logger.log(
         `📥 Recibidos: ${pullData.pending_orders?.length || 0} pedidos, ${
@@ -207,10 +246,7 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
             try {
               await this.processRemoteOrder(manager, remoteOrder);
             } catch (error) {
-              this.logger.error(
-                `Error procesando pedido ${remoteOrder.id}:`,
-                error,
-              );
+              // Error procesando pedido
             }
           }
         }
@@ -221,19 +257,15 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
             try {
               await this.processRemoteCustomer(manager, remoteCustomer);
             } catch (error) {
-              this.logger.error(
-                `Error procesando cliente ${remoteCustomer.id}:`,
-                error,
-              );
+              // Error procesando cliente
             }
           }
         }
       });
 
-      this.logger.log('✅ Cambios procesados correctamente');
       return pullData;
     } catch (error) {
-      this.logger.error('Error en pullChanges:', error);
+      this.failedPulls++;
       // Registrar actividad de sincronización fallida
       await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', false);
       throw error;
@@ -251,7 +283,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     });
 
     if (existingOrder) {
-      this.logger.log(`⚠️ Orden ${remoteOrder.id} ya existe localmente`);
       return;
     }
 
@@ -357,10 +388,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         }
       }
     }
-
-    this.logger.log(
-      `✅ Orden ${remoteOrder.id} guardada con número de turno: ${shiftOrderNumber}`,
-    );
   }
 
   // Método auxiliar para procesar un cliente remoto
@@ -381,7 +408,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         email: remoteCustomer.email,
         whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber,
       });
-      this.logger.log(`✅ Cliente ${remoteCustomer.id} actualizado`);
     } else {
       // Crear nuevo cliente
       await manager.save(CustomerEntity, {
@@ -391,7 +417,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         email: remoteCustomer.email,
         whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber,
       });
-      this.logger.log(`✅ Cliente ${remoteCustomer.id} creado`);
     }
 
     // Procesar direcciones del cliente si existen
@@ -503,16 +528,199 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  // Método para hacer push de los datos del restaurante
+  async pushRestaurantData(): Promise<void> {
+    try {
+      const headers = { 'X-API-Key': this.syncConfig.cloudApiKey };
+      const url = `${this.syncConfig.cloudApiUrl}/api/sync/push-restaurant-data`;
+      
+      this.logger.log('📤 Iniciando push de datos del restaurante...');
+      
+      // Obtener el menú completo con todas las relaciones
+      // getFullMenu ya incluye: modifierGroups, productModifiers, pizzaCustomizations, pizzaConfiguration
+      const categories = await this.categoriesService.getFullMenu();
+      this.logger.log(`✅ Menú obtenido: ${categories.length} categorías`);
+      
+      // Obtener la configuración completa del restaurante
+      const config = await this.restaurantConfigService.getConfig();
+      this.logger.log(`✅ Configuración obtenida: ${config?.restaurantName}`);
+      
+      // Log detallado de la configuración
+      this.logger.log('📋 Configuración del restaurante completa:');
+      this.logger.log(JSON.stringify({
+        id: config?.id,
+        restaurantName: config?.restaurantName,
+        phoneMain: config?.phoneMain,
+        phoneSecondary: config?.phoneSecondary,
+        address: config?.address,
+        city: config?.city,
+        state: config?.state,
+        postalCode: config?.postalCode,
+        country: config?.country,
+        acceptingOrders: config?.acceptingOrders,
+        estimatedPickupTime: config?.estimatedPickupTime,
+        estimatedDeliveryTime: config?.estimatedDeliveryTime,
+        estimatedDineInTime: config?.estimatedDineInTime,
+        openingGracePeriod: config?.openingGracePeriod,
+        closingGracePeriod: config?.closingGracePeriod,
+        timeZone: config?.timeZone,
+        scheduledOrdersLeadTime: config?.scheduledOrdersLeadTime,
+        deliveryCoverageArea: config?.deliveryCoverageArea,
+        businessHours: config?.businessHours,
+        createdAt: config?.createdAt,
+        updatedAt: config?.updatedAt
+      }, null, 2));
+      
+      // Log detallado de businessHours si existen
+      if (config?.businessHours && config.businessHours.length > 0) {
+        this.logger.log(`📅 Horarios de apertura (${config.businessHours.length} registros):`);
+        config.businessHours.forEach(bh => {
+          const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+          const dayName = dayNames[bh.dayOfWeek] || `Día ${bh.dayOfWeek}`;
+          if (bh.isClosed) {
+            this.logger.log(`  - ${dayName}: CERRADO`);
+          } else {
+            this.logger.log(`  - ${dayName}: ${bh.openingTime || 'N/A'} - ${bh.closingTime || 'N/A'}`);
+          }
+        });
+      }
+      
+      // Calcular la última actualización del menú
+      let menuLastUpdated = new Date(0);
+      
+      // Revisar categorías
+      for (const category of categories) {
+        if (category.updatedAt && category.updatedAt > menuLastUpdated) {
+          menuLastUpdated = category.updatedAt;
+        }
+        // Revisar subcategorías
+        if (category.subcategories) {
+          for (const subcategory of category.subcategories) {
+            if (subcategory.updatedAt && subcategory.updatedAt > menuLastUpdated) {
+              menuLastUpdated = subcategory.updatedAt;
+            }
+            // Revisar productos
+            if (subcategory.products) {
+              for (const product of subcategory.products) {
+                if (product.updatedAt && product.updatedAt > menuLastUpdated) {
+                  menuLastUpdated = product.updatedAt;
+                }
+                // Revisar variantes de producto
+                if (product.variants) {
+                  for (const variant of product.variants) {
+                    if (variant.updatedAt && variant.updatedAt > menuLastUpdated) {
+                      menuLastUpdated = variant.updatedAt;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      
+      // Última actualización de la configuración
+      const configLastUpdated = config?.updatedAt || new Date();
+      
+      // Convertir valores decimales de string a number
+      // TypeORM devuelve decimales como strings, pero el servidor espera números
+      const processedCategories = categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories?.map(subcategory => ({
+          ...subcategory,
+          products: subcategory.products?.map(product => ({
+            ...product,
+            // Convertir campos decimales de productos
+            price: product.price ? parseFloat(product.price.toString()) : null,
+            // Procesar pizza configuration si existe
+            pizzaConfiguration: product.pizzaConfiguration ? {
+              ...product.pizzaConfiguration,
+              extraToppingCost: parseFloat(product.pizzaConfiguration.extraToppingCost.toString())
+            } : undefined,
+            // Procesar variantes
+            variants: product.variants?.map(variant => ({
+              ...variant,
+              price: variant.price ? parseFloat(variant.price.toString()) : 0
+            })),
+            // Procesar grupos de modificadores
+            modifierGroups: product.modifierGroups?.map(group => ({
+              ...group,
+              productModifiers: group.productModifiers?.map(modifier => ({
+                ...modifier,
+                price: modifier.price ? parseFloat(modifier.price.toString()) : 0
+              }))
+            }))
+          }))
+        }))
+      }));
+      
+      // Construir el body para el push con todos los datos
+      const pushData = {
+        menu: {
+          categories: processedCategories, // Categorías con valores numéricos correctos
+          lastUpdated: menuLastUpdated.toISOString()
+        },
+        config: {
+          restaurantConfig: {
+            id: config?.id,
+            restaurantName: config?.restaurantName,
+            phoneMain: config?.phoneMain,
+            phoneSecondary: config?.phoneSecondary,
+            address: config?.address,
+            city: config?.city,
+            state: config?.state,
+            postalCode: config?.postalCode,
+            country: config?.country,
+            acceptingOrders: config?.acceptingOrders,
+            estimatedPickupTime: config?.estimatedPickupTime,
+            estimatedDeliveryTime: config?.estimatedDeliveryTime,
+            estimatedDineInTime: config?.estimatedDineInTime,
+            openingGracePeriod: config?.openingGracePeriod,
+            closingGracePeriod: config?.closingGracePeriod,
+            timeZone: config?.timeZone,
+            scheduledOrdersLeadTime: config?.scheduledOrdersLeadTime,
+            deliveryCoverageArea: config?.deliveryCoverageArea,
+            businessHours: config?.businessHours || [],
+            updatedAt: config?.updatedAt,
+            createdAt: config?.createdAt
+          },
+          lastUpdated: configLastUpdated.toISOString()
+        }
+      };
+      
+      this.logger.log(`📡 POST ${url}`);
+      this.logger.log(`📦 Enviando ${processedCategories.length} categorías con menú completo`);
+      
+      // Log del objeto config que se enviará
+      this.logger.log('🔍 Datos de configuración a enviar:');
+      this.logger.log(JSON.stringify(pushData.config, null, 2));
+      
+      // Hacer la petición al backend en la nube
+      const response = await firstValueFrom(
+        this.httpService.post(url, pushData, { headers }),
+      );
+      
+      this.logger.log('✅ Push de datos del restaurante exitoso');
+      
+      // Registrar actividad exitosa
+      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', true);
+    } catch (error) {
+      this.logger.error('❌ Error en push de datos del restaurante:', error.response?.data || error.message);
+      this.logger.error(`Status: ${error.response?.status}, URL: ${error.config?.url}`);
+      
+      // Registrar actividad fallida pero no interrumpir el pull
+      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', false);
+      // No lanzamos el error para no interrumpir el pull de cambios
+    }
+  }
+
   // Método para notificar cambios de estado de orden a la nube
   async updateOrderStatus(
     updateDto: UpdateOrderStatusDto,
   ): Promise<UpdateOrderStatusResponseDto> {
     try {
-      const headers = { 'X-Sync-Api-Key': this.syncConfig.cloudApiKey };
-      
-      this.logger.log(
-        `📤 Notificando cambio de estado: Orden ${updateDto.orderId} -> ${updateDto.newStatus}`,
-      );
+      const headers = { 'X-API-Key': this.syncConfig.cloudApiKey };
 
       // Hacer la petición al backend en la nube
       const response = await firstValueFrom(
@@ -525,17 +733,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
 
       const result = response.data;
       
-      this.logger.log(
-        `✅ Estado actualizado en la nube. Cliente notificado: ${result.customerNotified}`,
-      );
-
       // Registrar actividad exitosa
       await this.logSyncActivity(SyncActivityType.ORDER_STATUS, 'OUT', true);
       
       return result;
     } catch (error) {
-      this.logger.error('Error al actualizar estado en la nube:', error);
-      
       // Registrar actividad fallida
       await this.logSyncActivity(SyncActivityType.ORDER_STATUS, 'OUT', false);
       
@@ -583,79 +785,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     return newShift.id;
   }
 
-  // Método para que el backend remoto obtenga los datos del restaurante
-  async getRestaurantData(ifModifiedSince?: Date): Promise<RestaurantDataResponseDto | null> {
-    try {
-      // Obtener el menú completo
-      const categories = await this.categoriesService.getFullMenu();
-      
-      // Obtener la configuración del restaurante
-      const config = await this.restaurantConfigService.getConfig();
-      
-      // Calcular la última actualización del menú
-      let menuLastUpdated = new Date(0);
-      for (const category of categories) {
-        if (category.updatedAt && category.updatedAt > menuLastUpdated) {
-          menuLastUpdated = category.updatedAt;
-        }
-        // Revisar también las subcategorías
-        if (category.subcategories) {
-          for (const subcategory of category.subcategories) {
-            if (subcategory.updatedAt && subcategory.updatedAt > menuLastUpdated) {
-              menuLastUpdated = subcategory.updatedAt;
-            }
-            // Revisar productos dentro de subcategorías
-            if (subcategory.products) {
-              for (const product of subcategory.products) {
-                if (product.updatedAt && product.updatedAt > menuLastUpdated) {
-                  menuLastUpdated = product.updatedAt;
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      // Última actualización de la configuración
-      const configLastUpdated = config?.updatedAt || new Date();
-      
-      // Si se especificó ifModifiedSince, verificar si hay cambios
-      if (ifModifiedSince) {
-        const lastModified = menuLastUpdated > configLastUpdated ? menuLastUpdated : configLastUpdated;
-        if (lastModified <= ifModifiedSince) {
-          // No hay cambios desde la fecha especificada
-          return null;
-        }
-      }
-      
-      // Construir la respuesta
-      const response: RestaurantDataResponseDto = {
-        menu: {
-          categories,
-          lastUpdated: menuLastUpdated,
-        },
-        config: {
-          restaurantConfig: config,
-          businessHours: config?.businessHours || [],
-          lastUpdated: configLastUpdated,
-        },
-        timestamp: new Date(),
-      };
-      
-      this.logger.log(
-        `📤 Datos del restaurante preparados para sincronización (${categories.length} categorías)`,
-      );
-      
-      // Registrar actividad de sincronización
-      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', true);
-      
-      return response;
-    } catch (error) {
-      this.logger.error('Error al obtener datos del restaurante:', error);
-      await this.logSyncActivity(SyncActivityType.RESTAURANT_DATA, 'OUT', false);
-      throw error;
-    }
-  }
 
   // Método auxiliar para registrar actividad de sincronización
   private async logSyncActivity(
@@ -671,7 +800,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       });
     } catch (error) {
       // No fallar si no se puede registrar la actividad
-      this.logger.warn('No se pudo registrar actividad de sincronización:', error);
     }
   }
 

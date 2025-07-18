@@ -16,8 +16,6 @@ import { LocalSyncService } from '../services/local-sync.service';
 import { PullChangesResponseDto } from '../dto/pull-changes-response.dto';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
 import { UpdateOrderStatusResponseDto } from '../dto/update-order-status-response.dto';
-import { RestaurantDataResponseDto } from '../dto/restaurant-data-response.dto';
-import { RestaurantDataQueryDto } from '../dto/restaurant-data-query.dto';
 import { SyncActivityEntity } from '../infrastructure/persistence/relational/entities/sync-activity.entity';
 import { PullChangesRequestDto } from '../dto/pull-changes-request.dto';
 
@@ -59,6 +57,14 @@ export class SyncController {
       webSocketFailed: webSocketStatus.failed,
       remoteUrl: syncConfig.cloudApiUrl || null,
       mode: 'pull',
+      intervalMinutes: syncConfig.intervalMinutes,
+      stats: {
+        pullCount: this.localSyncService['pullCount'],
+        successfulPulls: this.localSyncService['successfulPulls'],
+        failedPulls: this.localSyncService['failedPulls'],
+        lastPullTime: this.localSyncService['lastPullTime'],
+        nextPullTime: this.localSyncService['nextPullTime']
+      }
     };
   }
 
@@ -93,38 +99,6 @@ export class SyncController {
     return await this.localSyncService.updateOrderStatus(updateDto);
   }
 
-  @Get('restaurant-data')
-  @ApiOperation({ 
-    summary: 'Obtener datos completos del restaurante',
-    description: 'Endpoint para que el backend remoto obtenga el menú completo y la configuración del restaurante. ' +
-                 'Soporta validación de cambios mediante if_modified_since.'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Datos del restaurante obtenidos exitosamente',
-    type: RestaurantDataResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_MODIFIED,
-    description: 'No hay cambios desde la fecha especificada',
-  })
-  async getRestaurantData(@Query() query: RestaurantDataQueryDto) {
-    const ifModifiedSince = query.if_modified_since 
-      ? new Date(query.if_modified_since)
-      : undefined;
-    
-    const data = await this.localSyncService.getRestaurantData(ifModifiedSince);
-    
-    if (!data && ifModifiedSince) {
-      // No hay cambios desde la fecha especificada
-      return {
-        statusCode: HttpStatus.NOT_MODIFIED,
-        message: 'No hay cambios desde la fecha especificada',
-      };
-    }
-    
-    return data;
-  }
 
   @Get('activity')
   @ApiOperation({ 
