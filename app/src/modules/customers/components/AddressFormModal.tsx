@@ -23,6 +23,7 @@ import { addressSchema, AddressFormInputs } from '../schema/customer.schema';
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
 import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 interface AddressFormModalProps {
   visible: boolean;
@@ -42,6 +43,7 @@ export default function AddressFormModal({
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
+  const showSnackbar = useSnackbarStore((state) => state.show);
   const { config: mapsConfig, loading: isLoadingApiKey } =
     useGoogleMapsConfig();
   const apiKey = mapsConfig?.apiKey;
@@ -49,6 +51,7 @@ export default function AddressFormModal({
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const webViewRef = useRef<WebView>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const {
     control,
@@ -57,6 +60,7 @@ export default function AddressFormModal({
     reset,
     setValue,
     watch,
+    trigger,
   } = useForm<AddressFormInputs>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
@@ -90,8 +94,9 @@ export default function AddressFormModal({
         zipCode: editingItem.zipCode,
         country: editingItem.country || 'México',
         deliveryInstructions: editingItem.deliveryInstructions || '',
-        latitude: editingItem.latitude,
-        longitude: editingItem.longitude,
+        // Convertir a número si existe, undefined si no
+        latitude: editingItem.latitude ? Number(editingItem.latitude) : undefined,
+        longitude: editingItem.longitude ? Number(editingItem.longitude) : undefined,
         isDefault: editingItem.isDefault,
       });
     } else {
@@ -325,8 +330,9 @@ export default function AddressFormModal({
             setIsMapLoading(false);
             break;
           case 'locationUpdated':
-            setValue('latitude', data.latitude);
-            setValue('longitude', data.longitude);
+            // Convertir a número antes de guardar
+            setValue('latitude', Number(data.latitude));
+            setValue('longitude', Number(data.longitude));
             break;
         }
       } catch (e) {
@@ -364,7 +370,24 @@ export default function AddressFormModal({
 
   const handleFormSubmit = React.useCallback(
     async (data: AddressFormInputs) => {
-      await onSubmit(data);
+      console.log('Form submitted with data:', data);
+      // Convertir undefined a valores válidos para el backend
+      const formattedData: CreateAddressDto = {
+        name: data.name,
+        street: data.street,
+        number: data.number,
+        interiorNumber: data.interiorNumber || undefined,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        country: data.country,
+        deliveryInstructions: data.deliveryInstructions || undefined,
+        latitude: data.latitude !== undefined ? data.latitude : undefined,
+        longitude: data.longitude !== undefined ? data.longitude : undefined,
+        isDefault: data.isDefault || false,
+      };
+      await onSubmit(formattedData);
     },
     [onSubmit],
   );
@@ -427,6 +450,7 @@ export default function AddressFormModal({
             </View>
 
             <ScrollView
+              ref={scrollViewRef}
               style={styles.formContainer}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -765,6 +789,8 @@ export default function AddressFormModal({
                         onPress={() => {
                           setValue('latitude', undefined);
                           setValue('longitude', undefined);
+                          // Forzar la validación del formulario
+                          trigger(['latitude', 'longitude']);
                         }}
                         icon="close"
                         compact
@@ -916,7 +942,50 @@ export default function AddressFormModal({
               </Button>
               <Button
                 mode="contained"
-                onPress={handleSubmit(handleFormSubmit)}
+                onPress={() => {
+                  console.log('Button clicked');
+                  console.log('Form state:', watch());
+                  console.log('Form errors:', errors);
+                  
+                  handleSubmit(
+                    handleFormSubmit,
+                    (validationErrors) => {
+                      console.log('Validation errors:', validationErrors);
+                      // Obtener todos los errores
+                      const errorMessages = Object.entries(validationErrors)
+                        .map(([field, error]) => {
+                          if (error && 'message' in error) {
+                            // Mapear nombres de campos a nombres legibles
+                            const fieldNames: Record<string, string> = {
+                              name: 'Nombre de la dirección',
+                              street: 'Calle',
+                              number: 'Número',
+                              neighborhood: 'Colonia',
+                              city: 'Ciudad',
+                              state: 'Estado',
+                              zipCode: 'Código postal',
+                              country: 'País',
+                            };
+                            const fieldName = fieldNames[field] || field;
+                            return `${fieldName}: ${error.message}`;
+                          }
+                          return null;
+                        })
+                        .filter(Boolean);
+
+                      if (errorMessages.length > 0) {
+                        // Mostrar el primer error
+                        showSnackbar({
+                          message: errorMessages[0],
+                          type: 'error',
+                        });
+                        
+                        // Hacer scroll al principio del formulario
+                        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
+                      }
+                    },
+                  )();
+                }}
                 disabled={isSubmitting}
                 loading={isSubmitting}
                 style={[styles.button, styles.confirmButton]}
