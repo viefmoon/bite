@@ -70,6 +70,9 @@ export class RestaurantConfigEntity extends EntityRelationalHelper {
   @Column({ type: 'jsonb', nullable: true })
   deliveryCoverageArea: any | null;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  minimumOrderValueForDelivery: number;
+
   // Relaciones
   @OneToMany(
     () => BusinessHoursEntity,

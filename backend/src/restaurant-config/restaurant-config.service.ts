@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef, BadRequestException } from '@nestjs/common';
 import { RestaurantConfigRepository } from './infrastructure/persistence/restaurant-config.repository';
 import { RestaurantConfig } from './domain/restaurant-config';
 import { UpdateRestaurantConfigDto } from './dto/update-restaurant-config.dto';
+import { ShiftsService } from '../shifts/shifts.service';
 
 @Injectable()
 export class RestaurantConfigService {
   constructor(
     private readonly restaurantConfigRepository: RestaurantConfigRepository,
+    @Inject(forwardRef(() => ShiftsService))
+    private readonly shiftsService: ShiftsService,
   ) {}
 
   async findOrCreate(): Promise<RestaurantConfig> {
@@ -54,6 +57,22 @@ export class RestaurantConfigService {
     updateRestaurantConfigDto: UpdateRestaurantConfigDto,
   ): Promise<RestaurantConfig> {
     const config = await this.findOrCreate();
+
+    // Verificar si se está intentando cambiar 'acceptingOrders'
+    if (
+      updateRestaurantConfigDto.acceptingOrders !== undefined &&
+      updateRestaurantConfigDto.acceptingOrders !== config.acceptingOrders
+    ) {
+      // Comprobar si hay un turno abierto
+      const isShiftOpen = await this.shiftsService.isShiftOpen();
+
+      // Si no hay un turno abierto, no se permite cambiar el estado de los pedidos
+      if (!isShiftOpen) {
+        throw new BadRequestException(
+          'No se puede cambiar el estado de "Aceptar Pedidos" porque no hay ningún turno abierto.',
+        );
+      }
+    }
 
     // Convertir DTO a dominio
     const updated = await this.restaurantConfigRepository.update(

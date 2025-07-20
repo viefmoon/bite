@@ -32,7 +32,6 @@ import {
 } from '../types/restaurantConfig.types';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import TimeZoneSelector from '../components/TimeZoneSelector';
-// Removed KeyboardAwareScrollView - using native KeyboardAvoidingView instead
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useNavigation } from '@react-navigation/native';
@@ -139,7 +138,8 @@ const RestaurantConfigScreen: React.FC = () => {
       formData.openingGracePeriod !== config.openingGracePeriod ||
       formData.closingGracePeriod !== config.closingGracePeriod ||
       formData.timeZone !== config.timeZone ||
-      formData.scheduledOrdersLeadTime !== config.scheduledOrdersLeadTime;
+      formData.scheduledOrdersLeadTime !== config.scheduledOrdersLeadTime ||
+      formData.minimumOrderValueForDelivery !== config.minimumOrderValueForDelivery;
 
     // Comparar área de cobertura
     const deliveryAreaChanged =
@@ -235,6 +235,9 @@ const RestaurantConfigScreen: React.FC = () => {
         scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         // Configuración de delivery
         deliveryCoverageArea: config.deliveryCoverageArea,
+        minimumOrderValueForDelivery: typeof config.minimumOrderValueForDelivery === 'string' 
+          ? parseFloat(config.minimumOrderValueForDelivery) 
+          : config.minimumOrderValueForDelivery,
         // Horarios
         businessHours: initialBusinessHours,
       });
@@ -341,6 +344,9 @@ const RestaurantConfigScreen: React.FC = () => {
         timeZone: config.timeZone || 'America/Mexico_City',
         scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         deliveryCoverageArea: config.deliveryCoverageArea,
+        minimumOrderValueForDelivery: typeof config.minimumOrderValueForDelivery === 'string' 
+          ? parseFloat(config.minimumOrderValueForDelivery) 
+          : config.minimumOrderValueForDelivery,
         businessHours: initialBusinessHours,
       });
     }
@@ -612,6 +618,33 @@ const RestaurantConfigScreen: React.FC = () => {
               disabled={!isEditing}
               style={styles.timeInput}
               right={<TextInput.Affix text="min" />}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.timeIconWrapper}>
+              <MaterialCommunityIcons
+                name="currency-usd"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <TextInput
+              label="Valor mínimo para delivery"
+              value={formData.minimumOrderValueForDelivery?.toString() || ''}
+              onChangeText={(text) => {
+                const value = parseFloat(text);
+                setFormData({
+                  ...formData,
+                  minimumOrderValueForDelivery: isNaN(value) ? 0 : value,
+                });
+              }}
+              keyboardType="numeric"
+              mode="outlined"
+              disabled={!isEditing}
+              style={styles.timeInput}
+              right={<TextInput.Affix text="$" />}
               outlineStyle={styles.inputOutline}
             />
           </View>

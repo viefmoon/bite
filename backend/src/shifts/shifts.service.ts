@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ConflictException,
   Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ShiftRepository } from './infrastructure/persistence/shift.repository';
 import { Shift, ShiftStatus } from './domain/shift';
@@ -24,6 +25,7 @@ import { OrderStatus } from '../orders/domain/enums/order-status.enum';
 export class ShiftsService {
   constructor(
     private readonly shiftRepository: ShiftRepository,
+    @Inject(forwardRef(() => RestaurantConfigService))
     private readonly restaurantConfigService: RestaurantConfigService,
     @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: OrderRepository,
@@ -93,7 +95,14 @@ export class ShiftsService {
     shift.updatedAt = new Date();
     shift.deletedAt = null;
 
-    return this.shiftRepository.create(shift);
+    const createdShift = await this.shiftRepository.create(shift);
+
+    // Actualizar el estado del restaurante para aceptar órdenes
+    await this.restaurantConfigService.updateConfig({
+      acceptingOrders: true,
+    });
+
+    return createdShift;
   }
 
   /**
@@ -173,6 +182,11 @@ export class ShiftsService {
     if (!updatedShift) {
       throw new Error('Error al actualizar el turno');
     }
+
+    // Actualizar el estado del restaurante para NO aceptar órdenes
+    await this.restaurantConfigService.updateConfig({
+      acceptingOrders: false,
+    });
 
     return updatedShift;
   }

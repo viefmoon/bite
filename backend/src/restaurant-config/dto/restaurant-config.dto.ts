@@ -137,6 +137,13 @@ export class RestaurantConfigDto {
   })
   deliveryCoverageArea: any | null;
 
+  @ApiProperty({
+    type: Number,
+    example: 50,
+    description: 'Valor mínimo de orden para entrega a domicilio',
+  })
+  minimumOrderValueForDelivery: number;
+
   // Relaciones
   @ApiProperty({
     type: () => [BusinessHoursDto],

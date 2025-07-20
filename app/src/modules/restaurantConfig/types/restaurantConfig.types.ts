@@ -39,6 +39,7 @@ export interface RestaurantConfig {
 
   // Configuración de delivery
   deliveryCoverageArea: DeliveryCoveragePoint[] | null;
+  minimumOrderValueForDelivery: number | string; // Puede venir como string desde el backend (decimal)
 
   // Relaciones
   businessHours: BusinessHours[];
@@ -70,6 +71,7 @@ export interface UpdateRestaurantConfigDto {
 
   // Configuración de delivery
   deliveryCoverageArea?: DeliveryCoveragePoint[] | null;
+  minimumOrderValueForDelivery?: number;
 
   // Horarios
   businessHours?: CreateBusinessHoursDto[];

@@ -9,7 +9,7 @@ import { RelationalPaymentPersistenceModule } from '../payments/infrastructure/p
 @Module({
   imports: [
     RelationalShiftPersistenceModule,
-    RestaurantConfigModule,
+    forwardRef(() => RestaurantConfigModule),
     forwardRef(() => RelationalOrderPersistenceModule),
     forwardRef(() => RelationalPaymentPersistenceModule),
   ],

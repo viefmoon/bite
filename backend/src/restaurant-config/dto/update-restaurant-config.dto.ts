@@ -8,6 +8,7 @@ import {
   MaxLength,
   IsArray,
   ValidateNested,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateBusinessHoursDto } from './create-business-hours.dto';
@@ -187,6 +188,16 @@ export class UpdateRestaurantConfigDto {
   })
   @IsOptional()
   deliveryCoverageArea?: any | null;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 50,
+    description: 'Valor mínimo de orden para entrega a domicilio',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minimumOrderValueForDelivery?: number;
 
   // Horarios de operación
   @ApiPropertyOptional({

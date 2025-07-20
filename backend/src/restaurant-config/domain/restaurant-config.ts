@@ -24,6 +24,7 @@ export class RestaurantConfig {
 
   // Configuración de delivery
   deliveryCoverageArea: any | null; // Polígono de cobertura
+  minimumOrderValueForDelivery: number; // Valor mínimo de orden para entrega
 
   // Relaciones
   businessHours: BusinessHours[];
