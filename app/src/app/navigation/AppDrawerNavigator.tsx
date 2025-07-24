@@ -132,7 +132,7 @@ export function AppDrawerNavigator() {
             <TouchableOpacity
               style={styles.drawerButtonContainer}
               onPress={() => navigation.openDrawer()}
-              hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Icon
                 source="menu"

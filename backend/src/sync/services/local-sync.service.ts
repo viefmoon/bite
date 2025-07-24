@@ -395,19 +395,31 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     manager: any,
     remoteCustomer: Customer,
   ): Promise<void> {
-    // Buscar cliente existente
-    const existingCustomer = await manager.findOne(CustomerEntity, {
+    // Buscar cliente existente por ID o WhatsApp
+    let existingCustomer = await manager.findOne(CustomerEntity, {
       where: { id: remoteCustomer.id },
     });
 
+    // Si no existe por ID, buscar por WhatsApp
+    if (!existingCustomer && remoteCustomer.whatsappPhoneNumber) {
+      existingCustomer = await manager.findOne(CustomerEntity, {
+        where: { whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber },
+      });
+    }
+
     if (existingCustomer) {
       // Actualizar cliente existente
-      await manager.update(CustomerEntity, { id: remoteCustomer.id }, {
+      await manager.update(CustomerEntity, { id: existingCustomer.id }, {
         firstName: remoteCustomer.firstName,
         lastName: remoteCustomer.lastName,
         email: remoteCustomer.email,
         whatsappPhoneNumber: remoteCustomer.whatsappPhoneNumber,
       });
+      
+      // Si el ID del cliente remoto es diferente, actualizar también el ID
+      if (existingCustomer.id !== remoteCustomer.id) {
+        this.logger.warn(`Cliente con WhatsApp ${remoteCustomer.whatsappPhoneNumber} ya existe con ID diferente. Local: ${existingCustomer.id}, Remoto: ${remoteCustomer.id}`);
+      }
     } else {
       // Crear nuevo cliente
       await manager.save(CustomerEntity, {
@@ -454,28 +466,26 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     manager: any,
     customerData: any,
   ): Promise<CustomerEntity> {
-    // Buscar cliente existente por email o teléfono
-    let customer = await manager.findOne(CustomerEntity, {
-      where: [
-        { email: customerData.email },
-        {
-          whatsappPhoneNumber:
-            customerData.phoneNumber || customerData.whatsappPhoneNumber,
-        },
-      ],
-    });
-
-    if (!customer) {
-      // Crear nuevo cliente
-      customer = await manager.save(CustomerEntity, {
-        id: customerData.id,
-        firstName: customerData.firstName,
-        lastName: customerData.lastName,
-        email: customerData.email,
-        whatsappPhoneNumber:
-          customerData.phoneNumber || customerData.whatsappPhoneNumber,
+    const whatsappNumber = customerData.phoneNumber || customerData.whatsappPhoneNumber;
+    
+    // Buscar cliente existente por ID
+    if (customerData.id) {
+      const customerById = await manager.findOne(CustomerEntity, {
+        where: { id: customerData.id },
       });
+      if (customerById) {
+        return customerById;
+      }
     }
+    
+    // Si no existe, crear nuevo cliente
+    const customer = await manager.save(CustomerEntity, {
+      id: customerData.id,
+      firstName: customerData.firstName,
+      lastName: customerData.lastName,
+      email: customerData.email,
+      whatsappPhoneNumber: whatsappNumber,
+    });
 
     return customer;
   }
