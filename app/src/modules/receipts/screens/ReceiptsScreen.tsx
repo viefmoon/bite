@@ -297,6 +297,26 @@ export const ReceiptsScreen: React.FC = () => {
                       </View>
                     );
                   })()}
+
+                  {/* Badge de WhatsApp */}
+                  {item.isFromWhatsApp && (
+                    <View
+                      style={[
+                        styles.inlinePreparationBadge,
+                        {
+                          backgroundColor: '#25D366',
+                          borderColor: '#25D366',
+                        },
+                      ]}
+                    >
+                      <Icon
+                        source="whatsapp"
+                        size={12}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  )}
+
                   {item.preparationScreenStatuses &&
                     item.preparationScreenStatuses.length > 0 && (
                       <>

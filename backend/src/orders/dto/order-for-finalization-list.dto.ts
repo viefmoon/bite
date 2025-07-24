@@ -113,4 +113,11 @@ export class OrderForFinalizationListDto {
     firstName?: string | null;
     lastName?: string | null;
   };
+
+  @ApiProperty({ 
+    required: false,
+    description: 'Indica si la orden proviene de WhatsApp',
+    example: true,
+  })
+  isFromWhatsApp?: boolean;
 }

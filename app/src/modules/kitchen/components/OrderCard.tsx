@@ -451,6 +451,26 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     })()}
                   </Text>
                 )}
+
+                {/* Badge de WhatsApp */}
+                {order.isFromWhatsApp && (
+                  <View style={styles.whatsappBadgeContainer}>
+                    <View
+                      style={[
+                        styles.whatsappBadge,
+                        {
+                          backgroundColor: '#25D366',
+                        },
+                      ]}
+                    >
+                      <Icon
+                        source="whatsapp"
+                        size={12}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  </View>
+                )}
               </View>
               <View style={[styles.headerRight, { marginLeft: 6 }]}>
                 <View
@@ -998,5 +1018,21 @@ const createStyles = (responsive: any, theme: any) =>
       fontSize: responsive.fontSize.xs,
       fontWeight: '600',
       color: '#FFFFFF',
+    },
+    whatsappBadgeContainer: {
+      marginTop: 4,
+      alignItems: 'flex-start',
+    },
+    whatsappBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
     },
   });

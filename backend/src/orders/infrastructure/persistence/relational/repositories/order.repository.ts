@@ -511,12 +511,22 @@ export class OrdersRelationalRepository implements OrderRepository {
       .select([
         'order.id',
         'order.shiftOrderNumber',
+        'order.shiftId',
         'order.orderType',
         'order.orderStatus',
         'order.total',
+        'order.subtotal',
         'order.createdAt',
         'order.scheduledAt',
         'order.notes',
+        'order.isFromWhatsApp',
+        'order.userId',
+        'order.tableId',
+        'order.customerId',
+        'order.estimatedDeliveryTime',
+        'order.finalizedAt',
+        'order.deletedAt',
+        'order.updatedAt',
       ])
       // Solo seleccionar campos mínimos de table
       .leftJoin('order.table', 'table')

@@ -43,6 +43,7 @@ export interface OrderForFinalizationList {
     firstName?: string | null;
     lastName?: string | null;
   };
+  isFromWhatsApp?: boolean;
 }
 
 // Tipo completo para el detalle de orden

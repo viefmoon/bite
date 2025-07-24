@@ -1374,6 +1374,7 @@ export class OrdersService {
         createdAt: true,
         scheduledAt: true,
         notes: true,
+        isFromWhatsApp: true,
         user: {
           username: true,
           firstName: true,
@@ -1793,6 +1794,7 @@ export class OrdersService {
       total: Number(order.total),
       createdAt: order.createdAt,
       scheduledAt: order.scheduledAt || undefined,
+      isFromWhatsApp: order.isFromWhatsApp,
       paymentsSummary: {
         totalPaid,
       },
@@ -1914,6 +1916,7 @@ export class OrdersService {
       createdAt: order.createdAt,
       finalizedAt: order.finalizedAt,
       scheduledAt: order.scheduledAt || undefined,
+      isFromWhatsApp: order.isFromWhatsApp,
       paymentsSummary: {
         totalPaid,
       },
@@ -1981,6 +1984,7 @@ export class OrdersService {
       paymentsSummary: order.paymentsSummary,
       ticketImpressionCount: order.ticketImpressionCount,
       preparationScreenStatuses: order.preparationScreenStatuses,
+      isFromWhatsApp: order.isFromWhatsApp,
     };
 
     // Mapear tabla si existe

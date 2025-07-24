@@ -280,4 +280,11 @@ export class ReceiptDetailDto {
 
   @ApiProperty({ type: () => [TicketImpressionDto], required: false })
   ticketImpressions?: TicketImpressionDto[];
+
+  @ApiProperty({ 
+    required: false,
+    description: 'Indica si la orden proviene de WhatsApp',
+    example: true,
+  })
+  isFromWhatsApp?: boolean;
 }

@@ -117,6 +117,14 @@ export class OrderOpenListDto {
   @Expose()
   ticketImpressionCount?: number;
 
+  @ApiProperty({ 
+    required: false,
+    description: 'Indica si la orden proviene de WhatsApp',
+    example: true,
+  })
+  @Expose()
+  isFromWhatsApp?: boolean;
+
   @ApiProperty({
     required: false,
     description: 'Usuario que creó la orden',

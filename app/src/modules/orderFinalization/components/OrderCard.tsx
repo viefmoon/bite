@@ -164,6 +164,26 @@ export const OrderCard = React.memo<OrderCardProps>(
                       </View>
                     );
                   })()}
+
+                  {/* Badge de WhatsApp */}
+                  {order.isFromWhatsApp && (
+                    <View
+                      style={[
+                        styles.inlinePreparationBadge,
+                        {
+                          backgroundColor: '#25D366',
+                          borderColor: '#25D366',
+                        },
+                      ]}
+                    >
+                      <Icon
+                        source="whatsapp"
+                        size={12}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  )}
+
                   {order.preparationScreenStatuses &&
                     order.preparationScreenStatuses.length > 0 && (
                       <>

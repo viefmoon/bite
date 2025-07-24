@@ -41,6 +41,7 @@ export interface ReceiptList {
     firstName?: string | null;
     lastName?: string | null;
   };
+  isFromWhatsApp?: boolean;
 }
 
 // Tipo para el detalle completo del recibo

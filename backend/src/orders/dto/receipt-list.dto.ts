@@ -136,4 +136,12 @@ export class ReceiptListDto {
     firstName?: string | null;
     lastName?: string | null;
   };
+
+  @ApiProperty({ 
+    required: false,
+    description: 'Indica si la orden proviene de WhatsApp',
+    example: true,
+  })
+  @Expose()
+  isFromWhatsApp?: boolean;
 }

@@ -26,9 +26,10 @@ import { Customer } from '../../customers/domain/customer';
 import { PreparationStatus } from '../../orders/domain/order-item';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
 import { UpdateOrderStatusResponseDto } from '../dto/update-order-status-response.dto';
-import { RestaurantDataResponseDto } from '../dto/restaurant-data-response.dto';
 import { SyncActivityEntity, SyncActivityType } from '../infrastructure/persistence/relational/entities/sync-activity.entity';
 import { PullChangesRequestDto } from '../dto/pull-changes-request.dto';
+import { ShiftEntity } from '../../shifts/infrastructure/persistence/relational/entities/shift.entity';
+import { ShiftStatus } from '../../shifts/domain/shift';
 
 @Injectable()
 export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
@@ -38,11 +39,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   private isWebSocketConnected = false;
   private webSocketFailed = false;
   private pullInterval: NodeJS.Timeout | null = null;
-  private lastPullTime: Date | null = null;
-  private nextPullTime: Date | null = null;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
   private pullCount = 0;
-  private successfulPulls = 0;
-  private failedPulls = 0;
 
   constructor(
     private readonly configService: ConfigService,
@@ -70,13 +68,19 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('🚀 Iniciando servicio de sincronización...');
     this.logger.log(`⏰ Intervalo: ${this.syncConfig.intervalMinutes} minuto(s)`);
     this.logger.log(`🌐 URL: ${this.syncConfig.cloudApiUrl}`);
+    this.logger.log(`🔌 WebSocket habilitado: ${this.syncConfig.webSocketEnabled}`);
 
     // Inicializar pull automático
     this.startAutomaticPull();
 
     // Solo inicializar WebSocket para notificaciones en tiempo real
     if (this.syncConfig.webSocketEnabled) {
-      await this.connectWebSocket();
+      try {
+        await this.connectWebSocket();
+      } catch (error) {
+        this.logger.error('❌ Error al conectar WebSocket:', error.message);
+        this.logger.warn('⚠️ Continuando sin WebSocket, usando solo pull periódico');
+      }
     }
 
     // Hacer un pull inicial (con manejo de errores para no crashear el app)
@@ -91,65 +95,78 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   onModuleDestroy() {
     this.disconnect();
     this.stopAutomaticPull();
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    // Limpiar referencia global
+    if ((global as any).__syncSocket) {
+      delete (global as any).__syncSocket;
+    }
   }
 
 
-  private connectWebSocket() {
+  private async connectWebSocket(): Promise<void> {
     if (this.socket) {
       this.socket.disconnect();
+      this.socket = null;
     }
 
-    const wsUrl = `${this.syncConfig.cloudApiUrl}`;
-
-    this.socket = io(wsUrl, {
-      auth: { apiKey: this.syncConfig.cloudApiKey },
+    // Configuración para producción con HTTPS y Nginx
+    const wsUrl = this.syncConfig.cloudApiUrl;
+    const isProduction = wsUrl.includes('https://');
+    const fullUrl = `${wsUrl}/sync`;
+    
+    this.logger.log(`📡 Conectando WebSocket a ${fullUrl}...`);
+    
+    const socketOptions = {
+      auth: {
+        apiKey: this.syncConfig.cloudApiKey
+      },
+      path: '/socket.io/',
+      transports: ['websocket', 'polling'],
+      secure: isProduction,
       reconnection: true,
-      reconnectionDelay: 5000, // 5 segundos inicial
-      reconnectionDelayMax: 30000, // Máximo 30 segundos entre intentos
-      reconnectionAttempts: Infinity, // Intentar indefinidamente
-      transports: ['polling', 'websocket'], // Permitir polling primero, luego upgrade a websocket
-      timeout: 20000, // Timeout de conexión inicial de 20 segundos
-      path: '/socket.io/', // Path explícito para socket.io
-    });
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      randomizationFactor: 0.5,
+      timeout: 20000,
+      forceNew: true
+    };
+
+    // Conectar al namespace /sync con configuración para producción
+    this.socket = io(fullUrl, socketOptions);
 
 
+    // Evento de desconexión
     this.socket.on('disconnect', (reason) => {
       this.isWebSocketConnected = false;
+      this.logger.warn(`⚠️ WebSocket desconectado: ${reason}`);
     });
 
-    let errorCount = 0;
-    let lastErrorLog = 0;
+    // Evento de error de conexión
     this.socket.on('connect_error', (error) => {
-      errorCount++;
       this.isWebSocketConnected = false;
-      
-      const now = Date.now();
-      // Actualizar contador sin mostrar logs
+      // Solo mostrar error si es la primera vez o cada 5 intentos
+      if (!this.webSocketFailed) {
+        this.logger.error(`❌ Error de conexión WebSocket: ${error.message}`);
+        this.webSocketFailed = true;
+      }
     });
     
-    // Eventos de reconexión
-    // Eventos de reconexión sin logs
     
-    // Socket.io maneja el heartbeat automáticamente
-    // El servidor debe estar configurado con pingInterval y pingTimeout
-
-    // Con reconnectionAttempts: Infinity, este evento no se disparará
-    // pero lo dejamos por si cambia la configuración
-    this.socket.on('reconnect_failed', () => {
-      this.webSocketFailed = true;
-      this.isWebSocketConnected = false;
-      // Conexión fallida
-    });
     
-    // Resetear el estado de fallo si se logra conectar
+    // Evento de conexión exitosa
     this.socket.on('connect', () => {
       this.isWebSocketConnected = true;
       this.webSocketFailed = false;
-      errorCount = 0; // Resetear contador de errores
+      this.logger.log(`✅ WebSocket conectado (ID: ${this.socket?.id})`);
     });
 
     // Evento genérico para cualquier cambio pendiente en la nube
     this.socket.on('changes:pending', async () => {
+      this.logger.log('📨 Evento recibido: changes:pending');
       // Ejecutar pull de cambios
       // Esto obtendrá todos los cambios pendientes (órdenes, clientes, etc.)
       try {
@@ -157,6 +174,66 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       } catch (error) {
         // El error ya se registra en sync_activity dentro de pullChanges
       }
+    });
+    
+    // Evento de reconexión exitosa
+    this.socket.io.on('reconnect', (attempt) => {
+      this.logger.log(`✅ WebSocket reconectado después de ${attempt} intentos`);
+      this.isWebSocketConnected = true;
+    });
+    
+    // Solo mostrar intentos de reconexión cada 5 intentos
+    let reconnectAttempts = 0;
+    this.socket.io.on('reconnect_attempt', (attempt) => {
+      reconnectAttempts = attempt;
+      if (attempt === 1 || attempt % 5 === 0) {
+        this.logger.log(`🔄 Intentando reconectar... (intento #${attempt})`);
+      }
+    });
+    
+    this.socket.io.on('reconnect_failed', () => {
+      this.logger.error(`❌ Reconexión fallida después de ${reconnectAttempts} intentos`);
+      this.webSocketFailed = true;
+    });
+
+    // Esperar a que se conecte o falle
+    return new Promise((resolve, reject) => {
+      if (!this.socket) {
+        reject(new Error('Socket not initialized'));
+        return;
+      }
+
+      const timeout = setTimeout(() => {
+        this.logger.error('❌ Timeout esperando conexión WebSocket');
+        reject(new Error('WebSocket connection timeout'));
+      }, 30000); // 30 segundos de timeout
+
+      this.socket.once('connect', () => {
+        clearTimeout(timeout);
+        
+        // Mantener referencia al socket para evitar que se destruya
+        // Reducir intervalo a 20 segundos para evitar timeouts
+        this.heartbeatInterval = setInterval(() => {
+          if (this.socket?.connected) {
+            // Emitir un ping manual para mantener la conexión viva
+            this.socket.emit('ping');
+            this.socket.emit('heartbeat', { timestamp: new Date().toISOString() });
+          } else if (!this.socket?.io?._reconnecting) {
+            // Solo reconectar si no está ya intentándolo
+            this.socket?.connect();
+          }
+        }, 20000); // Cada 20 segundos
+        
+        // IMPORTANTE: Mantener el socket vivo
+        (global as any).__syncSocket = this.socket;
+        
+        resolve();
+      });
+
+      this.socket.once('connect_error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
     });
   }
 
@@ -181,9 +258,6 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         this.logger.error(`❌ Error en pull automático #${this.pullCount}:`, error.message);
       }
     }, intervalMs);
-
-    // Calcular próximo pull
-    this.updateNextPullTime();
   }
 
   private stopAutomaticPull() {
@@ -193,16 +267,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private updateNextPullTime() {
-    const intervalMs = this.syncConfig.intervalMinutes * 60 * 1000;
-    this.nextPullTime = new Date(Date.now() + intervalMs);
-  }
-
-
   // Nuevo método unificado para pull de cambios
   async pullChanges(confirmDto?: PullChangesRequestDto): Promise<PullChangesResponseDto> {
-    this.lastPullTime = new Date();
-    this.updateNextPullTime();
     
     // Primero hacer push de los datos del restaurante
     await this.pushRestaurantData();
@@ -222,13 +288,41 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       
       // Registrar actividad de sincronización exitosa
       await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', true);
-      this.successfulPulls++;
 
       this.logger.log(
         `📥 Recibidos: ${pullData.pending_orders?.length || 0} pedidos, ${
           pullData.updated_customers?.length || 0
         } clientes actualizados`,
       );
+
+      // Log de estructura de pedidos recibidos
+      if (pullData.pending_orders && pullData.pending_orders.length > 0) {
+        this.logger.log('📋 Estructura de pedidos recibidos:');
+        pullData.pending_orders.forEach((order, index) => {
+          this.logger.log(`  Pedido ${index + 1}/${pullData.pending_orders.length}:`);
+          this.logger.log(`    - ID: ${order.id}`);
+          this.logger.log(`    - Cliente: ${order.customer?.firstName || 'N/A'} ${order.customer?.lastName || ''}`);
+          this.logger.log(`    - Tipo: ${order.orderType}`);
+          this.logger.log(`    - Estado: ${order.orderStatus}`);
+          this.logger.log(`    - Total: $${order.total || order.subtotal || 0}`);
+          this.logger.log(`    - Items: ${order.orderItems?.length || 0}`);
+          if (order.deliveryInfo) {
+            this.logger.log(`    - Entrega a: ${order.deliveryInfo.recipientName || 'N/A'}`);
+          }
+        });
+      }
+
+      // Log de estructura de clientes actualizados
+      if (pullData.updated_customers && pullData.updated_customers.length > 0) {
+        this.logger.log('👥 Clientes actualizados:');
+        pullData.updated_customers.forEach((customer, index) => {
+          this.logger.log(`  Cliente ${index + 1}/${pullData.updated_customers.length}:`);
+          this.logger.log(`    - ID: ${customer.id}`);
+          this.logger.log(`    - Nombre: ${customer.firstName} ${customer.lastName || ''}`);
+          this.logger.log(`    - WhatsApp: ${customer.whatsappPhoneNumber || 'N/A'}`);
+          this.logger.log(`    - Direcciones: ${customer.addresses?.length || 0}`);
+        });
+      }
 
       // Si no hay cambios pendientes, retornar inmediatamente
       if (
@@ -238,34 +332,72 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         return pullData;
       }
 
-      // Procesar los cambios en una transacción
-      await this.dataSource.transaction(async (manager) => {
-        // 1. Procesar pedidos pendientes
-        if (pullData.pending_orders && pullData.pending_orders.length > 0) {
-          for (const remoteOrder of pullData.pending_orders) {
-            try {
+      // Procesar pedidos pendientes (cada uno en su propia transacción)
+      if (pullData.pending_orders && pullData.pending_orders.length > 0) {
+        this.logger.log(`🔄 Iniciando procesamiento de ${pullData.pending_orders.length} pedidos...`);
+        let processedCount = 0;
+        let skippedNoShiftCount = 0;
+        let errorCount = 0;
+        
+        for (const remoteOrder of pullData.pending_orders) {
+          try {
+            this.logger.log(`  ⏳ Procesando pedido ${remoteOrder.id}...`);
+            // Cada pedido en su propia transacción
+            await this.dataSource.transaction(async (manager) => {
               await this.processRemoteOrder(manager, remoteOrder);
-            } catch (error) {
-              // Error procesando pedido
+            });
+            processedCount++;
+            this.logger.log(`  ✅ Pedido ${remoteOrder.id} procesado exitosamente`);
+          } catch (error) {
+            if (error.message === 'No hay shift abierto para sincronizar órdenes') {
+              skippedNoShiftCount++;
+              // No mostrar stack trace para este caso específico
+            } else {
+              errorCount++;
+              this.logger.error(`  ❌ Error procesando pedido ${remoteOrder.id}:`, error.message);
+              if (error.stack) {
+                this.logger.error(`     Stack: ${error.stack}`);
+              }
             }
+            // Continuar con el siguiente pedido aunque este falle
           }
         }
+        
+        const parts = [`📊 Resumen: ${processedCount} procesados`];
+        if (skippedNoShiftCount > 0) {
+          parts.push(`${skippedNoShiftCount} esperando shift`);
+        }
+        if (errorCount > 0) {
+          parts.push(`${errorCount} errores`);
+        }
+        this.logger.log(parts.join(', '));
+      }
 
-        // 2. Procesar clientes actualizados
-        if (pullData.updated_customers && pullData.updated_customers.length > 0) {
-          for (const remoteCustomer of pullData.updated_customers) {
-            try {
+      // Procesar clientes actualizados (cada uno en su propia transacción)
+      if (pullData.updated_customers && pullData.updated_customers.length > 0) {
+        this.logger.log(`👥 Procesando ${pullData.updated_customers.length} clientes actualizados...`);
+        let customerProcessed = 0;
+        let customerErrors = 0;
+        
+        for (const remoteCustomer of pullData.updated_customers) {
+          try {
+            await this.dataSource.transaction(async (manager) => {
               await this.processRemoteCustomer(manager, remoteCustomer);
-            } catch (error) {
-              // Error procesando cliente
-            }
+            });
+            customerProcessed++;
+          } catch (error) {
+            customerErrors++;
+            this.logger.error(`  ❌ Error procesando cliente ${remoteCustomer.id}:`, error.message);
           }
         }
-      });
+        
+        if (customerErrors > 0) {
+          this.logger.log(`  📊 Clientes: ${customerProcessed} procesados, ${customerErrors} errores`);
+        }
+      }
 
       return pullData;
     } catch (error) {
-      this.failedPulls++;
       // Registrar actividad de sincronización fallida
       await this.logSyncActivity(SyncActivityType.PULL_CHANGES, 'IN', false);
       throw error;
@@ -277,34 +409,55 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
     manager: any,
     remoteOrder: Order,
   ): Promise<void> {
+    this.logger.log(`    🔍 Verificando si existe orden ${remoteOrder.id}...`);
+    
     // Verificar si la orden ya existe
     const existingOrder = await manager.findOne(OrderEntity, {
       where: { id: remoteOrder.id },
     });
 
     if (existingOrder) {
+      this.logger.log(`    ⚠️ Orden ${remoteOrder.id} ya existe, saltando...`);
       return;
     }
+    
+    // Verificar si hay un shift abierto antes de procesar
+    const activeShift = await manager.findOne(ShiftEntity, {
+      where: { status: ShiftStatus.OPEN },
+      order: { openedAt: 'DESC' },
+    });
+    
+    if (!activeShift) {
+      this.logger.warn(`    ⏸️ No hay shift abierto. Orden ${remoteOrder.id} se sincronizará cuando se abra un shift.`);
+      throw new Error('No hay shift abierto para sincronizar órdenes');
+    }
+    
+    this.logger.log(`    ✨ Orden ${remoteOrder.id} no existe, creando nueva...`);
 
-    // Obtener el número de orden del turno
-    const shiftOrderNumber = await this.getNextShiftOrderNumber(manager, remoteOrder.shiftId || await this.getCurrentShiftId(manager));
+    // Usar el shift activo que ya verificamos que existe
+    const shiftId = remoteOrder.shiftId || activeShift.id;
+    const shiftOrderNumber = await this.getNextShiftOrderNumber(manager, shiftId);
+    this.logger.log(`    📝 Número de orden del turno: ${shiftOrderNumber} (Shift: ${shiftId})`)
 
     // Procesar cliente si existe
     let customer: CustomerEntity | null = null;
     if (remoteOrder.customer) {
+      this.logger.log(`    👤 Procesando cliente ${remoteOrder.customer.id}...`);
       customer = await this.findOrCreateCustomer(
         manager,
         remoteOrder.customer,
       );
+      this.logger.log(`    ✅ Cliente procesado: ${customer.id}`);
     }
 
     // Crear la orden con todos los campos relevantes
+    this.logger.log(`    💾 Guardando orden en base de datos...`);
     const order = await manager.save(OrderEntity, {
       id: remoteOrder.id,
       customer,
       customerId: customer?.id || remoteOrder.customerId || null,
       shiftOrderNumber,
-      shiftId: remoteOrder.shiftId || await this.getCurrentShiftId(manager),
+      shiftId: shiftId,
       userId: remoteOrder.userId || remoteOrder.user?.id || null,
       tableId: remoteOrder.tableId || remoteOrder.table?.id || null,
       isFromWhatsApp: true,
@@ -317,14 +470,18 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
       estimatedDeliveryTime: remoteOrder.estimatedDeliveryTime || null,
       finalizedAt: remoteOrder.finalizedAt || null,
     });
+    
+    this.logger.log(`    ✅ Orden guardada con ID: ${order.id}, Número: ${order.shiftOrderNumber}`);
 
     // Guardar delivery info si existe
     if (remoteOrder.deliveryInfo) {
+      this.logger.log(`    🚚 Guardando información de entrega...`);
       await this.saveDeliveryInfo(manager, order, remoteOrder.deliveryInfo, customer);
     }
 
     // Guardar order items con todas sus relaciones
     if (remoteOrder.orderItems && remoteOrder.orderItems.length > 0) {
+      this.logger.log(`    📦 Guardando ${remoteOrder.orderItems.length} items de la orden...`);
       for (const item of remoteOrder.orderItems) {
         const orderItem = await manager.save(OrderItemEntity, {
           order,
@@ -388,6 +545,8 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         }
       }
     }
+    
+    this.logger.log(`    🎉 Orden ${remoteOrder.id} procesada completamente con ${remoteOrder.orderItems?.length || 0} items`);
   }
 
   // Método auxiliar para procesar un cliente remoto
@@ -474,11 +633,28 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
         where: { id: customerData.id },
       });
       if (customerById) {
+        this.logger.log(`      ✅ Cliente encontrado por ID: ${customerById.id}`);
         return customerById;
       }
     }
     
+    // Buscar por WhatsApp si existe
+    if (whatsappNumber) {
+      const customerByWhatsApp = await manager.findOne(CustomerEntity, {
+        where: { whatsappPhoneNumber: whatsappNumber },
+      });
+      if (customerByWhatsApp) {
+        this.logger.log(`      ✅ Cliente encontrado por WhatsApp: ${customerByWhatsApp.id}`);
+        // Actualizar el ID si es diferente
+        if (customerData.id && customerByWhatsApp.id !== customerData.id) {
+          this.logger.warn(`      ⚠️ Cliente con WhatsApp ${whatsappNumber} tiene ID diferente. Local: ${customerByWhatsApp.id}, Remoto: ${customerData.id}`);
+        }
+        return customerByWhatsApp;
+      }
+    }
+    
     // Si no existe, crear nuevo cliente
+    this.logger.log(`      ✨ Creando nuevo cliente: ${customerData.firstName} ${customerData.lastName || ''}`);
     const customer = await manager.save(CustomerEntity, {
       id: customerData.id,
       firstName: customerData.firstName,
@@ -763,7 +939,11 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Método auxiliar para obtener el siguiente número de orden del turno
-  private async getNextShiftOrderNumber(manager: any, shiftId: string): Promise<number> {
+  private async getNextShiftOrderNumber(manager: any, shiftId: string | null): Promise<number> {
+    if (!shiftId) {
+      return 1;
+    }
+    
     const lastOrder = await manager.findOne(OrderEntity, {
       where: { shiftId },
       order: { shiftOrderNumber: 'DESC' },
@@ -774,25 +954,43 @@ export class LocalSyncService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Método auxiliar para obtener el shift actual
-  private async getCurrentShiftId(manager: any): Promise<string> {
+  private async getCurrentShiftId(manager: any): Promise<string | null> {
     // Buscar el shift activo actual
-    const activeShift = await manager.findOne('shift', {
-      where: { isActive: true },
-      order: { startedAt: 'DESC' },
+    const activeShift = await manager.findOne(ShiftEntity, {
+      where: { status: ShiftStatus.OPEN },
+      order: { openedAt: 'DESC' },
     });
 
     if (activeShift) {
       return activeShift.id;
     }
 
-    // Si no hay shift activo, crear uno temporal
-    const newShift = await manager.save('shift', {
-      isActive: true,
-      startedAt: new Date(),
-      openingCash: 0,
+    // Si no hay shift activo, buscar el último shift cerrado del día
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lastShiftToday = await manager.findOne(ShiftEntity, {
+      where: { date: today },
+      order: { shiftNumber: 'DESC' },
     });
-
-    return newShift.id;
+    
+    if (lastShiftToday) {
+      return lastShiftToday.id;
+    }
+    
+    // Si no hay ningún shift del día, buscar el último shift en general
+    const lastShift = await manager.findOne(ShiftEntity, {
+      order: { openedAt: 'DESC' },
+    });
+    
+    if (lastShift) {
+      this.logger.warn(`⚠️ No hay shift activo, usando el último shift disponible: ${lastShift.id}`);
+      return lastShift.id;
+    }
+    
+    // Si no hay ningún shift en el sistema, retornar null
+    this.logger.error('❌ No hay ningún shift en el sistema. Las órdenes se crearán sin shift.');
+    return null;
   }
 
 

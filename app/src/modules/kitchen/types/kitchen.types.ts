@@ -63,6 +63,7 @@ export interface KitchenOrder {
   hasPendingItems: boolean;
   screenStatuses: PreparationScreenStatusInfo[];
   myScreenStatus?: PreparationScreenStatus;
+  isFromWhatsApp?: boolean;
 }
 
 export interface KitchenFilters {
