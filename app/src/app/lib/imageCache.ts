@@ -9,17 +9,6 @@ const MAX_CACHE_AGE_DAYS = 7;
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY = 1000; // 1 segundo
 
-// Logging utility para operaciones de cache (solo errores y operaciones críticas)
-const logCacheOperation = (operation: string, details: any) => {
-  // Solo loggear errores y operaciones de limpieza
-  if (
-    operation.includes('ERROR') ||
-    operation.includes('FAILED') ||
-    operation === 'CACHE_CLEANED'
-  ) {
-    // [ImageCache] operation: details
-  }
-};
 
 // Función para realizar descargas con retry y backoff exponencial
 async function downloadWithRetry(
@@ -35,27 +24,13 @@ async function downloadWithRetry(
         localUri,
       );
 
-      // Solo loggear si hubo múltiples intentos y falló al final
-      // Éxito después de reintentos no necesita log
-
       return downloadedUri;
     } catch (error) {
       if (attempt === maxRetries) {
-        // Último intento fallido
-        logCacheOperation('DOWNLOAD_FAILED_ALL_RETRIES', {
-          url: remoteUrl,
-          totalAttempts: maxRetries + 1,
-          error: error.message,
-        });
         break;
       }
 
-      // Calcular el delay con backoff exponencial
       const delay = baseDelay * Math.pow(2, attempt);
-
-      // No loggear cada reintento, solo el fallo final
-
-      // Esperar antes del siguiente intento
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -64,10 +39,7 @@ async function downloadWithRetry(
 }
 
 async function ensureCacheDirExists() {
-  // En web, el sistema de archivos no está disponible
-  if (Platform.OS === 'web') {
-    return;
-  }
+  if (Platform.OS === 'web') return;
 
   const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
   if (!dirInfo.exists) {
@@ -78,15 +50,12 @@ async function ensureCacheDirExists() {
 async function getCacheFilename(remoteUrl: string): Promise<string> {
   let urlToHash = remoteUrl;
 
-  // Si la URL es de nuestra API, incluir el host en el hash para evitar conflictos
-  // cuando cambia la IP del servidor
+  // Incluir el host en el hash para URLs de nuestra API
   if (remoteUrl.includes(API_PATHS.FILES_CHECK)) {
     try {
       const parsedUrl = new URL(remoteUrl);
-      // Incluir host + pathname para diferenciar entre diferentes servidores
       urlToHash = `${parsedUrl.host}${parsedUrl.pathname}`;
-    } catch (e) {
-      // Si falla el parseo, usar la URL completa
+    } catch {
       urlToHash = remoteUrl;
     }
   }
@@ -147,14 +116,10 @@ async function cleanCache() {
     );
 
     let totalSize = existingFileInfos.reduce((sum, file) => sum + file.size, 0);
-    const originalTotalSize = totalSize;
 
     const now = Date.now();
     const maxAgeMillis = MAX_CACHE_AGE_DAYS * 24 * 60 * 60 * 1000;
     const maxSizeInBytes = MAX_CACHE_SIZE_MB * 1024 * 1024;
-
-    let filesDeletedCount = 0;
-    let sizeDeleted = 0;
 
     // Fase 1: Eliminar archivos por edad (más eficiente)
     const filesToDeleteByAge = existingFileInfos.filter((file) => {
@@ -166,9 +131,7 @@ async function cleanCache() {
       try {
         await FileSystem.deleteAsync(file.uri, { idempotent: true });
         totalSize -= file.size;
-        sizeDeleted += file.size;
-        filesDeletedCount++;
-      } catch (delError) {
+      } catch {
         // Ignorar errores de archivos que no se pueden eliminar
       }
     }
@@ -199,29 +162,14 @@ async function cleanCache() {
         try {
           await FileSystem.deleteAsync(file.uri, { idempotent: true });
           totalSize -= file.size;
-          sizeDeleted += file.size;
-          filesDeletedCount++;
-        } catch (delError) {
+        } catch {
           // Ignorar errores de archivos que no se pueden eliminar
         }
       }
     }
 
-    // Logging detallado
-    if (filesDeletedCount > 0) {
-      logCacheOperation('CACHE_CLEANED', {
-        filesDeleted: filesDeletedCount,
-        sizeCleaned: `${(sizeDeleted / 1024 / 1024).toFixed(2)}MB`,
-        totalFilesRemaining: files.length - filesDeletedCount,
-        totalSizeRemaining: `${(totalSize / 1024 / 1024).toFixed(2)}MB`,
-        originalSize: `${(originalTotalSize / 1024 / 1024).toFixed(2)}MB`,
-        spaceFreed: `${(sizeDeleted / 1024 / 1024).toFixed(2)}MB`,
-        cacheUtilization: `${((totalSize / maxSizeInBytes) * 100).toFixed(1)}%`,
-      });
-    }
-    // No necesitamos loggear cuando no se limpia nada
   } catch (error) {
-    logCacheOperation('CACHE_CLEAN_ERROR', { error: error.message });
+    // Silently ignore cache clean errors
   }
 }
 
@@ -249,12 +197,9 @@ export async function getCachedImageUri(
   if (fileInfo.exists) {
     return localUri;
   } else {
-    // Usar downloadWithRetry en lugar de descarga directa
     const downloadedUri = await downloadWithRetry(remoteUrl, localUri);
 
     if (downloadedUri) {
-      // Descarga exitosa - no necesita log en producción
-
       return downloadedUri;
     } else {
       // Limpiar archivos parciales si los hay
@@ -262,12 +207,6 @@ export async function getCachedImageUri(
       if (partialFileInfo.exists) {
         await FileSystem.deleteAsync(localUri, { idempotent: true });
       }
-
-      logCacheOperation('CACHE_MISS_FAILED', {
-        url: remoteUrl,
-        filename,
-        error: 'Download failed after all retries',
-      });
 
       return null;
     }
@@ -282,8 +221,8 @@ export async function initImageCache() {
 
   await ensureCacheDirExists();
 
-  cleanCache().catch((error) => {
-    logCacheOperation('CACHE_CLEAN_ERROR', { error: error.message });
+  cleanCache().catch(() => {
+    // Silently ignore init errors
   });
 }
 
@@ -300,12 +239,8 @@ export async function removeImageFromCache(remoteUrl: string) {
     const localUri = `${CACHE_DIR}${filename}`;
     await FileSystem.deleteAsync(localUri, { idempotent: true });
 
-    // Item removido exitosamente - no necesita log
   } catch (error) {
-    logCacheOperation('CACHE_ITEM_REMOVE_FAILED', {
-      url: remoteUrl,
-      error: error.message,
-    });
+    // Silently ignore removal errors
   }
 }
 
@@ -314,11 +249,8 @@ export async function clearImageCache() {
     await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
     await ensureCacheDirExists();
 
-    // Cache limpiado exitosamente - no necesita log
   } catch (error) {
-    logCacheOperation('CACHE_CLEAR_FAILED', {
-      error: error.message,
-    });
+    // Silently ignore clear errors
   }
 }
 
@@ -340,19 +272,25 @@ export async function prefetchImages(
   let completed = 0;
   let failed = 0;
 
-  // Función para procesar una imagen
   const processSingleImage = async (imagePath: string) => {
     try {
-      // Construir la URL completa usando getImageUrl
-      const { getImageUrl } = await import('./imageUtils');
-      const fullUrl = await getImageUrl(imagePath);
+      const { getImageUrlSync } = await import('./imageUtils');
+      const { serverConnectionService } = await import(
+        '@/services/serverConnectionService'
+      );
 
+      const serverUrl = serverConnectionService.getCurrentUrl();
+      if (!serverUrl) {
+        failed++;
+        return;
+      }
+
+      const fullUrl = getImageUrlSync(imagePath, serverUrl);
       if (!fullUrl) {
         failed++;
         return;
       }
 
-      // Verificar si ya existe en cache
       if (skipExisting) {
         const filename = await getCacheFilename(fullUrl);
         const localUri = `${CACHE_DIR}${filename}`;
@@ -363,7 +301,6 @@ export async function prefetchImages(
         }
       }
 
-      // Descargar la imagen usando el método con retry
       const result = await getCachedImageUri(fullUrl);
       if (!result) {
         failed++;
@@ -376,7 +313,6 @@ export async function prefetchImages(
     }
   };
 
-  // Procesar imágenes en lotes concurrentes
   const batches = [];
   for (let i = 0; i < imagePaths.length; i += maxConcurrent) {
     const batch = imagePaths.slice(i, i + maxConcurrent);
@@ -387,17 +323,9 @@ export async function prefetchImages(
     await Promise.all(batch.map(processSingleImage));
   }
 
-  // Solo loggear si hubo errores
-  if (failed > 0) {
-    logCacheOperation('PREFETCH_FAILED', {
-      totalImages: imagePaths.length,
-      failed,
-      successRate: `${((1 - failed / imagePaths.length) * 100).toFixed(1)}%`,
-    });
-  }
+  // Silently ignore prefetch failures
 }
 
-// Prefetching específico para menús
 export async function prefetchMenuImages(
   menuData: any[],
   options?: {
@@ -407,7 +335,6 @@ export async function prefetchMenuImages(
 ) {
   const imagePaths: string[] = [];
 
-  // Extraer paths de imágenes del menú
   menuData.forEach((category) => {
     if (category.photo?.path) {
       imagePaths.push(category.photo.path);

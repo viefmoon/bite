@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
-  Platform,
   View,
   ActivityIndicator,
   StyleProp,
   ViewStyle,
   DimensionValue,
 } from 'react-native';
+import { Platform } from 'react-native';
 import { Image, ImageProps as ExpoImageProps } from 'expo-image';
 import { Icon } from 'react-native-paper';
 import { getCachedImageUri } from '../../lib/imageCache';
-import { getImageUrl } from '../../lib/imageUtils';
+import { getImageUrlSync } from '../../lib/imageUtils';
+import { serverConnectionService } from '@/services/serverConnectionService';
 import { useAppTheme, AppTheme } from '../../styles/theme';
-import { useResponsive } from '../../hooks/useResponsive';
 
 export interface AutoImageProps
   extends Omit<ExpoImageProps, 'source' | 'style'> {
@@ -68,18 +68,26 @@ export const AutoImage: React.FC<AutoImageProps> = ({
   ...restExpoImageProps
 }) => {
   const theme = useAppTheme();
-  const responsive = useResponsive();
   const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isLoadingUri, setIsLoadingUri] = useState(true);
 
-  const { width, height } = useAutoImageSize(maxWidth, maxHeight); // Eliminado argumento uri no usado
+  const { width, height } = useAutoImageSize(maxWidth, maxHeight);
+
+  const fullImageUrl = useMemo(() => {
+    if (!originalSourceProp) return null;
+
+    const serverUrl = serverConnectionService.getCurrentUrl();
+    if (!serverUrl) return null;
+
+    return getImageUrlSync(originalSourceProp, serverUrl);
+  }, [originalSourceProp]);
 
   useEffect(() => {
     let isMounted = true;
     setIsLoadingUri(true);
     setProcessedUri(null);
 
-    if (!originalSourceProp) {
+    if (!fullImageUrl) {
       if (isMounted) {
         setIsLoadingUri(false);
       }
@@ -87,35 +95,28 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     }
 
     const processSource = async () => {
-      const fullRemoteUrl = await getImageUrl(originalSourceProp);
-
-      if (!fullRemoteUrl) {
-        if (isMounted) setIsLoadingUri(false);
-        return;
-      }
-
       // Si NO se usa caché, o es web, o es una URI local, usar la URL construida directamente
       if (
         !useCache ||
         Platform.OS === 'web' ||
-        fullRemoteUrl.startsWith('file://')
+        fullImageUrl.startsWith('file://')
       ) {
         if (isMounted) {
-          setProcessedUri(fullRemoteUrl);
+          setProcessedUri(fullImageUrl);
           setIsLoadingUri(false);
         }
         return;
       }
 
       try {
-        const cachedUri = await getCachedImageUri(fullRemoteUrl);
+        const cachedUri = await getCachedImageUri(fullImageUrl);
         if (isMounted) {
-          setProcessedUri(cachedUri ?? fullRemoteUrl);
+          setProcessedUri(cachedUri ?? fullImageUrl);
           setIsLoadingUri(false);
         }
       } catch (error) {
         if (isMounted) {
-          setProcessedUri(fullRemoteUrl);
+          setProcessedUri(fullImageUrl);
           setIsLoadingUri(false);
         }
       }
@@ -126,7 +127,7 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [originalSourceProp, useCache]);
+  }, [fullImageUrl, useCache]);
 
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -143,8 +144,8 @@ export const AutoImage: React.FC<AutoImageProps> = ({
     if (typeof width === 'number' && typeof height === 'number') {
       return Math.min(width, height) * 0.4;
     }
-    return responsive.dimensions.iconSize.large;
-  }, [width, height, responsive.dimensions.iconSize.large]);
+    return 48; // Default size
+  }, [width, height]);
 
   return (
     <View style={containerStyle}>
