@@ -110,7 +110,7 @@ const SubcategoriesScreen: React.FC = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
+    deleteConfirmation,
   } = useCrudScreenLogic<SubCategory>({
     entityName: 'Subcategoría',
     queryKey: ['subcategories', queryParams],
@@ -366,7 +366,7 @@ const SubcategoriesScreen: React.FC = () => {
               handleOpenEditModal(selectedItem);
             }
           }}
-          onDelete={handleDeleteItem}
+          deleteConfirmation={deleteConfirmation}
           isDeleting={isDeleting}
           showImage={true}
         />

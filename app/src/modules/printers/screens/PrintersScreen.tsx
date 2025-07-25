@@ -79,7 +79,7 @@ const PrintersScreen: React.FC = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
+    deleteConfirmation,
   } = useCrudScreenLogic<ThermalPrinter>({
     entityName: 'Impresora',
     queryKey: ['thermalPrinters', queryParams], // Usar queryKey consistente
@@ -263,7 +263,7 @@ const PrintersScreen: React.FC = () => {
           onDismiss={handleCloseModals}
           printer={selectedItem}
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
-          onDelete={() => selectedItem && handleDeleteItem(selectedItem.id)}
+          deleteConfirmation={deleteConfirmation}
           onTestPrint={() => selectedItem && handleTestPrint(selectedItem.id)}
           isDeleting={isDeleting}
           isTestPrinting={testPrintingPrinterId === selectedItem?.id}

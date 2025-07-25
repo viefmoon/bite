@@ -111,7 +111,7 @@ const ModifiersScreen = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
+    deleteConfirmation,
   } = useCrudScreenLogic<Modifier>({
     entityName: 'Modificador',
     queryKey: QUERY_KEY,
@@ -248,7 +248,7 @@ const ModifiersScreen = () => {
           statusConfig={listRenderConfig.statusConfig}
           fieldsToDisplay={detailFields}
           onEdit={handleEditFromDetails}
-          onDelete={handleDeleteItem}
+          deleteConfirmation={deleteConfirmation}
           isDeleting={isDeleting}
           showImage={false}
         />

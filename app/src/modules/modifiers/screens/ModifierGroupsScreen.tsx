@@ -89,7 +89,7 @@ const ModifierGroupsScreen = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
+    deleteConfirmation,
   } = useCrudScreenLogic<ModifierGroup>({
     entityName: 'Grupo de Modificadores',
     queryKey: [QUERY_KEY[0], queryParams],
@@ -265,7 +265,7 @@ const ModifierGroupsScreen = () => {
             handleOpenEditModal(selectedItem);
           }
         }}
-        onDelete={handleDeleteItem}
+        deleteConfirmation={deleteConfirmation}
         isDeleting={isDeleting}
         editButtonLabel="Editar"
         deleteButtonLabel="Eliminar"

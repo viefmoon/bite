@@ -149,7 +149,7 @@ const PreparationScreensScreen = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
+    deleteConfirmation,
   } = useCrudScreenLogic<PreparationScreen>({
     entityName: 'Pantalla de Preparación',
     queryKey: ['preparationScreens', filters, pagination],
@@ -336,7 +336,7 @@ const PreparationScreensScreen = () => {
             handleOpenEditModal(itemToEdit);
           }
         }}
-        onDelete={handleDeleteItem}
+        deleteConfirmation={deleteConfirmation}
         onManageProducts={handleOpenProductModal}
         isDeleting={isDeleting}
       />

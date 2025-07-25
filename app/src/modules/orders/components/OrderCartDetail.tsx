@@ -2201,7 +2201,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 icon="alert-circle-outline"
                 size={48}
                 iconColor={theme.colors.error}
-                style={{ margin: 0 }}
+                style={styles.iconButtonNoMargin}
               />
             </View>
 
@@ -2781,10 +2781,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <Button
                 onPress={() => setShowAdjustmentModal(true)}
                 mode="outlined"
-                style={{
-                  marginTop: theme.spacing.m,
-                  marginBottom: theme.spacing.s,
-                }}
+                style={styles.adjustmentButton}
                 icon="calculator-variant"
               >
                 Ajustes
@@ -2838,10 +2835,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   }
                 }}
                 mode="outlined"
-                style={{
-                  marginTop: theme.spacing.m,
-                  marginBottom: theme.spacing.m,
-                }}
+                style={styles.addProductsButton}
                 icon="plus-circle-outline"
               >
                 Añadir Productos
@@ -2921,7 +2915,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         icon="alert-circle"
                         size={16}
                         iconColor={theme.colors.error}
-                        style={{ margin: 0 }}
+                        style={styles.iconButtonNoMargin}
                       />
                       <Text style={styles.prepaymentWarningText}>
                         El prepago excede el total de la orden. Edite el pago
@@ -3764,6 +3758,18 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     errorModalButtonLabel: {
       fontSize: 16,
+    },
+    // Estilos adicionales para eliminar inline styles
+    iconButtonNoMargin: {
+      margin: 0,
+    },
+    adjustmentButton: {
+      marginTop: theme.spacing.m,
+      marginBottom: theme.spacing.s,
+    },
+    addProductsButton: {
+      marginTop: theme.spacing.m,
+      marginBottom: theme.spacing.m,
     },
   });
 export default OrderCartDetail;

@@ -24,6 +24,16 @@ const createStyles = (theme: MD3Theme) =>
     touchableArea: {
       padding: 5,
     },
+    // Estilos adicionales para eliminar inline styles
+    animatedContainer: {
+      // El transform se aplica dinámicamente
+    },
+    badgeContainer: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      pointerEvents: 'none',
+    },
   });
 
 const CartButton = React.forwardRef(
@@ -80,7 +90,12 @@ const CartButton = React.forwardRef(
 
     return (
       <View style={styles.touchableArea}>
-        <Animated.View style={{ transform: [{ scale: cartBounceAnimation }] }}>
+        <Animated.View
+          style={[
+            styles.animatedContainer,
+            { transform: [{ scale: cartBounceAnimation }] },
+          ]}
+        >
           <IconButton
             icon="cart-outline"
             iconColor={theme.colors.primary}
@@ -92,13 +107,10 @@ const CartButton = React.forwardRef(
         </Animated.View>
         {itemCount > 0 && (
           <Animated.View
-            style={{
-              transform: [{ scale: cartBadgeScale }],
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              pointerEvents: 'none',
-            }}
+            style={[
+              styles.badgeContainer,
+              { transform: [{ scale: cartBadgeScale }] },
+            ]}
           >
             <Badge style={styles.cartBadge} size={22}>
               {itemCount}

@@ -460,7 +460,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
           size={28}
           onPress={handleRefresh}
           disabled={isFetching} // Deshabilitar mientras se refresca
-          style={{ marginRight: 8 }} // Agregar margen para mejor accesibilidad
+          style={styles.headerRefreshButton} // Agregar margen para mejor accesibilidad
         />
       ),
     });
@@ -1393,6 +1393,10 @@ const createStyles = (
       maxWidth: responsive.isTablet ? 280 : 320,
       lineHeight: responsive.isTablet ? 20 : 24,
       fontSize: responsive.isTablet ? 14 : 16,
+    },
+    // Estilo adicional para eliminar inline style
+    headerRefreshButton: {
+      marginRight: 8,
     },
   });
 

@@ -17,6 +17,7 @@ import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { AdaptiveModal } from '../common/AdaptiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 export interface DisplayFieldConfig<TItem> {
   field: keyof TItem;
@@ -31,6 +32,15 @@ interface StatusConfig<TItem> {
   inactiveLabel: string;
 }
 
+interface DeleteConfirmation {
+  visible: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  show: (id: string) => void;
+}
+
 interface GenericDetailModalProps<TItem extends { id: string }> {
   visible: boolean;
   onDismiss: () => void;
@@ -42,6 +52,7 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
   fieldsToDisplay?: DisplayFieldConfig<TItem>[];
   onEdit?: (item: TItem) => void;
   onDelete?: (id: string) => void;
+  deleteConfirmation?: DeleteConfirmation;
   isDeleting?: boolean;
   editButtonLabel?: string;
   deleteButtonLabel?: string;
@@ -224,6 +235,7 @@ function GenericDetailModal<TItem extends { id: string }>({
   fieldsToDisplay = [],
   onEdit,
   onDelete,
+  deleteConfirmation,
   isDeleting = false,
   editButtonLabel = 'Editar',
   deleteButtonLabel = 'Eliminar',
@@ -268,8 +280,12 @@ function GenericDetailModal<TItem extends { id: string }>({
   };
 
   const handleDelete = () => {
-    if (onDelete && item) {
-      onDelete(item.id);
+    if (item) {
+      if (deleteConfirmation) {
+        deleteConfirmation.show(item.id);
+      } else if (onDelete) {
+        onDelete(item.id);
+      }
     }
   };
 
@@ -478,21 +494,36 @@ function GenericDetailModal<TItem extends { id: string }>({
   };
 
   return (
-    <AdaptiveModal
-      visible={visible}
-      onDismiss={onDismiss}
-      dismissable={!isDeleting}
-      dismissableBackButton={!isDeleting}
-      scrollable={true}
-      maxWidth={responsive.isTablet ? 480 : 400}
-      minHeight={200}
-      maxHeight={'85%'}
-      footer={renderFooter()}
-      stickyFooter={true}
-      modalSurfaceStyle={[styles.modalSurface, modalStyle]}
-    >
-      {renderContent()}
-    </AdaptiveModal>
+    <>
+      <AdaptiveModal
+        visible={visible}
+        onDismiss={onDismiss}
+        dismissable={!isDeleting}
+        dismissableBackButton={!isDeleting}
+        scrollable={true}
+        maxWidth={responsive.isTablet ? 480 : 400}
+        minHeight={200}
+        maxHeight={'85%'}
+        footer={renderFooter()}
+        stickyFooter={true}
+        modalSurfaceStyle={[styles.modalSurface, modalStyle]}
+      >
+        {renderContent()}
+      </AdaptiveModal>
+
+      {deleteConfirmation && (
+        <ConfirmationModal
+          visible={deleteConfirmation.visible}
+          title={deleteConfirmation.title}
+          message={deleteConfirmation.message}
+          onConfirm={deleteConfirmation.onConfirm}
+          onCancel={deleteConfirmation.onCancel}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmButtonColor={theme.colors.error}
+        />
+      )}
+    </>
   );
 }
 

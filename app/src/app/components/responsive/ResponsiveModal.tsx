@@ -17,8 +17,11 @@ interface ResponsiveModalProps {
   onDismiss: () => void;
   children: ReactNode;
 
-  // Título del modal
+  // Header configuration
   title?: string;
+  hideCloseButton?: boolean;
+  headerActions?: ReactNode;
+  headerStyle?: StyleProp<ViewStyle>;
 
   // Estilo
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -72,6 +75,14 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   visible,
   onDismiss,
   children,
+  
+  // Header
+  title,
+  hideCloseButton = false,
+  headerActions,
+  headerStyle,
+  
+  // Estilo
   contentContainerStyle,
   style,
 

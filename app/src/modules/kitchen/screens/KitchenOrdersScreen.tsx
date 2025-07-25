@@ -161,13 +161,7 @@ export default function KitchenOrdersScreen() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text
-          variant="bodyLarge"
-          style={{
-            marginTop: theme.spacing.m,
-            color: theme.colors.onBackground,
-          }}
-        >
+        <Text variant="bodyLarge" style={styles.loadingText}>
           Cargando pedidos...
         </Text>
       </View>
@@ -175,9 +169,7 @@ export default function KitchenOrdersScreen() {
   }
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={styles.container}>
       {hasOrders ? (
         <ScrollView
           horizontal={!responsive.isWeb || responsive.width < 1200}
@@ -200,19 +192,15 @@ export default function KitchenOrdersScreen() {
             <View
               key={item.id}
               style={[
+                styles.cardContainer,
                 {
                   width: cardWidth,
                   marginRight:
                     index === orders.length - 1 ? 0 : responsive.spacing.xxs,
-                  height: '100%',
-                  paddingVertical: responsive.spacing.xxxs,
                 },
                 responsive.isWeb &&
-                  responsive.width >= 1200 && {
-                    marginRight: responsive.spacing.s,
-                    marginBottom: responsive.spacing.s,
-                    height: 'auto',
-                  },
+                  responsive.width >= 1200 &&
+                  styles.cardContainerWeb,
               ]}
             >
               <OrderCard
