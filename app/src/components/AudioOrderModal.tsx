@@ -303,8 +303,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     if (orderData?.orderItems) {
       setEditableItems(orderData.orderItems);
     }
-    if (orderData?.orderType) {
+    // Si orderType viene del backend, usarlo; si es undefined, usar DELIVERY como defecto
+    if (orderData?.orderType !== undefined) {
       setEditableOrderType(orderData.orderType);
+    } else if (orderData) {
+      // Solo cambiar a DELIVERY si hay datos de la orden pero orderType es undefined
+      setEditableOrderType(OrderTypeEnum.DELIVERY);
     }
   }, [orderData?.deliveryInfo, orderData?.orderItems, orderData?.orderType]);
 

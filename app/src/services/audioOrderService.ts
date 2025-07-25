@@ -68,14 +68,15 @@ class AudioOrderService {
         audioFormat: 'audio/mp4',
       };
 
-      // Enviar al backend que se comunicará con el servidor remoto
+      // Enviar al backend con timeout extendido para procesamiento de audio
       const response = await ApiClientWrapper.post(
         API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
+        { timeout: 60000 } // 60 segundos para permitir procesamiento de audio
       );
 
       // Verificar que tengamos una respuesta válida
-      if (!response || !response.data) {
+      if (!response || !response?.ok || !response.data) {
         throw new Error('No se recibió respuesta del servidor');
       }
 
@@ -89,7 +90,7 @@ class AudioOrderService {
             orderItems: [],
             deliveryInfo: {},
             scheduledDelivery: {},
-            orderType: undefined,
+            orderType: 'DELIVERY', // Valor por defecto si no hay datos
             warnings: undefined,
             processingTime: 0,
           },

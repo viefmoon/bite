@@ -69,7 +69,8 @@ export class AudioOrderProcessingService {
       // Enviar al servidor en la nube
       const cloudResponse = await this.callCloudApi(cloudRequest);
 
-      if (!cloudResponse.success) {
+      // Verificar si hay un error explícito en la respuesta
+      if (cloudResponse.success === false || cloudResponse.error) {
         return {
           success: false,
           message: 'No se pudo procesar el audio',
@@ -81,6 +82,7 @@ export class AudioOrderProcessingService {
       }
 
       // Procesar la respuesta del servidor en la nube
+      // Si no hay error explícito, asumir que los datos son válidos
       const result = await this.processCloudResponse(
         cloudResponse.data || cloudResponse,
       );
@@ -160,13 +162,8 @@ export class AudioOrderProcessingService {
   private async processCloudResponse(
     data: any,
   ): Promise<AudioOrderResponseDto> {
-    // El servidor en la nube devuelve directamente los datos estructurados
-    // No hay una acción específica, solo los datos extraídos
-
-    this.logger.log('=== DEBUG processCloudResponse ===');
-    this.logger.log('Data from cloud:', JSON.stringify(data, null, 2));
-    this.logger.log('orderType:', data.orderType);
-    this.logger.log('=================================');
+    // Si orderType es undefined, establecer "DELIVERY" como valor por defecto
+    const orderType = data.orderType || 'DELIVERY';
 
     return {
       success: true,
@@ -175,7 +172,7 @@ export class AudioOrderProcessingService {
         orderItems: data.orderItems || [],
         deliveryInfo: data.deliveryInfo || {},
         scheduledDelivery: data.scheduledDelivery || {},
-        orderType: data.orderType, // Agregando orderType aquí
+        orderType: orderType,
         warnings: data.warnings,
         processingTime: data.processingTime,
       },
