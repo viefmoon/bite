@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  HttpStatus,
-  Body,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Get, HttpStatus, Body, Query } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -26,13 +19,12 @@ import { PullChangesRequestDto } from '../dto/pull-changes-request.dto';
   version: '1',
 })
 export class SyncController {
-  constructor(
-    private readonly localSyncService: LocalSyncService,
-  ) {}
-
+  constructor(private readonly localSyncService: LocalSyncService) {}
 
   @Get('status')
-  @ApiOperation({ summary: 'Obtener información del servicio de sincronización' })
+  @ApiOperation({
+    summary: 'Obtener información del servicio de sincronización',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Estado del servicio de sincronización',
@@ -49,7 +41,7 @@ export class SyncController {
   async getSyncStatus() {
     const syncConfig = this.localSyncService['syncConfig'];
     const webSocketStatus = this.localSyncService.getWebSocketStatus();
-    
+
     return {
       enabled: syncConfig.enabled,
       webSocketEnabled: syncConfig.webSocketEnabled,
@@ -63,30 +55,33 @@ export class SyncController {
         successfulPulls: this.localSyncService['successfulPulls'],
         failedPulls: this.localSyncService['failedPulls'],
         lastPullTime: this.localSyncService['lastPullTime'],
-        nextPullTime: this.localSyncService['nextPullTime']
-      }
+        nextPullTime: this.localSyncService['nextPullTime'],
+      },
     };
   }
 
-
   @Post('pull-changes')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener cambios pendientes y confirmar procesados',
-    description: 'Obtiene pedidos pendientes y clientes actualizados. Opcionalmente confirma IDs procesados exitosamente del pull anterior.'
+    description:
+      'Obtiene pedidos pendientes y clientes actualizados. Opcionalmente confirma IDs procesados exitosamente del pull anterior.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Cambios pendientes obtenidos exitosamente',
     type: PullChangesResponseDto,
   })
-  async pullChanges(@Body() confirmDto: PullChangesRequestDto): Promise<PullChangesResponseDto> {
+  async pullChanges(
+    @Body() confirmDto: PullChangesRequestDto,
+  ): Promise<PullChangesResponseDto> {
     return await this.localSyncService.pullChanges(confirmDto);
   }
 
   @Post('order-status')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Notificar cambio de estado de orden a la nube',
-    description: 'Notifica al backend en la nube cuando el restaurante acepta, rechaza o actualiza el estado de un pedido'
+    description:
+      'Notifica al backend en la nube cuando el restaurante acepta, rechaza o actualiza el estado de un pedido',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -99,11 +94,11 @@ export class SyncController {
     return await this.localSyncService.updateOrderStatus(updateDto);
   }
 
-
   @Get('activity')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener actividad reciente de sincronización',
-    description: 'Devuelve las últimas 20 actividades de sincronización ordenadas por fecha descendente'
+    description:
+      'Devuelve las últimas 20 actividades de sincronización ordenadas por fecha descendente',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -114,7 +109,10 @@ export class SyncController {
         type: 'object',
         properties: {
           id: { type: 'string', format: 'uuid' },
-          type: { type: 'string', enum: ['PULL_CHANGES', 'RESTAURANT_DATA', 'ORDER_STATUS'] },
+          type: {
+            type: 'string',
+            enum: ['PULL_CHANGES', 'RESTAURANT_DATA', 'ORDER_STATUS'],
+          },
           direction: { type: 'string', enum: ['IN', 'OUT'] },
           success: { type: 'boolean' },
           timestamp: { type: 'string', format: 'date-time' },

@@ -7,9 +7,7 @@ import syncConfig from './config/sync.config';
 import { CategoriesModule } from '../categories/categories.module';
 import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
 
-const providers = [
-  LocalSyncService,
-];
+const providers = [LocalSyncService];
 
 @Module({
   imports: [

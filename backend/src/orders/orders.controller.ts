@@ -591,7 +591,6 @@ export class OrdersController {
       await this.ordersService.update(id, {
         orderStatus: OrderStatus.IN_PROGRESS,
       });
-    } else if (order.orderStatus === OrderStatus.IN_PROGRESS) {
     }
   }
 

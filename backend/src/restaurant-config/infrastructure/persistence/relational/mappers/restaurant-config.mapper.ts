@@ -34,7 +34,8 @@ export class RestaurantConfigMapper {
 
     // Configuración de delivery
     domainEntity.deliveryCoverageArea = raw.deliveryCoverageArea;
-    domainEntity.minimumOrderValueForDelivery = raw.minimumOrderValueForDelivery;
+    domainEntity.minimumOrderValueForDelivery =
+      raw.minimumOrderValueForDelivery;
 
     // Relaciones
     domainEntity.businessHours = mapArray(raw.businessHours, (hours) =>
@@ -77,7 +78,8 @@ export class RestaurantConfigMapper {
 
     // Configuración de delivery
     persistenceEntity.deliveryCoverageArea = domainEntity.deliveryCoverageArea;
-    persistenceEntity.minimumOrderValueForDelivery = domainEntity.minimumOrderValueForDelivery;
+    persistenceEntity.minimumOrderValueForDelivery =
+      domainEntity.minimumOrderValueForDelivery;
 
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;

@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, Inject, forwardRef, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+  BadRequestException,
+} from '@nestjs/common';
 import { RestaurantConfigRepository } from './infrastructure/persistence/restaurant-config.repository';
 import { RestaurantConfig } from './domain/restaurant-config';
 import { UpdateRestaurantConfigDto } from './dto/update-restaurant-config.dto';

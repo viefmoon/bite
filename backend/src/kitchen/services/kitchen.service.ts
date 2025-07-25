@@ -12,10 +12,6 @@ import { OrderItemEntity } from '../../orders/infrastructure/persistence/relatio
 import { UserEntity } from '../../users/infrastructure/persistence/relational/entities/user.entity';
 import { KitchenOrderFilterDto } from '../dto/kitchen-order-filter.dto';
 import {
-  KitchenOrderDto,
-  KitchenOrderItemDto,
-} from '../dto/kitchen-order-response.dto';
-import {
   KitchenOrderOptimizedDto,
   KitchenOrderItemOptimizedDto,
   ScreenStatusOptimizedDto,
@@ -235,21 +231,22 @@ export class KitchenService {
         itemDto.productName = item.product.name;
         itemDto.variantName = item.productVariant?.name;
         itemDto.modifiers = item.productModifiers?.map((m) => m.name) || [];
-        
+
         // Solo incluir pizzaCustomizations si existen
         if (item.selectedPizzaCustomizations?.length) {
-          itemDto.pizzaCustomizations =
-            item.selectedPizzaCustomizations.map((pc) => ({
+          itemDto.pizzaCustomizations = item.selectedPizzaCustomizations.map(
+            (pc) => ({
               customizationName: pc.pizzaCustomization.name,
               action: pc.action,
               half: pc.half,
-            }));
+            }),
+          );
         }
-        
+
         itemDto.preparationNotes = item.preparationNotes || undefined;
         itemDto.preparationStatus = item.preparationStatus;
         itemDto.preparedAt = item.preparedAt || undefined;
-        
+
         // Solo incluir preparedByUser si existe
         if (item.preparedBy) {
           itemDto.preparedByUser = {
@@ -257,7 +254,7 @@ export class KitchenService {
             lastName: item.preparedBy.lastName || '',
           };
         }
-        
+
         itemDto.quantity = group.items.length;
         itemDto.belongsToMyScreen = userScreenId
           ? item.product.preparationScreenId === userScreenId
@@ -287,137 +284,6 @@ export class KitchenService {
         screenStatusDto.screenName = status.preparationScreen.name;
         screenStatusDto.status = status.status;
         dto.screenStatuses.push(screenStatusDto);
-      }
-    }
-
-    // Agregar el estado de mi pantalla
-    const myScreenStatus = screenStatuses.get(userScreenId);
-    dto.myScreenStatus =
-      myScreenStatus?.status || PreparationScreenStatus.PENDING;
-
-    return dto;
-  }
-
-  // Mantener el método original para compatibilidad si es necesario
-  private transformToKitchenOrder(
-    order: OrderEntity,
-    userScreenId: string,
-    filters: KitchenOrderFilterDto,
-    screenStatuses: Map<string, any>,
-  ): KitchenOrderDto {
-    const dto = new KitchenOrderDto();
-    dto.id = order.id;
-    dto.shiftOrderNumber = order.shiftOrderNumber;
-    dto.orderType = order.orderType;
-    dto.orderStatus = order.orderStatus;
-    dto.createdAt = order.createdAt;
-    dto.orderNotes = order.notes || undefined;
-
-    // Agregar información específica según tipo
-    switch (order.orderType) {
-      case OrderType.DELIVERY:
-        if (order.deliveryInfo) {
-          dto.deliveryAddress = order.deliveryInfo.fullAddress;
-          dto.deliveryPhone = order.deliveryInfo.recipientPhone;
-        }
-        break;
-      case OrderType.TAKE_AWAY:
-        if (order.customer) {
-          dto.receiptName =
-            `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() ||
-            'Cliente';
-          dto.customerPhone = order.customer.whatsappPhoneNumber;
-        }
-        break;
-      case OrderType.DINE_IN:
-        dto.areaName = order.table?.area?.name;
-        dto.tableName = order.table?.name;
-        break;
-    }
-
-    // Procesar items
-    const itemGroups = this.groupOrderItems(
-      order.orderItems || [],
-      filters.ungroupProducts || false,
-    );
-
-    dto.items = itemGroups
-      .map((group) => {
-        const item = group.items[0]; // Usar el primer item como referencia
-
-        if (!item.product) {
-          return null;
-        }
-
-        const itemDto = new KitchenOrderItemDto();
-
-        itemDto.id = group.items.map((i) => i.id).join(','); // IDs concatenados para grupo
-        itemDto.productName = item.product.name;
-        itemDto.variantName = item.productVariant?.name;
-        itemDto.modifiers = item.productModifiers?.map((m) => m.name) || [];
-        itemDto.pizzaCustomizations =
-          item.selectedPizzaCustomizations?.map((pc) => ({
-            customizationName: pc.pizzaCustomization.name,
-            action: pc.action,
-            half: pc.half,
-          })) || [];
-        itemDto.preparationNotes = item.preparationNotes || undefined;
-        itemDto.preparationStatus = item.preparationStatus;
-        itemDto.preparedAt = item.preparedAt || undefined;
-        itemDto.preparedBy = item.preparedBy?.username;
-        itemDto.preparedByUser = item.preparedBy
-          ? {
-              firstName: item.preparedBy.firstName || '',
-              lastName: item.preparedBy.lastName || '',
-            }
-          : undefined;
-        itemDto.createdAt = item.createdAt || undefined;
-        itemDto.quantity = group.items.length;
-        itemDto.belongsToMyScreen = userScreenId
-          ? item.product.preparationScreenId === userScreenId
-          : true; // Si no hay userScreenId, todos los items "pertenecen" a la pantalla
-        itemDto.preparationScreenId =
-          item.product.preparationScreenId || undefined;
-
-        return itemDto;
-      })
-      .filter((item): item is KitchenOrderItemDto => item !== null);
-
-    // Filtrar items según configuración
-    if (!filters.showAllProducts) {
-      dto.items = dto.items.filter((item) => item.belongsToMyScreen);
-    }
-
-    // Siempre mostrar todos los items, incluyendo los preparados
-    // if (!filters.showPrepared) {
-    //   dto.items = dto.items.filter(
-    //     (item) => item.preparationStatus !== PreparationStatus.READY,
-    //   );
-    // }
-
-    dto.hasPendingItems = dto.items.some(
-      (item) =>
-        item.belongsToMyScreen &&
-        item.preparationStatus !== PreparationStatus.READY,
-    );
-
-    // Agregar información de estados por pantalla
-    dto.screenStatuses = [];
-    for (const [, status] of screenStatuses) {
-      if (status.preparationScreen) {
-        dto.screenStatuses.push({
-          screenId: status.preparationScreenId,
-          screenName: status.preparationScreen.name,
-          status: status.status,
-          startedAt: status.startedAt,
-          completedAt: status.completedAt,
-          startedBy: status.startedBy
-            ? {
-                firstName: status.startedBy.firstName || '',
-                lastName: status.startedBy.lastName || '',
-              }
-            : undefined,
-        });
       }
     }
 

@@ -2328,7 +2328,7 @@ export class OrdersService {
       DeliveryInfoEntity.DeliveryInfoEntity,
     );
 
-    let existingDeliveryInfo = await DeliveryInfoRepo.findOne({
+    const existingDeliveryInfo = await DeliveryInfoRepo.findOne({
       where: { orderId },
     });
 

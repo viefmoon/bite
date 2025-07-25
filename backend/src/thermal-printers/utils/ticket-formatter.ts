@@ -270,7 +270,7 @@ export class TicketFormatter {
     // Reservamos más espacio para precios para asegurar separación clara
     let productColumnWidth: number;
     let priceColumnWidth: number;
-    let separatorWidth = 1; // Espacio entre columnas
+    const separatorWidth = 1; // Espacio entre columnas
 
     // Si se proporciona un ancho dinámico, usarlo
     if (dynamicPriceWidth && dynamicPriceWidth > 0) {

@@ -23,7 +23,6 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { KitchenService } from '../services/kitchen.service';
 import { KitchenOrderFilterDto } from '../dto/kitchen-order-filter.dto';
 import { MarkItemPreparedDto } from '../dto/mark-item-prepared.dto';
-import { KitchenOrderDto } from '../dto/kitchen-order-response.dto';
 import { KitchenOrderOptimizedDto } from '../dto/kitchen-order-optimized.dto';
 
 @ApiTags('Cocina')
