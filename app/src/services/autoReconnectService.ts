@@ -134,13 +134,13 @@ class AutoReconnectService extends EventEmitter {
           lastError: null,
         });
         this.isRunning = false;
-        
+
         // Asegurar que el servicio de conexión actualice su estado
         // Pequeño delay para asegurar que el estado se propague correctamente
         setTimeout(() => {
           this.emit('reconnected');
         }, 100);
-        
+
         break;
       }
 
@@ -163,13 +163,13 @@ class AutoReconnectService extends EventEmitter {
             lastError: null,
           });
           this.isRunning = false;
-          
+
           // Asegurar que el servicio de conexión actualice su estado
           // Pequeño delay para asegurar que el estado se propague correctamente
           setTimeout(() => {
             this.emit('reconnected');
           }, 100);
-          
+
           break;
         } else {
           this.addLog('❌ Servidor encontrado pero no responde', 'error');

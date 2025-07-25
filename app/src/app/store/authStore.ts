@@ -110,9 +110,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       await ScreenOrientation.unlockAsync();
-      await new Promise(resolve => setTimeout(resolve, ORIENTATION_DELAYS.UNLOCK));
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      await new Promise(resolve => setTimeout(resolve, ORIENTATION_DELAYS.LOCK));
+      await new Promise((resolve) =>
+        setTimeout(resolve, ORIENTATION_DELAYS.UNLOCK),
+      );
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, ORIENTATION_DELAYS.LOCK),
+      );
       await clearAuthData();
     } catch (error) {
       try {

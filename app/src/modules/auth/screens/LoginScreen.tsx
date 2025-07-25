@@ -108,10 +108,12 @@ const LoginScreen = () => {
         }
 
         try {
-          await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBERED_CREDENTIALS);
+          await EncryptedStorage.removeItem(
+            STORAGE_KEYS.REMEMBERED_CREDENTIALS,
+          );
           await EncryptedStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_ENABLED);
         } catch (cleanupError) {}
-        
+
         showSnackbar({
           message: 'Error procesando el inicio de sesión.',
           type: 'error',
@@ -197,7 +199,10 @@ const LoginScreen = () => {
 
   const isWeb = Platform.OS === 'web';
   const isDesktop = isWeb && responsive.dimensions.width >= 1024;
-  const isTablet = isWeb && responsive.dimensions.width >= 768 && responsive.dimensions.width < 1024;
+  const isTablet =
+    isWeb &&
+    responsive.dimensions.width >= 768 &&
+    responsive.dimensions.width < 1024;
 
   const styles = React.useMemo(
     () =>
@@ -217,7 +222,9 @@ const LoginScreen = () => {
         },
         webLeftPanel: {
           flex: isDesktop ? 1 : undefined,
-          backgroundColor: theme.dark ? theme.colors.primaryContainer : theme.colors.primary,
+          backgroundColor: theme.dark
+            ? theme.colors.primaryContainer
+            : theme.colors.primary,
           justifyContent: 'center',
           alignItems: 'center',
           padding: responsive.spacingPreset.xl,
@@ -251,13 +258,17 @@ const LoginScreen = () => {
         webBrandingTitle: {
           fontSize: isDesktop ? 48 : 36,
           fontWeight: 'bold',
-          color: theme.dark ? theme.colors.onPrimaryContainer : theme.colors.onPrimary,
+          color: theme.dark
+            ? theme.colors.onPrimaryContainer
+            : theme.colors.onPrimary,
           marginBottom: responsive.spacingPreset.m,
           textAlign: 'center',
         },
         webBrandingSubtitle: {
           fontSize: isDesktop ? 20 : 18,
-          color: theme.dark ? theme.colors.onPrimaryContainer : theme.colors.onPrimary,
+          color: theme.dark
+            ? theme.colors.onPrimaryContainer
+            : theme.colors.onPrimary,
           opacity: theme.dark ? 0.8 : 0.9,
           textAlign: 'center',
           maxWidth: 400,
@@ -309,12 +320,16 @@ const LoginScreen = () => {
           paddingVertical: responsive.spacingPreset.l,
           ...(isWeb && {
             width: '100%',
-            shadowColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            shadowColor: theme.dark
+              ? 'rgba(255,255,255,0.1)'
+              : 'rgba(0,0,0,0.1)',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 1,
             shadowRadius: 8,
             borderWidth: theme.dark ? 1 : 0,
-            borderColor: theme.dark ? theme.colors.surfaceVariant : 'transparent',
+            borderColor: theme.dark
+              ? theme.colors.surfaceVariant
+              : 'transparent',
           }),
         },
         registerContainer: {
@@ -360,14 +375,20 @@ const LoginScreen = () => {
   }
 
   const webContent = (
-    <View style={{ flex: 1, height: '100vh', backgroundColor: theme.colors.background }}>
+    <View
+      style={{
+        flex: 1,
+        height: '100vh',
+        backgroundColor: theme.colors.background,
+      }}
+    >
       <ConnectionErrorModal />
       <RegisterModal
         visible={showRegisterModal}
         onDismiss={() => setShowRegisterModal(false)}
         onRegisterSuccess={handleRegisterSuccess}
       />
-      
+
       {/* Theme toggle button */}
       <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
         <IconButton
@@ -378,19 +399,21 @@ const LoginScreen = () => {
         />
       </View>
 
-      <ScrollView 
-        contentContainerStyle={{ 
+      <ScrollView
+        contentContainerStyle={{
           flexGrow: 1,
           justifyContent: 'center',
           alignItems: 'center',
           padding: 20,
         }}
       >
-        <View style={{
-          width: '100%',
-          maxWidth: 380,
-          alignItems: 'center',
-        }}>
+        <View
+          style={{
+            width: '100%',
+            maxWidth: 380,
+            alignItems: 'center',
+          }}
+        >
           {/* Logo */}
           <Image
             source={require('../../../../assets/icon.png')}
@@ -404,35 +427,45 @@ const LoginScreen = () => {
           />
 
           {/* Login form card */}
-          <View style={{
-            width: '100%',
-            backgroundColor: theme.colors.surface,
-            borderRadius: 16,
-            padding: 24,
-            shadowColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: theme.dark ? 1 : 0,
-            borderColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'transparent',
-          }}>
-            <Text style={{
-              fontSize: 24,
-              fontWeight: 'bold',
-              color: theme.colors.onSurface,
-              marginBottom: 8,
-              textAlign: 'center',
-            }}>Iniciar Sesión</Text>
-            <Text style={{
-              fontSize: 14,
-              color: theme.colors.onSurfaceVariant,
-              marginBottom: 20,
-              textAlign: 'center',
-            }}>
+          <View
+            style={{
+              width: '100%',
+              backgroundColor: theme.colors.surface,
+              borderRadius: 16,
+              padding: 24,
+              shadowColor: theme.dark
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.1)',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 1,
+              shadowRadius: 12,
+              elevation: 4,
+              borderWidth: theme.dark ? 1 : 0,
+              borderColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'transparent',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: 'bold',
+                color: theme.colors.onSurface,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+            >
+              Iniciar Sesión
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: theme.colors.onSurfaceVariant,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}
+            >
               Ingresa tus credenciales para continuar
             </Text>
-            
+
             <LoginForm
               onSubmit={handleLoginSubmit}
               isLoading={loginMutation.isPending}
@@ -440,28 +473,36 @@ const LoginScreen = () => {
               initialPassword={initialPassword}
               initialRememberMe={initialRememberMe}
             />
-            
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: 16,
-            }}>
-              <Text style={{ 
-                color: theme.colors.onSurfaceVariant,
-                fontSize: 14,
-              }}>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: 16,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.colors.onSurfaceVariant,
+                  fontSize: 14,
+                }}
+              >
                 ¿No tienes una cuenta?
               </Text>
               <TouchableRipple
                 onPress={() => setShowRegisterModal(true)}
                 style={{ marginLeft: 5 }}
               >
-                <Text style={{
-                  color: theme.colors.primary,
-                  fontWeight: 'bold',
-                  fontSize: 14,
-                }}>Regístrate</Text>
+                <Text
+                  style={{
+                    color: theme.colors.primary,
+                    fontWeight: 'bold',
+                    fontSize: 14,
+                  }}
+                >
+                  Regístrate
+                </Text>
               </TouchableRipple>
             </View>
           </View>
@@ -487,66 +528,70 @@ const LoginScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
-          <View>
-            <View
-              style={{
-                position: 'absolute',
-                top: -responsive.spacing.s,
-                right: -responsive.spacing.s,
-                zIndex: 1,
-              }}
-            >
-              <ConnectionIndicator />
-            </View>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('../../../../assets/icon.png')}
-                style={styles.logo}
-                resizeMode="cover"
-              />
-              <Text style={styles.title}>¡Bienvenido!</Text>
-              <Text style={styles.subtitle}>
-                Inicia sesión para gestionar tus pedidos
-              </Text>
+            <View>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -responsive.spacing.s,
+                  right: -responsive.spacing.s,
+                  zIndex: 1,
+                }}
+              >
+                <ConnectionIndicator />
+              </View>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('../../../../assets/icon.png')}
+                  style={styles.logo}
+                  resizeMode="cover"
+                />
+                <Text style={styles.title}>¡Bienvenido!</Text>
+                <Text style={styles.subtitle}>
+                  Inicia sesión para gestionar tus pedidos
+                </Text>
+              </View>
+
+              <Surface style={styles.formContainer}>
+                <LoginForm
+                  onSubmit={handleLoginSubmit}
+                  isLoading={loginMutation.isPending}
+                  initialEmailOrUsername={initialEmailOrUsername}
+                  initialPassword={initialPassword}
+                  initialRememberMe={initialRememberMe}
+                />
+              </Surface>
             </View>
 
-            <Surface style={styles.formContainer}>
-              <LoginForm
-                onSubmit={handleLoginSubmit}
-                isLoading={loginMutation.isPending}
-                initialEmailOrUsername={initialEmailOrUsername}
-                initialPassword={initialPassword}
-                initialRememberMe={initialRememberMe}
-              />
-            </Surface>
-          </View>
-
-          <View>
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
-              <TouchableRipple onPress={() => setShowRegisterModal(true)}>
-                <Text style={styles.registerLink}>Regístrate</Text>
-              </TouchableRipple>
-            </View>
-            <View style={styles.bottomThemeToggleContainer}>
-              <IconButton
-                icon={theme.dark ? 'weather-night' : 'weather-sunny'}
-                size={responsive.dimensions.iconSize.large}
-                onPress={toggleTheme}
-                iconColor={theme.colors.onSurfaceVariant}
-              />
+            <View>
+              <View style={styles.registerContainer}>
+                <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
+                <TouchableRipple onPress={() => setShowRegisterModal(true)}>
+                  <Text style={styles.registerLink}>Regístrate</Text>
+                </TouchableRipple>
+              </View>
+              <View style={styles.bottomThemeToggleContainer}>
+                <IconButton
+                  icon={theme.dark ? 'weather-night' : 'weather-sunny'}
+                  size={responsive.dimensions.iconSize.large}
+                  onPress={toggleTheme}
+                  iconColor={theme.colors.onSurfaceVariant}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  </SafeAreaView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 
   const content = isWeb ? webContent : mobileContent;
 
-  return Platform.OS === 'web' ? content : (
-    <OrientationTransition targetOrientation={ScreenOrientation.OrientationLock.PORTRAIT_UP}>
+  return Platform.OS === 'web' ? (
+    content
+  ) : (
+    <OrientationTransition
+      targetOrientation={ScreenOrientation.OrientationLock.PORTRAIT_UP}
+    >
       {content}
     </OrientationTransition>
   );

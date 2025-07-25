@@ -15,6 +15,7 @@ import {
   audioServiceHealth,
   type AudioServiceHealthStatus,
 } from '@/services/audioServiceHealth';
+import { serverConnectionService } from '@/services/serverConnectionService';
 
 interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;
@@ -47,6 +48,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     audioServiceHealth.getStatus(),
   );
   const [isServiceAvailable, setIsServiceAvailable] = useState(false);
+  const [isServerReady, setIsServerReady] = useState(false);
 
   // Animaciones
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -58,14 +60,35 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Suscribirse a cambios en el estado del servicio
+  // Verificar estado del servidor primero
   useEffect(() => {
+    const checkServerConnection = () => {
+      const connectionState = serverConnectionService.getState();
+      const ready = connectionState.isConnected && !!connectionState.currentUrl;
+      setIsServerReady(ready);
+    };
+
+    // Verificación inicial
+    checkServerConnection();
+
+    // Suscribirse a cambios en el estado del servidor
+    const unsubscribeServer = serverConnectionService.subscribe(
+      checkServerConnection,
+    );
+
+    return unsubscribeServer;
+  }, []);
+
+  // Suscribirse a cambios en el estado del servicio solo cuando el servidor esté listo
+  useEffect(() => {
+    if (!isServerReady) return;
+
     const unsubscribe = audioServiceHealth.subscribe((status) => {
       setServiceHealth(status);
       setIsServiceAvailable(status.isAvailable);
     });
 
-    // Iniciar verificación periódica solo cuando este componente está montado
+    // Iniciar verificación periódica solo cuando el servidor esté conectado
     audioServiceHealth.startPeriodicCheck();
 
     return () => {
@@ -73,7 +96,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       // IMPORTANTE: Detener verificaciones periódicas cuando el componente se desmonte
       audioServiceHealth.stopPeriodicCheck();
     };
-  }, []);
+  }, [isServerReady]);
 
   // Animación de entrada del widget (siempre visible)
   useEffect(() => {

@@ -33,12 +33,12 @@ export class CertificateValidator {
 
     try {
       const urlObj = new URL(url);
-      
+
       // En producción, solo permitir HTTPS para dominios externos
       if (this.isExternalDomain(urlObj.hostname)) {
         return urlObj.protocol === 'https:';
       }
-      
+
       // Para IPs locales, permitir HTTP (necesario para discovery)
       return this.isLocalNetwork(urlObj.hostname);
     } catch {
@@ -60,13 +60,14 @@ export class CertificateValidator {
     if (parts.length === 4) {
       const firstOctet = parseInt(parts[0]);
       const secondOctet = parseInt(parts[1]);
-      
+
       // 10.0.0.0/8
       if (firstOctet === 10) return true;
-      
+
       // 172.16.0.0/12
-      if (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31) return true;
-      
+      if (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31)
+        return true;
+
       // 192.168.0.0/16
       if (firstOctet === 192 && secondOctet === 168) return true;
     }
@@ -79,9 +80,11 @@ export class CertificateValidator {
    */
   private isExternalDomain(hostname: string): boolean {
     // Si no es IP local y no es localhost, es externo
-    return !this.isLocalNetwork(hostname) && 
-           !hostname.includes('.local') && 
-           !hostname.includes('.internal');
+    return (
+      !this.isLocalNetwork(hostname) &&
+      !hostname.includes('.local') &&
+      !hostname.includes('.internal')
+    );
   }
 
   /**
@@ -96,7 +99,7 @@ export class CertificateValidator {
         },
       };
     }
-    
+
     return {};
   }
 
@@ -108,7 +111,7 @@ export class CertificateValidator {
     if (!this.isSecureUrl(url)) {
       throw new Error(
         `Conexión insegura bloqueada: ${url}. ` +
-        'En producción solo se permiten conexiones HTTPS a dominios externos.'
+          'En producción solo se permiten conexiones HTTPS a dominios externos.',
       );
     }
   }

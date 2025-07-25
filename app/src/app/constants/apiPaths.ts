@@ -130,7 +130,7 @@ export const API_PATHS = {
   FILES_CHECK: '/api/v1/files/',
 
   // Audio Orders
-  AUDIO_ORDERS_PROCESS: '/api/audio-orders/process',
+  AUDIO_ORDERS_PROCESS: '/api/v1/audio-orders/process',
   AUDIO_ORDERS_HEALTH: '/api/v1/audio-orders/health',
 
   // Health & Discovery

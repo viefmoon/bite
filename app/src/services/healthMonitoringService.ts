@@ -105,7 +105,7 @@ class HealthMonitoringService extends EventEmitter {
       if (response.data.status === 'ok') {
         // Backend está saludable
         const wasUnavailable = !this.state.isAvailable;
-        
+
         this.updateState({
           status: 'ok',
           isAvailable: true,
@@ -242,11 +242,11 @@ class HealthMonitoringService extends EventEmitter {
   async forceCheck(): Promise<boolean> {
     this.retryCount = 0; // Reset retry count
     const result = await this.checkHealth();
-    
+
     // Forzar emisión del estado actual después del check
     // Esto asegura que todos los componentes se actualicen
     this.emit('stateChange', this.state);
-    
+
     return result;
   }
 }

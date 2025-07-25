@@ -196,15 +196,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         onPress={handleSubmit((data) => onSubmit(data, rememberMe))}
         loading={isLoading}
         disabled={isLoading}
-        style={[styles.button, { 
-          backgroundColor: theme.colors.primary,
-          borderRadius: 30,
-        }]}
-        contentStyle={{ 
+        style={[
+          styles.button,
+          {
+            backgroundColor: theme.colors.primary,
+            borderRadius: 30,
+          },
+        ]}
+        contentStyle={{
           height: 42,
           paddingHorizontal: responsive.spacingPreset.s,
         }}
-        labelStyle={{ 
+        labelStyle={{
           fontSize: responsive.fontSizePreset.m,
           fontWeight: '600',
         }}

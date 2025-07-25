@@ -1,9 +1,7 @@
 import type { FieldErrors, FieldValues, ResolverResult } from 'react-hook-form';
 import type { ZodSchema, ZodError } from 'zod';
 
-export function zodResolver<T extends FieldValues>(
-  schema: ZodSchema<T>
-) {
+export function zodResolver<T extends FieldValues>(schema: ZodSchema<T>) {
   return async (data: T): Promise<ResolverResult<T>> => {
     try {
       const validatedData = await schema.parseAsync(data);

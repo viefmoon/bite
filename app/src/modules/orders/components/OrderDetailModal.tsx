@@ -134,7 +134,8 @@ export const OrderDetailContent: React.FC<{
                       <View style={styles.itemTitleRow}>
                         <Text style={styles.itemName}>
                           {item.product?.name || 'Producto desconocido'}
-                          {item.productVariant && ` - ${item.productVariant.name}`}
+                          {item.productVariant &&
+                            ` - ${item.productVariant.name}`}
                         </Text>
                         <Chip
                           mode="flat"

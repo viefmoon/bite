@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { ScrollView, RefreshControl, View, useWindowDimensions } from 'react-native';
+import {
+  ScrollView,
+  RefreshControl,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import {
   Card,
   List,
@@ -33,7 +38,7 @@ export function SyncStatusScreen() {
   const { isTablet, deviceType } = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Ajustar padding según el dispositivo
   const contentPadding = isTablet ? theme.spacing.l : theme.spacing.m;
 
@@ -101,7 +106,10 @@ export function SyncStatusScreen() {
   };
 
   // Crear estilos dinámicos con el tema
-  const styles = React.useMemo(() => createStyles(theme, isTablet), [theme, isTablet]);
+  const styles = React.useMemo(
+    () => createStyles(theme, isTablet),
+    [theme, isTablet],
+  );
 
   if (isLoadingStatus || isLoadingActivity) {
     return (
@@ -131,8 +139,8 @@ export function SyncStatusScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={handleRefresh}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}
@@ -161,7 +169,11 @@ export function SyncStatusScreen() {
                 <List.Icon
                   {...props}
                   icon={syncStatus?.enabled ? 'check-circle' : 'close-circle'}
-                  color={syncStatus?.enabled ? theme.colors.success : theme.colors.error}
+                  color={
+                    syncStatus?.enabled
+                      ? theme.colors.success
+                      : theme.colors.error
+                  }
                 />
               )}
             />
@@ -169,23 +181,23 @@ export function SyncStatusScreen() {
               title="WebSocket"
               titleStyle={styles.listItemTitle}
               description={
-                syncStatus?.webSocketEnabled 
-                  ? syncStatus?.webSocketConnected 
+                syncStatus?.webSocketEnabled
+                  ? syncStatus?.webSocketConnected
                     ? 'Conectado'
                     : syncStatus?.webSocketFailed
-                    ? 'Conexión fallida'
-                    : 'Intentando conectar...'
+                      ? 'Conexión fallida'
+                      : 'Intentando conectar...'
                   : 'Deshabilitado'
               }
               descriptionStyle={[
                 styles.listItemDescription,
-                syncStatus?.webSocketFailed && { color: theme.colors.error }
+                syncStatus?.webSocketFailed && { color: theme.colors.error },
               ]}
               left={(props) => (
                 <List.Icon
                   {...props}
                   icon={
-                    syncStatus?.webSocketFailed 
+                    syncStatus?.webSocketFailed
                       ? 'access-point-off'
                       : 'access-point'
                   }
@@ -193,10 +205,10 @@ export function SyncStatusScreen() {
                     syncStatus?.webSocketConnected
                       ? theme.colors.success
                       : syncStatus?.webSocketFailed
-                      ? theme.colors.error
-                      : syncStatus?.webSocketEnabled
-                      ? theme.colors.warning
-                      : theme.colors.outline
+                        ? theme.colors.error
+                        : syncStatus?.webSocketEnabled
+                          ? theme.colors.warning
+                          : theme.colors.outline
                   }
                 />
               )}
@@ -247,7 +259,10 @@ export function SyncStatusScreen() {
                           color={getStatusColor(activity.success)}
                         />
                         <View style={styles.activityInfo}>
-                          <Text variant="bodyMedium" style={styles.activityType}>
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.activityType}
+                          >
                             {SYNC_TYPE_LABELS[activity.type]}
                           </Text>
                           <Text variant="bodySmall" style={styles.activityTime}>
@@ -259,11 +274,15 @@ export function SyncStatusScreen() {
                         <Chip
                           compact
                           mode="flat"
-                          textStyle={[styles.chipText, {
-                            color: activity.direction === 'IN' 
-                              ? theme.colors.onInfoContainer 
-                              : theme.colors.onSuccessContainer
-                          }]}
+                          textStyle={[
+                            styles.chipText,
+                            {
+                              color:
+                                activity.direction === 'IN'
+                                  ? theme.colors.onInfoContainer
+                                  : theme.colors.onSuccessContainer,
+                            },
+                          ]}
                           style={[
                             styles.directionChip,
                             activity.direction === 'IN'
@@ -308,10 +327,14 @@ export function SyncStatusScreen() {
         <Card style={[styles.card, styles.infoCard]} mode="contained">
           <Card.Content>
             <View style={styles.infoRow}>
-              <Icon source="information-outline" size={20} color={theme.colors.onInfoContainer} />
+              <Icon
+                source="information-outline"
+                size={20}
+                color={theme.colors.onInfoContainer}
+              />
               <Text variant="bodySmall" style={styles.infoText}>
-                La sincronización se ejecuta automáticamente cuando hay cambios pendientes.
-                No es necesaria ninguna acción manual.
+                La sincronización se ejecuta automáticamente cuando hay cambios
+                pendientes. No es necesaria ninguna acción manual.
               </Text>
             </View>
           </Card.Content>
@@ -321,123 +344,127 @@ export function SyncStatusScreen() {
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>, isTablet: boolean) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContent: {
-    paddingBottom: theme.spacing.xl,
-  },
-  scrollContentTablet: {
-    maxWidth: 800,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.m,
-    color: theme.colors.onSurfaceVariant,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  errorText: {
-    marginTop: theme.spacing.m,
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-  },
-  card: {
-    marginBottom: theme.spacing.m,
-    elevation: 2,
-  },
-  listItemTitle: {
-    fontSize: isTablet ? 16 : 14,
-    color: theme.colors.onSurface,
-  },
-  listItemDescription: {
-    fontSize: isTablet ? 14 : 12,
-    color: theme.colors.onSurfaceVariant,
-  },
-  activityItem: {
-    padding: theme.spacing.m,
-    borderRadius: theme.roundness,
-    marginVertical: theme.spacing.xs,
-    backgroundColor: theme.colors.surfaceVariant,
-  },
-  activityItemError: {
-    backgroundColor: theme.colors.errorContainer,
-  },
-  activityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  activityLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  activityInfo: {
-    marginLeft: theme.spacing.m,
-    flex: 1,
-  },
-  activityType: {
-    fontWeight: '500',
-    color: theme.colors.onSurface,
-  },
-  activityTime: {
-    opacity: 0.7,
-    marginTop: 2,
-    color: theme.colors.onSurfaceVariant,
-  },
-  activityRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.s,
-  },
-  directionChip: {
-    height: 24,
-  },
-  chipText: {
-    fontSize: isTablet ? 12 : 11,
-    marginVertical: 0,
-    marginHorizontal: theme.spacing.s,
-  },
-  chipIn: {
-    backgroundColor: theme.colors.infoContainer,
-  },
-  chipOut: {
-    backgroundColor: theme.colors.successContainer,
-  },
-  divider: {
-    marginVertical: theme.spacing.xs,
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  emptyText: {
-    marginTop: theme.spacing.m,
-  },
-  infoCard: {
-    backgroundColor: theme.colors.infoContainer,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  infoText: {
-    marginLeft: theme.spacing.s,
-    flex: 1,
-    lineHeight: 20,
-    color: theme.colors.onInfoContainer,
-  },
-});
+const createStyles = (
+  theme: ReturnType<typeof useAppTheme>,
+  isTablet: boolean,
+) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      paddingBottom: theme.spacing.xl,
+    },
+    scrollContentTablet: {
+      maxWidth: 800,
+      alignSelf: 'center',
+      width: '100%',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: theme.spacing.m,
+      color: theme.colors.onSurfaceVariant,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    errorText: {
+      marginTop: theme.spacing.m,
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+    },
+    card: {
+      marginBottom: theme.spacing.m,
+      elevation: 2,
+    },
+    listItemTitle: {
+      fontSize: isTablet ? 16 : 14,
+      color: theme.colors.onSurface,
+    },
+    listItemDescription: {
+      fontSize: isTablet ? 14 : 12,
+      color: theme.colors.onSurfaceVariant,
+    },
+    activityItem: {
+      padding: theme.spacing.m,
+      borderRadius: theme.roundness,
+      marginVertical: theme.spacing.xs,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    activityItemError: {
+      backgroundColor: theme.colors.errorContainer,
+    },
+    activityHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    activityLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    activityInfo: {
+      marginLeft: theme.spacing.m,
+      flex: 1,
+    },
+    activityType: {
+      fontWeight: '500',
+      color: theme.colors.onSurface,
+    },
+    activityTime: {
+      opacity: 0.7,
+      marginTop: 2,
+      color: theme.colors.onSurfaceVariant,
+    },
+    activityRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    directionChip: {
+      height: 24,
+    },
+    chipText: {
+      fontSize: isTablet ? 12 : 11,
+      marginVertical: 0,
+      marginHorizontal: theme.spacing.s,
+    },
+    chipIn: {
+      backgroundColor: theme.colors.infoContainer,
+    },
+    chipOut: {
+      backgroundColor: theme.colors.successContainer,
+    },
+    divider: {
+      marginVertical: theme.spacing.xs,
+    },
+    emptyState: {
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    emptyText: {
+      marginTop: theme.spacing.m,
+    },
+    infoCard: {
+      backgroundColor: theme.colors.infoContainer,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    infoText: {
+      marginLeft: theme.spacing.s,
+      flex: 1,
+      lineHeight: 20,
+      color: theme.colors.onInfoContainer,
+    },
+  });

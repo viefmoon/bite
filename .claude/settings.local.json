@@ -69,7 +69,8 @@
       "Bash(npx expo export:*)",
       "Bash(npx kill-port:*)",
       "Bash(docker compose:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

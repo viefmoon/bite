@@ -21,7 +21,10 @@ import {
 } from '../dto/process-audio-order.dto';
 
 @ApiTags('Audio Orders')
-@Controller('audio-orders')
+@Controller({
+  path: 'audio-orders',
+  version: '1',
+})
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class AudioOrderProcessingController {

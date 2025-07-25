@@ -176,11 +176,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                         },
                       ]}
                     >
-                      <Icon
-                        source="whatsapp"
-                        size={12}
-                        color="#FFFFFF"
-                      />
+                      <Icon source="whatsapp" size={12} color="#FFFFFF" />
                     </View>
                   )}
 

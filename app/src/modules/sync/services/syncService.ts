@@ -37,7 +37,10 @@ class SyncService {
       const status = await this.getSyncStatus();
       return status.enabled;
     } catch (error) {
-      console.error('Error verificando disponibilidad de sincronización:', error);
+      console.error(
+        'Error verificando disponibilidad de sincronización:',
+        error,
+      );
       return false;
     }
   }

@@ -23,16 +23,21 @@ export function useKitchenOrders(filters: Partial<KitchenFilters> = {}) {
 // Hooks que NO invalidan toda la query
 export function useMarkItemPrepared() {
   const { markItemPrepared } = useGranularKitchenUpdates();
-  
+
   return useMutation({
-    mutationFn: ({ itemId, isPrepared }: { itemId: string; isPrepared: boolean }) => 
-      markItemPrepared(itemId, isPrepared),
+    mutationFn: ({
+      itemId,
+      isPrepared,
+    }: {
+      itemId: string;
+      isPrepared: boolean;
+    }) => markItemPrepared(itemId, isPrepared),
   });
 }
 
 export function useStartOrderPreparation() {
   const { startOrderPreparation } = useGranularKitchenUpdates();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => startOrderPreparation(orderId),
   });
@@ -40,7 +45,7 @@ export function useStartOrderPreparation() {
 
 export function useCancelOrderPreparation() {
   const { cancelOrderPreparation } = useGranularKitchenUpdates();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => cancelOrderPreparation(orderId),
   });
@@ -48,7 +53,7 @@ export function useCancelOrderPreparation() {
 
 export function useCompleteOrderPreparation() {
   const { completeOrderPreparation } = useGranularKitchenUpdates();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => completeOrderPreparation(orderId),
   });

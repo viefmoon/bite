@@ -157,10 +157,17 @@ export const useResponsive = (): ResponsiveInfo => {
     [isWeb, dimensions.width],
   );
   const isTablet = useMemo(
-    () => checkIsTablet(dimensions.width) || (isWeb && dimensions.width >= BREAKPOINTS.md && dimensions.width < BREAKPOINTS.lg),
+    () =>
+      checkIsTablet(dimensions.width) ||
+      (isWeb &&
+        dimensions.width >= BREAKPOINTS.md &&
+        dimensions.width < BREAKPOINTS.lg),
     [dimensions.width, isWeb],
   );
-  const isMobile = useMemo(() => !isTablet && !isDesktop, [isTablet, isDesktop]);
+  const isMobile = useMemo(
+    () => !isTablet && !isDesktop,
+    [isTablet, isDesktop],
+  );
   const isSmallMobile = useMemo(
     () => deviceType === DEVICE_TYPES.MOBILE_SMALL,
     [deviceType],

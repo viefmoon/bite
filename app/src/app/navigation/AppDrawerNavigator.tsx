@@ -134,11 +134,7 @@ export function AppDrawerNavigator() {
               onPress={() => navigation.openDrawer()}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon
-                source="menu"
-                size={32}
-                color={theme.colors.onPrimary}
-              />
+              <Icon source="menu" size={32} color={theme.colors.onPrimary} />
             </TouchableOpacity>
           ),
           headerTitle: ({ children }) => {

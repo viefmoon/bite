@@ -67,9 +67,13 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
 
     const styles = StyleSheet.create({
       container: {
-        paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
-        paddingVertical: responsive.isWeb ? responsive.spacing.s : responsive.spacing.xs,
-        minHeight: responsive.isWeb ? 52 : (responsive.isTablet ? 40 : 36),
+        paddingHorizontal: responsive.isWeb
+          ? responsive.spacing.m
+          : responsive.spacing.s,
+        paddingVertical: responsive.isWeb
+          ? responsive.spacing.s
+          : responsive.spacing.xs,
+        minHeight: responsive.isWeb ? 52 : responsive.isTablet ? 40 : 36,
         display: 'flex',
         justifyContent: 'center',
       },
@@ -95,14 +99,14 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       },
       itemName: {
         fontWeight: '500',
-        fontSize: responsive.isWeb ? 16 : (responsive.isTablet ? 13 : 14),
-        lineHeight: responsive.isWeb ? 24 : (responsive.isTablet ? 18 : 20),
+        fontSize: responsive.isWeb ? 16 : responsive.isTablet ? 13 : 14,
+        lineHeight: responsive.isWeb ? 24 : responsive.isTablet ? 18 : 20,
       },
       detail: {
         color: theme.colors.onSurfaceVariant,
         marginTop: responsive.isWeb ? 2 : -1,
-        fontSize: responsive.isWeb ? 14 : (responsive.isTablet ? 11 : 12),
-        lineHeight: responsive.isWeb ? 20 : (responsive.isTablet ? 14 : 16),
+        fontSize: responsive.isWeb ? 14 : responsive.isTablet ? 11 : 12,
+        lineHeight: responsive.isWeb ? 20 : responsive.isTablet ? 14 : 16,
       },
       strikethrough: {
         textDecorationLine: 'line-through',

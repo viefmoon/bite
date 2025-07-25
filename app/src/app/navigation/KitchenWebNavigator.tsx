@@ -97,15 +97,15 @@ export function KitchenWebNavigator() {
           backgroundColor={theme.colors.primary}
           barStyle={theme.dark ? 'light-content' : 'dark-content'}
         />
-        
+
         <WebDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          drawerWidth={responsive.isWeb ? 320 : responsive.dimensions.drawerWidth}
+          drawerWidth={
+            responsive.isWeb ? 320 : responsive.dimensions.drawerWidth
+          }
           drawerContent={
-            <WebDrawerContent 
-              onClose={() => setDrawerOpen(false)}
-            />
+            <WebDrawerContent onClose={() => setDrawerOpen(false)} />
           }
         >
           <View style={styles.container}>

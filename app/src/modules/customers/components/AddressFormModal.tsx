@@ -95,8 +95,12 @@ export default function AddressFormModal({
         country: editingItem.country || 'México',
         deliveryInstructions: editingItem.deliveryInstructions || '',
         // Convertir a número si existe, undefined si no
-        latitude: editingItem.latitude ? Number(editingItem.latitude) : undefined,
-        longitude: editingItem.longitude ? Number(editingItem.longitude) : undefined,
+        latitude: editingItem.latitude
+          ? Number(editingItem.latitude)
+          : undefined,
+        longitude: editingItem.longitude
+          ? Number(editingItem.longitude)
+          : undefined,
         isDefault: editingItem.isDefault,
       });
     } else {
@@ -946,45 +950,46 @@ export default function AddressFormModal({
                   console.log('Button clicked');
                   console.log('Form state:', watch());
                   console.log('Form errors:', errors);
-                  
-                  handleSubmit(
-                    handleFormSubmit,
-                    (validationErrors) => {
-                      console.log('Validation errors:', validationErrors);
-                      // Obtener todos los errores
-                      const errorMessages = Object.entries(validationErrors)
-                        .map(([field, error]) => {
-                          if (error && 'message' in error) {
-                            // Mapear nombres de campos a nombres legibles
-                            const fieldNames: Record<string, string> = {
-                              name: 'Nombre de la dirección',
-                              street: 'Calle',
-                              number: 'Número',
-                              neighborhood: 'Colonia',
-                              city: 'Ciudad',
-                              state: 'Estado',
-                              zipCode: 'Código postal',
-                              country: 'País',
-                            };
-                            const fieldName = fieldNames[field] || field;
-                            return `${fieldName}: ${error.message}`;
-                          }
-                          return null;
-                        })
-                        .filter(Boolean);
 
-                      if (errorMessages.length > 0) {
-                        // Mostrar el primer error
-                        showSnackbar({
-                          message: errorMessages[0],
-                          type: 'error',
-                        });
-                        
-                        // Hacer scroll al principio del formulario
-                        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
-                      }
-                    },
-                  )();
+                  handleSubmit(handleFormSubmit, (validationErrors) => {
+                    console.log('Validation errors:', validationErrors);
+                    // Obtener todos los errores
+                    const errorMessages = Object.entries(validationErrors)
+                      .map(([field, error]) => {
+                        if (error && 'message' in error) {
+                          // Mapear nombres de campos a nombres legibles
+                          const fieldNames: Record<string, string> = {
+                            name: 'Nombre de la dirección',
+                            street: 'Calle',
+                            number: 'Número',
+                            neighborhood: 'Colonia',
+                            city: 'Ciudad',
+                            state: 'Estado',
+                            zipCode: 'Código postal',
+                            country: 'País',
+                          };
+                          const fieldName = fieldNames[field] || field;
+                          return `${fieldName}: ${error.message}`;
+                        }
+                        return null;
+                      })
+                      .filter(Boolean);
+
+                    if (errorMessages.length > 0) {
+                      // Mostrar el primer error
+                      showSnackbar({
+                        message: errorMessages[0],
+                        type: 'error',
+                      });
+
+                      // Hacer scroll al principio del formulario
+                      scrollViewRef.current?.scrollTo({
+                        x: 0,
+                        y: 0,
+                        animated: true,
+                      });
+                    }
+                  })();
                 }}
                 disabled={isSubmitting}
                 loading={isSubmitting}

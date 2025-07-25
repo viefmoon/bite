@@ -40,7 +40,7 @@ class ServerConnectionService {
   constructor() {
     this.loadConnectionMode();
     this.initializeListeners();
-    
+
     setTimeout(() => {
       if (!this.state.isConnected && !this.state.isConnecting) {
         this.connect().catch(() => {});
@@ -50,7 +50,9 @@ class ServerConnectionService {
 
   private async loadConnectionMode() {
     try {
-      const savedMode = await EncryptedStorage.getItem('connection_mode') as ConnectionMode;
+      const savedMode = (await EncryptedStorage.getItem(
+        'connection_mode',
+      )) as ConnectionMode;
       if (savedMode) {
         this.state.mode = savedMode;
       }
@@ -59,22 +61,23 @@ class ServerConnectionService {
 
   private initializeListeners() {
     this.netInfoUnsubscribe = NetInfo.addEventListener((state) => {
-      const hasWifi = !!state.isConnected && 
+      const hasWifi =
+        !!state.isConnected &&
         (state.type === 'wifi' || state.type === 'ethernet');
-      
+
       const previousHasWifi = this.state.hasWifi;
-      
+
       // Si perdemos el WiFi, también perdemos la conexión
       if (!hasWifi && previousHasWifi) {
-        this.updateState({ 
+        this.updateState({
           hasWifi: false,
           isConnected: false,
           isHealthy: false,
-          error: 'Sin conexión WiFi'
+          error: 'Sin conexión WiFi',
         });
         // Detener el monitoreo de salud cuando no hay WiFi
         healthMonitoringService.stopMonitoring();
-      } 
+      }
       // Si recuperamos el WiFi y no estamos conectados, intentar reconectar
       else if (hasWifi && !previousHasWifi) {
         this.updateState({ hasWifi });
@@ -89,37 +92,43 @@ class ServerConnectionService {
       }
     });
 
-    this.healthUnsubscribe = healthMonitoringService.subscribe((healthState) => {
-      const previousHealthy = this.state.isHealthy;
-      this.updateState({ 
-        isHealthy: healthState.isAvailable,
-        error: healthState.message || this.state.error
-      });
-      
-      if (!previousHealthy && healthState.isAvailable && this.state.hasWifi) {
+    this.healthUnsubscribe = healthMonitoringService.subscribe(
+      (healthState) => {
+        const previousHealthy = this.state.isHealthy;
         this.updateState({
-          isConnected: true,
-          isHealthy: true,
-          error: null,
-          isSearching: false
+          isHealthy: healthState.isAvailable,
+          error: healthState.message || this.state.error,
         });
-      }
-    });
 
-    this.reconnectUnsubscribe = autoReconnectService.subscribe((reconnectState) => {
-      this.updateState({ 
-        isSearching: reconnectState.isReconnecting,
-        error: reconnectState.lastError || this.state.error
-      });
-    });
+        if (!previousHealthy && healthState.isAvailable && this.state.hasWifi) {
+          this.updateState({
+            isConnected: true,
+            isHealthy: true,
+            error: null,
+            isSearching: false,
+          });
+        }
+      },
+    );
+
+    this.reconnectUnsubscribe = autoReconnectService.subscribe(
+      (reconnectState) => {
+        this.updateState({
+          isSearching: reconnectState.isReconnecting,
+          error: reconnectState.lastError || this.state.error,
+        });
+      },
+    );
 
     autoReconnectService.on('reconnected', async () => {
       const apiUrl = await discoveryService.getApiUrl();
-      
+
       // Reinicializar el API client con la nueva URL
-      const { reinitializeApiClient } = await import('@/app/services/apiClient');
+      const { reinitializeApiClient } = await import(
+        '@/app/services/apiClient'
+      );
       await reinitializeApiClient(apiUrl);
-      
+
       this.updateState({
         isConnected: true,
         isConnecting: false,
@@ -134,11 +143,13 @@ class ServerConnectionService {
 
     healthMonitoringService.on('recovered', async () => {
       const apiUrl = await discoveryService.getApiUrl();
-      
+
       // Reinicializar el API client con la nueva URL
-      const { reinitializeApiClient } = await import('@/app/services/apiClient');
+      const { reinitializeApiClient } = await import(
+        '@/app/services/apiClient'
+      );
       await reinitializeApiClient(apiUrl);
-      
+
       this.updateState({
         isConnected: true,
         isConnecting: false,
@@ -148,17 +159,18 @@ class ServerConnectionService {
         lastError: null,
         isSearching: false,
       });
-      
+
       if (!healthMonitoringService.isMonitoring()) {
         healthMonitoringService.startMonitoring();
       }
     });
 
     NetInfo.fetch().then((state) => {
-      const hasWifi = !!state.isConnected && 
+      const hasWifi =
+        !!state.isConnected &&
         (state.type === 'wifi' || state.type === 'ethernet');
       this.updateState({ hasWifi });
-      
+
       // Si tenemos WiFi pero no estamos conectados, intentar conectar
       if (hasWifi && !this.state.isConnected && !this.state.isConnecting) {
         setTimeout(() => {
@@ -170,7 +182,7 @@ class ServerConnectionService {
 
   async setConnectionMode(mode: ConnectionMode) {
     this.state.mode = mode;
-    
+
     // Si cambiamos a manual, actualizar la URL actual inmediatamente
     if (mode === 'manual') {
       const url = await discoveryService.getApiUrl();
@@ -178,7 +190,7 @@ class ServerConnectionService {
         this.updateState({ currentUrl: url });
       }
     }
-    
+
     this.notifyListeners();
   }
 
@@ -193,7 +205,7 @@ class ServerConnectionService {
     }
 
     this.connectionPromise = this.performConnection();
-    
+
     try {
       await this.connectionPromise;
     } finally {
@@ -213,7 +225,8 @@ class ServerConnectionService {
           // Primero intentar con la última URL conocida
           apiUrl = await discoveryService.getLastKnownUrl();
           if (apiUrl) {
-            const isHealthy = await healthMonitoringService.checkHealthWithUrl(apiUrl);
+            const isHealthy =
+              await healthMonitoringService.checkHealthWithUrl(apiUrl);
             if (!isHealthy) {
               // Si falla, intentar descubrimiento
               apiUrl = await discoveryService.discoverServer();
@@ -242,9 +255,10 @@ class ServerConnectionService {
       if (this.state.mode === 'auto') {
         await discoveryService.setServerUrl(apiUrl, false);
       }
-      
+
       // Verificar que el servidor esté respondiendo
-      const isHealthy = await healthMonitoringService.checkHealthWithUrl(apiUrl);
+      const isHealthy =
+        await healthMonitoringService.checkHealthWithUrl(apiUrl);
       if (!isHealthy) {
         throw new Error('El servidor no está respondiendo correctamente');
       }
@@ -253,7 +267,9 @@ class ServerConnectionService {
       healthMonitoringService.startMonitoring();
 
       // Reinicializar el API client con la nueva URL
-      const { reinitializeApiClient } = await import('@/app/services/apiClient');
+      const { reinitializeApiClient } = await import(
+        '@/app/services/apiClient'
+      );
       await reinitializeApiClient(apiUrl);
 
       this.updateState({
@@ -263,9 +279,9 @@ class ServerConnectionService {
         isHealthy: true,
         error: null,
       });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
       this.updateState({
         isConnected: false,
         isConnecting: false,
@@ -287,9 +303,9 @@ class ServerConnectionService {
       autoReconnectService.startAutoReconnect();
     } else if (!this.state.hasWifi) {
       // Si no hay WiFi, actualizar el estado de error
-      this.updateState({ 
+      this.updateState({
         error: 'Sin conexión WiFi',
-        lastError: 'Sin conexión WiFi'
+        lastError: 'Sin conexión WiFi',
       });
     }
   }
@@ -327,7 +343,7 @@ class ServerConnectionService {
 
     // Retornar función para desuscribirse
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
@@ -349,7 +365,7 @@ class ServerConnectionService {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(listener => listener(this.state));
+    this.listeners.forEach((listener) => listener(this.state));
   }
 }
 

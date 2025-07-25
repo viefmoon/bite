@@ -139,7 +139,8 @@ const RestaurantConfigScreen: React.FC = () => {
       formData.closingGracePeriod !== config.closingGracePeriod ||
       formData.timeZone !== config.timeZone ||
       formData.scheduledOrdersLeadTime !== config.scheduledOrdersLeadTime ||
-      formData.minimumOrderValueForDelivery !== config.minimumOrderValueForDelivery;
+      formData.minimumOrderValueForDelivery !==
+        config.minimumOrderValueForDelivery;
 
     // Comparar área de cobertura
     const deliveryAreaChanged =
@@ -235,9 +236,10 @@ const RestaurantConfigScreen: React.FC = () => {
         scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         // Configuración de delivery
         deliveryCoverageArea: config.deliveryCoverageArea,
-        minimumOrderValueForDelivery: typeof config.minimumOrderValueForDelivery === 'string' 
-          ? parseFloat(config.minimumOrderValueForDelivery) 
-          : config.minimumOrderValueForDelivery,
+        minimumOrderValueForDelivery:
+          typeof config.minimumOrderValueForDelivery === 'string'
+            ? parseFloat(config.minimumOrderValueForDelivery)
+            : config.minimumOrderValueForDelivery,
         // Horarios
         businessHours: initialBusinessHours,
       });
@@ -344,9 +346,10 @@ const RestaurantConfigScreen: React.FC = () => {
         timeZone: config.timeZone || 'America/Mexico_City',
         scheduledOrdersLeadTime: config.scheduledOrdersLeadTime,
         deliveryCoverageArea: config.deliveryCoverageArea,
-        minimumOrderValueForDelivery: typeof config.minimumOrderValueForDelivery === 'string' 
-          ? parseFloat(config.minimumOrderValueForDelivery) 
-          : config.minimumOrderValueForDelivery,
+        minimumOrderValueForDelivery:
+          typeof config.minimumOrderValueForDelivery === 'string'
+            ? parseFloat(config.minimumOrderValueForDelivery)
+            : config.minimumOrderValueForDelivery,
         businessHours: initialBusinessHours,
       });
     }

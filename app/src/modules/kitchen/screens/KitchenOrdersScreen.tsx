@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import { View, StyleSheet, ScrollView, Animated, Platform } from 'react-native';
 import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -24,11 +30,7 @@ export default function KitchenOrdersScreen() {
   const [isSwipingCard, setIsSwipingCard] = useState(false);
   const { refetchRef } = useKitchenContext();
 
-  const {
-    data: orders,
-    isLoading,
-    refetch,
-  } = useKitchenOrders(filters);
+  const { data: orders, isLoading, refetch } = useKitchenOrders(filters);
   const startOrderPreparation = useStartOrderPreparation();
   const cancelOrderPreparation = useCancelOrderPreparation();
   const completeOrderPreparation = useCompleteOrderPreparation();
@@ -39,8 +41,11 @@ export default function KitchenOrdersScreen() {
 
   const hasOrders = !!orders?.length;
 
-  const styles = useMemo(() => createStyles(theme, responsive), [theme, responsive]);
-  
+  const styles = useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
+
   const cardWidth = useMemo(() => {
     if (responsive.isDesktop) {
       // En desktop, las tarjetas son más grandes
@@ -55,17 +60,26 @@ export default function KitchenOrdersScreen() {
       : responsive.getResponsiveDimension(240, 280);
   }, [responsive.isTablet, responsive.isDesktop, responsive.isWeb]);
 
-  const handleStartPreparation = useCallback((orderId: string) => {
-    startOrderPreparation.mutate(orderId);
-  }, [startOrderPreparation]);
+  const handleStartPreparation = useCallback(
+    (orderId: string) => {
+      startOrderPreparation.mutate(orderId);
+    },
+    [startOrderPreparation],
+  );
 
-  const handleCancelPreparation = useCallback((orderId: string) => {
-    cancelOrderPreparation.mutate(orderId);
-  }, [cancelOrderPreparation]);
+  const handleCancelPreparation = useCallback(
+    (orderId: string) => {
+      cancelOrderPreparation.mutate(orderId);
+    },
+    [cancelOrderPreparation],
+  );
 
-  const handleCompletePreparation = useCallback((orderId: string) => {
-    completeOrderPreparation.mutate(orderId);
-  }, [completeOrderPreparation]);
+  const handleCompletePreparation = useCallback(
+    (orderId: string) => {
+      completeOrderPreparation.mutate(orderId);
+    },
+    [completeOrderPreparation],
+  );
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
@@ -161,109 +175,115 @@ export default function KitchenOrdersScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        {hasOrders ? (
-          <ScrollView
-            horizontal={!responsive.isWeb || responsive.width < 1200}
-            scrollEnabled={!isSwipingCard}
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled={false}
-            contentContainerStyle={[
-              styles.horizontalListContainer,
-              responsive.isWeb && responsive.width >= 1200 && styles.gridContainer
-            ]}
-            snapToInterval={responsive.isWeb ? undefined : cardWidth + responsive.spacing.m}
-            decelerationRate="fast"
-            snapToAlignment={responsive.isWeb ? undefined : "start"}
-          >
-            {orders.map((item, index) => (
-              <View
-                key={item.id}
-                style={[
-                  {
-                    width: cardWidth,
-                    marginRight:
-                      index === orders.length - 1 ? 0 : responsive.spacing.xxs,
-                    height: '100%',
-                    paddingVertical: responsive.spacing.xxxs,
-                  },
-                  responsive.isWeb && responsive.width >= 1200 && {
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      {hasOrders ? (
+        <ScrollView
+          horizontal={!responsive.isWeb || responsive.width < 1200}
+          scrollEnabled={!isSwipingCard}
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled={false}
+          contentContainerStyle={[
+            styles.horizontalListContainer,
+            responsive.isWeb &&
+              responsive.width >= 1200 &&
+              styles.gridContainer,
+          ]}
+          snapToInterval={
+            responsive.isWeb ? undefined : cardWidth + responsive.spacing.m
+          }
+          decelerationRate="fast"
+          snapToAlignment={responsive.isWeb ? undefined : 'start'}
+        >
+          {orders.map((item, index) => (
+            <View
+              key={item.id}
+              style={[
+                {
+                  width: cardWidth,
+                  marginRight:
+                    index === orders.length - 1 ? 0 : responsive.spacing.xxs,
+                  height: '100%',
+                  paddingVertical: responsive.spacing.xxxs,
+                },
+                responsive.isWeb &&
+                  responsive.width >= 1200 && {
                     marginRight: responsive.spacing.s,
                     marginBottom: responsive.spacing.s,
                     height: 'auto',
-                  }
-                ]}
-              >
-                <OrderCard
-                  order={item}
-                  onStartPreparation={handleStartPreparation}
-                  onCancelPreparation={handleCancelPreparation}
-                  onCompletePreparation={handleCompletePreparation}
-                  onSwipeStart={handleSwipeStart}
-                  onSwipeEnd={handleSwipeEnd}
-                />
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <View
-            style={styles.emptyStateContainer}
-          >
-            <Surface
-              style={styles.emptyCard}
-              elevation={4}
+                  },
+              ]}
             >
-              <Animated.View
-                style={[
-                  styles.emptyIconContainer,
-                  { transform: [{ scale: pulseAnim }] },
-                ]}
-              >
-                <Icon
-                  name={
-                    filters.orderType ||
-                    filters.showPrepared ||
-                    !filters.showAllProducts
-                      ? 'filter-remove'
-                      : 'chef-hat'
-                  }
-                  size={responsive.isWeb ? 64 : responsive.getResponsiveDimension(32, 40)}
-                  color={theme.colors.primary}
-                />
-              </Animated.View>
-              <Text
-                variant="titleMedium"
-                style={[styles.emptyText, { color: theme.colors.onSurface }]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-              >
-                {emptyMessage.title}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.emptySubtext,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-              >
-                {emptyMessage.subtitle}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={[
-                  styles.emptyHint,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-              >
-                {emptyMessage.hint}
-              </Text>
-            </Surface>
-          </View>
-        )}
+              <OrderCard
+                order={item}
+                onStartPreparation={handleStartPreparation}
+                onCancelPreparation={handleCancelPreparation}
+                onCompletePreparation={handleCompletePreparation}
+                onSwipeStart={handleSwipeStart}
+                onSwipeEnd={handleSwipeEnd}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.emptyStateContainer}>
+          <Surface style={styles.emptyCard} elevation={4}>
+            <Animated.View
+              style={[
+                styles.emptyIconContainer,
+                { transform: [{ scale: pulseAnim }] },
+              ]}
+            >
+              <Icon
+                name={
+                  filters.orderType ||
+                  filters.showPrepared ||
+                  !filters.showAllProducts
+                    ? 'filter-remove'
+                    : 'chef-hat'
+                }
+                size={
+                  responsive.isWeb
+                    ? 64
+                    : responsive.getResponsiveDimension(32, 40)
+                }
+                color={theme.colors.primary}
+              />
+            </Animated.View>
+            <Text
+              variant="titleMedium"
+              style={[styles.emptyText, { color: theme.colors.onSurface }]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              {emptyMessage.title}
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[
+                styles.emptySubtext,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              {emptyMessage.subtitle}
+            </Text>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.emptyHint,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              {emptyMessage.hint}
+            </Text>
+          </Surface>
+        </View>
+      )}
     </View>
   );
 }
@@ -281,11 +301,18 @@ const createStyles = (theme: any, responsive: any) =>
       backgroundColor: theme.colors.background,
     },
     horizontalListContainer: {
-      paddingLeft: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xxs,
-      paddingRight: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xs,
-      paddingVertical: responsive.isWeb ? responsive.spacing.s : responsive.spacing.xxs,
+      paddingLeft: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.xxs,
+      paddingRight: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.xs,
+      paddingVertical: responsive.isWeb
+        ? responsive.spacing.s
+        : responsive.spacing.xxs,
       minHeight: '100%',
-      alignItems: responsive.isWeb && responsive.width >= 1200 ? 'flex-start' : 'center',
+      alignItems:
+        responsive.isWeb && responsive.width >= 1200 ? 'flex-start' : 'center',
     },
     gridContainer: {
       flexDirection: 'row',
@@ -304,12 +331,16 @@ const createStyles = (theme: any, responsive: any) =>
       backgroundColor: theme.colors.background,
     },
     emptyCard: {
-      paddingHorizontal: responsive.isWeb ? responsive.spacing.xl : responsive.spacing.m,
-      paddingVertical: responsive.isWeb ? responsive.spacing.xl : responsive.spacing.m,
+      paddingHorizontal: responsive.isWeb
+        ? responsive.spacing.xl
+        : responsive.spacing.m,
+      paddingVertical: responsive.isWeb
+        ? responsive.spacing.xl
+        : responsive.spacing.m,
       borderRadius: theme.roundness * 2,
       alignItems: 'center',
       maxHeight: '70%',
-      width: responsive.isWeb 
+      width: responsive.isWeb
         ? responsive.getResponsiveDimension(400, 480)
         : responsive.getResponsiveDimension(280, 320),
       backgroundColor: theme.colors.surface,

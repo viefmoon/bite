@@ -132,7 +132,6 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const navigation = useNavigation<any>();
 
-
   const styles = React.useMemo(
     () => createStyles(theme, responsive),
     [theme, responsive],

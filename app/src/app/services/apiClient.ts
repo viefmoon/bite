@@ -35,11 +35,11 @@ async function initializeApiClient(providedUrl?: string) {
   initializationPromise = (async () => {
     try {
       const baseURL = providedUrl || (await discoveryService.getApiUrl());
-      
+
       if (!baseURL) {
         throw new Error('No se pudo obtener la URL del servidor');
       }
-      
+
       currentBaseURL = baseURL;
 
       // Validar la seguridad de la conexión
@@ -145,7 +145,7 @@ let failedQueue: Array<{
 const processQueue = (error: Error | null, token: string | null = null) => {
   const queue = [...failedQueue];
   failedQueue = [];
-  
+
   queue.forEach((prom) => {
     error ? prom.reject(error) : prom.resolve(token!);
   });
@@ -163,14 +163,17 @@ async function refreshToken(): Promise<string> {
     }
 
     // Obtener base URL del cliente o discovery
-    const baseURL = axiosInstance?.defaults?.baseURL || 
-                   await discoveryService.getApiUrl() || 
-                   await initializeApiClient().then(() => axiosInstance?.defaults?.baseURL);
-    
+    const baseURL =
+      axiosInstance?.defaults?.baseURL ||
+      (await discoveryService.getApiUrl()) ||
+      (await initializeApiClient().then(
+        () => axiosInstance?.defaults?.baseURL,
+      ));
+
     if (!baseURL) {
       throw new Error('No base URL available');
     }
-    
+
     const { data } = await axios.post<{ token: string; refreshToken?: string }>(
       `${baseURL}${API_PATHS.AUTH_REFRESH}`,
       {},
@@ -179,11 +182,11 @@ async function refreshToken(): Promise<string> {
 
     // Actualizar tokens en paralelo si es necesario
     const updates = [authStore.setAccessToken(data.token)];
-    
+
     if (data.refreshToken && data.refreshToken !== currentRefreshToken) {
       updates.push(authStore.setRefreshToken(data.refreshToken));
     }
-    
+
     await Promise.all(updates);
 
     return data.token;
@@ -215,7 +218,7 @@ function configureInterceptors() {
         patch: 5000,
         delete: 5000,
       };
-      
+
       config.timeout = timeouts[config.method as keyof typeof timeouts] || 5000;
 
       return config;

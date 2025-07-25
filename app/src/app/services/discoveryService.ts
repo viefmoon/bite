@@ -26,7 +26,9 @@ export class DiscoveryService {
   private lastDiscoveryTime = 0;
   private logCallback: ((message: string) => void) | null = null;
   private manualUrl: string | null = null;
-  private progressCallback: ((progress: { current: number; total: number; message: string }) => void) | null = null;
+  private progressCallback:
+    | ((progress: { current: number; total: number; message: string }) => void)
+    | null = null;
 
   private constructor() {}
 
@@ -40,7 +42,15 @@ export class DiscoveryService {
   /**
    * Establece un callback para el progreso del discovery
    */
-  setProgressCallback(callback: ((progress: { current: number; total: number; message: string }) => void) | null) {
+  setProgressCallback(
+    callback:
+      | ((progress: {
+          current: number;
+          total: number;
+          message: string;
+        }) => void)
+      | null,
+  ) {
     this.progressCallback = callback;
   }
 
@@ -248,8 +258,12 @@ export class DiscoveryService {
       // Probar cada subnet hasta encontrar el servidor
       for (const subnet of subnets) {
         this.log(`🔍 Escaneando red ${subnet}.*`);
-        this.updateProgress(globalIpsScanned, totalIps, `Escaneando red ${subnet}.*`);
-        
+        this.updateProgress(
+          globalIpsScanned,
+          totalIps,
+          `Escaneando red ${subnet}.*`,
+        );
+
         const ips = this.generateIpRange(subnet);
         const chunks = this.chunkArray(
           ips,
@@ -269,7 +283,11 @@ export class DiscoveryService {
           globalIpsScanned += currentIps.length;
 
           // Actualizar progreso
-          this.updateProgress(globalIpsScanned, totalIps, `Escaneando ${subnet}.* (${Math.round((globalIpsScanned / totalIps) * 100)}%)`);
+          this.updateProgress(
+            globalIpsScanned,
+            totalIps,
+            `Escaneando ${subnet}.* (${Math.round((globalIpsScanned / totalIps) * 100)}%)`,
+          );
 
           // Buscar si alguna petición fue exitosa
           for (let j = 0; j < results.length; j++) {
@@ -277,7 +295,11 @@ export class DiscoveryService {
             if (result.status === 'fulfilled' && result.value) {
               const foundIp = currentIps[j];
               this.log(`✅ ¡SERVIDOR ENCONTRADO EN ${foundIp}!`);
-              this.updateProgress(globalIpsScanned, totalIps, `¡Servidor encontrado en ${foundIp}!`);
+              this.updateProgress(
+                globalIpsScanned,
+                totalIps,
+                `¡Servidor encontrado en ${foundIp}!`,
+              );
               return result.value;
             }
           }
@@ -389,16 +411,19 @@ export class DiscoveryService {
    * @param url - La URL del servidor (null para limpiar URL manual)
    * @param isManual - Si es true, se marca como configuración manual
    */
-  async setServerUrl(url: string | null, isManual: boolean = false): Promise<void> {
+  async setServerUrl(
+    url: string | null,
+    isManual: boolean = false,
+  ): Promise<void> {
     if (url) {
       // Actualizar cache en memoria
       this.cachedUrl = url;
-      
+
       // Si es manual, guardar referencia especial
       if (isManual) {
         this.manualUrl = url;
       }
-      
+
       // Persistir en almacenamiento seguro
       await this.saveUrl(url);
     } else if (isManual) {
@@ -407,11 +432,9 @@ export class DiscoveryService {
     }
   }
 
-
   async discoverServer(): Promise<string | null> {
     return this.discoverBackend();
   }
-
 
   /**
    * Obtiene información del servidor incluyendo URL remota si está disponible

@@ -133,7 +133,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
         onClose();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [onClose]);
@@ -164,7 +164,6 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
         contentContainerStyle={{ paddingTop: 0 }}
         showsVerticalScrollIndicator={false}
       >
-
         <View style={{ flex: 1 }}>
           <Surface style={styles.userInfoSection} elevation={0}>
             {user ? (
@@ -211,7 +210,10 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
                     />
                   </View>
                   <Text
-                    style={[styles.drawerItemLabel, { color: theme.colors.primary }]}
+                    style={[
+                      styles.drawerItemLabel,
+                      { color: theme.colors.primary },
+                    ]}
                   >
                     Pantalla de Preparación
                   </Text>
@@ -337,29 +339,34 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           </View>
         </TouchableRipple>
       </PaperDrawer.Section>
-      
+
       {/* Modal de configuración del servidor */}
       {showServerSettings && (
         <Portal>
-          <Dialog 
-            visible={showServerSettings} 
+          <Dialog
+            visible={showServerSettings}
             onDismiss={() => setShowServerSettings(false)}
             style={{ maxWidth: 600, alignSelf: 'center' }}
           >
             <Dialog.Title>Configuración del Servidor</Dialog.Title>
             <Dialog.ScrollArea style={{ maxHeight: 400 }}>
               <Text style={{ marginBottom: 16 }}>
-                Para configurar el servidor en la versión web, utiliza la aplicación móvil.
+                Para configurar el servidor en la versión web, utiliza la
+                aplicación móvil.
               </Text>
               <Text style={{ marginBottom: 8 }}>
                 La configuración del servidor incluye:
               </Text>
-              <Text style={{ marginLeft: 16 }}>• Modo de conexión (Auto/Manual)</Text>
+              <Text style={{ marginLeft: 16 }}>
+                • Modo de conexión (Auto/Manual)
+              </Text>
               <Text style={{ marginLeft: 16 }}>• URL del servidor</Text>
               <Text style={{ marginLeft: 16 }}>• Prueba de conexión</Text>
             </Dialog.ScrollArea>
             <Dialog.Actions>
-              <Button onPress={() => setShowServerSettings(false)}>Cerrar</Button>
+              <Button onPress={() => setShowServerSettings(false)}>
+                Cerrar
+              </Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>

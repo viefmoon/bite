@@ -82,7 +82,7 @@ class AudioServiceHealthChecker {
 
       // Obtener la URL del servicio de conexión sin provocar discovery
       const connectionState = serverConnectionService.getState();
-      if (!connectionState.serverUrl || !connectionState.isConnected) {
+      if (!connectionState.currentUrl || !connectionState.isConnected) {
         this.updateStatus({
           isAvailable: false,
           hasInternet: true,
@@ -93,9 +93,9 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      const apiUrl = connectionState.serverUrl.endsWith('/')
-        ? connectionState.serverUrl.slice(0, -1)
-        : connectionState.serverUrl;
+      const apiUrl = connectionState.currentUrl.endsWith('/')
+        ? connectionState.currentUrl.slice(0, -1)
+        : connectionState.currentUrl;
       const response = await axios.get(
         `${apiUrl}${API_PATHS.AUDIO_ORDERS_HEALTH}`,
         {

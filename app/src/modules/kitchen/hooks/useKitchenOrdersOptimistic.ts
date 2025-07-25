@@ -33,37 +33,37 @@ export function useMarkItemPrepared() {
       itemId: string;
       isPrepared: boolean;
     }) => kitchenService.markItemPrepared(itemId, isPrepared),
-    
+
     onMutate: async ({ itemId, isPrepared }) => {
       await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
 
       const previousData = updateAllQueries((old: any) => {
         if (!old || !Array.isArray(old)) return old;
-        
+
         return old.map((order: any) => ({
-            ...order,
-            items: order.items?.map((item: any) => 
-              item.id === itemId 
-                ? { 
-                    ...item, 
-                    preparationStatus: isPrepared ? 'READY' : 'IN_PROGRESS',
-                    preparedAt: isPrepared ? new Date().toISOString() : null
-                  }
-                : item
-            )
-          }));
+          ...order,
+          items: order.items?.map((item: any) =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  preparationStatus: isPrepared ? 'READY' : 'IN_PROGRESS',
+                  preparedAt: isPrepared ? new Date().toISOString() : null,
+                }
+              : item,
+          ),
+        }));
       });
 
       return { previousData };
     },
-    
+
     onError: (error: any, variables, context) => {
       if (context?.previousData) {
         rollbackQueries(context.previousData);
       }
       showError(error.response?.data?.message || 'Error al actualizar el item');
     },
-    
+
     onSettled: () => {
       // Invalidar después de un breve retraso para permitir que se vea el cambio
       setTimeout(() => {
@@ -79,35 +79,38 @@ export function useStartOrderPreparation() {
   const { updateAllQueries, rollbackQueries } = useOptimisticUpdate();
 
   return useMutation({
-    mutationFn: (orderId: string) => kitchenService.startOrderPreparation(orderId),
-    
+    mutationFn: (orderId: string) =>
+      kitchenService.startOrderPreparation(orderId),
+
     onMutate: async (orderId) => {
       await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
 
       const previousData = updateAllQueries((old: any) => {
         if (!old || !Array.isArray(old)) return old;
-        
-        return old.map((order: any) => 
-          order.id === orderId 
-            ? { 
-                ...order, 
+
+        return old.map((order: any) =>
+          order.id === orderId
+            ? {
+                ...order,
                 myScreenStatus: 'IN_PREPARATION',
-                preparationStartedAt: new Date().toISOString()
+                preparationStartedAt: new Date().toISOString(),
               }
-            : order
+            : order,
         );
       });
 
       return { previousData };
     },
-    
+
     onError: (error: any, variables, context) => {
       if (context?.previousData) {
         rollbackQueries(context.previousData);
       }
-      showError(error.response?.data?.message || 'Error al iniciar preparación');
+      showError(
+        error.response?.data?.message || 'Error al iniciar preparación',
+      );
     },
-    
+
     onSettled: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
@@ -122,40 +125,45 @@ export function useCancelOrderPreparation() {
   const { updateAllQueries, rollbackQueries } = useOptimisticUpdate();
 
   return useMutation({
-    mutationFn: (orderId: string) => kitchenService.cancelOrderPreparation(orderId),
-    
+    mutationFn: (orderId: string) =>
+      kitchenService.cancelOrderPreparation(orderId),
+
     onMutate: async (orderId) => {
       await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
 
       const previousData = updateAllQueries((old: any) => {
         if (!old || !Array.isArray(old)) return old;
-        
-        return old.map((order: any) => 
-          order.id === orderId 
-            ? { 
-                ...order, 
+
+        return old.map((order: any) =>
+          order.id === orderId
+            ? {
+                ...order,
                 myScreenStatus: 'PENDING',
                 preparationStartedAt: null,
                 items: order.items?.map((item: any) => ({
                   ...item,
-                  preparationStatus: item.belongsToMyScreen ? 'IN_PROGRESS' : item.preparationStatus,
-                  preparedAt: item.belongsToMyScreen ? null : item.preparedAt
-                }))
+                  preparationStatus: item.belongsToMyScreen
+                    ? 'IN_PROGRESS'
+                    : item.preparationStatus,
+                  preparedAt: item.belongsToMyScreen ? null : item.preparedAt,
+                })),
               }
-            : order
+            : order,
         );
       });
 
       return { previousData };
     },
-    
+
     onError: (error: any, variables, context) => {
       if (context?.previousData) {
         rollbackQueries(context.previousData);
       }
-      showError(error.response?.data?.message || 'Error al cancelar preparación');
+      showError(
+        error.response?.data?.message || 'Error al cancelar preparación',
+      );
     },
-    
+
     onSettled: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
@@ -170,35 +178,38 @@ export function useCompleteOrderPreparation() {
   const { updateAllQueries, rollbackQueries } = useOptimisticUpdate();
 
   return useMutation({
-    mutationFn: (orderId: string) => kitchenService.completeOrderPreparation(orderId),
-    
+    mutationFn: (orderId: string) =>
+      kitchenService.completeOrderPreparation(orderId),
+
     onMutate: async (orderId) => {
       await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
 
       const previousData = updateAllQueries((old: any) => {
         if (!old || !Array.isArray(old)) return old;
-        
-        return old.map((order: any) => 
-          order.id === orderId 
-            ? { 
-                ...order, 
+
+        return old.map((order: any) =>
+          order.id === orderId
+            ? {
+                ...order,
                 myScreenStatus: 'READY',
-                preparationCompletedAt: new Date().toISOString()
+                preparationCompletedAt: new Date().toISOString(),
               }
-            : order
+            : order,
         );
       });
 
       return { previousData };
     },
-    
+
     onError: (error: any, variables, context) => {
       if (context?.previousData) {
         rollbackQueries(context.previousData);
       }
-      showError(error.response?.data?.message || 'Error al completar preparación');
+      showError(
+        error.response?.data?.message || 'Error al completar preparación',
+      );
     },
-    
+
     onSettled: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: [KITCHEN_ORDERS_KEY] });

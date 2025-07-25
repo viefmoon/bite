@@ -45,11 +45,17 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const [expandedItems, setExpandedItems] = useState<Set<string | number>>(new Set());
+  const [expandedItems, setExpandedItems] = useState<Set<string | number>>(
+    new Set(),
+  );
   const [activeTab, setActiveTab] = useState<'details' | 'history'>('details');
 
   // Query para el historial
-  const { data: history, isLoading, error } = useQuery({
+  const {
+    data: history,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['orderHistory', orderId],
     queryFn: async () => {
       const response = await apiClient.get(
@@ -63,7 +69,8 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 
   // Query para los detalles si no se pasaron como prop
   const { data: orderDataFromQuery } = useGetOrderByIdQuery(orderId, {
-    enabled: visible && !!orderId && activeTab === 'details' && !orderDataFromProps,
+    enabled:
+      visible && !!orderId && activeTab === 'details' && !orderDataFromProps,
   });
 
   // Transformar datos
@@ -71,18 +78,20 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     if (!kitchenOrder) return null;
     return {
       ...kitchenOrder,
-      orderItems: kitchenOrder.items?.map((item: any) => ({
-        id: item.id,
-        product: { name: item.productName },
-        productVariant: item.variantName ? { name: item.variantName } : null,
-        preparationNotes: item.preparationNotes,
-        preparationStatus: item.preparationStatus,
-        preparedAt: item.preparedAt,
-        createdAt: item.createdAt || kitchenOrder.createdAt,
-        preparedBy: item.preparedByUser || null,
-        modifiers: item.modifiers?.map((mod: string) => ({ name: mod })) || [],
-        pizzaCustomizations: item.pizzaCustomizations || [],
-      })) || [],
+      orderItems:
+        kitchenOrder.items?.map((item: any) => ({
+          id: item.id,
+          product: { name: item.productName },
+          productVariant: item.variantName ? { name: item.variantName } : null,
+          preparationNotes: item.preparationNotes,
+          preparationStatus: item.preparationStatus,
+          preparedAt: item.preparedAt,
+          createdAt: item.createdAt || kitchenOrder.createdAt,
+          preparedBy: item.preparedByUser || null,
+          modifiers:
+            item.modifiers?.map((mod: string) => ({ name: mod })) || [],
+          pizzaCustomizations: item.pizzaCustomizations || [],
+        })) || [],
       total: 0,
     };
   };
@@ -196,9 +205,18 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
               <Icon
                 name="file-document-outline"
                 size={22}
-                color={activeTab === 'details' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                color={
+                  activeTab === 'details'
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant
+                }
               />
-              <Text style={[styles.tabText, activeTab === 'details' && styles.activeTabText]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === 'details' && styles.activeTabText,
+                ]}
+              >
                 Detalles
               </Text>
             </TouchableOpacity>
@@ -211,9 +229,18 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
               <Icon
                 name="history"
                 size={22}
-                color={activeTab === 'history' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                color={
+                  activeTab === 'history'
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant
+                }
               />
-              <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === 'history' && styles.activeTabText,
+                ]}
+              >
                 Historial
               </Text>
             </TouchableOpacity>
@@ -224,7 +251,7 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
           {/* Content */}
           <View style={styles.contentContainer}>
             {activeTab === 'details' ? (
-              <ScrollView 
+              <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={styles.detailsScrollContent}
                 showsVerticalScrollIndicator={false}
@@ -237,141 +264,212 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
                 />
               </ScrollView>
             ) : (
-              <>{error ? (
-                <View style={styles.centerContainer}>
-                  <Icon name="alert-circle" size={48} color={theme.colors.error} />
-                  <Text variant="bodyLarge" style={styles.errorText}>
-                    Error al cargar el historial
-                  </Text>
-                </View>
-              ) : isLoading ? (
-                <View style={styles.centerContainer}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                </View>
-              ) : history && history.length > 0 ? (
-                <ScrollView 
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContent}
-                >
-                  {history.map((item: any) => {
-                    const isExpanded = expandedItems.has(item.id);
-                    return (
-                      <Surface key={item.id} style={styles.historyCard} elevation={1}>
-                        <TouchableOpacity
-                          onPress={() => toggleExpanded(item.id)}
-                          activeOpacity={0.7}
+              <>
+                {error ? (
+                  <View style={styles.centerContainer}>
+                    <Icon
+                      name="alert-circle"
+                      size={48}
+                      color={theme.colors.error}
+                    />
+                    <Text variant="bodyLarge" style={styles.errorText}>
+                      Error al cargar el historial
+                    </Text>
+                  </View>
+                ) : isLoading ? (
+                  <View style={styles.centerContainer}>
+                    <ActivityIndicator
+                      size="large"
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                ) : history && history.length > 0 ? (
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
+                  >
+                    {history.map((item: any) => {
+                      const isExpanded = expandedItems.has(item.id);
+                      return (
+                        <Surface
+                          key={item.id}
+                          style={styles.historyCard}
+                          elevation={1}
                         >
-                          <View style={styles.historyHeader}>
-                            <Avatar.Icon
-                              size={responsive.isTablet ? 32 : 28}
-                              icon="account"
-                              style={styles.avatar}
-                            />
-                            <View style={styles.historyInfo}>
-                              <View style={styles.userRow}>
-                                <Text style={styles.userName}>
-                                  {item.changedByUser
-                                    ? `${item.changedByUser.firstName} ${item.changedByUser.lastName}`
-                                    : 'Sistema'}
+                          <TouchableOpacity
+                            onPress={() => toggleExpanded(item.id)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.historyHeader}>
+                              <Avatar.Icon
+                                size={responsive.isTablet ? 32 : 28}
+                                icon="account"
+                                style={styles.avatar}
+                              />
+                              <View style={styles.historyInfo}>
+                                <View style={styles.userRow}>
+                                  <Text style={styles.userName}>
+                                    {item.changedByUser
+                                      ? `${item.changedByUser.firstName} ${item.changedByUser.lastName}`
+                                      : 'Sistema'}
+                                  </Text>
+                                  <Chip
+                                    mode="flat"
+                                    compact
+                                    textStyle={styles.chipText}
+                                    style={[
+                                      styles.chip,
+                                      {
+                                        backgroundColor:
+                                          theme.colors.primaryContainer,
+                                      },
+                                    ]}
+                                  >
+                                    <Icon
+                                      name={getOperationIcon(item.operation)}
+                                      size={9}
+                                    />{' '}
+                                    {getOperationLabel(item.operation)}
+                                  </Chip>
+                                </View>
+                                <Text style={styles.dateText}>
+                                  {format(
+                                    new Date(item.changedAt),
+                                    'dd/MM/yyyy HH:mm',
+                                    { locale: es },
+                                  )}
                                 </Text>
-                                <Chip
-                                  mode="flat"
-                                  compact
-                                  textStyle={styles.chipText}
-                                  style={[styles.chip, { backgroundColor: theme.colors.primaryContainer }]}
-                                >
-                                  <Icon name={getOperationIcon(item.operation)} size={9} />
-                                  {' '}{getOperationLabel(item.operation)}
-                                </Chip>
                               </View>
-                              <Text style={styles.dateText}>
-                                {format(new Date(item.changedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                              </Text>
+                              <Icon
+                                name={
+                                  isExpanded ? 'chevron-up' : 'chevron-down'
+                                }
+                                size={24}
+                                color={theme.colors.onSurfaceVariant}
+                              />
                             </View>
-                            <Icon
-                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                              size={24}
-                              color={theme.colors.onSurfaceVariant}
-                            />
-                          </View>
-                        </TouchableOpacity>
+                          </TouchableOpacity>
 
-                        {/* Contenido expandido */}
-                        {isExpanded && item.diff && (
-                          <View style={styles.expandedContent}>
-                            <Divider style={styles.divider} />
-                            
-                            {item.diff.summary && (
-                              <Text variant="bodyMedium" style={styles.summary}>
-                                {item.diff.summary}
-                              </Text>
-                            )}
+                          {/* Contenido expandido */}
+                          {isExpanded && item.diff && (
+                            <View style={styles.expandedContent}>
+                              <Divider style={styles.divider} />
 
-                            {/* Productos agregados */}
-                            {item.operation === 'INSERT' && item.diff.items?.added && (
-                              <View style={styles.changeSection}>
-                                <Text variant="titleSmall" style={styles.sectionTitle}>
-                                  Productos incluidos:
+                              {item.diff.summary && (
+                                <Text
+                                  variant="bodyMedium"
+                                  style={styles.summary}
+                                >
+                                  {item.diff.summary}
                                 </Text>
-                                {item.diff.items.added.map((product: any, idx: number) => (
-                                  <View key={idx} style={styles.productItem}>
-                                    <Text variant="bodyMedium" style={styles.productName}>
-                                      • {product.productName}
-                                      {product.variantName && ` - ${product.variantName}`}
+                              )}
+
+                              {/* Productos agregados */}
+                              {item.operation === 'INSERT' &&
+                                item.diff.items?.added && (
+                                  <View style={styles.changeSection}>
+                                    <Text
+                                      variant="titleSmall"
+                                      style={styles.sectionTitle}
+                                    >
+                                      Productos incluidos:
                                     </Text>
-                                    {product.modifiers?.length > 0 && (
-                                      <Text variant="bodySmall" style={styles.modifiers}>
-                                        {product.modifiers.join(', ')}
-                                      </Text>
+                                    {item.diff.items.added.map(
+                                      (product: any, idx: number) => (
+                                        <View
+                                          key={idx}
+                                          style={styles.productItem}
+                                        >
+                                          <Text
+                                            variant="bodyMedium"
+                                            style={styles.productName}
+                                          >
+                                            • {product.productName}
+                                            {product.variantName &&
+                                              ` - ${product.variantName}`}
+                                          </Text>
+                                          {product.modifiers?.length > 0 && (
+                                            <Text
+                                              variant="bodySmall"
+                                              style={styles.modifiers}
+                                            >
+                                              {product.modifiers.join(', ')}
+                                            </Text>
+                                          )}
+                                        </View>
+                                      ),
                                     )}
                                   </View>
-                                ))}
-                              </View>
-                            )}
+                                )}
 
-                            {/* Cambios en productos */}
-                            {item.formattedChanges?.['Cambios en productos'] && (
-                              <View style={styles.changeSection}>
-                                {/* Productos modificados */}
-                                {item.formattedChanges['Cambios en productos']['Productos modificados']?.map(
-                                  (mod: any, idx: number) => (
-                                    <Surface key={idx} style={styles.changeCard} elevation={1}>
-                                      <View style={styles.changeHeader}>
-                                        <Icon name="pencil" size={16} color={theme.colors.warning} />
-                                        <Text variant="labelLarge" style={styles.changeTitle}>
-                                          Producto modificado
-                                        </Text>
-                                      </View>
-                                      <View style={styles.changeBody}>
-                                        <View style={styles.beforeAfter}>
-                                          <Text variant="bodySmall" style={styles.beforeText}>
-                                            Antes: {mod.antes}
-                                          </Text>
-                                          <Text variant="bodySmall" style={styles.afterText}>
-                                            Después: {mod.después}
+                              {/* Cambios en productos */}
+                              {item.formattedChanges?.[
+                                'Cambios en productos'
+                              ] && (
+                                <View style={styles.changeSection}>
+                                  {/* Productos modificados */}
+                                  {item.formattedChanges[
+                                    'Cambios en productos'
+                                  ]['Productos modificados']?.map(
+                                    (mod: any, idx: number) => (
+                                      <Surface
+                                        key={idx}
+                                        style={styles.changeCard}
+                                        elevation={1}
+                                      >
+                                        <View style={styles.changeHeader}>
+                                          <Icon
+                                            name="pencil"
+                                            size={16}
+                                            color={theme.colors.warning}
+                                          />
+                                          <Text
+                                            variant="labelLarge"
+                                            style={styles.changeTitle}
+                                          >
+                                            Producto modificado
                                           </Text>
                                         </View>
-                                      </View>
-                                    </Surface>
-                                  ),
-                                )}
-                              </View>
-                            )}
-                          </View>
-                        )}
-                      </Surface>
-                    );
-                  })}
-                </ScrollView>
-              ) : (
-                <View style={styles.centerContainer}>
-                  <Icon name="history" size={48} color={theme.colors.onSurfaceVariant} />
-                  <Text variant="bodyLarge" style={styles.emptyText}>
-                    No hay historial disponible
-                  </Text>
-                </View>
-              )}
-            </>
+                                        <View style={styles.changeBody}>
+                                          <View style={styles.beforeAfter}>
+                                            <Text
+                                              variant="bodySmall"
+                                              style={styles.beforeText}
+                                            >
+                                              Antes: {mod.antes}
+                                            </Text>
+                                            <Text
+                                              variant="bodySmall"
+                                              style={styles.afterText}
+                                            >
+                                              Después: {mod.después}
+                                            </Text>
+                                          </View>
+                                        </View>
+                                      </Surface>
+                                    ),
+                                  )}
+                                </View>
+                              )}
+                            </View>
+                          )}
+                        </Surface>
+                      );
+                    })}
+                  </ScrollView>
+                ) : (
+                  <View style={styles.centerContainer}>
+                    <Icon
+                      name="history"
+                      size={48}
+                      color={theme.colors.onSurfaceVariant}
+                    />
+                    <Text variant="bodyLarge" style={styles.emptyText}>
+                      No hay historial disponible
+                    </Text>
+                  </View>
+                )}
+              </>
             )}
           </View>
         </Surface>
@@ -384,7 +482,7 @@ const createStyles = (theme: any, responsive: any) => {
   const { height, width } = Dimensions.get('window');
   const isLandscape = width > height;
   const isTablet = responsive.isTablet;
-  
+
   return StyleSheet.create({
     modalContainer: {
       margin: isLandscape ? 8 : 12,
@@ -407,8 +505,8 @@ const createStyles = (theme: any, responsive: any) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: isTablet ? 12 : 10,
-      paddingVertical: isLandscape ? 6 : (isTablet ? 8 : 6),
-      minHeight: isLandscape ? 48 : (isTablet ? 56 : 52),
+      paddingVertical: isLandscape ? 6 : isTablet ? 8 : 6,
+      minHeight: isLandscape ? 48 : isTablet ? 56 : 52,
     },
     headerTitle: {
       flex: 1,
@@ -440,7 +538,7 @@ const createStyles = (theme: any, responsive: any) => {
     tabs: {
       flexDirection: 'row',
       paddingHorizontal: isTablet ? 12 : 10,
-      paddingVertical: isLandscape ? 2 : (isTablet ? 4 : 3),
+      paddingVertical: isLandscape ? 2 : isTablet ? 4 : 3,
       backgroundColor: theme.colors.surfaceVariant,
       gap: isTablet ? 4 : 2,
     },
@@ -449,7 +547,7 @@ const createStyles = (theme: any, responsive: any) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: isLandscape ? 6 : (isTablet ? 8 : 7),
+      paddingVertical: isLandscape ? 6 : isTablet ? 8 : 7,
       paddingHorizontal: isTablet ? 12 : 10,
       borderRadius: theme.roundness,
       gap: isTablet ? 6 : 4,

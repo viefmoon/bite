@@ -13,7 +13,7 @@ const USER_INFO_KEY = 'user_info';
 export async function verifyStoredToken(): Promise<boolean> {
   try {
     const { accessToken } = useAuthStore.getState();
-    
+
     if (!accessToken) {
       return false;
     }
@@ -25,14 +25,14 @@ export async function verifyStoredToken(): Promise<boolean> {
       await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
       await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
       await EncryptedStorage.removeItem(USER_INFO_KEY);
-      
+
       useAuthStore.setState({
         accessToken: null,
         refreshToken: null,
         user: null,
         isAuthenticated: false,
       });
-      
+
       return false;
     }
 

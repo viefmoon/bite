@@ -26,14 +26,18 @@ export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
     if (Platform.OS === 'web') {
       return;
     }
-    
+
     setIsTransitioning(true);
-    
+
     try {
       await ScreenOrientation.unlockAsync();
-      await new Promise(resolve => setTimeout(resolve, TRANSITION_DELAYS.UNLOCK));
+      await new Promise((resolve) =>
+        setTimeout(resolve, TRANSITION_DELAYS.UNLOCK),
+      );
       await ScreenOrientation.lockAsync(targetOrientation);
-      await new Promise(resolve => setTimeout(resolve, TRANSITION_DELAYS.LOCK));
+      await new Promise((resolve) =>
+        setTimeout(resolve, TRANSITION_DELAYS.LOCK),
+      );
     } catch (error) {
       // Silently handle orientation errors
     } finally {
@@ -47,7 +51,9 @@ export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
 
   if (isTransitioning && Platform.OS !== 'web') {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={[styles.text, { color: theme.colors.onBackground }]}>
           Ajustando pantalla...

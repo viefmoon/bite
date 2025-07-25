@@ -43,23 +43,21 @@ export function useMarkItemPrepared() {
       // Actualizar optimistamente
       queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
         if (!old?.data) return old;
-        
+
         return {
           ...old,
           data: old.data.map((order: any) => ({
             ...order,
-            items: order.items?.map((item: any) => 
-              item.id === itemId 
-                ? { 
-                    ...item, 
-                    preparationStatus: isPrepared 
-                      ? 'READY' 
-                      : 'IN_PROGRESS',
-                    preparedAt: isPrepared ? new Date().toISOString() : null
+            items: order.items?.map((item: any) =>
+              item.id === itemId
+                ? {
+                    ...item,
+                    preparationStatus: isPrepared ? 'READY' : 'IN_PROGRESS',
+                    preparedAt: isPrepared ? new Date().toISOString() : null,
                   }
-                : item
-            )
-          }))
+                : item,
+            ),
+          })),
         };
       });
 
@@ -70,9 +68,7 @@ export function useMarkItemPrepared() {
       if (context?.previousOrders) {
         queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
       }
-      showError(
-        error.response?.data?.message || 'Error al actualizar el item'
-      );
+      showError(error.response?.data?.message || 'Error al actualizar el item');
     },
     onSettled: () => {
       // Refrescar datos del servidor
@@ -94,18 +90,18 @@ export function useStartOrderPreparation() {
 
       queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
         if (!old?.data) return old;
-        
+
         return {
           ...old,
-          data: old.data.map((order: any) => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
+          data: old.data.map((order: any) =>
+            order.id === orderId
+              ? {
+                  ...order,
                   myScreenStatus: 'IN_PREPARATION',
-                  preparationStartedAt: new Date().toISOString()
+                  preparationStartedAt: new Date().toISOString(),
                 }
-              : order
-          )
+              : order,
+          ),
         };
       });
 
@@ -116,7 +112,7 @@ export function useStartOrderPreparation() {
         queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
       }
       showError(
-        error.response?.data?.message || 'Error al iniciar preparación'
+        error.response?.data?.message || 'Error al iniciar preparación',
       );
     },
     onSettled: () => {
@@ -138,23 +134,25 @@ export function useCancelOrderPreparation() {
 
       queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
         if (!old?.data) return old;
-        
+
         return {
           ...old,
-          data: old.data.map((order: any) => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
+          data: old.data.map((order: any) =>
+            order.id === orderId
+              ? {
+                  ...order,
                   myScreenStatus: 'PENDING',
                   preparationStartedAt: null,
                   items: order.items?.map((item: any) => ({
                     ...item,
-                    preparationStatus: item.belongsToMyScreen ? 'IN_PROGRESS' : item.preparationStatus,
-                    preparedAt: item.belongsToMyScreen ? null : item.preparedAt
-                  }))
+                    preparationStatus: item.belongsToMyScreen
+                      ? 'IN_PROGRESS'
+                      : item.preparationStatus,
+                    preparedAt: item.belongsToMyScreen ? null : item.preparedAt,
+                  })),
                 }
-              : order
-          )
+              : order,
+          ),
         };
       });
 
@@ -165,7 +163,7 @@ export function useCancelOrderPreparation() {
         queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
       }
       showError(
-        error.response?.data?.message || 'Error al cancelar preparación'
+        error.response?.data?.message || 'Error al cancelar preparación',
       );
     },
     onSettled: () => {
@@ -187,18 +185,18 @@ export function useCompleteOrderPreparation() {
 
       queryClient.setQueryData([KITCHEN_ORDERS_KEY], (old: any) => {
         if (!old?.data) return old;
-        
+
         return {
           ...old,
-          data: old.data.map((order: any) => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
+          data: old.data.map((order: any) =>
+            order.id === orderId
+              ? {
+                  ...order,
                   myScreenStatus: 'READY',
-                  preparationCompletedAt: new Date().toISOString()
+                  preparationCompletedAt: new Date().toISOString(),
                 }
-              : order
-          )
+              : order,
+          ),
         };
       });
 
@@ -209,7 +207,7 @@ export function useCompleteOrderPreparation() {
         queryClient.setQueryData([KITCHEN_ORDERS_KEY], context.previousOrders);
       }
       showError(
-        error.response?.data?.message || 'Error al completar preparación'
+        error.response?.data?.message || 'Error al completar preparación',
       );
     },
     onSettled: () => {

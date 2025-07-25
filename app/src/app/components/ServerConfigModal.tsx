@@ -20,7 +20,10 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useSnackbar } from '@/hooks/useSnackbar';
-import { serverConnectionService, ConnectionMode } from '@/services/serverConnectionService';
+import {
+  serverConnectionService,
+  ConnectionMode,
+} from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import axios from 'axios';
@@ -36,16 +39,22 @@ interface ServerConfigModalProps {
   onSuccess?: () => void;
 }
 
-export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfigModalProps) {
+export function ServerConfigModal({
+  visible,
+  onDismiss,
+  onSuccess,
+}: ServerConfigModalProps) {
   const theme = useTheme();
   const { showSnackbar } = useSnackbar();
-  
+
   const [mode, setMode] = useState<ConnectionMode>('auto');
   const [manualUrl, setManualUrl] = useState('');
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [remoteUrlAvailable, setRemoteUrlAvailable] = useState<string | null>(null);
+  const [remoteUrlAvailable, setRemoteUrlAvailable] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (visible) {
@@ -57,7 +66,9 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
     try {
       setLoading(true);
       // Cargar configuración guardada
-      const savedMode = await EncryptedStorage.getItem(STORAGE_KEYS.CONNECTION_MODE) as ConnectionMode;
+      const savedMode = (await EncryptedStorage.getItem(
+        STORAGE_KEYS.CONNECTION_MODE,
+      )) as ConnectionMode;
       const savedUrl = await EncryptedStorage.getItem(STORAGE_KEYS.MANUAL_URL);
       const currentApiUrl = await discoveryService.getApiUrl();
 
@@ -88,17 +99,18 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'http://' + url;
     }
-    
+
     try {
       const parsed = new URL(url);
       // Si no tiene puerto y es una IP local o localhost, agregar :3737
-      if (!parsed.port && (
-        parsed.hostname.startsWith('192.168.') ||
-        parsed.hostname.startsWith('10.') ||
-        parsed.hostname.startsWith('172.') ||
-        parsed.hostname === 'localhost' ||
-        /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(parsed.hostname)
-      )) {
+      if (
+        !parsed.port &&
+        (parsed.hostname.startsWith('192.168.') ||
+          parsed.hostname.startsWith('10.') ||
+          parsed.hostname.startsWith('172.') ||
+          parsed.hostname === 'localhost' ||
+          /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(parsed.hostname))
+      ) {
         parsed.port = '3737';
       }
       // Construir la URL manualmente sin el slash final
@@ -127,7 +139,7 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
     setTesting(true);
     try {
       let urlToTest = '';
-      
+
       if (mode === 'auto') {
         // Probar auto-descubrimiento
         const discovered = await discoveryService.discoverServer();
@@ -155,7 +167,7 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
     } catch (error: any) {
       showSnackbar(
         error.message || 'Error al conectar con el servidor',
-        'error'
+        'error',
       );
     } finally {
       setTesting(false);
@@ -166,7 +178,7 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
     try {
       // Guardar modo de conexión
       await EncryptedStorage.setItem(STORAGE_KEYS.CONNECTION_MODE, mode);
-      
+
       // Guardar URL manual si aplica
       if (mode === 'manual') {
         if (!validateUrl(manualUrl)) {
@@ -176,18 +188,24 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
         const normalizedUrl = normalizeUrl(manualUrl);
         await EncryptedStorage.setItem(STORAGE_KEYS.MANUAL_URL, normalizedUrl);
         await discoveryService.setServerUrl(normalizedUrl, true);
-        
+
         // En web, verificar la conexión inmediatamente
         if (Platform.OS === 'web') {
           try {
-            const response = await axios.get(`${normalizedUrl}/api/v1/discovery`, {
-              timeout: 5000,
-            });
+            const response = await axios.get(
+              `${normalizedUrl}/api/v1/discovery`,
+              {
+                timeout: 5000,
+              },
+            );
             if (response.data.type === 'cloudbite-api') {
               // El servicio detectará automáticamente el cambio de URL
             }
           } catch (error) {
-            console.error('Error verificando conexión después de guardar:', error);
+            console.error(
+              'Error verificando conexión después de guardar:',
+              error,
+            );
           }
         }
       } else if (mode === 'remote' && remoteUrlAvailable) {
@@ -198,14 +216,14 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
       }
 
       // La reconexión se manejará en el onSuccess callback
-      
+
       showSnackbar('Configuración guardada', 'success');
       onSuccess?.();
       onDismiss();
     } catch (error: any) {
       showSnackbar(
         error.message || 'Error al guardar la configuración',
-        'error'
+        'error',
       );
     }
   };
@@ -317,16 +335,28 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
                   <Text style={styles.sectionTitle}>Estado de Conexión</Text>
                   {currentUrl ? (
                     <View style={styles.statusContainer}>
-                      <Chip icon="check-circle" mode="flat" style={styles.successChip}>
+                      <Chip
+                        icon="check-circle"
+                        mode="flat"
+                        style={styles.successChip}
+                      >
                         Conectado
                       </Chip>
-                      <Text variant="bodySmall" style={styles.urlText} numberOfLines={1}>
+                      <Text
+                        variant="bodySmall"
+                        style={styles.urlText}
+                        numberOfLines={1}
+                      >
                         {currentUrl}
                       </Text>
                     </View>
                   ) : (
                     <View style={styles.statusContainer}>
-                      <Chip icon="alert-circle" mode="flat" style={styles.errorChip}>
+                      <Chip
+                        icon="alert-circle"
+                        mode="flat"
+                        style={styles.errorChip}
+                      >
                         Sin conexión
                       </Chip>
                     </View>
@@ -367,7 +397,7 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
                       value="manual"
                       status={mode === 'manual' ? 'checked' : 'unchecked'}
                     />
-                    
+
                     {mode === 'manual' && (
                       <View style={styles.manualConfig}>
                         <TextInput
@@ -381,14 +411,15 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
                           keyboardType="url"
                           error={manualUrl !== '' && !validateUrl(manualUrl)}
                         />
-                        <HelperText 
-                          type="info" 
+                        <HelperText
+                          type="info"
                           visible={mode === 'manual' && manualUrl === ''}
                         >
-                          Puedes ingresar solo la IP. El puerto 3737 se agregará automáticamente.
+                          Puedes ingresar solo la IP. El puerto 3737 se agregará
+                          automáticamente.
                         </HelperText>
-                        <HelperText 
-                          type="error" 
+                        <HelperText
+                          type="error"
                           visible={manualUrl !== '' && !validateUrl(manualUrl)}
                         >
                           URL inválida
@@ -402,11 +433,7 @@ export function ServerConfigModal({ visible, onDismiss, onSuccess }: ServerConfi
           </ScrollView>
 
           <View style={styles.actions}>
-            <Button
-              mode="text"
-              onPress={onDismiss}
-              disabled={testing}
-            >
+            <Button mode="text" onPress={onDismiss} disabled={testing}>
               Cancelar
             </Button>
             <Button

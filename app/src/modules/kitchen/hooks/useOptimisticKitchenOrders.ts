@@ -9,9 +9,9 @@ export function useOptimisticUpdate() {
     // Obtener TODAS las queries del cache
     const queryCache = queryClient.getQueryCache();
     const queries = queryCache.getAll();
-    
+
     const previousData: any[] = [];
-    
+
     // Filtrar y actualizar queries de kitchen orders
     queries.forEach((query) => {
       const queryKey = query.queryKey;
@@ -24,7 +24,7 @@ export function useOptimisticUpdate() {
         }
       }
     });
-    
+
     return previousData;
   };
 

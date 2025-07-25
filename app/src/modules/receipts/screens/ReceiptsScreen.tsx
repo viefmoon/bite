@@ -309,11 +309,7 @@ export const ReceiptsScreen: React.FC = () => {
                         },
                       ]}
                     >
-                      <Icon
-                        source="whatsapp"
-                        size={12}
-                        color="#FFFFFF"
-                      />
+                      <Icon source="whatsapp" size={12} color="#FFFFFF" />
                     </View>
                   )}
 

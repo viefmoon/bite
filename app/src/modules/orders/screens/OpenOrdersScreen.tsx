@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, Pressable, TouchableOpacity, Animated } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import {
@@ -28,7 +34,12 @@ import {
   useUpdateOrderMutation,
   useCancelOrderMutation,
 } from '../hooks/useOrdersQueries';
-import { OrderOpenList, OrderType, OrderTypeEnum, OrderStatusEnum } from '../types/orders.types';
+import {
+  OrderOpenList,
+  OrderType,
+  OrderTypeEnum,
+  OrderStatusEnum,
+} from '../types/orders.types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
@@ -77,9 +88,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     [orderId: string]: number;
   }>({});
 
-  const [selectedOrderType, setSelectedOrderType] = useState<OrderType | 'ALL' | 'WHATSAPP'>(
-    'ALL',
-  );
+  const [selectedOrderType, setSelectedOrderType] = useState<
+    OrderType | 'ALL' | 'WHATSAPP'
+  >('ALL');
 
   const updateOrderMutation = useUpdateOrderMutation();
   const cancelOrderMutation = useCancelOrderMutation();
@@ -93,25 +104,33 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   } = useGetOpenOrdersListQuery();
   const filteredOrders = React.useMemo(() => {
     if (!ordersData) return [];
-    
+
     if (selectedOrderType === 'ALL') {
       // En ALL, excluir pedidos de WhatsApp pendientes
       return ordersData.filter(
-        (order) => !(order.isFromWhatsApp && order.orderStatus === OrderStatusEnum.PENDING)
+        (order) =>
+          !(
+            order.isFromWhatsApp &&
+            order.orderStatus === OrderStatusEnum.PENDING
+          ),
       );
     }
-    
+
     if (selectedOrderType === 'WHATSAPP') {
       // Filtrar solo pedidos de WhatsApp con estado PENDING
       return ordersData.filter(
-        (order) => order.isFromWhatsApp && order.orderStatus === OrderStatusEnum.PENDING
+        (order) =>
+          order.isFromWhatsApp && order.orderStatus === OrderStatusEnum.PENDING,
       );
     }
-    
+
     // Para otros filtros (DINE_IN, TAKE_AWAY, DELIVERY), excluir pedidos de WhatsApp pendientes
     return ordersData.filter(
-      (order) => order.orderType === selectedOrderType && 
-                 !(order.isFromWhatsApp && order.orderStatus === OrderStatusEnum.PENDING)
+      (order) =>
+        order.orderType === selectedOrderType &&
+        !(
+          order.isFromWhatsApp && order.orderStatus === OrderStatusEnum.PENDING
+        ),
     );
   }, [ordersData, selectedOrderType]);
 
@@ -260,11 +279,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                           },
                         ]}
                       >
-                        <Icon
-                          source="whatsapp"
-                          size={12}
-                          color="#FFFFFF"
-                        />
+                        <Icon source="whatsapp" size={12} color="#FFFFFF" />
                       </View>
                     )}
 
@@ -348,7 +363,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     {formatOrderStatus(order.orderStatus)}
                   </Chip>
                   <View style={styles.actionsContainer}>
-                    {selectedOrderType === 'WHATSAPP' && order.orderStatus === OrderStatusEnum.PENDING ? (
+                    {selectedOrderType === 'WHATSAPP' &&
+                    order.orderStatus === OrderStatusEnum.PENDING ? (
                       <Button
                         mode="contained"
                         icon="check"
@@ -388,7 +404,15 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       );
     },
-    [handleOrderItemPress, handleOpenPrintModal, handleAcceptWhatsAppOrder, selectedOrderType, acceptingOrderId, theme, styles],
+    [
+      handleOrderItemPress,
+      handleOpenPrintModal,
+      handleAcceptWhatsAppOrder,
+      selectedOrderType,
+      acceptingOrderId,
+      theme,
+      styles,
+    ],
   );
 
   const { ListEmptyComponent } = useListState({
@@ -400,19 +424,22 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         selectedOrderType === 'ALL'
           ? 'No hay órdenes abiertas'
           : selectedOrderType === 'WHATSAPP'
-          ? 'No hay pedidos de WhatsApp pendientes'
-          : `No hay órdenes de tipo ${formatOrderType(
-              selectedOrderType as OrderType,
-            )
-              .replace(/[\u{1F37D}]|[\u{FE0F}]|[\u{1F961}]|[\u{1F69A}]/gu, '')
-              .trim()}`,
+            ? 'No hay pedidos de WhatsApp pendientes'
+            : `No hay órdenes de tipo ${formatOrderType(
+                selectedOrderType as OrderType,
+              )
+                .replace(/[\u{1F37D}]|[\u{FE0F}]|[\u{1F961}]|[\u{1F69A}]/gu, '')
+                .trim()}`,
       message:
         selectedOrderType === 'ALL'
           ? 'No hay órdenes abiertas en este momento.'
           : selectedOrderType === 'WHATSAPP'
-          ? 'No hay pedidos de WhatsApp esperando aceptación.'
-          : `No hay órdenes de este tipo en este momento.`,
-      icon: selectedOrderType === 'WHATSAPP' ? 'whatsapp' : 'clipboard-text-outline',
+            ? 'No hay pedidos de WhatsApp esperando aceptación.'
+            : `No hay órdenes de este tipo en este momento.`,
+      icon:
+        selectedOrderType === 'WHATSAPP'
+          ? 'whatsapp'
+          : 'clipboard-text-outline',
     },
     errorConfig: {
       title: 'Error al cargar órdenes',
@@ -485,9 +512,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   const handleAcceptWhatsAppOrder = useCallback(
     async (orderId: string) => {
       if (acceptingOrderId !== null) return;
-      
+
       setAcceptingOrderId(orderId);
-      
+
       try {
         await updateOrderMutation.mutateAsync({
           orderId,
@@ -495,12 +522,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             orderStatus: OrderStatusEnum.IN_PROGRESS,
           },
         });
-        
+
         showSnackbar({
           message: 'Pedido aceptado exitosamente',
           type: 'success',
         });
-        
+
         refetch();
       } catch (error) {
         showSnackbar({
@@ -582,44 +609,52 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         : theme.colors.onSurfaceVariant
                     }
                   />
-                  {ordersData && 
+                  {ordersData &&
                     ordersData.filter(
-                      (o) => !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING)
+                      (o) =>
+                        !(
+                          o.isFromWhatsApp &&
+                          o.orderStatus === OrderStatusEnum.PENDING
+                        ),
                     ).length > 0 && (
-                    <View
-                      style={[
-                        styles.countBadge,
-                        {
-                          backgroundColor:
-                            selectedOrderType === 'ALL'
-                              ? theme.colors.error
-                              : theme.colors.errorContainer,
-                          borderColor:
-                            selectedOrderType === 'ALL'
-                              ? theme.colors.error
-                              : theme.colors.outline,
-                        },
-                      ]}
-                    >
-                      <Text
+                      <View
                         style={[
-                          styles.countBadgeText,
+                          styles.countBadge,
                           {
-                            color:
+                            backgroundColor:
                               selectedOrderType === 'ALL'
-                                ? theme.colors.onError
-                                : theme.colors.onErrorContainer,
+                                ? theme.colors.error
+                                : theme.colors.errorContainer,
+                            borderColor:
+                              selectedOrderType === 'ALL'
+                                ? theme.colors.error
+                                : theme.colors.outline,
                           },
                         ]}
                       >
-                        {
-                          ordersData.filter(
-                            (o) => !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING)
-                          ).length
-                        }
-                      </Text>
-                    </View>
-                  )}
+                        <Text
+                          style={[
+                            styles.countBadgeText,
+                            {
+                              color:
+                                selectedOrderType === 'ALL'
+                                  ? theme.colors.onError
+                                  : theme.colors.onErrorContainer,
+                            },
+                          ]}
+                        >
+                          {
+                            ordersData.filter(
+                              (o) =>
+                                !(
+                                  o.isFromWhatsApp &&
+                                  o.orderStatus === OrderStatusEnum.PENDING
+                                ),
+                            ).length
+                          }
+                        </Text>
+                      </View>
+                    )}
                 </Pressable>
                 <Pressable
                   style={[
@@ -646,8 +681,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   />
                   {ordersData &&
                     ordersData.filter(
-                      (o) => o.orderType === OrderTypeEnum.DINE_IN && 
-                             !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                      (o) =>
+                        o.orderType === OrderTypeEnum.DINE_IN &&
+                        !(
+                          o.isFromWhatsApp &&
+                          o.orderStatus === OrderStatusEnum.PENDING
+                        ),
                     ).length > 0 && (
                       <View
                         style={[
@@ -677,8 +716,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         >
                           {
                             ordersData.filter(
-                              (o) => o.orderType === OrderTypeEnum.DINE_IN &&
-                                     !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                              (o) =>
+                                o.orderType === OrderTypeEnum.DINE_IN &&
+                                !(
+                                  o.isFromWhatsApp &&
+                                  o.orderStatus === OrderStatusEnum.PENDING
+                                ),
                             ).length
                           }
                         </Text>
@@ -710,8 +753,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   />
                   {ordersData &&
                     ordersData.filter(
-                      (o) => o.orderType === OrderTypeEnum.TAKE_AWAY && 
-                             !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                      (o) =>
+                        o.orderType === OrderTypeEnum.TAKE_AWAY &&
+                        !(
+                          o.isFromWhatsApp &&
+                          o.orderStatus === OrderStatusEnum.PENDING
+                        ),
                     ).length > 0 && (
                       <View
                         style={[
@@ -741,8 +788,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         >
                           {
                             ordersData.filter(
-                              (o) => o.orderType === OrderTypeEnum.TAKE_AWAY &&
-                                     !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                              (o) =>
+                                o.orderType === OrderTypeEnum.TAKE_AWAY &&
+                                !(
+                                  o.isFromWhatsApp &&
+                                  o.orderStatus === OrderStatusEnum.PENDING
+                                ),
                             ).length
                           }
                         </Text>
@@ -774,8 +825,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   />
                   {ordersData &&
                     ordersData.filter(
-                      (o) => o.orderType === OrderTypeEnum.DELIVERY && 
-                             !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                      (o) =>
+                        o.orderType === OrderTypeEnum.DELIVERY &&
+                        !(
+                          o.isFromWhatsApp &&
+                          o.orderStatus === OrderStatusEnum.PENDING
+                        ),
                     ).length > 0 && (
                       <View
                         style={[
@@ -805,8 +860,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         >
                           {
                             ordersData.filter(
-                              (o) => o.orderType === OrderTypeEnum.DELIVERY &&
-                                     !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+                              (o) =>
+                                o.orderType === OrderTypeEnum.DELIVERY &&
+                                !(
+                                  o.isFromWhatsApp &&
+                                  o.orderStatus === OrderStatusEnum.PENDING
+                                ),
                             ).length
                           }
                         </Text>
@@ -838,7 +897,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   />
                   {ordersData &&
                     ordersData.filter(
-                      (o) => o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING,
+                      (o) =>
+                        o.isFromWhatsApp &&
+                        o.orderStatus === OrderStatusEnum.PENDING,
                     ).length > 0 && (
                       <View
                         style={[
@@ -868,7 +929,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                         >
                           {
                             ordersData.filter(
-                              (o) => o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING,
+                              (o) =>
+                                o.isFromWhatsApp &&
+                                o.orderStatus === OrderStatusEnum.PENDING,
                             ).length
                           }
                         </Text>

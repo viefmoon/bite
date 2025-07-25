@@ -68,7 +68,7 @@ async function ensureCacheDirExists() {
   if (Platform.OS === 'web') {
     return;
   }
-  
+
   const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
   if (!dirInfo.exists) {
     await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
@@ -289,12 +289,12 @@ export async function initImageCache() {
 
 export async function removeImageFromCache(remoteUrl: string) {
   if (!remoteUrl || typeof remoteUrl !== 'string') return;
-  
+
   // En web, no hay cache que limpiar
   if (Platform.OS === 'web') {
     return;
   }
-  
+
   try {
     const filename = await getCacheFilename(remoteUrl);
     const localUri = `${CACHE_DIR}${filename}`;

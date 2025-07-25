@@ -82,7 +82,7 @@ function KitchenOnlyNavigatorContent() {
           ...theme.fonts.titleLarge,
           color: theme.colors.onPrimary,
           fontWeight: 'bold',
-          fontSize: responsive.isWeb ? 26 : (responsive.isTablet ? 20 : 22),
+          fontSize: responsive.isWeb ? 26 : responsive.isTablet ? 20 : 22,
         },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
@@ -242,7 +242,7 @@ function KitchenOnlyNavigatorContent() {
         >
           {() => <KitchenNavigator />}
         </Drawer.Screen>
-        
+
         <Drawer.Screen
           name="ServerSettings"
           component={ServerSettingsScreen}
@@ -268,7 +268,7 @@ export function KitchenOnlyNavigator() {
     const { KitchenWebNavigator } = require('./KitchenWebNavigator');
     return <KitchenWebNavigator />;
   }
-  
+
   // Usar navegador nativo para otras plataformas
   return (
     <KitchenProvider>

@@ -1,4 +1,8 @@
-import { getApiClient, reinitializeApiClient, getAxiosInstance } from './apiClient';
+import {
+  getApiClient,
+  reinitializeApiClient,
+  getAxiosInstance,
+} from './apiClient';
 import { ApiResponse } from 'apisauce';
 import { AxiosResponse } from 'axios';
 
@@ -15,16 +19,18 @@ export class ApiClientWrapper {
   ): Promise<ApiResponse<T>> {
     try {
       const axios = await getAxiosInstance();
-      
-      const requestConfig = method === 'get' || method === 'delete'
-        ? { params: dataOrParams, ...config }
-        : config;
-        
-      const response: AxiosResponse<T> = await axios[method](url, 
-        method === 'get' || method === 'delete' ? requestConfig : dataOrParams, 
-        method === 'get' || method === 'delete' ? undefined : requestConfig
+
+      const requestConfig =
+        method === 'get' || method === 'delete'
+          ? { params: dataOrParams, ...config }
+          : config;
+
+      const response: AxiosResponse<T> = await axios[method](
+        url,
+        method === 'get' || method === 'delete' ? requestConfig : dataOrParams,
+        method === 'get' || method === 'delete' ? undefined : requestConfig,
       );
-      
+
       return {
         ok: true,
         problem: null,
@@ -37,7 +43,8 @@ export class ApiClientWrapper {
     } catch (error: any) {
       return {
         ok: false,
-        problem: error.response?.status === 401 ? 'CLIENT_ERROR' : 'NETWORK_ERROR',
+        problem:
+          error.response?.status === 401 ? 'CLIENT_ERROR' : 'NETWORK_ERROR',
         data: error.response?.data,
         status: error.response?.status,
         headers: error.response?.headers,

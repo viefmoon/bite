@@ -159,7 +159,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   const orderStatus = getOrderPreparationStatus();
 
   // Verificar si mi pantalla está en preparación
-  const isOrderInPreparation = order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION;
+  const isOrderInPreparation =
+    order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION;
 
   const handleToggleItemPrepared = (itemId: string, currentStatus: boolean) => {
     markItemPrepared.mutate({
@@ -270,14 +271,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   // Verificar si la orden puede ser marcada como lista con long press
   const canMarkAsReady = () => {
     // Solo se puede marcar como lista si mi pantalla está en preparación
-    return order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION && onCompletePreparation;
+    return (
+      order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION &&
+      onCompletePreparation
+    );
   };
 
   // Verificar si la orden puede regresar a en preparación con long press
   const canReturnToInProgress = () => {
     // Solo permitir long press para regresar si mi pantalla está EN PREPARACIÓN (no READY)
     // Si está READY, debe usar el swipe
-    return order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION && onCancelPreparation;
+    return (
+      order.myScreenStatus === PreparationScreenStatus.IN_PREPARATION &&
+      onCancelPreparation
+    );
   };
 
   // Manejar el inicio del long press
@@ -390,366 +397,379 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     >
       <View style={styles.cardContent}>
         {/* Header */}
-      {isSwipeable ? (
-        <Swipeable
-          ref={swipeableRef}
-          renderRightActions={renderRightActions}
-          renderLeftActions={renderLeftActions}
-          onSwipeableWillOpen={() => onSwipeStart && onSwipeStart()}
-          onSwipeableWillClose={() => onSwipeEnd && onSwipeEnd()}
-          onSwipeableRightOpen={handleRightSwipeComplete}
-          onSwipeableLeftOpen={handleLeftSwipeComplete}
-          overshootRight={false}
-          overshootLeft={false}
-          friction={1.2}
-          rightThreshold={50}
-          leftThreshold={50}
-          activationDistance={15}
-        >
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            delayLongPress={0}
+        {isSwipeable ? (
+          <Swipeable
+            ref={swipeableRef}
+            renderRightActions={renderRightActions}
+            renderLeftActions={renderLeftActions}
+            onSwipeableWillOpen={() => onSwipeStart && onSwipeStart()}
+            onSwipeableWillClose={() => onSwipeEnd && onSwipeEnd()}
+            onSwipeableRightOpen={handleRightSwipeComplete}
+            onSwipeableLeftOpen={handleLeftSwipeComplete}
+            overshootRight={false}
+            overshootLeft={false}
+            friction={1.2}
+            rightThreshold={50}
+            leftThreshold={50}
+            activationDistance={15}
           >
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              delayLongPress={0}
+            >
+              <View
+                style={[
+                  styles.header,
+                  {
+                    backgroundColor: getOrderTypeColor(),
+                    paddingHorizontal: 8,
+                  },
+                ]}
+              >
+                <View style={styles.headerLeft}>
+                  <Text
+                    style={[
+                      styles.orderNumber,
+                      { color: theme.colors.surface },
+                    ]}
+                  >
+                    #{order.shiftOrderNumber}
+                  </Text>
+                  {hasOrderDetails() && (
+                    <Text
+                      style={[
+                        styles.headerDetails,
+                        { color: theme.colors.surface },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {(() => {
+                        switch (order.orderType) {
+                          case OrderType.DELIVERY:
+                            return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
+                          case OrderType.TAKE_AWAY:
+                            return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
+                          case OrderType.DINE_IN:
+                            return `🪑 ${order.areaName} - ${order.tableName}`;
+                          default:
+                            return '';
+                        }
+                      })()}
+                    </Text>
+                  )}
+
+                  {/* Badge de WhatsApp */}
+                  {order.isFromWhatsApp && (
+                    <View style={styles.whatsappBadgeContainer}>
+                      <View
+                        style={[
+                          styles.whatsappBadge,
+                          {
+                            backgroundColor: '#25D366',
+                          },
+                        ]}
+                      >
+                        <Icon source="whatsapp" size={12} color="#FFFFFF" />
+                      </View>
+                    </View>
+                  )}
+                </View>
+                <View style={[styles.headerRight, { marginLeft: 6 }]}>
+                  <View
+                    style={[
+                      styles.typeChip,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        marginTop: 2,
+                        marginBottom: 3,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name={getOrderTypeIcon()}
+                      size={responsive.isWeb ? 18 : 14}
+                      color={theme.colors.surface}
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text
+                      style={[
+                        styles.typeChipText,
+                        { color: theme.colors.surface },
+                      ]}
+                    >
+                      {getOrderTypeLabel()}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.statusChip,
+                      {
+                        backgroundColor: orderStatus.color,
+                        borderWidth:
+                          orderStatus.label === 'En progreso' ? 1 : 0,
+                        borderColor: theme.colors.outline,
+                        marginBottom: 2,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusChipText,
+                        {
+                          color:
+                            orderStatus.label === 'En progreso'
+                              ? theme.colors.onSurface
+                              : theme.colors.surface,
+                        },
+                      ]}
+                    >
+                      {orderStatus.label}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[styles.headerTime, { color: theme.colors.surface }]}
+                  >
+                    {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
+                  </Text>
+                </View>
+              </View>
+              {/* Indicador de progreso del long press */}
+              {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
+                <>
+                  {/* Barra de progreso superior clara y simple */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 20,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Animated.View
+                      style={{
+                        height: '100%',
+                        width: animatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                        backgroundColor: canMarkAsReady()
+                          ? '#4CAF50'
+                          : '#FF6B35',
+                      }}
+                    />
+                  </View>
+                </>
+              )}
+            </Pressable>
+          </Swipeable>
+        ) : (
+          <View
+            style={[
+              styles.header,
+              {
+                backgroundColor: getOrderTypeColor(),
+                paddingHorizontal: 8,
+              },
+            ]}
+          >
+            <View style={styles.headerLeft}>
+              <Text
+                style={[styles.orderNumber, { color: theme.colors.surface }]}
+              >
+                #{order.shiftOrderNumber}
+              </Text>
+              {hasOrderDetails() && (
+                <Text
+                  style={[
+                    styles.headerDetails,
+                    { color: theme.colors.surface },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {(() => {
+                    switch (order.orderType) {
+                      case OrderType.DELIVERY:
+                        return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
+                      case OrderType.TAKE_AWAY:
+                        return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
+                      case OrderType.DINE_IN:
+                        return `🪑 ${order.areaName} - ${order.tableName}`;
+                      default:
+                        return '';
+                    }
+                  })()}
+                </Text>
+              )}
+            </View>
+            <View style={[styles.headerRight, { marginLeft: 12 }]}>
+              <View
+                style={[
+                  styles.typeChip,
+                  {
+                    backgroundColor: (() => {
+                      switch (order.orderType) {
+                        case OrderType.DELIVERY:
+                          return '#FFEBEE'; // Rojo muy claro
+                        case OrderType.TAKE_AWAY:
+                          return '#E0F2F1'; // Cyan/Turquesa muy claro
+                        case OrderType.DINE_IN:
+                          return '#E3F2FD'; // Azul muy claro
+                        default:
+                          return theme.colors.surfaceVariant;
+                      }
+                    })(),
+                    marginTop: 2,
+                    marginBottom: 3,
+                  },
+                ]}
+              >
+                <Icon
+                  name={getOrderTypeIcon()}
+                  size={responsive.isTablet ? 13 : 14}
+                  color={(() => {
+                    switch (order.orderType) {
+                      case OrderType.DELIVERY:
+                        return '#C62828'; // Rojo oscuro
+                      case OrderType.TAKE_AWAY:
+                        return '#00838F'; // Cyan/Turquesa oscuro
+                      case OrderType.DINE_IN:
+                        return '#1565C0'; // Azul oscuro
+                      default:
+                        return theme.colors.onSurfaceVariant;
+                    }
+                  })()}
+                  style={{ marginRight: 4 }}
+                />
+                <Text
+                  style={[
+                    styles.typeChipText,
+                    {
+                      color: (() => {
+                        switch (order.orderType) {
+                          case OrderType.DELIVERY:
+                            return '#C62828'; // Rojo oscuro
+                          case OrderType.TAKE_AWAY:
+                            return '#00838F'; // Cyan/Turquesa oscuro
+                          case OrderType.DINE_IN:
+                            return '#1565C0'; // Azul oscuro
+                          default:
+                            return theme.colors.onSurfaceVariant;
+                        }
+                      })(),
+                    },
+                  ]}
+                >
+                  {getOrderTypeLabel()}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.statusChip,
+                  {
+                    backgroundColor: orderStatus.color,
+                    borderWidth: orderStatus.borderColor ? 1 : 0,
+                    borderColor: orderStatus.borderColor || 'transparent',
+                    marginBottom: 2,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusChipText,
+                    { color: orderStatus.textColor },
+                  ]}
+                >
+                  {orderStatus.label}
+                </Text>
+              </View>
+              <Text
+                style={[styles.headerTime, { color: theme.colors.surface }]}
+              >
+                {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Order Notes - Solo mostrar si hay notas */}
+        {order.orderNotes && (
+          <>
             <View
               style={[
-                styles.header,
+                styles.details,
+                { backgroundColor: theme.colors.errorContainer },
+              ]}
+            >
+              <Text
+                variant="bodyMedium"
+                style={[styles.notes, { color: theme.colors.onErrorContainer }]}
+              >
+                📝 {order.orderNotes}
+              </Text>
+            </View>
+            <Divider
+              style={{
+                backgroundColor: theme.colors.outlineVariant,
+                height: 0.5,
+              }}
+            />
+          </>
+        )}
+
+        {/* Screen Statuses - Mostrar el estado de otras pantallas */}
+        {order.screenStatuses && order.screenStatuses.length > 1 && (
+          <>
+            <View
+              style={[
+                styles.screenStatusContainer,
                 {
-                  backgroundColor: getOrderTypeColor(),
+                  backgroundColor: theme.colors.surfaceVariant,
+                  paddingVertical: 8,
                   paddingHorizontal: 8,
                 },
               ]}
             >
-              <View style={styles.headerLeft}>
-                <Text
-                  style={[
-                    styles.orderNumber,
-                    { color: theme.colors.surface },
-                  ]}
-                >
-                  #{order.shiftOrderNumber}
-                </Text>
-                {hasOrderDetails() && (
-                  <Text
-                    style={[
-                      styles.headerDetails,
-                      { color: theme.colors.surface },
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {(() => {
-                      switch (order.orderType) {
-                        case OrderType.DELIVERY:
-                          return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                        case OrderType.TAKE_AWAY:
-                          return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                        case OrderType.DINE_IN:
-                          return `🪑 ${order.areaName} - ${order.tableName}`;
-                        default:
-                          return '';
-                      }
-                    })()}
-                  </Text>
-                )}
-
-                {/* Badge de WhatsApp */}
-                {order.isFromWhatsApp && (
-                  <View style={styles.whatsappBadgeContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={[styles.screenStatusList, { gap: 8 }]}>
+                  {order.screenStatuses.map((screenStatus) => (
                     <View
+                      key={screenStatus.screenId}
                       style={[
-                        styles.whatsappBadge,
+                        styles.screenStatusItem,
                         {
-                          backgroundColor: '#25D366',
+                          backgroundColor: (() => {
+                            switch (screenStatus.status) {
+                              case PreparationScreenStatus.READY:
+                                return '#4CAF50';
+                              case PreparationScreenStatus.IN_PREPARATION:
+                                return '#FF6B35';
+                              default:
+                                return '#9C27B0';
+                            }
+                          })(),
                         },
                       ]}
                     >
-                      <Icon
-                        source="whatsapp"
-                        size={12}
-                        color="#FFFFFF"
-                      />
+                      <Text style={styles.screenStatusText}>
+                        {screenStatus.screenName}
+                      </Text>
                     </View>
-                  </View>
-                )}
-              </View>
-              <View style={[styles.headerRight, { marginLeft: 6 }]}>
-                <View
-                  style={[
-                    styles.typeChip,
-                    { 
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      marginTop: 2,
-                      marginBottom: 3,
-                    },
-                  ]}
-                >
-                  <Icon
-                    name={getOrderTypeIcon()}
-                    size={responsive.isWeb ? 18 : 14}
-                    color={theme.colors.surface}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text
-                    style={[
-                      styles.typeChipText,
-                      { color: theme.colors.surface },
-                    ]}
-                  >
-                    {getOrderTypeLabel()}
-                  </Text>
+                  ))}
                 </View>
-                <View
-                  style={[
-                    styles.statusChip,
-                    {
-                      backgroundColor: orderStatus.color,
-                      borderWidth: orderStatus.label === 'En progreso' ? 1 : 0,
-                      borderColor: theme.colors.outline,
-                      marginBottom: 2,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusChipText,
-                      {
-                        color:
-                          orderStatus.label === 'En progreso'
-                            ? theme.colors.onSurface
-                            : theme.colors.surface,
-                      },
-                    ]}
-                  >
-                    {orderStatus.label}
-                  </Text>
-                </View>
-                <Text
-                  style={[styles.headerTime, { color: theme.colors.surface }]}
-                >
-                  {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
-                </Text>
-              </View>
+              </ScrollView>
             </View>
-            {/* Indicador de progreso del long press */}
-            {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
-              <>
-                {/* Barra de progreso superior clara y simple */}
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 20,
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Animated.View
-                    style={{
-                      height: '100%',
-                      width: animatedValue.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0%', '100%'],
-                      }),
-                      backgroundColor: canMarkAsReady() ? '#4CAF50' : '#FF6B35',
-                    }}
-                  />
-                </View>
-              </>
-            )}
-          </Pressable>
-        </Swipeable>
-      ) : (
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: getOrderTypeColor(),
-              paddingHorizontal: 8,
-            },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text
-              style={[styles.orderNumber, { color: theme.colors.surface }]}
-            >
-              #{order.shiftOrderNumber}
-            </Text>
-            {hasOrderDetails() && (
-              <Text
-                style={[styles.headerDetails, { color: theme.colors.surface }]}
-                numberOfLines={2}
-              >
-                {(() => {
-                  switch (order.orderType) {
-                    case OrderType.DELIVERY:
-                      return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                    case OrderType.TAKE_AWAY:
-                      return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                    case OrderType.DINE_IN:
-                      return `🪑 ${order.areaName} - ${order.tableName}`;
-                    default:
-                      return '';
-                  }
-                })()}
-              </Text>
-            )}
-          </View>
-          <View style={[styles.headerRight, { marginLeft: 12 }]}>
-            <View
-              style={[
-                styles.typeChip,
-                {
-                  backgroundColor: (() => {
-                    switch (order.orderType) {
-                      case OrderType.DELIVERY:
-                        return '#FFEBEE'; // Rojo muy claro
-                      case OrderType.TAKE_AWAY:
-                        return '#E0F2F1'; // Cyan/Turquesa muy claro
-                      case OrderType.DINE_IN:
-                        return '#E3F2FD'; // Azul muy claro
-                      default:
-                        return theme.colors.surfaceVariant;
-                    }
-                  })(),
-                  marginTop: 2,
-                  marginBottom: 3,
-                },
-              ]}
-            >
-              <Icon
-                name={getOrderTypeIcon()}
-                size={responsive.isTablet ? 13 : 14}
-                color={(() => {
-                  switch (order.orderType) {
-                    case OrderType.DELIVERY:
-                      return '#C62828'; // Rojo oscuro
-                    case OrderType.TAKE_AWAY:
-                      return '#00838F'; // Cyan/Turquesa oscuro
-                    case OrderType.DINE_IN:
-                      return '#1565C0'; // Azul oscuro
-                    default:
-                      return theme.colors.onSurfaceVariant;
-                  }
-                })()}
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                style={[
-                  styles.typeChipText,
-                  {
-                    color: (() => {
-                      switch (order.orderType) {
-                        case OrderType.DELIVERY:
-                          return '#C62828'; // Rojo oscuro
-                        case OrderType.TAKE_AWAY:
-                          return '#00838F'; // Cyan/Turquesa oscuro
-                        case OrderType.DINE_IN:
-                          return '#1565C0'; // Azul oscuro
-                        default:
-                          return theme.colors.onSurfaceVariant;
-                      }
-                    })(),
-                  },
-                ]}
-              >
-                {getOrderTypeLabel()}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statusChip,
-                {
-                  backgroundColor: orderStatus.color,
-                  borderWidth: orderStatus.borderColor ? 1 : 0,
-                  borderColor: orderStatus.borderColor || 'transparent',
-                  marginBottom: 2,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.statusChipText,
-                  { color: orderStatus.textColor },
-                ]}
-              >
-                {orderStatus.label}
-              </Text>
-            </View>
-            <Text style={[styles.headerTime, { color: theme.colors.surface }]}>
-              {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Order Notes - Solo mostrar si hay notas */}
-      {order.orderNotes && (
-        <>
-          <View
-            style={[
-              styles.details,
-              { backgroundColor: theme.colors.errorContainer },
-            ]}
-          >
-            <Text
-              variant="bodyMedium"
-              style={[styles.notes, { color: theme.colors.onErrorContainer }]}
-            >
-              📝 {order.orderNotes}
-            </Text>
-          </View>
-          <Divider
-            style={{
-              backgroundColor: theme.colors.outlineVariant,
-              height: 0.5,
-            }}
-          />
-        </>
-      )}
-
-      {/* Screen Statuses - Mostrar el estado de otras pantallas */}
-      {order.screenStatuses && order.screenStatuses.length > 1 && (
-        <>
-          <View style={[styles.screenStatusContainer, { backgroundColor: theme.colors.surfaceVariant, paddingVertical: 8, paddingHorizontal: 8 }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={[styles.screenStatusList, { gap: 8 }]}>
-                {order.screenStatuses.map((screenStatus) => (
-                  <View
-                    key={screenStatus.screenId}
-                    style={[
-                      styles.screenStatusItem,
-                      {
-                        backgroundColor: (() => {
-                          switch (screenStatus.status) {
-                            case PreparationScreenStatus.READY:
-                              return '#4CAF50';
-                            case PreparationScreenStatus.IN_PREPARATION:
-                              return '#FF6B35';
-                            default:
-                              return '#9C27B0';
-                          }
-                        })(),
-                      },
-                    ]}
-                  >
-                    <Text style={styles.screenStatusText}>
-                      {screenStatus.screenName}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-          <Divider
-            style={{
-              backgroundColor: theme.colors.outlineVariant,
-              height: 0.5,
-            }}
-          />
-        </>
-      )}
+            <Divider
+              style={{
+                backgroundColor: theme.colors.outlineVariant,
+                height: 0.5,
+              }}
+            />
+          </>
+        )}
 
         {/* Items */}
         <View style={styles.itemsWrapper}>
@@ -764,39 +784,41 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 const myScreenItems = order.items
                   .map((item, originalIndex) => ({ item, originalIndex }))
                   .filter(({ item }) => item.belongsToMyScreen);
-                
+
                 const otherScreenItems = order.items
                   .map((item, originalIndex) => ({ item, originalIndex }))
                   .filter(({ item }) => !item.belongsToMyScreen);
-                
+
                 // Ordenar items de mi pantalla
                 const sortedMyScreenItems = myScreenItems.sort((a, b) => {
                   // Los items preparados mantienen su posición relativa
-                  const aIsPrepared = a.item.preparationStatus === PreparationStatus.READY;
-                  const bIsPrepared = b.item.preparationStatus === PreparationStatus.READY;
-                  
+                  const aIsPrepared =
+                    a.item.preparationStatus === PreparationStatus.READY;
+                  const bIsPrepared =
+                    b.item.preparationStatus === PreparationStatus.READY;
+
                   // Si ambos están preparados o ambos no lo están, mantener orden original
                   if (aIsPrepared === bIsPrepared) {
                     return a.originalIndex - b.originalIndex;
                   }
-                  
+
                   // Si uno está preparado y el otro no, mantener el orden original
                   return a.originalIndex - b.originalIndex;
                 });
-                
+
                 // Mantener orden original para items de otras pantallas
                 const sortedOtherScreenItems = otherScreenItems;
-                
+
                 // Combinar: primero los de mi pantalla, luego los de otras
                 return [...sortedMyScreenItems, ...sortedOtherScreenItems];
               })().map(({ item }, index) => (
-                  <OrderItemRow
-                    key={`${item.id}-${index}`}
-                    item={item}
-                    onTogglePrepared={handleToggleItemPrepared}
-                    isOrderInPreparation={isOrderInPreparation}
-                  />
-                ))}
+                <OrderItemRow
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  onTogglePrepared={handleToggleItemPrepared}
+                  isOrderInPreparation={isOrderInPreparation}
+                />
+              ))}
             </ScrollView>
           ) : (
             <View style={styles.emptyItemsContainer}>
@@ -809,15 +831,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             </View>
           )}
         </View>
-        
+
         {/* Botón flotante con posicionamiento fijo */}
-        <View style={{
-          position: 'absolute',
-          bottom: 10,
-          right: 10,
-          width: 48,
-          height: 48,
-        }}>
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            right: 10,
+            width: 48,
+            height: 48,
+          }}
+        >
           <IconButton
             icon="file-document-multiple-outline"
             size={responsive.isWeb ? 32 : 28}
@@ -876,11 +900,17 @@ const createStyles = (responsive: any, theme: any) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      paddingHorizontal: responsive.isWeb ? responsive.spacing.l : responsive.spacing.m,
-      paddingVertical: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
+      paddingHorizontal: responsive.isWeb
+        ? responsive.spacing.l
+        : responsive.spacing.m,
+      paddingVertical: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.s,
       borderTopLeftRadius: theme.roundness,
       borderTopRightRadius: theme.roundness,
-      minHeight: responsive.isWeb ? 80 : responsive.getResponsiveDimension(50, 60),
+      minHeight: responsive.isWeb
+        ? 80
+        : responsive.getResponsiveDimension(50, 60),
     },
     headerLeft: {
       flex: 1,
@@ -893,8 +923,8 @@ const createStyles = (responsive: any, theme: any) =>
       gap: responsive.spacing.xs,
     },
     headerDetails: {
-      fontSize: responsive.isWeb ? 16 : (responsive.isTablet ? 12 : 13),
-      lineHeight: responsive.isWeb ? 22 : (responsive.isTablet ? 16 : 18),
+      fontSize: responsive.isWeb ? 16 : responsive.isTablet ? 12 : 13,
+      lineHeight: responsive.isWeb ? 22 : responsive.isTablet ? 16 : 18,
       opacity: 0.95,
       marginTop: responsive.spacing.xxxs,
       fontWeight: '500',
@@ -906,11 +936,13 @@ const createStyles = (responsive: any, theme: any) =>
     },
     orderNumber: {
       fontWeight: 'bold',
-      fontSize: responsive.isWeb ? 24 : (responsive.isTablet ? 18 : 20),
-      lineHeight: responsive.isWeb ? 32 : (responsive.isTablet ? 24 : 28),
+      fontSize: responsive.isWeb ? 24 : responsive.isTablet ? 18 : 20,
+      lineHeight: responsive.isWeb ? 32 : responsive.isTablet ? 24 : 28,
     },
     typeChip: {
-      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
+      paddingHorizontal: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.s,
       paddingVertical: responsive.isWeb ? 6 : 4,
       minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
@@ -921,7 +953,7 @@ const createStyles = (responsive: any, theme: any) =>
       marginBottom: responsive.spacing.xxxs,
     },
     typeChipText: {
-      fontSize: responsive.isWeb ? 14 : (responsive.isTablet ? 11 : 12),
+      fontSize: responsive.isWeb ? 14 : responsive.isTablet ? 11 : 12,
       fontWeight: '700',
       letterSpacing: 0.4,
       textAlign: 'center',
@@ -931,10 +963,12 @@ const createStyles = (responsive: any, theme: any) =>
     },
     headerTime: {
       fontWeight: '500',
-      fontSize: responsive.isWeb ? 16 : (responsive.isTablet ? 12 : 13),
+      fontSize: responsive.isWeb ? 16 : responsive.isTablet ? 12 : 13,
     },
     statusChip: {
-      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.xs,
+      paddingHorizontal: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.xs,
       paddingVertical: responsive.isWeb ? 6 : 4,
       minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
@@ -944,22 +978,26 @@ const createStyles = (responsive: any, theme: any) =>
       marginBottom: responsive.spacing.xxxs,
     },
     statusChipText: {
-      fontSize: responsive.isWeb ? 15 : (responsive.isTablet ? 12 : 13),
+      fontSize: responsive.isWeb ? 15 : responsive.isTablet ? 12 : 13,
       fontWeight: '600',
       letterSpacing: 0.3,
       textAlign: 'center',
       textAlignVertical: 'center',
-      lineHeight: responsive.isWeb ? 22 : (responsive.isTablet ? 18 : 20),
+      lineHeight: responsive.isWeb ? 22 : responsive.isTablet ? 18 : 20,
       includeFontPadding: false,
     },
     details: {
-      paddingHorizontal: responsive.isWeb ? responsive.spacing.m : responsive.spacing.s,
-      paddingVertical: responsive.isWeb ? responsive.spacing.s : responsive.spacing.xs,
+      paddingHorizontal: responsive.isWeb
+        ? responsive.spacing.m
+        : responsive.spacing.s,
+      paddingVertical: responsive.isWeb
+        ? responsive.spacing.s
+        : responsive.spacing.xs,
     },
     detailText: {
       marginBottom: 0,
-      fontSize: responsive.isWeb ? 15 : (responsive.isTablet ? 11 : 12),
-      lineHeight: responsive.isWeb ? 20 : (responsive.isTablet ? 16 : 14),
+      fontSize: responsive.isWeb ? 15 : responsive.isTablet ? 11 : 12,
+      lineHeight: responsive.isWeb ? 20 : responsive.isTablet ? 16 : 14,
     },
     notesContainer: {
       marginTop: responsive.spacing.xxs,

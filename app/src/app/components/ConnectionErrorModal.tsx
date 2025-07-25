@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import {
   Text,
   Modal,
@@ -85,7 +91,7 @@ export function ConnectionErrorModal() {
     if (Platform.OS === 'web') {
       return;
     }
-    
+
     if (!isConnected && !autoReconnectService.getState().isReconnecting) {
       setTimeout(() => {
         if (!isConnected) {
@@ -307,15 +313,16 @@ export function ConnectionErrorModal() {
           <View style={styles.statusSection}>
             {Platform.OS === 'web' ? (
               <>
-                <Icon 
-                  source="server-network" 
-                  size={64} 
+                <Icon
+                  source="server-network"
+                  size={64}
                   color={theme.colors.tertiary}
                   style={{ marginBottom: 16 }}
                 />
                 <Text style={styles.title}>Configuración Requerida</Text>
                 <Text style={styles.subtitle}>
-                  En la versión web, debes configurar manualmente la URL del servidor
+                  En la versión web, debes configurar manualmente la URL del
+                  servidor
                 </Text>
               </>
             ) : (
@@ -323,7 +330,9 @@ export function ConnectionErrorModal() {
                 <Text style={styles.title}>{statusInfo.title}</Text>
                 {reconnectState.lastError &&
                   reconnectState.status !== 'connected' && (
-                    <Text style={styles.subtitle}>{reconnectState.lastError}</Text>
+                    <Text style={styles.subtitle}>
+                      {reconnectState.lastError}
+                    </Text>
                   )}
               </>
             )}
@@ -413,10 +422,11 @@ export function ConnectionErrorModal() {
           )}
 
           {/* Action Buttons */}
-          {(Platform.OS === 'web' ||
-           reconnectState.status === 'failed' || 
-           reconnectState.status === 'no-wifi' ||
-           (reconnectState.attempts > 2 && reconnectState.status !== 'connected')) ? (
+          {Platform.OS === 'web' ||
+          reconnectState.status === 'failed' ||
+          reconnectState.status === 'no-wifi' ||
+          (reconnectState.attempts > 2 &&
+            reconnectState.status !== 'connected') ? (
             <View style={styles.actionContainer}>
               <Button
                 mode="contained"
@@ -432,7 +442,7 @@ export function ConnectionErrorModal() {
           ) : null}
         </Surface>
       </Modal>
-      
+
       {/* Modal de configuración del servidor */}
       <ServerConfigModal
         visible={showConfigModal}
