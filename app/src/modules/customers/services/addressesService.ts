@@ -29,9 +29,7 @@ async function update(
 }
 
 async function remove(addressId: string): Promise<void> {
-  await apiClient.delete(
-    API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),
-  );
+  await apiClient.delete(API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId));
 }
 
 export const addressesService = {

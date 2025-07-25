@@ -11,7 +11,6 @@ import { PaginatedResponse } from '@/app/types/api.types';
 
 const modifiersListSchema = z.array(modifierApiSchema);
 
-// Schema para respuesta paginada
 const paginatedModifiersSchema = z.object({
   items: z.array(modifierApiSchema),
   total: z.number(),
@@ -28,9 +27,6 @@ interface FindAllModifiersParams {
 }
 
 export const modifierService = {
-  /**
-   * Obtiene todos los modificadores con paginación.
-   */
   async findAll(
     params?: FindAllModifiersParams,
   ): Promise<PaginatedResponse<Modifier>> {
@@ -39,15 +35,12 @@ export const modifierService = {
       limit: params?.limit ?? 10,
       ...params,
     };
-    const response = await apiClient.get<unknown>(
-      API_PATHS.MODIFIERS,
-      { params: queryParams },
-    );
+    const response = await apiClient.get<unknown>(API_PATHS.MODIFIERS, {
+      params: queryParams,
+    });
 
-    // Parsear como respuesta paginada
     const paginatedResult = paginatedModifiersSchema.safeParse(response.data);
     if (paginatedResult.success) {
-      // Transformar la respuesta del backend a PaginatedResponse
       return {
         data: paginatedResult.data.items,
         total: paginatedResult.data.total,
@@ -59,13 +52,9 @@ export const modifierService = {
       };
     }
 
-    // Datos inválidos recibidos para modificadores
     throw new Error('Received invalid data format for modifiers.');
   },
 
-  /**
-   * Obtiene un modificador por su ID.
-   */
   async findOne(id: string): Promise<Modifier> {
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
@@ -73,15 +62,11 @@ export const modifierService = {
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos para modificador
       throw new Error(`Received invalid data format for modifier ${id}.`);
     }
     return validationResult.data;
   },
 
-  /**
-   * Obtiene todos los modificadores asociados a un grupo específico, con filtros opcionales.
-   */
   async findByGroupId(
     modifierGroupId: string,
     params: { isActive?: boolean; search?: string } = {},
@@ -105,9 +90,6 @@ export const modifierService = {
     return validationResult.data;
   },
 
-  /**
-   * Crea un nuevo modificador.
-   */
   async create(data: CreateModifierInput): Promise<Modifier> {
     const response = await apiClient.post<unknown>(API_PATHS.MODIFIERS, data);
 
@@ -119,9 +101,6 @@ export const modifierService = {
     return validationResult.data;
   },
 
-  /**
-   * Actualiza un modificador existente.
-   */
   async update(id: string, data: UpdateModifierInput): Promise<Modifier> {
     const response = await apiClient.patch<unknown>(
       API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
@@ -138,12 +117,7 @@ export const modifierService = {
     return validationResult.data;
   },
 
-  /**
-   * Elimina un modificador.
-   */
   async remove(id: string): Promise<void> {
-    await apiClient.delete(
-      API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
-    );
+    await apiClient.delete(API_PATHS.MODIFIERS_BY_ID.replace(':id', id));
   },
 };

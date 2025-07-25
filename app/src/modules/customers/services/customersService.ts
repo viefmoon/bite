@@ -9,7 +9,9 @@ import {
 } from '../types/customer.types';
 
 async function findAll(params?: FindAllCustomersQuery): Promise<Customer[]> {
-  const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, { params });
+  const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, {
+    params,
+  });
   return response.data;
 }
 
@@ -34,9 +36,7 @@ async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
 }
 
 async function remove(id: string): Promise<void> {
-  await apiClient.delete(
-    API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
-  );
+  await apiClient.delete(API_PATHS.CUSTOMERS_BY_ID.replace(':id', id));
 }
 
 // Métodos específicos para chat history

@@ -65,10 +65,7 @@ async function remove(id: string): Promise<void> {
 async function updateSortOrder(
   updates: { id: string; sortOrder: number }[],
 ): Promise<void> {
-  await apiClient.patch(
-    API_PATHS.PIZZA_CUSTOMIZATIONS_SORT_ORDER,
-    { updates },
-  );
+  await apiClient.patch(API_PATHS.PIZZA_CUSTOMIZATIONS_SORT_ORDER, { updates });
 }
 
 export const pizzaCustomizationsService = {

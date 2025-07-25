@@ -5,7 +5,7 @@ import {
   ProductFormInputs,
   FindAllProductsQuery,
   AssignModifierGroupsInput,
-} from '../schema/products.schema'; // Corregida ruta de importación
+} from '../schema/products.schema';
 import { PaginatedResponse } from '@/app/types/api.types';
 
 async function findAll(
@@ -20,7 +20,6 @@ async function findAll(
     hasPrevPage: boolean;
   }>(API_PATHS.PRODUCTS, { params });
 
-  // Transforma la respuesta del backend a PaginatedResponse
   return {
     data: response.data.items,
     total: response.data.total,
@@ -54,9 +53,7 @@ async function update(
 }
 
 async function remove(id: string): Promise<void> {
-  await apiClient.delete(
-    API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
-  );
+  await apiClient.delete(API_PATHS.PRODUCTS_BY_ID.replace(':id', id));
 }
 
 async function assignModifierGroups(
@@ -106,7 +103,7 @@ async function updatePizzaCustomizations(
 ): Promise<Product> {
   const response = await apiClient.put<Product>(
     API_PATHS.PRODUCTS_PIZZA_CUSTOMIZATIONS.replace(':productId', productId),
-    pizzaCustomizationIds, // Enviar el array directamente
+    pizzaCustomizationIds,
   );
   return response.data;
 }
@@ -114,10 +111,9 @@ async function updatePizzaCustomizations(
 async function bulkUpdatePizzaCustomizations(
   updates: Array<{ productId: string; customizationIds: string[] }>,
 ): Promise<void> {
-  await apiClient.put(
-    API_PATHS.PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK,
-    { updates },
-  );
+  await apiClient.put(API_PATHS.PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK, {
+    updates,
+  });
 }
 
 export const productsService = {
@@ -130,7 +126,6 @@ export const productsService = {
   getModifierGroups,
   removeModifierGroups,
   findAllPizzas,
-  // Pizza customizations methods
   getPizzaCustomizations,
   updatePizzaCustomizations,
   bulkUpdatePizzaCustomizations,

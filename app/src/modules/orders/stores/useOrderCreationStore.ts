@@ -105,7 +105,6 @@ interface OrderCreationStore {
   resetOrder: () => void;
 }
 
-// Computed selectors
 export const useOrderCreationSubtotal = () =>
   useOrderCreationStore((state) =>
     state.items.reduce((sum, item) => sum + item.totalPrice, 0),
@@ -157,7 +156,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
       ? product.variants?.find((v) => v.id === variantId)
       : undefined;
 
-    // Validar y sanitizar precios
     const safeParsePrice = (price: any): number => {
       const parsed = Number(price);
       if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
@@ -175,14 +173,12 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
       0,
     );
 
-    // Buscar si existe un item idéntico
     const existingItemIndex = items.findIndex((item) => {
       if (item.productId !== product.id) return false;
       if (item.variantId !== variantId) return false;
       if (item.preparationNotes !== preparationNotes) return false;
       if (item.modifiers.length !== modifiers.length) return false;
 
-      // Comparar modifiers
       const sortedExistingModifiers = [...item.modifiers].sort((a, b) =>
         a.id.localeCompare(b.id),
       );
@@ -200,7 +196,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
         }
       }
 
-      // Comparar pizza customizations
       const existingCustomizations = item.selectedPizzaCustomizations || [];
       const newCustomizations = selectedPizzaCustomizations || [];
 
@@ -236,7 +231,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
     });
 
     if (existingItemIndex !== -1) {
-      // Si existe un item idéntico, actualizar la cantidad
       const updatedItems = [...items];
       const existingItem = updatedItems[existingItemIndex];
       const newQuantity = existingItem.quantity + quantity;
@@ -253,7 +247,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
 
       set({ items: updatedItems });
     } else {
-      // Si no existe, crear un nuevo item
       const newItem: CartItem = {
         id: generateId(),
         productId: product.id,
@@ -282,7 +275,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
   updateItemQuantity: (itemId: string, quantity: number) => {
     const { items, removeItem } = get();
 
-    // Validar y sanitizar cantidad
     const safeQuantity = Math.round(quantity);
 
     if (safeQuantity <= 0 || isNaN(safeQuantity)) {
@@ -290,7 +282,6 @@ export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
       return;
     }
 
-    // Límite máximo razonable
     const MAX_QUANTITY = 9999;
     const finalQuantity = Math.min(safeQuantity, MAX_QUANTITY);
 

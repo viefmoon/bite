@@ -9,9 +9,7 @@ import {
 import { z } from 'zod';
 import { PaginatedResponse } from '@/app/types/api.types';
 
-const _modifierGroupsListSchema = z.array(modifierGroupApiSchema);
 
-// Schema para respuesta paginada
 const paginatedModifierGroupsSchema = z.object({
   items: z.array(modifierGroupApiSchema),
   total: z.number(),
@@ -29,9 +27,6 @@ interface FindAllParams {
 }
 
 export const modifierGroupService = {
-  /**
-   * Obtiene todos los grupos de modificadores con paginación.
-   */
   async findAll(
     params: FindAllParams = {},
   ): Promise<PaginatedResponse<ModifierGroup>> {
@@ -41,17 +36,14 @@ export const modifierGroupService = {
       ...(params.isActive !== undefined && { isActive: params.isActive }),
       ...(params.search && { search: params.search }),
     };
-    const response = await apiClient.get<unknown>(
-      API_PATHS.MODIFIER_GROUPS,
-      { params: queryParams },
-    );
+    const response = await apiClient.get<unknown>(API_PATHS.MODIFIER_GROUPS, {
+      params: queryParams,
+    });
 
-    // Parsear como respuesta paginada
     const paginatedResult = paginatedModifierGroupsSchema.safeParse(
       response.data,
     );
     if (paginatedResult.success) {
-      // Transformar la respuesta del backend a PaginatedResponse
       return {
         data: paginatedResult.data.items,
         total: paginatedResult.data.total,
@@ -63,13 +55,9 @@ export const modifierGroupService = {
       };
     }
 
-    // Datos inválidos recibidos para grupos de modificadores
     throw new Error('Received invalid data format for modifier groups.');
   },
 
-  /**
-   * Obtiene un grupo de modificadores por su ID.
-   */
   async findOne(id: string): Promise<ModifierGroup> {
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
@@ -77,15 +65,11 @@ export const modifierGroupService = {
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos para grupo de modificador
       throw new Error(`Received invalid data format for modifier group ${id}.`);
     }
     return validationResult.data;
   },
 
-  /**
-   * Crea un nuevo grupo de modificadores.
-   */
   async create(data: CreateModifierGroupInput): Promise<ModifierGroup> {
     const response = await apiClient.post<unknown>(
       API_PATHS.MODIFIER_GROUPS,
@@ -94,7 +78,6 @@ export const modifierGroupService = {
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos después de crear grupo de modificador
       throw new Error(
         'Received invalid data format after creating modifier group.',
       );
@@ -102,9 +85,6 @@ export const modifierGroupService = {
     return validationResult.data;
   },
 
-  /**
-   * Actualiza un grupo de modificadores existente.
-   */
   async update(
     id: string,
     data: UpdateModifierGroupInput,
@@ -116,7 +96,6 @@ export const modifierGroupService = {
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos después de actualizar grupo de modificador
       throw new Error(
         `Received invalid data format after updating modifier group ${id}.`,
       );
@@ -124,12 +103,7 @@ export const modifierGroupService = {
     return validationResult.data;
   },
 
-  /**
-   * Elimina un grupo de modificadores.
-   */
   async remove(id: string): Promise<void> {
-    await apiClient.delete(
-      API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
-    );
+    await apiClient.delete(API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id));
   },
 };
