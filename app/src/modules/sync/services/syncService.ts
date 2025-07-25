@@ -8,9 +8,6 @@ class SyncService {
    */
   async getSyncStatus(): Promise<SyncStatus> {
     const response = await apiClient.get<SyncStatus>(API_PATHS.SYNC_STATUS);
-    if (!response.data) {
-      throw new Error('No se pudo obtener el estado de sincronización');
-    }
     return response.data;
   }
 
@@ -23,9 +20,6 @@ class SyncService {
       API_PATHS.SYNC_ACTIVITY,
       { params: { limit } },
     );
-    if (!response.data) {
-      throw new Error('No se pudo obtener la actividad de sincronización');
-    }
     return response.data;
   }
 

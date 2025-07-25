@@ -28,9 +28,6 @@ export class PreparationScreenSeedService {
     });
 
     if (kitchenUsers.length < 3) {
-      console.log(
-        'Not enough kitchen users found. Please run user seeds first.',
-      );
       return;
     }
 
@@ -66,9 +63,6 @@ export class PreparationScreenSeedService {
         });
 
         await this.preparationScreenRepository.save(screen);
-        console.log(
-          `Created preparation screen: ${screenData.name} assigned to ${screenData.user.firstName} ${screenData.user.lastName}`,
-        );
       }
     }
   }

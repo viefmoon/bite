@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { PizzaConfiguration } from '../types/pizzaConfiguration.types';
 import type {
@@ -10,19 +9,19 @@ import type {
 async function findByProductId(
   productId: string,
 ): Promise<PizzaConfiguration | null> {
-  const response = await apiClient.get<PizzaConfiguration>(
-    API_PATHS.PIZZA_CONFIGURATIONS + '/product/' + productId,
-  );
-
-  if (response.status === 404) {
-    return null;
+  try {
+    const response = await apiClient.get<PizzaConfiguration>(
+      API_PATHS.PIZZA_CONFIGURATIONS + '/product/' + productId,
+    );
+    return response.data;
+  } catch (error: any) {
+    // Si es un error 404, retornar null en lugar de lanzar error
+    if (error.status === 404) {
+      return null;
+    }
+    // Para otros errores, re-lanzar para que el interceptor los maneje
+    throw error;
   }
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
-  return response.data;
 }
 
 async function create(
@@ -32,11 +31,6 @@ async function create(
     API_PATHS.PIZZA_CONFIGURATIONS,
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
   return response.data;
 }
 
@@ -48,22 +42,13 @@ async function update(
     API_PATHS.PIZZA_CONFIGURATIONS_BY_ID.replace(':id', id),
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
   return response.data;
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(
+  await apiClient.delete(
     API_PATHS.PIZZA_CONFIGURATIONS_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 export const pizzaConfigurationsService = {

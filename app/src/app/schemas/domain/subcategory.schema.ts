@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { photoSchema } from './photo.schema'; // Importar schema de Photo centralizado
-// import { productSchema } from './product.schema'; // Opcional: Importar si se incluyen productos
 
 /**
  * Esquema Zod para validar un objeto SubCategory completo.

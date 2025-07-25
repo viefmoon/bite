@@ -139,8 +139,6 @@ export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 // Esquema para la respuesta de la API - usa directamente el schema de dominio
 // Este schema representa la estructura que devuelve el backend.
 export const productResponseSchema = domainProductSchema;
-// Si se necesita el tipo específico inferido de esta respuesta:
-// export type ProductApiResponse = z.infer<typeof productResponseSchema>;
 
 // Esquema para la respuesta de lista paginada (si aplica)
 export const productsListResponseSchema = z.tuple([

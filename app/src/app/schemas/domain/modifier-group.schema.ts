@@ -1,6 +1,4 @@
 import { z } from 'zod';
-// Importar Modifier si se incluye en el schema de dominio
-// import { modifierSchema } from './modifier.schema';
 
 /**
  * Esquema Zod para validar un objeto ModifierGroup completo.

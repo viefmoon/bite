@@ -32,7 +32,6 @@ export class TableSeedService {
     });
 
     if (!bar || !arco || !jardin || !entrada || !equipales) {
-      console.log('Areas not found. Please run area seeds first.');
       return;
     }
 

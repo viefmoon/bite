@@ -1,5 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import { handleApiError } from '../../../app/lib/apiResponseHelper';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
   DiscoveredPrinter,
@@ -21,15 +20,10 @@ type PrinterFilterParams = Omit<
 const discoverPrinters = async (
   duration: number = 10000,
 ): Promise<DiscoveredPrinter[]> => {
-  const response = await ApiClientWrapper.get<DiscoveredPrinter[]>(
+  const response = await apiClient.get<DiscoveredPrinter[]>(
     API_PATHS.THERMAL_PRINTERS_DISCOVER,
-    { duration },
+    { params: { duration } },
   );
-
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
-
   return response.data;
 };
 
@@ -60,19 +54,10 @@ const findAllPrinters = async (
     hasPrevPage: boolean;
   };
 
-  const response = await ApiClientWrapper.get<FindAllPrintersApiResponse>(
+  const response = await apiClient.get<FindAllPrintersApiResponse>(
     API_PATHS.THERMAL_PRINTERS,
-    queryParams,
+    { params: queryParams },
   );
-
-  if (
-    !response.ok ||
-    !response.data ||
-    typeof response.data !== 'object' ||
-    !Array.isArray(response.data.items)
-  ) {
-    handleApiError(response);
-  }
 
   return {
     data: response.data.items,
@@ -84,25 +69,19 @@ const findAllPrinters = async (
 };
 
 const findOnePrinter = async (id: string): Promise<ThermalPrinter> => {
-  const response = await ApiClientWrapper.get<ThermalPrinter>(
+  const response = await apiClient.get<ThermalPrinter>(
     API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
   );
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
   return response.data;
 };
 
 const createPrinter = async (
   data: CreateThermalPrinterDto,
 ): Promise<ThermalPrinter> => {
-  const response = await ApiClientWrapper.post<ThermalPrinter>(
+  const response = await apiClient.post<ThermalPrinter>(
     API_PATHS.THERMAL_PRINTERS,
     data,
   );
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
   return response.data;
 };
 
@@ -110,44 +89,28 @@ const updatePrinter = async (
   id: string,
   data: UpdateThermalPrinterDto,
 ): Promise<ThermalPrinter> => {
-  const response = await ApiClientWrapper.patch<ThermalPrinter>(
+  const response = await apiClient.patch<ThermalPrinter>(
     API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
     data,
   );
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
   return response.data;
 };
 
 const deletePrinter = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(
-    API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id),
-  );
-  if (!response.ok) {
-    handleApiError(response);
-  }
+  await apiClient.delete(API_PATHS.THERMAL_PRINTERS_BY_ID.replace(':id', id));
 };
 
 const pingPrinter = async (id: string): Promise<{ status: string }> => {
-  const response = await ApiClientWrapper.get<{ status: string }>(
+  const response = await apiClient.get<{ status: string }>(
     API_PATHS.THERMAL_PRINTERS_PING.replace(':id', id),
   );
-
-  if (
-    !response.ok ||
-    !response.data ||
-    typeof response.data.status !== 'string'
-  ) {
-    handleApiError(response);
-  }
   return response.data;
 };
 
 const testPrintDiscoveredPrinter = async (
   printer: DiscoveredPrinter,
 ): Promise<{ success: boolean; message?: string }> => {
-  const response = await ApiClientWrapper.post<{
+  const response = await apiClient.post<{
     success: boolean;
     message?: string;
   }>(API_PATHS.THERMAL_PRINTERS_TEST_PRINT, {
@@ -155,10 +118,6 @@ const testPrintDiscoveredPrinter = async (
     port: printer.port,
     connectionType: 'NETWORK',
   });
-
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
   return response.data;
 };
 
@@ -181,14 +140,10 @@ const testPrintPrinter = async (
     printerInfo.path = printer.path;
   }
 
-  const response = await ApiClientWrapper.post<{
+  const response = await apiClient.post<{
     success: boolean;
     message?: string;
   }>(API_PATHS.THERMAL_PRINTERS_TEST_PRINT, printerInfo);
-
-  if (!response.ok || !response.data) {
-    handleApiError(response);
-  }
   return response.data;
 };
 

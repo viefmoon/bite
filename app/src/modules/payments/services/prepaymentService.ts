@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { handleApiResponse, handleApiResponseVoid } from '@/app/lib/apiHelpers';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Payment } from '../types/payment.types';
 
@@ -22,7 +21,7 @@ export const prepaymentService = {
       API_PATHS.PAYMENTS_PREPAYMENT,
       data,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 
   /**
@@ -36,7 +35,7 @@ export const prepaymentService = {
       API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', paymentId),
       data,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 
   /**
@@ -52,16 +51,15 @@ export const prepaymentService = {
         orderId,
       ),
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 
   /**
    * Eliminar un pre-pago
    */
   deletePrepayment: async (paymentId: string): Promise<void> => {
-    const response = await apiClient.delete(
+    await apiClient.delete(
       API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', paymentId),
     );
-    handleApiResponseVoid(response);
   },
 };

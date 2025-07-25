@@ -1,4 +1,4 @@
-import ApiClientWrapper from '../app/services/apiClientWrapper';
+import apiClient from '../app/services/apiClient';
 import * as FileSystem from 'expo-file-system';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
@@ -69,16 +69,11 @@ class AudioOrderService {
       };
 
       // Enviar al backend con timeout extendido para procesamiento de audio
-      const response = await ApiClientWrapper.post(
+      const response = await apiClient.post(
         API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
         { timeout: 60000 }, // 60 segundos para permitir procesamiento de audio
       );
-
-      // Verificar que tengamos una respuesta válida
-      if (!response || !response?.ok || !response.data) {
-        throw new Error('No se recibió respuesta del servidor');
-      }
 
       const responseData = response.data as any;
 

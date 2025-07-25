@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { handleApiResponse } from '@/app/lib/apiHelpers';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { ShiftSummary, ShiftOrder } from '@/modules/shiftAudit/types';
 import type { Order } from '@/app/schemas/domain/order.schema';
@@ -69,15 +68,6 @@ class ShiftsService {
    */
   async openShift(data: OpenShiftDto): Promise<Shift> {
     const response = await apiClient.post(API_PATHS.SHIFTS_OPEN, data);
-
-    if (!response.ok) {
-      throw (
-        response.data ||
-        response.originalError ||
-        new Error('Error al abrir el turno')
-      );
-    }
-
     return response.data;
   }
 
@@ -86,15 +76,6 @@ class ShiftsService {
    */
   async closeShift(data: CloseShiftDto): Promise<Shift> {
     const response = await apiClient.post(API_PATHS.SHIFTS_CLOSE, data);
-
-    if (!response.ok) {
-      throw (
-        response.data ||
-        response.originalError ||
-        new Error('Error al cerrar el turno')
-      );
-    }
-
     return response.data;
   }
 
@@ -145,11 +126,10 @@ class ShiftsService {
    */
   async getOrdersByShift(shiftId: string): Promise<Order[]> {
     const url = API_PATHS.ORDERS_BY_SHIFT.replace(':shiftId', shiftId);
-    const response = await apiClient.get<any>(url);
-    const data = handleApiResponse(response);
+    const response = await apiClient.get<Order[]>(url);
 
     // Asegurar que siempre devuelva un array
-    return Array.isArray(data) ? data : data?.data || [];
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   /**

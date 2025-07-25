@@ -1,5 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import { ApiError } from '../../../app/lib/errors';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
   SubCategory,
@@ -15,13 +14,10 @@ type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 export const createSubcategory = async (
   data: CreateSubCategoryDto,
 ): Promise<SubCategory> => {
-  const response = await ApiClientWrapper.post<SubCategory>(
+  const response = await apiClient.post<SubCategory>(
     API_PATHS.SUBCATEGORIES,
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 };
 
@@ -38,18 +34,14 @@ export const findAllSubcategories = async (
     {} as Record<string, any>,
   );
 
-  const response = await ApiClientWrapper.get<{
+  const response = await apiClient.get<{
     items: SubCategory[];
     total: number;
     page: number;
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(API_PATHS.SUBCATEGORIES, queryParams);
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
+  }>(API_PATHS.SUBCATEGORIES, { params: queryParams });
 
   // Transforma la respuesta del backend a PaginatedResponse
   return {
@@ -62,12 +54,9 @@ export const findAllSubcategories = async (
 };
 
 export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
-  const response = await ApiClientWrapper.get<SubCategory>(
+  const response = await apiClient.get<SubCategory>(
     API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 };
 
@@ -75,31 +64,13 @@ export const updateSubcategory = async (
   id: string,
   data: UpdateSubCategoryDto,
 ): Promise<SubCategory> => {
-  const response = await ApiClientWrapper.patch<SubCategory>(
+  const response = await apiClient.patch<SubCategory>(
     API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 };
 
 export const removeSubcategory = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(
-    API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
-  );
-  if (!response.ok) {
-    if (response.data) {
-      // Hay un cuerpo de error definido por el backend
-      throw ApiError.fromApiResponse(response.data, response.status);
-    } else if (response.status !== 404) {
-      // No hay cuerpo de error, pero no es un 404 esperado
-      throw new Error(
-        `Error deleting subcategory ${id}: Status ${response.status}`,
-      );
-    }
-    // Si es 404, no se lanza error.
-  }
-  // No se devuelve nada en caso de éxito (204) o 404.
+  await apiClient.delete(API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id));
 };

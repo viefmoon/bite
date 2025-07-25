@@ -33,7 +33,10 @@ import type {
 } from '@/modules/orders/stores/useCartStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import { Swipeable } from 'react-native-gesture-handler';
+import {
+  Swipeable,
+  type Animated as GestureAnimated,
+} from 'react-native-gesture-handler';
 import {
   OrderTypeEnum,
   type OrderType,
@@ -41,7 +44,10 @@ import {
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
-import type { Table } from '@/modules/areasTables/types/areasTables.types';
+import type {
+  Area,
+  Table,
+} from '@/modules/areasTables/types/areasTables.types';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import { Menu, Checkbox, HelperText } from 'react-native-paper';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
@@ -145,7 +151,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
   // Nombres computed para área y mesa
   const selectedAreaName = useMemo(
-    () => areasData?.find((a: any) => a.id === editableSelectedAreaId)?.name,
+    () => areasData?.find((a: Area) => a.id === editableSelectedAreaId)?.name,
     [areasData, editableSelectedAreaId],
   );
   const selectedTableName = useMemo(() => {
@@ -563,7 +569,9 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   };
 
   // Función para formatear personalizaciones de pizza
-  const formatPizzaCustomizations = (customizations?: any[]) => {
+  const formatPizzaCustomizations = (
+    customizations?: AIOrderItem['pizzaCustomizations'],
+  ) => {
     if (!customizations || customizations.length === 0) return '';
 
     const groupedByHalf = customizations.reduce(
@@ -884,7 +892,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                       />
                     }
                   >
-                    {areasData?.map((area: any) => (
+                    {areasData?.map((area: Area) => (
                       <Menu.Item
                         key={area.id}
                         onPress={() => {
@@ -1270,7 +1278,10 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 );
 
                 // Función para renderizar acciones de deslizar
-                const renderRightActions = (_progress: any, dragX: any) => {
+                const renderRightActions = (
+                  _progress: Animated.AnimatedAddition,
+                  dragX: Animated.AnimatedAddition,
+                ) => {
                   const translateX = dragX.interpolate({
                     inputRange: [-100, 0],
                     outputRange: [0, 100],

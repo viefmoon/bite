@@ -47,17 +47,11 @@ export function useShiftSalesSummary(shiftId: string | null) {
     queryFn: async () => {
       if (!shiftId) return null;
 
-      const response = await apiClient.get(
+      const response = await apiClient.get<ShiftSalesSummary>(
         API_PATHS.ORDERS_BY_SHIFT_SALES_SUMMARY.replace(':shiftId', shiftId),
       );
 
-      if (!response.ok) {
-        throw new Error(
-          response.problem || 'Error al obtener resumen de ventas',
-        );
-      }
-
-      return response.data as ShiftSalesSummary;
+      return response.data;
     },
     enabled: !!shiftId,
   });

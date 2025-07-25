@@ -135,7 +135,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       enabled: mode === 'payment' && !!orderId,
     });
   const createPaymentMutation = useCreatePaymentMutation();
-  // const updatePaymentMutation = useUpdatePaymentMutation(); // No se usa actualmente
   const deletePaymentMutation = useDeletePaymentMutation();
   const completeOrderMutation = useCompleteOrderMutation();
 

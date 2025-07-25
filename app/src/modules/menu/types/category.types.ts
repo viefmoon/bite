@@ -1,5 +1,4 @@
 // Tipos de dominio centralizados en src/app/types/domain/
-// import type { Category, CategoryPhoto } from '../../../app/types/domain/category.types';
 
 /**
  * Estructura genérica para respuestas paginadas de la API.

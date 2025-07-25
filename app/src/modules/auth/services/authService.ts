@@ -1,8 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import {
-  handleApiResponse,
-  handleApiResponseVoid,
-} from '../../../app/lib/apiHelpers';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import {
   AuthEmailLoginDto,
@@ -22,26 +18,24 @@ class AuthService {
       ...(isEmail ? { email: sanitizedInput } : { username: sanitizedInput }),
     };
 
-    const response = await ApiClientWrapper.post<LoginResponseDto>(
+    const response = await apiClient.post<LoginResponseDto>(
       API_PATHS.AUTH_EMAIL_LOGIN,
       payload,
     );
 
-    return handleApiResponse(response);
+    return response.data;
   }
 
   async register(data: RegisterFormInputs): Promise<void> {
-    const response = await ApiClientWrapper.post<{ message?: string }>(
+    await apiClient.post<{ message?: string }>(
       API_PATHS.AUTH_EMAIL_REGISTER,
       data,
     );
-
-    handleApiResponseVoid(response);
   }
 
   async verifyToken(): Promise<boolean> {
     try {
-      const response = await ApiClientWrapper.get(API_PATHS.AUTH_ME);
+      const response = await apiClient.get(API_PATHS.AUTH_ME);
       return response.status === 200;
     } catch (error) {
       return false;

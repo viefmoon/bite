@@ -1,10 +1,6 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import { ApiError } from '../../../app/lib/errors';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
-import {
-  BackendErrorResponse,
-  PaginatedResponse,
-} from '../../../app/types/api.types';
+import { PaginatedResponse } from '../../../app/types/api.types';
 import { BaseListQuery } from '../../../app/types/query.types';
 import {
   PreparationScreen,
@@ -24,20 +20,16 @@ export const getPreparationScreens = async (
   filterOptions: FindAllPreparationScreensDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 15 }, // Default limit 15
 ): Promise<PaginatedResponse<PreparationScreen>> => {
-  const response = await ApiClientWrapper.get<
-    PaginatedResponse<PreparationScreen>
-  >(API_PATHS.PREPARATION_SCREENS, {
-    ...filterOptions,
-    page: paginationOptions.page,
-    limit: paginationOptions.limit,
-  });
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
+  const response = await apiClient.get<PaginatedResponse<PreparationScreen>>(
+    API_PATHS.PREPARATION_SCREENS,
+    {
+      params: {
+        ...filterOptions,
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      },
+    },
+  );
 
   // Verificar que la respuesta tenga la estructura esperada del backend paginado
   if (
@@ -70,16 +62,9 @@ export const getPreparationScreens = async (
 export const getPreparationScreenById = async (
   id: string,
 ): Promise<PreparationScreen> => {
-  const response = await ApiClientWrapper.get<PreparationScreen>(
+  const response = await apiClient.get<PreparationScreen>(
     API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -92,23 +77,10 @@ export const getPreparationScreenById = async (
 export const createPreparationScreen = async (
   data: CreatePreparationScreenDto,
 ): Promise<PreparationScreen> => {
-  const response = await ApiClientWrapper.post<PreparationScreen>(
+  const response = await apiClient.post<PreparationScreen>(
     API_PATHS.PREPARATION_SCREENS,
     data,
   );
-
-  if (!response.ok || !response.data) {
-    // Si hay un ApiError original del interceptor, usarlo directamente
-    if ((response as any).apiError instanceof ApiError) {
-      throw (response as any).apiError;
-    }
-
-    // Si no, crear uno nuevo desde la respuesta
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -123,17 +95,10 @@ export const updatePreparationScreen = async (
   id: string,
   data: UpdatePreparationScreenDto,
 ): Promise<PreparationScreen> => {
-  const response = await ApiClientWrapper.patch<PreparationScreen>(
+  const response = await apiClient.patch<PreparationScreen>(
     API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -144,16 +109,9 @@ export const updatePreparationScreen = async (
  * @throws {ApiError} If the API request fails.
  */
 export const deletePreparationScreen = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(
+  await apiClient.delete(
     API_PATHS.PREPARATION_SCREENS_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
 };
 
 /**
@@ -165,16 +123,9 @@ export const deletePreparationScreen = async (id: string): Promise<void> => {
 export const getPreparationScreenProducts = async (
   id: string,
 ): Promise<any[]> => {
-  const response = await ApiClientWrapper.get<any[]>(
+  const response = await apiClient.get<any[]>(
     API_PATHS.PREPARATION_SCREENS_PRODUCTS.replace(':id', id),
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -185,16 +136,9 @@ export const getPreparationScreenProducts = async (
  * @throws {ApiError} If the API request fails.
  */
 export const getMenuWithAssociations = async (id: string): Promise<any> => {
-  const response = await ApiClientWrapper.get<any>(
+  const response = await apiClient.get<any>(
     API_PATHS.PREPARATION_SCREENS_MENU_WITH_ASSOCIATIONS.replace(':id', id),
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -209,16 +153,9 @@ export const associateProducts = async (
   id: string,
   productIds: string[],
 ): Promise<PreparationScreen> => {
-  const response = await ApiClientWrapper.post<PreparationScreen>(
+  const response = await apiClient.post<PreparationScreen>(
     API_PATHS.PREPARATION_SCREENS_PRODUCTS.replace(':id', id),
     { productIds },
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };

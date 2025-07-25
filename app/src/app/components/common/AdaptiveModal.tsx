@@ -6,6 +6,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  type ViewStyle,
 } from 'react-native';
 import { Modal, Portal } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -15,7 +16,7 @@ interface AdaptiveModalProps {
   visible: boolean;
   onDismiss: () => void;
   children: ReactNode;
-  contentContainerStyle?: any;
+  contentContainerStyle?: ViewStyle;
   maxWidth?: number | string;
   minHeight?: number;
   maxHeight?: string | number;

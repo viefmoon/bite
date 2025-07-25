@@ -1,7 +1,5 @@
 import apiClient from '@/app/services/apiClient';
-import { handleApiResponse } from '@/app/lib/apiHelpers';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { ApiError } from '@/app/lib/errors';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
 import type { PaginatedResponse } from '../../../app/types/api.types';
@@ -12,7 +10,7 @@ const createOrder = async (
   orderData: OrderDetailsForBackend,
 ): Promise<Order> => {
   const response = await apiClient.post<Order>(API_PATHS.ORDERS, orderData);
-  return handleApiResponse(response);
+  return response.data;
 };
 
 export const orderService = {
@@ -33,19 +31,9 @@ export const orderService = {
     const limit = filters.limit ?? 10;
     queryParams.page = page;
     queryParams.limit = limit;
-    const response = await apiClient.get<[Order[], number]>(
-      API_PATHS.ORDERS,
-      queryParams,
-    );
-
-    if (
-      !response.ok ||
-      !response.data ||
-      !Array.isArray(response.data) ||
-      response.data.length !== 2
-    ) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
+    const response = await apiClient.get<[Order[], number]>(API_PATHS.ORDERS, {
+      params: queryParams,
+    });
 
     const [data, total] = response.data;
     const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
@@ -62,13 +50,13 @@ export const orderService = {
     const response = await apiClient.get<Order[]>(
       API_PATHS.ORDERS_OPEN_CURRENT_SHIFT,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
   getOpenOrdersList: async (): Promise<OrderOpenList[]> => {
     const response = await apiClient.get<OrderOpenList[]>(
       API_PATHS.ORDERS_OPEN_ORDERS_LIST,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
   printOrderTicket: async (
     orderId: string,
@@ -76,20 +64,12 @@ export const orderService = {
   ): Promise<void> => {
     const url = API_PATHS.PRINT_ORDER_TICKET;
     const body = { orderId, printerId };
-    const response = await apiClient.post<any>(url, body);
-
-    if (!response.ok) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
+    await apiClient.post<any>(url, body);
   },
   getOrderById: async (orderId: string): Promise<Order> => {
     const response = await apiClient.get<Order>(
       API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
     );
-
-    if (!response.ok || !response.data) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
     return response.data;
   },
   updateOrder: async (
@@ -100,10 +80,6 @@ export const orderService = {
       API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
       payload,
     );
-
-    if (!response.ok || !response.data) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
     return response.data;
   },
   cancelOrder: async (orderId: string): Promise<Order> => {
@@ -115,10 +91,6 @@ export const orderService = {
       API_PATHS.ORDERS_BY_ID.replace(':orderId', orderId),
       payload,
     );
-
-    if (!response.ok || !response.data) {
-      throw ApiError.fromApiResponse(response.data, response.status);
-    }
     return response.data;
   },
 };

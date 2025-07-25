@@ -1,4 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
+import apiClient from '../../../app/services/apiClient';
 import { ApiError } from '../../../app/lib/errors';
 import { Platform } from 'react-native';
 import { API_PATHS } from '../../../app/constants/apiPaths';
@@ -52,7 +52,7 @@ export const uploadFile = async (
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await ApiClientWrapper.post<FileUploadResponse>(
+      const response = await apiClient.post<FileUploadResponse>(
         API_PATHS.FILES_UPLOAD,
         formData,
         {
@@ -68,23 +68,15 @@ export const uploadFile = async (
         },
       );
 
-      if (!response.ok || !response.data || !response.data.file) {
-        lastError = ApiError.fromApiResponse(response.data, response.status);
-
-        // Si no es un error de red, no reintentar
-        if (response.status && response.status < 500) {
-          throw lastError;
-        }
-
-        // Esperar antes de reintentar (backoff exponencial)
-        if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
+      if (!response.data || !response.data.file) {
+        throw new ApiError(
+          'UPLOAD_FAILED',
+          'Error al recibir respuesta del servidor',
+          500,
+        );
       }
 
-      return response.data!;
+      return response.data;
     } catch (error) {
       lastError = error;
 

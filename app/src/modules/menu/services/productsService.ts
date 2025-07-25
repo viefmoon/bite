@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Product,
@@ -19,10 +18,7 @@ async function findAll(
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(API_PATHS.PRODUCTS, params);
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
+  }>(API_PATHS.PRODUCTS, { params });
 
   // Transforma la respuesta del backend a PaginatedResponse
   return {
@@ -38,31 +34,12 @@ async function findOne(id: string): Promise<Product> {
   const response = await apiClient.get<Product>(
     API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function create(data: ProductFormInputs): Promise<Product> {
   const response = await apiClient.post<Product>(API_PATHS.PRODUCTS, data);
-
-  if (!response.ok) {
-    // Verificar si tenemos un ApiError preservado
-    if ((response as any).apiError instanceof ApiError) {
-      throw (response as any).apiError;
-    }
-
-    // Verificar si el error original del interceptor es un ApiError
-    if (response.originalError instanceof ApiError) {
-      throw response.originalError;
-    }
-
-    // Si no hay originalError, crear uno desde la respuesta
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
-  return response.data!;
+  return response.data;
 }
 
 async function update(
@@ -73,34 +50,13 @@ async function update(
     API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
     data,
   );
-
-  if (!response.ok) {
-    // Verificar si tenemos un ApiError preservado
-    if ((response as any).apiError instanceof ApiError) {
-      throw (response as any).apiError;
-    }
-
-    // Verificar si el error original del interceptor es un ApiError
-    if (response.originalError instanceof ApiError) {
-      throw response.originalError;
-    }
-
-    // Si no hay originalError, crear uno desde la respuesta
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
-  return response.data!;
+  return response.data;
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(
+  await apiClient.delete(
     API_PATHS.PRODUCTS_BY_ID.replace(':id', id),
   );
-  if (!response.ok) {
-    // No esperamos 'data' en un 204 No Content, pero sí puede haber error
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-  // No se retorna nada en caso de éxito (204 No Content)
 }
 
 async function assignModifierGroups(
@@ -111,9 +67,6 @@ async function assignModifierGroups(
     API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -121,9 +74,6 @@ async function getModifierGroups(productId: string): Promise<Product> {
   const response = await apiClient.get<Product>(
     API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -135,17 +85,11 @@ async function removeModifierGroups(
     API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function findAllPizzas(): Promise<Product[]> {
   const response = await apiClient.get<Product[]>(API_PATHS.PRODUCTS_PIZZAS);
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -153,9 +97,6 @@ async function getPizzaCustomizations(productId: string): Promise<any[]> {
   const response = await apiClient.get<any[]>(
     API_PATHS.PRODUCTS_PIZZA_CUSTOMIZATIONS.replace(':productId', productId),
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -167,22 +108,16 @@ async function updatePizzaCustomizations(
     API_PATHS.PRODUCTS_PIZZA_CUSTOMIZATIONS.replace(':productId', productId),
     pizzaCustomizationIds, // Enviar el array directamente
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function bulkUpdatePizzaCustomizations(
   updates: Array<{ productId: string; customizationIds: string[] }>,
 ): Promise<void> {
-  const response = await apiClient.put(
+  await apiClient.put(
     API_PATHS.PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK,
     { updates },
   );
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 export const productsService = {

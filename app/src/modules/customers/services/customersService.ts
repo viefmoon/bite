@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Customer,
@@ -10,10 +9,7 @@ import {
 } from '../types/customer.types';
 
 async function findAll(params?: FindAllCustomersQuery): Promise<Customer[]> {
-  const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, params);
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
+  const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, { params });
   return response.data;
 }
 
@@ -21,17 +17,11 @@ async function findOne(id: string): Promise<Customer> {
   const response = await apiClient.get<Customer>(
     API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function create(data: CreateCustomerDto): Promise<Customer> {
   const response = await apiClient.post<Customer>(API_PATHS.CUSTOMERS, data);
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -40,19 +30,13 @@ async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
     API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(
+  await apiClient.delete(
     API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
   );
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 // Métodos específicos para chat history
@@ -64,9 +48,6 @@ async function appendChatMessage(
     API_PATHS.CUSTOMERS_CHAT_MESSAGE.replace(':customerId', customerId),
     message,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -78,9 +59,6 @@ async function updateRelevantChatHistory(
     API_PATHS.CUSTOMERS_CHAT_HISTORY.replace(':customerId', customerId),
     { relevantHistory },
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -92,9 +70,6 @@ async function updateCustomerStats(
     API_PATHS.CUSTOMERS_STATS.replace(':customerId', customerId),
     stats,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -103,11 +78,8 @@ async function getActiveWithRecentInteraction(
 ): Promise<Customer[]> {
   const response = await apiClient.get<Customer[]>(
     API_PATHS.CUSTOMERS_ACTIVE_RECENT,
-    { daysAgo },
+    { params: { daysAgo } },
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 

@@ -224,7 +224,7 @@ class AutoReconnectService extends EventEmitter {
         } else {
           this.addLog('  ✗ Health check falló', 'error');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.addLog('  ✗ Health check falló', 'error');
       }
 
@@ -260,11 +260,10 @@ class AutoReconnectService extends EventEmitter {
         this.addLog('  ✗ No se encontró servidor en la red', 'error');
         return false;
       }
-    } catch (error: any) {
-      this.addLog(
-        `  ✗ Error: ${error.message || 'Error al buscar servidor'}`,
-        'error',
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error al buscar servidor';
+      this.addLog(`  ✗ Error: ${errorMessage}`, 'error');
       return false;
     } finally {
       discoveryService.setLogCallback(null);

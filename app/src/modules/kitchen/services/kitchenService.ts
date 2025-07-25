@@ -1,4 +1,4 @@
-import ApiClientWrapper from '@/app/services/apiClientWrapper';
+import apiClient from '@/app/services/apiClient';
 import { KitchenOrder, KitchenFilters } from '../types/kitchen.types';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
@@ -36,7 +36,7 @@ class KitchenService {
       ? `${API_PATHS.KITCHEN_ORDERS}?${queryString}`
       : API_PATHS.KITCHEN_ORDERS;
 
-    const response = await ApiClientWrapper.get<KitchenOrder[]>(url);
+    const response = await apiClient.get<KitchenOrder[]>(url);
     return response.data || [];
   }
 
@@ -44,7 +44,7 @@ class KitchenService {
     itemId: string,
     isPrepared: boolean = true,
   ): Promise<void> {
-    await ApiClientWrapper.patch(
+    await apiClient.patch(
       API_PATHS.KITCHEN_MARK_PREPARED.replace(':itemId', itemId),
       {
         isPrepared,
@@ -53,25 +53,25 @@ class KitchenService {
   }
 
   async unmarkItemPrepared(itemId: string): Promise<void> {
-    await ApiClientWrapper.patch(
+    await apiClient.patch(
       API_PATHS.KITCHEN_MARK_UNPREPARED.replace(':itemId', itemId),
     );
   }
 
   async startOrderPreparation(orderId: string): Promise<void> {
-    await ApiClientWrapper.patch(
+    await apiClient.patch(
       API_PATHS.KITCHEN_ORDERS_START_PREPARATION.replace(':orderId', orderId),
     );
   }
 
   async cancelOrderPreparation(orderId: string): Promise<void> {
-    await ApiClientWrapper.patch(
+    await apiClient.patch(
       API_PATHS.KITCHEN_ORDERS_CANCEL_PREPARATION.replace(':orderId', orderId),
     );
   }
 
   async completeOrderPreparation(orderId: string): Promise<void> {
-    await ApiClientWrapper.patch(
+    await apiClient.patch(
       API_PATHS.KITCHEN_ORDERS_COMPLETE_PREPARATION.replace(
         ':orderId',
         orderId,

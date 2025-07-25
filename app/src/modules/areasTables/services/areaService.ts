@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
+import apiClient from '../../../app/services/apiClient';
 import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
-import { BackendErrorResponse } from '../../../app/types/api.types';
 import { BaseListQuery } from '../../../app/types/query.types';
 import {
   Area,
@@ -15,7 +14,7 @@ export const getAreas = async (
   filterOptions: FindAllAreasDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Area[]> => {
-  const response = await ApiClientWrapper.get<{
+  const response = await apiClient.get<{
     items: Area[];
     total: number;
     page: number;
@@ -23,46 +22,27 @@ export const getAreas = async (
     hasNextPage: boolean;
     hasPrevPage: boolean;
   }>(API_PATHS.AREAS, {
-    ...filterOptions,
-    page: paginationOptions.page,
-    limit: paginationOptions.limit,
+    params: {
+      ...filterOptions,
+      page: paginationOptions.page,
+      limit: paginationOptions.limit,
+    },
   });
 
-  if (!response.ok || !response.data) {
-    // Error al obtener áreas
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data.items;
 };
 
 export const getAreaById = async (id: string): Promise<Area> => {
-  const response = await ApiClientWrapper.get<Area>(
+  const response = await apiClient.get<Area>(
     API_PATHS.AREAS_BY_ID.replace(':id', id),
   );
 
-  if (!response.ok || !response.data) {
-    // Error al obtener área por ID
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
 export const createArea = async (data: CreateAreaDto): Promise<Area> => {
-  const response = await ApiClientWrapper.post<Area>(API_PATHS.AREAS, data);
+  const response = await apiClient.post<Area>(API_PATHS.AREAS, data);
 
-  if (!response.ok || !response.data) {
-    // Error al crear área
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
@@ -70,33 +50,16 @@ export const updateArea = async (
   id: string,
   data: UpdateAreaDto,
 ): Promise<Area> => {
-  const response = await ApiClientWrapper.patch<Area>(
+  const response = await apiClient.patch<Area>(
     API_PATHS.AREAS_BY_ID.replace(':id', id),
     data,
   );
 
-  if (!response.ok || !response.data) {
-    // Error al actualizar área
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
   return response.data;
 };
 
 export const deleteArea = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(
-    API_PATHS.AREAS_BY_ID.replace(':id', id),
-  );
-
-  if (!response.ok) {
-    // Error al eliminar área
-    throw ApiError.fromApiResponse(
-      response.data as BackendErrorResponse | undefined,
-      response.status,
-    );
-  }
+  await apiClient.delete(API_PATHS.AREAS_BY_ID.replace(':id', id));
 };
 
 // Claves de Query para áreas

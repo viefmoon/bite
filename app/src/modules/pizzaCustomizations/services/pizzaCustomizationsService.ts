@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { PaginatedResponse } from '@/app/types/api.types';
 import type { PizzaCustomization } from '../types/pizzaCustomization.types';
@@ -18,11 +17,7 @@ async function findAll(
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(API_PATHS.PIZZA_CUSTOMIZATIONS, params);
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
+  }>(API_PATHS.PIZZA_CUSTOMIZATIONS, { params });
 
   return {
     data: response.data.items,
@@ -37,11 +32,6 @@ async function findOne(id: string): Promise<PizzaCustomization> {
   const response = await apiClient.get<PizzaCustomization>(
     API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
   return response.data;
 }
 
@@ -52,11 +42,6 @@ async function create(
     API_PATHS.PIZZA_CUSTOMIZATIONS,
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
   return response.data;
 }
 
@@ -68,35 +53,22 @@ async function update(
     API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
-
   return response.data;
 }
 
 async function remove(id: string): Promise<void> {
-  const response = await apiClient.delete(
+  await apiClient.delete(
     API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 async function updateSortOrder(
   updates: { id: string; sortOrder: number }[],
 ): Promise<void> {
-  const response = await apiClient.patch(
+  await apiClient.patch(
     API_PATHS.PIZZA_CUSTOMIZATIONS_SORT_ORDER,
     { updates },
   );
-
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 export const pizzaCustomizationsService = {

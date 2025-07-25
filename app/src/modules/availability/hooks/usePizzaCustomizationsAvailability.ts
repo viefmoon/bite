@@ -11,10 +11,6 @@ export function usePizzaCustomizationsAvailability(search?: string) {
         PizzaCustomizationGroupAvailability[]
       >(API_PATHS.AVAILABILITY_PIZZA_CUSTOMIZATIONS);
 
-      if (!response.ok || !response.data) {
-        throw new Error('Failed to fetch pizza customizations availability');
-      }
-
       let data = response.data;
 
       if (search) {

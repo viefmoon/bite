@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Address,
@@ -15,9 +14,6 @@ async function create(
     API_PATHS.ADDRESSES_BY_CUSTOMER.replace(':customerId', customerId),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
@@ -29,19 +25,13 @@ async function update(
     API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),
     data,
   );
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
   return response.data;
 }
 
 async function remove(addressId: string): Promise<void> {
-  const response = await apiClient.delete(
+  await apiClient.delete(
     API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),
   );
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status);
-  }
 }
 
 export const addressesService = {

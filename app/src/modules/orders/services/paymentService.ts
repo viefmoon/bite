@@ -1,4 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import type {
   Payment,
@@ -10,11 +10,8 @@ import type {
 
 class PaymentService {
   async createPayment(dto: CreatePaymentDto): Promise<Payment> {
-    const { data } = await ApiClientWrapper.post<Payment>(
-      API_PATHS.PAYMENTS,
-      dto,
-    );
-    return data;
+    const response = await apiClient.post<Payment>(API_PATHS.PAYMENTS, dto);
+    return response.data;
   }
 
   async getPayments(filters?: {
@@ -22,38 +19,36 @@ class PaymentService {
     paymentMethod?: PaymentMethod;
     paymentStatus?: PaymentStatus;
   }): Promise<Payment[]> {
-    const { data } = await ApiClientWrapper.get<Payment[]>(API_PATHS.PAYMENTS, {
+    const response = await apiClient.get<Payment[]>(API_PATHS.PAYMENTS, {
       params: filters,
     });
-    return data;
+    return response.data;
   }
 
   async getPaymentById(id: string): Promise<Payment> {
-    const { data } = await ApiClientWrapper.get<Payment>(
+    const response = await apiClient.get<Payment>(
       API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
     );
-    return data;
+    return response.data;
   }
 
   async getPaymentsByOrderId(orderId: string): Promise<Payment[]> {
-    const { data } = await ApiClientWrapper.get<Payment[]>(
+    const response = await apiClient.get<Payment[]>(
       API_PATHS.PAYMENTS_BY_ORDER.replace(':orderId', orderId),
     );
-    return data;
+    return response.data;
   }
 
   async updatePayment(id: string, dto: UpdatePaymentDto): Promise<Payment> {
-    const { data } = await ApiClientWrapper.patch<Payment>(
+    const response = await apiClient.patch<Payment>(
       API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
       dto,
     );
-    return data;
+    return response.data;
   }
 
   async deletePayment(id: string): Promise<void> {
-    await ApiClientWrapper.delete(
-      API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id),
-    );
+    await apiClient.delete(API_PATHS.PAYMENTS_BY_ID.replace(':paymentId', id));
   }
 }
 

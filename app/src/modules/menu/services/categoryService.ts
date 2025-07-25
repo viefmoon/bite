@@ -1,5 +1,4 @@
-import ApiClientWrapper from '../../../app/services/apiClientWrapper';
-import { ApiError } from '../../../app/lib/errors';
+import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import type {
   Category,
@@ -13,18 +12,14 @@ export const getCategories = async (params?: {
   page?: number;
   limit?: number;
 }): Promise<PaginatedResponse<Category>> => {
-  const response = await ApiClientWrapper.get<{
+  const response = await apiClient.get<{
     items: Category[];
     total: number;
     page: number;
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(API_PATHS.CATEGORIES, params);
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
+  }>(API_PATHS.CATEGORIES, { params });
 
   // Transforma la respuesta del backend a PaginatedResponse
   return {
@@ -37,27 +32,16 @@ export const getCategories = async (params?: {
 };
 
 export const getCategory = async (id: string): Promise<Category> => {
-  const response = await ApiClientWrapper.get<Category>(
+  const response = await apiClient.get<Category>(
     API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
   return response.data;
 };
 
 export const createCategory = async (
   data: CreateCategoryDto,
 ): Promise<Category> => {
-  const response = await ApiClientWrapper.post<Category>(
-    API_PATHS.CATEGORIES,
-    data,
-  );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
+  const response = await apiClient.post<Category>(API_PATHS.CATEGORIES, data);
   return response.data;
 };
 
@@ -65,38 +49,22 @@ export const updateCategory = async (
   id: string,
   data: UpdateCategoryDto,
 ): Promise<Category> => {
-  const response = await ApiClientWrapper.patch<Category>(
+  const response = await apiClient.patch<Category>(
     API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
     data,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
-
   return response.data;
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
-  const response = await ApiClientWrapper.delete(
-    API_PATHS.CATEGORIES_BY_ID.replace(':id', id),
-  );
-
-  if (!response.ok) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
+  await apiClient.delete(API_PATHS.CATEGORIES_BY_ID.replace(':id', id));
 };
 
 // Menú para pantallas de creación de órdenes
 export async function getOrderMenu(): Promise<Category[]> {
-  const response = await ApiClientWrapper.get<Category[]>(
+  const response = await apiClient.get<Category[]>(
     API_PATHS.CATEGORIES_ORDER_MENU,
   );
-
-  if (!response.ok || !response.data) {
-    throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-  }
-
   return response.data;
 }
 

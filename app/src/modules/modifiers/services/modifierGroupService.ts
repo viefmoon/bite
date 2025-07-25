@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   ModifierGroup,
@@ -44,13 +43,8 @@ export const modifierGroupService = {
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIER_GROUPS,
-      queryParams,
+      { params: queryParams },
     );
-
-    if (!response.ok || !response.data) {
-      // Error al obtener grupos de modificadores
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
 
     // Parsear como respuesta paginada
     const paginatedResult = paginatedModifierGroupsSchema.safeParse(
@@ -81,11 +75,6 @@ export const modifierGroupService = {
       API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
     );
 
-    if (!response.ok || !response.data) {
-      // Error al obtener grupo de modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
-
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       // Datos inválidos recibidos para grupo de modificador
@@ -102,11 +91,6 @@ export const modifierGroupService = {
       API_PATHS.MODIFIER_GROUPS,
       data,
     );
-
-    if (!response.ok || !response.data) {
-      // Error al crear grupo de modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
 
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
@@ -130,11 +114,6 @@ export const modifierGroupService = {
       data,
     );
 
-    if (!response.ok || !response.data) {
-      // Error al actualizar grupo de modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
-
     const validationResult = modifierGroupApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       // Datos inválidos recibidos después de actualizar grupo de modificador
@@ -149,13 +128,8 @@ export const modifierGroupService = {
    * Elimina un grupo de modificadores.
    */
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(
+    await apiClient.delete(
       API_PATHS.MODIFIER_GROUPS_BY_ID.replace(':id', id),
     );
-
-    if (!response.ok) {
-      // Error al eliminar grupo de modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
   },
 };

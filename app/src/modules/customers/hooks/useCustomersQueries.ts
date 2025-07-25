@@ -163,13 +163,15 @@ export function useGetAddressesByCustomer(
   return useQuery({
     queryKey: customerKeys.addresses(customerId),
     queryFn: async () => {
-      const response = await apiClient.get<Address[]>(
-        `${API_PATHS.CUSTOMERS}/${customerId}/addresses`,
-      );
-      if (!response.ok || !response.data) {
+      try {
+        const response = await apiClient.get<Address[]>(
+          `${API_PATHS.CUSTOMERS}/${customerId}/addresses`,
+        );
+        return response.data;
+      } catch (error) {
+        // Si hay error al obtener direcciones, retornar array vacío
         return [];
       }
-      return response.data;
     },
     enabled: options?.enabled ?? true,
   });

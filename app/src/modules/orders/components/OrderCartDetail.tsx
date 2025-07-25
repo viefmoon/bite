@@ -988,12 +988,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return result;
   }, []);
 
-  // Estado para controlar si ya procesamos los productos pendientes (declarado arriba)
-  // const [processedPendingProductsIds, setProcessedPendingProductsIds] =
-  //   useState<string[]>([]);
-  // Estado para controlar si los datos de la orden ya se cargaron (declarado arriba)
-  // const [orderDataLoaded, setOrderDataLoaded] = useState(false);
-
   // Manejar productos pendientes de añadir
   useEffect(() => {
     // Solo procesar cuando:

@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { ApiError } from '@/app/lib/errors';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Modifier,
@@ -42,13 +41,8 @@ export const modifierService = {
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIERS,
-      queryParams,
+      { params: queryParams },
     );
-
-    if (!response.ok || !response.data) {
-      // Error al obtener modificadores
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
 
     // Parsear como respuesta paginada
     const paginatedResult = paginatedModifiersSchema.safeParse(response.data);
@@ -77,11 +71,6 @@ export const modifierService = {
       API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
     );
 
-    if (!response.ok || !response.data) {
-      // Error al obtener modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
-
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       // Datos inválidos recibidos para modificador
@@ -103,13 +92,8 @@ export const modifierService = {
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIERS_BY_GROUP.replace(':modifierGroupId', modifierGroupId),
-      queryParams,
+      { params: queryParams },
     );
-
-    if (!response.ok || !response.data) {
-      // Error al obtener modificadores del grupo
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
 
     const validationResult = modifiersListSchema.safeParse(response.data);
     if (!validationResult.success) {
@@ -126,11 +110,6 @@ export const modifierService = {
    */
   async create(data: CreateModifierInput): Promise<Modifier> {
     const response = await apiClient.post<unknown>(API_PATHS.MODIFIERS, data);
-
-    if (!response.ok || !response.data) {
-      // Error al crear modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
@@ -149,11 +128,6 @@ export const modifierService = {
       data,
     );
 
-    if (!response.ok || !response.data) {
-      // Error al actualizar modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
-
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
       // Datos inválidos recibidos después de actualizar modificador
@@ -168,13 +142,8 @@ export const modifierService = {
    * Elimina un modificador.
    */
   async remove(id: string): Promise<void> {
-    const response = await apiClient.delete(
+    await apiClient.delete(
       API_PATHS.MODIFIERS_BY_ID.replace(':id', id),
     );
-
-    if (!response.ok) {
-      // Error al eliminar modificador
-      throw ApiError.fromApiResponse(response.data, response.status ?? 500);
-    }
   },
 };

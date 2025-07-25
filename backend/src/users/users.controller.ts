@@ -160,24 +160,4 @@ export class UsersController {
       updateUserPreparationScreensDto.preparationScreenIds,
     );
   }
-
-  // Endpoint temporal de debug
-  @Get(':id/debug-screen')
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-  })
-  @HttpCode(HttpStatus.OK)
-  async debugUserScreen(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    return {
-      userId: user?.id,
-      username: user?.username,
-      roleId: user?.role?.id,
-      hasPreparationScreen: !!user?.preparationScreen,
-      preparationScreenId: user?.preparationScreen?.id,
-      preparationScreenName: user?.preparationScreen?.name,
-    };
-  }
 }

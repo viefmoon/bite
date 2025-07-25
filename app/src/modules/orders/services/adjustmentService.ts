@@ -1,5 +1,4 @@
 import apiClient from '@/app/services/apiClient';
-import { handleApiResponse } from '@/app/lib/apiHelpers';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Adjustment } from '@/app/schemas/domain/adjustment.schema';
 import type { OrderAdjustmentDto } from '../types/update-order.types';
@@ -15,7 +14,7 @@ export const adjustmentService = {
       API_PATHS.ADJUSTMENTS + '/bulk',
       adjustments,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 
   /**
@@ -25,17 +24,16 @@ export const adjustmentService = {
     const response = await apiClient.get<Adjustment[]>(
       API_PATHS.ADJUSTMENTS + '/order/' + orderId,
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 
   /**
    * Elimina un ajuste (solo admin)
    */
   deleteAdjustment: async (adjustmentId: string): Promise<void> => {
-    const response = await apiClient.delete<void>(
+    await apiClient.delete<void>(
       API_PATHS.ADJUSTMENTS_BY_ID.replace(':id', adjustmentId),
     );
-    return handleApiResponse(response);
   },
 
   /**
@@ -47,6 +45,6 @@ export const adjustmentService = {
     const response = await apiClient.get<{ total: number }>(
       API_PATHS.ADJUSTMENTS + '/order/' + orderId + '/total',
     );
-    return handleApiResponse(response);
+    return response.data;
   },
 };

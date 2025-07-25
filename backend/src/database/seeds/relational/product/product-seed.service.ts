@@ -498,9 +498,6 @@ export class ProductSeedService {
     const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada si no se encuentra "Bar"
 
     if (!defaultScreen) {
-      console.error(
-        'No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.',
-      );
       return;
     }
 
@@ -916,9 +913,6 @@ export class ProductSeedService {
     const defaultScreen = preparationScreens[0]; // Usar la primera como predeterminada
 
     if (!defaultScreen) {
-      console.error(
-        'No hay pantallas de preparación disponibles. Por favor ejecuta el seeder de preparation screens primero.',
-      );
       return;
     }
 
