@@ -2,6 +2,10 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KitchenController } from './controllers/kitchen.controller';
 import { KitchenService } from './services/kitchen.service';
+import { KitchenOrderQueryBuilderService } from './services/kitchen-order-query-builder.service';
+import { KitchenOrderMapperService } from './services/kitchen-order-mapper.service';
+import { ScreenStatusProcessorService } from './services/screen-status-processor.service';
+import { OrderItemOperationsService } from './services/order-item-operations.service';
 import { OrderEntity } from '../orders/infrastructure/persistence/relational/entities/order.entity';
 import { OrderItemEntity } from '../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
@@ -19,7 +23,13 @@ import { RelationalOrderPersistenceModule } from '../orders/infrastructure/persi
     forwardRef(() => RelationalOrderPersistenceModule),
   ],
   controllers: [KitchenController],
-  providers: [KitchenService],
+  providers: [
+    KitchenService,
+    KitchenOrderQueryBuilderService,
+    KitchenOrderMapperService,
+    ScreenStatusProcessorService,
+    OrderItemOperationsService,
+  ],
   exports: [KitchenService],
 })
 export class KitchenModule {}
