@@ -10,8 +10,6 @@ import { Order } from './domain/order';
 import { OrderRepository } from './infrastructure/persistence/order.repository';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { FindAllOrdersDto } from './dto/find-all-orders.dto';
-import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderStatus } from './domain/enums/order-status.enum';
 import { OrderItemRepository } from './infrastructure/persistence/order-item.repository';
 import { OrderItem } from './domain/order-item';
@@ -19,7 +17,6 @@ import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { PreparationStatus } from './domain/order-item';
 import { PaymentMethod } from '../payments/domain/enums/payment-method.enum';
-import { PaymentStatus } from '../payments/domain/enums/payment-status.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { TicketImpressionRepository } from './infrastructure/persistence/ticket-impression.repository';
 import { TicketType } from './domain/enums/ticket-type.enum';
@@ -45,9 +42,9 @@ import { RestaurantConfigService } from '../restaurant-config/restaurant-config.
 import { OrderType } from './domain/enums/order-type.enum';
 import { ProductRepository } from '../products/infrastructure/persistence/product.repository';
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
+import { UserContextService } from '../common/services/user-context.service';
 import { DataSource, Not, In, Between } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
-import { format } from 'date-fns';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
 import {
   PreparationScreenStatus,
@@ -78,6 +75,7 @@ export class OrdersService {
     private readonly customersService: CustomersService,
     private readonly restaurantConfigService: RestaurantConfigService,
     private readonly orderChangeTracker: OrderChangeTrackerV2Service,
+    private readonly userContextService: UserContextService,
     private readonly dataSource: DataSource,
     private readonly paymentsService: PaymentsService,
     private readonly tablesService: TablesService,
@@ -159,7 +157,7 @@ export class OrdersService {
     const hasDeliveryData =
       createOrderDto.deliveryInfo &&
       Object.entries(createOrderDto.deliveryInfo).some(
-        ([key, value]) => value !== undefined && value !== null && value !== '',
+        ([, value]) => value !== undefined && value !== null && value !== '',
       );
 
     if (hasDeliveryData) {
@@ -171,7 +169,7 @@ export class OrdersService {
 
       // Solo crear deliveryInfo si quedan campos después de la limpieza
       const hasCleanedData = Object.entries(cleanedDeliveryInfo).some(
-        ([key, value]) => value !== undefined && value !== null && value !== '',
+        ([, value]) => value !== undefined && value !== null && value !== '',
       );
 
       if (hasCleanedData) {
@@ -364,166 +362,123 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    // Obtener la orden existente para comparar
-    const existingOrder = await this.findOne(id);
+    // Usar transacción para garantizar consistencia entre actualización y historial
+    return await this.dataSource.transaction(async (manager) => {
+      // Obtener la orden existente para comparar
+      const existingOrder = await this.findOne(id);
 
-    // Capturar el estado anterior completo de la entidad ANTES de cualquier cambio
-    let previousOrderEntity: OrderEntity | null = null;
-    if (
-      existingOrder.orderType === OrderType.DELIVERY ||
-      existingOrder.orderType === OrderType.TAKE_AWAY
-    ) {
-      const queryRunner = this.dataSource.createQueryRunner();
-      try {
-        await queryRunner.connect();
-        previousOrderEntity = await queryRunner.manager.findOne(OrderEntity, {
-          where: { id },
-          relations: [
-            'orderItems',
-            'orderItems.product',
-            'orderItems.productVariant',
-            'orderItems.productModifiers',
-            'orderItems.selectedPizzaCustomizations',
-            'orderItems.selectedPizzaCustomizations.pizzaCustomization',
-            'deliveryInfo',
-          ],
-        });
-      } finally {
-        await queryRunner.release();
-      }
-    }
-
-    // Manejar la creación de mesa temporal si es necesario
-    let newTableId = updateOrderDto.tableId;
-    if (
-      updateOrderDto.isTemporaryTable &&
-      updateOrderDto.temporaryTableName &&
-      updateOrderDto.temporaryTableAreaId
-    ) {
-      // Crear mesa temporal
-      const temporaryTable = await this.tablesService.create({
-        name: updateOrderDto.temporaryTableName,
-        areaId: updateOrderDto.temporaryTableAreaId,
-        isTemporary: true,
-        temporaryIdentifier: uuidv4(),
-        isActive: true,
-        isAvailable: false,
-        capacity: 4,
+      // Capturar el estado anterior completo con todas las relaciones
+      const previousOrderEntity = await manager.findOne(OrderEntity, {
+        where: { id },
+        relations: [
+          'orderItems',
+          'orderItems.product',
+          'orderItems.productVariant',
+          'orderItems.productModifiers',
+          'orderItems.selectedPizzaCustomizations',
+          'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+          'table',
+          'customer',
+          'customer.addresses',
+          'deliveryInfo',
+        ],
       });
-      newTableId = temporaryTable.id;
-    }
 
-    // Actualizar datos básicos de la orden
-    const updatePayload: Partial<Order> = {};
-
-    // Solo incluir campos que realmente cambiaron
-    if (
-      updateOrderDto.userId !== undefined &&
-      updateOrderDto.userId !== existingOrder.userId
-    )
-      updatePayload.userId = updateOrderDto.userId;
-    if (newTableId !== undefined && newTableId !== existingOrder.tableId) {
-      updatePayload.tableId = newTableId;
-
-      // Manejar cambio de mesa: liberar la anterior y ocupar la nueva
-      // Solo si la orden no está finalizada
+      // Manejar la creación de mesa temporal si es necesario
+      let newTableId = updateOrderDto.tableId;
       if (
-        existingOrder.orderStatus !== OrderStatus.COMPLETED &&
-        existingOrder.orderStatus !== OrderStatus.CANCELLED
+        updateOrderDto.isTemporaryTable &&
+        updateOrderDto.temporaryTableName &&
+        updateOrderDto.temporaryTableAreaId
       ) {
-        // Liberar mesa anterior si existía
-        if (existingOrder.tableId) {
-          const oldTable = await this.tablesService.findOne(
-            existingOrder.tableId,
-          );
-
-          if (oldTable.isTemporary) {
-            // Eliminar mesa temporal
-            await this.tablesService.remove(existingOrder.tableId);
-          } else {
-            // Liberar mesa normal
-            await this.tablesService.update(existingOrder.tableId, {
-              isAvailable: true,
-            });
-          }
-        }
-
-        // Ocupar nueva mesa si se especificó
-        if (newTableId) {
-          // Verificar que la mesa esté disponible (solo si no es temporal, ya que las temporales ya se crean ocupadas)
-          if (!updateOrderDto.isTemporaryTable) {
-            const newTable = await this.tablesService.findOne(newTableId);
-            if (!newTable.isAvailable) {
-              throw new BadRequestException(
-                `La mesa ${newTable.name} no está disponible`,
-              );
-            }
-
-            await this.tablesService.update(newTableId, {
-              isAvailable: false,
-            });
-          }
-        }
+        // Crear mesa temporal
+        const temporaryTable = await this.tablesService.create({
+          name: updateOrderDto.temporaryTableName,
+          areaId: updateOrderDto.temporaryTableAreaId,
+          isTemporary: true,
+          temporaryIdentifier: uuidv4(),
+          isActive: true,
+          isAvailable: false,
+          capacity: 4,
+        });
+        newTableId = temporaryTable.id;
       }
-    }
-    if (
-      updateOrderDto.scheduledAt !== undefined &&
-      new Date(updateOrderDto.scheduledAt).getTime() !==
-        new Date(existingOrder.scheduledAt || 0).getTime()
-    )
-      updatePayload.scheduledAt = updateOrderDto.scheduledAt;
-    if (
-      updateOrderDto.orderStatus !== undefined &&
-      updateOrderDto.orderStatus !== existingOrder.orderStatus
-    ) {
-      updatePayload.orderStatus = updateOrderDto.orderStatus;
 
-      // Si la orden se está completando o cancelando, establecer finalizedAt y liberar la mesa
+      // Actualizar datos básicos de la orden
+      const updatePayload: Partial<OrderEntity> = {};
+
+      // Solo incluir campos que realmente cambiaron
       if (
-        updateOrderDto.orderStatus === OrderStatus.COMPLETED ||
-        updateOrderDto.orderStatus === OrderStatus.CANCELLED
-      ) {
-        updatePayload.finalizedAt = new Date();
+        updateOrderDto.userId !== undefined &&
+        updateOrderDto.userId !== existingOrder.userId
+      )
+        updatePayload.userId = updateOrderDto.userId;
+      if (newTableId !== undefined && newTableId !== existingOrder.tableId) {
+        updatePayload.tableId = newTableId;
 
-        // Liberar la mesa si existe
-        if (existingOrder.tableId) {
-          // Verificar si es una mesa temporal
-          const table = await this.tablesService.findOne(existingOrder.tableId);
-
-          if (table.isTemporary) {
-            // Eliminar mesa temporal
-            await this.tablesService.remove(existingOrder.tableId);
-          } else {
-            // Liberar mesa normal
-            await this.tablesService.update(existingOrder.tableId, {
-              isAvailable: true,
-            });
-          }
-        }
-      }
-    }
-    if (
-      updateOrderDto.orderType !== undefined &&
-      updateOrderDto.orderType !== existingOrder.orderType
-    ) {
-      updatePayload.orderType = updateOrderDto.orderType;
-
-      // Si se cambia de DINE_IN a otro tipo, liberar la mesa
-      if (
-        existingOrder.orderType === OrderType.DINE_IN &&
-        updateOrderDto.orderType !== OrderType.DINE_IN
-      ) {
-        // Limpiar tableId cuando se cambia de DINE_IN a otro tipo
-        updatePayload.tableId = null;
-
-        // Solo intentar liberar la mesa si existe y la orden no está terminada
+        // Manejar cambio de mesa: liberar la anterior y ocupar la nueva
+        // Solo si la orden no está finalizada
         if (
-          existingOrder.tableId &&
           existingOrder.orderStatus !== OrderStatus.COMPLETED &&
           existingOrder.orderStatus !== OrderStatus.CANCELLED
         ) {
-          try {
-            // Verificar si es mesa temporal
+          // Liberar mesa anterior si existía
+          if (existingOrder.tableId) {
+            const oldTable = await this.tablesService.findOne(
+              existingOrder.tableId,
+            );
+
+            if (oldTable.isTemporary) {
+              // Eliminar mesa temporal
+              await this.tablesService.remove(existingOrder.tableId);
+            } else {
+              // Liberar mesa normal
+              await this.tablesService.update(existingOrder.tableId, {
+                isAvailable: true,
+              });
+            }
+          }
+
+          // Ocupar nueva mesa si se especificó
+          if (newTableId) {
+            // Verificar que la mesa esté disponible (solo si no es temporal, ya que las temporales ya se crean ocupadas)
+            if (!updateOrderDto.isTemporaryTable) {
+              const newTable = await this.tablesService.findOne(newTableId);
+              if (!newTable.isAvailable) {
+                throw new BadRequestException(
+                  `La mesa ${newTable.name} no está disponible`,
+                );
+              }
+
+              await this.tablesService.update(newTableId, {
+                isAvailable: false,
+              });
+            }
+          }
+        }
+      }
+      if (
+        updateOrderDto.scheduledAt !== undefined &&
+        new Date(updateOrderDto.scheduledAt).getTime() !==
+          new Date(existingOrder.scheduledAt || 0).getTime()
+      )
+        updatePayload.scheduledAt = updateOrderDto.scheduledAt;
+      if (
+        updateOrderDto.orderStatus !== undefined &&
+        updateOrderDto.orderStatus !== existingOrder.orderStatus
+      ) {
+        updatePayload.orderStatus = updateOrderDto.orderStatus;
+
+        // Si la orden se está completando o cancelando, establecer finalizedAt y liberar la mesa
+        if (
+          updateOrderDto.orderStatus === OrderStatus.COMPLETED ||
+          updateOrderDto.orderStatus === OrderStatus.CANCELLED
+        ) {
+          updatePayload.finalizedAt = new Date();
+
+          // Liberar la mesa si existe
+          if (existingOrder.tableId) {
+            // Verificar si es una mesa temporal
             const table = await this.tablesService.findOne(
               existingOrder.tableId,
             );
@@ -537,110 +492,182 @@ export class OrdersService {
                 isAvailable: true,
               });
             }
-          } catch (error) {
-            this.logger.error(
-              `Error al liberar mesa ${existingOrder.tableId}:`,
-              error,
-            );
-            // Continuar con la actualización aunque haya error con la mesa
           }
         }
       }
-
-      // Si se cambia de DELIVERY/TAKEAWAY a DINE_IN, asegurar que tableId se maneje correctamente
       if (
-        (existingOrder.orderType === OrderType.DELIVERY ||
-          existingOrder.orderType === OrderType.TAKE_AWAY) &&
-        updateOrderDto.orderType === OrderType.DINE_IN
+        updateOrderDto.orderType !== undefined &&
+        updateOrderDto.orderType !== existingOrder.orderType
       ) {
-        // El tableId se maneja en la lógica general de actualización
-      }
-    }
-    if (
-      updateOrderDto.subtotal !== undefined &&
-      Number(updateOrderDto.subtotal) !== Number(existingOrder.subtotal)
-    )
-      updatePayload.subtotal = updateOrderDto.subtotal;
-    if (
-      updateOrderDto.total !== undefined &&
-      Number(updateOrderDto.total) !== Number(existingOrder.total)
-    )
-      updatePayload.total = updateOrderDto.total;
-    if (
-      updateOrderDto.notes !== undefined &&
-      updateOrderDto.notes !== existingOrder.notes
-    )
-      updatePayload.notes = updateOrderDto.notes;
-    if (
-      updateOrderDto.customerId !== undefined &&
-      updateOrderDto.customerId !== existingOrder.customerId
-    )
-      updatePayload.customerId = updateOrderDto.customerId;
+        updatePayload.orderType = updateOrderDto.orderType;
 
-    // Determinar el tipo de orden final (nuevo o existente)
-    const finalOrderType = updateOrderDto.orderType || existingOrder.orderType;
+        // Si se cambia de DINE_IN a otro tipo, liberar la mesa
+        if (
+          existingOrder.orderType === OrderType.DINE_IN &&
+          updateOrderDto.orderType !== OrderType.DINE_IN
+        ) {
+          // Limpiar tableId cuando se cambia de DINE_IN a otro tipo
+          updatePayload.tableId = null;
 
-    // Manejar delivery_info de forma centralizada y robusta
-    const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
+          // Solo intentar liberar la mesa si existe y la orden no está terminada
+          if (
+            existingOrder.tableId &&
+            existingOrder.orderStatus !== OrderStatus.COMPLETED &&
+            existingOrder.orderStatus !== OrderStatus.CANCELLED
+          ) {
+            try {
+              // Verificar si es mesa temporal
+              const table = await this.tablesService.findOne(
+                existingOrder.tableId,
+              );
 
-    if (finalOrderType === OrderType.DINE_IN) {
-      // Si es DINE_IN, siempre eliminar delivery_info
-      updatePayload.deliveryInfo = null;
-    } else if (deliveryInfoInPayload || (existingOrder as any).deliveryInfo) {
-      // Si hay datos nuevos o existentes, procesarlos con el método centralizado
-      const deliveryData = deliveryInfoInPayload
-        ? {
-            ...(existingOrder as any).deliveryInfo,
-            ...updateOrderDto.deliveryInfo,
+              if (table.isTemporary) {
+                // Eliminar mesa temporal
+                await this.tablesService.remove(existingOrder.tableId);
+              } else {
+                // Liberar mesa normal
+                await this.tablesService.update(existingOrder.tableId, {
+                  isAvailable: true,
+                });
+              }
+            } catch (error) {
+              this.logger.error(
+                `Error al liberar mesa ${existingOrder.tableId}:`,
+                error,
+              );
+              // Continuar con la actualización aunque haya error con la mesa
+            }
           }
-        : (existingOrder as any).deliveryInfo;
+        }
 
-      updatePayload.deliveryInfo = await this.handleDeliveryInfo(
-        id,
-        deliveryData,
-        finalOrderType,
-      );
-    }
-
-    // Solo actualizar si hay cambios en los campos básicos
-    if (Object.keys(updatePayload).length > 0) {
-      const updatedOrder = await this.orderRepository.update(id, updatePayload);
-      if (!updatedOrder) {
-        throw new Error(`Failed to update order with ID ${id}`);
+        // Si se cambia de DELIVERY/TAKEAWAY a DINE_IN, asegurar que tableId se maneje correctamente
+        if (
+          (existingOrder.orderType === OrderType.DELIVERY ||
+            existingOrder.orderType === OrderType.TAKE_AWAY) &&
+          updateOrderDto.orderType === OrderType.DINE_IN
+        ) {
+          // El tableId se maneja en la lógica general de actualización
+        }
       }
-    }
+      if (
+        updateOrderDto.subtotal !== undefined &&
+        Number(updateOrderDto.subtotal) !== Number(existingOrder.subtotal)
+      )
+        updatePayload.subtotal = updateOrderDto.subtotal;
+      if (
+        updateOrderDto.total !== undefined &&
+        Number(updateOrderDto.total) !== Number(existingOrder.total)
+      )
+        updatePayload.total = updateOrderDto.total;
+      if (
+        updateOrderDto.notes !== undefined &&
+        updateOrderDto.notes !== existingOrder.notes
+      )
+        updatePayload.notes = updateOrderDto.notes;
+      if (
+        updateOrderDto.customerId !== undefined &&
+        updateOrderDto.customerId !== existingOrder.customerId
+      )
+        updatePayload.customerId = updateOrderDto.customerId;
 
-    // Solo procesar items si se proporcionaron explícitamente
-    if (
-      updateOrderDto.items !== undefined &&
-      Array.isArray(updateOrderDto.items)
-    ) {
-      // Obtener items existentes
-      const existingItems = await this.orderItemRepository.findByOrderId(id);
-      const existingItemsMap = new Map(
-        existingItems.map((item) => [item.id, item]),
-      );
+      // Determinar el tipo de orden final (nuevo o existente)
+      const finalOrderType =
+        updateOrderDto.orderType || existingOrder.orderType;
 
-      const itemsToUpdate = new Set<string>();
-      const itemsToDelete = new Set(existingItemsMap.keys());
-      let hasNewItems = false;
+      // Manejar delivery_info de forma centralizada y robusta
+      const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
 
-      for (const itemDto of updateOrderDto.items) {
-        if (itemDto.id) {
-          if (itemDto.id.includes(',')) {
-            // Grupo de items concatenados
-            const itemIds = itemDto.id.split(',').filter((id) => id.trim());
-            const existingGroupItems = itemIds.filter((id) =>
-              existingItemsMap.has(id),
-            );
-            const nonExistingCount = itemIds.length - existingGroupItems.length;
+      if (finalOrderType === OrderType.DINE_IN) {
+        // Si es DINE_IN, siempre eliminar delivery_info
+        updatePayload.deliveryInfo = null;
+      } else if (deliveryInfoInPayload || (existingOrder as any).deliveryInfo) {
+        // Si hay datos nuevos o existentes, procesarlos con el método centralizado
+        const deliveryData = deliveryInfoInPayload
+          ? {
+              ...(existingOrder as any).deliveryInfo,
+              ...updateOrderDto.deliveryInfo,
+            }
+          : (existingOrder as any).deliveryInfo;
 
-            // Actualizar items existentes del grupo
-            for (const singleItemId of existingGroupItems) {
-              itemsToUpdate.add(singleItemId);
-              itemsToDelete.delete(singleItemId);
+        const deliveryInfo = await this.handleDeliveryInfo(
+          id,
+          deliveryData,
+          finalOrderType,
+        );
+        // Convertir a entidad compatible
+        updatePayload.deliveryInfo = deliveryInfo as any;
+      }
 
-              await this.updateOrderItem(singleItemId, {
+      // Solo actualizar si hay cambios en los campos básicos
+      if (Object.keys(updatePayload).length > 0) {
+        await manager.update(OrderEntity, id, updatePayload);
+      }
+
+      // Solo procesar items si se proporcionaron explícitamente
+      if (
+        updateOrderDto.items !== undefined &&
+        Array.isArray(updateOrderDto.items)
+      ) {
+        // Obtener items existentes
+        const existingItems = await this.orderItemRepository.findByOrderId(id);
+        const existingItemsMap = new Map(
+          existingItems.map((item) => [item.id, item]),
+        );
+
+        const itemsToUpdate = new Set<string>();
+        const itemsToDelete = new Set(existingItemsMap.keys());
+        let hasNewItems = false;
+
+        for (const itemDto of updateOrderDto.items) {
+          if (itemDto.id) {
+            if (itemDto.id.includes(',')) {
+              // Grupo de items concatenados
+              const itemIds = itemDto.id.split(',').filter((id) => id.trim());
+              const existingGroupItems = itemIds.filter((id) =>
+                existingItemsMap.has(id),
+              );
+              const nonExistingCount =
+                itemIds.length - existingGroupItems.length;
+
+              // Actualizar items existentes del grupo
+              for (const singleItemId of existingGroupItems) {
+                itemsToUpdate.add(singleItemId);
+                itemsToDelete.delete(singleItemId);
+
+                await this.updateOrderItem(singleItemId, {
+                  productId: itemDto.productId,
+                  productVariantId: itemDto.productVariantId,
+                  basePrice: itemDto.basePrice,
+                  finalPrice: itemDto.finalPrice,
+                  preparationNotes: itemDto.preparationNotes,
+                  productModifiers: itemDto.productModifiers,
+                  selectedPizzaCustomizations:
+                    itemDto.selectedPizzaCustomizations,
+                });
+              }
+
+              // Crear items faltantes
+              for (let i = 0; i < nonExistingCount; i++) {
+                const createOrderItemDto: CreateOrderItemDto = {
+                  orderId: id,
+                  productId: itemDto.productId,
+                  productVariantId: itemDto.productVariantId,
+                  basePrice: itemDto.basePrice,
+                  finalPrice: itemDto.finalPrice,
+                  preparationNotes: itemDto.preparationNotes,
+                  productModifiers: itemDto.productModifiers,
+                  selectedPizzaCustomizations:
+                    itemDto.selectedPizzaCustomizations,
+                };
+
+                await this.createOrderItemInternal(createOrderItemDto);
+                hasNewItems = true;
+              }
+            } else if (existingItemsMap.has(itemDto.id)) {
+              itemsToUpdate.add(itemDto.id);
+              itemsToDelete.delete(itemDto.id);
+
+              await this.updateOrderItem(itemDto.id, {
                 productId: itemDto.productId,
                 productVariantId: itemDto.productVariantId,
                 basePrice: itemDto.basePrice,
@@ -650,10 +677,7 @@ export class OrdersService {
                 selectedPizzaCustomizations:
                   itemDto.selectedPizzaCustomizations,
               });
-            }
-
-            // Crear items faltantes
-            for (let i = 0; i < nonExistingCount; i++) {
+            } else {
               const createOrderItemDto: CreateOrderItemDto = {
                 orderId: id,
                 productId: itemDto.productId,
@@ -669,19 +693,6 @@ export class OrdersService {
               await this.createOrderItemInternal(createOrderItemDto);
               hasNewItems = true;
             }
-          } else if (existingItemsMap.has(itemDto.id)) {
-            itemsToUpdate.add(itemDto.id);
-            itemsToDelete.delete(itemDto.id);
-
-            await this.updateOrderItem(itemDto.id, {
-              productId: itemDto.productId,
-              productVariantId: itemDto.productVariantId,
-              basePrice: itemDto.basePrice,
-              finalPrice: itemDto.finalPrice,
-              preparationNotes: itemDto.preparationNotes,
-              productModifiers: itemDto.productModifiers,
-              selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations,
-            });
           } else {
             const createOrderItemDto: CreateOrderItemDto = {
               orderId: id,
@@ -697,115 +708,102 @@ export class OrdersService {
             await this.createOrderItemInternal(createOrderItemDto);
             hasNewItems = true;
           }
-        } else {
-          const createOrderItemDto: CreateOrderItemDto = {
-            orderId: id,
-            productId: itemDto.productId,
-            productVariantId: itemDto.productVariantId,
-            basePrice: itemDto.basePrice,
-            finalPrice: itemDto.finalPrice,
-            preparationNotes: itemDto.preparationNotes,
-            productModifiers: itemDto.productModifiers,
-            selectedPizzaCustomizations: itemDto.selectedPizzaCustomizations,
-          };
+        }
 
-          await this.createOrderItemInternal(createOrderItemDto);
-          hasNewItems = true;
+        // Eliminar items que no están en el DTO actualizado
+        for (const itemIdToDelete of itemsToDelete) {
+          await this.orderItemRepository.delete(itemIdToDelete);
+        }
+
+        // Si se agregaron nuevos items, verificar y actualizar estados de pantalla
+        if (hasNewItems) {
+          await this.handleNewItemsAddedToOrder(id, existingOrder);
         }
       }
 
-      // Eliminar items que no están en el DTO actualizado
-      for (const itemIdToDelete of itemsToDelete) {
-        await this.orderItemRepository.delete(itemIdToDelete);
-      }
+      // Manejar ajustes si se proporcionaron
+      if (
+        updateOrderDto.adjustments !== undefined &&
+        updateOrderDto.adjustments !== null
+      ) {
+        await this.dataSource.manager.transaction(async (manager) => {
+          // Eliminar todos los ajustes existentes de la orden
+          await manager.delete('adjustment', { orderId: id });
 
-      // Si se agregaron nuevos items, verificar y actualizar estados de pantalla
-      if (hasNewItems) {
-        await this.handleNewItemsAddedToOrder(id, existingOrder);
-      }
-    }
-
-    // Manejar ajustes si se proporcionaron
-    if (
-      updateOrderDto.adjustments !== undefined &&
-      updateOrderDto.adjustments !== null
-    ) {
-      await this.dataSource.manager.transaction(async (manager) => {
-        // Eliminar todos los ajustes existentes de la orden
-        await manager.delete('adjustment', { orderId: id });
-
-        // Crear los nuevos ajustes
-        for (const adj of updateOrderDto.adjustments!) {
-          if (!adj.isDeleted) {
-            await manager.save('adjustment', {
-              orderId: id,
-              name: adj.name,
-              isPercentage: adj.isPercentage || false,
-              value: adj.value || 0,
-              amount: adj.amount || 0,
-              appliedAt: new Date(),
-              appliedById:
-                updateOrderDto.userId || existingOrder.userId || 'system',
-            });
+          // Crear los nuevos ajustes
+          for (const adj of updateOrderDto.adjustments!) {
+            if (!adj.isDeleted) {
+              await manager.save('adjustment', {
+                orderId: id,
+                name: adj.name,
+                isPercentage: adj.isPercentage || false,
+                value: adj.value || 0,
+                amount: adj.amount || 0,
+                appliedAt: new Date(),
+                appliedById:
+                  updateOrderDto.userId || existingOrder.userId || 'system',
+              });
+            }
           }
-        }
-      });
-    }
-
-    // Recargar la orden completa con todos los datos actualizados
-    const updatedOrder = await this.findOne(id);
-
-    // Detectar cambios reales usando el servicio de tracking de cambios
-    let hasRealChanges = false;
-
-    if (
-      (updatedOrder.orderType === OrderType.DELIVERY ||
-        updatedOrder.orderType === OrderType.TAKE_AWAY) &&
-      previousOrderEntity
-    ) {
-      const queryRunner = this.dataSource.createQueryRunner();
-
-      try {
-        await queryRunner.connect();
-
-        // Obtener el estado actual (después de los cambios)
-        const currentEntity = await queryRunner.manager.findOne(OrderEntity, {
-          where: { id: updatedOrder.id },
-          relations: [
-            'orderItems',
-            'orderItems.product',
-            'orderItems.productVariant',
-            'orderItems.productModifiers',
-            'orderItems.selectedPizzaCustomizations',
-            'orderItems.selectedPizzaCustomizations.pizzaCustomization',
-            'deliveryInfo',
-          ],
         });
-
-        if (currentEntity) {
-          hasRealChanges = this.orderChangeTracker.detectStructuralChangesOnly(
-            currentEntity,
-            previousOrderEntity,
-          );
-        }
-      } catch (error) {
-        this.logger.error(`Error al detectar cambios en orden ${id}:`, error);
-        hasRealChanges = true;
-      } finally {
-        await queryRunner.release();
       }
-    }
 
-    if (hasRealChanges) {
-      await this.automaticPrintingService.printOrderAutomatically(
-        updatedOrder.id,
-        updatedOrder.orderType,
-        updateOrderDto.userId || null,
-        true,
-      );
-    }
+      // Obtener el estado actual después de los cambios con todas las relaciones
+      const currentOrderEntity = await manager.findOne(OrderEntity, {
+        where: { id },
+        relations: [
+          'orderItems',
+          'orderItems.product',
+          'orderItems.productVariant',
+          'orderItems.productModifiers',
+          'orderItems.selectedPizzaCustomizations',
+          'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+          'table',
+          'customer',
+          'customer.addresses',
+          'deliveryInfo',
+        ],
+      });
 
-    return updatedOrder;
+      // Registrar historial de cambios dentro de la misma transacción
+      if (previousOrderEntity && currentOrderEntity) {
+        const currentUser = this.userContextService.getCurrentUser();
+        const changedBy =
+          currentUser?.userId || updateOrderDto.userId || 'system';
+
+        await this.orderChangeTracker.trackOrderWithItems(
+          'UPDATE',
+          currentOrderEntity,
+          previousOrderEntity,
+          changedBy,
+          manager,
+        );
+      }
+
+      // Detectar cambios estructurales para la impresión automática
+      let hasRealChanges = false;
+      if (previousOrderEntity && currentOrderEntity) {
+        hasRealChanges = this.orderChangeTracker.detectStructuralChangesOnly(
+          currentOrderEntity,
+          previousOrderEntity,
+        );
+      }
+
+      // Recargar la orden completa para el retorno (fuera de la transacción para mejor rendimiento)
+      const updatedOrder = await this.findOne(id);
+
+      // Imprimir automáticamente si hay cambios estructurales
+      if (hasRealChanges) {
+        await this.automaticPrintingService.printOrderAutomatically(
+          updatedOrder.id,
+          updatedOrder.orderType,
+          updateOrderDto.userId || null,
+          true,
+        );
+      }
+
+      return updatedOrder;
+    }); // Fin de la transacción
   }
 
   async remove(id: string): Promise<void> {
@@ -2314,7 +2312,7 @@ export class OrdersService {
     );
 
     const hasValidFields = Object.entries(cleanedData).some(
-      ([key, value]) => value !== undefined,
+      ([, value]) => value !== undefined,
     );
 
     if (!hasValidFields) {
@@ -2377,7 +2375,7 @@ export class OrdersService {
     return { ordersWithWarnings };
   }
 
-  async quickFinalizeOrder(orderId: string, userId: string): Promise<void> {
+  async quickFinalizeOrder(orderId: string, _userId: string): Promise<void> {
     // Obtener la orden con toda la información necesaria
     const order = await this.findOne(orderId);
 

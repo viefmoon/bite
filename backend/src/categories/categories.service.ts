@@ -26,7 +26,6 @@ export class CategoriesService extends BaseCrudService<
     super(repo);
   }
 
-
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const id = await this.customIdService.generateId(
       EntityPrefix.CATEGORY,

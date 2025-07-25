@@ -28,7 +28,7 @@ export class CustomersService extends BaseCrudService<
   constructor(
     @Inject(CUSTOMER_REPOSITORY)
     protected readonly repo: CustomerRepository,
-    
+
     private readonly addressesService: AddressesService,
   ) {
     super(repo);
@@ -62,7 +62,6 @@ export class CustomersService extends BaseCrudService<
     return createdCustomer;
   }
 
-
   // Sobrescribir 'update' para añadir lógica de validación y sincronización de direcciones
   override async update(
     id: string,
@@ -91,7 +90,6 @@ export class CustomersService extends BaseCrudService<
     await super.update(id, customerUpdatePayload);
     return this.findOne(id);
   }
-
 
   // --- Métodos específicos para Direcciones (mantenerlos) ---
 

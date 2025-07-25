@@ -27,5 +27,4 @@ export abstract class AddressRepository
     payload: UpdateAddressDto,
   ): Promise<NullableType<Address>>;
   abstract remove(id: Address['id']): Promise<void>;
-
 }
