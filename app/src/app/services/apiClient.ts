@@ -211,15 +211,19 @@ function configureInterceptors() {
       }
 
       // Configurar timeouts específicos según el tipo de operación
-      const timeouts = {
-        get: 5000,
-        post: config.url?.includes('/files/upload') ? 30000 : 5000,
-        put: 5000,
-        patch: 5000,
-        delete: 5000,
-      };
+      // Si ya se especificó un timeout en la config, respetarlo
+      if (!config.timeout) {
+        const timeouts = {
+          get: 5000,
+          post: config.url?.includes('/files/upload') ? 30000 : 5000,
+          put: 5000,
+          patch: 5000,
+          delete: 5000,
+        };
 
-      config.timeout = timeouts[config.method as keyof typeof timeouts] || 5000;
+        config.timeout = timeouts[config.method as keyof typeof timeouts] || 5000;
+      }
+
 
       return config;
     },
