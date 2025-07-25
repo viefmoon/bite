@@ -256,7 +256,6 @@ export default function AddressFormModal({
             break;
         }
       } catch (e) {
-        // Error handling message
       }
     }
 
@@ -308,7 +307,6 @@ export default function AddressFormModal({
           }));
         }
       } catch (e) {
-        // Error sending message
       }
     }
   </script>
@@ -339,9 +337,7 @@ export default function AddressFormModal({
             setValue('longitude', Number(data.longitude));
             break;
         }
-      } catch (e) {
-        // Silently handle parsing errors
-      }
+      } catch (e) {}
     },
     [setValue],
   );
@@ -374,8 +370,6 @@ export default function AddressFormModal({
 
   const handleFormSubmit = React.useCallback(
     async (data: AddressFormInputs) => {
-      console.log('Form submitted with data:', data);
-      // Convertir undefined a valores válidos para el backend
       const formattedData: CreateAddressDto = {
         name: data.name,
         street: data.street,
@@ -947,17 +941,10 @@ export default function AddressFormModal({
               <Button
                 mode="contained"
                 onPress={() => {
-                  console.log('Button clicked');
-                  console.log('Form state:', watch());
-                  console.log('Form errors:', errors);
-
                   handleSubmit(handleFormSubmit, (validationErrors) => {
-                    console.log('Validation errors:', validationErrors);
-                    // Obtener todos los errores
                     const errorMessages = Object.entries(validationErrors)
                       .map(([field, error]) => {
                         if (error && 'message' in error) {
-                          // Mapear nombres de campos a nombres legibles
                           const fieldNames: Record<string, string> = {
                             name: 'Nombre de la dirección',
                             street: 'Calle',
@@ -976,13 +963,11 @@ export default function AddressFormModal({
                       .filter(Boolean);
 
                     if (errorMessages.length > 0) {
-                      // Mostrar el primer error
                       showSnackbar({
                         message: errorMessages[0],
                         type: 'error',
                       });
 
-                      // Hacer scroll al principio del formulario
                       scrollViewRef.current?.scrollTo({
                         x: 0,
                         y: 0,

@@ -13,10 +13,9 @@ module.exports = function (api) {
         },
       },
     ],
-    'react-native-reanimated/plugin', // Necesario para react-navigation drawer
+    'react-native-reanimated/plugin',
   ];
 
-  // Para web, transformar import.meta
   if (isWeb) {
     plugins.push([
       function() {

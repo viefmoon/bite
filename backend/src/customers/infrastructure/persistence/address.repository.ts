@@ -28,8 +28,4 @@ export abstract class AddressRepository
   ): Promise<NullableType<Address>>;
   abstract remove(id: Address['id']): Promise<void>;
 
-  // Los métodos específicos findByCustomerId, save y removeMany se eliminan.
-  // La funcionalidad de findByCustomerId se logra con findAll({ customerId }).
-  // Las operaciones de guardado y eliminación múltiple se manejan a través
-  // de los métodos heredados create, update, remove de IBaseRepository.
 }

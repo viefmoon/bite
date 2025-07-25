@@ -23,23 +23,20 @@ export class CustomersService extends BaseCrudService<
   Customer,
   CreateCustomerDto,
   UpdateCustomerDto,
-  FindAllCustomersDto // Usar FindAllCustomersDto como filtro base
+  FindAllCustomersDto
 > {
   constructor(
     @Inject(CUSTOMER_REPOSITORY)
-    protected readonly repo: CustomerRepository, // 'repo' como en BaseCrudService
-    // Inyectar AddressesService para delegar lógica de direcciones
+    protected readonly repo: CustomerRepository,
+    
     private readonly addressesService: AddressesService,
   ) {
-    super(repo); // Pasar el repositorio principal al constructor base
+    super(repo);
   }
 
-  // Sobrescribir 'create' para añadir lógica de validación y creación de direcciones
   override async create(
     createCustomerDto: CreateCustomerDto,
   ): Promise<Customer> {
-    // La unicidad la maneja la BD y el filtro.
-    // Separar DTO del cliente y DTOs de direcciones
     const { addresses: addressDtos, ...customerData } = createCustomerDto;
 
     // Crear el cliente usando el método base
@@ -57,21 +54,14 @@ export class CustomersService extends BaseCrudService<
           }
           hasDefault = true;
         }
-        // Llamar al helper refactorizado que inyecta customerId y usa AddressesService
-        // Asegurarse de que addAddressToCustomer maneje la lógica de 'isDefault' internamente si es necesario
         await this.addAddressToCustomer(createdCustomer.id, addressDto);
       }
-      // Recargar el cliente para obtener las direcciones asociadas
-      // findOne es heredado y maneja NotFoundException
       return this.findOne(createdCustomer.id);
     }
 
-    return createdCustomer; // Devolver cliente sin direcciones si no se proporcionaron
+    return createdCustomer;
   }
 
-  // Se elimina findAll con paginación. El findAll heredado de BaseCrudService no tiene paginación.
-
-  // findOne es heredado de BaseCrudService
 
   // Sobrescribir 'update' para añadir lógica de validación y sincronización de direcciones
   override async update(
@@ -96,22 +86,12 @@ export class CustomersService extends BaseCrudService<
       fullChatHistory: updateCustomerDto.fullChatHistory,
       relevantChatHistory: updateCustomerDto.relevantChatHistory,
       lastInteraction: updateCustomerDto.lastInteraction,
-      // Excluir 'addresses' del payload para el update base
     };
 
-    // Llamar al update base para actualizar los campos del cliente
-    // Nota: El update base podría devolver null si no encuentra la entidad, pero findOne ya lo valida.
-    await super.update(id, customerUpdatePayload); // Llamar al update de BaseCrudService
-
-    // Se elimina la lógica de sincronización de direcciones (if block y syncAddresses call)
-    // ya que UpdateCustomerDto no incluye 'addresses'.
-    // El super.update ya guardó los campos básicos del cliente.
-
-    // Recargar y devolver el cliente actualizado completo (con sus direcciones existentes si las tuviera)
+    await super.update(id, customerUpdatePayload);
     return this.findOne(id);
   }
 
-  // remove es heredado de BaseCrudService
 
   // --- Métodos específicos para Direcciones (mantenerlos) ---
 

@@ -251,17 +251,10 @@ export class CustomersController {
   async getCustomerAddresses(
     @Param('id') customerId: string,
   ): Promise<Address[]> {
-    try {
-      // Verificar que el cliente existe primero
-      await this.customersService.findOne(customerId);
+    await this.customersService.findOne(customerId);
 
-      // Crear un DTO explícito para evitar problemas de tipos
-      const filter: FindAllAddressesDto = { customerId };
-      return this.addressesService.findAll(filter);
-    } catch (error) {
-      console.error('Error getting customer addresses:', error);
-      throw error;
-    }
+    const filter: FindAllAddressesDto = { customerId };
+    return this.addressesService.findAll(filter);
   }
 
   @Patch(':id/addresses/:addressId')

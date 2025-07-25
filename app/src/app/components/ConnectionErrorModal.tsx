@@ -57,8 +57,6 @@ export function ConnectionErrorModal() {
 
       if (state.status === 'connected') {
         setVisible(false);
-        // El servicio se actualiza automáticamente cuando se reconecta
-        // No necesita verificación manual
       }
     });
 
@@ -67,7 +65,6 @@ export function ConnectionErrorModal() {
     };
   }, [isLoggedIn, isConnected]);
 
-  // Efecto adicional para web - cerrar modal cuando se conecta
   useEffect(() => {
     if (Platform.OS === 'web' && isConnected && visible) {
       setVisible(false);
@@ -75,19 +72,15 @@ export function ConnectionErrorModal() {
     }
   }, [isConnected, visible]);
 
-  // Efecto para pausar los logs
   useEffect(() => {
     if (isPaused && pausedLogs.length === 0) {
-      // Guardar los logs actuales cuando se pausa
       setPausedLogs([...reconnectState.logs]);
     } else if (!isPaused) {
-      // Limpiar logs pausados cuando se reanuda
       setPausedLogs([]);
     }
   }, [isPaused, reconnectState.logs]);
 
   useEffect(() => {
-    // En web no intentar auto-reconexión
     if (Platform.OS === 'web') {
       return;
     }
@@ -293,7 +286,6 @@ export function ConnectionErrorModal() {
         }
       >
         <Surface style={styles.container}>
-          {/* Header */}
           <View style={styles.header}>
             <Icon source="wifi-sync" size={24} color={theme.colors.primary} />
             <Text style={styles.headerTitle}>Estado de Conexión</Text>
@@ -309,7 +301,6 @@ export function ConnectionErrorModal() {
             )}
           </View>
 
-          {/* Status Section */}
           <View style={styles.statusSection}>
             {Platform.OS === 'web' ? (
               <>
@@ -348,7 +339,6 @@ export function ConnectionErrorModal() {
               )}
           </View>
 
-          {/* Progress Bar - No mostrar en web */}
           {reconnectState.isReconnecting &&
             reconnectState.status !== 'connected' &&
             Platform.OS !== 'web' && (
@@ -361,7 +351,6 @@ export function ConnectionErrorModal() {
               </View>
             )}
 
-          {/* Logs Section - No mostrar en web */}
           {reconnectState.logs.length > 0 && Platform.OS !== 'web' && (
             <View style={styles.logsContainer}>
               <View style={styles.logsHeader}>
@@ -421,7 +410,6 @@ export function ConnectionErrorModal() {
             </View>
           )}
 
-          {/* Action Buttons */}
           {Platform.OS === 'web' ||
           reconnectState.status === 'failed' ||
           reconnectState.status === 'no-wifi' ||
@@ -443,17 +431,14 @@ export function ConnectionErrorModal() {
         </Surface>
       </Modal>
 
-      {/* Modal de configuración del servidor */}
       <ServerConfigModal
         visible={showConfigModal}
         onDismiss={() => setShowConfigModal(false)}
         onSuccess={() => {
           setShowConfigModal(false);
-          // En web, cerrar también el modal principal
           if (Platform.OS === 'web') {
             setVisible(false);
           } else {
-            // En móvil, reintentar conexión después de configurar
             setTimeout(() => {
               autoReconnectService.startAutoReconnect();
             }, 1000);

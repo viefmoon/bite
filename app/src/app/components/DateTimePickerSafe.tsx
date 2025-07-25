@@ -13,7 +13,7 @@ interface DateTimePickerSafeProps {
   maximumDate?: Date;
   minuteInterval?: number;
   title?: string;
-  allowManualInput?: boolean; // Permite habilitar entrada manual en Android
+  allowManualInput?: boolean;
 }
 
 export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
@@ -31,12 +31,10 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
   const [tempDate, setTempDate] = useState<Date>(() => {
     if (value) return new Date(value);
     const now = new Date();
-    // Redondear a los 5 minutos más cercanos si es time mode
     if (mode === 'time' && minuteInterval && minuteInterval > 1) {
       const minutes = now.getMinutes();
       const roundedMinutes =
         Math.round(minutes / minuteInterval) * minuteInterval;
-      // Crear una nueva fecha para evitar mutación
       const roundedDate = new Date(now);
       roundedDate.setMinutes(roundedMinutes, 0, 0);
       return roundedDate;
@@ -110,7 +108,6 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
     );
   }
 
-  // Android muestra el picker nativo directamente
   return (
     <>
       {visible && (
@@ -121,7 +118,7 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
           is24Hour={false}
           display="default"
           onChange={(event, selectedDate) => {
-            onCancel(); // En Android, cerrar al seleccionar
+            onCancel();
             if (event.type === 'set' && selectedDate) {
               onConfirm(new Date(selectedDate));
             }

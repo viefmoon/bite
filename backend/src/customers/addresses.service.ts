@@ -63,9 +63,4 @@ export class AddressesService extends BaseCrudService<
       }
     }
   }
-
-  // Método findByCustomerId (ya estaba como ejemplo, lo eliminamos porque ya existe en la interfaz del repo y se puede llamar via this.findAll)
-  // async findByCustomerId(customerId: string): Promise<Address[]> {
-  //   return this.findAll({ customerId });
-  // }
 }

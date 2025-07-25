@@ -181,7 +181,6 @@ export function ShiftOrdersModal({
     />
   );
 
-
   // Renderizar lista vacía
   const renderEmptyComponent = () => {
     if (isLoading) {

@@ -15,7 +15,6 @@ export function ConnectionIndicator() {
   const [isChecking, setIsChecking] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
-  // Suscribirse al servicio de reconexión para mostrar indicador sutil
   useEffect(() => {
     const unsubscribe = autoReconnectService.subscribe((state) => {
       setIsReconnecting(state.isReconnecting && state.attempts > 0);
@@ -57,7 +56,6 @@ export function ConnectionIndicator() {
       };
     }
 
-    // Conectado pero servidor no saludable
     if (!isHealthy) {
       return {
         icon: 'wifi-strength-2-alert',
@@ -79,7 +77,6 @@ export function ConnectionIndicator() {
   const status = getConnectionStatus();
 
   const handlePress = async () => {
-    // Primero mostrar explicación del estado actual
     const iconExplanation = getIconExplanation();
     showSnackbar({
       message: iconExplanation,
@@ -88,7 +85,6 @@ export function ConnectionIndicator() {
       duration: 4000,
     });
 
-    // Si está reconectando, mostrar información adicional
     if (isReconnecting) {
       const reconnectState = autoReconnectService.getState();
       setTimeout(() => {
@@ -100,11 +96,9 @@ export function ConnectionIndicator() {
       }, 500);
     }
 
-    // SOLO hacer health check si está conectado y no está reconectando
     if (isConnected && !isChecking && !isReconnecting) {
       setIsChecking(true);
 
-      // Esperar un poco antes de hacer el check
       setTimeout(async () => {
         try {
           const isHealthyNow = await healthMonitoringService.forceCheck();
@@ -128,7 +122,6 @@ export function ConnectionIndicator() {
       }, 1000);
     }
 
-    // Si no está conectado y no está reconectando, iniciar reconexión
     if (!isConnected && !isReconnecting && hasWifi) {
       showSnackbar({
         message: 'Iniciando proceso de reconexión...',
@@ -136,8 +129,6 @@ export function ConnectionIndicator() {
         duration: 2000,
       });
 
-      // Delegar la reconexión al servicio centralizado
-      // Este servicio hará health checks primero y solo discovery si es necesario
       setTimeout(() => {
         autoReconnectService.startAutoReconnect();
       }, 500);
@@ -191,7 +182,6 @@ export function ConnectionIndicator() {
     [],
   );
 
-  // Solo mostrar con fondo cuando hay problemas
   const showBackground =
     !hasWifi || !isConnected || isSearching || !isHealthy || isChecking;
 
@@ -208,7 +198,6 @@ export function ConnectionIndicator() {
             style={iconButtonStyle}
           />
         </Surface>
-        {/* Badge sutil cuando está reconectando en segundo plano */}
         {isReconnecting && !isSearching && (
           <Badge
             size={8}
@@ -224,7 +213,6 @@ export function ConnectionIndicator() {
     );
   }
 
-  // Cuando está conectado, mostrar sin fondo pero con color visible
   return (
     <View style={{ marginRight: 8, position: 'relative' }}>
       <IconButton
@@ -233,7 +221,6 @@ export function ConnectionIndicator() {
         size={24}
         onPress={handlePress}
       />
-      {/* Badge sutil cuando está reconectando en segundo plano */}
       {isReconnecting && (
         <Badge
           size={8}

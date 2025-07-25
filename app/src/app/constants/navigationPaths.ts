@@ -1,39 +1,31 @@
 export const NAVIGATION_PATHS = {
-  // Auth Stack
   LOGIN: 'Login',
 
-  // Main Navigation (Drawer)
   MAIN_DRAWER: 'MainDrawer',
 
-  // Orders Stack
   ORDERS_STACK: 'OrdersStack',
   ORDERS: 'Orders',
   CREATE_ORDER: 'CreateOrder',
   OPEN_ORDERS: 'OpenOrders',
   ADD_PRODUCTS_TO_ORDER: 'AddProductsToOrder',
 
-  // Menu Stack
   MENU_STACK: 'MenuStack',
   CATEGORIES: 'CategoriesScreen',
   SUBCATEGORIES: 'SubcategoriesScreen',
   PRODUCTS: 'Products',
 
-  // Areas & Tables Stack
   AREAS_TABLES_STACK: 'AreasTablesStack',
   AREAS_LIST: 'AreasList',
   TABLES_LIST: 'TablesList',
 
-  // Modifiers Stack
   MODIFIERS_STACK: 'ModifiersStack',
   MODIFIER_GROUPS: 'ModifierGroupsScreen',
   MODIFIERS: 'ModifiersScreen',
 
-  // Kitchen Stack
   KITCHEN_STACK: 'KitchenStack',
   KITCHEN_ORDERS: 'KitchenOrders',
   KITCHEN: 'Kitchen',
 
-  // Single Screen Stacks
   RECEIPTS_STACK: 'ReceiptsStack',
   RECEIPTS_LIST: 'ReceiptsList',
 
@@ -68,7 +60,6 @@ export const NAVIGATION_PATHS = {
   PREPARATION_SCREENS_LIST: 'PreparationScreensList',
 } as const;
 
-// Types for navigation params
 export type RootStackParamList = {
   [NAVIGATION_PATHS.LOGIN]: undefined;
   [NAVIGATION_PATHS.MAIN_DRAWER]: undefined;

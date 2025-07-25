@@ -26,7 +26,6 @@ export class CategoriesService extends BaseCrudService<
     super(repo);
   }
 
-  // Los métodos CRUD (create, findAll, findOne, update, remove) son heredados de BaseCrudService
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const id = await this.customIdService.generateId(
@@ -57,19 +56,13 @@ export class CategoriesService extends BaseCrudService<
     const page = filter?.page || 1;
     const limit = filter?.limit || 10;
 
-    // Usar el método findAll heredado para obtener todos los registros
     const allItems = await this.findAll(filter);
-
-    // Crear respuesta paginada
     return new Paginated(allItems, allItems.length, page, limit);
   }
 
-  /**  --- lógica extra propia del dominio --- */
   async getFullMenu(): Promise<Category[]> {
     return (this.repo as CategoryRepository).findFullMenu();
   }
-
-  // Menú para la creación de órdenes
   async getOrderMenu(): Promise<Category[]> {
     return (this.repo as CategoryRepository).findOrderMenu();
   }

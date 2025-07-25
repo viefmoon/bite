@@ -337,7 +337,6 @@ const GenericList = <TItem extends { id: string }>({
     renderConfig,
   ]);
 
-  // Calcular número de columnas para el grid
   const numColumns = useMemo(() => {
     if (!enableGrid) return 1;
 
@@ -427,9 +426,6 @@ const GenericList = <TItem extends { id: string }>({
           'path' in imageFieldValue &&
           typeof imageFieldValue.path === 'string'
         ) {
-          // TODO: Fix async getImageUrl call
-          // const url = getImageUrl(imageFieldValue.path);
-          // imageSource = url ?? undefined;
           imageSource = imageFieldValue.path;
         } else if (typeof imageFieldValue === 'string') {
           imageSource = imageFieldValue;
@@ -496,15 +492,12 @@ const GenericList = <TItem extends { id: string }>({
               )
             }
             description={() => {
-              // Si hay un renderDescription personalizado, usarlo
               if (renderConfig.renderDescription) {
                 return renderConfig.renderDescription(item);
               }
 
-              // Construir las partes del texto
               const parts = [];
 
-              // Verificar si es por defecto
               if (
                 renderConfig.isDefaultField &&
                 item.hasOwnProperty(renderConfig.isDefaultField) &&
@@ -525,7 +518,6 @@ const GenericList = <TItem extends { id: string }>({
                 parts.push(priceString);
               }
 
-              // Unir las partes con el separador apropiado
               const combinedText = parts.join(' - ');
 
               if (combinedText.trim()) {
@@ -594,8 +586,6 @@ const GenericList = <TItem extends { id: string }>({
     ],
   );
 
-  // Simplificado: contentContainerStyle solo debe tener padding/backgroundColor.
-  // El centrado del contenido vacío se maneja en el ListEmptyComponent.
   const finalContentContainerStyle = useMemo(() => {
     return StyleSheet.flatten([
       styles.defaultContentContainer,

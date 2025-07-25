@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { serverConnectionService } from '@/services/serverConnectionService';
 
-/**
- * Hook para monitorear la conexión con el servidor
- *
- * Este hook simplemente se suscribe al servicio singleton de conexión
- * sin realizar ninguna inicialización. La inicialización se hace
- * una sola vez al inicio de la aplicación.
- */
-
 export interface ServerConnectionState {
   isSearching: boolean;
   isConnected: boolean;
@@ -34,7 +26,6 @@ export function useServerConnection(): ServerConnectionState {
   });
 
   useEffect(() => {
-    // Obtener estado inicial
     const serviceState = serverConnectionService.getState();
     setState({
       isSearching: serviceState.isSearching,
@@ -46,7 +37,6 @@ export function useServerConnection(): ServerConnectionState {
       retry: () => serverConnectionService.retry(),
     });
 
-    // Suscribirse a cambios en el servicio
     const unsubscribe = serverConnectionService.subscribe((newState) => {
       setState({
         isSearching: newState.isSearching,

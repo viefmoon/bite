@@ -9,7 +9,7 @@ import audioOrderConfig from './config/audio-order.config';
   imports: [
     ConfigModule.forFeature(audioOrderConfig),
     HttpModule.register({
-      timeout: 300000, // 5 minutos
+      timeout: 300000,
       maxRedirects: 5,
     }),
   ],

@@ -155,10 +155,9 @@ export class DiscoveryService {
         return null;
       }
 
-      // Extraer la MAC address (buscar patrón xx-xx-xx-xx-xx-xx o xx:xx:xx:xx:xx:xx)
       const macMatch = line.match(/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/);
       if (macMatch && macMatch[0]) {
-        const mac = macMatch[0].replace(/-/g, ':').toUpperCase(); // Normalizar a formato con ':'
+        const mac = macMatch[0].replace(/-/g, ':').toUpperCase();
         return mac;
       } else {
         this.logger.debug(

@@ -47,15 +47,12 @@ export class AudioOrderProcessingService {
         );
       }
 
-      // Validar el tamaño del audio
       const audioSizeMb = this.calculateBase64SizeMb(dto.audioData);
       if (audioSizeMb > this.maxAudioSizeMb) {
         throw new BadRequestException(
           `El archivo de audio excede el tamaño máximo permitido de ${this.maxAudioSizeMb}MB`,
         );
       }
-
-      // Preparar la solicitud para el servidor en la nube
       const cloudRequest: CloudApiRequestDto = {
         audio: dto.audioData,
         transcript: dto.transcription,
@@ -66,10 +63,7 @@ export class AudioOrderProcessingService {
         },
       };
 
-      // Enviar al servidor en la nube
       const cloudResponse = await this.callCloudApi(cloudRequest);
-
-      // Verificar si hay un error explícito en la respuesta
       if (cloudResponse.success === false || cloudResponse.error) {
         return {
           success: false,
@@ -81,8 +75,6 @@ export class AudioOrderProcessingService {
         };
       }
 
-      // Procesar la respuesta del servidor en la nube
-      // Si no hay error explícito, asumir que los datos son válidos
       const result = await this.processCloudResponse(
         cloudResponse.data || cloudResponse,
       );
@@ -110,20 +102,15 @@ export class AudioOrderProcessingService {
     request: CloudApiRequestDto,
   ): Promise<CloudApiResponseDto> {
     try {
-      // Convertir base64 a Buffer
       const audioBuffer = Buffer.from(request.audio, 'base64');
 
-      // Crear FormData
       const FormData = require('form-data');
       const formData = new FormData();
 
-      // Agregar archivo de audio
       formData.append('audio', audioBuffer, {
         filename: `order_${Date.now()}.mp4`,
         contentType: 'audio/mp4',
       });
-
-      // Agregar transcripción
       formData.append('transcription', request.transcript);
 
       const response = await firstValueFrom(
@@ -162,7 +149,6 @@ export class AudioOrderProcessingService {
   private async processCloudResponse(
     data: any,
   ): Promise<AudioOrderResponseDto> {
-    // Si orderType es undefined, establecer "DELIVERY" como valor por defecto
     const orderType = data.orderType || 'DELIVERY';
 
     return {
@@ -180,11 +166,8 @@ export class AudioOrderProcessingService {
   }
 
   private calculateBase64SizeMb(base64String: string): number {
-    // Remover el prefijo data:audio/xxx;base64, si existe
     const base64Data = base64String.split(',')[1] || base64String;
-    // Calcular el tamaño en bytes
     const sizeInBytes = (base64Data.length * 3) / 4;
-    // Convertir a MB
     return sizeInBytes / (1024 * 1024);
   }
 
@@ -195,7 +178,6 @@ export class AudioOrderProcessingService {
     timestamp: string;
   }> {
     try {
-      // Verificar configuración local primero
       if (!this.isEnabled) {
         return {
           status: 'disabled',
@@ -214,9 +196,6 @@ export class AudioOrderProcessingService {
         };
       }
 
-      // Hacer ping al servicio remoto
-      // Si cloudApiUrl ya incluye /api/v1/audio, entonces solo agregamos /health
-      // Si no, agregamos la ruta completa
       const healthCheckUrl = this.cloudApiUrl.includes('/api/v1/audio')
         ? `${this.cloudApiUrl}/health`
         : `${this.cloudApiUrl}/api/v1/audio/health`;
@@ -225,7 +204,7 @@ export class AudioOrderProcessingService {
           headers: {
             'X-API-Key': this.cloudApiKey,
           },
-          timeout: 5000, // Timeout corto para health check
+          timeout: 5000,
         }),
       );
 

@@ -46,7 +46,7 @@ import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
 import { useListState } from '../../../app/hooks/useListState';
-import { CartItem, CartProvider } from '../context/CartContext';
+import { CartItem } from '../stores/useCartStore';
 import {
   formatOrderStatus,
   formatOrderType,
@@ -971,146 +971,141 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         />
         {/* Modal de Edición de Orden usando OrderCartDetail */}
         {editingOrderId && (
-          <CartProvider>
-            <OrderCartDetail
-              visible={isEditModalVisible}
-              isEditMode={true}
-              orderId={editingOrderId}
-              orderNumber={
-                ordersData?.find((o) => o.id === editingOrderId)
-                  ?.shiftOrderNumber
-              }
-              orderDate={
-                ordersData?.find((o) => o.id === editingOrderId)?.createdAt
-                  ? new Date(
-                      ordersData.find(
-                        (o) => o.id === editingOrderId,
-                      )!.createdAt,
-                    )
-                  : undefined
-              }
-              navigation={navigation}
-              pendingProductsToAdd={
-                editingOrderId && temporaryProducts[editingOrderId]
-                  ? temporaryProducts[editingOrderId]
-                  : pendingProductsToAdd
-              }
-              onItemsCountChanged={(count) => {
-                // Actualizar el conteo de items existentes para esta orden
-                setExistingItemsCount((prev) => ({
-                  ...prev,
-                  [editingOrderId]: count,
-                }));
-              }}
-              onClose={() => {
+          <OrderCartDetail
+            visible={isEditModalVisible}
+            isEditMode={true}
+            orderId={editingOrderId}
+            orderNumber={
+              ordersData?.find((o) => o.id === editingOrderId)?.shiftOrderNumber
+            }
+            orderDate={
+              ordersData?.find((o) => o.id === editingOrderId)?.createdAt
+                ? new Date(
+                    ordersData.find((o) => o.id === editingOrderId)!.createdAt,
+                  )
+                : undefined
+            }
+            navigation={navigation}
+            pendingProductsToAdd={
+              editingOrderId && temporaryProducts[editingOrderId]
+                ? temporaryProducts[editingOrderId]
+                : pendingProductsToAdd
+            }
+            onItemsCountChanged={(count) => {
+              // Actualizar el conteo de items existentes para esta orden
+              setExistingItemsCount((prev) => ({
+                ...prev,
+                [editingOrderId]: count,
+              }));
+            }}
+            onClose={() => {
+              setIsEditModalVisible(false);
+              setEditingOrderId(null);
+              setPendingProductsToAdd([]);
+              // NO limpiar temporaryProducts aquí para mantener los productos
+              // NO llamar refetch() aquí porque ya se maneja con invalidateQueries
+              // y el refetchInterval automático
+            }}
+            onAddProducts={() => {
+              // Cerrar el modal temporalmente para navegar
+              setIsEditModalVisible(false);
+
+              const orderNumber = ordersData?.find(
+                (o) => o.id === editingOrderId,
+              )?.shiftOrderNumber;
+
+              // Navegar a añadir productos
+              setTimeout(() => {
+                const existingProducts =
+                  temporaryProducts[editingOrderId!] || [];
+                navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
+                  orderId: editingOrderId!,
+                  orderNumber: orderNumber!,
+                  // Pasar productos temporales existentes si los hay
+                  existingTempProducts: existingProducts,
+                  existingOrderItemsCount:
+                    existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
+                  onProductsAdded: (newProducts) => {
+                    // Actualizar productos temporales para esta orden
+                    setTemporaryProducts((prev) => ({
+                      ...prev,
+                      [editingOrderId!]: newProducts,
+                    }));
+                    // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
+                    // Reabrir el modal cuando regresemos
+                    setIsEditModalVisible(true);
+                  },
+                });
+              }, 100);
+            }}
+            onConfirmOrder={async (details: OrderDetailsForBackend) => {
+              // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
+              const payload = {
+                orderType: details.orderType,
+                items: details.items, // Enviar items para actualizar
+                tableId: details.tableId || null,
+                isTemporaryTable: details.isTemporaryTable || false,
+                temporaryTableName: details.temporaryTableName || null,
+                temporaryTableAreaId: details.temporaryTableAreaId || null,
+                scheduledAt: details.scheduledAt || null,
+                // Enviar null cuando deliveryInfo está vacío para indicar limpieza
+                deliveryInfo: (() => {
+                  if (!details.deliveryInfo) return null;
+
+                  // Filtrar solo las propiedades que tienen valores reales (no undefined)
+                  const filteredDeliveryInfo = Object.entries(
+                    details.deliveryInfo,
+                  )
+                    .filter(([_, value]) => value !== undefined)
+                    .reduce(
+                      (acc, [key, value]) => ({ ...acc, [key]: value }),
+                      {},
+                    );
+
+                  // Si no quedan propiedades con valores, enviar null
+                  return Object.keys(filteredDeliveryInfo).length > 0
+                    ? filteredDeliveryInfo
+                    : null;
+                })(),
+                notes: details.notes || null,
+                total: details.total,
+                subtotal: details.subtotal,
+                adjustments: details.adjustments || [], // Incluir ajustes en el payload
+              };
+
+              try {
+                // Actualizar la orden (ahora incluye los ajustes)
+                await updateOrderMutation.mutateAsync({
+                  orderId: editingOrderId,
+                  payload,
+                });
+
+                // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
-                setPendingProductsToAdd([]);
-                // NO limpiar temporaryProducts aquí para mantener los productos
-                // NO llamar refetch() aquí porque ya se maneja con invalidateQueries
-                // y el refetchInterval automático
-              }}
-              onAddProducts={() => {
-                // Cerrar el modal temporalmente para navegar
-                setIsEditModalVisible(false);
-
-                const orderNumber = ordersData?.find(
-                  (o) => o.id === editingOrderId,
-                )?.shiftOrderNumber;
-
-                // Navegar a añadir productos
-                setTimeout(() => {
-                  const existingProducts =
-                    temporaryProducts[editingOrderId!] || [];
-                  navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
-                    orderId: editingOrderId!,
-                    orderNumber: orderNumber!,
-                    // Pasar productos temporales existentes si los hay
-                    existingTempProducts: existingProducts,
-                    existingOrderItemsCount:
-                      existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
-                    onProductsAdded: (newProducts) => {
-                      // Actualizar productos temporales para esta orden
-                      setTemporaryProducts((prev) => ({
-                        ...prev,
-                        [editingOrderId!]: newProducts,
-                      }));
-                      // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
-                      // Reabrir el modal cuando regresemos
-                      setIsEditModalVisible(true);
-                    },
-                  });
-                }, 100);
-              }}
-              onConfirmOrder={async (details: OrderDetailsForBackend) => {
-                // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
-                const payload = {
-                  orderType: details.orderType,
-                  items: details.items, // Enviar items para actualizar
-                  tableId: details.tableId || null,
-                  isTemporaryTable: details.isTemporaryTable || false,
-                  temporaryTableName: details.temporaryTableName || null,
-                  temporaryTableAreaId: details.temporaryTableAreaId || null,
-                  scheduledAt: details.scheduledAt || null,
-                  // Enviar null cuando deliveryInfo está vacío para indicar limpieza
-                  deliveryInfo: (() => {
-                    if (!details.deliveryInfo) return null;
-
-                    // Filtrar solo las propiedades que tienen valores reales (no undefined)
-                    const filteredDeliveryInfo = Object.entries(
-                      details.deliveryInfo,
-                    )
-                      .filter(([_, value]) => value !== undefined)
-                      .reduce(
-                        (acc, [key, value]) => ({ ...acc, [key]: value }),
-                        {},
-                      );
-
-                    // Si no quedan propiedades con valores, enviar null
-                    return Object.keys(filteredDeliveryInfo).length > 0
-                      ? filteredDeliveryInfo
-                      : null;
-                  })(),
-                  notes: details.notes || null,
-                  total: details.total,
-                  subtotal: details.subtotal,
-                  adjustments: details.adjustments || [], // Incluir ajustes en el payload
-                };
-
-                try {
-                  // Actualizar la orden (ahora incluye los ajustes)
-                  await updateOrderMutation.mutateAsync({
-                    orderId: editingOrderId,
-                    payload,
-                  });
-
-                  // Limpiar estados después de actualización exitosa
-                  setIsEditModalVisible(false);
-                  setEditingOrderId(null);
-                  // Limpiar productos temporales y conteo para esta orden
-                  if (editingOrderId) {
-                    setTemporaryProducts((prev) => {
-                      const newState = { ...prev };
-                      delete newState[editingOrderId];
-                      return newState;
-                    });
-                    setExistingItemsCount((prev) => {
-                      const newState = { ...prev };
-                      delete newState[editingOrderId];
-                      return newState;
-                    });
-                  }
-                } catch (error) {
-                  // No cerrar el modal en caso de error para que el usuario pueda reintentar
-                }
-              }}
-              onCancelOrder={() => {
+                // Limpiar productos temporales y conteo para esta orden
                 if (editingOrderId) {
-                  handleCancelOrder(editingOrderId);
+                  setTemporaryProducts((prev) => {
+                    const newState = { ...prev };
+                    delete newState[editingOrderId];
+                    return newState;
+                  });
+                  setExistingItemsCount((prev) => {
+                    const newState = { ...prev };
+                    delete newState[editingOrderId];
+                    return newState;
+                  });
                 }
-              }}
-            />
-          </CartProvider>
+              } catch (error) {
+                // No cerrar el modal en caso de error para que el usuario pueda reintentar
+              }
+            }}
+            onCancelOrder={() => {
+              if (editingOrderId) {
+                handleCancelOrder(editingOrderId);
+              }
+            }}
+          />
         )}
       </Portal>
     </SafeAreaView>

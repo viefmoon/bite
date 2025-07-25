@@ -22,7 +22,6 @@ export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(Platform.OS !== 'web');
 
   const handleOrientationChange = useCallback(async () => {
-    // Skip orientation changes on web
     if (Platform.OS === 'web') {
       return;
     }
@@ -39,7 +38,6 @@ export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
         setTimeout(resolve, TRANSITION_DELAYS.LOCK),
       );
     } catch (error) {
-      // Silently handle orientation errors
     } finally {
       setIsTransitioning(false);
     }

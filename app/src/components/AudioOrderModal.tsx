@@ -30,7 +30,7 @@ import type { FullMenuProduct as Product } from '@/modules/orders/types/orders.t
 import type {
   CartItem,
   CartItemModifier,
-} from '@/modules/orders/context/CartContext';
+} from '@/modules/orders/stores/useCartStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import { Swipeable } from 'react-native-gesture-handler';

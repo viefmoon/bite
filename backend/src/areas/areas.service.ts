@@ -25,10 +25,7 @@ export class AreasService extends BaseCrudService<
     const page = filter?.page || 1;
     const limit = filter?.limit || 10;
 
-    // Usar el método findAll heredado para obtener todos los registros
     const allItems = await this.findAll(filter);
-
-    // Crear respuesta paginada
     return new Paginated(allItems, allItems.length, page, limit);
   }
 }

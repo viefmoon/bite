@@ -42,7 +42,12 @@ import type { FullMenuProduct as Product } from '../types/orders.types';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
 import type { Table } from '@/modules/areasTables/types/areasTables.types';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
-import { useCart, CartItem, CartItemModifier } from '../context/CartContext'; // Importar CartItem y CartItemModifier
+import {
+  useCartStore,
+  CartItem,
+  CartItemModifier,
+} from '../stores/useCartStore'; // Importar CartItem y CartItemModifier
+import { useOrderFormStore } from '../stores/useOrderFormStore';
 import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
 import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
@@ -263,59 +268,51 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     useState<string[]>([]);
   const [orderDataLoaded, setOrderDataLoaded] = useState(false);
 
-  // Siempre llamar al hook, pero usar sus valores solo si no estamos en modo edición
-  const cartContext = useCart();
+  // Usar los stores separados en lugar del contexto unificado
+  const cartStore = useCartStore();
+  const orderFormStore = useOrderFormStore();
 
-  const cartItems = !isEditMode ? cartContext?.items || [] : [];
-  const removeCartItem = !isEditMode
-    ? cartContext?.removeItem || (() => {})
-    : () => {};
+  const cartItems = !isEditMode ? cartStore.items : [];
+  const removeCartItem = !isEditMode ? cartStore.removeItem : () => {};
   const updateCartItemQuantity = !isEditMode
-    ? cartContext?.updateItemQuantity || (() => {})
+    ? cartStore.updateItemQuantity
     : () => {};
-  const isCartVisible = !isEditMode
-    ? cartContext?.isCartVisible || false
-    : false;
+  const isCartVisible = !isEditMode ? cartStore.isCartVisible : false;
+
   const cartOrderType = !isEditMode
-    ? cartContext?.orderType || OrderTypeEnum.DINE_IN
+    ? orderFormStore.orderType
     : OrderTypeEnum.DINE_IN;
-  const setCartOrderType = !isEditMode
-    ? cartContext?.setOrderType || (() => {})
-    : () => {};
-  const cartSelectedAreaId = !isEditMode
-    ? cartContext?.selectedAreaId || null
-    : null;
+  const setCartOrderType = !isEditMode ? orderFormStore.setOrderType : () => {};
+  const cartSelectedAreaId = !isEditMode ? orderFormStore.selectedAreaId : null;
   const setCartSelectedAreaId = !isEditMode
-    ? cartContext?.setSelectedAreaId || (() => {})
+    ? orderFormStore.setSelectedAreaId
     : () => {};
   const cartSelectedTableId = !isEditMode
-    ? cartContext?.selectedTableId || null
+    ? orderFormStore.selectedTableId
     : null;
   const setCartSelectedTableId = !isEditMode
-    ? cartContext?.setSelectedTableId || (() => {})
+    ? orderFormStore.setSelectedTableId
     : () => {};
   const cartIsTemporaryTable = !isEditMode
-    ? cartContext?.isTemporaryTable || false
+    ? orderFormStore.isTemporaryTable
     : false;
   const setCartIsTemporaryTable = !isEditMode
-    ? cartContext?.setIsTemporaryTable || (() => {})
+    ? orderFormStore.setIsTemporaryTable
     : () => {};
   const cartTemporaryTableName = !isEditMode
-    ? cartContext?.temporaryTableName || ''
+    ? orderFormStore.temporaryTableName
     : '';
   const setCartTemporaryTableName = !isEditMode
-    ? cartContext?.setTemporaryTableName || (() => {})
+    ? orderFormStore.setTemporaryTableName
     : () => {};
-  const cartScheduledTime = !isEditMode
-    ? cartContext?.scheduledTime || null
-    : null;
+  const cartScheduledTime = !isEditMode ? orderFormStore.scheduledTime : null;
   const setCartScheduledTime = !isEditMode
-    ? cartContext?.setScheduledTime || (() => {})
+    ? orderFormStore.setScheduledTime
     : () => {};
-  const cartDeliveryInfo = !isEditMode ? cartContext?.deliveryInfo || {} : {};
-  const setCartDeliveryInfo = cartContext?.setDeliveryInfo || (() => {});
-  const cartOrderNotes = cartContext?.orderNotes || '';
-  const setCartOrderNotes = cartContext?.setOrderNotes || (() => {});
+  const cartDeliveryInfo = !isEditMode ? orderFormStore.deliveryInfo : {};
+  const setCartDeliveryInfo = orderFormStore.setDeliveryInfo;
+  const cartOrderNotes = orderFormStore.orderNotes;
+  const setCartOrderNotes = orderFormStore.setOrderNotes;
 
   // Usar valores del contexto o locales según el modo
   const items = isEditMode ? editItems : cartItems;

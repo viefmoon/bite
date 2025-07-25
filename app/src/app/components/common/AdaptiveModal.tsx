@@ -44,7 +44,6 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
   const responsive = useResponsive();
   const screenHeight = Dimensions.get('window').height;
 
-  // Calcular altura máxima
   const maxHeightPixels = useMemo(() => {
     if (typeof maxHeight === 'string' && maxHeight.endsWith('%')) {
       const percentage = parseInt(maxHeight) / 100;

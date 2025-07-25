@@ -483,7 +483,6 @@ export class AuthService {
 
   async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>) {
     if (!data.sessionId) {
-      // Si no hay sessionId, no hay nada que hacer
       return;
     }
     return this.sessionService.deleteById(data.sessionId);

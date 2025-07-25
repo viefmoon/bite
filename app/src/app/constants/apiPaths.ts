@@ -47,7 +47,7 @@ export const API_PATHS = {
   ORDERS_RECEIPTS_LIST: '/api/v1/orders/receipts-list',
   ORDERS_RECEIPTS_BY_ID: '/api/v1/orders/receipts/:id',
   ORDERS_RECOVER: '/api/v1/orders/:id/recover',
-  PRINT_ORDER_TICKET: '/api/v1/print/order', // Ruta para solicitar impresión de ticket
+  PRINT_ORDER_TICKET: '/api/v1/print/order',
 
   THERMAL_PRINTERS: '/api/v1/thermal-printers',
   THERMAL_PRINTERS_BY_ID: '/api/v1/thermal-printers/:id',
@@ -110,30 +110,23 @@ export const API_PATHS = {
   ORDERS_BY_SHIFT: '/api/v1/orders/shift/:shiftId',
   ORDERS_BY_SHIFT_SALES_SUMMARY: '/api/v1/orders/shift/:shiftId/sales-summary',
 
-  // Users
   USERS: '/api/v1/users',
   USERS_BY_ID: '/api/v1/users/:id',
 
-  // App config
   APP_CONFIG: '/api/v1/app-config',
 
-  // Sync
   SYNC_STATUS: '/api/v1/sync-local/status',
   SYNC_ACTIVITY: '/api/v1/sync-local/activity',
 
-  // Order operations
   ORDERS_HISTORY: '/api/v1/orders/:orderId/history',
   ORDERS_QUICK_FINALIZE_MULTIPLE: '/api/v1/orders/quick-finalize-multiple',
   ORDERS_PRINT_TICKET: '/api/v1/orders/:orderId/print-ticket',
 
-  // Files
   FILES_CHECK: '/api/v1/files/',
 
-  // Audio Orders
   AUDIO_ORDERS_PROCESS: '/api/v1/audio-orders/process',
   AUDIO_ORDERS_HEALTH: '/api/v1/audio-orders/health',
 
-  // Health & Discovery
   HEALTH: '/api/v1/health',
   DISCOVERY: '/api/v1/discovery',
 } as const;

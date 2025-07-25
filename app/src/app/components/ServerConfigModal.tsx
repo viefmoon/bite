@@ -65,7 +65,6 @@ export function ServerConfigModal({
   const loadSettings = async () => {
     try {
       setLoading(true);
-      // Cargar configuración guardada
       const savedMode = (await EncryptedStorage.getItem(
         STORAGE_KEYS.CONNECTION_MODE,
       )) as ConnectionMode;
@@ -76,16 +75,13 @@ export function ServerConfigModal({
       if (savedUrl) setManualUrl(savedUrl);
       if (currentApiUrl) setCurrentUrl(currentApiUrl);
 
-      // Verificar si hay URL remota disponible
       if (currentApiUrl) {
         try {
           const response = await axios.get(`${currentApiUrl}/api/v1/discovery`);
           if (response.data.remoteUrl) {
             setRemoteUrlAvailable(response.data.remoteUrl);
           }
-        } catch (error) {
-          // Ignorar errores de descubrimiento
-        }
+        } catch (error) {}
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -95,14 +91,12 @@ export function ServerConfigModal({
   };
 
   const normalizeUrl = (url: string): string => {
-    // Si no tiene protocolo, agregar http://
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'http://' + url;
     }
 
     try {
       const parsed = new URL(url);
-      // Si no tiene puerto y es una IP local o localhost, agregar :3737
       if (
         !parsed.port &&
         (parsed.hostname.startsWith('192.168.') ||
@@ -113,7 +107,6 @@ export function ServerConfigModal({
       ) {
         parsed.port = '3737';
       }
-      // Construir la URL manualmente sin el slash final
       return `${parsed.protocol}//${parsed.host}`;
     } catch {
       return url;

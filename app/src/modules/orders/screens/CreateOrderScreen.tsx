@@ -19,8 +19,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useGetOrderMenu } from '../hooks/useMenuQueries';
 import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries';
-import { useCart, CartProvider, CartItem } from '../context/CartContext';
-import { CartItemModifier } from '../context/CartContext';
+import {
+  useCartStore,
+  useIsCartEmpty,
+  useCartItemsCount,
+  useClearAll,
+  CartItem,
+  CartItemModifier,
+} from '../stores/useCartStore';
+import { useOrderFormStore } from '../stores/useOrderFormStore';
 import { Product, Category, SubCategory } from '../types/orders.types';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -57,17 +64,18 @@ const CreateOrderScreen = () => {
   const responsive = useResponsive();
   const navigation = useNavigation();
   const {
-    isCartEmpty,
     addItem: originalAddItem,
     updateItem,
     isCartVisible,
     showCart,
     hideCart,
-    clearCart,
-    totalItemsCount,
-    setOrderType,
-    setDeliveryInfo,
-  } = useCart();
+  } = useCartStore();
+
+  const isCartEmpty = useIsCartEmpty();
+  const totalItemsCount = useCartItemsCount();
+  const clearAll = useClearAll();
+
+  const { setOrderType, setDeliveryInfo } = useOrderFormStore();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const user = useAuthStore((state) => state.user);
@@ -286,7 +294,7 @@ const CreateOrderScreen = () => {
         type: 'success',
       });
       hideCart();
-      clearCart(); // Limpiar carrito ANTES de navegar
+      clearAll(); // Limpiar carrito y formulario ANTES de navegar
 
       // Pequeño delay para asegurar que el estado se actualice antes de navegar
       setTimeout(() => {
@@ -686,7 +694,7 @@ const CreateOrderScreen = () => {
 
     // Clear cart after navigation to avoid the beforeRemove check
     setTimeout(() => {
-      clearCart();
+      clearAll();
     }, 100);
   };
 
@@ -1014,12 +1022,4 @@ const CreateOrderScreen = () => {
   return renderContent();
 };
 
-const CreateOrderScreenWithCart = () => {
-  return (
-    <CartProvider>
-      <CreateOrderScreen />
-    </CartProvider>
-  );
-};
-
-export default CreateOrderScreenWithCart;
+export default CreateOrderScreen;

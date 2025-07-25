@@ -44,8 +44,6 @@ export class ProductModifiersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Return a paginated list of product modifiers',
-    // TODO: Define a specific ApiOkResponse decorator with a Paginated<ProductModifier> type/schema for Swagger
-    // type: [ProductModifier], // Original incorrect type
   })
   findAll(
     @Query() filterDto: FindAllProductModifiersDto,
