@@ -13,7 +13,7 @@ import {
   useStartOrderPreparation,
   useCancelOrderPreparation,
   useCompleteOrderPreparation,
-} from '../hooks/useKitchenOrdersEfficient';
+} from '../hooks/useKitchenOrders';
 import { useKitchenStore } from '../store/kitchenStore';
 import { OrderCard } from '../components/OrderCard';
 import * as ScreenOrientation from 'expo-screen-orientation';
