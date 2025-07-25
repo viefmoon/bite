@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type { Product } from '../types/orders.types';
 import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
-import { useOrderFormStore } from './useOrderFormStore';
+import { OrderTypeEnum, type OrderType } from '../types/orders.types';
+import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 
 const generateId = () => {
   const timestamp = Date.now().toString();
@@ -40,11 +41,27 @@ export interface CartItem {
   pizzaExtraCost?: number;
 }
 
-interface CartStore {
+interface OrderCreationStore {
+  // Cart items
   items: CartItem[];
   isCartVisible: boolean;
 
-  // Actions
+  // Order form data
+  orderType: OrderType;
+  selectedAreaId: string | null;
+  selectedTableId: string | null;
+  isTemporaryTable: boolean;
+  temporaryTableName: string;
+  scheduledTime: Date | null;
+  deliveryInfo: DeliveryInfo;
+  orderNotes: string;
+
+  // Prepayment data
+  prepaymentId: string | null;
+  prepaymentAmount: string;
+  prepaymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | null;
+
+  // Cart actions
   addItem: (
     product: Product,
     quantity?: number,
@@ -67,44 +84,64 @@ interface CartStore {
     selectedPizzaCustomizations?: SelectedPizzaCustomization[],
     pizzaExtraCost?: number,
   ) => void;
-  clearCart: () => void;
   setItems: (items: CartItem[]) => void;
   showCart: () => void;
   hideCart: () => void;
+
+  // Form actions
+  setOrderType: (type: OrderType) => void;
+  setSelectedAreaId: (id: string | null) => void;
+  setSelectedTableId: (id: string | null) => void;
+  setIsTemporaryTable: (isTemp: boolean) => void;
+  setTemporaryTableName: (name: string) => void;
+  setScheduledTime: (time: Date | null) => void;
+  setDeliveryInfo: (info: DeliveryInfo) => void;
+  setOrderNotes: (notes: string) => void;
+  setPrepaymentId: (id: string | null) => void;
+  setPrepaymentAmount: (amount: string) => void;
+  setPrepaymentMethod: (method: 'CASH' | 'CARD' | 'TRANSFER' | null) => void;
+
+  // Unified reset action
+  resetOrder: () => void;
 }
 
-// Selectores para valores computados
-export const useCartSubtotal = () =>
-  useCartStore((state) =>
+// Computed selectors
+export const useOrderCreationSubtotal = () =>
+  useOrderCreationStore((state) =>
     state.items.reduce((sum, item) => sum + item.totalPrice, 0),
   );
 
-export const useCartTotal = () => useCartSubtotal();
+export const useOrderCreationTotal = () => useOrderCreationSubtotal();
 
-export const useCartItemsCount = () =>
-  useCartStore((state) =>
+export const useOrderCreationItemsCount = () =>
+  useOrderCreationStore((state) =>
     state.items.reduce((sum, item) => sum + item.quantity, 0),
   );
 
-export const useIsCartEmpty = () =>
-  useCartStore((state) => state.items.length === 0);
+export const useIsOrderCreationEmpty = () =>
+  useOrderCreationStore((state) => state.items.length === 0);
 
-// Función para limpiar tanto el cart como el formulario
-export const useClearAll = () => {
-  const clearCart = useCartStore((state) => state.clearCart);
-  const clearForm = useOrderFormStore((state) => state.clearForm);
-
-  return () => {
-    clearCart();
-    clearForm();
-  };
-};
-
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useOrderCreationStore = create<OrderCreationStore>((set, get) => ({
+  // Initial cart state
   items: [],
   isCartVisible: false,
 
-  // Actions
+  // Initial form state
+  orderType: OrderTypeEnum.DINE_IN,
+  selectedAreaId: null,
+  selectedTableId: null,
+  isTemporaryTable: false,
+  temporaryTableName: '',
+  scheduledTime: null,
+  deliveryInfo: {},
+  orderNotes: '',
+
+  // Initial prepayment state
+  prepaymentId: null,
+  prepaymentAmount: '',
+  prepaymentMethod: null,
+
+  // Cart actions
   addItem: (
     product: Product,
     quantity: number = 1,
@@ -327,10 +364,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ items: updatedItems });
   },
 
-  clearCart: () => {
-    set({ items: [] });
-  },
-
   setItems: (items: CartItem[]) => {
     set({ items });
   },
@@ -341,5 +374,72 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   hideCart: () => {
     set({ isCartVisible: false });
+  },
+
+  // Form actions
+  setOrderType: (type: OrderType) => {
+    set({ orderType: type });
+  },
+
+  setSelectedAreaId: (id: string | null) => {
+    set({ selectedAreaId: id });
+  },
+
+  setSelectedTableId: (id: string | null) => {
+    set({ selectedTableId: id });
+  },
+
+  setIsTemporaryTable: (isTemp: boolean) => {
+    set({ isTemporaryTable: isTemp });
+  },
+
+  setTemporaryTableName: (name: string) => {
+    set({ temporaryTableName: name });
+  },
+
+  setScheduledTime: (time: Date | null) => {
+    set({ scheduledTime: time });
+  },
+
+  setDeliveryInfo: (info: DeliveryInfo) => {
+    set({ deliveryInfo: info });
+  },
+
+  setOrderNotes: (notes: string) => {
+    set({ orderNotes: notes });
+  },
+
+  setPrepaymentId: (id: string | null) => {
+    set({ prepaymentId: id });
+  },
+
+  setPrepaymentAmount: (amount: string) => {
+    set({ prepaymentAmount: amount });
+  },
+
+  setPrepaymentMethod: (method: 'CASH' | 'CARD' | 'TRANSFER' | null) => {
+    set({ prepaymentMethod: method });
+  },
+
+  // Unified reset action
+  resetOrder: () => {
+    set({
+      // Reset cart
+      items: [],
+      isCartVisible: false,
+      // Reset form
+      orderType: OrderTypeEnum.DINE_IN,
+      selectedAreaId: null,
+      selectedTableId: null,
+      isTemporaryTable: false,
+      temporaryTableName: '',
+      scheduledTime: null,
+      deliveryInfo: {},
+      orderNotes: '',
+      // Reset prepayment
+      prepaymentId: null,
+      prepaymentAmount: '',
+      prepaymentMethod: null,
+    });
   },
 }));

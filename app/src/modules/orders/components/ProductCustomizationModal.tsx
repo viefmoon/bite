@@ -23,7 +23,7 @@ import {
   Modifier,
   FullMenuModifierGroup,
 } from '../types/orders.types';
-import { CartItemModifier, CartItem } from '../stores/useCartStore';
+import { CartItemModifier, CartItem } from '../stores/useOrderCreationStore';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';

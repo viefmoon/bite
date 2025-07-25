@@ -30,7 +30,7 @@ import type { FullMenuProduct as Product } from '@/modules/orders/types/orders.t
 import type {
   CartItem,
   CartItemModifier,
-} from '@/modules/orders/stores/useCartStore';
+} from '@/modules/orders/stores/useOrderCreationStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {

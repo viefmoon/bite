@@ -46,7 +46,7 @@ import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
 import { useListState } from '../../../app/hooks/useListState';
-import { CartItem } from '../stores/useCartStore';
+import { CartItem } from '../stores/useOrderCreationStore';
 import {
   formatOrderStatus,
   formatOrderType,

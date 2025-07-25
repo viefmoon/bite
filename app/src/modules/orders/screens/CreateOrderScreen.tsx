@@ -20,14 +20,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useGetOrderMenu } from '../hooks/useMenuQueries';
 import { useCreateOrderMutation } from '@/modules/orders/hooks/useOrdersQueries';
 import {
-  useCartStore,
-  useIsCartEmpty,
-  useCartItemsCount,
-  useClearAll,
+  useOrderCreationStore,
+  useIsOrderCreationEmpty,
+  useOrderCreationItemsCount,
   CartItem,
   CartItemModifier,
-} from '../stores/useCartStore';
-import { useOrderFormStore } from '../stores/useOrderFormStore';
+} from '../stores/useOrderCreationStore';
 import { Product, Category, SubCategory } from '../types/orders.types';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -69,13 +67,13 @@ const CreateOrderScreen = () => {
     isCartVisible,
     showCart,
     hideCart,
-  } = useCartStore();
+    setOrderType,
+    setDeliveryInfo,
+    resetOrder,
+  } = useOrderCreationStore();
 
-  const isCartEmpty = useIsCartEmpty();
-  const totalItemsCount = useCartItemsCount();
-  const clearAll = useClearAll();
-
-  const { setOrderType, setDeliveryInfo } = useOrderFormStore();
+  const isCartEmpty = useIsOrderCreationEmpty();
+  const totalItemsCount = useOrderCreationItemsCount();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const user = useAuthStore((state) => state.user);
@@ -294,7 +292,7 @@ const CreateOrderScreen = () => {
         type: 'success',
       });
       hideCart();
-      clearAll(); // Limpiar carrito y formulario ANTES de navegar
+      resetOrder(); // Limpiar todo el estado de la orden ANTES de navegar
 
       // Pequeño delay para asegurar que el estado se actualice antes de navegar
       setTimeout(() => {
@@ -692,9 +690,9 @@ const CreateOrderScreen = () => {
     // Execute navigation first
     navigationAction();
 
-    // Clear cart after navigation to avoid the beforeRemove check
+    // Clear order after navigation to avoid the beforeRemove check
     setTimeout(() => {
-      clearAll();
+      resetOrder();
     }, 100);
   };
 

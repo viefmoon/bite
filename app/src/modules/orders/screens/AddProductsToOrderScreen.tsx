@@ -27,7 +27,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
-import { CartItem, CartItemModifier } from '../stores/useCartStore';
+import { CartItem, CartItemModifier } from '../stores/useOrderCreationStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 // Props de navegación

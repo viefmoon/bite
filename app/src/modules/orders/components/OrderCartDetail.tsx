@@ -43,11 +43,10 @@ import { useGetTablesByArea } from '@/modules/areasTables/services/tableService'
 import type { Table } from '@/modules/areasTables/types/areasTables.types';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
-  useCartStore,
+  useOrderCreationStore,
   CartItem,
   CartItemModifier,
-} from '../stores/useCartStore'; // Importar CartItem y CartItemModifier
-import { useOrderFormStore } from '../stores/useOrderFormStore';
+} from '../stores/useOrderCreationStore';
 import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
 import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
@@ -269,50 +268,49 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const [orderDataLoaded, setOrderDataLoaded] = useState(false);
 
   // Usar los stores separados en lugar del contexto unificado
-  const cartStore = useCartStore();
-  const orderFormStore = useOrderFormStore();
+  const orderCreationStore = useOrderCreationStore();
 
-  const cartItems = !isEditMode ? cartStore.items : [];
-  const removeCartItem = !isEditMode ? cartStore.removeItem : () => {};
+  const cartItems = !isEditMode ? orderCreationStore.items : [];
+  const removeCartItem = !isEditMode ? orderCreationStore.removeItem : () => {};
   const updateCartItemQuantity = !isEditMode
-    ? cartStore.updateItemQuantity
+    ? orderCreationStore.updateItemQuantity
     : () => {};
-  const isCartVisible = !isEditMode ? cartStore.isCartVisible : false;
+  const isCartVisible = !isEditMode ? orderCreationStore.isCartVisible : false;
 
   const cartOrderType = !isEditMode
-    ? orderFormStore.orderType
+    ? orderCreationStore.orderType
     : OrderTypeEnum.DINE_IN;
-  const setCartOrderType = !isEditMode ? orderFormStore.setOrderType : () => {};
-  const cartSelectedAreaId = !isEditMode ? orderFormStore.selectedAreaId : null;
+  const setCartOrderType = !isEditMode ? orderCreationStore.setOrderType : () => {};
+  const cartSelectedAreaId = !isEditMode ? orderCreationStore.selectedAreaId : null;
   const setCartSelectedAreaId = !isEditMode
-    ? orderFormStore.setSelectedAreaId
+    ? orderCreationStore.setSelectedAreaId
     : () => {};
   const cartSelectedTableId = !isEditMode
-    ? orderFormStore.selectedTableId
+    ? orderCreationStore.selectedTableId
     : null;
   const setCartSelectedTableId = !isEditMode
-    ? orderFormStore.setSelectedTableId
+    ? orderCreationStore.setSelectedTableId
     : () => {};
   const cartIsTemporaryTable = !isEditMode
-    ? orderFormStore.isTemporaryTable
+    ? orderCreationStore.isTemporaryTable
     : false;
   const setCartIsTemporaryTable = !isEditMode
-    ? orderFormStore.setIsTemporaryTable
+    ? orderCreationStore.setIsTemporaryTable
     : () => {};
   const cartTemporaryTableName = !isEditMode
-    ? orderFormStore.temporaryTableName
+    ? orderCreationStore.temporaryTableName
     : '';
   const setCartTemporaryTableName = !isEditMode
-    ? orderFormStore.setTemporaryTableName
+    ? orderCreationStore.setTemporaryTableName
     : () => {};
-  const cartScheduledTime = !isEditMode ? orderFormStore.scheduledTime : null;
+  const cartScheduledTime = !isEditMode ? orderCreationStore.scheduledTime : null;
   const setCartScheduledTime = !isEditMode
-    ? orderFormStore.setScheduledTime
+    ? orderCreationStore.setScheduledTime
     : () => {};
-  const cartDeliveryInfo = !isEditMode ? orderFormStore.deliveryInfo : {};
-  const setCartDeliveryInfo = orderFormStore.setDeliveryInfo;
-  const cartOrderNotes = orderFormStore.orderNotes;
-  const setCartOrderNotes = orderFormStore.setOrderNotes;
+  const cartDeliveryInfo = !isEditMode ? orderCreationStore.deliveryInfo : {};
+  const setCartDeliveryInfo = orderCreationStore.setDeliveryInfo;
+  const cartOrderNotes = orderCreationStore.orderNotes;
+  const setCartOrderNotes = orderCreationStore.setOrderNotes;
 
   // Usar valores del contexto o locales según el modo
   const items = isEditMode ? editItems : cartItems;
