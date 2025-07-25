@@ -27,7 +27,7 @@ import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailsModal } from '../components/ReceiptDetailsModal';
-import { ConfirmRecoverModal } from '../components/ConfirmRecoverModal';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -589,15 +589,17 @@ export const ReceiptsScreen: React.FC = () => {
       />
 
       {/* Modal de confirmación de recuperación */}
-      <ConfirmRecoverModal
+      <ConfirmationModal
         visible={showRecoverConfirm}
-        onClose={() => {
+        title="Recuperar Orden"
+        message={`¿Estás seguro de que deseas recuperar la orden #${orderToRecover?.shiftOrderNumber}?\n\nLa orden se marcará como entregada y volverá a estar visible en las órdenes activas.`}
+        onConfirm={handleConfirmRecover}
+        onCancel={() => {
           setShowRecoverConfirm(false);
           setOrderToRecover(null);
         }}
-        onConfirm={handleConfirmRecover}
-        orderNumber={orderToRecover?.shiftOrderNumber?.toString()}
-        isLoading={recoverOrderMutation.isPending}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
       />
 
       {/* Date range picker */}

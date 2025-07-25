@@ -79,6 +79,43 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     }
   };
 
+  const getOrderTypeBackgroundColor = () => {
+    switch (order.orderType) {
+      case OrderType.DELIVERY:
+        return '#FFEBEE'; // Rojo muy claro
+      case OrderType.TAKE_AWAY:
+        return '#E0F2F1'; // Cyan/Turquesa muy claro
+      case OrderType.DINE_IN:
+        return '#E3F2FD'; // Azul muy claro
+      default:
+        return theme.colors.surfaceVariant;
+    }
+  };
+
+  const getOrderTypeTextColor = () => {
+    switch (order.orderType) {
+      case OrderType.DELIVERY:
+        return '#C62828'; // Rojo oscuro
+      case OrderType.TAKE_AWAY:
+        return '#00838F'; // Cyan/Turquesa oscuro
+      case OrderType.DINE_IN:
+        return '#1565C0'; // Azul oscuro
+      default:
+        return theme.colors.onSurfaceVariant;
+    }
+  };
+
+  const getScreenStatusColor = (status: PreparationScreenStatus) => {
+    switch (status) {
+      case PreparationScreenStatus.READY:
+        return theme.colors.success;
+      case PreparationScreenStatus.IN_PREPARATION:
+        return '#FF6B35';
+      default:
+        return '#9C27B0';
+    }
+  };
+
   const getOrderTypeIcon = () => {
     switch (order.orderType) {
       case OrderType.DELIVERY:
@@ -421,27 +458,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               <View
                 style={[
                   styles.header,
-                  {
-                    backgroundColor: getOrderTypeColor(),
-                    paddingHorizontal: 8,
-                  },
+                  styles.headerSwipeable,
+                  { backgroundColor: getOrderTypeColor() },
                 ]}
               >
                 <View style={styles.headerLeft}>
-                  <Text
-                    style={[
-                      styles.orderNumber,
-                      { color: theme.colors.surface },
-                    ]}
-                  >
+                  <Text style={[styles.orderNumber, styles.headerText]}>
                     #{order.shiftOrderNumber}
                   </Text>
                   {hasOrderDetails() && (
                     <Text
-                      style={[
-                        styles.headerDetails,
-                        { color: theme.colors.surface },
-                      ]}
+                      style={[styles.headerDetails, styles.headerText]}
                       numberOfLines={2}
                     >
                       {(() => {
@@ -462,54 +489,37 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   {/* Badge de WhatsApp */}
                   {order.isFromWhatsApp && (
                     <View style={styles.whatsappBadgeContainer}>
-                      <View
-                        style={[
-                          styles.whatsappBadge,
-                          {
-                            backgroundColor: '#25D366',
-                          },
-                        ]}
-                      >
-                        <Icon source="whatsapp" size={12} color="#FFFFFF" />
+                      <View style={styles.whatsappBadge}>
+                        <Icon
+                          source="whatsapp"
+                          size={12}
+                          color={theme.colors.surface}
+                        />
                       </View>
                     </View>
                   )}
                 </View>
-                <View style={[styles.headerRight, { marginLeft: 6 }]}>
-                  <View
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        marginTop: 2,
-                        marginBottom: 3,
-                      },
-                    ]}
-                  >
+                <View style={[styles.headerRight, styles.headerRightSwipeable]}>
+                  <View style={[styles.typeChip, styles.typeChipSwipeable]}>
                     <Icon
                       name={getOrderTypeIcon()}
                       size={responsive.isWeb ? 18 : 14}
                       color={theme.colors.surface}
-                      style={{ marginRight: 4 }}
+                      style={styles.typeChipIcon}
                     />
-                    <Text
-                      style={[
-                        styles.typeChipText,
-                        { color: theme.colors.surface },
-                      ]}
-                    >
+                    <Text style={[styles.typeChipText, styles.headerText]}>
                       {getOrderTypeLabel()}
                     </Text>
                   </View>
                   <View
                     style={[
                       styles.statusChip,
+                      styles.statusChipSwipeable,
                       {
                         backgroundColor: orderStatus.color,
                         borderWidth:
                           orderStatus.label === 'En progreso' ? 1 : 0,
                         borderColor: theme.colors.outline,
-                        marginBottom: 2,
                       },
                     ]}
                   >
@@ -527,42 +537,29 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                       {orderStatus.label}
                     </Text>
                   </View>
-                  <Text
-                    style={[styles.headerTime, { color: theme.colors.surface }]}
-                  >
+                  <Text style={[styles.headerTime, styles.headerText]}>
                     {format(new Date(order.createdAt), 'HH:mm', { locale: es })}
                   </Text>
                 </View>
               </View>
               {/* Indicador de progreso del long press */}
               {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
-                <>
-                  {/* Barra de progreso superior clara y simple */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 20,
-                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Animated.View
-                      style={{
-                        height: '100%',
+                <View style={styles.progressBarContainer}>
+                  <Animated.View
+                    style={[
+                      styles.progressBar,
+                      {
                         width: animatedValue.interpolate({
                           inputRange: [0, 1],
                           outputRange: ['0%', '100%'],
                         }),
                         backgroundColor: canMarkAsReady()
-                          ? '#4CAF50'
+                          ? theme.colors.success
                           : '#FF6B35',
-                      }}
-                    />
-                  </View>
-                </>
+                      },
+                    ]}
+                  />
+                </View>
               )}
             </Pressable>
           </Swipeable>
@@ -570,24 +567,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <View
             style={[
               styles.header,
-              {
-                backgroundColor: getOrderTypeColor(),
-                paddingHorizontal: 8,
-              },
+              styles.headerSwipeable,
+              { backgroundColor: getOrderTypeColor() },
             ]}
           >
             <View style={styles.headerLeft}>
-              <Text
-                style={[styles.orderNumber, { color: theme.colors.surface }]}
-              >
+              <Text style={[styles.orderNumber, styles.headerText]}>
                 #{order.shiftOrderNumber}
               </Text>
               {hasOrderDetails() && (
                 <Text
-                  style={[
-                    styles.headerDetails,
-                    { color: theme.colors.surface },
-                  ]}
+                  style={[styles.headerDetails, styles.headerText]}
                   numberOfLines={2}
                 >
                   {(() => {
@@ -605,62 +595,24 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 </Text>
               )}
             </View>
-            <View style={[styles.headerRight, { marginLeft: 12 }]}>
+            <View style={[styles.headerRight, styles.headerRightNormal]}>
               <View
                 style={[
                   styles.typeChip,
-                  {
-                    backgroundColor: (() => {
-                      switch (order.orderType) {
-                        case OrderType.DELIVERY:
-                          return '#FFEBEE'; // Rojo muy claro
-                        case OrderType.TAKE_AWAY:
-                          return '#E0F2F1'; // Cyan/Turquesa muy claro
-                        case OrderType.DINE_IN:
-                          return '#E3F2FD'; // Azul muy claro
-                        default:
-                          return theme.colors.surfaceVariant;
-                      }
-                    })(),
-                    marginTop: 2,
-                    marginBottom: 3,
-                  },
+                  styles.typeChipNormal,
+                  { backgroundColor: getOrderTypeBackgroundColor() },
                 ]}
               >
                 <Icon
                   name={getOrderTypeIcon()}
                   size={responsive.isTablet ? 13 : 14}
-                  color={(() => {
-                    switch (order.orderType) {
-                      case OrderType.DELIVERY:
-                        return '#C62828'; // Rojo oscuro
-                      case OrderType.TAKE_AWAY:
-                        return '#00838F'; // Cyan/Turquesa oscuro
-                      case OrderType.DINE_IN:
-                        return '#1565C0'; // Azul oscuro
-                      default:
-                        return theme.colors.onSurfaceVariant;
-                    }
-                  })()}
-                  style={{ marginRight: 4 }}
+                  color={getOrderTypeTextColor()}
+                  style={styles.typeChipIcon}
                 />
                 <Text
                   style={[
                     styles.typeChipText,
-                    {
-                      color: (() => {
-                        switch (order.orderType) {
-                          case OrderType.DELIVERY:
-                            return '#C62828'; // Rojo oscuro
-                          case OrderType.TAKE_AWAY:
-                            return '#00838F'; // Cyan/Turquesa oscuro
-                          case OrderType.DINE_IN:
-                            return '#1565C0'; // Azul oscuro
-                          default:
-                            return theme.colors.onSurfaceVariant;
-                        }
-                      })(),
-                    },
+                    { color: getOrderTypeTextColor() },
                   ]}
                 >
                   {getOrderTypeLabel()}
@@ -711,12 +663,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 📝 {order.orderNotes}
               </Text>
             </View>
-            <Divider
-              style={{
-                backgroundColor: theme.colors.outlineVariant,
-                height: 0.5,
-              }}
-            />
+            <Divider style={styles.divider} />
           </>
         )}
 
@@ -762,12 +709,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 </View>
               </ScrollView>
             </View>
-            <Divider
-              style={{
-                backgroundColor: theme.colors.outlineVariant,
-                height: 0.5,
-              }}
-            />
+            <Divider style={styles.divider} />
           </>
         )}
 
@@ -822,10 +764,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             </ScrollView>
           ) : (
             <View style={styles.emptyItemsContainer}>
-              <Text
-                variant="bodyLarge"
-                style={{ color: theme.colors.onSurfaceVariant, opacity: 0.6 }}
-              >
+              <Text variant="bodyLarge" style={styles.emptyItemsText}>
                 No hay productos para mostrar
               </Text>
             </View>
@@ -833,32 +772,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         </View>
 
         {/* Botón flotante con posicionamiento fijo */}
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 10,
-            right: 10,
-            width: 48,
-            height: 48,
-          }}
-        >
+        <View style={styles.floatingButtonContainer}>
           <IconButton
             icon="file-document-multiple-outline"
             size={responsive.isWeb ? 32 : 28}
-            iconColor="#FFFFFF"
-            style={{
-              backgroundColor: theme.colors.primary,
-              elevation: 6,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4.65,
-              width: responsive.isWeb ? 56 : 48,
-              height: responsive.isWeb ? 56 : 48,
-              borderRadius: responsive.isWeb ? 28 : 24,
-              margin: 0,
-              opacity: 0.7,
-            }}
+            iconColor={theme.colors.surface}
+            style={[
+              styles.floatingButton,
+              {
+                backgroundColor: theme.colors.primary,
+                width: responsive.isWeb ? 56 : 48,
+                height: responsive.isWeb ? 56 : 48,
+                borderRadius: responsive.isWeb ? 28 : 24,
+              },
+            ]}
             onPress={() => setShowHistory(true)}
           />
         </View>
@@ -1072,5 +999,84 @@ const createStyles = (responsive: any, theme: any) =>
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.2,
       shadowRadius: 2,
+      backgroundColor: '#25D366',
+    },
+    // Estilos adicionales para eliminar inline styles
+    headerText: {
+      color: theme.colors.surface,
+    },
+    headerSwipeable: {
+      paddingHorizontal: responsive.spacing.s,
+    },
+    headerRightSwipeable: {
+      marginLeft: responsive.spacing.xs,
+    },
+    headerRightNormal: {
+      marginLeft: responsive.spacing.m,
+    },
+    typeChipSwipeable: {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      marginTop: 2,
+      marginBottom: 3,
+    },
+    typeChipNormal: {
+      marginTop: 2,
+      marginBottom: 3,
+    },
+    typeChipIcon: {
+      marginRight: 4,
+    },
+    statusChipSwipeable: {
+      marginBottom: 2,
+    },
+    statusChipNormal: {
+      marginBottom: 2,
+    },
+    progressBarContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 20,
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      overflow: 'hidden',
+    },
+    progressBar: {
+      height: '100%',
+    },
+    notesContainer: {
+      backgroundColor: theme.colors.errorContainer,
+    },
+    notesText: {
+      color: theme.colors.onErrorContainer,
+    },
+    divider: {
+      backgroundColor: theme.colors.outlineVariant,
+      height: 0.5,
+    },
+    screenStatusContainerStyle: {
+      backgroundColor: theme.colors.surfaceVariant,
+      paddingVertical: responsive.spacing.s,
+      paddingHorizontal: responsive.spacing.s,
+    },
+    emptyItemsText: {
+      color: theme.colors.onSurfaceVariant,
+      opacity: 0.6,
+    },
+    floatingButtonContainer: {
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+      width: 48,
+      height: 48,
+    },
+    floatingButton: {
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4.65,
+      margin: 0,
+      opacity: 0.7,
     },
   });

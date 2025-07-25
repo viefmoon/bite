@@ -11,9 +11,9 @@ import {
 } from '../../../app/schemas/domain/product-variant.schema';
 import { modifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
 // Importar el schema y tipo Product centralizado del dominio
-import { 
+import {
   productSchema as domainProductSchema,
-  type Product 
+  type Product,
 } from '../../../app/schemas/domain/product.schema';
 
 // --- Schemas Zod ---
@@ -28,7 +28,7 @@ const productVariantFormSchema = productVariantSchema
 
 // Schema base para formularios - compose desde el dominio con campos adicionales específicos del formulario
 const productFormBaseSchema = domainProductSchema
-  .omit({ 
+  .omit({
     id: true,
     photo: true,
     variants: true,
@@ -36,7 +36,7 @@ const productFormBaseSchema = domainProductSchema
     pizzaCustomizations: true,
     pizzaConfiguration: true,
     createdAt: true,
-    updatedAt: true 
+    updatedAt: true,
   })
   .extend({
     id: z.string().optional(), // ID opcional para creación/formulario

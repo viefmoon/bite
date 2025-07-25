@@ -72,7 +72,7 @@ class AudioOrderService {
       const response = await ApiClientWrapper.post(
         API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
-        { timeout: 60000 } // 60 segundos para permitir procesamiento de audio
+        { timeout: 60000 }, // 60 segundos para permitir procesamiento de audio
       );
 
       // Verificar que tengamos una respuesta válida

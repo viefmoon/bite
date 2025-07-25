@@ -51,7 +51,7 @@ module.exports = {
     'react/display-name': 'off',
 
     // React Native
-    'react-native/no-inline-styles': 'off', // Too many to fix now
+    'react-native/no-inline-styles': 'error', // Refactored to use StyleSheet
     'react-native/no-color-literals': 'off',
     'react-native/no-raw-text': 'off',
     'react-native/sort-styles': 'off',

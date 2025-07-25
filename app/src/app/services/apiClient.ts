@@ -221,9 +221,9 @@ function configureInterceptors() {
           delete: 5000,
         };
 
-        config.timeout = timeouts[config.method as keyof typeof timeouts] || 5000;
+        config.timeout =
+          timeouts[config.method as keyof typeof timeouts] || 5000;
       }
-
 
       return config;
     },

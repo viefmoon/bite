@@ -1,8 +1,8 @@
 import { z } from 'zod';
 // Importar el schema y tipo de dominio centralizado
-import { 
+import {
   preparationScreenSchema as domainPreparationScreenSchema,
-  type PreparationScreen as DomainPreparationScreen 
+  type PreparationScreen as DomainPreparationScreen,
 } from '../../../app/schemas/domain/preparation-screen.schema';
 
 // Esquema principal extendido desde el dominio para incluir relaciones
@@ -53,26 +53,26 @@ export const CreatePreparationScreenSchema = domainPreparationScreenSchema
   });
 
 // Esquema para actualizar una pantalla de preparación existente - basado en el de creación
-export const UpdatePreparationScreenSchema = CreatePreparationScreenSchema
-  .omit({ userId: true })
-  .extend({
-    name: z
-      .string()
-      .min(1, 'El nombre es requerido')
-      .max(100, 'El nombre no puede exceder los 100 caracteres')
-      .optional(),
-    description: z
-      .string()
-      .max(255, 'La descripción no puede exceder los 255 caracteres')
-      .nullable()
-      .optional(),
-    isActive: z.boolean().optional(),
-    userId: z
-      .string()
-      .min(1, 'Debe seleccionar un usuario de cocina')
-      .uuid({ message: 'Debe seleccionar un usuario de cocina válido' })
-      .optional(), // Opcional en actualización
-  });
+export const UpdatePreparationScreenSchema = CreatePreparationScreenSchema.omit(
+  { userId: true },
+).extend({
+  name: z
+    .string()
+    .min(1, 'El nombre es requerido')
+    .max(100, 'El nombre no puede exceder los 100 caracteres')
+    .optional(),
+  description: z
+    .string()
+    .max(255, 'La descripción no puede exceder los 255 caracteres')
+    .nullable()
+    .optional(),
+  isActive: z.boolean().optional(),
+  userId: z
+    .string()
+    .min(1, 'Debe seleccionar un usuario de cocina')
+    .uuid({ message: 'Debe seleccionar un usuario de cocina válido' })
+    .optional(), // Opcional en actualización
+});
 
 // Tipos inferidos de los esquemas Zod
 export type PreparationScreen = z.infer<typeof PreparationScreenSchema>;

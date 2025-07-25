@@ -43,7 +43,7 @@ export function useUpdateKitchenItem() {
         const oldData = query.state.data;
         if (oldData) {
           previousData.push([queryKey, oldData]);
-          
+
           queryClient.setQueryData(queryKey, (old: any) => {
             if (!old || !Array.isArray(old)) return old;
 
@@ -81,27 +81,27 @@ export function useUpdateKitchenItem() {
       itemId: string;
       isPrepared: boolean;
     }) => kitchenService.markItemPrepared(itemId, isPrepared),
-    
+
     onMutate: async ({ itemId, isPrepared }) => {
       await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
       const previousData = updateAllQueriesForItem(itemId, isPrepared);
       return { previousData };
     },
-    
+
     onError: (error: any, variables, context) => {
       if (context?.previousData) {
         rollbackAllQueries(context.previousData);
       }
       showError(error.response?.data?.message || 'Error al actualizar el item');
     },
-    
+
     // NO invalidar inmediatamente - dejar que el background refetch se encargue
     onSettled: () => {
       // Invalidar después de 2 segundos para permitir ver el cambio optimista
       setTimeout(() => {
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: [KITCHEN_ORDERS_KEY],
-          refetchType: 'none' // Solo marcar como stale, no refetch inmediato
+          refetchType: 'none', // Solo marcar como stale, no refetch inmediato
         });
       }, 2000);
     },
@@ -115,7 +115,11 @@ export function useUpdateKitchenOrderStatus() {
   const queryClient = useQueryClient();
   const { showError } = useKitchenSnackbar();
 
-  const updateAllQueriesForOrder = (orderId: string, status: string, extraUpdates?: any) => {
+  const updateAllQueriesForOrder = (
+    orderId: string,
+    status: string,
+    extraUpdates?: any,
+  ) => {
     const queryCache = queryClient.getQueryCache();
     const queries = queryCache.getAll();
     const previousData: any[] = [];
@@ -126,7 +130,7 @@ export function useUpdateKitchenOrderStatus() {
         const oldData = query.state.data;
         if (oldData) {
           previousData.push([queryKey, oldData]);
-          
+
           queryClient.setQueryData(queryKey, (old: any) => {
             if (!old || !Array.isArray(old)) return old;
 
@@ -177,52 +181,56 @@ export function useUpdateKitchenOrderStatus() {
   return {
     // Función genérica para actualizar status
     updateStatus: useMutation({
-      mutationFn: ({ orderId, status, serverAction }: { 
-        orderId: string; 
-        status: string; 
+      mutationFn: ({
+        orderId,
+        status,
+        serverAction,
+      }: {
+        orderId: string;
+        status: string;
         serverAction: () => Promise<any>;
       }) => serverAction(),
-      
+
       onMutate: async ({ orderId, status }) => {
         await queryClient.cancelQueries({ queryKey: [KITCHEN_ORDERS_KEY] });
         const previousData = updateAllQueriesForOrder(orderId, status);
         return { previousData };
       },
-      
+
       onError: (error: any, variables, context) => {
         if (context?.previousData) {
           rollbackAllQueries(context.previousData);
         }
         showError(error.response?.data?.message || 'Error al actualizar orden');
       },
-      
+
       onSettled: () => {
         setTimeout(() => {
-          queryClient.invalidateQueries({ 
+          queryClient.invalidateQueries({
             queryKey: [KITCHEN_ORDERS_KEY],
-            refetchType: 'none'
+            refetchType: 'none',
           });
         }, 2000);
       },
     }),
-    
+
     // Helpers específicos
     startPreparation: (orderId: string) => ({
       orderId,
       status: 'IN_PREPARATION',
-      serverAction: () => kitchenService.startOrderPreparation(orderId)
+      serverAction: () => kitchenService.startOrderPreparation(orderId),
     }),
-    
+
     cancelPreparation: (orderId: string) => ({
       orderId,
-      status: 'PENDING', 
-      serverAction: () => kitchenService.cancelOrderPreparation(orderId)
+      status: 'PENDING',
+      serverAction: () => kitchenService.cancelOrderPreparation(orderId),
     }),
-    
+
     completePreparation: (orderId: string) => ({
       orderId,
       status: 'READY',
-      serverAction: () => kitchenService.completeOrderPreparation(orderId)
+      serverAction: () => kitchenService.completeOrderPreparation(orderId),
     }),
   };
 }
@@ -232,7 +240,7 @@ export function useUpdateKitchenOrderStatus() {
  */
 export function useStartOrderPreparation() {
   const { updateStatus, startPreparation } = useUpdateKitchenOrderStatus();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => {
       const params = startPreparation(orderId);
@@ -246,7 +254,7 @@ export function useStartOrderPreparation() {
  */
 export function useCancelOrderPreparation() {
   const { updateStatus, cancelPreparation } = useUpdateKitchenOrderStatus();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => {
       const params = cancelPreparation(orderId);
@@ -260,7 +268,7 @@ export function useCancelOrderPreparation() {
  */
 export function useCompleteOrderPreparation() {
   const { updateStatus, completePreparation } = useUpdateKitchenOrderStatus();
-  
+
   return useMutation({
     mutationFn: (orderId: string) => {
       const params = completePreparation(orderId);
@@ -275,9 +283,15 @@ export function useCompleteOrderPreparation() {
  */
 export function useMarkItemPrepared() {
   const updateItem = useUpdateKitchenItem();
-  
+
   return useMutation({
-    mutationFn: ({ itemId, isPrepared }: { itemId: string; isPrepared: boolean }) => {
+    mutationFn: ({
+      itemId,
+      isPrepared,
+    }: {
+      itemId: string;
+      isPrepared: boolean;
+    }) => {
       return updateItem.mutateAsync({ itemId, isPrepared });
     },
   });

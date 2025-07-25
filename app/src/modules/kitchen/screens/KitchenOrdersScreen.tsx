@@ -293,6 +293,7 @@ const createStyles = (theme: any, responsive: any) =>
     container: {
       flex: 1,
       position: 'relative',
+      backgroundColor: theme.colors.background,
     },
     centerContainer: {
       flex: 1,
@@ -393,5 +394,19 @@ const createStyles = (theme: any, responsive: any) =>
       width: '80%',
       fontWeight: '400',
       color: theme.colors.onSurfaceVariant,
+    },
+    // Estilos adicionales para eliminar inline styles
+    loadingText: {
+      marginTop: theme.spacing.m,
+      color: theme.colors.onBackground,
+    },
+    cardContainer: {
+      height: '100%',
+      paddingVertical: responsive.spacing.xxxs,
+    },
+    cardContainerWeb: {
+      marginRight: responsive.spacing.s,
+      marginBottom: responsive.spacing.s,
+      height: 'auto',
     },
   });
