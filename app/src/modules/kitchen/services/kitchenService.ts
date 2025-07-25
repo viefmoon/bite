@@ -37,7 +37,7 @@ class KitchenService {
       : API_PATHS.KITCHEN_ORDERS;
 
     const response = await apiClient.get<KitchenOrder[]>(url);
-    return response.data || [];
+    return response.data;
   }
 
   async markItemPrepared(

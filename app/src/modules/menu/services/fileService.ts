@@ -68,14 +68,6 @@ export const uploadFile = async (
         },
       );
 
-      if (!response.data || !response.data.file) {
-        throw new ApiError(
-          'UPLOAD_FAILED',
-          'Error al recibir respuesta del servidor',
-          500,
-        );
-      }
-
       return response.data;
     } catch (error) {
       lastError = error;

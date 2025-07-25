@@ -12,7 +12,7 @@ export const availabilityService = {
     const response = await apiClient.get<CategoryAvailability[]>(
       API_PATHS.AVAILABILITY_MENU,
     );
-    return response.data || [];
+    return response.data;
   },
 
   // Obtener la disponibilidad de grupos de modificadores
@@ -20,7 +20,7 @@ export const availabilityService = {
     const response = await apiClient.get<ModifierGroupAvailability[]>(
       API_PATHS.AVAILABILITY_MODIFIER_GROUPS,
     );
-    return response.data || [];
+    return response.data;
   },
 
   // Actualizar disponibilidad (con opción de cascada)

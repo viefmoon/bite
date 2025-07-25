@@ -53,7 +53,7 @@ export function AssociatePizzaToppingsModal({
         limit: 100,
         isActive: true,
       });
-      return response.data || [];
+      return response.data;
     },
     enabled: visible,
   });
