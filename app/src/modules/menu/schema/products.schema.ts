@@ -10,63 +10,50 @@ import {
   type ProductVariant,
 } from '../../../app/schemas/domain/product-variant.schema';
 import { modifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
-// Importar el tipo Product centralizado
-import type { Product } from '../../../app/schemas/domain/product.schema';
+// Importar el schema y tipo Product centralizado del dominio
+import { 
+  productSchema as domainProductSchema,
+  type Product 
+} from '../../../app/schemas/domain/product.schema';
 
 // --- Schemas Zod ---
 
-// Schema para variantes en el formulario (sin requerir ID)
-const productVariantFormSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, 'El nombre es requerido'),
-  price: z.coerce
-    .number({
-      invalid_type_error: 'El precio debe ser un número',
-      required_error: 'El precio es requerido',
-    })
-    .positive('El precio debe ser mayor a 0'),
-  isActive: z.boolean(),
-  sortOrder: z.number().optional().default(0),
-});
+// Schema para variantes en el formulario (sin requerir ID) - derivado del dominio
+const productVariantFormSchema = productVariantSchema
+  .omit({ id: true })
+  .extend({
+    id: z.string().optional(),
+    sortOrder: z.number().optional().default(0),
+  });
 
-// Schema base local para el formulario (necesario para superRefine y campos extra como imageUri)
-// y también como base para productResponseSchema
-const productBaseSchema = z.object({
-  id: z.string().optional(), // ID opcional para creación/formulario
-  name: z.string().min(1, 'El nombre es requerido'),
-  description: z.string().nullable().optional(), // Campo descripción agregado
-  price: z
-    .number()
-    .positive('El precio debe ser positivo')
-    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
-      message: 'El precio debe tener como máximo dos decimales',
-    })
-    .optional()
-    .nullable(),
-  hasVariants: z.boolean(),
-  isActive: z.boolean(),
-  isPizza: z.boolean().optional(),
-  subcategoryId: z.string().min(1, 'La subcategoría es requerida'),
-  photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(), // ID de la foto guardada en backend
-  imageUri: z // Campo temporal para el formulario
-    .string()
-    .url()
-    .or(z.string().startsWith('file://'))
-    .optional()
-    .nullable(),
-  estimatedPrepTime: z
-    .number()
-    .min(1, 'El tiempo debe ser al menos 1 minuto')
-    .optional(),
-  preparationScreenId: z.string().optional().nullable(),
-  sortOrder: z.number().optional().default(0),
-  variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
-  variantsToDelete: z.array(z.string()).optional(), // Para manejar eliminación en edición
-  modifierGroupIds: z.array(z.string()).optional(), // IDs para asignar/actualizar
-});
+// Schema base para formularios - compose desde el dominio con campos adicionales específicos del formulario
+const productFormBaseSchema = domainProductSchema
+  .omit({ 
+    id: true,
+    photo: true,
+    variants: true,
+    modifierGroups: true,
+    pizzaCustomizations: true,
+    pizzaConfiguration: true,
+    createdAt: true,
+    updatedAt: true 
+  })
+  .extend({
+    id: z.string().optional(), // ID opcional para creación/formulario
+    photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(), // ID de la foto guardada en backend
+    imageUri: z // Campo temporal para el formulario
+      .string()
+      .url()
+      .or(z.string().startsWith('file://'))
+      .optional()
+      .nullable(),
+    variants: z.array(productVariantFormSchema).optional(), // Usa el schema del formulario
+    variantsToDelete: z.array(z.string()).optional(), // Para manejar eliminación en edición
+    modifierGroupIds: z.array(z.string()).optional(), // IDs para asignar/actualizar
+  });
 
 // Esquema para el formulario, con la validación condicional
-export const productSchema = productBaseSchema.superRefine((data, ctx) => {
+export const productSchema = productFormBaseSchema.superRefine((data, ctx) => {
   if (data.hasVariants) {
     if (!data.variants || data.variants.length === 0) {
       ctx.addIssue({
@@ -106,7 +93,7 @@ export const productSchema = productBaseSchema.superRefine((data, ctx) => {
 export type ProductFormInputs = z.infer<typeof productSchema>;
 
 // Schema para actualización de productos
-export const updateProductSchema = productBaseSchema
+export const updateProductSchema = productFormBaseSchema
   .partial()
   .superRefine((data, ctx) => {
     if (data.hasVariants !== undefined) {
@@ -149,18 +136,9 @@ export const updateProductSchema = productBaseSchema
 
 export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 
-// Esquema para la respuesta de la API, extendiendo el base local
+// Esquema para la respuesta de la API - usa directamente el schema de dominio
 // Este schema representa la estructura que devuelve el backend.
-export const productResponseSchema = productBaseSchema.extend({
-  id: z.string(), // ID es requerido en la respuesta
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-  photo: photoSchema.optional().nullable(), // Usa el photoSchema importado del dominio
-  variants: z
-    .array(productVariantSchema) // Usa el schema importado (ya incluye id)
-    .optional(),
-  modifierGroups: z.array(modifierGroupSchema).optional(), // Usa schema importado del dominio
-});
+export const productResponseSchema = domainProductSchema;
 // Si se necesita el tipo específico inferido de esta respuesta:
 // export type ProductApiResponse = z.infer<typeof productResponseSchema>;
 

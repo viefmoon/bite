@@ -1,11 +1,19 @@
 import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
-import {
-  PizzaHalf,
-  CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 import { DeliveryInfoSchema } from './delivery-info.schema';
 import { tableSchema } from './table.schema';
+
+// Definir enums localmente para evitar dependencias circulares
+enum PizzaHalf {
+  FULL = 'FULL',
+  HALF_1 = 'HALF_1',
+  HALF_2 = 'HALF_2',
+}
+
+enum CustomizationAction {
+  ADD = 'ADD',
+  REMOVE = 'REMOVE',
+}
 
 // Enum para los estados de la orden
 export const orderStatusSchema = z.enum([
