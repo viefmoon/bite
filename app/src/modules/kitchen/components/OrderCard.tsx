@@ -22,7 +22,7 @@ import {
 import { OrderItemRow } from './OrderItemRow';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Swipeable } from 'react-native-gesture-handler';
-import { OrderHistoryModal } from './OrderHistoryModal';
+import { OrderHistoryModal } from '@/modules/shared/components/OrderHistoryModal';
 import { useMarkItemPrepared } from '../hooks/useKitchenOrders';
 
 interface OrderCardProps {

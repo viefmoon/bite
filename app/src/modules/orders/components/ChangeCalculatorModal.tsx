@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { Modal, Portal, Text, Button, TextInput } from 'react-native-paper';
+import { Text, Button, TextInput } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface ChangeCalculatorModalProps {
   visible: boolean;
@@ -51,166 +52,139 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
     }
   };
 
+  const footerActions = (
+    <View style={styles.footer}>
+      <Button
+        mode="outlined"
+        onPress={onDismiss}
+        style={styles.cancelButton}
+        labelStyle={styles.cancelButtonLabel}
+        contentStyle={styles.footerButtonContent}
+      >
+        Cancelar
+      </Button>
+      <Button
+        mode="contained"
+        onPress={handleConfirm}
+        disabled={
+          !receivedAmount ||
+          isNaN(parseFloat(receivedAmount)) ||
+          parseFloat(receivedAmount) < amountToPay
+        }
+        style={styles.confirmButton}
+        contentStyle={styles.footerButtonContent}
+        labelStyle={styles.confirmButtonLabel}
+      >
+        Confirmar Pago
+      </Button>
+    </View>
+  );
+
   return (
-    <>
-      {visible && (
-        <Portal>
-          <Modal
-            visible={visible}
-            onDismiss={onDismiss}
-            contentContainerStyle={styles.modalContainer}
-          >
-            <Pressable style={styles.modalContent}>
-              <View style={styles.content}>
-                {/* Inputs en línea */}
-                <View style={styles.inputsRow}>
-                  {/* Total a pagar */}
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Total a pagar</Text>
-                    <TextInput
-                      value={`$${amountToPay.toFixed(2)}`}
-                      editable={false}
-                      mode="flat"
-                      style={styles.totalInput}
-                      dense
-                      theme={{
-                        colors: {
-                          primary: theme.colors.primary,
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          text: theme.dark ? '#FFFFFF' : '#000000',
-                        },
-                      }}
-                    />
-                  </View>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title="Calcular Cambio"
+      widthTablet={480}
+      maxWidthMobile="95%"
+      scrollable={false}
+      footer={footerActions}
+    >
+      <View style={styles.content}>
+        {/* Inputs en línea */}
+        <View style={styles.inputsRow}>
+          {/* Total a pagar */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Total a pagar</Text>
+            <TextInput
+              value={`$${amountToPay.toFixed(2)}`}
+              editable={false}
+              mode="flat"
+              style={styles.totalInput}
+              dense
+              theme={{
+                colors: {
+                  primary: theme.colors.primary,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  text: theme.dark ? '#FFFFFF' : '#000000',
+                },
+              }}
+            />
+          </View>
 
-                  {/* Monto recibido */}
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Monto recibido</Text>
-                    <TextInput
-                      value={receivedAmount}
-                      onChangeText={setReceivedAmount}
-                      keyboardType="decimal-pad"
-                      mode="flat"
-                      left={<TextInput.Affix text="$" />}
-                      style={styles.receivedInput}
-                      error={
-                        receivedAmount !== '' &&
-                        (isNaN(parseFloat(receivedAmount)) ||
-                          parseFloat(receivedAmount) < amountToPay)
-                      }
-                      dense
-                      theme={{
-                        colors: {
-                          primary: theme.colors.primary,
-                          background: 'rgba(255, 255, 255, 0.05)',
-                        },
-                      }}
-                    />
-                  </View>
-                </View>
+          {/* Monto recibido */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Monto recibido</Text>
+            <TextInput
+              value={receivedAmount}
+              onChangeText={setReceivedAmount}
+              keyboardType="decimal-pad"
+              mode="flat"
+              left={<TextInput.Affix text="$" />}
+              style={styles.receivedInput}
+              error={
+                receivedAmount !== '' &&
+                (isNaN(parseFloat(receivedAmount)) ||
+                  parseFloat(receivedAmount) < amountToPay)
+              }
+              dense
+              theme={{
+                colors: {
+                  primary: theme.colors.primary,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                },
+              }}
+            />
+          </View>
+        </View>
 
-                {/* Error message */}
-                {receivedAmount !== '' &&
-                  (isNaN(parseFloat(receivedAmount)) ||
-                    parseFloat(receivedAmount) < amountToPay) && (
-                    <Text style={styles.errorText}>Monto insuficiente</Text>
-                  )}
+        {/* Error message */}
+        {receivedAmount !== '' &&
+          (isNaN(parseFloat(receivedAmount)) ||
+            parseFloat(receivedAmount) < amountToPay) && (
+            <Text style={styles.errorText}>Monto insuficiente</Text>
+          )}
 
-                {/* Botones de billetes comunes */}
-                {availableBills.length > 0 && (
-                  <View style={styles.quickAmountsRow}>
-                    {availableBills.map((bill) => (
-                      <Pressable
-                        key={bill}
-                        onPress={() => setReceivedAmount(`${bill}.00`)}
-                        style={({ pressed }) => [
-                          styles.quickAmountButton,
-                          pressed && styles.quickAmountButtonPressed,
-                        ]}
-                      >
-                        <Text style={styles.quickAmountButtonText}>
-                          ${bill >= 1000 ? '1k' : bill}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
+        {/* Botones de billetes comunes */}
+        {availableBills.length > 0 && (
+          <View style={styles.quickAmountsRow}>
+            {availableBills.map((bill) => (
+              <Pressable
+                key={bill}
+                onPress={() => setReceivedAmount(`${bill}.00`)}
+                style={({ pressed }) => [
+                  styles.quickAmountButton,
+                  pressed && styles.quickAmountButtonPressed,
+                ]}
+              >
+                <Text style={styles.quickAmountButtonText}>
+                  ${bill >= 1000 ? '1k' : bill}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
-                {/* Mostrar cambio */}
-                {receivedAmount !== '' &&
-                  !isNaN(parseFloat(receivedAmount)) &&
-                  parseFloat(receivedAmount) >= amountToPay && (
-                    <View style={styles.changeSection}>
-                      <Text style={styles.changeLabel}>Cambio</Text>
-                      <Text style={styles.changeAmount}>
-                        ${changeAmount.toFixed(2)}
-                      </Text>
-                    </View>
-                  )}
-              </View>
-
-              {/* Footer */}
-              <View style={styles.footer}>
-                <Button
-                  mode="outlined"
-                  onPress={onDismiss}
-                  style={styles.cancelButton}
-                  labelStyle={styles.cancelButtonLabel}
-                  contentStyle={styles.footerButtonContent}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleConfirm}
-                  disabled={
-                    !receivedAmount ||
-                    isNaN(parseFloat(receivedAmount)) ||
-                    parseFloat(receivedAmount) < amountToPay
-                  }
-                  style={styles.confirmButton}
-                  contentStyle={styles.footerButtonContent}
-                  labelStyle={styles.confirmButtonLabel}
-                >
-                  Confirmar Pago
-                </Button>
-              </View>
-            </Pressable>
-          </Modal>
-        </Portal>
-      )}
-    </>
+        {/* Mostrar cambio */}
+        {receivedAmount !== '' &&
+          !isNaN(parseFloat(receivedAmount)) &&
+          parseFloat(receivedAmount) >= amountToPay && (
+            <View style={styles.changeSection}>
+              <Text style={styles.changeLabel}>Cambio</Text>
+              <Text style={styles.changeAmount}>
+                ${changeAmount.toFixed(2)}
+              </Text>
+            </View>
+          )}
+      </View>
+    </ResponsiveModal>
   );
 };
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    modalContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.m,
-    },
-    modalContent: {
-      borderRadius: 16,
-      backgroundColor: theme.dark ? '#1C1C1E' : '#FFFFFF',
-      width: '100%',
-      maxWidth: 480,
-      overflow: 'hidden',
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      borderWidth: 2,
-      borderColor: theme.colors.outline,
-    },
     content: {
-      paddingHorizontal: 24,
-      paddingTop: 24,
-      paddingBottom: 20,
+      // Ya no necesita padding ya que ResponsiveModal lo maneja
     },
     inputsRow: {
       flexDirection: 'row',
@@ -306,13 +280,7 @@ const createStyles = (theme: AppTheme) =>
     footer: {
       flexDirection: 'row',
       gap: 16,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderTopWidth: 1,
-      borderTopColor: theme.dark
-        ? 'rgba(255, 255, 255, 0.1)'
-        : 'rgba(0, 0, 0, 0.05)',
-      backgroundColor: theme.dark ? '#1C1C1E' : '#FFFFFF',
+      // ResponsiveModal maneja padding, border y background
     },
     cancelButton: {
       flex: 1,

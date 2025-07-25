@@ -26,7 +26,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
-import InlineDatePicker from '@/app/components/common/InlineDatePicker';
+import { DateTimePickerSafe } from '@/app/components/DateTimePickerSafe';
 import PhoneNumberInput from '@/app/components/common/PhoneNumberInput';
 import { useGetAddressesByCustomer } from '../hooks/useCustomersQueries';
 import AddressFormModal from './AddressFormModal';
@@ -55,7 +55,7 @@ export default function CustomerFormModal({
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
   const [dateOnChange, setDateOnChange] = useState<
     ((value: string) => void) | null
   >(null);
@@ -340,7 +340,7 @@ export default function CustomerFormModal({
                             : ''
                         }
                         onPress={() => {
-                          setTempDate(value ? new Date(value) : undefined);
+                          setTempDate(value ? new Date(value) : new Date());
                           setDateOnChange(() => onChange);
                           setShowDatePicker(true);
                         }}
@@ -728,20 +728,19 @@ export default function CustomerFormModal({
       )}
 
       {/* Date Picker */}
-      <InlineDatePicker
+      <DateTimePickerSafe
         visible={showDatePicker}
-        onDismiss={() => setShowDatePicker(false)}
-        date={tempDate}
+        mode="date"
+        value={tempDate}
         onConfirm={(date) => {
           if (dateOnChange) {
             dateOnChange(date.toISOString().split('T')[0]);
           }
           setShowDatePicker(false);
         }}
-        label="Fecha de nacimiento"
-        validRange={{
-          endDate: new Date(),
-        }}
+        onCancel={() => setShowDatePicker(false)}
+        title="Fecha de nacimiento"
+        maximumDate={new Date()}
       />
     </>
   );

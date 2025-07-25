@@ -48,7 +48,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackb
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
 import { useGetOrderMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
 import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subcategorías
-import OrderHistoryModal from './OrderHistoryModal'; // Modal de historial
+import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal'; // Modal de historial
 import { OrderDetailModal } from './OrderDetailModal'; // Modal de detalles
 import PaymentModal from './PaymentModal'; // Modal de pagos
 import { FAB } from 'react-native-paper'; // Para el floating action button

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { shiftService } from '../services/shiftService';
-import type { Shift } from '../types';
+import { shiftsService, type Shift } from '@/services/shifts';
 
 export const useShifts = (params?: {
   startDate?: string;
@@ -8,7 +7,7 @@ export const useShifts = (params?: {
 }) => {
   return useQuery<Shift[], Error>({
     queryKey: ['shifts', 'history', params],
-    queryFn: () => shiftService.getHistory(params),
+    queryFn: () => shiftsService.getHistory(params),
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: false,
@@ -19,7 +18,7 @@ export const useShifts = (params?: {
 export const useCurrentShift = () => {
   return useQuery<Shift | null, Error>({
     queryKey: ['shifts', 'current'],
-    queryFn: () => shiftService.getCurrentShift(),
+    queryFn: () => shiftsService.getCurrentShift(),
     staleTime: 30000,
     refetchInterval: 60000,
     refetchOnWindowFocus: true,
@@ -30,7 +29,7 @@ export const useCurrentShift = () => {
 export const useShiftDetail = (shiftId: string | undefined) => {
   return useQuery<Shift, Error>({
     queryKey: ['shifts', shiftId],
-    queryFn: () => shiftService.getShiftById(shiftId!),
+    queryFn: () => shiftsService.getById(shiftId!),
     enabled: !!shiftId,
     staleTime: 300000,
     refetchOnWindowFocus: false,

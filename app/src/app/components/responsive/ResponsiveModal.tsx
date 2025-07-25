@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from 'react';
-import { Modal, Portal } from 'react-native-paper';
+import { Modal, Portal, Text, IconButton } from 'react-native-paper';
 import {
   ScrollView,
   ViewStyle,
@@ -75,13 +75,13 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   visible,
   onDismiss,
   children,
-  
+
   // Header
   title,
   hideCloseButton = false,
   headerActions,
   headerStyle,
-  
+
   // Estilo
   contentContainerStyle,
   style,
@@ -269,20 +269,84 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     contentContainerStyle,
   ]);
 
+  // Estilos del header
+  const headerStyles = useMemo(
+    () => ({
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      paddingHorizontal: modalPadding,
+      paddingVertical: modalPadding * 0.75,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+      backgroundColor: theme.colors.surface,
+    }),
+    [theme, modalPadding],
+  );
+
+  // Header del modal
+  const modalHeader = (title || headerActions || !hideCloseButton) && (
+    <View style={[headerStyles, headerStyle]}>
+      {title && (
+        <Text
+          variant="titleLarge"
+          style={{
+            color: theme.colors.onSurface,
+            fontWeight: '600',
+            flex: 1,
+          }}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+      )}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: responsive.spacing.s,
+        }}
+      >
+        {headerActions}
+        {!hideCloseButton && (
+          <IconButton
+            icon="close"
+            size={24}
+            onPress={onDismiss}
+            style={{ marginRight: -responsive.spacing.s }}
+          />
+        )}
+      </View>
+    </View>
+  );
+
   // Contenido del modal
   const modalContent = (
-    <View style={{ flex: scrollable ? 1 : undefined, padding: modalPadding }}>
-      {scrollable ? (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        children
-      )}
+    <View
+      style={{
+        flex: scrollable ? 1 : undefined,
+        padding: title ? 0 : modalPadding,
+      }}
+    >
+      {title && modalHeader}
+      <View
+        style={{
+          flex: scrollable ? 1 : undefined,
+          padding: title ? modalPadding : 0,
+        }}
+      >
+        {scrollable ? (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          children
+        )}
+      </View>
     </View>
   );
 
@@ -426,4 +490,4 @@ export const ResponsiveConfirmModal: React.FC<ResponsiveConfirmModalProps> = ({
 };
 
 // Imports necesarios para los componentes de React Native Paper
-import { Text, Button } from 'react-native-paper';
+import { Button } from 'react-native-paper';

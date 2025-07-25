@@ -15,7 +15,7 @@ import {
 } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
 import { useAppTheme, AppTheme } from '../../styles/theme';
-import { AdaptiveModal } from '../common/AdaptiveModal';
+import { ResponsiveModal } from '../responsive/ResponsiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
 import ConfirmationModal from '../common/ConfirmationModal';
 
@@ -495,21 +495,20 @@ function GenericDetailModal<TItem extends { id: string }>({
 
   return (
     <>
-      <AdaptiveModal
+      <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
         dismissable={!isDeleting}
         dismissableBackButton={!isDeleting}
         scrollable={true}
         maxWidth={responsive.isTablet ? 480 : 400}
-        minHeight={200}
         maxHeight={'85%'}
         footer={renderFooter()}
         stickyFooter={true}
-        modalSurfaceStyle={[styles.modalSurface, modalStyle]}
+        contentContainerStyle={[styles.modalSurface, modalStyle]}
       >
         {renderContent()}
-      </AdaptiveModal>
+      </ResponsiveModal>
 
       {deleteConfirmation && (
         <ConfirmationModal

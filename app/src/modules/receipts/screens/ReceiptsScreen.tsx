@@ -16,9 +16,9 @@ import {
   IconButton,
   Divider,
   Badge,
-  Card,
   Icon,
 } from 'react-native-paper';
+import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useReceipts, useRecoverOrder } from '../hooks/useReceiptsQueries';
 import type { Receipt, ReceiptList } from '../types/receipt.types';
@@ -183,233 +183,36 @@ export const ReceiptsScreen: React.FC = () => {
 
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
-  // Renderizar item de recibo
-  const renderReceiptItem = ({ item }: { item: ReceiptList }) => {
-    // Construir el título según el tipo de orden
-    let orderTitle = `#${item.shiftOrderNumber} • ${formatOrderTypeShort(item.orderType)}`;
+  // Renderizar botón de restaurar
+  const renderRestoreAction = (item: ReceiptList) => (
+    <TouchableOpacity
+      style={styles.restoreContainer}
+      onPress={() => handleRecoverPress(item)}
+      activeOpacity={0.7}
+    >
+      <Surface style={styles.restoreButtonSurface} elevation={2}>
+        <IconButton
+          icon="restore"
+          size={36}
+          iconColor={theme.colors.primary}
+          style={styles.restoreButton}
+        />
+      </Surface>
+    </TouchableOpacity>
+  );
 
-    if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
-      // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
-      const tableDisplay = item.table.isTemporary
-        ? item.table.name
-        : `Mesa ${item.table.name || item.table.number || 'N/A'}`;
-      orderTitle += ` • ${item.table.area?.name || 'Sin área'} • ${tableDisplay}`;
-    } else if (item.orderType === OrderTypeEnum.TAKE_AWAY) {
-      if (item.deliveryInfo?.recipientName) {
-        orderTitle += ` • ${item.deliveryInfo.recipientName}`;
-      }
-      if (item.deliveryInfo?.recipientPhone) {
-        orderTitle += ` • ${item.deliveryInfo.recipientPhone}`;
-      }
-    } else if (item.orderType === OrderTypeEnum.DELIVERY) {
-      if (item.deliveryInfo?.fullAddress) {
-        orderTitle += ` • ${item.deliveryInfo.fullAddress}`;
-      }
-      if (item.deliveryInfo?.recipientPhone) {
-        orderTitle += ` • ${item.deliveryInfo.recipientPhone}`;
-      }
-    }
+  // Renderizar item de recibo usando el componente compartido
+  const renderReceiptItem = ({ item }: { item: ReceiptList }) => (
+    <OrderSummaryCard
+      item={item}
+      onPress={() => handleReceiptPress(item)}
+      renderActions={renderRestoreAction}
+      getStatusColor={getReceiptStatusColor}
+      getStatusLabel={getStatusLabel}
+    />
+  );
 
-    const totalAmount =
-      typeof item.total === 'string' ? parseFloat(item.total) : item.total;
-    const totalPaid = item.paymentsSummary?.totalPaid || 0;
-    const pendingAmount = totalAmount - totalPaid;
-
-    return (
-      <TouchableOpacity
-        activeOpacity={0.95}
-        onPress={() => handleReceiptPress(item)}
-      >
-        <Card
-          style={[
-            styles.orderCard,
-            {
-              backgroundColor: theme.colors.surface,
-            },
-          ]}
-          mode="elevated"
-        >
-          <Card.Content style={styles.cardContent}>
-            <View style={styles.mainContainer}>
-              <View style={styles.leftContainer}>
-                <Text
-                  style={[
-                    styles.orderNumber,
-                    { color: theme.colors.onSurface },
-                  ]}
-                >
-                  {orderTitle}
-                  <Text
-                    style={[
-                      styles.orderPrice,
-                      {
-                        color:
-                          pendingAmount > 0 ? theme.colors.error : '#10B981',
-                      },
-                    ]}
-                  >
-                    {' • '}
-                    {pendingAmount > 0
-                      ? `Por pagar: $${pendingAmount.toFixed(2)}`
-                      : `Pagado: $${totalAmount.toFixed(2)}`}
-                  </Text>
-                  {item.notes && (
-                    <Text
-                      style={[
-                        styles.notesInline,
-                        { color: theme.colors.onSurfaceVariant },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {' • '}
-                      {item.notes}
-                    </Text>
-                  )}
-                </Text>
-                <View style={styles.timeAndPaymentRow}>
-                  <Text
-                    style={[styles.orderTime, { color: theme.colors.primary }]}
-                  >
-                    {format(new Date(item.createdAt), 'p', { locale: es })}
-                  </Text>
-                  {(() => {
-                    const paymentStatus = getPaymentStatus(item as any);
-                    const color =
-                      paymentStatus === 'paid'
-                        ? '#10B981'
-                        : paymentStatus === 'partial'
-                          ? '#F59E0B'
-                          : '#EF4444';
-                    const icon =
-                      paymentStatus === 'paid'
-                        ? '✓'
-                        : paymentStatus === 'partial'
-                          ? '½'
-                          : '•';
-                    return (
-                      <View
-                        style={[
-                          styles.miniPaymentBadge,
-                          { backgroundColor: color },
-                        ]}
-                      >
-                        <Text style={styles.miniPaymentText}>{icon}</Text>
-                      </View>
-                    );
-                  })()}
-
-                  {/* Badge de WhatsApp */}
-                  {item.isFromWhatsApp && (
-                    <View
-                      style={[
-                        styles.inlinePreparationBadge,
-                        {
-                          backgroundColor: '#25D366',
-                          borderColor: '#25D366',
-                        },
-                      ]}
-                    >
-                      <Icon source="whatsapp" size={12} color="#FFFFFF" />
-                    </View>
-                  )}
-
-                  {item.preparationScreenStatuses &&
-                    item.preparationScreenStatuses.length > 0 && (
-                      <>
-                        {item.preparationScreenStatuses.map((screen, index) => {
-                          const backgroundColor =
-                            screen.status === 'READY'
-                              ? '#4CAF50'
-                              : screen.status === 'IN_PROGRESS'
-                                ? '#FFA000'
-                                : theme.colors.surfaceVariant;
-
-                          const textColor =
-                            screen.status === 'READY' ||
-                            screen.status === 'IN_PROGRESS'
-                              ? '#FFFFFF'
-                              : theme.colors.onSurfaceVariant;
-
-                          return (
-                            <View
-                              key={`${item.id}-screen-${index}`}
-                              style={[
-                                styles.inlinePreparationBadge,
-                                {
-                                  backgroundColor,
-                                  borderColor:
-                                    backgroundColor ===
-                                    theme.colors.surfaceVariant
-                                      ? theme.colors.outline
-                                      : backgroundColor,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.inlinePreparationText,
-                                  { color: textColor },
-                                ]}
-                              >
-                                {screen.status === 'READY'
-                                  ? '✓ '
-                                  : screen.status === 'IN_PROGRESS'
-                                    ? '⏳'
-                                    : ''}
-                                🍳 {screen.name}
-                              </Text>
-                            </View>
-                          );
-                        })}
-                      </>
-                    )}
-                </View>
-              </View>
-
-              <View style={styles.rightContainer}>
-                {item.createdBy && (
-                  <Text style={styles.createdByText} numberOfLines={1}>
-                    {item.createdBy.firstName && item.createdBy.lastName
-                      ? `${item.createdBy.firstName} ${item.createdBy.lastName}`
-                      : item.createdBy.username}
-                  </Text>
-                )}
-                <Chip
-                  mode="flat"
-                  compact
-                  style={[
-                    styles.statusChip,
-                    {
-                      backgroundColor: getReceiptStatusColor(item.orderStatus),
-                    },
-                  ]}
-                  textStyle={styles.statusChipText}
-                >
-                  {getStatusLabel(item.orderStatus)}
-                </Chip>
-                <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    style={styles.restoreContainer}
-                    onPress={() => handleRecoverPress(item)}
-                    activeOpacity={0.7}
-                  >
-                    <Surface style={styles.restoreButtonSurface} elevation={2}>
-                      <IconButton
-                        icon="restore"
-                        size={36}
-                        iconColor={theme.colors.primary}
-                        style={styles.restoreButton}
-                      />
-                    </Surface>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Card.Content>
-        </Card>
-      </TouchableOpacity>
-    );
-  };
+  // Renderizar lista vacía
 
   // Renderizar lista vacía
   const renderEmptyComponent = () => {

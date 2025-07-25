@@ -57,11 +57,13 @@ export function PizzaCustomizationAvailabilityItem({
       {group.items.map((item, index) => (
         <React.Fragment key={item.id}>
           <View style={styles.item}>
-            <Text style={[
-              styles.itemName,
-              !item.isActive && styles.strikethrough,
-              { color: theme.colors.onSurface }
-            ]}>
+            <Text
+              style={[
+                styles.itemName,
+                !item.isActive && styles.strikethrough,
+                { color: theme.colors.onSurface },
+              ]}
+            >
               {item.name}
             </Text>
             <Switch

@@ -12,10 +12,9 @@ import {
   Appbar,
   Searchbar,
   Text,
-  Card,
-  Chip,
   ActivityIndicator,
 } from 'react-native-paper';
+import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -172,212 +171,16 @@ export function ShiftOrdersModal({
     }
   };
 
-  // Renderizar item de recibo (COPIADO EXACTAMENTE DE ReceiptsScreen)
-  const renderReceiptItem = ({ item }: { item: Order }) => {
-    // Construir el título según el tipo de orden
-    let orderTitle = `#${item.shiftOrderNumber || item.orderNumber} • ${formatOrderTypeShort(item.orderType)}`;
+  // Renderizar item de recibo usando el componente compartido
+  const renderReceiptItem = ({ item }: { item: Order }) => (
+    <OrderSummaryCard
+      item={item}
+      onPress={() => handleReceiptPress(item)}
+      getStatusColor={getReceiptStatusColor}
+      getStatusLabel={getStatusLabel}
+    />
+  );
 
-    if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
-      // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
-      const tableDisplay = item.table.isTemporary
-        ? item.table.name
-        : `Mesa ${item.table.name || item.table.number || 'N/A'}`;
-      orderTitle += ` • ${item.table.area?.name || item.area?.name || 'Sin área'} • ${tableDisplay}`;
-    } else if (item.orderType === OrderTypeEnum.TAKE_AWAY) {
-      if (item.deliveryInfo?.recipientName || item.deliveryInfo?.customerName) {
-        orderTitle += ` • ${item.deliveryInfo.recipientName || item.deliveryInfo.customerName}`;
-      }
-      if (
-        item.deliveryInfo?.recipientPhone ||
-        item.deliveryInfo?.customerPhone
-      ) {
-        orderTitle += ` • ${item.deliveryInfo.recipientPhone || item.deliveryInfo.customerPhone}`;
-      }
-    } else if (item.orderType === OrderTypeEnum.DELIVERY) {
-      if (item.deliveryInfo?.fullAddress || item.deliveryInfo?.address) {
-        orderTitle += ` • ${item.deliveryInfo.fullAddress || item.deliveryInfo.address}`;
-      }
-      if (
-        item.deliveryInfo?.recipientPhone ||
-        item.deliveryInfo?.customerPhone
-      ) {
-        orderTitle += ` • ${item.deliveryInfo.recipientPhone || item.deliveryInfo.customerPhone}`;
-      }
-    }
-
-    const totalAmount =
-      typeof item.total === 'string' ? parseFloat(item.total) : item.total;
-    const totalPaid =
-      item.paymentsSummary?.totalPaid ||
-      item.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) ||
-      0;
-    const pendingAmount = totalAmount - totalPaid;
-
-    return (
-      <TouchableOpacity
-        activeOpacity={0.95}
-        onPress={() => handleReceiptPress(item)}
-      >
-        <Card
-          style={[
-            styles.orderCard,
-            {
-              backgroundColor: theme.colors.surface,
-            },
-          ]}
-          mode="elevated"
-        >
-          <Card.Content style={styles.cardContent}>
-            <View style={styles.mainContainer}>
-              <View style={styles.leftContainer}>
-                <Text
-                  style={[
-                    styles.orderNumber,
-                    { color: theme.colors.onSurface },
-                  ]}
-                >
-                  {orderTitle}
-                  <Text
-                    style={[
-                      styles.orderPrice,
-                      {
-                        color:
-                          pendingAmount > 0 ? theme.colors.error : '#10B981',
-                      },
-                    ]}
-                  >
-                    {' • '}
-                    {pendingAmount > 0
-                      ? `Por pagar: $${pendingAmount.toFixed(2)}`
-                      : `Pagado: $${totalAmount.toFixed(2)}`}
-                  </Text>
-                  {item.notes && (
-                    <Text
-                      style={[
-                        styles.notesInline,
-                        { color: theme.colors.onSurfaceVariant },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {' • '}
-                      {item.notes}
-                    </Text>
-                  )}
-                </Text>
-                <View style={styles.timeAndPaymentRow}>
-                  <Text
-                    style={[styles.orderTime, { color: theme.colors.primary }]}
-                  >
-                    {format(new Date(item.createdAt), 'p', { locale: es })}
-                  </Text>
-                  {(() => {
-                    const paymentStatus = getPaymentStatus(item as any);
-                    const color =
-                      paymentStatus === 'paid'
-                        ? '#10B981'
-                        : paymentStatus === 'partial'
-                          ? '#F59E0B'
-                          : '#EF4444';
-                    const icon =
-                      paymentStatus === 'paid'
-                        ? '✓'
-                        : paymentStatus === 'partial'
-                          ? '½'
-                          : '•';
-                    return (
-                      <View
-                        style={[
-                          styles.miniPaymentBadge,
-                          { backgroundColor: color },
-                        ]}
-                      >
-                        <Text style={styles.miniPaymentText}>{icon}</Text>
-                      </View>
-                    );
-                  })()}
-                  {item.preparationScreenStatuses &&
-                    item.preparationScreenStatuses.length > 0 && (
-                      <>
-                        {item.preparationScreenStatuses.map((screen, index) => {
-                          const backgroundColor =
-                            screen.status === 'READY'
-                              ? '#4CAF50'
-                              : screen.status === 'IN_PROGRESS'
-                                ? '#FFA000'
-                                : theme.colors.surfaceVariant;
-
-                          const textColor =
-                            screen.status === 'READY' ||
-                            screen.status === 'IN_PROGRESS'
-                              ? '#FFFFFF'
-                              : theme.colors.onSurfaceVariant;
-
-                          return (
-                            <View
-                              key={`${item.id}-screen-${index}`}
-                              style={[
-                                styles.inlinePreparationBadge,
-                                {
-                                  backgroundColor,
-                                  borderColor:
-                                    backgroundColor ===
-                                    theme.colors.surfaceVariant
-                                      ? theme.colors.outline
-                                      : backgroundColor,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.inlinePreparationText,
-                                  { color: textColor },
-                                ]}
-                              >
-                                {screen.status === 'READY'
-                                  ? '✓ '
-                                  : screen.status === 'IN_PROGRESS'
-                                    ? '⏳'
-                                    : ''}
-                                🍳 {screen.name}
-                              </Text>
-                            </View>
-                          );
-                        })}
-                      </>
-                    )}
-                </View>
-              </View>
-
-              <View style={styles.rightContainer}>
-                {item.createdBy && (
-                  <Text style={styles.createdByText} numberOfLines={1}>
-                    {item.createdBy.firstName && item.createdBy.lastName
-                      ? `${item.createdBy.firstName} ${item.createdBy.lastName}`
-                      : item.createdBy.username ||
-                        item.user?.firstName ||
-                        'Usuario'}
-                  </Text>
-                )}
-                <Chip
-                  mode="flat"
-                  compact
-                  style={[
-                    styles.statusChip,
-                    {
-                      backgroundColor: getReceiptStatusColor(item.orderStatus),
-                    },
-                  ]}
-                  textStyle={styles.statusChipText}
-                >
-                  {getStatusLabel(item.orderStatus)}
-                </Chip>
-              </View>
-            </View>
-          </Card.Content>
-        </Card>
-      </TouchableOpacity>
-    );
-  };
 
   // Renderizar lista vacía
   const renderEmptyComponent = () => {
