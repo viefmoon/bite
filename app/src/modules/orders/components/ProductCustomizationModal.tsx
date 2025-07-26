@@ -35,8 +35,10 @@ import type {
 import {
   PizzaHalf,
   CustomizationAction,
+  CustomizationType,
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 import PizzaCustomizationSection from './PizzaCustomizationSection';
+import { useProductValidation } from '../hooks/useProductValidation';
 
 interface ProductCustomizationModalProps {
   visible: boolean;
@@ -110,9 +112,6 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
     const [quantity, setQuantity] = useState(1);
     const [showExitConfirmation, setShowExitConfirmation] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<
-      Record<string, string>
-    >({});
 
     // Estados para pizzas
     const [pizzaCustomizations, setPizzaCustomizations] = useState<
@@ -122,6 +121,16 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       useState<PizzaConfiguration | null>(null);
     const [selectedPizzaCustomizations, setSelectedPizzaCustomizations] =
       useState<SelectedPizzaCustomization[]>([]);
+
+    // Hook de validación
+    const { isValid, getFieldError, getGroupError } = useProductValidation({
+      product,
+      selectedVariantId,
+      selectedModifiersByGroup,
+      selectedPizzaCustomizations,
+      pizzaCustomizations,
+      pizzaConfiguration,
+    });
 
     // Función para calcular el precio extra de las pizzas
     const calculatePizzaExtraCost = useCallback(() => {
@@ -302,32 +311,6 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       }
     }, [editingItem, checkForChanges]);
 
-    // Validar en tiempo real
-    useEffect(() => {
-      const errors: Record<string, string> = {};
-
-      if (product.modifierGroups) {
-        product.modifierGroups.forEach((group) => {
-          const selectedInGroup = selectedModifiersByGroup[group.id] || [];
-          const selectedCount = selectedInGroup.length;
-          const minRequired = Math.max(
-            group.minSelections || 0,
-            group.isRequired ? 1 : 0,
-          );
-
-          if (selectedCount < minRequired) {
-            if (group.isRequired && minRequired === 1) {
-              errors[group.id] = 'Requerido';
-            } else {
-              errors[group.id] = `Mínimo ${minRequired}`;
-            }
-          }
-        });
-      }
-
-      setValidationErrors(errors);
-    }, [product, selectedModifiersByGroup]);
-
     const handleVariantSelect = useCallback((variantId: string) => {
       setSelectedVariantId(variantId);
     }, []);
@@ -392,6 +375,37 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
     };
 
     const handleAddToCart = () => {
+      // Validar variantes requeridas
+      if (hasVariants && !selectedVariantId) {
+        showSnackbar({
+          message: 'Debes seleccionar una variante',
+          type: 'error',
+        });
+        return;
+      }
+
+      // Validar pizzas - deben tener al menos un sabor
+      if (product.isPizza && pizzaConfiguration) {
+        const selectedFlavors = selectedPizzaCustomizations.filter(
+          (sc) =>
+            sc.action === CustomizationAction.ADD &&
+            pizzaCustomizations.some(
+              (pc) => 
+                pc.id === sc.pizzaCustomizationId && 
+                pc.type === CustomizationType.FLAVOR
+            ),
+        );
+
+        const minFlavors = pizzaConfiguration.minFlavors || 1;
+        if (selectedFlavors.length < minFlavors) {
+          showSnackbar({
+            message: `Debes seleccionar al menos ${minFlavors} ${minFlavors === 1 ? 'sabor' : 'sabores'} para tu pizza`,
+            type: 'error',
+          });
+          return;
+        }
+      }
+
       // Validar grupos requeridos y límites de selección
       if (product.modifierGroups) {
         for (const group of product.modifierGroups) {
@@ -564,9 +578,22 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                     <Card.Content>
                       <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Variantes</Text>
-                        <Chip mode="flat" compact style={styles.requiredChip}>
-                          Requerido
-                        </Chip>
+                        <View style={styles.chipContainer}>
+                          {getFieldError('variant') && (
+                            <Chip
+                              mode="flat"
+                              compact
+                              style={styles.errorChip}
+                              icon="alert-circle"
+                              textStyle={{ fontSize: 12 }}
+                            >
+                              {getFieldError('variant')}
+                            </Chip>
+                          )}
+                          <Chip mode="flat" compact style={styles.requiredChip}>
+                            Requerido
+                          </Chip>
+                        </View>
                       </View>
                       <RadioButton.Group
                         onValueChange={(value) => handleVariantSelect(value)}
@@ -639,13 +666,30 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
 
               {/* Sección de Personalización de Pizza - Después de variantes */}
               {product.isPizza && (
-                <PizzaCustomizationSection
-                  pizzaCustomizations={pizzaCustomizations}
-                  pizzaConfiguration={pizzaConfiguration}
-                  selectedPizzaCustomizations={selectedPizzaCustomizations}
-                  onCustomizationChange={setSelectedPizzaCustomizations}
-                  loading={false}
-                />
+                <Card style={styles.sectionCard}>
+                  <Card.Content>
+                    {getFieldError('pizza') && (
+                      <View style={styles.pizzaErrorContainer}>
+                        <Chip
+                          mode="flat"
+                          compact
+                          style={styles.errorChip}
+                          icon="alert-circle"
+                          textStyle={{ fontSize: 12 }}
+                        >
+                          {getFieldError('pizza')}
+                        </Chip>
+                      </View>
+                    )}
+                    <PizzaCustomizationSection
+                      pizzaCustomizations={pizzaCustomizations}
+                      pizzaConfiguration={pizzaConfiguration}
+                      selectedPizzaCustomizations={selectedPizzaCustomizations}
+                      onCustomizationChange={setSelectedPizzaCustomizations}
+                      loading={false}
+                    />
+                  </Card.Content>
+                </Card>
               )}
 
               {product.modifierGroups &&
@@ -683,14 +727,15 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                           </View>
                         </View>
                         <View style={styles.chipContainer}>
-                          {validationErrors[group.id] && (
+                          {getGroupError(group.id) && (
                             <Chip
                               mode="flat"
                               compact
                               style={styles.errorChip}
                               icon="alert-circle"
+                              textStyle={{ fontSize: 12 }}
                             >
-                              {validationErrors[group.id]}
+                              {getGroupError(group.id)}
                             </Chip>
                           )}
                           <Chip
@@ -979,10 +1024,27 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
 
             {/* Footer Button - Estilo OrderCartDetail */}
             <View style={styles.footer}>
+              {!isValid && (
+                <View style={styles.validationWarning}>
+                  <IconButton
+                    icon="alert-circle"
+                    size={20}
+                    iconColor={theme.colors.error}
+                    style={{ margin: 0 }}
+                  />
+                  <Text style={styles.validationWarningText}>
+                    Completa los campos requeridos
+                  </Text>
+                </View>
+              )}
               <Button
                 mode="contained"
                 onPress={handleAddToCart}
-                style={styles.confirmButton}
+                style={[
+                  styles.confirmButton,
+                  !isValid && styles.confirmButtonDisabled
+                ]}
+                disabled={!isValid}
                 icon={editingItem ? 'cart-check' : 'cart-plus'}
               >
                 {editingItem
@@ -1358,12 +1420,33 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: theme.spacing.s, // Padding consistente
       // width: "100%", // Ya es el comportamiento por defecto del botón en un View
     },
+    confirmButtonDisabled: {
+      opacity: 0.6,
+    },
     // Estilo para SpeechRecognitionInput (una sola línea)
     preparationInput: {
       // backgroundColor: theme.colors.surfaceVariant, // Opcional: mantener fondo
       marginVertical: theme.spacing.xs,
       textAlignVertical: 'center', // Intentar centrar verticalmente el placeholder/texto
       // minHeight: 80, // Eliminar altura mínima, ya no es multilínea
+    },
+    validationWarning: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: theme.spacing.s,
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: theme.roundness,
+      marginBottom: theme.spacing.s,
+    },
+    validationWarningText: {
+      color: theme.colors.onErrorContainer,
+      fontSize: 14,
+      fontWeight: '500',
+      marginLeft: theme.spacing.xs,
+    },
+    pizzaErrorContainer: {
+      marginBottom: theme.spacing.m,
     },
     // Eliminar estilos no usados
     // sectionTitleContainer: { ... },

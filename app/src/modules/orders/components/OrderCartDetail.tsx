@@ -1,80 +1,69 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import { Portal } from 'react-native-paper';
 import {
   View,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
-  Animated,
 } from 'react-native';
 import {
-  Swipeable,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import {
   Text,
   Divider,
-  List,
   Button,
-  RadioButton,
-  HelperText,
   Menu,
   IconButton,
   Modal,
-  Checkbox,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { OrderTypeEnum, type OrderType } from '../types/orders.types'; // Importar OrderTypeEnum y el tipo OrderType
+import { OrderTypeEnum, type OrderType } from '../types/orders.types';
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 import OrderHeader from './OrderHeader';
-import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
-import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
-import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
-import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import ProductCustomizationModal from './ProductCustomizationModal';
-import type { FullMenuProduct as Product } from '../types/orders.types';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
-import type { Table } from '@/modules/areasTables/types/areasTables.types';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
   useOrderCreationStore,
   CartItem,
   CartItemModifier,
 } from '../stores/useOrderCreationStore';
-import { useAuthStore } from '@/app/store/authStore'; // Importar authStore
-import { useSnackbarStore } from '@/app/store/snackbarStore'; // Importar snackbar store
-import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries'; // Para cargar datos en modo edición
-import { useGetOrderMenu } from '../hooks/useMenuQueries'; // Para obtener productos completos
-import type { FullMenuCategory } from '../types/orders.types'; // Tipo con subcategorías
-import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal'; // Modal de historial
-import { OrderDetailModal } from './OrderDetailModal'; // Modal de detalles
-import PaymentModal from './PaymentModal'; // Modal de pagos
-import { FAB } from 'react-native-paper'; // Para el floating action button
-import { AdjustmentFormModal } from './AdjustmentFormModal'; // Modal de ajustes
-import type { OrderAdjustment } from '../types/adjustments.types'; // Tipo para ajustes
-import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries'; // Para consultar pagos existentes
-import { PaymentStatusEnum } from '../types/payment.types'; // Para verificar estados de pago
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema'; // Para personalizaciones de pizza
-import { prepaymentService } from '@/modules/payments/services/prepaymentService'; // Servicio de prepagos
-import {
-  CustomizationType,
-  PizzaHalf,
-  CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import { useAuthStore } from '@/app/store/authStore';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
+import { useGetOrderMenu } from '../hooks/useMenuQueries';
+import { FAB } from 'react-native-paper';
+import type { OrderAdjustment } from '../types/adjustments.types';
+import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
-// Importar tipos desde update-order.types.ts
+import { useOrderType } from '../hooks/useOrderType';
+import { useOrderCalculations } from '../hooks/useOrderCalculations';
+import { useOrderValidation } from '../hooks/useOrderValidation';
+import { useOrderEditing } from '../hooks/useOrderEditing';
+import { usePrepayment } from '../hooks/usePrepayment';
+import { useOrderState } from '../hooks/useOrderState';
+import { useOrderDataLoader } from '../hooks/useOrderDataLoader';
+import { 
+  OrderTypeSelector, 
+  DineInForm, 
+  TakeAwayForm, 
+  DeliveryForm,
+  OrderItemsList,
+  OrderAdjustments,
+  PrepaymentSection,
+  ModalsContainer
+} from './order-cart';
+
 import type {
   OrderItemDtoForBackend,
-  OrderItemModifierDto,
 } from '../types/update-order.types';
 
-// Definir la estructura completa del payload para onConfirmOrder (y exportarla)
 export interface OrderDetailsForBackend {
   userId?: string;
   orderType: OrderType;
@@ -105,7 +94,6 @@ export interface OrderDetailsForBackend {
   prepaymentId?: string;
 }
 
-// Helper para formatear el estado de la orden
 const formatOrderStatus = (status: string): string => {
   switch (status) {
     case 'PENDING':
@@ -127,27 +115,6 @@ const formatOrderStatus = (status: string): string => {
   }
 };
 
-// Helper para obtener el color del estado de preparación
-const getPreparationStatusColor = (status: string | undefined, theme: any) => {
-  switch (status) {
-    case 'NEW':
-      return '#2196F3'; // Azul brillante para nuevo
-    case 'PENDING':
-      return theme.colors.error; // Rojo para pendiente
-    case 'IN_PROGRESS':
-      return '#FFA000'; // Naranja para en progreso
-    case 'READY':
-      return '#4CAF50'; // Verde para listo
-    case 'DELIVERED':
-      return theme.colors.tertiary; // Color terciario para entregado
-    case 'CANCELLED':
-      return theme.colors.onSurfaceDisabled; // Gris para cancelado
-    default:
-      return theme.colors.onSurfaceVariant;
-  }
-};
-
-// Helper para obtener el texto del estado de preparación
 const getPreparationStatusText = (status: string | undefined): string => {
   switch (status) {
     case 'NEW':
@@ -176,28 +143,27 @@ interface OrderCartDetailProps {
   orderId?: string | null;
   orderNumber?: number;
   orderDate?: Date;
-  onCancelOrder?: () => void; // Función para cancelar la orden
-  navigation?: any; // Prop de navegación opcional para añadir productos
-  onAddProducts?: () => void; // Callback para añadir productos
-  pendingProductsToAdd?: CartItem[]; // Productos pendientes de añadir
-  onItemsCountChanged?: (count: number) => void; // Callback cuando cambia el conteo de items
+  onCancelOrder?: () => void;
+  navigation?: any;
+  onAddProducts?: () => void;
+  pendingProductsToAdd?: CartItem[];
+  onItemsCountChanged?: (count: number) => void;
 }
 
-// Helper para obtener el color del estado de la orden
 const getOrderStatusColor = (status: string, theme: any) => {
   switch (status) {
     case 'PENDING':
-      return '#FFA000'; // Orange
+      return '#FFA000';
     case 'IN_PROGRESS':
       return theme.colors.primary;
     case 'IN_PREPARATION':
-      return '#FF6B35'; // Orange más oscuro
+      return '#FF6B35';
     case 'READY':
-      return '#4CAF50'; // Green
+      return '#4CAF50';
     case 'DELIVERED':
       return theme.colors.tertiary;
     case 'COMPLETED':
-      return '#10B981'; // Verde más brillante
+      return '#10B981';
     case 'CANCELLED':
       return theme.colors.error;
     default:
@@ -223,51 +189,89 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Query para cargar datos de la orden en modo edición
   const {
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
-    isSuccess: _isSuccessOrder,
-    refetch: _refetchOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
 
-  // Query para obtener el menú completo (para poder editar productos)
   const { data: menu } = useGetOrderMenu();
 
-  // Query para obtener los pagos de la orden (solo en modo edición)
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
     enabled: isEditMode && !!orderId && visible,
   });
 
-  // Estados locales para modo edición (cuando no usamos el contexto del carrito)
-  const [editItems, setEditItems] = useState<CartItem[]>([]);
-  const [editOrderType, setEditOrderType] = useState<OrderType>(
-    OrderTypeEnum.DINE_IN,
-  );
-  const [editSelectedAreaId, setEditSelectedAreaId] = useState<string | null>(
-    null,
-  );
-  const [editSelectedTableId, setEditSelectedTableId] = useState<string | null>(
-    null,
-  );
-  const [editScheduledTime, setEditScheduledTime] = useState<Date | null>(null);
-  const [editDeliveryInfo, setEditDeliveryInfo] = useState<DeliveryInfo>({});
-  const [editOrderNotes, setEditOrderNotes] = useState<string>('');
-  const [editAdjustments, setEditAdjustments] = useState<OrderAdjustment[]>([]);
-  const [editIsTemporaryTable, setEditIsTemporaryTable] =
-    useState<boolean>(false);
-  const [editTemporaryTableName, setEditTemporaryTableName] =
-    useState<string>('');
+  // Consolidate all states using useOrderState hook
+  const {
+    // States
+    editItems,
+    editOrderType,
+    editSelectedAreaId,
+    editSelectedTableId,
+    editScheduledTime,
+    editDeliveryInfo,
+    editOrderNotes,
+    editAdjustments,
+    editIsTemporaryTable,
+    editTemporaryTableName,
+    processedPendingProductsIds,
+    orderDataLoaded,
+    isTimePickerVisible,
+    isTimeAlertVisible,
+    isConfirming,
+    showExitConfirmation,
+    isModalReady,
+    showOptionsMenu,
+    showCancelConfirmation,
+    showModifyInProgressConfirmation,
+    pendingModifyAction,
+    modifyingItemName,
+    showHistoryModal,
+    showDetailModal,
+    showPaymentModal,
+    showAdjustmentModal,
+    adjustmentToEdit,
+    hasUnsavedChanges,
+    originalOrderState,
+    lastNotifiedCount,
+    // Setters
+    setEditItems,
+    setEditOrderType,
+    setEditSelectedAreaId,
+    setEditSelectedTableId,
+    setEditScheduledTime,
+    setEditDeliveryInfo,
+    setEditOrderNotes,
+    setEditAdjustments,
+    setEditIsTemporaryTable,
+    setEditTemporaryTableName,
+    setProcessedPendingProductsIds,
+    setOrderDataLoaded,
+    setTimeAlertVisible,
+    setIsConfirming,
+    setShowExitConfirmation,
+    setIsModalReady,
+    setShowOptionsMenu,
+    setShowCancelConfirmation,
+    setShowModifyInProgressConfirmation,
+    setPendingModifyAction,
+    setModifyingItemName,
+    setShowHistoryModal,
+    setShowDetailModal,
+    setShowPaymentModal,
+    setShowAdjustmentModal,
+    setAdjustmentToEdit,
+    setHasUnsavedChanges,
+    setOriginalOrderState,
+    setLastNotifiedCount,
+    // Helper functions
+    resetEditModeStates,
+    showTimePicker,
+    hideTimePicker,
+  } = useOrderState();
 
-  // Estados para controlar si ya procesamos los productos pendientes y si los datos de la orden ya se cargaron
-  const [processedPendingProductsIds, setProcessedPendingProductsIds] =
-    useState<string[]>([]);
-  const [orderDataLoaded, setOrderDataLoaded] = useState(false);
-
-  // Usar los stores separados en lugar del contexto unificado
   const orderCreationStore = useOrderCreationStore();
 
   const cartItems = !isEditMode ? orderCreationStore.items : [];
@@ -280,8 +284,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const cartOrderType = !isEditMode
     ? orderCreationStore.orderType
     : OrderTypeEnum.DINE_IN;
-  const setCartOrderType = !isEditMode ? orderCreationStore.setOrderType : () => {};
-  const cartSelectedAreaId = !isEditMode ? orderCreationStore.selectedAreaId : null;
+  const setCartOrderType = !isEditMode
+    ? orderCreationStore.setOrderType
+    : () => {};
+  const cartSelectedAreaId = !isEditMode
+    ? orderCreationStore.selectedAreaId
+    : null;
   const setCartSelectedAreaId = !isEditMode
     ? orderCreationStore.setSelectedAreaId
     : () => {};
@@ -303,7 +311,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const setCartTemporaryTableName = !isEditMode
     ? orderCreationStore.setTemporaryTableName
     : () => {};
-  const cartScheduledTime = !isEditMode ? orderCreationStore.scheduledTime : null;
+  const cartScheduledTime = !isEditMode
+    ? orderCreationStore.scheduledTime
+    : null;
   const setCartScheduledTime = !isEditMode
     ? orderCreationStore.setScheduledTime
     : () => {};
@@ -312,7 +322,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const cartOrderNotes = orderCreationStore.orderNotes;
   const setCartOrderNotes = orderCreationStore.setOrderNotes;
 
-  // Usar valores del contexto o locales según el modo
   const items = isEditMode ? editItems : cartItems;
   const orderType = isEditMode ? editOrderType : cartOrderType;
   const selectedAreaId = isEditMode ? editSelectedAreaId : cartSelectedAreaId;
@@ -351,18 +360,89 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     : setCartDeliveryInfo;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
 
+  const { cleanOrderDataForType } = useOrderType({
+    isEditMode,
+    initialOrderType: orderType,
+    onOrderTypeChange: setOrderType,
+  });
+
+  const {
+    subtotal,
+    adjustmentTotal: totalAdjustments,
+    total,
+    totalPaid,
+    remainingAmount: pendingAmount,
+  } = useOrderCalculations({
+    items,
+    adjustments,
+    payments,
+  });
+
+  const {
+    areaError,
+    tableError,
+    recipientNameError,
+    recipientPhoneError,
+    addressError,
+    setAreaError,
+    setTableError,
+    setRecipientNameError,
+    setRecipientPhoneError,
+    setAddressError,
+    validateOrder,
+    clearAllErrors,
+  } = useOrderValidation({
+    orderType,
+    items,
+    selectedAreaId,
+    selectedTableId,
+    isTemporaryTable,
+    temporaryTableName,
+    deliveryInfo,
+  });
+
+  const {
+    editingItemFromList,
+    editingProduct,
+    handleEditCartItem,
+    clearEditingState,
+  } = useOrderEditing({
+    isEditMode,
+    onEditItem,
+  });
+
+  // Hook para manejo de prepagos
+  const {
+    prepaymentId,
+    paymentAmount,
+    paymentMethod,
+    showPrepaymentModal,
+    showDeletePrepaymentConfirm,
+    setShowPrepaymentModal,
+    setShowDeletePrepaymentConfirm,
+    handlePrepaymentCreated,
+    handleDeletePrepayment,
+    confirmDeletePrepayment,
+    handlePrepaymentDeleted,
+  } = usePrepayment({
+    initialPrepaymentId: null,
+    initialPaymentAmount: '',
+    initialPaymentMethod: 'CASH',
+  });
+
+  const { user } = useAuthStore();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
   const removeItem = useCallback(
     (itemId: string) => {
       if (isEditMode) {
         const item = editItems.find((i) => i.id === itemId);
         if (!item) return;
 
-        // Verificar el estado del item
         if (
           item.preparationStatus === 'READY' ||
           item.preparationStatus === 'DELIVERED'
         ) {
-          // No permitir eliminar items listos o entregados
           showSnackbar({
             message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
             type: 'error',
@@ -371,14 +451,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-          // Pedir confirmación para items en preparación
           setModifyingItemName(item.productName);
           setPendingModifyAction(() => () => {
             setEditItems((prev) => prev.filter((i) => i.id !== itemId));
           });
           setShowModifyInProgressConfirmation(true);
         } else {
-          // Permitir eliminar items pendientes o cancelados sin confirmación
           setEditItems((prev) => prev.filter((i) => i.id !== itemId));
         }
       } else {
@@ -399,12 +477,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         const item = editItems.find((i) => i.id === itemId);
         if (!item) return;
 
-        // Verificar el estado del item
         if (
           item.preparationStatus === 'READY' ||
           item.preparationStatus === 'DELIVERED'
         ) {
-          // No permitir modificar items listos o entregados
           showSnackbar({
             message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
             type: 'error',
@@ -434,12 +510,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         };
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-          // Pedir confirmación para items en preparación
           setModifyingItemName(item.productName);
           setPendingModifyAction(() => updateQuantity);
           setShowModifyInProgressConfirmation(true);
         } else {
-          // Permitir modificar items pendientes o cancelados sin confirmación
           updateQuantity();
         }
       } else {
@@ -449,29 +523,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode, editItems, removeItem, showSnackbar, updateCartItemQuantity],
   );
 
-  // Calcular totales
-  const subtotal = useMemo(() => {
-    if (!items || !Array.isArray(items)) return 0;
-    return items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-  }, [items]);
-
-  // Calcular total de ajustes
-  const totalAdjustments = useMemo(() => {
-    if (!isEditMode) return 0;
-    return editAdjustments
-      .filter((adj) => !adj.isDeleted)
-      .reduce((sum, adj) => sum + (adj.amount || 0), 0);
-  }, [isEditMode, editAdjustments]);
-
-  const total = useMemo(() => {
-    return subtotal + totalAdjustments;
-  }, [subtotal, totalAdjustments]);
-
   const totalItemsCount = useMemo(() => {
     return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
 
-  // Calcular conteo de items existentes (no temporales)
   const existingItemsCount = useMemo(() => {
     if (!isEditMode) return 0;
     return editItems
@@ -479,14 +534,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       .reduce((sum, item) => sum + item.quantity, 0);
   }, [isEditMode, editItems]);
 
-  // Notificar cambios en el conteo de items (solo en modo edición)
-  const [lastNotifiedCount, setLastNotifiedCount] = useState<number | null>(
-    null,
-  );
-
   useEffect(() => {
     if (isEditMode && onItemsCountChanged && visible && orderDataLoaded) {
-      // Solo notificar si el conteo realmente cambió
       if (existingItemsCount !== lastNotifiedCount) {
         onItemsCountChanged(existingItemsCount);
         setLastNotifiedCount(existingItemsCount);
@@ -501,86 +550,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     onItemsCountChanged,
   ]);
 
-  // Calcular total pagado
-  const totalPaid = useMemo(() => {
-    if (!isEditMode || !payments) return 0;
-    return payments
-      .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
-      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
-  }, [payments, isEditMode]);
-
-  const pendingAmount = useMemo(() => {
-    return Math.max(0, total - totalPaid);
-  }, [total, totalPaid]);
-
-  const { user } = useAuthStore(); // Obtener usuario autenticado
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Hook para snackbar
-
-  // Verificar si el usuario puede registrar pagos usando la utilidad centralizada
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
 
-  // Estados locales solo para UI (errores, visibilidad de menús/modales)
-  const [areaMenuVisible, setAreaMenuVisible] = useState(false);
-  const [tableMenuVisible, setTableMenuVisible] = useState(false);
-  const [areaError, setAreaError] = useState<string | null>(null);
-  const [tableError, setTableError] = useState<string | null>(null);
-  const [recipientNameError, setRecipientNameError] = useState<string | null>(
-    null,
-  );
-  const [recipientPhoneError, setRecipientPhoneError] = useState<string | null>(
-    null,
-  );
-  const [addressError, setAddressError] = useState<string | null>(null);
-  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [isTimeAlertVisible, setTimeAlertVisible] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  const [editingItemFromList, setEditingItemFromList] =
-    useState<CartItem | null>(null);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isModalReady, setIsModalReady] = useState(false);
-  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [
-    showModifyInProgressConfirmation,
-    setShowModifyInProgressConfirmation,
-  ] = useState(false);
-  const [pendingModifyAction, setPendingModifyAction] = useState<
-    (() => void) | null
-  >(null);
-  const [modifyingItemName, setModifyingItemName] = useState<string>('');
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
-  const [adjustmentToEdit, setAdjustmentToEdit] =
-    useState<OrderAdjustment | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [_paymentMethod, _setPaymentMethod] = useState<
-    'CASH' | 'CARD' | 'TRANSFER' | null
-  >('CASH');
-  const [prepaymentId, setPrepaymentId] = useState<string | null>(null);
-  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
-  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] =
-    useState(false);
-
-  // Estado original de la orden para detectar cambios
-  const [originalOrderState, setOriginalOrderState] = useState<{
-    items: CartItem[];
-    orderType: OrderType;
-    tableId: string | null;
-    isTemporaryTable: boolean;
-    temporaryTableName: string;
-    deliveryInfo: DeliveryInfo;
-    notes: string;
-    scheduledAt: Date | null;
-    adjustments: OrderAdjustment[];
-  } | null>(null);
-
-  // --- Queries para Áreas y Mesas (sin cambios) ---
   const {
     data: areasData,
     isLoading: isLoadingAreas,
@@ -592,357 +565,35 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     error: errorTables,
   } = useGetTablesByArea(selectedAreaId);
 
-  // Función helper para buscar información de un modifier por su ID
-  const findModifierById = useCallback(
-    (modifierId: string): CartItemModifier | null => {
-      if (!menu) return null;
+  // Use the order data loader hook
+  const { findModifierById } = useOrderDataLoader({
+    isEditMode,
+    orderData,
+    visible,
+    setEditOrderType,
+    setEditSelectedTableId,
+    setEditScheduledTime,
+    setEditDeliveryInfo,
+    setEditOrderNotes,
+    setEditAdjustments,
+    setEditSelectedAreaId,
+    setEditIsTemporaryTable,
+    setEditTemporaryTableName,
+    setEditItems,
+    setOrderDataLoaded,
+    setOriginalOrderState,
+    setHasUnsavedChanges,
+  });
 
-      for (const category of menu) {
-        for (const subcategory of category.subcategories || []) {
-          for (const product of subcategory.products || []) {
-            for (const modifierGroup of product.modifierGroups || []) {
-              const modifier = modifierGroup.productModifiers?.find(
-                (mod) => mod.id === modifierId,
-              );
-              if (modifier) {
-                return {
-                  id: modifier.id,
-                  modifierGroupId: modifierGroup.id,
-                  name: modifier.name,
-                  price: modifier.price,
-                };
-              }
-            }
-          }
-        }
-      }
-      return null;
-    },
-    [menu],
-  );
-
-  // Cargar datos de la orden cuando esté en modo edición
-  useEffect(() => {
-    if (!isEditMode || !orderData || !visible) return;
-
-    // Establecer los valores del formulario
-    setEditOrderType(orderData.orderType);
-    setEditSelectedTableId(orderData.tableId ?? null);
-    setEditScheduledTime(
-      orderData.scheduledAt ? new Date(orderData.scheduledAt) : null,
-    );
-    // Cargar deliveryInfo
-    setEditDeliveryInfo(orderData.deliveryInfo || {});
-    setEditOrderNotes(orderData.notes ?? '');
-
-    // Cargar ajustes si existen
-    if (orderData.adjustments && Array.isArray(orderData.adjustments)) {
-      const mappedAdjustments = orderData.adjustments.map((adj) => ({
-        id: adj.id,
-        name: adj.name,
-        description: adj.description || '',
-        isPercentage: adj.isPercentage,
-        value: adj.value,
-        amount: adj.amount,
-        isDeleted: false, // Importante: establecer como no eliminado
-        isNew: false, // No es nuevo, viene del backend
-      }));
-      setEditAdjustments(mappedAdjustments);
-    } else {
-      setEditAdjustments([]);
-    }
-
-    // Si hay una mesa, necesitamos encontrar el área
-    if (orderData.tableId && orderData.table) {
-      // Intentar obtener el areaId de diferentes formas
-      const areaId = orderData.table.areaId || orderData.table.area?.id;
-      if (areaId) {
-        setEditSelectedAreaId(areaId);
-      }
-
-      // Verificar si es una mesa temporal
-      if (orderData.table.isTemporary) {
-        setEditIsTemporaryTable(true);
-        setEditTemporaryTableName(orderData.table.name || '');
-      } else {
-        setEditIsTemporaryTable(false);
-        setEditTemporaryTableName('');
-      }
-    } else {
-      setEditIsTemporaryTable(false);
-      setEditTemporaryTableName('');
-    }
-
-    // Mapa para agrupar items idénticos
-    const groupedItemsMap = new Map<string, CartItem>();
-
-    // Mapear y agrupar los items de la orden
-    if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-      orderData.orderItems.forEach((item: any) => {
-        // Mapear los modificadores desde el nuevo formato (productModifiers)
-        const modifiers: CartItemModifier[] = [];
-
-        // Si vienen en el formato antiguo (item.modifiers con objetos)
-        if (item.modifiers && Array.isArray(item.modifiers)) {
-          item.modifiers.forEach((mod: any) => {
-            modifiers.push({
-              id: mod.productModifierId,
-              modifierGroupId: mod.productModifier?.modifierGroupId || '',
-              name: mod.productModifier?.name || 'Modificador',
-              price: parseFloat(mod.price) || 0,
-            });
-          });
-        }
-        // Si vienen en el nuevo formato (item.productModifiers como array de entidades)
-        else if (
-          item.productModifiers &&
-          Array.isArray(item.productModifiers)
-        ) {
-          item.productModifiers.forEach((mod: any) => {
-            const modifierInfo = findModifierById(mod.id) || {
-              id: mod.id,
-              modifierGroupId: mod.modifierGroupId || '',
-              name: mod.name || 'Modificador',
-              price: parseFloat(mod.price) || 0,
-            };
-            modifiers.push(modifierInfo);
-          });
-        }
-
-        const modifiersPrice = modifiers.reduce(
-          (sum: number, mod: any) => sum + (parseFloat(mod.price) || 0),
-          0,
-        );
-        const unitPrice = parseFloat(item.basePrice || '0');
-
-        // Crear una clave única para agrupar items idénticos (incluye estado de preparación)
-        const modifierIds = modifiers
-          .map((m) => m.id)
-          .sort()
-          .join(',');
-        const pizzaCustomizationIds = item.selectedPizzaCustomizations
-          ? item.selectedPizzaCustomizations
-              .map((c) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`)
-              .sort()
-              .join(',')
-          : '';
-        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
-
-        const existingItem = groupedItemsMap.get(groupKey);
-
-        if (
-          existingItem &&
-          existingItem.preparationStatus === item.preparationStatus
-        ) {
-          // Si ya existe un item idéntico con el mismo estado, incrementar la cantidad
-          existingItem.quantity += 1;
-          existingItem.totalPrice =
-            (unitPrice + modifiersPrice) * existingItem.quantity;
-          existingItem.id = `${existingItem.id},${item.id}`;
-        } else {
-          // Si es un nuevo item, agregarlo al mapa
-
-          const cartItem: CartItem = {
-            id: item.id,
-            productId: item.productId,
-            productName: item.product?.name || 'Producto desconocido',
-            quantity: 1, // Empezar con 1, el backend ya no envía quantity
-            unitPrice,
-            totalPrice: unitPrice + modifiersPrice,
-            modifiers,
-            variantId: item.productVariantId || undefined,
-            variantName: item.productVariant?.name || undefined,
-            preparationNotes: item.preparationNotes || undefined,
-            preparationStatus: item.preparationStatus || 'PENDING', // Incluir estado de preparación
-            selectedPizzaCustomizations:
-              item.selectedPizzaCustomizations || undefined, // Incluir personalizaciones de pizza
-          };
-          groupedItemsMap.set(groupKey, cartItem);
-        }
-      });
-
-      // Convertir el mapa a array
-      const mappedItems = Array.from(groupedItemsMap.values());
-
-      setEditItems(mappedItems);
-    }
-
-    // Marcar que los datos de la orden ya se cargaron
-    setOrderDataLoaded(true);
-
-    // Guardar el estado original de la orden para detectar cambios
-    const originalItems = Array.from(groupedItemsMap.values());
-    const originalAdjustments =
-      orderData.adjustments?.map((adj) => ({
-        id: adj.id,
-        name: adj.name,
-        // description: adj.description, // No existe en el tipo Adjustment
-        isPercentage: adj.isPercentage,
-        value: adj.value,
-        amount: adj.amount,
-      })) || [];
-
-    setOriginalOrderState({
-      items: originalItems,
-      orderType: orderData.orderType,
-      tableId: orderData.tableId ?? null,
-      isTemporaryTable: orderData.table?.isTemporary || false,
-      temporaryTableName: orderData.table?.isTemporary
-        ? orderData.table.name
-        : '',
-      deliveryInfo: orderData.deliveryInfo || {},
-      notes: orderData.notes ?? '',
-      scheduledAt: orderData.scheduledAt
-        ? new Date(orderData.scheduledAt)
-        : null,
-      adjustments: originalAdjustments,
-    });
-
-    // Resetear el flag de cambios no guardados
-    setHasUnsavedChanges(false);
-  }, [isEditMode, orderData, visible]);
-
-  // Función para formatear las personalizaciones de pizza
-  const formatPizzaCustomizations = (
-    customizations: SelectedPizzaCustomization[],
-  ): string => {
-    if (!customizations || customizations.length === 0) return '';
-
-    // Agrupar por mitad y tipo
-    const groupedByHalf = customizations.reduce(
-      (acc, curr) => {
-        const half =
-          curr.half === PizzaHalf.HALF_1
-            ? 'HALF_1'
-            : curr.half === PizzaHalf.HALF_2
-              ? 'HALF_2'
-              : 'FULL';
-
-        if (!acc[half]) {
-          acc[half] = {
-            flavors: [],
-            addedIngredients: [],
-            removedIngredients: [],
-          };
-        }
-
-        // Primero intentar obtener la información de pizzaCustomization si está disponible
-        let name = '';
-        let type = null;
-
-        if (curr.pizzaCustomization) {
-          // Si viene la información completa del backend
-          name = curr.pizzaCustomization.name;
-          type = curr.pizzaCustomization.type;
-        } else if (menu) {
-          // Si no viene la información completa, buscarla en el menú
-          outer: for (const category of menu) {
-            for (const subcategory of category.subcategories || []) {
-              for (const product of subcategory.products || []) {
-                if (product.pizzaCustomizations) {
-                  const customization = product.pizzaCustomizations.find(
-                    (pc) => pc.id === curr.pizzaCustomizationId,
-                  );
-                  if (customization) {
-                    name = customization.name;
-                    type = customization.type;
-                    break outer;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        // Si aún no tenemos el nombre, usar el ID como fallback
-        if (!name) {
-          name = curr.pizzaCustomizationId;
-        }
-
-        if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
-          acc[half].flavors.push(name);
-        } else if (
-          type === 'INGREDIENT' ||
-          type === CustomizationType.INGREDIENT
-        ) {
-          if (curr.action === CustomizationAction.ADD) {
-            acc[half].addedIngredients.push(name);
-          } else {
-            acc[half].removedIngredients.push(name);
-          }
-        }
-
-        return acc;
-      },
-      {} as Record<
-        string,
-        {
-          flavors: string[];
-          addedIngredients: string[];
-          removedIngredients: string[];
-        }
-      >,
-    );
-
-    // Formatear según el tipo de pizza
-    if (groupedByHalf.FULL) {
-      // Pizza completa
-      const parts: string[] = [];
-      if (groupedByHalf.FULL.flavors.length > 0) {
-        parts.push(groupedByHalf.FULL.flavors.join(', '));
-      }
-      if (groupedByHalf.FULL.addedIngredients.length > 0) {
-        parts.push(`con: ${groupedByHalf.FULL.addedIngredients.join(', ')}`);
-      }
-      if (groupedByHalf.FULL.removedIngredients.length > 0) {
-        parts.push(`sin: ${groupedByHalf.FULL.removedIngredients.join(', ')}`);
-      }
-      return parts.join(' - ');
-    } else if (groupedByHalf.HALF_1 || groupedByHalf.HALF_2) {
-      // Pizza mitad y mitad
-      const formatHalf = (halfData: {
-        flavors: string[];
-        addedIngredients: string[];
-        removedIngredients: string[];
-      }) => {
-        const parts: string[] = [];
-        if (halfData.flavors.length > 0) {
-          parts.push(halfData.flavors.join(', '));
-        }
-        if (halfData.addedIngredients.length > 0) {
-          parts.push(`con: ${halfData.addedIngredients.join(', ')}`);
-        }
-        if (halfData.removedIngredients.length > 0) {
-          parts.push(`sin: ${halfData.removedIngredients.join(', ')}`);
-        }
-        return parts.join(' - ');
-      };
-
-      const half1 = groupedByHalf.HALF_1
-        ? formatHalf(groupedByHalf.HALF_1)
-        : '';
-      const half2 = groupedByHalf.HALF_2
-        ? formatHalf(groupedByHalf.HALF_2)
-        : '';
-
-      return half1 && half2 ? `(${half1} / ${half2})` : half1 || half2;
-    }
-
-    return '';
-  };
-
-  // Función para agrupar items idénticos
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
 
     items.forEach((item) => {
-      // Crear una clave única basada en todas las propiedades que deben ser idénticas
       const modifierIds = item.modifiers
         .map((m) => m.id)
         .sort()
         .join(',');
 
-      // Incluir personalizaciones de pizza en la clave
       const pizzaCustomizationIds = item.selectedPizzaCustomizations
         ? item.selectedPizzaCustomizations
             .map((pc) => `${pc.pizzaCustomizationId}-${pc.half}-${pc.action}`)
@@ -955,9 +606,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       const existingItem = groupedMap.get(groupKey);
 
       if (existingItem) {
-        // Si ya existe un item idéntico, incrementar la cantidad
         existingItem.quantity += item.quantity;
-        // Recalcular el precio total considerando modificadores
         const modifiersPrice = existingItem.modifiers.reduce(
           (sum, mod) => sum + (mod.price || 0),
           0,
@@ -965,7 +614,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         existingItem.totalPrice =
           (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
 
-        // Concatenar IDs si ambos items tienen IDs reales (no temporales)
         if (
           !existingItem.id.startsWith('new-') &&
           !item.id.startsWith('new-')
@@ -976,7 +624,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           existingItem.id = allIds.join(',');
         }
       } else {
-        // Si es nuevo, agregarlo al mapa con una copia completa
         groupedMap.set(groupKey, { ...item });
       }
     });
@@ -986,35 +633,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return result;
   }, []);
 
-  // Manejar productos pendientes de añadir
   useEffect(() => {
-    // Solo procesar cuando:
-    // 1. Hay productos pendientes
-    // 2. Estamos en modo edición
-    // 3. El modal es visible
-    // 4. Los datos de la orden ya se cargaron
     if (
       pendingProductsToAdd.length > 0 &&
       isEditMode &&
       visible &&
       orderDataLoaded
     ) {
-      // Filtrar productos que no han sido procesados aún
       const unprocessedProducts = pendingProductsToAdd.filter((item) => {
-        // Usar una clave única para cada producto basada en sus propiedades
         const productKey = `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`;
         return !processedPendingProductsIds.includes(productKey);
       });
 
       if (unprocessedProducts.length > 0) {
-        // Marcar los nuevos productos con estado "NEW" temporal
         const newProductsWithStatus = unprocessedProducts.map((item) => ({
           ...item,
           preparationStatus: 'NEW' as const,
           id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
         }));
 
-        // Combinar con items existentes y agrupar
         setEditItems((prevItems) => {
           const allItems = [...prevItems, ...newProductsWithStatus];
           const grouped = groupIdenticalItems(allItems);
@@ -1022,14 +659,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           return grouped;
         });
 
-        // Marcar estos productos como procesados
         const newProcessedIds = unprocessedProducts.map(
           (item) =>
             `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`,
         );
         setProcessedPendingProductsIds((prev) => [...prev, ...newProcessedIds]);
 
-        // Calcular cuántos items únicos se añadieron
         const uniqueNewItems = newProductsWithStatus.length;
         showSnackbar({
           message: `${uniqueNewItems} producto${uniqueNewItems > 1 ? 's' : ''} añadido${uniqueNewItems > 1 ? 's' : ''}`,
@@ -1047,44 +682,27 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     showSnackbar,
   ]);
 
-  // Resetear los IDs procesados cuando el modal se cierre o cambie de orden
-  // (esto se maneja en el useEffect de reseteo de estados)
-
-  // Limpiar errores locales al cambiar tipo de orden (más simple)
   useEffect(() => {
-    setAreaError(null);
-    setTableError(null);
-    setRecipientNameError(null);
-    setRecipientPhoneError(null);
-    setAddressError(null);
-  }, [orderType]);
+    clearAllErrors();
+  }, [orderType, clearAllErrors]);
 
-  // Detectar cambios sin guardar
   useEffect(() => {
     if (!isEditMode || !originalOrderState || !visible) {
       setHasUnsavedChanges(false);
       return;
     }
 
-    // Comparar el estado actual con el original
     const hasChanges =
-      // Cambios en items
       JSON.stringify(editItems) !== JSON.stringify(originalOrderState.items) ||
-      // Cambios en tipo de orden
       editOrderType !== originalOrderState.orderType ||
-      // Cambios en mesa
       editSelectedTableId !== originalOrderState.tableId ||
-      // Cambios en mesa temporal
       editIsTemporaryTable !== originalOrderState.isTemporaryTable ||
       editTemporaryTableName !== originalOrderState.temporaryTableName ||
-      // Cambios en datos del cliente
       JSON.stringify(editDeliveryInfo) !==
         JSON.stringify(originalOrderState.deliveryInfo) ||
       editOrderNotes !== originalOrderState.notes ||
-      // Cambios en hora programada (comparar valores de tiempo, no referencias)
       (editScheduledTime?.getTime() ?? null) !==
         (originalOrderState.scheduledAt?.getTime() ?? null) ||
-      // Cambios en ajustes
       JSON.stringify(editAdjustments) !==
         JSON.stringify(originalOrderState.adjustments);
 
@@ -1104,44 +722,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     editAdjustments,
   ]);
 
-  // Resetear estados cuando el modal se cierre
   useEffect(() => {
     if (!visible && isEditMode) {
-      // Resetear estados de edición cuando el modal se cierre
-      setEditOrderType(OrderTypeEnum.DINE_IN);
-      setEditSelectedAreaId(null);
-      setEditSelectedTableId(null);
-      setEditScheduledTime(null);
-      setEditDeliveryInfo({});
-      setEditOrderNotes('');
-      setEditItems([]);
-      setShowExitConfirmation(false);
-      setEditingItemFromList(null);
-      setEditingProduct(null);
-      setIsModalReady(false);
-      setOrderDataLoaded(false); // Resetear el flag de datos cargados
-      setProcessedPendingProductsIds([]); // Resetear los IDs de productos procesados
-      setLastNotifiedCount(null); // Resetear el conteo notificado
-      setOriginalOrderState(null); // Resetear el estado original
-      setHasUnsavedChanges(false); // Resetear el flag de cambios
+      resetEditModeStates();
+      clearEditingState();
     }
-  }, [visible, isEditMode]);
+  }, [visible, isEditMode, resetEditModeStates, clearEditingState]);
 
-  // Manejar la preparación del modal con un pequeño delay
   useEffect(() => {
     if (visible && !isModalReady) {
       const timer = setTimeout(() => {
         setIsModalReady(true);
-      }, 100); // 100ms delay para evitar conflictos de focus
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [visible, isModalReady]);
 
-  // Funciones para manejar ajustes
   const handleAddAdjustment = useCallback(
     (adjustment: OrderAdjustment) => {
       if (isEditMode) {
-        // Asegurar que el ajuste tenga un ID único
         const newAdjustment = {
           ...adjustment,
           id:
@@ -1177,149 +776,39 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode],
   );
 
-  // Función para limpiar datos según el tipo de orden (solo se ejecuta al guardar)
-  const cleanOrderDataForSubmission = useCallback(
-    (
-      orderType: OrderType,
-      deliveryInfo: DeliveryInfo,
-      selectedTableId: string | null,
-      selectedAreaId: string | null,
-      isTemporaryTable: boolean,
-      temporaryTableName: string,
-    ) => {
-      const cleanedData: {
-        deliveryInfo: DeliveryInfo;
-        tableId?: string;
-        isTemporaryTable?: boolean;
-        temporaryTableName?: string;
-        temporaryTableAreaId?: string;
-      } = {
-        deliveryInfo: {},
-      };
-
-      // Limpiar deliveryInfo según el tipo de orden
-      if (orderType === OrderTypeEnum.DINE_IN) {
-        // DINE_IN: No necesita deliveryInfo, pero sí mesa
-        cleanedData.deliveryInfo = {};
-        if (isTemporaryTable) {
-          cleanedData.isTemporaryTable = true;
-          cleanedData.temporaryTableName = temporaryTableName;
-          cleanedData.temporaryTableAreaId = selectedAreaId || undefined;
-        } else {
-          cleanedData.tableId = selectedTableId || undefined;
-        }
-      } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
-        // TAKE_AWAY: Solo recipientName, recipientPhone y deliveryInstructions
-        cleanedData.deliveryInfo = {
-          recipientName: deliveryInfo.recipientName,
-          recipientPhone: deliveryInfo.recipientPhone,
-          deliveryInstructions: deliveryInfo.deliveryInstructions,
-        };
-        // No necesita mesa ni área
-      } else if (orderType === OrderTypeEnum.DELIVERY) {
-        // DELIVERY: Solo campos de dirección y recipientPhone
-        cleanedData.deliveryInfo = {
-          fullAddress: deliveryInfo.fullAddress,
-          street: deliveryInfo.street,
-          number: deliveryInfo.number,
-          interiorNumber: deliveryInfo.interiorNumber,
-          neighborhood: deliveryInfo.neighborhood,
-          city: deliveryInfo.city,
-          state: deliveryInfo.state,
-          zipCode: deliveryInfo.zipCode,
-          country: deliveryInfo.country,
-          latitude: deliveryInfo.latitude,
-          longitude: deliveryInfo.longitude,
-          recipientPhone: deliveryInfo.recipientPhone,
-          deliveryInstructions: deliveryInfo.deliveryInstructions,
-        };
-        // No necesita mesa ni área
-      }
-
-      return cleanedData;
-    },
-    [],
-  );
-
   const handleConfirm = async () => {
-    if (isConfirming) return; // Prevenir múltiples clics
+    if (isConfirming) return;
 
-    // Resetear errores
-    setAreaError(null);
-    setTableError(null);
-    setRecipientNameError(null);
-    setRecipientPhoneError(null);
-    setAddressError(null);
-
+    // Validar que haya items
     if (items.length === 0) {
+      showSnackbar({
+        message: 'No hay productos en el carrito',
+        type: 'error',
+      });
       return;
     }
 
-    let isValid = true;
-
-    // Validaciones según el tipo de orden
-    if (orderType === OrderTypeEnum.DINE_IN) {
-      if (!selectedAreaId) {
-        setAreaError('Debe seleccionar un área');
-        isValid = false;
-      }
-      if (isTemporaryTable) {
-        if (!temporaryTableName || temporaryTableName.trim() === '') {
-          setTableError('Debe ingresar un nombre para la mesa temporal');
-          isValid = false;
-        }
-      } else {
-        if (!selectedTableId) {
-          setTableError('Debe seleccionar una mesa');
-          isValid = false;
-        }
-      }
-    } else if (orderType === OrderTypeEnum.TAKE_AWAY) {
-      if (
-        !deliveryInfo.recipientName ||
-        deliveryInfo.recipientName.trim() === ''
-      ) {
-        setRecipientNameError('El nombre del cliente es obligatorio');
-        isValid = false;
-      }
-      // Si se proporciona teléfono, validar que tenga al menos 10 dígitos
-      if (
-        deliveryInfo.recipientPhone &&
-        deliveryInfo.recipientPhone.trim() !== ''
-      ) {
-        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
-        if (phoneDigits.length < 10) {
-          setRecipientPhoneError('El teléfono debe tener al menos 10 dígitos');
-          isValid = false;
-        }
-      }
-    } else if (orderType === OrderTypeEnum.DELIVERY) {
-      if (!deliveryInfo.fullAddress || deliveryInfo.fullAddress.trim() === '') {
-        setAddressError('La dirección es obligatoria para Domicilio');
-        isValid = false;
-      }
-      if (
-        !deliveryInfo.recipientPhone ||
-        deliveryInfo.recipientPhone.trim() === ''
-      ) {
-        setRecipientPhoneError('El teléfono es obligatorio para Domicilio');
-        isValid = false;
-      } else {
-        // Validar que tenga al menos 10 dígitos
-        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
-        if (phoneDigits.length < 10) {
-          setRecipientPhoneError('El teléfono debe tener al menos 10 dígitos');
-          isValid = false;
-        }
-      }
-    }
-
-    if (!isValid) {
+    // Validar prepago si existe
+    if (!isEditMode && prepaymentId && parseFloat(paymentAmount || '0') > total) {
+      showSnackbar({
+        message: 'El prepago excede el total de la orden. Por favor edite el pago antes de continuar.',
+        type: 'error',
+      });
       return;
     }
 
-    // Limpiar datos según el tipo de orden SOLO AL GUARDAR
-    const cleanedData = cleanOrderDataForSubmission(
+    // Validar y mostrar errores específicos
+    if (!validateOrder()) {
+      // Los errores ya se establecen en el hook validateOrder
+      // Mostrar un mensaje general si hay errores
+      showSnackbar({
+        message: 'Por favor complete todos los campos requeridos',
+        type: 'error',
+      });
+      return;
+    }
+
+    const cleanedData = cleanOrderDataForType(
       orderType,
       deliveryInfo,
       selectedTableId,
@@ -1328,19 +817,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       temporaryTableName,
     );
 
-    // Mapear items del carrito al formato esperado por el DTO del backend
     const itemsForBackend: OrderItemDtoForBackend[] = [];
 
-    // Mapear items según el modo (creación o edición)
     items.forEach((item: CartItem) => {
       if (isEditMode && item.id && !item.id.startsWith('new-')) {
-        // En modo edición, expandir items con ID real según la cantidad
         const existingIds = item.id
           .split(',')
           .filter((id) => id.trim() && !id.startsWith('new-'));
         const requiredQuantity = item.quantity;
 
-        // Enviar cada item individualmente
         for (let i = 0; i < requiredQuantity; i++) {
           const isExistingItem = i < existingIds.length;
 
@@ -1362,7 +847,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           });
         }
       } else {
-        // Items nuevos se expanden según cantidad
         for (let i = 0; i < item.quantity; i++) {
           itemsForBackend.push({
             productId: item.productId,
@@ -1383,7 +867,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     });
 
-    // Formatear el número de teléfono para el backend
     let formattedPhone: string | undefined = undefined;
     if (
       cleanedData.deliveryInfo.recipientPhone &&
@@ -1424,13 +907,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     };
 
     if (!orderDetails.userId) {
-      // Usuario no autenticado
+      showSnackbar({
+        message: 'Error: No se pudo identificar el usuario',
+        type: 'error',
+      });
       return;
     }
 
     setIsConfirming(true);
 
-    // Si hay un pre-pago creado, incluir su ID
     if (!isEditMode && prepaymentId) {
       orderDetails.prepaymentId = prepaymentId;
     }
@@ -1462,7 +947,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     } catch (error) {
       setIsConfirming(false);
-      // Error manejado por el componente padre
     }
   };
 
@@ -1474,85 +958,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return tablesData?.find((t) => t.id === selectedTableId)?.name;
   }, [tablesData, selectedTableId]);
 
-  const showTimePicker = () => {
-    setTimePickerVisible(true);
-  };
-
-  const hideTimePicker = () => setTimePickerVisible(false);
-
-  const handlePrepaymentCreated = async (
-    prepaymentIdCreated: string,
-    amount: number,
-    method: 'CASH' | 'CARD' | 'TRANSFER',
-  ) => {
-    const isUpdate = prepaymentId === prepaymentIdCreated;
-
-    setPrepaymentId(prepaymentIdCreated);
-    setPaymentAmount(amount.toFixed(2));
-    setPaymentMethod(method);
-    setShowPrepaymentModal(false);
-
-    showSnackbar({
-      message: isUpdate
-        ? 'Pago actualizado correctamente'
-        : 'Pago registrado correctamente',
-      type: 'success',
-    });
-  };
-
-  const handleDeletePrepayment = () => {
-    if (!prepaymentId) return;
-
-    setShowDeletePrepaymentConfirm(true);
-  };
-
-  const confirmDeletePrepayment = async () => {
-    if (!prepaymentId) return;
-
-    try {
-      await prepaymentService.deletePrepayment(prepaymentId);
-      setPrepaymentId(null);
-      setPaymentAmount('');
-      setPaymentMethod(null);
-
-      showSnackbar({
-        message: 'Prepago eliminado correctamente',
-        type: 'success',
-      });
-    } catch (error: any) {
-      let errorMessage = 'Error al eliminar el prepago';
-
-      // Manejar específicamente el error 404
-      if (error?.response?.status === 404) {
-        errorMessage = 'El prepago ya no existe o fue eliminado previamente';
-        // Limpiar el estado local si el prepago ya no existe
-        setPrepaymentId(null);
-        setPaymentAmount('');
-        setPaymentMethod(null);
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-
-      showSnackbar({
-        message: errorMessage,
-        type: 'error',
-      });
-    } finally {
-      setShowDeletePrepaymentConfirm(false);
-    }
-  };
-
-  const handlePrepaymentDeleted = () => {
-    setPrepaymentId(null);
-    setPaymentAmount('');
-    setPaymentMethod('CASH');
-    setShowPrepaymentModal(false);
-
-    showSnackbar({
-      message: 'Pago eliminado correctamente',
-      type: 'success',
-    });
-  };
+  // showTimePicker and hideTimePicker are now provided by useOrderState hook
 
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
@@ -1574,113 +980,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const formattedScheduledTime = useMemo(() => {
     if (!scheduledTime) return null;
     try {
-      return format(scheduledTime, 'h:mm a').toLowerCase(); // Formato 12 horas con am/pm
+      return format(scheduledTime, 'h:mm a').toLowerCase();
     } catch (error) {
-      // Error al formatear fecha
       return 'Hora inválida';
     }
   }, [scheduledTime]);
 
-  // [HELPER MOVIDO A dateTimeHelpers.ts para evitar problemas con Hermes]
-
-  // Función para manejar la edición de un item del carrito
-  const handleEditCartItem = useCallback(
-    (item: CartItem) => {
-      if (!isEditMode) {
-        // En modo creación, usar la función pasada por props
-        if (onEditItem) {
-          onEditItem(item);
-        }
-      } else {
-        // Verificar el estado del item antes de permitir edición
-        if (
-          item.preparationStatus === 'READY' ||
-          item.preparationStatus === 'DELIVERED'
-        ) {
-          // No permitir editar items listos o entregados
-          showSnackbar({
-            message: `No se puede editar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
-            type: 'error',
-          });
-          return;
-        }
-
-        const proceedWithEdit = () => {
-          // En modo edición, buscar el producto real del menú
-          if (!menu || !Array.isArray(menu)) {
-            return;
-          }
-
-          // Buscar el producto en la estructura anidada del menú
-          let product: Product | undefined;
-
-          for (const category of menu as FullMenuCategory[]) {
-            if (
-              category.subcategories &&
-              Array.isArray(category.subcategories)
-            ) {
-              for (const subcategory of category.subcategories) {
-                if (
-                  subcategory.products &&
-                  Array.isArray(subcategory.products)
-                ) {
-                  product = subcategory.products.find(
-                    (p: Product) => p.id === item.productId,
-                  );
-                  if (product) break;
-                }
-              }
-            }
-            if (product) break;
-          }
-
-          if (product) {
-            setEditingItemFromList(item);
-            setEditingProduct(product);
-          } else {
-            // Si no encontramos el producto en el menú, crear uno temporal
-            setEditingItemFromList(item);
-
-            const tempProduct: Product = {
-              id: item.productId,
-              name: item.productName,
-              price: item.unitPrice,
-              hasVariants: !!item.variantId,
-              variants: item.variantId
-                ? [
-                    {
-                      id: item.variantId,
-                      name: item.variantName || '',
-                      price: item.unitPrice,
-                    },
-                  ]
-                : [],
-              modifierGroups: [], // Sin grupos de modificadores
-              photo: null,
-              subcategoryId: '',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
-
-            setEditingProduct(tempProduct);
-          }
-        };
-
-        if (item.preparationStatus === 'IN_PROGRESS') {
-          // Pedir confirmación para items en preparación
-          setModifyingItemName(item.productName);
-          setPendingModifyAction(() => proceedWithEdit);
-          setShowModifyInProgressConfirmation(true);
-        } else {
-          // Permitir editar items pendientes o cancelados sin confirmación
-          proceedWithEdit();
-        }
-      }
-    },
-    [isEditMode, onEditItem, menu, showSnackbar],
-  );
-
-  // Función para actualizar un item editado
   const handleUpdateEditedItem = useCallback(
     (
       itemId: string,
@@ -1731,427 +1036,85 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }),
       );
 
-      // Cerrar el modal de edición
-      setEditingItemFromList(null);
-      setEditingProduct(null);
+      clearEditingState();
     },
-    [isEditMode],
+    [isEditMode, clearEditingState],
   );
 
-  // Helper function to render fields in order
   const renderFields = () => {
     switch (orderType) {
-      case OrderTypeEnum.DINE_IN: // Usar Enum
+      case OrderTypeEnum.DINE_IN:
         return (
-          <>
-            {/* 1. Área */}
-            <View style={styles.dineInSelectorsRow}>
-              <View style={styles.dineInSelectorContainer}>
-                <Menu
-                  visible={areaMenuVisible}
-                  onDismiss={() => setAreaMenuVisible(false)}
-                  anchor={
-                    <AnimatedLabelSelector
-                      label="Área *"
-                      value={selectedAreaName}
-                      onPress={() => setAreaMenuVisible(true)}
-                      isLoading={isLoadingAreas}
-                      error={!!areaError || !!errorAreas}
-                      disabled={isLoadingAreas}
-                    />
-                  }
-                >
-                  {areasData?.map((area: any) => (
-                    <Menu.Item
-                      key={area.id}
-                      onPress={() => {
-                        setSelectedAreaId(area.id);
-                        setSelectedTableId(null);
-                        setAreaMenuVisible(false);
-                        setAreaError(null);
-                      }}
-                      title={area.name}
-                    />
-                  ))}
-                  {errorAreas && (
-                    <Menu.Item title="Error al cargar áreas" disabled />
-                  )}
-                </Menu>
-                {areaError && !errorAreas && (
-                  <HelperText
-                    type="error"
-                    visible={true}
-                    style={styles.helperTextFix}
-                  >
-                    {areaError}
-                  </HelperText>
-                )}
-                {errorAreas && (
-                  <HelperText
-                    type="error"
-                    visible={true}
-                    style={styles.helperTextFix}
-                  >
-                    Error al cargar áreas
-                  </HelperText>
-                )}
-              </View>
-
-              {/* 2. Mesa */}
-              <View style={styles.dineInSelectorContainer}>
-                <Menu
-                  visible={tableMenuVisible}
-                  onDismiss={() => setTableMenuVisible(false)}
-                  anchor={
-                    <AnimatedLabelSelector
-                      label="Mesa *"
-                      value={selectedTableName}
-                      onPress={() => setTableMenuVisible(true)}
-                      isLoading={isLoadingTables}
-                      error={!!tableError || !!errorTables}
-                      disabled={
-                        !selectedAreaId ||
-                        isLoadingTables ||
-                        isLoadingAreas ||
-                        isTemporaryTable
-                      }
-                    />
-                  }
-                >
-                  {tablesData?.map((table: Table) => {
-                    // En modo edición, permitir seleccionar la mesa actual aunque esté ocupada
-                    const isCurrentTable =
-                      isEditMode && orderData?.tableId === table.id;
-                    const canSelect = table.isAvailable || isCurrentTable;
-
-                    return (
-                      <Menu.Item
-                        key={table.id}
-                        onPress={() => {
-                          if (canSelect) {
-                            setSelectedTableId(table.id);
-                            setTableMenuVisible(false);
-                            setTableError(null);
-                          }
-                        }}
-                        title={`${table.name}${!table.isAvailable && !isCurrentTable ? ' (Ocupada)' : ''}`}
-                        disabled={!canSelect}
-                        titleStyle={
-                          !canSelect ? { color: theme.colors.error } : undefined
-                        }
-                      />
-                    );
-                  })}
-                  {selectedAreaId &&
-                    tablesData?.length === 0 &&
-                    !isLoadingTables &&
-                    !errorTables && <Menu.Item title="No hay mesas" disabled />}
-                  {errorTables && (
-                    <Menu.Item title="Error al cargar mesas" disabled />
-                  )}
-                </Menu>
-                {tableError && !errorTables && !isTemporaryTable && (
-                  <HelperText
-                    type="error"
-                    visible={true}
-                    style={styles.helperTextFix}
-                  >
-                    {tableError}
-                  </HelperText>
-                )}
-                {errorTables && (
-                  <HelperText
-                    type="error"
-                    visible={true}
-                    style={styles.helperTextFix}
-                  >
-                    Error al cargar mesas
-                  </HelperText>
-                )}
-              </View>
-            </View>
-
-            {/* Opción de mesa temporal */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <TouchableOpacity
-                onPress={() => {
-                  setIsTemporaryTable(!isTemporaryTable);
-                  if (!isTemporaryTable) {
-                    // Si activamos mesa temporal, limpiar la selección de mesa
-                    setSelectedTableId(null);
-                    setTableError(null);
-                  } else {
-                    // Si desactivamos mesa temporal, limpiar el nombre
-                    setTemporaryTableName('');
-                  }
-                }}
-                style={styles.checkboxContainer}
-              >
-                <Checkbox.Android
-                  status={isTemporaryTable ? 'checked' : 'unchecked'}
-                  onPress={() => {
-                    setIsTemporaryTable(!isTemporaryTable);
-                    if (!isTemporaryTable) {
-                      // Si activamos mesa temporal, limpiar la selección de mesa
-                      setSelectedTableId(null);
-                      setTableError(null);
-                    } else {
-                      // Si desactivamos mesa temporal, limpiar el nombre
-                      setTemporaryTableName('');
-                    }
-                  }}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.checkboxLabel}>
-                  {isEditMode && isTemporaryTable
-                    ? 'Mesa temporal'
-                    : 'Crear mesa temporal'}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Campo para nombre de mesa temporal */}
-              {(isTemporaryTable || (isEditMode && editIsTemporaryTable)) && (
-                <View style={styles.temporaryTableInputContainer}>
-                  <SpeechRecognitionInput
-                    key={`temporary-table-name-${isEditMode ? 'edit' : 'create'}`}
-                    label="Nombre de la Mesa Temporal *"
-                    value={temporaryTableName}
-                    onChangeText={(text) => {
-                      setTemporaryTableName(text);
-                      if (tableError) setTableError(null);
-                    }}
-                    error={!!tableError && isTemporaryTable}
-                    speechLang="es-MX"
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    placeholder="Ej: Mesa Terraza 1"
-                    editable={true} // Editable tanto en creación como en edición
-                  />
-                  {tableError && isTemporaryTable && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      {tableError}
-                    </HelperText>
-                  )}
-                </View>
-              )}
-            </View>
-
-            {/* 3. Notas */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key="notes-input-dine-in"
-                label="Notas de la Orden (Opcional)"
-                value={orderNotes}
-                onChangeText={setOrderNotes}
-                multiline
-                speechLang="es-MX"
-              />
-            </View>
-
-            {/* 4. Programar Hora */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <AnimatedLabelSelector
-                label="Programar Hora (Opcional)"
-                value={formattedScheduledTime}
-                onPress={showTimePicker}
-                onClear={() => setScheduledTime(null)}
-              />
-            </View>
-          </>
+          <DineInForm
+            selectedAreaId={selectedAreaId}
+            selectedAreaName={selectedAreaName}
+            selectedTableId={selectedTableId}
+            selectedTableName={selectedTableName}
+            isTemporaryTable={isTemporaryTable}
+            temporaryTableName={temporaryTableName}
+            orderNotes={orderNotes}
+            formattedScheduledTime={formattedScheduledTime}
+            areaError={areaError}
+            tableError={tableError}
+            areasData={areasData || []}
+            tablesData={tablesData || []}
+            isLoadingAreas={isLoadingAreas}
+            isLoadingTables={isLoadingTables}
+            errorAreas={errorAreas}
+            errorTables={errorTables}
+            isEditMode={isEditMode}
+            orderData={orderData}
+            onAreaSelect={(areaId) => {
+              setSelectedAreaId(areaId);
+              setSelectedTableId(null);
+            }}
+            onTableSelect={setSelectedTableId}
+            onTemporaryTableToggle={setIsTemporaryTable}
+            onTemporaryTableNameChange={setTemporaryTableName}
+            onNotesChange={setOrderNotes}
+            onScheduleTimePress={showTimePicker}
+            onScheduleTimeClear={() => setScheduledTime(null)}
+            setAreaError={setAreaError}
+            setTableError={setTableError}
+          />
         );
-      case OrderTypeEnum.TAKE_AWAY: // Usar Enum
+      case OrderTypeEnum.TAKE_AWAY:
         return (
-          <>
-            {/* 1. Nombre Cliente */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key={`customer-name-input-${orderType}`}
-                label="Nombre del Cliente *"
-                value={deliveryInfo.recipientName || ''}
-                onChangeText={(text) => {
-                  setDeliveryInfo({ ...deliveryInfo, recipientName: text });
-                  if (recipientNameError) setRecipientNameError(null);
-                }}
-                error={!!recipientNameError}
-                speechLang="es-MX"
-                autoCapitalize="words"
-                autoCorrect={false}
-              />
-              {recipientNameError && (
-                <HelperText
-                  type="error"
-                  visible={true}
-                  style={styles.helperTextFix}
-                >
-                  {recipientNameError}
-                </HelperText>
-              )}
-            </View>
-
-            {/* 2. Teléfono */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <View style={styles.phoneInputWrapper}>
-                <SpeechRecognitionInput
-                  key={`phone-input-takeaway-${orderType}`}
-                  label="Teléfono (Opcional)"
-                  value={deliveryInfo.recipientPhone || ''}
-                  onChangeText={(text) => {
-                    setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
-                    if (recipientPhoneError) setRecipientPhoneError(null);
-                  }}
-                  keyboardType="phone-pad"
-                  error={!!recipientPhoneError} // Aunque opcional, puede tener errores de formato si se ingresa
-                  speechLang="es-MX"
-                  autoCorrect={false}
-                />
-                {(deliveryInfo.recipientPhone || '').length > 0 &&
-                  !recipientPhoneError && (
-                    <Text style={styles.digitCounterAbsolute}>
-                      {
-                        (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
-                          .length
-                      }{' '}
-                      dígitos
-                    </Text>
-                  )}
-              </View>
-              {recipientPhoneError && (
-                <HelperText
-                  type="error"
-                  visible={true}
-                  style={styles.helperTextFix}
-                >
-                  {recipientPhoneError}
-                </HelperText>
-              )}
-            </View>
-
-            {/* 3. Notas */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key="notes-input-takeaway"
-                label="Notas de la Orden (Opcional)"
-                value={orderNotes}
-                onChangeText={setOrderNotes}
-                multiline
-                speechLang="es-MX"
-              />
-            </View>
-
-            {/* 4. Programar Hora */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <AnimatedLabelSelector
-                label="Programar Hora Recolección (Opcional)"
-                value={formattedScheduledTime}
-                onPress={showTimePicker}
-                onClear={() => setScheduledTime(null)}
-              />
-            </View>
-          </>
+          <TakeAwayForm
+            deliveryInfo={deliveryInfo}
+            orderNotes={orderNotes}
+            formattedScheduledTime={formattedScheduledTime}
+            recipientNameError={recipientNameError}
+            recipientPhoneError={recipientPhoneError}
+            onDeliveryInfoChange={setDeliveryInfo}
+            onNotesChange={setOrderNotes}
+            onScheduleTimePress={showTimePicker}
+            onScheduleTimeClear={() => setScheduledTime(null)}
+            setRecipientNameError={setRecipientNameError}
+            setRecipientPhoneError={setRecipientPhoneError}
+          />
         );
-      case OrderTypeEnum.DELIVERY: // Usar Enum
+      case OrderTypeEnum.DELIVERY:
         return (
-          <>
-            {/* 1. Dirección */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key="address-input-delivery"
-                label="Dirección de Entrega *"
-                value={deliveryInfo.fullAddress || ''}
-                onChangeText={(text) => {
-                  setDeliveryInfo({ ...deliveryInfo, fullAddress: text });
-                  if (addressError) setAddressError(null);
-                }}
-                error={!!addressError}
-                speechLang="es-MX"
-                multiline
-                isInModal={true}
-              />
-              {addressError && (
-                <HelperText
-                  type="error"
-                  visible={true}
-                  style={styles.helperTextFix}
-                >
-                  {addressError}
-                </HelperText>
-              )}
-            </View>
-
-            {/* 2. Teléfono */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key={`phone-input-delivery-${orderType}`} // Key única y específica
-                label="Teléfono *"
-                value={deliveryInfo.recipientPhone || ''}
-                onChangeText={(text) => {
-                  // Asegurar que la función esté bien definida aquí
-                  setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
-                  if (recipientPhoneError) {
-                    setRecipientPhoneError(null);
-                  }
-                }}
-                keyboardType="phone-pad"
-                error={!!recipientPhoneError}
-                speechLang="es-MX"
-                autoCorrect={false}
-              />
-              <View style={styles.phoneHelperContainer}>
-                {recipientPhoneError ? (
-                  <HelperText
-                    type="error"
-                    visible={true}
-                    style={[styles.helperTextFix, styles.recipientPhoneError]}
-                  >
-                    {recipientPhoneError}
-                  </HelperText>
-                ) : (
-                  (deliveryInfo.recipientPhone || '').length > 0 && (
-                    <Text style={styles.digitCounter}>
-                      {
-                        (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
-                          .length
-                      }{' '}
-                      dígitos
-                    </Text>
-                  )
-                )}
-              </View>
-            </View>
-
-            {/* 3. Notas */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <SpeechRecognitionInput
-                key="notes-input-delivery" // Key única y específica
-                label="Notas de la Orden (Opcional)"
-                value={orderNotes}
-                onChangeText={setOrderNotes}
-                multiline
-                speechLang="es-MX"
-              />
-            </View>
-
-            {/* 4. Programar Hora */}
-            <View style={[styles.sectionCompact, styles.fieldContainer]}>
-              <AnimatedLabelSelector
-                label="Programar Hora Entrega (Opcional)"
-                value={formattedScheduledTime}
-                onPress={showTimePicker}
-                onClear={() => setScheduledTime(null)}
-              />
-            </View>
-          </>
+          <DeliveryForm
+            deliveryInfo={deliveryInfo}
+            orderNotes={orderNotes}
+            formattedScheduledTime={formattedScheduledTime}
+            addressError={addressError}
+            recipientPhoneError={recipientPhoneError}
+            onDeliveryInfoChange={setDeliveryInfo}
+            onNotesChange={setOrderNotes}
+            onScheduleTimePress={showTimePicker}
+            onScheduleTimeClear={() => setScheduledTime(null)}
+            setAddressError={setAddressError}
+            setRecipientPhoneError={setRecipientPhoneError}
+          />
         );
       default:
         return null;
     }
   };
 
-  // Mostrar loading si estamos en modo edición y aún cargando
   if (isEditMode && isLoadingOrder) {
     return (
       <Portal>
@@ -2169,7 +1132,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     );
   }
 
-  // Mostrar error si falló la carga en modo edición
   if (isEditMode && isErrorOrder) {
     return (
       <Portal>
@@ -2179,7 +1141,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           contentContainerStyle={styles.errorModalContent}
         >
           <View style={styles.errorModalContainer}>
-            {/* Icono de error */}
             <View
               style={[
                 styles.errorIconContainer,
@@ -2194,7 +1155,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               />
             </View>
 
-            {/* Título del error */}
             <Text
               style={[
                 styles.errorModalTitle,
@@ -2204,7 +1164,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               No se pudo cargar la orden
             </Text>
 
-            {/* Mensaje descriptivo */}
             <Text
               style={[
                 styles.errorModalMessage,
@@ -2215,7 +1174,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               favor, intenta nuevamente más tarde.
             </Text>
 
-            {/* Botón de cerrar */}
             <Button
               mode="contained"
               onPress={onClose}
@@ -2351,451 +1309,39 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
-            {/* Order Type Selection */}
-            <View style={styles.sectionCompact}>
-              <RadioButton.Group
-                onValueChange={(newValue) =>
-                  setOrderType(newValue as OrderType)
-                }
-                value={orderType}
-              >
-                <View style={styles.radioGroupHorizontal}>
-                  <RadioButton.Item
-                    label="COMER AQUÍ"
-                    value={OrderTypeEnum.DINE_IN} // Usar Enum
-                    style={styles.radioButtonItem}
-                    labelStyle={styles.radioLabel}
-                    position="leading"
-                  />
-                  <RadioButton.Item
-                    label="PARA LLEVAR"
-                    value={OrderTypeEnum.TAKE_AWAY} // Usar Enum
-                    style={styles.radioButtonItem}
-                    labelStyle={styles.radioLabel}
-                    position="leading"
-                  />
-                  <RadioButton.Item
-                    label="DOMICILIO"
-                    value={OrderTypeEnum.DELIVERY} // Usar Enum
-                    style={styles.radioButtonItem}
-                    labelStyle={styles.radioLabel}
-                    position="leading"
-                  />
-                </View>
-              </RadioButton.Group>
-            </View>
+            <OrderTypeSelector
+              value={orderType}
+              onValueChange={setOrderType}
+              disabled={false}
+            />
 
-            {/* Render fields based on order type */}
             {renderFields()}
 
             <Divider style={styles.divider} />
 
-            {/* Cart Items */}
-            <List.Section>
-              {items.map((item) => {
-                // Crear función de renderizado de acción de eliminar
-                const renderRightActions = (progress, dragX) => {
-                  const translateX = dragX.interpolate({
-                    inputRange: [-100, 0],
-                    outputRange: [0, 100],
-                    extrapolate: 'clamp',
-                  });
+            <OrderItemsList
+              items={items}
+              isEditMode={isEditMode}
+              onEditItem={handleEditCartItem}
+              onRemoveItem={removeItem}
+              onUpdateQuantity={updateItemQuantity}
+            />
 
-                  const scale = dragX.interpolate({
-                    inputRange: [-100, -50, 0],
-                    outputRange: [1, 0.8, 0.5],
-                    extrapolate: 'clamp',
-                  });
 
-                  const opacity = dragX.interpolate({
-                    inputRange: [-100, -20, 0],
-                    outputRange: [1, 0.5, 0],
-                    extrapolate: 'clamp',
-                  });
-
-                  return (
-                    <Animated.View
-                      style={[
-                        styles.deleteActionContainer,
-                        {
-                          opacity,
-                          transform: [{ translateX }],
-                        },
-                      ]}
-                    >
-                      <Animated.View
-                        style={[
-                          styles.deleteAction,
-                          {
-                            backgroundColor: theme.colors.error,
-                            transform: [{ scale }],
-                          },
-                        ]}
-                      >
-                        <View style={styles.deleteIconContainer}>
-                          <IconButton
-                            icon="delete-sweep"
-                            size={28}
-                            iconColor="white"
-                            style={styles.deleteIcon}
-                          />
-                        </View>
-                        <Text style={styles.deleteActionText}>ELIMINAR</Text>
-                      </Animated.View>
-                    </Animated.View>
-                  );
-                };
-
-                return (
-                  <Swipeable
-                    key={item.id}
-                    renderRightActions={renderRightActions}
-                    overshootRight={false}
-                    friction={2}
-                    rightThreshold={90}
-                    leftThreshold={100}
-                    onSwipeableOpen={(direction) => {
-                      if (direction === 'right') {
-                        // Pequeño delay para que se vea la animación completa
-                        setTimeout(() => {
-                          removeItem(item.id);
-                        }, 150);
-                      }
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={() => handleEditCartItem(item)}
-                      disabled={!onEditItem && !isEditMode}
-                      activeOpacity={0.7}
-                    >
-                      <List.Item
-                        // Mover title y description a un View contenedor para controlar el ancho
-                        title={() => (
-                          <View style={styles.itemTextContainer}>
-                            <View>
-                              <Text style={styles.itemTitleText}>
-                                {`${item.quantity}x ${item.variantName ? String(item.variantName ?? '') : String(item.productName ?? '')}`}
-                              </Text>
-                              {/* Mostrar estado de preparación solo en modo edición - siempre en nueva línea */}
-                              {isEditMode && item.preparationStatus && (
-                                <View style={styles.statusContainer}>
-                                  <View
-                                    style={[
-                                      styles.statusBadge,
-                                      {
-                                        backgroundColor:
-                                          getPreparationStatusColor(
-                                            item.preparationStatus,
-                                            theme,
-                                          ) + '20',
-                                      },
-                                    ]}
-                                  >
-                                    <View
-                                      style={[
-                                        styles.statusDot,
-                                        {
-                                          backgroundColor:
-                                            getPreparationStatusColor(
-                                              item.preparationStatus,
-                                              theme,
-                                            ),
-                                        },
-                                      ]}
-                                    />
-                                    <Text
-                                      style={[
-                                        styles.statusText,
-                                        {
-                                          color: getPreparationStatusColor(
-                                            item.preparationStatus,
-                                            theme,
-                                          ),
-                                        },
-                                      ]}
-                                    >
-                                      {getPreparationStatusText(
-                                        item.preparationStatus,
-                                      )}
-                                    </Text>
-                                  </View>
-                                </View>
-                              )}
-                            </View>
-                            {(() => {
-                              // Render description condicionalmente
-                              const hasModifiers =
-                                item.modifiers && item.modifiers.length > 0;
-                              const hasNotes =
-                                item.preparationNotes &&
-                                item.preparationNotes.trim() !== '';
-                              const hasPizzaCustomizations =
-                                item.selectedPizzaCustomizations &&
-                                item.selectedPizzaCustomizations.length > 0;
-
-                              return (
-                                <View>
-                                  {/* Renderizar personalizaciones de pizza */}
-                                  {hasPizzaCustomizations && (
-                                    <Text style={styles.itemDescription}>
-                                      {formatPizzaCustomizations(
-                                        item.selectedPizzaCustomizations,
-                                      )}
-                                    </Text>
-                                  )}
-
-                                  {/* Renderizar modificadores */}
-                                  {hasModifiers &&
-                                    item.modifiers.map(
-                                      (mod: any, index: number) => (
-                                        <Text
-                                          key={mod.id || index}
-                                          style={styles.itemDescription}
-                                        >
-                                          • {mod.name}{' '}
-                                          {mod.price && Number(mod.price) > 0
-                                            ? `(+$${Number(mod.price).toFixed(2)})`
-                                            : ''}
-                                        </Text>
-                                      ),
-                                    )}
-
-                                  {/* Renderizar notas */}
-                                  {hasNotes && (
-                                    <Text
-                                      style={[
-                                        styles.itemDescription,
-                                        styles.notesText,
-                                      ]}
-                                    >
-                                      Notas: {item.preparationNotes}
-                                    </Text>
-                                  )}
-                                </View>
-                              );
-                            })()}
-                          </View>
-                        )}
-                        // titleNumberOfLines y description ya no se usan directamente aquí
-                        right={() => (
-                          // Usar paréntesis para retorno implícito si es una sola expresión
-                          <View style={styles.itemActionsContainer}>
-                            <View style={styles.quantityActions}>
-                              <IconButton
-                                icon="minus-circle-outline"
-                                size={20} // Reducir tamaño de icono
-                                onPress={() =>
-                                  updateItemQuantity(item.id, item.quantity - 1)
-                                }
-                                style={styles.quantityButton}
-                                disabled={item.quantity <= 1} // Deshabilitar si es 1
-                              />
-                              <Text style={styles.quantityText}>
-                                {item.quantity}
-                              </Text>
-                              <IconButton
-                                icon="plus-circle-outline"
-                                size={20} // Reducir tamaño de icono
-                                onPress={() =>
-                                  updateItemQuantity(item.id, item.quantity + 1)
-                                }
-                                style={styles.quantityButton}
-                              />
-                            </View>
-                            <View style={styles.priceContainer}>
-                              <Text style={styles.itemPrice}>
-                                ${Number(item.totalPrice || 0).toFixed(2)}
-                              </Text>
-                              {item.quantity > 1 && (
-                                <Text style={styles.unitPriceText}>
-                                  ($
-                                  {(
-                                    Number(item.unitPrice || 0) +
-                                    (item.modifiers || []).reduce(
-                                      (sum, mod) =>
-                                        sum + Number(mod.price || 0),
-                                      0,
-                                    )
-                                  ).toFixed(2)}{' '}
-                                  c/u)
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                        )}
-                        style={styles.listItem}
-                      />
-                    </TouchableOpacity>
-                  </Swipeable>
-                );
-              })}
-
-              {/* Renderizar ajustes como OrderItems - dentro del mismo List.Section */}
-              {isEditMode &&
-                adjustments
-                  .filter((adj) => !adj.isDeleted)
-                  .map((adjustment, index) => {
-                    const renderRightActions = (progress, dragX) => {
-                      const translateX = dragX.interpolate({
-                        inputRange: [-100, 0],
-                        outputRange: [0, 100],
-                        extrapolate: 'clamp',
-                      });
-
-                      const scale = dragX.interpolate({
-                        inputRange: [-100, -50, 0],
-                        outputRange: [1, 0.8, 0.5],
-                        extrapolate: 'clamp',
-                      });
-
-                      const opacity = dragX.interpolate({
-                        inputRange: [-100, -20, 0],
-                        outputRange: [1, 0.5, 0],
-                        extrapolate: 'clamp',
-                      });
-
-                      return (
-                        <Animated.View
-                          style={[
-                            styles.deleteActionContainer,
-                            {
-                              opacity,
-                              transform: [{ translateX }],
-                            },
-                          ]}
-                        >
-                          <Animated.View
-                            style={[
-                              styles.deleteAction,
-                              {
-                                backgroundColor: theme.colors.error,
-                                transform: [{ scale }],
-                              },
-                            ]}
-                          >
-                            <View style={styles.deleteIconContainer}>
-                              <IconButton
-                                icon="delete-sweep"
-                                size={28}
-                                iconColor="white"
-                                style={styles.deleteIcon}
-                              />
-                            </View>
-                            <Text style={styles.deleteActionText}>
-                              ELIMINAR
-                            </Text>
-                          </Animated.View>
-                        </Animated.View>
-                      );
-                    };
-
-                    return (
-                      <Swipeable
-                        key={adjustment.id || `new-${index}`}
-                        renderRightActions={renderRightActions}
-                        overshootRight={false}
-                        friction={2}
-                        rightThreshold={90}
-                        leftThreshold={100}
-                        onSwipeableOpen={(direction) => {
-                          if (direction === 'right') {
-                            setTimeout(() => {
-                              if (adjustment.id) {
-                                handleRemoveAdjustment(adjustment.id);
-                              }
-                            }, 150);
-                          }
-                        }}
-                      >
-                        <TouchableOpacity
-                          onPress={() => {
-                            setAdjustmentToEdit(adjustment);
-                            setShowAdjustmentModal(true);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <List.Item
-                            title={() => (
-                              <View style={styles.itemTextContainer}>
-                                <Text
-                                  style={[
-                                    styles.itemTitleText,
-                                    {
-                                      color:
-                                        adjustment.amount < 0
-                                          ? theme.colors.error
-                                          : theme.colors.primary,
-                                    },
-                                  ]}
-                                >
-                                  {adjustment.name}
-                                  {adjustment.isPercentage
-                                    ? ` (${adjustment.value}%)`
-                                    : ''}
-                                </Text>
-                              </View>
-                            )}
-                            right={() => (
-                              <View style={styles.itemActionsContainer}>
-                                <View style={styles.priceContainer}>
-                                  <Text
-                                    style={[
-                                      styles.itemPrice,
-                                      {
-                                        color:
-                                          adjustment.amount < 0
-                                            ? theme.colors.error
-                                            : theme.colors.primary,
-                                      },
-                                    ]}
-                                  >
-                                    {adjustment.amount < 0 ? '-' : '+'}$
-                                    {Math.abs(adjustment.amount || 0).toFixed(
-                                      2,
-                                    )}
-                                  </Text>
-                                </View>
-                              </View>
-                            )}
-                            style={styles.listItem}
-                          />
-                        </TouchableOpacity>
-                      </Swipeable>
-                    );
-                  })}
-            </List.Section>
-
-            {/* Botón de ajustes - Solo en modo edición */}
-            {isEditMode && (
-              <Button
-                onPress={() => setShowAdjustmentModal(true)}
-                mode="outlined"
-                style={styles.adjustmentButton}
-                icon="calculator-variant"
-              >
-                Ajustes
-              </Button>
-            )}
-
-            {/* Botón para añadir productos en modo edición */}
             {isEditMode && (
               <Button
                 onPress={() => {
                   if (onAddProducts) {
-                    // Si tenemos un callback personalizado, usarlo
                     onAddProducts();
                   } else if (navigation && orderId && orderNumber) {
-                    // Si no, usar navegación directa
                     try {
                       navigation.navigate('AddProductsToOrder', {
                         orderId,
                         orderNumber,
-                        // Pasar el conteo de items existentes (no incluir los temporales "NEW")
                         existingOrderItemsCount: editItems
                           .filter((item) => !item.id.startsWith('new-'))
                           .reduce((sum, item) => sum + item.quantity, 0),
                         onProductsAdded: (newProducts: CartItem[]) => {
-                          // Marcar los nuevos productos con estado "NEW"
                           const newProductsWithStatus = newProducts.map(
                             (item) => ({
                               ...item,
@@ -2804,7 +1350,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             }),
                           );
 
-                          // Combinar con items existentes y agrupar
                           const allItems = [
                             ...editItems,
                             ...newProductsWithStatus,
@@ -2819,7 +1364,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         },
                       });
                     } catch (error) {
-                      // Error al navegar
                     }
                   }
                 }}
@@ -2833,187 +1377,74 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
             <Divider style={styles.divider} />
 
-            {/* Totals */}
-            <View style={styles.totalsContainer}>
-              <Text style={styles.totalsText}>Subtotal:</Text>
-              <Text style={styles.totalsValue}>
-                ${(subtotal || 0).toFixed(2)}
-              </Text>
-            </View>
-            {isEditMode && totalAdjustments !== 0 && (
-              <View style={styles.totalsContainer}>
-                <Text style={styles.totalsText}>Ajustes:</Text>
-                <Text
-                  style={[
-                    styles.totalsValue,
-                    {
-                      color:
-                        totalAdjustments < 0
-                          ? theme.colors.error
-                          : theme.colors.primary,
-                    },
-                  ]}
-                >
-                  {totalAdjustments < 0 ? '-' : '+'}$
-                  {Math.abs(totalAdjustments || 0).toFixed(2)}
-                </Text>
-              </View>
-            )}
-            <View style={styles.totalsContainer}>
-              <Text style={[styles.totalsText, styles.totalLabel]}>Total:</Text>
-              <Text style={[styles.totalsValue, styles.totalValue]}>
-                ${(total || 0).toFixed(2)}
-              </Text>
-            </View>
-
-            {/* Mostrar desglose de pago cuando hay pre-pago registrado */}
-            {!isEditMode && prepaymentId && (
-              <>
-                <View style={styles.prepaymentSection}>
-                  <View style={styles.prepaymentHeader}>
-                    <Text style={styles.prepaymentTitle}>
-                      Prepago registrado
-                    </Text>
-                    <View style={styles.prepaymentActions}>
-                      <IconButton
-                        icon="pencil"
-                        size={28}
-                        iconColor={theme.colors.primary}
-                        onPress={() => setShowPrepaymentModal(true)}
-                        style={styles.prepaymentIconButton}
-                      />
-                      <IconButton
-                        icon="delete"
-                        size={28}
-                        iconColor={theme.colors.error}
-                        onPress={handleDeletePrepayment}
-                        style={styles.prepaymentIconButton}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.totalsContainer}>
-                    <Text style={styles.totalsText}>Monto pagado:</Text>
-                    <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
-                      ${parseFloat(paymentAmount || '0').toFixed(2)}
-                    </Text>
-                  </View>
-                  {/* Mostrar advertencia si el prepago excede el total */}
-                  {parseFloat(paymentAmount || '0') > total && (
-                    <View style={styles.prepaymentWarning}>
-                      <IconButton
-                        icon="alert-circle"
-                        size={16}
-                        iconColor={theme.colors.error}
-                        style={styles.iconButtonNoMargin}
-                      />
-                      <Text style={styles.prepaymentWarningText}>
-                        El prepago excede el total de la orden. Edite el pago
-                        antes de continuar.
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.totalsContainer}>
-                  <Text style={[styles.totalsText, { fontWeight: '600' }]}>
-                    Restante:
-                  </Text>
-                  <Text
-                    style={[
-                      styles.totalsValue,
-                      {
-                        fontWeight: 'bold',
-                        color:
-                          total - parseFloat(paymentAmount || '0') <= 0
-                            ? '#4CAF50'
-                            : theme.colors.error,
-                      },
-                    ]}
-                  >
-                    $
-                    {Math.max(
-                      0,
-                      total - parseFloat(paymentAmount || '0'),
-                    ).toFixed(2)}
-                  </Text>
-                </View>
-              </>
-            )}
-
-            {/* Mostrar información de pagos solo en modo edición */}
+            {/* Sección de ajustes */}
             {isEditMode && (
-              <>
-                <View style={styles.totalsContainer}>
-                  <Text style={styles.totalsText}>Pagado:</Text>
-                  <Text style={[styles.totalsValue, { color: '#4CAF50' }]}>
-                    ${(totalPaid || 0).toFixed(2)}
-                  </Text>
-                </View>
-                <View style={styles.totalsContainer}>
-                  <Text style={[styles.totalsText, { fontWeight: 'bold' }]}>
-                    Restante:
-                  </Text>
-                  <Text
-                    style={[
-                      styles.totalsValue,
-                      {
-                        fontWeight: 'bold',
-                        color:
-                          pendingAmount > 0 ? theme.colors.error : '#4CAF50',
-                      },
-                    ]}
-                  >
-                    ${(pendingAmount || 0).toFixed(2)}
-                  </Text>
-                </View>
-              </>
+              <OrderAdjustments
+                adjustments={adjustments}
+                subtotal={subtotal}
+                onAddAdjustment={() => setShowAdjustmentModal(true)}
+                onEditAdjustment={(adjustment) => {
+                  setAdjustmentToEdit(adjustment);
+                  setShowAdjustmentModal(true);
+                }}
+                onRemoveAdjustment={handleRemoveAdjustment}
+                disabled={false}
+                canManageAdjustments={true}
+              />
             )}
-          </ScrollView>
 
-          {/* Botón de pago - solo mostrar si es creación y el usuario tiene permisos y no hay pre-pago */}
-          {!isEditMode && canRegisterPayments && !prepaymentId && (
-            <View style={styles.paymentButtonContainer}>
-              <Button
-                mode="outlined"
-                onPress={() => setShowPrepaymentModal(true)}
-                style={styles.paymentButton}
-                icon="credit-card"
-              >
-                💵 Registrar pago con la orden
-              </Button>
+            {/* Resumen de totales */}
+            <View style={styles.totalsSection}>
+              <View style={styles.totalsContainer}>
+                <Text style={styles.totalsText}>Subtotal:</Text>
+                <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
+              </View>
+              {totalAdjustments > 0 && (
+                <View style={styles.totalsContainer}>
+                  <Text style={styles.totalsText}>Descuentos:</Text>
+                  <Text style={[styles.totalsValue, styles.discountText]}>
+                    -${totalAdjustments.toFixed(2)}
+                  </Text>
+                </View>
+              )}
+              <Divider style={styles.totalDivider} />
+              <View style={styles.totalsContainer}>
+                <Text style={styles.totalLabel}>Total:</Text>
+                <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+              </View>
             </View>
-          )}
+
+            <PrepaymentSection
+              isEditMode={isEditMode}
+              prepaymentId={prepaymentId}
+              paymentAmount={paymentAmount}
+              paymentMethod={paymentMethod}
+              total={total}
+              totalPaid={totalPaid}
+              pendingAmount={pendingAmount}
+              canRegisterPayments={canRegisterPayments}
+              onShowPrepaymentModal={() => setShowPrepaymentModal(true)}
+              onDeletePrepayment={handleDeletePrepayment}
+            />
+          </ScrollView>
 
           <View style={styles.footer}>
             <Button
               mode="contained"
               onPress={handleConfirm}
               disabled={
-                isConfirming || // Deshabilitar mientras se procesa
+                isConfirming ||
                 items.length === 0 ||
-                (isEditMode && !hasUnsavedChanges) || // Deshabilitar si estamos en modo edición y no hay cambios
-                (orderType === OrderTypeEnum.DINE_IN &&
-                  (!selectedAreaId ||
-                    (isTemporaryTable
-                      ? !temporaryTableName || temporaryTableName.trim() === ''
-                      : !selectedTableId))) || // Usar Enum
-                (orderType === OrderTypeEnum.TAKE_AWAY &&
-                  (!deliveryInfo.recipientName ||
-                    deliveryInfo.recipientName.trim() === '')) || // Usar Enum
-                (orderType === OrderTypeEnum.DELIVERY &&
-                  (!deliveryInfo.fullAddress ||
-                    deliveryInfo.fullAddress.trim() === '')) || // Usar Enum
-                (orderType === OrderTypeEnum.DELIVERY &&
-                  (!deliveryInfo.recipientPhone ||
-                    deliveryInfo.recipientPhone.trim() === '')) // Usar Enum
+                (isEditMode && !hasUnsavedChanges)
               }
               style={[
                 styles.confirmButton,
                 isEditMode &&
                   hasUnsavedChanges && {
-                    backgroundColor: '#FF6B35', // Naranja vibrante para indicar acción requerida
+                    backgroundColor: '#FF6B35',
                   },
               ]}
-              loading={isConfirming} // Mostrar indicador de carga
+              loading={isConfirming}
             >
               {isConfirming
                 ? isEditMode
@@ -3027,124 +1458,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             </Button>
           </View>
 
-          {/* Modals */}
-          <Portal>
-            <DateTimePickerSafe
-              visible={isTimePickerVisible}
-              mode="time"
-              value={scheduledTime}
-              onConfirm={handleTimeConfirm}
-              onCancel={hideTimePicker}
-              minimumDate={new Date()}
-              minuteInterval={5}
-              title={
-                orderType === OrderTypeEnum.DELIVERY
-                  ? 'Seleccionar Hora de Entrega'
-                  : orderType === OrderTypeEnum.TAKE_AWAY
-                    ? 'Seleccionar Hora de Recolección'
-                    : 'Seleccionar Hora'
-              }
-              allowManualInput={true} // Habilita entrada manual en Android
-            />
-          </Portal>
-
-          <ConfirmationModal
-            visible={isTimeAlertVisible}
-            title="Hora Inválida"
-            message="No puedes seleccionar una hora que ya ha pasado. Por favor, elige una hora futura."
-            confirmText="Entendido"
-            onConfirm={() => setTimeAlertVisible(false)}
-          />
-
-          {/* Modal de confirmación para descartar cambios */}
-          <ConfirmationModal
-            visible={showExitConfirmation}
-            title="¿Descartar cambios?"
-            message="Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
-            confirmText="Descartar"
-            cancelText="Cancelar"
-            onConfirm={() => {
-              setShowExitConfirmation(false);
-              onClose?.();
-            }}
-            onCancel={() => setShowExitConfirmation(false)}
-          />
-
-          {/* Modal de confirmación para cancelar la orden */}
-          <ConfirmationModal
-            visible={showCancelConfirmation}
-            title="¿Cancelar orden?"
-            message={`¿Estás seguro de que quieres cancelar la orden #${orderNumber}? Esta acción no se puede deshacer.`}
-            confirmText="Cancelar Orden"
-            cancelText="No, mantener"
-            onConfirm={() => {
-              setShowCancelConfirmation(false);
-              if (onCancelOrder) {
-                onCancelOrder();
-              }
-            }}
-            onCancel={() => setShowCancelConfirmation(false)}
-          />
-
-          {/* Modal de confirmación para modificar items en preparación */}
-          <ConfirmationModal
-            visible={showModifyInProgressConfirmation}
-            title="¿Modificar producto en preparación?"
-            message={`El producto "${modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
-            confirmText="Sí, modificar"
-            cancelText="No, cancelar"
-            onConfirm={() => {
-              setShowModifyInProgressConfirmation(false);
-              if (pendingModifyAction) {
-                pendingModifyAction();
-                setPendingModifyAction(null);
-              }
-              setModifyingItemName('');
-            }}
-            onCancel={() => {
-              setShowModifyInProgressConfirmation(false);
-              setPendingModifyAction(null);
-              setModifyingItemName('');
-            }}
-          />
-
-          {/* Modal de personalización de producto para edición */}
-          {isEditMode && editingProduct && editingItemFromList && (
-            <ProductCustomizationModal
-              visible={true}
-              product={editingProduct}
-              editingItem={editingItemFromList}
-              onDismiss={() => {
-                setEditingItemFromList(null);
-                setEditingProduct(null);
-              }}
-              onAddToCart={() => {}} // No usado en modo edición
-              onUpdateItem={handleUpdateEditedItem}
-            />
-          )}
-
-          {/* Modal de detalles de orden */}
-          {isEditMode && (
-            <OrderDetailModal
-              visible={showDetailModal}
-              onDismiss={() => setShowDetailModal(false)}
-              orderId={orderId}
-              orderNumber={orderNumber}
-              orderData={orderData}
-            />
-          )}
-
-          {/* Modal de historial de cambios */}
-          {isEditMode && (
-            <OrderHistoryModal
-              visible={showHistoryModal}
-              onDismiss={() => setShowHistoryModal(false)}
-              orderId={orderId}
-              orderNumber={orderNumber}
-            />
-          )}
-
-          {/* FAB para pagos - solo en modo edición */}
           {isEditMode && orderId && visible && (
             <FAB
               icon="cash-multiple"
@@ -3152,7 +1465,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 styles.paymentFab,
                 {
                   backgroundColor: hasUnsavedChanges
-                    ? '#9CA3AF' // Gris sólido pero visible
+                    ? '#9CA3AF'
                     : pendingAmount <= 0
                       ? '#4CAF50'
                       : theme.colors.primary,
@@ -3174,67 +1487,76 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             />
           )}
 
-          {/* Modal de pagos */}
-          {showPaymentModal && isEditMode && orderId && (
-            <PaymentModal
-              visible={showPaymentModal}
-              onDismiss={() => setShowPaymentModal(false)}
-              orderId={orderId}
-              orderTotal={total}
-              orderNumber={orderNumber}
-              orderStatus={orderData?.orderStatus}
-              onOrderCompleted={() => {
-                // Cerrar el modal de pagos
-                setShowPaymentModal(false);
-                // Cerrar el modal de edición de orden
-                onClose?.();
-              }}
-            />
-          )}
-
-          {/* Modal de ajustes */}
-          {showAdjustmentModal && isEditMode && (
-            <AdjustmentFormModal
-              visible={showAdjustmentModal}
-              onDismiss={() => {
-                setShowAdjustmentModal(false);
-                setAdjustmentToEdit(null);
-              }}
-              onSave={(adjustment: OrderAdjustment) => {
-                if (adjustmentToEdit) {
-                  handleUpdateAdjustment(adjustmentToEdit.id!, adjustment);
-                } else {
-                  handleAddAdjustment(adjustment);
-                }
-                setShowAdjustmentModal(false);
-                setAdjustmentToEdit(null);
-              }}
-              adjustment={adjustmentToEdit}
-              orderSubtotal={subtotal}
-            />
-          )}
-
-          {/* Modal de pago para pre-pagos */}
-          <PaymentModal
-            visible={showPrepaymentModal}
-            onDismiss={() => setShowPrepaymentModal(false)}
+          <ModalsContainer
+            // DateTimePicker props
+            isTimePickerVisible={isTimePickerVisible}
+            scheduledTime={scheduledTime}
+            orderType={orderType}
+            onTimeConfirm={handleTimeConfirm}
+            hideTimePicker={hideTimePicker}
+            
+            // Alert modals props
+            isTimeAlertVisible={isTimeAlertVisible}
+            setTimeAlertVisible={setTimeAlertVisible}
+            showExitConfirmation={showExitConfirmation}
+            setShowExitConfirmation={setShowExitConfirmation}
+            showCancelConfirmation={showCancelConfirmation}
+            setShowCancelConfirmation={setShowCancelConfirmation}
+            showModifyInProgressConfirmation={showModifyInProgressConfirmation}
+            setShowModifyInProgressConfirmation={setShowModifyInProgressConfirmation}
+            showDeletePrepaymentConfirm={showDeletePrepaymentConfirm}
+            setShowDeletePrepaymentConfirm={setShowDeletePrepaymentConfirm}
+            
+            // Modal data props
+            orderNumber={orderNumber}
+            modifyingItemName={modifyingItemName}
+            pendingModifyAction={pendingModifyAction}
+            setPendingModifyAction={setPendingModifyAction}
+            setModifyingItemName={setModifyingItemName}
+            
+            // Callbacks
+            onClose={onClose}
+            onCancelOrder={onCancelOrder}
+            confirmDeletePrepayment={confirmDeletePrepayment}
+            
+            // Edit mode specific modals
+            isEditMode={isEditMode}
+            editingProduct={editingProduct}
+            editingItemFromList={editingItemFromList}
+            clearEditingState={clearEditingState}
+            handleUpdateEditedItem={handleUpdateEditedItem}
+            
+            // Order detail modal
+            showDetailModal={showDetailModal}
+            setShowDetailModal={setShowDetailModal}
+            orderId={orderId}
+            orderData={orderData}
+            
+            // Order history modal  
+            showHistoryModal={showHistoryModal}
+            setShowHistoryModal={setShowHistoryModal}
+            
+            // Payment modal
+            showPaymentModal={showPaymentModal}
+            setShowPaymentModal={setShowPaymentModal}
             orderTotal={total}
-            mode="prepayment"
-            onPrepaymentCreated={handlePrepaymentCreated}
-            existingPrepaymentId={prepaymentId || undefined}
-            onPrepaymentDeleted={handlePrepaymentDeleted}
-          />
-
-          {/* Modal de confirmación para eliminar prepago */}
-          <ConfirmationModal
-            visible={showDeletePrepaymentConfirm}
-            onDismiss={() => setShowDeletePrepaymentConfirm(false)}
-            title="¿Eliminar prepago?"
-            message="¿Estás seguro de que deseas eliminar este prepago? Esta acción no se puede deshacer."
-            confirmText="Eliminar"
-            cancelText="Cancelar"
-            onConfirm={confirmDeletePrepayment}
-            onCancel={() => setShowDeletePrepaymentConfirm(false)}
+            orderStatus={orderData?.orderStatus}
+            
+            // Adjustment modal
+            showAdjustmentModal={showAdjustmentModal}
+            setShowAdjustmentModal={setShowAdjustmentModal}
+            adjustmentToEdit={adjustmentToEdit}
+            setAdjustmentToEdit={setAdjustmentToEdit}
+            handleAddAdjustment={handleAddAdjustment}
+            handleUpdateAdjustment={handleUpdateAdjustment}
+            subtotal={subtotal}
+            
+            // Prepayment modal
+            showPrepaymentModal={showPrepaymentModal}
+            setShowPrepaymentModal={setShowPrepaymentModal}
+            prepaymentId={prepaymentId}
+            handlePrepaymentCreated={handlePrepaymentCreated}
+            handlePrepaymentDeleted={handlePrepaymentDeleted}
           />
         </GestureHandlerRootView>
       </Modal>
@@ -3260,89 +1582,70 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     scrollView: {
       flex: 1,
-      paddingHorizontal: theme.spacing.s, // Restaurar padding pequeño
+      paddingHorizontal: theme.spacing.s,
     },
     divider: {
       marginVertical: theme.spacing.s,
     },
-    // List Item Styles
     listItem: {
-      flexDirection: 'row', // 1) Fila
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between', // 2) Separar título y acciones
+      justifyContent: 'space-between',
       paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.s, // controla el "gap" desde el borde
+      paddingHorizontal: theme.spacing.s,
       backgroundColor: theme.colors.surface,
-      minHeight: 80, // Altura mínima para mejor experiencia de swipe
+      minHeight: 80,
     },
 
     itemTextContainer: {
-      // Contenedor para título y descripción
-      flex: 3, // Darle aún más espacio al texto ahora que no hay botón de eliminar
-      marginRight: theme.spacing.xs, // Pequeño margen para separar de las acciones
-      justifyContent: 'center', // Centrar texto verticalmente
-      // backgroundColor: 'lightyellow', // Debug
+      flex: 3,
+      marginRight: theme.spacing.xs,
+      justifyContent: 'center',
     },
     itemTitleText: {
-      // Estilo para el texto del título
-      fontSize: 15, // Aumentar tamaño del título
+      fontSize: 15,
       fontWeight: '500',
       color: theme.colors.onSurface,
-      flexWrap: 'wrap', // Permitir que el texto se ajuste
-      lineHeight: 20, // Ajustar altura de línea
+      flexWrap: 'wrap',
+      lineHeight: 20,
     },
     itemDescription: {
-      fontSize: 13, // Aumentar tamaño de descripción
+      fontSize: 13,
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
-      flexWrap: 'wrap', // Permitir que el texto se ajuste
-      lineHeight: 18, // Ajustar altura de línea
+      flexWrap: 'wrap',
+      lineHeight: 18,
     },
     itemActionsContainer: {
-      // Contenedor para acciones (cantidad, precio, borrar)
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      flexShrink: 0, // No permitir que se encoja
-      // backgroundColor: 'lightblue', // Debug
+      flexShrink: 0,
     },
     quantityActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      // marginRight: theme.spacing.s, // Adjust spacing as needed
-    }, // <<< COMA RESTAURADA
-    // quantityButton: { // <<< ESTILO DUPLICADO/INCORRECTO ELIMINADO
-    //    margin: 0,
-    //    // backgroundColor: 'lightgreen',
-    // },
-    //   flexDirection: "row", // <<< CÓDIGO INCORRECTO ELIMINADO
-    //   alignItems: "center",
-    //   // marginRight: theme.spacing.xs,
-    // },
+    },
     quantityButton: {
-      // <<< ESTILO CORRECTO
-      marginHorizontal: -4, // Reducir espacio horizontal entre botones
-      padding: 0, // Eliminar padding interno
-      // backgroundColor: 'lightgreen', // Debug
-    }, // <<< COMA RESTAURADA
+      marginHorizontal: -4,
+      padding: 0,
+    },
     quantityText: {
-      fontSize: 14, // Aumentar tamaño
+      fontSize: 14,
       fontWeight: 'bold',
-      minWidth: 20, // Ajustar ancho mínimo
+      minWidth: 20,
       textAlign: 'center',
-      marginHorizontal: 2, // Ajustar margen horizontal
-      // backgroundColor: 'pink', // Debug
-    }, // <<< COMA RESTAURADA
+      marginHorizontal: 2,
+    },
     itemPrice: {
       alignSelf: 'center',
-      marginRight: theme.spacing.xs, // Reducir espacio
+      marginRight: theme.spacing.xs,
       color: theme.colors.onSurfaceVariant,
-      fontSize: 15, // Aumentar tamaño
+      fontSize: 15,
       fontWeight: 'bold',
-      minWidth: 55, // Ajustar ancho mínimo
+      minWidth: 55,
       textAlign: 'right',
-      // backgroundColor: 'lightcoral', // Debug
-    }, // <<< COMA RESTAURADA
+    },
     priceContainer: {
       flexDirection: 'column',
       alignItems: 'flex-end',
@@ -3396,101 +1699,110 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       fontWeight: '700',
       letterSpacing: 1,
       textTransform: 'uppercase',
-    }, // <<< COMA RESTAURADA
-    // End List Item Styles
+    },
     totalsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: theme.spacing.xs,
       paddingHorizontal: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     totalsText: {
       fontSize: 16,
-    }, // <<< COMA RESTAURADA
+    },
     totalsValue: {
       fontSize: 16,
       fontWeight: 'bold',
-    }, // <<< COMA RESTAURADA
+    },
     totalLabel: {
       fontWeight: 'bold',
       fontSize: 18,
-    }, // <<< COMA RESTAURADA
+    },
     totalValue: {
       fontSize: 18,
       color: theme.colors.primary,
-    }, // <<< COMA RESTAURADA
+    },
+    totalsSection: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+    },
+    discountText: {
+      color: theme.colors.primary,
+    },
+    totalDivider: {
+      marginVertical: theme.spacing.s,
+    },
     section: {
       marginBottom: theme.spacing.m,
       marginTop: theme.spacing.s,
-    }, // <<< COMA RESTAURADA
+    },
     sectionCompact: {
       marginBottom: 0,
       paddingBottom: 0,
-    }, // <<< COMA RESTAURADA
+    },
     dineInSelectorsRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: 0,
       gap: theme.spacing.s,
       marginTop: theme.spacing.s,
-    }, // <<< COMA RESTAURADA
+    },
     dineInSelectorContainer: {
       flex: 1,
-    }, // <<< COMA RESTAURADA
-    selectorLoader: {}, // <<< COMA RESTAURADA
+    },
+    selectorLoader: {},
     sectionTitleContainer: {
       flexDirection: 'row',
       alignItems: 'baseline',
       marginBottom: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     sectionTitle: {
       fontSize: 16,
       fontWeight: 'bold',
       marginBottom: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     sectionTitleOptional: {
       ...theme.fonts.bodySmall,
       color: theme.colors.onSurfaceVariant,
       marginLeft: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     radioGroupHorizontal: {
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
       width: '100%',
       paddingVertical: theme.spacing.xs,
-    }, // <<< COMA RESTAURADA
+    },
     radioLabel: {
       marginLeft: 0,
       fontSize: 11,
       textTransform: 'uppercase',
       textAlign: 'center',
-    }, // <<< COMA RESTAURADA
+    },
     radioButtonItem: {
       paddingHorizontal: 0,
       paddingVertical: 4,
       flexShrink: 1,
       flex: 1,
       marginHorizontal: 2,
-    }, // <<< COMA RESTAURADA
-    dropdownAnchor: {}, // <<< COMA RESTAURADA
-    dropdownContent: {}, // <<< COMA RESTAURADA
-    dropdownLabel: {}, // <<< COMA RESTAURADA
+    },
+    dropdownAnchor: {},
+    dropdownContent: {},
+    dropdownLabel: {},
     helperTextFix: {
       marginTop: -6,
       marginBottom: 0,
       paddingHorizontal: 12,
-    }, // <<< COMA RESTAURADA
+    },
     footer: {
       padding: theme.spacing.m,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
       backgroundColor: theme.colors.surface,
-    }, // <<< COMA RESTAURADA
+    },
     confirmButton: {
       paddingVertical: theme.spacing.xs,
     },
-    input: {}, // <<< COMA RESTAURADA
+    input: {},
     fieldContainer: {
       marginTop: theme.spacing.s,
     },
@@ -3537,8 +1849,8 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     digitCounterAbsolute: {
       position: 'absolute',
-      right: 50, // Mover más a la izquierda para evitar el botón de micrófono
-      top: 10, // Ajustar para estar en la parte superior del input
+      right: 50,
+      top: 10,
       fontSize: 10,
       color: theme.colors.onSurfaceVariant,
       opacity: 0.7,
@@ -3588,14 +1900,14 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     statusContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 2, // Pequeño margen para separar del nombre
-      justifyContent: 'flex-start', // Alinear a la izquierda
+      marginTop: 2,
+      justifyContent: 'flex-start',
     },
     statusBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.s,
-      paddingVertical: 2, // Reducido de 4 a 2 para ser más compacto
+      paddingVertical: 2,
       borderRadius: 12,
       gap: 4,
     },
@@ -3614,25 +1926,16 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       position: 'absolute',
       margin: 16,
       right: 0,
-      bottom: 140, // Más arriba para mejor visibilidad
+      bottom: 140,
       zIndex: 1000,
       elevation: 6,
-      width: 56, // Tamaño estándar para FAB pequeño
+      width: 56,
       height: 56,
       justifyContent: 'center',
       alignItems: 'center',
     },
     paymentConfigButton: {
       marginTop: theme.spacing.s,
-    },
-    paymentButtonContainer: {
-      paddingHorizontal: theme.spacing.s,
-      paddingVertical: theme.spacing.m,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-    },
-    paymentButton: {
-      marginVertical: theme.spacing.xs,
     },
     paymentValueContainer: {
       flexDirection: 'row',
@@ -3658,43 +1961,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     temporaryTableInputContainer: {
       marginTop: theme.spacing.xs,
       marginBottom: theme.spacing.s,
-    },
-    prepaymentSection: {
-      marginBottom: theme.spacing.s,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    prepaymentHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacing.xs,
-    },
-    prepaymentTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    prepaymentActions: {
-      flexDirection: 'row',
-      gap: theme.spacing.xs,
-    },
-    prepaymentIconButton: {
-      margin: 0,
-    },
-    prepaymentWarning: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.colors.errorContainer,
-      padding: theme.spacing.s,
-      borderRadius: theme.roundness,
-      marginTop: theme.spacing.xs,
-      marginBottom: theme.spacing.xs,
-    },
-    prepaymentWarningText: {
-      flex: 1,
-      fontSize: 14,
-      color: theme.colors.onErrorContainer,
-      marginLeft: theme.spacing.xs,
     },
     errorModalContent: {
       backgroundColor: 'transparent',
@@ -3747,10 +2013,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     errorModalButtonLabel: {
       fontSize: 16,
-    },
-    // Estilos adicionales para eliminar inline styles
-    iconButtonNoMargin: {
-      margin: 0,
     },
     adjustmentButton: {
       marginTop: theme.spacing.m,
