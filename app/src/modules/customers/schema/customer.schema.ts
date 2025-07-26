@@ -40,23 +40,10 @@ export const createCustomerSchema = z.object({
 // Schema para actualizar cliente
 export const updateCustomerSchema = createCustomerSchema.partial();
 
-// Schema para formularios
-export const customerFormSchema = z.object({
-  firstName: z.string().min(1, 'El nombre es requerido').max(100),
-  lastName: z.string().min(1, 'El apellido es requerido').max(100),
-  whatsappPhoneNumber: z.string().min(1, 'El número de WhatsApp es requerido'),
-  email: z
-    .string()
-    .email('El correo electrónico no es válido')
-    .optional()
-    .or(z.literal('')),
-  birthDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
-    .optional()
-    .or(z.literal('')),
-  isActive: z.boolean(),
-  isBanned: z.boolean(),
+// Schema para formularios (extendido con campos adicionales para UI)
+export const customerFormSchema = createCustomerSchema.extend({
+  isActive: z.boolean().default(true),
+  isBanned: z.boolean().default(false),
   banReason: z.string().optional().or(z.literal('')),
 });
 

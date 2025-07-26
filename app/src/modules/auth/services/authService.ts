@@ -7,40 +7,42 @@ import {
   RegisterFormInputs,
 } from '../schema/auth.schema';
 
-class AuthService {
-  async login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isEmail = emailRegex.test(loginData.emailOrUsername);
-    const sanitizedInput = loginData.emailOrUsername.trim().toLowerCase();
+async function login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmail = emailRegex.test(loginData.emailOrUsername);
+  const sanitizedInput = loginData.emailOrUsername.trim().toLowerCase();
 
-    const payload: AuthEmailLoginDto = {
-      password: loginData.password,
-      ...(isEmail ? { email: sanitizedInput } : { username: sanitizedInput }),
-    };
+  const payload: AuthEmailLoginDto = {
+    password: loginData.password,
+    ...(isEmail ? { email: sanitizedInput } : { username: sanitizedInput }),
+  };
 
-    const response = await apiClient.post<LoginResponseDto>(
-      API_PATHS.AUTH_EMAIL_LOGIN,
-      payload,
-    );
+  const response = await apiClient.post<LoginResponseDto>(
+    API_PATHS.AUTH_EMAIL_LOGIN,
+    payload,
+  );
 
-    return response.data;
-  }
+  return response.data;
+}
 
-  async register(data: RegisterFormInputs): Promise<void> {
-    await apiClient.post<{ message?: string }>(
-      API_PATHS.AUTH_EMAIL_REGISTER,
-      data,
-    );
-  }
+async function register(data: RegisterFormInputs): Promise<void> {
+  await apiClient.post<{ message?: string }>(
+    API_PATHS.AUTH_EMAIL_REGISTER,
+    data,
+  );
+}
 
-  async verifyToken(): Promise<boolean> {
-    try {
-      const response = await apiClient.get(API_PATHS.AUTH_ME);
-      return response.status === 200;
-    } catch (error) {
-      return false;
-    }
+async function verifyToken(): Promise<boolean> {
+  try {
+    const response = await apiClient.get(API_PATHS.AUTH_ME);
+    return response.status === 200;
+  } catch (error) {
+    return false;
   }
 }
 
-export const authService = new AuthService();
+export const authService = {
+  login,
+  register,
+  verifyToken,
+};

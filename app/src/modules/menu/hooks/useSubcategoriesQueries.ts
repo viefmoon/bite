@@ -5,7 +5,7 @@ import {
   type UseQueryResult,
   type UseMutationResult,
 } from '@tanstack/react-query';
-import * as subcategoriesService from '../services/subcategoriesService';
+import { subcategoriesService } from '../services/subcategoriesService';
 import {
   SubCategory,
   CreateSubCategoryDto,

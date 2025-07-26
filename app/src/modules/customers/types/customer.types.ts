@@ -50,68 +50,6 @@ export interface Customer {
   deletedAt?: Date | null;
 }
 
-export interface CreateCustomerDto {
-  firstName: string;
-  lastName: string;
-  whatsappPhoneNumber: string;
-  email?: string;
-  birthDate?: string;
-  isActive?: boolean;
-  isBanned?: boolean;
-  whatsappMessageCount?: number;
-  lastWhatsappMessageTime?: string;
-  addresses?: CreateAddressDto[];
-}
-
-export interface UpdateCustomerDto {
-  firstName?: string;
-  lastName?: string;
-  whatsappPhoneNumber?: string;
-  email?: string | null;
-  birthDate?: string | null;
-  isActive?: boolean;
-  isBanned?: boolean;
-  bannedAt?: string;
-  banReason?: string | null;
-  whatsappMessageCount?: number;
-  lastWhatsappMessageTime?: string;
-  fullChatHistory?: ChatMessage[];
-  relevantChatHistory?: ChatMessage[];
-  lastInteraction?: string;
-}
-
-export interface CreateAddressDto {
-  name: string;
-  street: string;
-  number: string;
-  interiorNumber?: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  deliveryInstructions?: string;
-  latitude?: number;
-  longitude?: number;
-  isDefault?: boolean;
-}
-
-export interface UpdateAddressDto {
-  name?: string;
-  street?: string;
-  number?: string;
-  interiorNumber?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  country?: string;
-  deliveryInstructions?: string;
-  latitude?: number;
-  longitude?: number;
-  isDefault?: boolean;
-}
-
 export interface FindAllCustomersQuery {
   firstName?: string;
   lastName?: string;

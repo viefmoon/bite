@@ -10,7 +10,7 @@ import {
   FindAllAreasDto,
 } from '../schema/area.schema';
 
-export const getAreas = async (
+const getAreas = async (
   filterOptions: FindAllAreasDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Area[]> => {
@@ -32,7 +32,7 @@ export const getAreas = async (
   return response.data.items;
 };
 
-export const getAreaById = async (id: string): Promise<Area> => {
+const getAreaById = async (id: string): Promise<Area> => {
   const response = await apiClient.get<Area>(
     API_PATHS.AREAS_BY_ID.replace(':id', id),
   );
@@ -40,13 +40,13 @@ export const getAreaById = async (id: string): Promise<Area> => {
   return response.data;
 };
 
-export const createArea = async (data: CreateAreaDto): Promise<Area> => {
+const createArea = async (data: CreateAreaDto): Promise<Area> => {
   const response = await apiClient.post<Area>(API_PATHS.AREAS, data);
 
   return response.data;
 };
 
-export const updateArea = async (
+const updateArea = async (
   id: string,
   data: UpdateAreaDto,
 ): Promise<Area> => {
@@ -58,7 +58,7 @@ export const updateArea = async (
   return response.data;
 };
 
-export const deleteArea = async (id: string): Promise<void> => {
+const deleteArea = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.AREAS_BY_ID.replace(':id', id));
 };
 
@@ -67,13 +67,21 @@ const areaQueryKeys = {
   all: ['areas'] as const,
 };
 
+export const areaService = {
+  getAreas,
+  getAreaById,
+  createArea,
+  updateArea,
+  deleteArea,
+};
+
 /**
  * Hook para obtener la lista de todas las áreas activas usando React Query.
  */
 export function useGetAreas() {
   return useQuery<Area[], ApiError>({
     queryKey: areaQueryKeys.all,
-    queryFn: () => getAreas(), // Llama a getAreas sin argumentos para obtener todos por defecto
+    queryFn: () => areaService.getAreas(), // Llama a getAreas sin argumentos para obtener todos por defecto
     // Sin staleTime, se usará la configuración global (0)
   });
 }
