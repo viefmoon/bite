@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -396,7 +396,7 @@ export function PizzaCustomizationFormModal({
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
                         placeholder="Ej: Jamón, Piña, Queso"
-                        value={value}
+                        value={value || ''}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         error={!!errors.ingredients}

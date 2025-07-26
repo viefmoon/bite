@@ -1592,7 +1592,7 @@ const HistoryItemComponent: React.FC<{
               >
                 Cambios realizados en una sola edición:
               </Text>
-              {item.batchOperations.map((op, idx: number) => (
+              {item.batchOperations.map((op: BatchOperation, idx: number) => (
                 <View
                   key={idx}
                   style={[
@@ -1623,7 +1623,7 @@ const HistoryItemComponent: React.FC<{
                       </Text>
 
                       {/* Mostrar descripción del item */}
-                      {(op.itemDescription || op.snapshot?.itemDescription) && (
+                      {((op as BatchOperation).itemDescription || (op as BatchOperation).snapshot?.itemDescription) && (
                         <Text
                           variant="bodySmall"
                           style={[
@@ -1634,14 +1634,14 @@ const HistoryItemComponent: React.FC<{
                             },
                           ]}
                         >
-                          {op.itemDescription || op.snapshot?.itemDescription}
+                          {(op as BatchOperation).itemDescription || (op as BatchOperation).snapshot?.itemDescription}
                         </Text>
                       )}
 
                       {/* Para UPDATE, mostrar el cambio */}
-                      {op.operation === 'UPDATE' && op.formattedChanges && (
+                      {(op as BatchOperation).operation === 'UPDATE' && (op as BatchOperation).formattedChanges && (
                         <View style={styles.batchOperationChanges}>
-                          {Object.entries(op.formattedChanges)
+                          {Object.entries((op as BatchOperation).formattedChanges!)
                             .filter(([fieldName]) => {
                               // Solo mostrar campos relevantes (no precios)
                               const allowedFields = [
@@ -2193,6 +2193,161 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) => {
     },
     emptyIcon: {
       opacity: 0.5,
+    },
+    // Estilos adicionales necesarios
+    verticalChangeContainer: {
+      marginVertical: theme.spacing.xs,
+    },
+    changeBlock: {
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+      marginBottom: theme.spacing.xs,
+    },
+    changeBlockAfter: {
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+    },
+    changeBlockLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    changeBlockText: {
+      fontSize: 12,
+    },
+    horizontalChangeBefore: {
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: 2,
+      borderRadius: theme.roundness / 2,
+      marginRight: theme.spacing.xs,
+    },
+    horizontalChangeAfter: {
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: 2,
+      borderRadius: theme.roundness / 2,
+    },
+    horizontalChangeText: {
+      fontSize: 11,
+    },
+    horizontalChangeArrow: {
+      marginHorizontal: theme.spacing.xs,
+    },
+    historyHeaderContent: {
+      flex: 1,
+    },
+    historyHeaderTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    historyHeaderBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+    },
+    operationAvatar: {
+      marginRight: theme.spacing.s,
+    },
+    userNameText: {
+      flex: 1,
+      marginRight: theme.spacing.s,
+    },
+    expandButton: {
+      borderRadius: theme.roundness,
+      padding: theme.spacing.xs,
+    },
+    operationBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.s,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.roundness,
+      marginRight: theme.spacing.s,
+    },
+    operationBadgeIcon: {
+      marginRight: theme.spacing.xs,
+    },
+    operationBadgeText: {
+      fontSize: 10,
+      fontWeight: '600',
+    },
+    statusChipText: {
+      fontSize: 10,
+    },
+    statusChip: {
+      height: 24,
+      marginRight: theme.spacing.s,
+    },
+    timestampText: {
+      fontSize: 10,
+      opacity: 0.7,
+    },
+    summaryText: {
+      marginBottom: theme.spacing.s,
+      fontWeight: '500',
+    },
+    orderDetailsContainer: {
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+      marginBottom: theme.spacing.s,
+    },
+    orderDetailsTitle: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.xs,
+    },
+    orderDetailItem: {
+      marginBottom: theme.spacing.xs,
+    },
+    fieldLabel: {
+      fontWeight: '600',
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.s,
+      marginTop: theme.spacing.s,
+    },
+    productItemContainer: {
+      padding: theme.spacing.s,
+      borderLeftWidth: 3,
+      marginBottom: theme.spacing.s,
+      borderRadius: theme.roundness,
+    },
+    productName: {
+      fontWeight: '500',
+      marginBottom: theme.spacing.xs,
+    },
+    productDetail: {
+      fontSize: 11,
+      marginBottom: theme.spacing.xs,
+    },
+    productNotes: {
+      fontSize: 11,
+      fontStyle: 'italic',
+      marginBottom: theme.spacing.xs,
+    },
+    productPrice: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    fallbackTitle: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.s,
+    },
+    snapshotContainer: {
+      padding: theme.spacing.s,
+      borderRadius: theme.roundness,
+    },
+    orderChangesTitle: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.s,
+    },
+    changeItemContainer: {
+      marginBottom: theme.spacing.s,
+    },
+    fieldNameText: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.xs,
     },
   });
 };

@@ -76,7 +76,7 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
               style={styles.deleteIcon}
             />
           </View>
-          <Text style={styles.deleteActionText}>ELIMINAR</Text>
+          <Text style={styles.swipeActionText}>ELIMINAR</Text>
         </Animated.View>
       </Animated.View>
     );
@@ -104,9 +104,9 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
       >
         <List.Item
           title={() => (
-            <View style={styles.itemTextContainer}>
+            <View>
               <View>
-                <Text style={styles.itemTitleText}>
+                <Text style={styles.itemTitle}>
                   {item.quantity}x {item.variantName || item.productName}
                 </Text>
               </View>
@@ -301,6 +301,11 @@ const createStyles = (theme: any) =>
       minWidth: 20,
       textAlign: 'center',
       marginHorizontal: 2,
+    },
+    itemTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
     },
     itemPrice: {
       alignSelf: 'center',

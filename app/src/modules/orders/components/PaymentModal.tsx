@@ -141,7 +141,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           if (amountInputRef.current && scrollViewRef.current) {
             amountInputRef.current.measureLayout(
               scrollViewRef.current as any,
-              (x, y) => {
+              (_, y) => {
                 scrollViewRef.current?.scrollTo({ y: y - 50, animated: true });
               },
               () => {},
@@ -693,7 +693,7 @@ const createStyles = (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      padding: responsive.spacingPreset.m,
     },
     modalWrapper: {
       width: '100%',
@@ -714,8 +714,8 @@ const createStyles = (
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingVertical: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingVertical: responsive.spacingPreset.xs,
     },
     headerTextContainer: {
       flex: 1,
@@ -735,7 +735,7 @@ const createStyles = (
       maxHeight: responsive.isTablet ? 600 : 500,
     },
     scrollViewContent: {
-      paddingBottom: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingBottom: responsive.spacingPreset.m,
     },
     scrollViewWithKeyboard: {
       maxHeight: responsive.isTablet ? 350 : 250,
@@ -745,11 +745,11 @@ const createStyles = (
       justifyContent: 'space-around',
       alignItems: 'center',
       backgroundColor: theme.colors.primaryContainer,
-      paddingVertical: responsive.spacing(theme.spacing.s, theme.spacing.xs),
-      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      marginHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      marginTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
-      marginBottom: responsive.spacing(theme.spacing.m, theme.spacing.s),
+      paddingVertical: responsive.spacingPreset.s,
+      paddingHorizontal: responsive.spacingPreset.m,
+      marginHorizontal: responsive.spacingPreset.m,
+      marginTop: responsive.spacingPreset.s,
+      marginBottom: responsive.spacingPreset.m,
       borderRadius: theme.roundness,
     },
     summaryItem: {
@@ -774,27 +774,27 @@ const createStyles = (
       height: '80%',
       backgroundColor: theme.colors.onPrimaryContainer,
       opacity: 0.2,
-      marginHorizontal: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      marginHorizontal: responsive.spacingPreset.xs,
     },
     loader: {
-      marginVertical: responsive.spacing(theme.spacing.xl, theme.spacing.l),
+      marginVertical: responsive.spacingPreset.xl,
     },
     paymentsSection: {
-      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingBottom: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingBottom: responsive.spacingPreset.s,
     },
     sectionTitle: {
       ...theme.fonts.titleSmall,
       fontSize: responsive.fontSize(theme.fonts.titleSmall.fontSize),
       color: theme.colors.onSurface,
-      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      marginBottom: responsive.spacingPreset.xs,
       fontWeight: '600',
     },
     paymentItem: {
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
-      padding: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
-      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      padding: responsive.spacingPreset.xs,
+      marginBottom: responsive.spacingPreset.xs,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -805,7 +805,7 @@ const createStyles = (
     paymentRightInfo: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      gap: responsive.spacingPreset.xs,
     },
     paymentMethodRow: {
       flexDirection: 'row',
@@ -847,18 +847,18 @@ const createStyles = (
       height: responsive.isTablet ? 32 : 36,
     },
     formSection: {
-      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingBottom: responsive.spacingPreset.xs,
     },
     methodsContainer: {
-      marginBottom: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      marginBottom: responsive.spacingPreset.s,
     },
     methodCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
-      paddingHorizontal: responsive.spacing(theme.spacing.s, theme.spacing.xs),
-      marginBottom: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      paddingVertical: responsive.spacingPreset.xs,
+      paddingHorizontal: responsive.spacingPreset.s,
+      marginBottom: responsive.spacingPreset.xs,
       borderRadius: theme.roundness,
       borderWidth: 1,
       borderColor: theme.colors.outline,
@@ -872,7 +872,7 @@ const createStyles = (
       ...theme.fonts.bodyLarge,
       fontSize: responsive.fontSize(theme.fonts.bodyLarge.fontSize),
       color: theme.colors.onSurface,
-      marginLeft: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      marginLeft: responsive.spacingPreset.xs,
     },
     methodTextSelected: {
       color: theme.colors.onPrimaryContainer,
@@ -884,7 +884,7 @@ const createStyles = (
     },
     methodLabelContainer: {
       flex: 1,
-      marginLeft: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      marginLeft: responsive.spacingPreset.xs,
     },
     methodTextDisabled: {
       color: theme.colors.onSurfaceDisabled,
@@ -897,11 +897,11 @@ const createStyles = (
       marginTop: 2,
     },
     amountContainer: {
-      marginTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      marginTop: responsive.spacingPreset.s,
     },
     amountRow: {
       flexDirection: 'row',
-      gap: responsive.spacing(theme.spacing.xs, theme.spacing.xxs),
+      gap: responsive.spacingPreset.xs,
       alignItems: 'flex-start',
     },
     amountInput: {
@@ -917,7 +917,7 @@ const createStyles = (
     totalPendingButtonContent: {
       height: '100%',
       paddingVertical: 0,
-      paddingHorizontal: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      paddingHorizontal: responsive.spacingPreset.s,
     },
     totalPendingButtonLabel: {
       fontSize: responsive.fontSize(13),
@@ -928,10 +928,10 @@ const createStyles = (
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingHorizontal: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingVertical: responsive.spacing(theme.spacing.m, theme.spacing.s),
-      paddingTop: responsive.spacing(theme.spacing.s, theme.spacing.xs),
+      gap: responsive.spacingPreset.m,
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingVertical: responsive.spacingPreset.m,
+      paddingTop: responsive.spacingPreset.s,
       backgroundColor: theme.colors.surface,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,

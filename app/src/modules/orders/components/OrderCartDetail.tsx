@@ -62,7 +62,7 @@ import { modalHelpers } from '../stores/useModalStore';
 
 interface OrderCartDetailProps {
   visible: boolean;
-  onConfirmOrder: (details: OrderDetailsForBackend) => void;
+  onConfirmOrder: (details: OrderDetailsForBackend) => Promise<void>;
   onClose?: () => void;
   onEditItem?: (item: CartItem) => void;
   isEditMode?: boolean;
@@ -178,7 +178,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const totalPaid = useMemo(() => {
     if (!isEditMode || !payments) return 0;
     return payments.reduce(
-      (sum, payment) => sum + parseFloat(payment.amount),
+      (sum, payment) => sum + payment.amount,
       0,
     );
   }, [payments, isEditMode]);
@@ -197,7 +197,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   };
 
   const handleEditCartItem = (item: CartItem) => {
-    setEditingItemFromList(item);
     if (onEditItem) {
       onEditItem(item);
     } else {
@@ -216,10 +215,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   }, []);
 
   const handlePrepaymentCreated = useCallback(
-    (id: string, amount: string, method: 'CASH' | 'CARD' | 'TRANSFER') => {
+    (id: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => {
       if (!isEditMode) {
         setPrepaymentId(id);
-        setPrepaymentAmount(amount);
+        setPrepaymentAmount(amount.toString());
         setPrepaymentMethod(method);
       }
     },
@@ -326,53 +325,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return checkCanRegisterPayments(user);
   }, [user]);
 
-  const _groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
-    const groupedMap = new Map<string, CartItem>();
-
-    items.forEach((item) => {
-      const modifierIds = item.modifiers
-        .map((m) => m.id)
-        .sort()
-        .join(',');
-
-      const pizzaCustomizationIds = item.selectedPizzaCustomizations
-        ? item.selectedPizzaCustomizations
-            .map((pc) => `${pc.pizzaCustomizationId}-${pc.half}-${pc.action}`)
-            .sort()
-            .join(',')
-        : '';
-
-      const groupKey = `${item.productId}-${item.variantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
-
-      const existingItem = groupedMap.get(groupKey);
-
-      if (existingItem) {
-        existingItem.quantity += item.quantity;
-        const modifiersPrice = existingItem.modifiers.reduce(
-          (sum, mod) => sum + (mod.price || 0),
-          0,
-        );
-        existingItem.totalPrice =
-          (existingItem.unitPrice + modifiersPrice) * existingItem.quantity;
-
-        if (
-          !existingItem.id.startsWith('new-') &&
-          !item.id.startsWith('new-')
-        ) {
-          const existingIds = existingItem.id.split(',');
-          const newIds = item.id.split(',');
-          const allIds = [...new Set([...existingIds, ...newIds])];
-          existingItem.id = allIds.join(',');
-        }
-      } else {
-        groupedMap.set(groupKey, { ...item });
-      }
-    });
-
-    const result = Array.from(groupedMap.values());
-
-    return result;
-  }, []);
 
   useEffect(() => {
     if (!visible && isEditMode) {
@@ -819,17 +771,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 onAddAdjustment={() =>
                   modalHelpers.showAdjustment({
                     adjustmentToEdit: null,
-                    setAdjustmentToEdit,
                     handleAddAdjustment,
                     handleUpdateAdjustment,
                     subtotal,
                   })
                 }
                 onEditAdjustment={(adjustment) => {
-                  setAdjustmentToEdit(adjustment);
                   modalHelpers.showAdjustment({
                     adjustmentToEdit: adjustment,
-                    setAdjustmentToEdit,
                     handleAddAdjustment,
                     handleUpdateAdjustment,
                     subtotal,

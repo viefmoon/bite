@@ -11,8 +11,8 @@ import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInp
 import { useAppTheme } from '@/app/styles/theme';
 import type { Table } from '@/modules/areasTables/schema/table.schema';
 import { useOrderStore } from '../../stores/useOrderStore';
-import { useGetAreas } from '@/modules/areasTables/services/areaService';
-import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
+import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
+import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
 import { format } from 'date-fns';
 
 interface DineInFormProps {
@@ -49,7 +49,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
       data: tablesData = [],
       isLoading: isLoadingTables,
       error: errorTables,
-    } = useGetTablesByArea(selectedAreaId || '', { enabled: !!selectedAreaId });
+    } = useGetTablesByAreaId(selectedAreaId || '', { enabled: !!selectedAreaId });
     const selectedAreaName =
       areasData.find((a: any) => a.id === selectedAreaId)?.name ||
       'Selecciona un área';

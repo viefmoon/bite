@@ -54,14 +54,14 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             opacity: 0.6,
           },
           cardContent: {
-            paddingHorizontal: responsive.spacing.s,
-            paddingVertical: responsive.spacing.xs,
+            paddingHorizontal: responsive.spacingPreset.s,
+            paddingVertical: responsive.spacingPreset.xs,
           },
           cardTitle: {
-            fontSize: responsive.fontSize.m,
+            fontSize: responsive.fontSizePreset.m,
             fontWeight: '600',
-            lineHeight: responsive.fontSize.m * 1.2,
-            marginBottom: responsive.spacing.xs,
+            lineHeight: responsive.fontSizePreset.m * 1.2,
+            marginBottom: responsive.spacingPreset.xs,
           },
           cardHeader: {
             flexDirection: 'row',
@@ -79,7 +79,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
           priceText: {
             color: theme.colors.primary,
             fontWeight: '600',
-            fontSize: responsive.fontSize.s,
+            fontSize: responsive.fontSizePreset.s,
             marginTop: 2,
           },
           inactiveBadge: {
@@ -98,15 +98,15 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
           },
           warningMessage: {
             backgroundColor: colors.warningContainer || colors.errorContainer,
-            paddingHorizontal: responsive.spacing.s,
-            paddingVertical: responsive.spacing.xs,
-            marginTop: responsive.spacing.xs,
+            paddingHorizontal: responsive.spacingPreset.s,
+            paddingVertical: responsive.spacingPreset.xs,
+            marginTop: responsive.spacingPreset.xs,
           },
           warningMessageText: {
-            fontSize: responsive.fontSize.xs,
+            fontSize: responsive.fontSizePreset.xs,
             color: colors.onWarningContainer || colors.onErrorContainer,
             textAlign: 'center',
-            lineHeight: responsive.fontSize.xs * 1.3,
+            lineHeight: responsive.fontSizePreset.xs * 1.3,
           },
         }),
       [colors, theme, responsive],
@@ -152,7 +152,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
         'price' in item &&
         'description' in item &&
         (item as Product).description &&
-        (item as Product).description.trim() !== '' &&
+        (item as Product).description?.trim() !== '' &&
         onInfoPress
       );
     };

@@ -61,7 +61,6 @@ export const OrderAdjustments: React.FC<OrderAdjustmentsProps> = ({
               <List.Item
                 key={adjustment.id}
                 title={adjustment.name}
-                description={adjustment.description}
                 right={() => (
                   <View style={styles.rightContent}>
                     <Text style={styles.amountText}>-${amount.toFixed(2)}</Text>
@@ -80,7 +79,7 @@ export const OrderAdjustments: React.FC<OrderAdjustmentsProps> = ({
                         <IconButton
                           icon="delete"
                           size={16}
-                          onPress={() => onRemoveAdjustment?.(adjustment.id)}
+                          onPress={() => adjustment.id && onRemoveAdjustment?.(adjustment.id)}
                         />
                       </View>
                     )}

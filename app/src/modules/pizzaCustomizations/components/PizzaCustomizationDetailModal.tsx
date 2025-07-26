@@ -1,7 +1,7 @@
 import React from 'react';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import {
-  CustomizationType,
+  CustomizationTypeEnum,
   PizzaCustomization,
 } from '../schema/pizzaCustomization.schema';
 
@@ -37,37 +37,41 @@ export function PizzaCustomizationDetailModal({
   };
 
   // Configurar campos dinámicamente según el tipo
-  const fieldsToDisplay = [
+  const fieldsToDisplay: Array<{
+    field: keyof PizzaCustomization;
+    label: string;
+    render?: (value: any, item: PizzaCustomization) => React.ReactNode;
+  }> = [
     {
-      field: 'type',
+      field: 'type' as keyof PizzaCustomization,
       label: 'Tipo',
-      render: (type) =>
-        type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente',
+      render: (type: string) =>
+        type === CustomizationTypeEnum.FLAVOR ? 'Sabor' : 'Ingrediente',
     },
     // Solo mostrar ingredientes si es tipo FLAVOR
-    ...(customization.type === CustomizationType.FLAVOR
+    ...(customization.type === CustomizationTypeEnum.FLAVOR
       ? [
           {
-            field: 'ingredients',
+            field: 'ingredients' as keyof PizzaCustomization,
             label: 'Ingredientes',
-            render: (ingredients) => ingredients || 'Sin ingredientes',
+            render: (ingredients: string | null) => ingredients || 'Sin ingredientes',
           },
         ]
       : []),
     {
-      field: 'toppingValue',
+      field: 'toppingValue' as keyof PizzaCustomization,
       label: 'Valor de topping',
-      render: (value) => value?.toString() || '0',
+      render: (value: number) => value?.toString() || '0',
     },
     {
-      field: 'sortOrder',
+      field: 'sortOrder' as keyof PizzaCustomization,
       label: 'Orden de visualización',
-      render: (value) => value?.toString() || '0',
+      render: (value: number) => value?.toString() || '0',
     },
     {
-      field: 'products',
+      field: 'products' as keyof PizzaCustomization,
       label: 'Asociado a productos',
-      render: (products) => {
+      render: (products: Array<{ id: string; name: string }> | undefined) => {
         if (!products || products.length === 0) {
           return 'No asociado a ningún producto';
         }

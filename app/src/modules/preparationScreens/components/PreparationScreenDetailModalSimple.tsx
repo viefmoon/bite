@@ -20,6 +20,14 @@ interface PreparationScreenDetailModalProps {
   onDelete?: (id: string) => void;
   onManageProducts?: (item: PreparationScreen) => void;
   isDeleting?: boolean;
+  deleteConfirmation?: {
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    show: (id: string) => void;
+  };
 }
 
 const getStyles = (theme: AppTheme) =>
@@ -145,6 +153,7 @@ const PreparationScreenDetailModal: React.FC<
   onDelete,
   onManageProducts,
   isDeleting = false,
+  deleteConfirmation,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);

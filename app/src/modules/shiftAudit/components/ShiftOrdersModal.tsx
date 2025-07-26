@@ -75,7 +75,7 @@ export function ShiftOrdersModal({
     return orders.filter((order) => {
       // Buscar por número de orden
       if (order.shiftOrderNumber?.toString().includes(search)) return true;
-      if (order.orderNumber?.toString().includes(search)) return true;
+      if (order.orderNumber?.includes(search)) return true;
 
       // Buscar en información de entrega
       if (order.deliveryInfo) {
@@ -204,15 +204,7 @@ export function ShiftOrdersModal({
           {showOrderHistory && selectedReceipt ? (
             <OrderHistoryView
               orderId={String(selectedReceipt.id)}
-              orderNumber={
-                Number(selectedReceipt.shiftOrderNumber) ||
-                (typeof selectedReceipt.orderNumber === 'string'
-                  ? parseInt(selectedReceipt.orderNumber, 10)
-                  : typeof selectedReceipt.orderNumber === 'number'
-                    ? selectedReceipt.orderNumber
-                    : 0) ||
-                0
-              }
+              orderNumber={Number(selectedReceipt.shiftOrderNumber) || 0}
               onBack={() => {
                 setShowOrderHistory(false);
                 setShowReceiptDetails(true);

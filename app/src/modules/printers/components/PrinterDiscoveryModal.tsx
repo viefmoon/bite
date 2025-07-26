@@ -79,7 +79,6 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
               testPrintMutation.isPending &&
               testPrintMutation.variables?.ip === item.ip
             }
-            tooltip="Imprimir prueba"
           />
           <IconButton
             {...props}
@@ -87,7 +86,6 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
             size={24}
             onPress={() => onPrinterSelect(item)}
             disabled={testPrintMutation.isPending}
-            tooltip="Agregar impresora"
           />
         </View>
       )}

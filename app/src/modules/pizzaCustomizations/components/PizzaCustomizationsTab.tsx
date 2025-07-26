@@ -20,6 +20,7 @@ import { PizzaCustomizationDetailModal } from './PizzaCustomizationDetailModal';
 import { PizzaCustomizationFormModal } from './PizzaCustomizationFormModal';
 import {
   CustomizationType,
+  CustomizationTypeEnum,
   PizzaCustomization,
 } from '../schema/pizzaCustomization.schema';
 import EmptyState from '@/app/components/common/EmptyState';
@@ -118,13 +119,13 @@ export function PizzaCustomizationsTab() {
                 mode="flat"
                 compact
                 icon={
-                  item.type === CustomizationType.FLAVOR ? 'pizza' : 'cheese'
+                  item.type === CustomizationTypeEnum.FLAVOR ? 'pizza' : 'cheese'
                 }
                 style={[
                   styles.typeChip,
                   {
                     backgroundColor:
-                      item.type === CustomizationType.FLAVOR
+                      item.type === CustomizationTypeEnum.FLAVOR
                         ? theme.colors.errorContainer
                         : theme.colors.secondaryContainer,
                   },
@@ -132,7 +133,7 @@ export function PizzaCustomizationsTab() {
                 ]}
                 textStyle={styles.chipText}
               >
-                {item.type === CustomizationType.FLAVOR
+                {item.type === CustomizationTypeEnum.FLAVOR
                   ? 'Sabor'
                   : 'Ingrediente'}
               </Chip>
@@ -347,7 +348,7 @@ export function PizzaCustomizationsTab() {
                   icon={
                     selectedType === 'all'
                       ? 'filter-variant'
-                      : selectedType === CustomizationType.FLAVOR
+                      : selectedType === CustomizationTypeEnum.FLAVOR
                         ? 'pizza'
                         : 'cheese'
                   }
@@ -379,36 +380,36 @@ export function PizzaCustomizationsTab() {
               />
               <Menu.Item
                 onPress={() => {
-                  setSelectedType(CustomizationType.FLAVOR);
+                  setSelectedType(CustomizationTypeEnum.FLAVOR);
                   setFilterMenuVisible(false);
                 }}
                 title="Sabores"
                 leadingIcon="pizza"
                 trailingIcon={
-                  selectedType === CustomizationType.FLAVOR
+                  selectedType === CustomizationTypeEnum.FLAVOR
                     ? 'check'
                     : undefined
                 }
                 titleStyle={
-                  selectedType === CustomizationType.FLAVOR
+                  selectedType === CustomizationTypeEnum.FLAVOR
                     ? styles.activeMenuTitle
                     : undefined
                 }
               />
               <Menu.Item
                 onPress={() => {
-                  setSelectedType(CustomizationType.INGREDIENT);
+                  setSelectedType(CustomizationTypeEnum.INGREDIENT);
                   setFilterMenuVisible(false);
                 }}
                 title="Ingredientes"
                 leadingIcon="cheese"
                 trailingIcon={
-                  selectedType === CustomizationType.INGREDIENT
+                  selectedType === CustomizationTypeEnum.INGREDIENT
                     ? 'check'
                     : undefined
                 }
                 titleStyle={
-                  selectedType === CustomizationType.INGREDIENT
+                  selectedType === CustomizationTypeEnum.INGREDIENT
                     ? styles.activeMenuTitle
                     : undefined
                 }
@@ -428,9 +429,9 @@ export function PizzaCustomizationsTab() {
             <EmptyState
               title="No hay personalizaciones"
               message={
-                selectedType === CustomizationType.FLAVOR
+                selectedType === CustomizationTypeEnum.FLAVOR
                   ? 'No hay sabores disponibles'
-                  : selectedType === CustomizationType.INGREDIENT
+                  : selectedType === CustomizationTypeEnum.INGREDIENT
                     ? 'No hay ingredientes disponibles'
                     : 'No hay personalizaciones disponibles'
               }

@@ -271,7 +271,7 @@ const PreparationScreensScreen = () => {
         ? 'No se pudo encontrar el servidor. Verifica que el servidor esté encendido y en la misma red.'
         : 'No se pudieron cargar las pantallas de preparación. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      actionText: 'Reintentar',
+      actionLabel: 'Reintentar',
       onAction: handleRefresh,
     },
   });

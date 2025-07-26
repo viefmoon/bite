@@ -2,7 +2,7 @@ import { z } from 'zod';
 import {
   orderTypeSchema,
   orderStatusSchema,
-} from '@/modules/orders/schema/orders.schema';
+} from '@/app/schemas/domain/order.schema';
 
 export type OrderType = z.infer<typeof orderTypeSchema>;
 export type OrderStatus = z.infer<typeof orderStatusSchema>;

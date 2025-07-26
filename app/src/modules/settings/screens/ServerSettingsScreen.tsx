@@ -59,23 +59,6 @@ export function ServerSettingsScreen() {
     },
   );
 
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
-
-  useEffect(() => {
-    if (serverUrl && !loading) {
-      try {
-        const url = new URL(serverUrl);
-        setManualUrl(url.hostname);
-      } catch {
-        // Si no es una URL válida, intentar extraer la IP
-        const cleanUrl = serverUrl.replace(/^https?:\/\//, '').split(':')[0];
-        setManualUrl(cleanUrl);
-      }
-    }
-  }, [serverUrl, loading]);
-
   const loadSettings = useCallback(async () => {
     try {
       const [savedMode, savedUrl] = await Promise.all([
@@ -112,6 +95,23 @@ export function ServerSettingsScreen() {
       setLoading(false);
     }
   }, [serverUrl]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (serverUrl && !loading) {
+      try {
+        const url = new URL(serverUrl);
+        setManualUrl(url.hostname);
+      } catch {
+        // Si no es una URL válida, intentar extraer la IP
+        const cleanUrl = serverUrl.replace(/^https?:\/\//, '').split(':')[0];
+        setManualUrl(cleanUrl);
+      }
+    }
+  }, [serverUrl, loading]);
 
   const validateUrl = (url: string): boolean => {
     // Validar que sea una IP válida o un dominio

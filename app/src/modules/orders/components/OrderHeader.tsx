@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import CartButton from './CartButton';

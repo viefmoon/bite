@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import {
   Surface,
@@ -19,6 +19,22 @@ import { Product } from '@/modules/menu/schema/products.schema';
 import { getImageUrl } from '@/app/lib/imageUtils';
 import { PizzaConfigurationModal } from './PizzaConfigurationModal';
 import { AssociatePizzaToppingsModal } from './AssociatePizzaToppingsModal';
+
+// Custom hook para manejar URLs de imagen
+const useImageUrl = (imagePath: string | null | undefined) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!imagePath) {
+      setImageUrl(null);
+      return;
+    }
+
+    getImageUrl(imagePath).then(setImageUrl);
+  }, [imagePath]);
+
+  return imageUrl;
+};
 
 export function PizzaProductsTab() {
   const theme = useAppTheme();
@@ -55,7 +71,16 @@ export function PizzaProductsTab() {
     return filtered;
   }, [data, searchQuery, filter]);
 
-  const renderProductItem = ({ item }: { item: Product }) => {
+  // Componente para renderizar cada producto
+  const ProductItem = ({ 
+    item, 
+    onConfigure, 
+    onManageIngredients 
+  }: { 
+    item: Product;
+    onConfigure: (product: Product) => void;
+    onManageIngredients: (product: Product) => void;
+  }) => {
     const isConfigured = !!item.pizzaConfiguration;
     const customizations = item.pizzaCustomizations || [];
     const flavorsCount = customizations.filter(
@@ -64,7 +89,7 @@ export function PizzaProductsTab() {
     const ingredientsCount = customizations.filter(
       (c: any) => c.type === 'INGREDIENT',
     ).length;
-    const imageUrl = item.photo?.path ? getImageUrl(item.photo.path) : null;
+    const imageUrl = useImageUrl(item.photo?.path);
     const variantsCount = item.variants?.length || 0;
 
     return (
@@ -108,20 +133,14 @@ export function PizzaProductsTab() {
                 icon="cog"
                 mode="contained-tonal"
                 size={28}
-                onPress={() => {
-                  setSelectedProduct(item);
-                  setConfigModalVisible(true);
-                }}
+                onPress={() => onConfigure(item)}
                 style={styles.actionButton}
               />
               <IconButton
                 icon="cheese"
                 mode="contained-tonal"
                 size={28}
-                onPress={() => {
-                  setSelectedProduct(item);
-                  setIngredientsModalVisible(true);
-                }}
+                onPress={() => onManageIngredients(item)}
                 style={styles.actionButton}
               />
             </View>
@@ -161,6 +180,20 @@ export function PizzaProductsTab() {
       </Surface>
     );
   };
+
+  const renderProductItem = ({ item }: { item: Product }) => (
+    <ProductItem 
+      item={item} 
+      onConfigure={(product) => {
+        setSelectedProduct(product);
+        setConfigModalVisible(true);
+      }}
+      onManageIngredients={(product) => {
+        setSelectedProduct(product);
+        setIngredientsModalVisible(true);
+      }}
+    />
+  );
 
   const hasActiveFilter = filter !== 'all';
 
