@@ -90,14 +90,22 @@ export class TablesService {
     );
   }
 
-  async findByAreaIdPaginated(areaId: string): Promise<Paginated<Table>> {
-    const items = await this.findByAreaId(areaId);
+  async findByAreaIdPaginated(
+    areaId: string,
+    filterOptions?: FindAllTablesDto,
+    paginationOptions?: IPaginationOptions,
+  ): Promise<Paginated<Table>> {
+    // Combinar areaId con los filtros adicionales
+    const combinedFilters: FindAllTablesDto = {
+      ...filterOptions,
+      areaId,
+    };
 
-    return new Paginated(
-      items,
-      items.length,
-      1, // página por defecto
-      100, // límite alto por defecto para mostrar todas las mesas del área
-    );
+    const finalPaginationOptions: IPaginationOptions = {
+      page: paginationOptions?.page || 1,
+      limit: paginationOptions?.limit || 100,
+    };
+
+    return this.findAllPaginated(combinedFilters, finalPaginationOptions);
   }
 }

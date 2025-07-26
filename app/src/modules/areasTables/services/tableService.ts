@@ -30,7 +30,11 @@ const getTables = async (
   return response.data.items;
 };
 
-const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
+const getTablesByAreaId = async (
+  areaId: string,
+  filterOptions: Omit<FindAllTablesDto, 'areaId'> = {},
+  paginationOptions: BaseListQuery = { page: 1, limit: 100 },
+): Promise<Table[]> => {
   const response = await apiClient.get<{
     items: Table[];
     total: number;
@@ -38,7 +42,13 @@ const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
     limit: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  }>(API_PATHS.TABLES_BY_AREA.replace(':areaId', areaId));
+  }>(API_PATHS.TABLES_BY_AREA.replace(':areaId', areaId), {
+    params: {
+      ...filterOptions,
+      page: paginationOptions.page,
+      limit: paginationOptions.limit,
+    },
+  });
 
   return response.data.items;
 };

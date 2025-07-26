@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { OrderTypeEnum, type OrderType } from '../types/orders.types';
+import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 
 interface UseOrderTypeProps {
@@ -86,7 +86,7 @@ export const useOrderType = ({
           // Para llevar, solo mantener nombre y teléfono
           cleanedData.deliveryInfo = {
             recipientName: deliveryInfo.recipientName,
-            phone: deliveryInfo.phone,
+            recipientPhone: deliveryInfo.recipientPhone,
           };
           break;
 

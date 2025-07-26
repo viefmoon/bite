@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersApiService } from '../services';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import type { CreateUserDto, UpdateUserDto, UsersQuery } from '../types';
+import type { CreateUserDto, UpdateUserDto, UsersQuery } from '../schema/user.schema';
 
 const USERS_QUERY_KEY = 'users';
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { Product } from '../types/orders.types';
+import type { Product } from '../schema/orders.schema';
 import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
-import { OrderTypeEnum, type OrderType } from '../types/orders.types';
+import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { OrderItemDtoForBackend } from '../schema/update-order.schema';
@@ -997,8 +997,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
               recipientName: state.deliveryInfo.recipientName,
               recipientPhone: state.deliveryInfo.recipientPhone,
               fullAddress: state.deliveryInfo.fullAddress,
-              reference: state.deliveryInfo.reference,
-              coords: state.deliveryInfo.coords,
+              deliveryInstructions: state.deliveryInfo.deliveryInstructions,
             },
           };
 
@@ -1032,6 +1031,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
             id: isExistingItem ? existingIds[i] : undefined,
             productId: item.productId,
             productVariantId: item.variantId || null,
+            quantity: 1,
             basePrice: Number(item.unitPrice),
             finalPrice: Number(item.totalPrice / item.quantity),
             preparationNotes: item.preparationNotes || null,
@@ -1050,6 +1050,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
           itemsForBackend.push({
             productId: item.productId,
             productVariantId: item.variantId || null,
+            quantity: 1,
             basePrice: Number(item.unitPrice),
             finalPrice: Number(item.totalPrice / item.quantity),
             preparationNotes: item.preparationNotes || null,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGetOrderByIdQuery } from '../../hooks/useOrdersQueries';
 import { useGetOrderMenu } from '../../hooks/useMenuQueries';
-import type { CartItem } from '../../stores/useOrderCreationStore';
+import type { CartItem } from '../../stores/useOrderStore';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 
@@ -36,27 +36,34 @@ export const useOrderEditing = (orderId: string | null, visible: boolean) => {
   // Cargar datos de la orden en el estado original
   useEffect(() => {
     if (orderData && !orderDataLoaded && visible) {
-      const items: CartItem[] = orderData.items.map((item: any) => ({
-        id: item.id,
-        productId: item.productId,
-        productName: item.product.name,
-        productPrice: item.product.price || 0,
-        variantId: item.variantId || undefined,
-        variantName: item.variant?.name || undefined,
-        variantPrice: item.variant?.price || undefined,
-        quantity: item.quantity,
-        modifiers: item.modifiers.map((mod: any) => ({
+      const items: CartItem[] = (orderData.orderItems || []).map((item: any) => {
+        const unitPrice = item.variant?.price || item.product.price || 0;
+        const modifiers = (item.modifiers || []).map((mod: any) => ({
           id: mod.productModifierId,
           modifierGroupId: mod.modifierGroupId,
           name: mod.productModifier.name,
           price: mod.productModifier.price || 0,
-        })),
-        preparationNotes: item.preparationNotes || undefined,
-        pizzaCustomizations: item.pizzaCustomizations || [],
-        pizzaExtraCost: item.pizzaExtraCost || 0,
-        preparationStatus: item.preparationStatus,
-        originalId: item.id,
-      }));
+        }));
+        const modifiersPrice = modifiers.reduce((sum: number, mod) => sum + mod.price, 0);
+        const pizzaExtraCost = item.pizzaExtraCost || 0;
+        const totalPrice = (unitPrice + modifiersPrice + pizzaExtraCost) * item.quantity;
+
+        return {
+          id: item.id,
+          productId: item.productId,
+          productName: item.product.name,
+          unitPrice,
+          totalPrice,
+          variantId: item.variantId || undefined,
+          variantName: item.variant?.name || undefined,
+          quantity: item.quantity,
+          modifiers,
+          preparationNotes: item.preparationNotes || undefined,
+          selectedPizzaCustomizations: item.pizzaCustomizations || undefined,
+          pizzaExtraCost,
+          preparationStatus: item.preparationStatus,
+        };
+      });
 
       const adjustments =
         orderData.adjustments?.map((adj: any) => ({
@@ -71,9 +78,9 @@ export const useOrderEditing = (orderId: string | null, visible: boolean) => {
       const state: OriginalOrderState = {
         items,
         orderType: orderData.orderType,
-        tableId: orderData.tableId,
-        isTemporaryTable: orderData.isTemporaryTable || false,
-        temporaryTableName: orderData.temporaryTableName || '',
+        tableId: orderData.tableId ?? null,
+        isTemporaryTable: orderData.table?.isTemporary || false,
+        temporaryTableName: orderData.table?.name || '',
         deliveryInfo: orderData.deliveryInfo || {},
         notes: orderData.notes || '',
         scheduledAt: orderData.scheduledAt
@@ -149,7 +156,7 @@ export const useOrderEditing = (orderId: string | null, visible: boolean) => {
   // Preparar items para el backend
   const prepareItemsForBackend = useCallback((items: CartItem[]) => {
     return items.map((item) => ({
-      id: item.originalId,
+      id: item.id,
       productId: item.productId,
       variantId: item.variantId || null,
       quantity: item.quantity,
@@ -157,7 +164,7 @@ export const useOrderEditing = (orderId: string | null, visible: boolean) => {
         productModifierId: mod.id,
       })),
       preparationNotes: item.preparationNotes || null,
-      pizzaCustomizations: item.pizzaCustomizations || [],
+      pizzaCustomizations: item.selectedPizzaCustomizations || [],
       pizzaExtraCost: item.pizzaExtraCost || 0,
     }));
   }, []);

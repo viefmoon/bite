@@ -21,8 +21,8 @@ import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useCreateUser, useUpdateUser } from '../hooks';
-import type { User } from '../types';
-import { GenderEnum } from '../types';
+import type { User } from '../schema/user.schema';
+import { GenderEnum } from '../schema/user.schema';
 
 const createUserSchema = z.object({
   username: z

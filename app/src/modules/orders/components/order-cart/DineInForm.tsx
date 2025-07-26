@@ -49,7 +49,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
       data: tablesData = [],
       isLoading: isLoadingTables,
       error: errorTables,
-    } = useGetTablesByAreaId(selectedAreaId || '', { enabled: !!selectedAreaId });
+    } = useGetTablesByAreaId(selectedAreaId || '', {}, { enabled: !!selectedAreaId });
     const selectedAreaName =
       areasData.find((a: any) => a.id === selectedAreaId)?.name ||
       'Selecciona un área';

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { CartItem } from '../../stores/useOrderCreationStore';
+import type { CartItem } from '../../stores/useOrderStore';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 
 export const useOrderCalculations = (
@@ -8,7 +8,7 @@ export const useOrderCalculations = (
 ) => {
   const subtotal = useMemo(() => {
     return items.reduce((total, item) => {
-      const basePrice = item.variantPrice || item.productPrice;
+      const basePrice = item.unitPrice;
       const modifiersPrice = item.modifiers.reduce(
         (sum, mod) => sum + (mod.price || 0),
         0,

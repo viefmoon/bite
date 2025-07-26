@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { CartItem } from '../stores/useOrderCreationStore';
+import type { CartItem } from '../stores/useOrderStore';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { Payment } from '../schema/payment.schema';
 import { PaymentStatusEnum } from '../schema/payment.schema';
@@ -90,8 +90,8 @@ export const useOrderCalculations = ({
     return payments
       .filter(
         (payment) =>
-          payment.status === PaymentStatusEnum.COMPLETED ||
-          payment.status === PaymentStatusEnum.PENDING,
+          payment.paymentStatus === PaymentStatusEnum.COMPLETED ||
+          payment.paymentStatus === PaymentStatusEnum.PENDING,
       )
       .reduce((sum, payment) => sum + payment.amount, 0);
   }, [payments]);

@@ -24,7 +24,7 @@ import {
   Modal,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { OrderTypeEnum } from '../types/orders.types';
+import { OrderTypeEnum } from '../schema/orders.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
@@ -771,6 +771,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 onAddAdjustment={() =>
                   modalHelpers.showAdjustment({
                     adjustmentToEdit: null,
+                    setAdjustmentToEdit: () => {},
                     handleAddAdjustment,
                     handleUpdateAdjustment,
                     subtotal,
@@ -779,6 +780,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                 onEditAdjustment={(adjustment) => {
                   modalHelpers.showAdjustment({
                     adjustmentToEdit: adjustment,
+                    setAdjustmentToEdit: () => {},
                     handleAddAdjustment,
                     handleUpdateAdjustment,
                     subtotal,

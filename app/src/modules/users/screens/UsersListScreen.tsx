@@ -11,8 +11,8 @@ import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useGetUsers, useDeleteUser } from '../hooks';
-import type { User, UsersQuery } from '../types';
-import { RoleEnum } from '../types';
+import type { User, UsersQuery } from '../schema/user.schema';
+import { RoleEnum } from '../schema/user.schema';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export function UsersListScreen() {

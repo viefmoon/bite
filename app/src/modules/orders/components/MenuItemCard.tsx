@@ -4,7 +4,7 @@ import { Card, Title, Text, IconButton } from 'react-native-paper';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import type { Product, Category, SubCategory } from '../types/orders.types';
+import type { Product, Category, SubCategory } from '../schema/orders.schema';
 
 interface MenuItemCardProps {
   item: Category | SubCategory | Product;

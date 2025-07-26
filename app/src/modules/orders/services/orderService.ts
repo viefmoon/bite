@@ -1,7 +1,7 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Order } from '../../../app/schemas/domain/order.schema';
-import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
+import type { FindAllOrdersDto, OrderOpenList } from '../schema/orders.schema';
 import type { PaginatedResponse } from '../../../app/types/api.types';
 import type { OrderDetailsForBackend } from '../stores/useOrderStore';
 import type { UpdateOrderPayload } from '../schema/update-order.schema';

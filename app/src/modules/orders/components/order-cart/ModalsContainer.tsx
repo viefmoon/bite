@@ -7,7 +7,7 @@ import { OrderDetailModal } from '../OrderDetailModal';
 import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal';
 import PaymentModal from '../PaymentModal';
 import { AdjustmentFormModal } from '../AdjustmentFormModal';
-import { OrderTypeEnum } from '../../types/orders.types';
+import { OrderTypeEnum } from '../../schema/orders.schema';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import { useModalStore, modalHelpers } from '../../stores/useModalStore';
 

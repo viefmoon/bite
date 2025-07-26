@@ -6,7 +6,7 @@ import type {
   UpdateUserDto,
   UsersQuery,
   UsersResponse,
-} from '../types';
+} from '../schema/user.schema';
 
 export const usersApiService = {
   async findAll(params?: UsersQuery): Promise<UsersResponse> {

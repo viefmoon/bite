@@ -89,8 +89,16 @@ export class TablesController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  findByAreaId(@Param('areaId') areaId: string): Promise<Paginated<Table>> {
-    return this.tablesService.findByAreaIdPaginated(areaId);
+  findByAreaId(
+    @Param('areaId') areaId: string,
+    @Query() filterOptions: FindAllTablesDto,
+    @Query('page') page = 1,
+    @Query('limit') limit = 100,
+  ): Promise<Paginated<Table>> {
+    return this.tablesService.findByAreaIdPaginated(areaId, filterOptions, {
+      page,
+      limit,
+    } as IPaginationOptions);
   }
 
   @Get(':id')

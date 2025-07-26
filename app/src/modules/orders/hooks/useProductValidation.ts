@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
-import { Product } from '../types/orders.types';
+import { Product } from '../schema/orders.schema';
 import { CartItemModifier } from '../stores/useOrderStore';
 import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {
   PizzaCustomization,
-  CustomizationType,
-  CustomizationAction,
+  CustomizationActionEnum,
 } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 
@@ -47,24 +46,52 @@ export const useProductValidation = ({
       });
     }
 
-    // Validar pizzas - deben tener al menos un sabor
+    // Validar pizzas - deben tener al menos un sabor o ingrediente
     if (product.isPizza && pizzaConfiguration) {
-      const selectedFlavors = selectedPizzaCustomizations.filter(
-        (sc) =>
-          sc.action === CustomizationAction.ADD &&
-          pizzaCustomizations.some(
-            (pc) =>
-              pc.id === sc.pizzaCustomizationId &&
-              pc.type === CustomizationType.FLAVOR,
-          ),
+      const addedCustomizations = selectedPizzaCustomizations.filter(
+        (sc) => sc.action === CustomizationActionEnum.ADD
       );
 
-      const minFlavors = pizzaConfiguration.minFlavors || 1;
-      if (selectedFlavors.length < minFlavors) {
-        errors.push({
-          field: 'pizza',
-          message: `Selecciona al menos ${minFlavors} ${minFlavors === 1 ? 'sabor' : 'sabores'}`,
-        });
+      // Verificar elementos en cada mitad (lógica igual que en handleAddToCart)
+      const fullPizzaElements = addedCustomizations.filter(
+        (sc) => sc.half === 'FULL'
+      );
+      
+      const half1Elements = addedCustomizations.filter(
+        (sc) => sc.half === 'HALF_1'
+      );
+      
+      const half2Elements = addedCustomizations.filter(
+        (sc) => sc.half === 'HALF_2'
+      );
+
+      // Si hay elementos en pizza completa, es válido
+      if (fullPizzaElements.length > 0) {
+        // La pizza completa cubre ambas mitades - no hay errores
+      } else {
+        // Si no hay elementos en pizza completa, verificar que ambas mitades tengan al menos un elemento
+        if (half1Elements.length === 0 && half2Elements.length === 0) {
+          // Si no hay nada en ninguna parte
+          errors.push({
+            field: 'pizza',
+            message: 'La pizza debe tener al menos un sabor o ingrediente',
+          });
+        } else {
+          // Si hay elementos pero alguna mitad está vacía
+          if (half1Elements.length === 0) {
+            errors.push({
+              field: 'pizza',
+              message: 'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
+            });
+          }
+          
+          if (half2Elements.length === 0) {
+            errors.push({
+              field: 'pizza',
+              message: 'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
+            });
+          }
+        }
       }
     }
 

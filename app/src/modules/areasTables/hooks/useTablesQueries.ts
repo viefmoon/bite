@@ -15,8 +15,8 @@ const tablesQueryKeys = {
   lists: () => [...tablesQueryKeys.all, 'list'] as const,
   list: (filters: FindAllTablesDto & BaseListQuery) =>
     [...tablesQueryKeys.lists(), filters] as const,
-  listsByArea: (areaId: string) =>
-    [...tablesQueryKeys.lists(), { areaId }] as const,
+  listsByArea: (areaId: string, filters?: Omit<FindAllTablesDto, 'areaId'>) =>
+    [...tablesQueryKeys.lists(), { areaId, ...filters }] as const,
   details: () => [...tablesQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...tablesQueryKeys.details(), id] as const,
 };
@@ -34,12 +34,13 @@ export const useGetTables = (
 
 export const useGetTablesByAreaId = (
   areaId: string | null,
+  filters: Omit<FindAllTablesDto, 'areaId'> = {},
   options?: { enabled?: boolean },
 ) => {
-  const queryKey = tablesQueryKeys.listsByArea(areaId!);
+  const queryKey = tablesQueryKeys.listsByArea(areaId!, filters);
   return useQuery<Table[], Error>({
     queryKey,
-    queryFn: () => tableService.getTablesByAreaId(areaId!),
+    queryFn: () => tableService.getTablesByAreaId(areaId!, filters),
     enabled: !!areaId && (options?.enabled ?? true),
   });
 };

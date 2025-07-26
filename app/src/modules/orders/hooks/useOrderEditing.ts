@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { CartItem } from '../stores/useOrderCreationStore';
-import { Product } from '../types/orders.types';
+import { CartItem } from '../stores/useOrderStore';
+import { Product } from '../schema/orders.schema';
 
 interface UseOrderEditingProps {
   isEditMode: boolean;
@@ -41,14 +41,14 @@ export const useOrderEditing = ({
                 name: item.variantName || '',
                 price: item.unitPrice,
                 isActive: true,
+                sortOrder: 0,
               },
             ]
           : [],
         modifierGroups: [],
         photo: null,
-        categoryId: '',
-        subCategoryId: '',
-        restaurantId: '',
+        subcategoryId: '',
+        sortOrder: 0,
         preparationScreenId: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

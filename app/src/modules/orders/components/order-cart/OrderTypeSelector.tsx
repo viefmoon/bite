@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
-import { OrderTypeEnum, type OrderType } from '../../types/orders.types';
+import { OrderTypeEnum, type OrderType } from '../../schema/orders.schema';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface OrderTypeSelectorProps {

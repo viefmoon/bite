@@ -11,6 +11,19 @@ import { prefetchMenuImages } from '@/app/lib/imageCache';
 const orderMenuQueryKey = ['orderMenu'];
 
 /**
+ * Hook para obtener el menú completo con todas las relaciones.
+ * Usado para validar modificadores y configuraciones.
+ */
+export function useFullMenuQuery() {
+  return useQuery<FullMenuCategory[], ApiError>({
+    queryKey: ['fullMenu'],
+    queryFn: getOrderMenu,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
  * Hook para obtener el menú en pantallas de creación y edición de órdenes.
  * Devuelve solo los campos necesarios para mejorar el rendimiento.
  */
@@ -24,7 +37,7 @@ export function useGetOrderMenu() {
     refetchOnMount: true,
     staleTime: 5000, // Los datos se consideran frescos por 5 segundos
     // IMPORTANTE: Mantener datos previos durante refetch para evitar parpadeos
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
     // No mostrar loading en refetch para mantener la UI estable
     notifyOnChangeProps: ['data', 'error'],
   });

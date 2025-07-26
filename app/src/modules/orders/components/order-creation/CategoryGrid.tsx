@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import { Category, SubCategory, Product } from '../../types/orders.types';
+import { Category, SubCategory, Product, FullMenuCategory } from '../../schema/orders.schema';
 import CartButton from '../CartButton';
 import { useOrderStore, CartItem } from '../../stores/useOrderStore';
 import { CategoryQuickAccess } from './CategoryQuickAccess';
@@ -26,11 +26,11 @@ interface CategoryGridProps {
   onBack: () => void;
   onProductInfo?: (product: Product) => void;
   showCartButton: boolean;
-  cartButtonRef: React.RefObject<{ animate: () => void }>;
+  cartButtonRef: React.RefObject<{ animate: () => void } | null>;
   totalItemsCount: number;
   onViewCart: () => void;
   cartItems?: CartItem[];
-  categories?: Category[];
+  categories?: FullMenuCategory[];
   selectedCategoryId?: string | null;
   onCategoryQuickSelect?: (categoryId: string) => void;
 }

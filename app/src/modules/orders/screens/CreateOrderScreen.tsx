@@ -13,7 +13,7 @@ import {
 } from '../stores/useOrderStore';
 import { useAuthStore } from '@/app/store/authStore';
 
-import { Product, Category, SubCategory } from '../types/orders.types';
+import { Product, Category, SubCategory } from '../schema/orders.schema';
 import OrderCartDetail from '../components/OrderCartDetail';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';

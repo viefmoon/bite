@@ -78,7 +78,7 @@ export const ReceiptsScreen: React.FC = () => {
   useRefreshModuleOnFocus('receipts');
 
   const receipts = useMemo(() => {
-    if (!allReceipts) return [];
+    if (!allReceipts || !Array.isArray(allReceipts)) return [];
 
     let filtered = [...allReceipts];
 

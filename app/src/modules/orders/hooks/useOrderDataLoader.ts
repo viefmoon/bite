@@ -1,9 +1,9 @@
 import { useEffect, useCallback } from 'react';
-import type { CartItem } from '../stores/useOrderCreationStore';
+import type { CartItem } from '../stores/useOrderStore';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
-import type { OrderType } from '../types/orders.types';
-import { useFullMenuQuery } from '@/modules/products/hooks/useFullMenuQuery';
+import type { OrderType } from '../schema/orders.schema';
+import { useFullMenuQuery } from './useMenuQueries';
 
 interface CartItemModifier {
   id: string;
@@ -55,16 +55,20 @@ export const useOrderDataLoader = ({
     (modifierId: string) => {
       if (!fullMenuData) return null;
 
-      for (const product of fullMenuData) {
-        for (const group of product.modifierGroups || []) {
-          for (const modifier of group.modifiers || []) {
-            if (modifier.id === modifierId) {
-              return {
-                id: modifier.id,
-                modifierGroupId: group.id,
-                name: modifier.name,
-                price: modifier.price,
-              };
+      for (const category of fullMenuData) {
+        for (const subcategory of category.subcategories || []) {
+          for (const product of subcategory.products || []) {
+            for (const group of product.modifierGroups || []) {
+              for (const modifier of group.productModifiers || []) {
+                if (modifier.id === modifierId) {
+                  return {
+                    id: modifier.id,
+                    modifierGroupId: group.id,
+                    name: modifier.name,
+                    price: modifier.price || 0,
+                  };
+                }
+              }
             }
           }
         }
@@ -143,7 +147,7 @@ export const useOrderDataLoader = ({
               id: mod.id,
               modifierGroupId: mod.modifierGroupId || '',
               name: mod.name || 'Modificador',
-              price: parseFloat(mod.price) || 0,
+              price: parseFloat(mod.price?.toString() || '0') || 0,
             };
             modifiers.push(modifierInfo);
           });

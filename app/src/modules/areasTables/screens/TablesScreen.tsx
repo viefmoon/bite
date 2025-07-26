@@ -47,7 +47,14 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     isError: isErrorTables,
     refetch: refetchTables,
     isRefetching,
-  } = useGetTablesByAreaId(areaId, { enabled: !!areaId });
+  } = useGetTablesByAreaId(
+    areaId,
+    {
+      name: searchQuery || undefined,
+      isActive: filterStatus === 'all' ? undefined : filterStatus === 'true',
+    },
+    { enabled: !!areaId },
+  );
 
   useRefreshModuleOnFocus('tables');
 
@@ -68,7 +75,15 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     deleteConfirmation,
   } = useCrudScreenLogic<Table & { id: string }>({
     entityName: 'Mesa',
-    queryKey: ['tables', areaId],
+    queryKey: [
+      'tables',
+      'list',
+      {
+        areaId,
+        name: searchQuery || undefined,
+        isActive: filterStatus === 'all' ? undefined : filterStatus === 'true',
+      },
+    ],
     deleteMutationFn: deleteTable,
   });
 
@@ -154,31 +169,11 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     refetchTables();
   }, [refetchTables]);
 
-  const filteredAndSearchedTables = useMemo(() => {
-    let processed = [...tablesData];
-
-    const isActiveFilter =
-      filterStatus === 'all' ? undefined : filterStatus === 'true';
-    if (isActiveFilter !== undefined) {
-      processed = processed.filter(
-        (table) => table.isActive === isActiveFilter,
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      processed = processed.filter((table) =>
-        table.name.toLowerCase().includes(lowerCaseQuery),
-      );
-    }
-
-    return processed;
-  }, [tablesData, filterStatus, searchQuery]);
 
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingTables,
     isError: isErrorTables,
-    data: filteredAndSearchedTables,
+    data: tablesData,
     emptyConfig: {
       title: 'No hay mesas',
       message: `No hay mesas registradas en ${areaName}. Presiona el botón + para crear la primera.`,
@@ -195,7 +190,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <GenericList<Table>
-        items={filteredAndSearchedTables}
+        items={tablesData}
         renderConfig={listRenderConfig}
         onItemPress={handleOpenDetailModal}
         onRefresh={handleRefresh}

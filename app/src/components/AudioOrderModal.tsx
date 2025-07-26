@@ -137,7 +137,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     data: tablesData,
     isLoading: isLoadingTables,
     error: errorTables,
-  } = useGetTablesByAreaId(editableSelectedAreaId);
+  } = useGetTablesByAreaId(editableSelectedAreaId, {});
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Nombres computed para área y mesa

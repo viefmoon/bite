@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { Category } from '../../types/orders.types';
+import { Category } from '../../schema/orders.schema';
 
 interface CategoryQuickAccessProps {
   categories: Category[];

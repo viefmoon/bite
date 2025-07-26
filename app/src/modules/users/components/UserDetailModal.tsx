@@ -15,7 +15,7 @@ import {
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useResetPassword, useDeleteUser } from '../hooks';
-import type { User } from '../types';
+import type { User } from '../schema/user.schema';
 
 interface UserDetailModalProps {
   visible: boolean;

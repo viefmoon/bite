@@ -22,7 +22,7 @@ import {
   ProductVariant,
   Modifier,
   FullMenuModifierGroup,
-} from '../types/orders.types';
+} from '../schema/orders.schema';
 import { CartItemModifier, CartItem } from '../stores/useOrderStore';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
@@ -382,22 +382,51 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         return;
       }
 
-      // Validar pizzas - deben tener al menos un sabor
+      // Validar pizzas - cada mitad debe tener al menos un elemento (sabor o ingrediente)
       if (product.isPizza && pizzaConfiguration) {
-        const selectedFlavors = selectedPizzaCustomizations.filter(
-          (sc) =>
-            sc.action === CustomizationActionEnum.ADD &&
-            pizzaCustomizations.some(
-              (pc) =>
-                pc.id === sc.pizzaCustomizationId &&
-                pc.type === CustomizationTypeEnum.FLAVOR,
-            ),
+        const addedCustomizations = selectedPizzaCustomizations.filter(
+          (sc) => sc.action === CustomizationActionEnum.ADD,
         );
 
-        const minFlavors = pizzaConfiguration.minFlavors || 1;
-        if (selectedFlavors.length < minFlavors) {
+        // Verificar elementos en cada mitad
+        const fullPizzaElements = addedCustomizations.filter(
+          (sc) => sc.half === PizzaHalfEnum.FULL,
+        );
+        
+        const half1Elements = addedCustomizations.filter(
+          (sc) => sc.half === PizzaHalfEnum.HALF_1,
+        );
+        
+        const half2Elements = addedCustomizations.filter(
+          (sc) => sc.half === PizzaHalfEnum.HALF_2,
+        );
+
+        // Si hay elementos en pizza completa, es válido
+        if (fullPizzaElements.length > 0) {
+          // La pizza completa cubre ambas mitades
+        } else {
+          // Si no hay elementos en pizza completa, verificar que ambas mitades tengan al menos un elemento
+          if (half1Elements.length === 0) {
+            showSnackbar({
+              message: 'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
+              type: 'error',
+            });
+            return;
+          }
+          
+          if (half2Elements.length === 0) {
+            showSnackbar({
+              message: 'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
+              type: 'error',
+            });
+            return;
+          }
+        }
+
+        // Verificar que al menos hay un elemento en total
+        if (addedCustomizations.length === 0) {
           showSnackbar({
-            message: `Debes seleccionar al menos ${minFlavors} ${minFlavors === 1 ? 'sabor' : 'sabores'} para tu pizza`,
+            message: 'La pizza debe tener al menos un sabor o ingrediente',
             type: 'error',
           });
           return;
@@ -512,7 +541,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
 
     const selectedVariant = useMemo(
       () =>
-        hasVariants && product
+        hasVariants && product && product.variants
           ? product.variants.find(
               (variant: ProductVariant) => variant.id === selectedVariantId,
             )
