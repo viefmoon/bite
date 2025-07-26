@@ -198,7 +198,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     return renderDrawerItem(route, label, icon, () => {
       // For kitchen users in KitchenOnlyNavigator, handle navigation differently
       const isKitchenUser = user?.role?.id === 5;
-      if (isKitchenUser && route === 'KitchenStack') {
+      if (isKitchenUser && route === 'KitchenScreen') {
         // Simply navigate to the Kitchen screen without reset
         props.navigation.navigate('Kitchen');
       } else {
@@ -281,11 +281,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           )}
 
           {/* Sección de Cocina - Solo para usuarios con rol kitchen */}
-          {hasPermission(user?.role?.id, 'KitchenStack') && (
+          {hasPermission(user?.role?.id, 'KitchenScreen') && (
             <PaperDrawer.Section style={styles.drawerSection}>
               <Text style={styles.configSubheader}>Cocina</Text>
               {renderDrawerItemSimple(
-                'KitchenStack',
+                'KitchenScreen',
                 'Pantalla de Preparación',
                 'chef-hat',
               )}

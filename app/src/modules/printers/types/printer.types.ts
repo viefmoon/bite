@@ -24,7 +24,3 @@ export type FindAllThermalPrintersDto = z.infer<
   BaseListQueryDto; // Combinar con paginación base
 export type DiscoveredPrinter = z.infer<typeof discoveredPrinterSchema>;
 export type PrinterConnectionType = z.infer<typeof PrinterConnectionTypeSchema>;
-
-// Las interfaces originales se comentan o eliminan ya que los tipos Zod son la fuente de verdad
-// export interface DiscoveredPrinter { ... }
-// export interface ThermalPrinter { ... }

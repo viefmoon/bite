@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Schemas moved from auth.types.ts
 export const loginSchema = z.object({
   emailOrUsername: z
     .string()

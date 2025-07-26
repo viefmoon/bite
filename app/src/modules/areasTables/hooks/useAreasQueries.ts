@@ -5,7 +5,7 @@ import {
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,
-} from '../schema/area.schema'; // Corregida ruta de importación
+} from '../schema/area.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';

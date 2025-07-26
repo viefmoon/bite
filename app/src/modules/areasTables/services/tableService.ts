@@ -84,9 +84,8 @@ export const tableService = {
   deleteTable,
 };
 
-// Claves de Query para tablas relacionadas con áreas
 const tableQueryKeys = {
-  base: ['tables'] as const, // Clave base para todas las tablas
+  base: ['tables'] as const,
   byArea: (areaId: string | null | undefined) =>
     [...tableQueryKeys.base, 'area', areaId] as const,
 };
@@ -101,6 +100,5 @@ export function useGetTablesByArea(areaId: string | null | undefined) {
       return tableService.getTablesByAreaId(areaId);
     },
     enabled: !!areaId,
-    // Sin staleTime, se usará la configuración global (0)
   });
 }

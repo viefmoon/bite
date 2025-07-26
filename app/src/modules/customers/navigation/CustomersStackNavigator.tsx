@@ -25,11 +25,6 @@ export function CustomersStackNavigator() {
           title: 'Clientes',
         }}
       />
-      {/* Aquí se pueden agregar más pantallas como:
-          - CustomerDetail
-          - CustomerAddresses
-          - CustomerChatHistory
-      */}
     </Stack.Navigator>
   );
 }

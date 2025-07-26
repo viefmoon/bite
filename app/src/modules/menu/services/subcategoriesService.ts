@@ -43,7 +43,6 @@ const findAllSubcategories = async (
     hasPrevPage: boolean;
   }>(API_PATHS.SUBCATEGORIES, { params: queryParams });
 
-  // Transforma la respuesta del backend a PaginatedResponse
   return {
     data: response.data.items,
     total: response.data.total,

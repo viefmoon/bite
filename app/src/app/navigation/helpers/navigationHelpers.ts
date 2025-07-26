@@ -7,7 +7,7 @@ export const ALL_DRAWER_ROUTES: DrawerSection[] = [
   'ReceiptsStack',
   'OrderFinalizationStack',
   'MenuStack',
-  'AvailabilityStack',
+  'AvailabilityScreen',
   'ModifiersStack',
   'PizzaCustomizationsStack',
   'PreparationScreensStack',
@@ -16,9 +16,9 @@ export const ALL_DRAWER_ROUTES: DrawerSection[] = [
   'RestaurantConfigStack',
   'CustomersStack',
   'SyncStack',
-  'UsersStack',
+  'UsersScreen',
   'ShiftAuditStack',
-  'KitchenStack',
+  'KitchenScreen',
 ];
 
 // Mapa de rutas a sus pantallas iniciales
@@ -27,7 +27,7 @@ export const ROUTE_INITIAL_SCREENS: Record<DrawerSection, string> = {
   ReceiptsStack: 'ReceiptsList',
   OrderFinalizationStack: 'OrderFinalizationScreen',
   MenuStack: 'CategoriesScreen',
-  AvailabilityStack: 'AvailabilityScreen',
+  AvailabilityScreen: 'AvailabilityScreen',
   ModifiersStack: 'ModifierGroupsScreen',
   PizzaCustomizationsStack: 'PizzaCustomizationsList',
   PreparationScreensStack: 'PreparationScreensList',
@@ -36,9 +36,9 @@ export const ROUTE_INITIAL_SCREENS: Record<DrawerSection, string> = {
   RestaurantConfigStack: 'RestaurantConfig',
   CustomersStack: 'Customers',
   SyncStack: 'SyncStatus',
-  UsersStack: 'UsersList',
+  UsersScreen: 'UsersScreen',
   ShiftAuditStack: 'ShiftsList',
-  KitchenStack: 'KitchenOrders',
+  KitchenScreen: 'KitchenScreen',
 };
 
 // Helper para generar la acción de navegación

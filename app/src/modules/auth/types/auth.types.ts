@@ -14,6 +14,3 @@ export interface AuthState {
 export interface RegisterResponseDto {
   message: string;
 }
-
-// Zod schemas (loginSchema, authResponseSchema, etc.)
-// are defined in ../schema/auth.schema.ts

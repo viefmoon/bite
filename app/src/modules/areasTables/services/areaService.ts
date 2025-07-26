@@ -62,7 +62,6 @@ const deleteArea = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.AREAS_BY_ID.replace(':id', id));
 };
 
-// Claves de Query para áreas
 const areaQueryKeys = {
   all: ['areas'] as const,
 };
@@ -75,13 +74,9 @@ export const areaService = {
   deleteArea,
 };
 
-/**
- * Hook para obtener la lista de todas las áreas activas usando React Query.
- */
 export function useGetAreas() {
   return useQuery<Area[], ApiError>({
     queryKey: areaQueryKeys.all,
-    queryFn: () => areaService.getAreas(), // Llama a getAreas sin argumentos para obtener todos por defecto
-    // Sin staleTime, se usará la configuración global (0)
+    queryFn: () => areaService.getAreas(),
   });
 }

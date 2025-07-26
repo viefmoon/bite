@@ -1,4 +1,3 @@
-// Pure TypeScript types remain here
 export type ModifierFormInputs = {
   name: string;
   description?: string | null;
@@ -7,6 +6,3 @@ export type ModifierFormInputs = {
   isDefault?: boolean;
   isActive?: boolean;
 };
-
-// Zod schemas (Modifier, CreateModifierInput, UpdateModifierInput, etc.)
-// are defined in ../schema/modifier.schema.ts

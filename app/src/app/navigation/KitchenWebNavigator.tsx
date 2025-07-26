@@ -9,7 +9,7 @@ import {
 import { Icon, Surface, Checkbox } from 'react-native-paper';
 import { WebDrawer } from './components/WebDrawer';
 import { WebDrawerContent } from './components/WebDrawerContent';
-import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
+import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';
 import { useAppTheme } from '../styles/theme';
 import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
@@ -192,7 +192,7 @@ export function KitchenWebNavigator() {
 
             {/* Content */}
             <View style={styles.content}>
-              <KitchenNavigator />
+              <KitchenOrdersScreen />
             </View>
           </View>
         </WebDrawer>
