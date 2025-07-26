@@ -54,9 +54,5 @@ export function useServerConnection(): ServerConnectionState {
     };
   }, []);
 
-  const retry = useCallback(() => {
-    serverConnectionService.retry();
-  }, []);
-
   return state;
 }

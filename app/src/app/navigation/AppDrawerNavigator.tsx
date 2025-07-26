@@ -23,7 +23,6 @@ import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavig
 import { UsersListScreen } from '../../modules/users/screens/UsersListScreen';
 import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';
 import { ShiftAuditStackNavigator } from '../../modules/shiftAudit/navigation/ShiftAuditStackNavigator';
-import { SettingsStackNavigator } from '../../modules/settings/navigation/SettingsStackNavigator';
 import { ServerSettingsScreen } from '../../modules/settings/screens/ServerSettingsScreen';
 
 import { CustomDrawerContent } from './components/CustomDrawerContent';
@@ -36,7 +35,7 @@ import { ShiftIndicator } from '../components/ShiftIndicator';
 import { useAuthStore } from '../store/authStore';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
 import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
-import { OrderType } from '../../modules/kitchen/types/kitchen.types';
+import { OrderTypeEnum } from '../../modules/kitchen/schema/kitchen.schema';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 
@@ -51,11 +50,11 @@ export function AppDrawerNavigator() {
   // Obtener el texto del filtro activo
   const getFilterText = () => {
     switch (filters.orderType) {
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return ' • Mesa';
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return ' • Llevar';
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return ' • Domicilio';
       default:
         return '';
@@ -115,13 +114,13 @@ export function AppDrawerNavigator() {
           drawerInactiveTintColor: theme.colors.onSurfaceVariant,
           drawerLabelStyle: {
             ...theme.fonts.labelLarge,
-            fontSize: responsive.fontSize.m,
+            fontSize: responsive.fontSizePreset.m,
           },
           drawerItemStyle: {
-            marginVertical: responsive.spacing.xxs,
+            marginVertical: responsive.spacingPreset.xxs,
             borderRadius: theme.roundness * 2,
-            paddingVertical: responsive.spacing.xxs,
-            paddingHorizontal: responsive.spacing.xs,
+            paddingVertical: responsive.spacingPreset.xxs,
+            paddingHorizontal: responsive.spacingPreset.xs,
           },
           headerShown: true,
           drawerType: 'front',

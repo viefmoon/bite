@@ -331,19 +331,19 @@ export async function prefetchMenuImages(
 ) {
   const imagePaths: string[] = [];
 
-  menuData.forEach((category) => {
+  menuData.forEach((category: any) => {
     if (category.photo?.path) {
       imagePaths.push(category.photo.path);
     }
 
     if (category.subcategories) {
-      category.subcategories.forEach((subcategory) => {
+      category.subcategories.forEach((subcategory: any) => {
         if (subcategory.photo?.path) {
           imagePaths.push(subcategory.photo.path);
         }
 
         if (subcategory.products) {
-          subcategory.products.forEach((product) => {
+          subcategory.products.forEach((product: any) => {
             if (product.photo?.path) {
               imagePaths.push(product.photo.path);
             }

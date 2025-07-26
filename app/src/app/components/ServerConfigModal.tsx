@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -21,7 +21,6 @@ import {
 } from 'react-native-paper';
 import { useSnackbar } from '@/hooks/useSnackbar';
 import {
-  serverConnectionService,
   ConnectionMode,
 } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';

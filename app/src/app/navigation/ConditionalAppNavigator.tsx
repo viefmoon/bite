@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Portal, Dialog, Button, Text } from 'react-native-paper';
 import { useAuthStore } from '../store/authStore';

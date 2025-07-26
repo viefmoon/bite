@@ -9,14 +9,13 @@ export const getDrawerHeaderOptions = (
 ): DrawerNavigationOptions => ({
   headerStyle: {
     backgroundColor: theme.colors.primary,
-    height: responsive?.dimensions.headerHeight,
   },
   headerTintColor: theme.colors.onPrimary,
   headerTitleStyle: {
     ...theme.fonts.titleLarge,
     color: theme.colors.onPrimary,
     fontWeight: 'bold',
-    fontSize: responsive?.fontSize.xl,
+    fontSize: responsive?.fontSizePreset.xl,
   },
   headerShadowVisible: false,
 });
@@ -27,14 +26,13 @@ export const getStackHeaderOptions = (
 ): NativeStackNavigationOptions => ({
   headerStyle: {
     backgroundColor: theme.colors.elevation.level2,
-    height: responsive?.dimensions.headerHeight,
   },
   headerTintColor: theme.colors.onSurface,
   headerTitleStyle: {
     ...theme.fonts.titleMedium,
     color: theme.colors.onSurface,
     fontWeight: 'bold',
-    fontSize: responsive?.fontSize.l,
+    fontSize: responsive?.fontSizePreset.l,
   },
   headerTitleAlign: 'center',
   headerShadowVisible: false,

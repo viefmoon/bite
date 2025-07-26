@@ -17,7 +17,7 @@ export function zodResolver<T extends FieldValues>(schema: ZodSchema<T>) {
         zodError.errors.forEach((err) => {
           const path = err.path.join('.');
           if (path) {
-            fieldErrors[path as keyof T] = {
+            (fieldErrors as any)[path] = {
               type: err.code,
               message: err.message,
             };

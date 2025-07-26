@@ -20,7 +20,7 @@ import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
-import { RoleEnum } from '@/modules/users/types/user.types';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 interface WebDrawerContentProps {
   onClose: () => void;

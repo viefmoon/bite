@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import {
   Drawer as PaperDrawer,
@@ -9,7 +9,6 @@ import {
   TouchableRipple,
   Icon,
   Surface,
-  IconButton,
 } from 'react-native-paper';
 import { useThemeStore } from '../../store/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
@@ -24,8 +23,7 @@ import {
   DrawerSection,
 } from '../../constants/rolePermissions';
 import { generateNavigationAction } from '../helpers/navigationHelpers';
-import { RoleEnum } from '@/modules/users/types/user.types';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
@@ -130,7 +128,6 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const navigation = useNavigation<any>();
 
   const styles = React.useMemo(
     () => createStyles(theme, responsive),

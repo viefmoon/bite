@@ -168,35 +168,6 @@ export class DiscoveryService {
     }
   }
 
-  /**
-   * Verifica si un servidor está disponible
-   */
-  private async checkServer(url: string): Promise<boolean> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      NETWORK_CONFIG.DISCOVERY_TIMEOUT,
-    );
-
-    try {
-      const response = await fetch(`${url}${DISCOVERY_ENDPOINT}`, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) return false;
-
-      const data: DiscoveryResponse = await response.json();
-      return data.type === 'cloudbite-api';
-    } catch (error) {
-      return false;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
 
   private async discoverBackend(): Promise<string | null> {
     // Si ya hay un descubrimiento en progreso, devolver la promesa existente
@@ -372,7 +343,7 @@ export class DiscoveryService {
   }
 
   private detectCurrentSubnet(): string[] {
-    return NETWORK_CONFIG.COMMON_SUBNETS;
+    return [...NETWORK_CONFIG.COMMON_SUBNETS];
   }
 
   /**

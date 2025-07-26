@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   BackHandler,
   TouchableOpacity,
@@ -20,7 +20,7 @@ import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFil
 import { RefreshButton } from '../../modules/kitchen/components/RefreshButton';
 import { useAuthStore } from '../store/authStore';
 import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
-import { OrderType } from '../../modules/kitchen/types/kitchen.types';
+import { OrderTypeEnum } from '../../modules/kitchen/schema/kitchen.schema';
 import { KitchenProvider } from '../../modules/kitchen/context/KitchenContext';
 
 const Drawer = createDrawerNavigator();
@@ -34,11 +34,11 @@ function KitchenOnlyNavigatorContent() {
   // Obtener el texto del filtro activo
   const getFilterText = () => {
     switch (filters.orderType) {
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return ' • Mesa';
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return ' • Llevar';
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return ' • Domicilio';
       default:
         return '';
@@ -129,13 +129,13 @@ function KitchenOnlyNavigatorContent() {
           drawerInactiveTintColor: theme.colors.onSurfaceVariant,
           drawerLabelStyle: {
             ...theme.fonts.labelLarge,
-            fontSize: responsive.fontSize.m,
+            fontSize: responsive.fontSizePreset.m,
           },
           drawerItemStyle: {
-            marginVertical: responsive.spacing.xxs,
+            marginVertical: responsive.spacingPreset.xxs,
             borderRadius: theme.roundness * 2,
-            paddingVertical: responsive.spacing.xxs,
-            paddingHorizontal: responsive.spacing.xs,
+            paddingVertical: responsive.spacingPreset.xxs,
+            paddingHorizontal: responsive.spacingPreset.xs,
           },
           headerShown: true,
           drawerType: 'slide',

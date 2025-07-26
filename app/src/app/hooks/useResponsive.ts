@@ -19,7 +19,7 @@ import {
   normalizeDPI,
 } from '@/app/styles/responsive';
 
-interface ResponsiveInfo {
+export interface ResponsiveInfo {
   // Dimensiones de pantalla
   width: number;
   height: number;
