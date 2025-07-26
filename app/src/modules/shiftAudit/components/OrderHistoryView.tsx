@@ -911,7 +911,10 @@ const HistoryItemComponent: React.FC<{
                         {item.diff.order?.fields &&
                           Object.entries(item.diff.order.fields).map(
                             ([field, values]) => (
-                              <View key={field} style={styles.changeSectionContainer}>
+                              <View
+                                key={field}
+                                style={styles.changeSectionContainer}
+                              >
                                 <Text
                                   variant="labelSmall"
                                   style={[
@@ -1225,10 +1228,8 @@ const HistoryItemComponent: React.FC<{
                           variant="labelSmall"
                           style={[
                             styles.changeSectionTitle,
-                            {
-                              color: theme.colors.onSurfaceVariant,
-                              textTransform: 'none',
-                            },
+                            styles.noTextTransform,
+                            { color: theme.colors.onSurfaceVariant },
                           ]}
                         >
                           {field}:
@@ -1284,9 +1285,10 @@ const HistoryItemComponent: React.FC<{
                     key={idx}
                     style={[
                       styles.batchOperationContainer,
+                      idx < item.batchOperations!.length - 1
+                        ? styles.batchOperationMarginBottom
+                        : styles.batchOperationNoMargin,
                       {
-                        marginBottom:
-                          idx < item.batchOperations!.length - 1 ? 12 : 0,
                         borderLeftColor: theme.colors.primary + '30',
                       },
                     ]}
@@ -1890,8 +1892,14 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) => {
     noTextTransform: {
       textTransform: 'none',
     },
-    dynamicMarginBottom: {
-      // Este será usado con lógica condicional inline
+    conditionalMarginBottom: {
+      // Este estilo será combinado con marginBottom dinámico
+    },
+    batchOperationMarginBottom: {
+      marginBottom: 12,
+    },
+    batchOperationNoMargin: {
+      marginBottom: 0,
     },
   });
 };
