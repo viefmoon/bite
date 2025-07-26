@@ -202,9 +202,9 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     if (isFullScreen) return 0;
 
     if (responsive.isTablet) {
-      return paddingTablet || padding || responsive.spacing.l;
+      return paddingTablet || padding || responsive.spacingPreset.l;
     } else {
-      return paddingMobile || padding || responsive.spacing.m;
+      return paddingMobile || padding || responsive.spacingPreset.m;
     }
   }, [responsive, padding, paddingMobile, paddingTablet, isFullScreen]);
 
@@ -304,7 +304,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          gap: responsive.spacing.s,
+          gap: responsive.spacingPreset.s,
         }}
       >
         {headerActions}
@@ -313,7 +313,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
             icon="close"
             size={24}
             onPress={onDismiss}
-            style={{ marginRight: -responsive.spacing.s }}
+            style={{ marginRight: -responsive.spacingPreset.s }}
           />
         )}
       </View>
@@ -444,13 +444,13 @@ export const ResponsiveConfirmModal: React.FC<ResponsiveConfirmModalProps> = ({
       maxWidthTablet={400}
       position="center"
     >
-      <View style={{ paddingVertical: responsive.spacing.m }}>
+      <View style={{ paddingVertical: responsive.spacingPreset.m }}>
         <Text
           style={[
             theme.fonts.headlineSmall,
             {
               color: theme.colors.onSurface,
-              marginBottom: responsive.spacing.m,
+              marginBottom: responsive.spacingPreset.m,
             },
           ]}
         >
@@ -469,8 +469,8 @@ export const ResponsiveConfirmModal: React.FC<ResponsiveConfirmModalProps> = ({
         style={{
           flexDirection: 'row',
           justifyContent: 'flex-end',
-          gap: responsive.spacing.s,
-          marginTop: responsive.spacing.l,
+          gap: responsive.spacingPreset.s,
+          marginTop: responsive.spacingPreset.l,
         }}
       >
         <Button mode="text" onPress={handleCancel} style={{ minWidth: 80 }}>

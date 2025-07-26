@@ -230,21 +230,21 @@ export const ResponsiveView: React.FC<ResponsiveViewProps> = ({
     if (padding !== undefined) {
       const paddingValue =
         padding === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleWidth(padding);
       baseStyle.padding = paddingValue;
     }
     if (paddingHorizontal !== undefined) {
       const paddingValue =
         paddingHorizontal === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleWidth(paddingHorizontal);
       baseStyle.paddingHorizontal = paddingValue;
     }
     if (paddingVertical !== undefined) {
       const paddingValue =
         paddingVertical === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleHeight(paddingVertical);
       baseStyle.paddingVertical = paddingValue;
     }
@@ -253,21 +253,21 @@ export const ResponsiveView: React.FC<ResponsiveViewProps> = ({
     if (margin !== undefined) {
       const marginValue =
         margin === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleWidth(margin);
       baseStyle.margin = marginValue;
     }
     if (marginHorizontal !== undefined) {
       const marginValue =
         marginHorizontal === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleWidth(marginHorizontal);
       baseStyle.marginHorizontal = marginValue;
     }
     if (marginVertical !== undefined) {
       const marginValue =
         marginVertical === 'auto'
-          ? responsive.spacing.m
+          ? responsive.spacingPreset.m
           : responsive.scaleHeight(marginVertical);
       baseStyle.marginVertical = marginValue;
     }
@@ -278,7 +278,7 @@ export const ResponsiveView: React.FC<ResponsiveViewProps> = ({
         responsive.isTablet && gapTablet !== undefined
           ? gapTablet
           : gap === 'auto'
-            ? responsive.spacing.m
+            ? responsive.spacingPreset.m
             : gap;
       baseStyle.gap = responsive.scaleWidth(gapValue as number);
     }

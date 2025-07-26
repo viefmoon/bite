@@ -13,7 +13,7 @@ class RecognitionInstance {
   private static instances = new Map<string, RecognitionInstance>();
   private static activeInstanceId: string | null = null;
 
-  private id: string;
+  public readonly id: string;
   private isActive: boolean = false;
   private onResultCallback: ((text: string) => void) | null = null;
   private onErrorCallback: ((error: string) => void) | null = null;

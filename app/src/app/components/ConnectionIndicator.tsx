@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { View } from 'react-native';
 import { IconButton, Surface, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
@@ -162,7 +162,7 @@ export function ConnectionIndicator() {
     () => ({
       marginRight: 8,
       borderRadius: 20,
-      overflow: 'hidden',
+      overflow: 'hidden' as const,
     }),
     [],
   );

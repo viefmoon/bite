@@ -1,4 +1,4 @@
-import React from 'react';
+import { } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

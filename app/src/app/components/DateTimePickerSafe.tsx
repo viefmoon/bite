@@ -116,7 +116,6 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
           value={tempDate}
           mode={mode}
           is24Hour={false}
-          display="default"
           onChange={(event, selectedDate) => {
             onCancel();
             if (event.type === 'set' && selectedDate) {

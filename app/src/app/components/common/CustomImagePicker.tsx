@@ -180,13 +180,13 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     placeholderContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      padding: responsive.spacing.s,
+      padding: responsive.spacingPreset.s,
     },
     placeholderText: {
-      marginTop: responsive.spacing.xs,
+      marginTop: responsive.spacingPreset.xs,
       color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
-      fontSize: responsive.fontSize.s,
+      fontSize: responsive.fontSizePreset.s,
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -197,8 +197,8 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     },
     removeButton: {
       position: 'absolute',
-      top: responsive.spacing.xs,
-      right: responsive.spacing.xs,
+      top: responsive.spacingPreset.xs,
+      right: responsive.spacingPreset.xs,
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
   });

@@ -60,7 +60,7 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
           backgroundColor: theme.colors.surface,
           borderRadius: theme.roundness * 2,
           width: '90%',
-          maxWidth: maxWidth || (responsive.isTablet ? 600 : 500),
+          maxWidth: (maxWidth || (responsive.isTablet ? 600 : 500)) as any,
           minHeight: minHeight,
           maxHeight: maxHeightPixels,
           alignSelf: 'center',

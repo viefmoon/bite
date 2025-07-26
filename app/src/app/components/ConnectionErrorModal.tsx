@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -24,7 +24,6 @@ import {
 } from '@/services/autoReconnectService';
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../store/authStore';
-import { serverConnectionService } from '@/services/serverConnectionService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -304,12 +303,13 @@ export function ConnectionErrorModal() {
           <View style={styles.statusSection}>
             {Platform.OS === 'web' ? (
               <>
-                <Icon
-                  source="server-network"
-                  size={64}
-                  color={theme.colors.tertiary}
-                  style={{ marginBottom: 16 }}
-                />
+                <View style={{ marginBottom: 16 }}>
+                  <Icon
+                    source="server-network"
+                    size={64}
+                    color={theme.colors.tertiary}
+                  />
+                </View>
                 <Text style={styles.title}>Configuración Requerida</Text>
                 <Text style={styles.subtitle}>
                   En la versión web, debes configurar manualmente la URL del

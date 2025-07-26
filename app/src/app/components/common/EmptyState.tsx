@@ -21,11 +21,11 @@ const getStyles = (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: responsive.isTablet ? responsive.spacing.l : theme.spacing.xl,
+      padding: responsive.isTablet ? responsive.spacingPreset.l : theme.spacing.xl,
     },
     iconContainer: {
       marginBottom: responsive.isTablet
-        ? responsive.spacing.m
+        ? responsive.spacingPreset.m
         : theme.spacing.l,
     },
     title: {
@@ -36,17 +36,17 @@ const getStyles = (
     message: {
       textAlign: 'center',
       marginBottom: responsive.isTablet
-        ? responsive.spacing.m
+        ? responsive.spacingPreset.m
         : theme.spacing.l,
       color: theme.colors.onSurfaceVariant,
       paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.l
+        ? responsive.spacingPreset.l
         : theme.spacing.xl,
       fontSize: responsive.isTablet ? 14 : 16,
       lineHeight: responsive.isTablet ? 20 : 24,
     },
     button: {
-      marginTop: responsive.isTablet ? responsive.spacing.s : theme.spacing.m,
+      marginTop: responsive.isTablet ? responsive.spacingPreset.s : theme.spacing.m,
     },
   });
 
