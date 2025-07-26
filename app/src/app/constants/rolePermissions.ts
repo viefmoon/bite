@@ -1,4 +1,4 @@
-import { RoleEnum } from '@/modules/users/types/user.types';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 export type DrawerSection =
   | 'OrdersStack'
@@ -35,7 +35,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'RestaurantConfigStack',
     'CustomersStack',
     'SyncStack',
-    'UsersStack',
+    'UsersScreen',
     'ShiftAuditStack',
   ],
 
@@ -161,7 +161,7 @@ export const DRAWER_SECTIONS = {
   administration: {
     title: 'Administración',
     items: [
-      { route: 'UsersStack', label: 'Usuarios', icon: 'account-multiple' },
+      { route: 'UsersScreen', label: 'Usuarios', icon: 'account-multiple' },
       {
         route: 'ShiftAuditStack',
         label: 'Historial de Turnos',

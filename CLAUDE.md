@@ -128,15 +128,19 @@ npm run compile:check   # TypeScript check (ignorando errores conocidos de React
 
 ### Problemas Conocidos
 
-#### Incompatibilidad de Tipos de React
-Actualmente hay un problema conocido de incompatibilidad entre las versiones de React, React Native y sus tipos. Los siguientes errores pueden ignorarse temporalmente:
-- "cannot be used as a JSX component"
-- "is not a valid JSX element"
-- "Type 'undefined' is not assignable to type 'Element | null'"
-- "Property 'children' is missing in type 'ReactElement'"
-- "Property 'refs' is missing in type"
+#### Estado de TypeScript
+La aplicación tiene configuración de TypeScript mejorada con soporte para:
+- JSX con `react-jsx`
+- ESModule interoperability
+- Aliases de rutas con `@/` para `src/`
+- Validación estricta habilitada
 
-Estos errores son causados por conflictos de versiones en el ecosistema y no afectan el funcionamiento de la aplicación. Para verificar solo errores reales, usa: `npm run compile:check`
+Algunos módulos aún tienen errores de TypeScript pendientes de resolver, principalmente relacionados con:
+- Incompatibilidades de tipos entre diferentes servicios y schemas
+- Importaciones con paths absolutos vs relativos
+- Configuración de responsive utilities
+
+Para verificar errores de TypeScript: `npm run compile`
 
 ## Architecture Overview
 

@@ -2,12 +2,15 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "noUnusedLocals": true, // Report errors on unused local variables
-    "noUnusedParameters": true, // Report errors on unused parameters
-    "moduleResolution": "bundler", // Añadido para resolver tipos de navegación
-    "baseUrl": ".", // O "./" - Directorio base para los paths
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"] // Define el alias @/ para apuntar a src/
-    }
+      "@/*": ["src/*"]
+    },
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }
