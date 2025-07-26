@@ -1,19 +1,20 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ServerSettingsScreen } from '../screens/ServerSettingsScreen';
-import { getDefaultScreenOptions } from '@/app/navigation/options';
+import { getStackHeaderOptions } from '@/app/navigation/options';
 import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import type { SettingsStackParamList } from './types';
 
-const Stack = createStackNavigator<SettingsStackParamList>();
+const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
 export function SettingsStackNavigator() {
   const theme = useAppTheme();
+  const responsive = useResponsive();
 
   return (
     <Stack.Navigator
       screenOptions={{
-        ...getDefaultScreenOptions(theme),
+        ...getStackHeaderOptions(theme, responsive),
         headerShown: false,
       }}
     >

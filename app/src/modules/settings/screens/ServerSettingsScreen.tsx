@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import {
   Text,
-  Card,
   RadioButton,
   TextInput,
   Button,
@@ -23,7 +22,6 @@ import {
   TouchableRipple,
   ProgressBar,
 } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
 import { useSnackbar } from '@/hooks/useSnackbar';
 import {
   serverConnectionService,
@@ -31,18 +29,22 @@ import {
 } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
-import { useAppTheme } from '@/app/styles/theme';
-import { useResponsive } from '@/app/hooks/useResponsive';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useResponsive, ResponsiveInfo } from '@/app/hooks/useResponsive';
 import { useServerConnection } from '@/app/hooks/useServerConnection';
-import axios from 'axios';
 
 const STORAGE_KEYS = {
   CONNECTION_MODE: 'connection_mode',
   MANUAL_URL: 'manual_server_url',
-};
+} as const;
+
+interface DiscoveryProgress {
+  current: number;
+  total: number;
+  message: string;
+}
 
 export function ServerSettingsScreen() {
-  const navigation = useNavigation();
   const { showSnackbar } = useSnackbar();
   const theme = useAppTheme();
   const responsive = useResponsive();
@@ -55,7 +57,7 @@ export function ServerSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const [discoveryProgress, setDiscoveryProgress] = useState({
+  const [discoveryProgress, setDiscoveryProgress] = useState<DiscoveryProgress>({
     current: 0,
     total: 0,
     message: '',
@@ -66,7 +68,6 @@ export function ServerSettingsScreen() {
   }, []);
 
   useEffect(() => {
-    // Actualizar el campo manual cuando cambie serverUrl
     if (serverUrl && !loading) {
       try {
         const url = new URL(serverUrl);
@@ -110,7 +111,7 @@ export function ServerSettingsScreen() {
           setManualUrl(savedUrl);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
     } finally {
       setLoading(false);
     }
@@ -140,7 +141,6 @@ export function ServerSettingsScreen() {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      // Validar primero si es manual
       if (mode === 'manual') {
         if (!validateUrl(manualUrl)) {
           showSnackbar('Por favor ingresa una URL válida', 'error');
@@ -149,52 +149,37 @@ export function ServerSettingsScreen() {
         }
       }
 
-      // Guardar la configuración
       await EncryptedStorage.setItem(STORAGE_KEYS.CONNECTION_MODE, mode);
 
       if (mode === 'manual') {
-        // Guardar la URL completa, no solo la IP
         const fullUrl = `http://${manualUrl.trim()}:3737`;
         await EncryptedStorage.setItem(STORAGE_KEYS.MANUAL_URL, fullUrl);
       }
 
-      // Primero establecer la URL si es necesario
-      let urlToCheck: string | null = null;
-
       if (mode === 'manual') {
-        // Construir la URL completa con http y el puerto estándar
         const fullUrl = `http://${manualUrl.trim()}:3737`;
         await discoveryService.setServerUrl(fullUrl, true);
-        urlToCheck = fullUrl;
       } else if (mode === 'auto') {
-        // En modo auto, limpiar cualquier URL manual
         await discoveryService.setServerUrl(null, true);
       }
 
-      // Luego establecer el modo (esto actualizará la URL mostrada)
       await serverConnectionService.setConnectionMode(mode);
 
-      // Comportamiento diferente según el modo
       if (mode === 'auto') {
-        // En modo automático, hacer discovery
         setIsDiscovering(true);
         showSnackbar('Iniciando búsqueda de servidor...', 'info');
 
         try {
-          // Limpiar cualquier URL manual previa
           await discoveryService.setServerUrl(null, true);
 
-          // Configurar callback de progreso
           discoveryService.setProgressCallback((progress) => {
             setDiscoveryProgress(progress);
           });
 
-          // Hacer discovery
           const discoveredUrl = await discoveryService.discoverServer();
 
           if (discoveredUrl) {
             showSnackbar('Servidor encontrado ✓', 'success');
-            // El discovery ya actualiza el estado, solo necesitamos iniciar el monitoreo
             const { healthMonitoringService } = await import(
               '@/services/healthMonitoringService'
             );
@@ -202,7 +187,7 @@ export function ServerSettingsScreen() {
           } else {
             showSnackbar('No se encontró servidor en la red', 'error');
           }
-        } catch (error) {
+        } catch (error: unknown) {
           showSnackbar('Error al buscar servidor', 'error');
         } finally {
           setIsDiscovering(false);
@@ -210,18 +195,15 @@ export function ServerSettingsScreen() {
           setDiscoveryProgress({ current: 0, total: 0, message: '' });
         }
       } else {
-        // Para manual, hacer reconnect para aplicar la nueva configuración
         showSnackbar('Aplicando configuración...', 'info');
 
         try {
-          // Hacer reconnect que reinicializará todo con la nueva URL
           await serverConnectionService.reconnect();
 
           showSnackbar('Configuración guardada - Conectado ✓', 'success');
-        } catch (error) {
+        } catch (error: unknown) {
           showSnackbar('Verificando conexión...', 'info');
 
-          // Si el reconnect falla, intentar un health check directo
           const { healthMonitoringService } = await import(
             '@/services/healthMonitoringService'
           );
@@ -241,7 +223,7 @@ export function ServerSettingsScreen() {
                 'warning',
               );
             }
-          } catch (error) {
+          } catch (error: unknown) {
             showSnackbar(
               'Configuración guardada - Error al verificar servidor',
               'warning',
@@ -249,11 +231,9 @@ export function ServerSettingsScreen() {
           }
         }
       }
-    } catch (error: any) {
-      showSnackbar(
-        error.message || 'Error al guardar la configuración',
-        'error',
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error al guardar la configuración';
+      showSnackbar(message, 'error');
     } finally {
       setSaving(false);
     }
@@ -587,7 +567,7 @@ export function ServerSettingsScreen() {
   );
 }
 
-const createStyles = (theme: any, responsive: any) =>
+const createStyles = (theme: AppTheme, responsive: ResponsiveInfo) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -700,19 +680,6 @@ const createStyles = (theme: any, responsive: any) =>
     radioSubtitle: {
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
-    },
-    radioDetails: {
-      marginTop: 8,
-      marginLeft: 48,
-      marginRight: 16,
-      marginBottom: 12,
-      padding: 8,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 8,
-    },
-    radioDetailsText: {
-      color: theme.colors.onSurfaceVariant,
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
     manualInputContainer: {
       paddingTop: 8,
