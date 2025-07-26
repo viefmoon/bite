@@ -13,14 +13,8 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
-import { OrderStatusEnum } from '../types/orders.types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  formatOrderStatus,
-  getOrderStatusColor,
-  getPreparationStatusLabel,
-  getPreparationStatusColor,
-} from '../utils/formatters';
+import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 
 interface OrderDetailModalProps {
   visible: boolean;
@@ -88,7 +82,7 @@ export const OrderDetailContent: React.FC<{
                             styles.preparationChip,
                             {
                               backgroundColor:
-                                getPreparationStatusColor(
+                                PreparationStatusInfo.getColor(
                                   item.preparationStatus,
                                   theme,
                                 ) + '20',
@@ -97,14 +91,16 @@ export const OrderDetailContent: React.FC<{
                           textStyle={[
                             styles.preparationChipText,
                             {
-                              color: getPreparationStatusColor(
+                              color: PreparationStatusInfo.getColor(
                                 item.preparationStatus,
                                 theme,
                               ),
                             },
                           ]}
                         >
-                          {getPreparationStatusLabel(item.preparationStatus)}
+                          {PreparationStatusInfo.getLabel(
+                            item.preparationStatus,
+                          )}
                         </Chip>
                       </View>
                       {item.preparationNotes && (
@@ -164,7 +160,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getOrderStatusColor(
+                      backgroundColor: OrderStatusInfo.getColor(
                         orderData.orderStatus,
                         theme,
                       ),
@@ -172,7 +168,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   ]}
                   textStyle={styles.statusChipText}
                 >
-                  {formatOrderStatus(orderData.orderStatus)}
+                  {OrderStatusInfo.getLabel(orderData.orderStatus)}
                 </Chip>
               )}
             </View>

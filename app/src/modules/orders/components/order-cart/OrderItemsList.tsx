@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Text, IconButton, List } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
 import type { CartItem } from '../../stores/useOrderStore';
+import { PreparationStatusInfo } from '../../utils/formatters';
 
 interface OrderItemsListProps {
   items: CartItem[];
@@ -24,45 +25,6 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [openSwipeableId, setOpenSwipeableId] = useState<string | null>(null);
-
-  const getPreparationStatusColor = (status: string | undefined) => {
-    switch (status) {
-      case 'NEW':
-        return '#2196F3';
-      case 'PENDING':
-        return theme.colors.error;
-      case 'IN_PROGRESS':
-        return '#FFA000';
-      case 'READY':
-        return '#4CAF50';
-      case 'DELIVERED':
-        return theme.colors.tertiary;
-      case 'CANCELLED':
-        return theme.colors.onSurfaceDisabled;
-      default:
-        return theme.colors.onSurfaceVariant;
-    }
-  };
-
-  const getPreparationStatusText = (status: string | undefined): string => {
-    switch (status) {
-      case 'NEW':
-        return 'Nuevo';
-      case 'PENDING':
-        return 'Pendiente';
-      case 'IN_PROGRESS':
-        return 'En Preparación';
-      case 'READY':
-        return 'Listo';
-      case 'DELIVERED':
-        return 'Entregado';
-      case 'CANCELLED':
-        return 'Cancelado';
-      default:
-        return '';
-    }
-  };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
@@ -175,8 +137,10 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
                       styles.statusBadge,
                       {
                         backgroundColor:
-                          getPreparationStatusColor(item.preparationStatus) +
-                          '20',
+                          PreparationStatusInfo.getColor(
+                            item.preparationStatus,
+                            theme,
+                          ) + '20',
                       },
                     ]}
                   >
@@ -184,8 +148,9 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
                       style={[
                         styles.statusDot,
                         {
-                          backgroundColor: getPreparationStatusColor(
+                          backgroundColor: PreparationStatusInfo.getColor(
                             item.preparationStatus,
+                            theme,
                           ),
                         },
                       ]}
@@ -194,13 +159,14 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
                       style={[
                         styles.statusText,
                         {
-                          color: getPreparationStatusColor(
+                          color: PreparationStatusInfo.getColor(
                             item.preparationStatus,
+                            theme,
                           ),
                         },
                       ]}
                     >
-                      {getPreparationStatusText(item.preparationStatus)}
+                      {PreparationStatusInfo.getLabel(item.preparationStatus)}
                     </Text>
                   </View>
                 </View>

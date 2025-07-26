@@ -37,7 +37,7 @@ import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ChangeCalculatorModal from './ChangeCalculatorModal';
 import { prepaymentService } from '@/modules/payments/services/prepaymentService';
-import { formatOrderStatus, formatPaymentMethod } from '../utils/formatters';
+import { OrderStatusInfo, formatPaymentMethod } from '../utils/formatters';
 
 interface PaymentModalProps {
   visible: boolean;
@@ -656,7 +656,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         title="Finalizar orden"
         message={
           orderStatus && orderStatus !== 'READY'
-            ? `⚠️ ADVERTENCIA: Esta orden está en estado "${formatOrderStatus(orderStatus)}" y no "Lista".\n\n¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
+            ? `⚠️ ADVERTENCIA: Esta orden está en estado "${OrderStatusInfo.getLabel(orderStatus)}" y no "Lista".\n\n¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
             : `¿Está seguro de que desea finalizar la orden #${orderNumber}? La orden se marcará como completada.`
         }
         confirmText={

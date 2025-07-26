@@ -49,7 +49,7 @@ import type { OrderDetailsForBackend } from '../stores/useOrderStore';
 import { useListState } from '../../../app/hooks/useListState';
 import { useOrderStore } from '../stores/useOrderStore';
 import {
-  formatOrderStatus,
+  OrderStatusInfo,
   formatOrderTypeShort,
   getPaymentStatus,
   getStatusColor,
@@ -354,7 +354,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     ]}
                     textStyle={styles.statusChipText}
                   >
-                    {formatOrderStatus(order.orderStatus)}
+                    {OrderStatusInfo.getLabel(order.orderStatus)}
                   </Chip>
                   <View style={styles.actionsContainer}>
                     {selectedOrderType === 'WHATSAPP' &&

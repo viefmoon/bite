@@ -26,11 +26,7 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum } from '../types/orders.types';
 import type { OrderAdjustment } from '../types/adjustments.types';
-import {
-  formatOrderStatus,
-  getOrderStatusColor,
-  getPreparationStatusLabel,
-} from '../utils/formatters';
+import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
@@ -285,7 +281,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           item.preparationStatus === 'DELIVERED'
         ) {
           showSnackbar({
-            message: `No se puede eliminar un producto ${getPreparationStatusLabel(item.preparationStatus || '').toLowerCase()}`,
+            message: `No se puede eliminar un producto ${PreparationStatusInfo.getLabel(item.preparationStatus || '').toLowerCase()}`,
             type: 'error',
           });
           return;
@@ -324,7 +320,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           item.preparationStatus === 'DELIVERED'
         ) {
           showSnackbar({
-            message: `No se puede modificar un producto ${getPreparationStatusLabel(item.preparationStatus || '').toLowerCase()}`,
+            message: `No se puede modificar un producto ${PreparationStatusInfo.getLabel(item.preparationStatus || '').toLowerCase()}`,
             type: 'error',
           });
           return;
@@ -676,7 +672,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         style={[
                           styles.orderStatusBadge,
                           {
-                            backgroundColor: getOrderStatusColor(
+                            backgroundColor: OrderStatusInfo.getColor(
                               orderData.orderStatus,
                               theme,
                             ),
@@ -684,7 +680,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         ]}
                       >
                         <Text style={styles.orderStatusText}>
-                          {formatOrderStatus(orderData.orderStatus)}
+                          {OrderStatusInfo.getLabel(orderData.orderStatus)}
                         </Text>
                       </View>
                     )}

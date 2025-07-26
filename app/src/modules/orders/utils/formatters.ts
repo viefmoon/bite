@@ -1,87 +1,94 @@
 import { OrderTypeEnum, type OrderType } from '../types/orders.types';
 
+
 /**
- * Obtiene el color correspondiente al estado de una orden
+ * Información consolidada para estados de orden
  */
-export const getOrderStatusColor = (status: string, theme: any): string => {
-  switch (status) {
-    case 'PENDING':
-      return '#FFA000';
-    case 'IN_PROGRESS':
-      return theme.colors.primary;
-    case 'IN_PREPARATION':
-      return '#FF6B35';
-    case 'READY':
-      return '#4CAF50';
-    case 'DELIVERED':
-      return theme.colors.tertiary;
-    case 'COMPLETED':
-      return '#10B981';
-    case 'CANCELLED':
-      return theme.colors.error;
-    default:
-      return theme.colors.onSurfaceVariant;
-  }
+export const OrderStatusInfo = {
+  getLabel: (status: string): string => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendiente';
+      case 'IN_PROGRESS':
+        return 'En Progreso';
+      case 'IN_PREPARATION':
+        return 'En Preparación';
+      case 'READY':
+        return 'Lista';
+      case 'DELIVERED':
+        return 'Entregada';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  },
+  getColor: (status: string, theme: any): string => {
+    switch (status) {
+      case 'PENDING':
+        return '#FFA000';
+      case 'IN_PROGRESS':
+        return theme.colors.primary;
+      case 'IN_PREPARATION':
+        return '#FF6B35';
+      case 'READY':
+        return '#4CAF50';
+      case 'DELIVERED':
+        return theme.colors.tertiary;
+      case 'COMPLETED':
+        return '#10B981';
+      case 'CANCELLED':
+        return theme.colors.error;
+      default:
+        return theme.colors.onSurfaceVariant;
+    }
+  },
 };
 
 /**
- * Formatea el estado de una orden a texto legible
+ * Información consolidada para estados de preparación de items
  */
-export const formatOrderStatus = (status: string): string => {
-  switch (status) {
-    case 'PENDING':
-      return 'Pendiente';
-    case 'IN_PROGRESS':
-      return 'En Progreso';
-    case 'IN_PREPARATION':
-      return 'En Preparación';
-    case 'READY':
-      return 'Lista';
-    case 'DELIVERED':
-      return 'Entregada';
-    case 'COMPLETED':
-      return 'Completada';
-    case 'CANCELLED':
-      return 'Cancelada';
-    default:
-      return status;
-  }
+export const PreparationStatusInfo = {
+  getLabel: (status: string | undefined): string => {
+    switch (status) {
+      case 'NEW':
+        return 'Nuevo';
+      case 'PENDING':
+        return 'Pendiente';
+      case 'IN_PROGRESS':
+        return 'En Preparación';
+      case 'READY':
+        return 'Listo';
+      case 'DELIVERED':
+        return 'Entregado';
+      case 'CANCELLED':
+        return 'Cancelado';
+      default:
+        return status || '';
+    }
+  },
+  getColor: (status: string | undefined, theme: any): string => {
+    switch (status) {
+      case 'NEW':
+        return '#2196F3';
+      case 'PENDING':
+        return theme.colors.error;
+      case 'IN_PROGRESS':
+        return '#FFA000';
+      case 'READY':
+        return '#4CAF50';
+      case 'DELIVERED':
+        return theme.colors.tertiary;
+      case 'CANCELLED':
+        return theme.colors.onSurfaceDisabled;
+      default:
+        return theme.colors.onSurfaceVariant;
+    }
+  },
 };
 
-/**
- * Formatea el estado de preparación de un item
- */
-export const getPreparationStatusLabel = (status: string): string => {
-  const statusMap: Record<string, string> = {
-    PENDING: 'Pendiente',
-    IN_PROGRESS: 'En preparación',
-    READY: 'Listo',
-    DELIVERED: 'Entregado',
-    CANCELLED: 'Cancelado',
-    NEW: 'Nuevo',
-  };
-
-  return statusMap[status] || status;
-};
-
-/**
- * Obtiene el color para el estado de preparación
- */
-export const getPreparationStatusColor = (
-  status: string,
-  theme: any,
-): string => {
-  const colorMap: Record<string, string> = {
-    PENDING: theme.colors.onSurfaceVariant,
-    IN_PROGRESS: theme.colors.primary,
-    READY: '#4CAF50',
-    DELIVERED: theme.colors.tertiary,
-    CANCELLED: theme.colors.error,
-    NEW: theme.colors.secondary,
-  };
-
-  return colorMap[status] || theme.colors.onSurfaceVariant;
-};
 
 /**
  * Formatea el tipo de orden a texto legible

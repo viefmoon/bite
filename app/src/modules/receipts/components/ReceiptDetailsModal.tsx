@@ -19,6 +19,10 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal';
+import {
+  OrderStatusInfo,
+  PreparationStatusInfo,
+} from '@/modules/orders/utils/formatters';
 
 interface ReceiptDetailsModalProps {
   visible: boolean;
@@ -140,44 +144,6 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
     }
   };
 
-  const getOrderStatusLabel = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'Pendiente';
-      case 'IN_PROGRESS':
-        return 'En preparación';
-      case 'READY':
-        return 'Listo';
-      case 'DELIVERED':
-        return 'Entregado';
-      case 'COMPLETED':
-        return 'Completado';
-      case 'CANCELLED':
-        return 'Cancelado';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return '#FFA726';
-      case 'IN_PROGRESS':
-        return theme.colors.primary;
-      case 'READY':
-        return '#66BB6A';
-      case 'DELIVERED':
-        return '#9C27B0';
-      case 'COMPLETED':
-        return '#10B981';
-      case 'CANCELLED':
-        return theme.colors.error;
-      default:
-        return theme.colors.onSurfaceVariant;
-    }
-  };
-
   const getPaymentStatus = () => {
     if (receipt?.payments && receipt.payments.length > 0) {
       const totalPaid = receipt.payments.reduce((sum, p) => sum + p.amount, 0);
@@ -259,17 +225,10 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
     const quantity = item.quantity || 1;
     const unitPrice = parseFloat(item.finalPrice);
     const totalPrice = unitPrice * quantity;
-    const preparationStatusColors = {
-      PENDING: '#FFA726',
-      IN_PROGRESS: '#42A5F5',
-      READY: '#66BB6A',
-      DELIVERED: '#26A69A',
-      CANCELLED: '#EF5350',
-    };
-    const statusColor =
-      preparationStatusColors[
-        item.preparationStatus as keyof typeof preparationStatusColors
-      ] || theme.colors.onSurfaceVariant;
+    const statusColor = PreparationStatusInfo.getColor(
+      item.preparationStatus,
+      theme,
+    );
 
     return (
       <Surface
@@ -300,11 +259,7 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                 style={[styles.statusChip, { backgroundColor: statusColor }]}
               >
                 <Text style={styles.statusChipText}>
-                  {item.preparationStatus === 'PENDING' && 'Pendiente'}
-                  {item.preparationStatus === 'IN_PROGRESS' && 'Preparando'}
-                  {item.preparationStatus === 'READY' && 'Listo'}
-                  {item.preparationStatus === 'DELIVERED' && 'Entregado'}
-                  {item.preparationStatus === 'CANCELLED' && 'Cancelado'}
+                  {PreparationStatusInfo.getLabel(item.preparationStatus)}
                 </Text>
               </View>
             )}
@@ -426,12 +381,15 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
               style={[
                 styles.headerStatusChip,
                 {
-                  backgroundColor: getStatusColor(receipt.orderStatus),
+                  backgroundColor: OrderStatusInfo.getColor(
+                    receipt.orderStatus,
+                    theme,
+                  ),
                 },
               ]}
             >
               <Text style={styles.headerStatusChipText}>
-                {getOrderStatusLabel(receipt.orderStatus)}
+                {OrderStatusInfo.getLabel(receipt.orderStatus)}
               </Text>
             </View>
             {receipt.preparationScreens &&
