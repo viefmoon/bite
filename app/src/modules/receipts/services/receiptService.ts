@@ -5,7 +5,7 @@ import type {
   Receipt,
   ReceiptsListResponse,
   ReceiptFilters,
-} from '../types/receipt.types';
+} from '../schema/receipt.schema';
 import type { Order } from '@/modules/orders/schema/orders.schema';
 
 export const receiptService = {
@@ -58,8 +58,6 @@ export const receiptQueryOptions = {
   ): QueryOptions<ReceiptsListResponse, Error> => ({
     queryKey: ['receipts', params],
     queryFn: () => receiptService.getReceiptsList(params),
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
   }),
 
   receipt: (id: string): QueryOptions<Receipt, Error> => ({

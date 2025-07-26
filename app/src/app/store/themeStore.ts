@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from '@/app/services/secureStorageService';
@@ -91,7 +91,7 @@ export function useSystemThemeDetector() {
   const systemColorScheme = useColorScheme();
   const setSystemDarkMode = useThemeStore((state) => state.setSystemDarkMode);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const isDarkMode = systemColorScheme === 'dark';
     if (useThemeStore.getState().isSystemDarkMode !== isDarkMode) {
       setSystemDarkMode(isDarkMode);

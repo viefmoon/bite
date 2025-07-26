@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -55,7 +55,7 @@ const createStyles = (theme: AppTheme) =>
     },
   });
 
-export const AutoImage: React.FC<AutoImageProps> = ({
+export const AutoImage = ({
   source: originalSourceProp,
   maxWidth,
   maxHeight,
@@ -66,7 +66,7 @@ export const AutoImage: React.FC<AutoImageProps> = ({
   contentFit = 'cover',
   transition = 300,
   ...restExpoImageProps
-}) => {
+}: AutoImageProps) => {
   const theme = useAppTheme();
   const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isLoadingUri, setIsLoadingUri] = useState(true);

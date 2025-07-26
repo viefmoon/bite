@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   BackHandler,
   TouchableOpacity,
@@ -62,7 +62,7 @@ function KitchenOnlyNavigatorContent() {
 
   const responsive = useResponsive();
 
-  const styles = React.useMemo(
+  const styles = useMemo(
     () =>
       StyleSheet.create({
         drawerButtonContainer: {

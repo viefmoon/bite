@@ -7,15 +7,7 @@ import {
   UpdateThermalPrinterDto,
   FindAllThermalPrintersDto,
 } from '../types/printer.types';
-import {
-  PaginatedResponse,
-  BaseListQueryDto,
-} from '../../../app/types/api.types';
-
-type PrinterFilterParams = Omit<
-  FindAllThermalPrintersDto,
-  keyof BaseListQueryDto
->;
+import { PaginatedResponse } from '../../../app/types/api.types';
 
 const discoverPrinters = async (
   duration: number = 10000,
@@ -28,10 +20,10 @@ const discoverPrinters = async (
 };
 
 const findAllPrinters = async (
-  filters: PrinterFilterParams = {},
-  pagination: BaseListQueryDto = { page: 1, limit: 10 },
+  params: FindAllThermalPrintersDto = { page: 1, limit: 10 },
 ): Promise<PaginatedResponse<ThermalPrinter>> => {
-  const queryParams = Object.entries({ ...filters, ...pagination }).reduce(
+  const { page = 1, limit = 10, ...filters } = params;
+  const queryParams = Object.entries({ ...filters, page, limit }).reduce(
     (acc, [key, value]) => {
       if (value !== undefined) {
         if (key === 'isActive' && typeof value === 'boolean') {

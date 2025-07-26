@@ -75,8 +75,7 @@ class ServerConnectionService {
           error: 'Sin conexión WiFi',
         });
         healthMonitoringService.stopMonitoring();
-      }
-      else if (hasWifi && !previousHasWifi) {
+      } else if (hasWifi && !previousHasWifi) {
         this.updateState({ hasWifi });
         setTimeout(() => {
           if (!this.state.isConnected && !this.state.isConnecting) {
@@ -217,7 +216,7 @@ class ServerConnectionService {
             const isHealthy =
               await healthMonitoringService.checkHealthWithUrl(apiUrl);
             if (!isHealthy) {
-                apiUrl = await discoveryService.discoverServer();
+              apiUrl = await discoveryService.discoverServer();
             }
           } else {
             apiUrl = await discoveryService.discoverServer();

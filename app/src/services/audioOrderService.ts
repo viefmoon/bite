@@ -67,7 +67,7 @@ class AudioOrderService {
       const response = await apiClient.post(
         API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
-        { timeout: 60000 }
+        { timeout: 60000 },
       );
 
       const responseData = response.data as any;

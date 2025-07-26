@@ -28,15 +28,15 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   restaurantLocation,
 }) => {
   const theme = useAppTheme();
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const webViewRef = useRef<WebView>(null);
   const { config: mapsConfig, loading: isLoadingApiKey } =
     useGoogleMapsConfig();
   const apiKey = mapsConfig?.apiKey;
 
   const styles = React.useMemo(
-    () => createStyles(theme, width, height),
-    [theme, width, height],
+    () => createStyles(theme, height),
+    [theme, height],
   );
 
   const [mapReady, setMapReady] = useState(false);
@@ -501,7 +501,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
             webViewRef.current.injectJavaScript(jsCode);
           }
         }}
-        onError={(_error) => {}}
+        onError={() => {}}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         startInLoadingState={true}
@@ -578,7 +578,7 @@ export const WebViewDeliveryCoverageMap: React.FC<DeliveryCoverageMapProps> = ({
   );
 };
 
-const createStyles = (theme: AppTheme, width: number, height: number) =>
+const createStyles = (theme: AppTheme, height: number) =>
   StyleSheet.create({
     container: {
       height: Math.min(height * 0.6, 500),
@@ -605,11 +605,6 @@ const createStyles = (theme: AppTheme, width: number, height: number) =>
     controlsRow: {
       flexDirection: 'row',
       gap: theme.spacing.xs,
-    },
-    statusText: {
-      fontSize: 12,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
     },
     centerButtonContainer: {
       position: 'absolute',

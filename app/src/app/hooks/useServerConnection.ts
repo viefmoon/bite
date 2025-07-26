@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { serverConnectionService } from '@/services/serverConnectionService';
 
 export interface ServerConnectionState {

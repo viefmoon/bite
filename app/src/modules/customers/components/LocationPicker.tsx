@@ -191,8 +191,7 @@ export default function LocationPicker({
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    content: {
-    },
+    content: {},
     helperText: {
       color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.m,

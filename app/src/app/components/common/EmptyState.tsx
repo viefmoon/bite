@@ -21,7 +21,9 @@ const getStyles = (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: responsive.isTablet ? responsive.spacingPreset.l : theme.spacing.xl,
+      padding: responsive.isTablet
+        ? responsive.spacingPreset.l
+        : theme.spacing.xl,
     },
     iconContainer: {
       marginBottom: responsive.isTablet
@@ -46,7 +48,9 @@ const getStyles = (
       lineHeight: responsive.isTablet ? 20 : 24,
     },
     button: {
-      marginTop: responsive.isTablet ? responsive.spacingPreset.s : theme.spacing.m,
+      marginTop: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : theme.spacing.m,
     },
   });
 

@@ -1,4 +1,4 @@
-import React, {
+import {
   useEffect,
   useMemo,
   useState,
@@ -114,7 +114,7 @@ interface NumericInputProps {
   inputProps?: any;
 }
 
-const NumericInput: React.FC<NumericInputProps> = ({
+const NumericInput = ({
   value,
   onChange,
   onBlur,
@@ -124,7 +124,7 @@ const NumericInput: React.FC<NumericInputProps> = ({
   error,
   disabled,
   inputProps,
-}) => {
+}: NumericInputProps) => {
   const [inputValue, setInputValue] = useState<string>(
     value === null || value === undefined ? '' : String(value),
   );

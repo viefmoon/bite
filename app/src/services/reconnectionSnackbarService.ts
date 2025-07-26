@@ -122,9 +122,7 @@ class ReconnectionSnackbarService {
           type: 'error',
           duration: 4000,
         });
-      }
-
-      else if (
+      } else if (
         log.includes('SUCCESS:') &&
         (log.includes('WiFi conectado') ||
           log.includes('Health check exitoso') ||

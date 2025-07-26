@@ -36,13 +36,13 @@ export const customerBaseSchema = z.object({
     .email('El correo electrónico no es válido')
     .optional()
     .or(z.literal(''))
-    .transform(val => val === '' ? undefined : val),
+    .transform((val) => (val === '' ? undefined : val)),
   birthDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
     .optional()
     .or(z.literal(''))
-    .transform(val => val === '' ? undefined : val),
+    .transform((val) => (val === '' ? undefined : val)),
 });
 
 // Schema para crear cliente - derivado del base

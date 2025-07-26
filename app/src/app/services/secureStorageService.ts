@@ -23,7 +23,7 @@ class SecureStorageService {
     try {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.error('Error storing secure item:', error);
+      // Error storing secure item
       throw error;
     }
   }
@@ -40,7 +40,7 @@ class SecureStorageService {
     try {
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      console.error('Error retrieving secure item:', error);
+      // Error retrieving secure item
       return null;
     }
   }
@@ -57,7 +57,7 @@ class SecureStorageService {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.error('Error removing secure item:', error);
+      // Error removing secure item
       throw error;
     }
   }
@@ -82,7 +82,7 @@ class SecureStorageService {
       try {
         await this.removeItem(key);
       } catch (error) {
-        console.error(`Error removing key ${key}:`, error);
+        // Error removing key
       }
     }
   }

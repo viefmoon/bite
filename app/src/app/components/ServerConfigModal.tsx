@@ -20,9 +20,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useSnackbar } from '@/hooks/useSnackbar';
-import {
-  ConnectionMode,
-} from '@/services/serverConnectionService';
+import { ConnectionMode } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import axios from 'axios';
@@ -83,7 +81,7 @@ export function ServerConfigModal({
         } catch (error) {}
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      // Error loading settings
     } finally {
       setLoading(false);
     }
@@ -194,10 +192,7 @@ export function ServerConfigModal({
               // El servicio detectará automáticamente el cambio de URL
             }
           } catch (error) {
-            console.error(
-              'Error verificando conexión después de guardar:',
-              error,
-            );
+            // Error verificando conexión después de guardar
           }
         }
       } else if (mode === 'remote' && remoteUrlAvailable) {

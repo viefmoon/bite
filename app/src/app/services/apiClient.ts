@@ -99,8 +99,7 @@ const initializationPromise = (async () => {
     apiClient.defaults.httpsAgent =
       certificateValidator.getAxiosSecurityConfig().httpsAgent;
   } catch (error) {
-    console.error('Error al inicializar apiClient:', error);
-    // Permitir que las peticiones fallen con un error claro si la URL base no se pudo establecer
+    // Error al inicializar apiClient
   }
 })();
 

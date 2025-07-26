@@ -25,7 +25,6 @@ const NumericField: React.FC<NumericFieldProps> = ({
   );
   const [isFocused, setIsFocused] = useState(false);
 
-  // Sincronizar valor externo con display solo cuando no está enfocado
   useEffect(() => {
     if (!isFocused && value !== undefined) {
       setDisplayValue(String(value));
@@ -33,7 +32,6 @@ const NumericField: React.FC<NumericFieldProps> = ({
   }, [value, isFocused]);
 
   const handleChangeText = (text: string) => {
-    // Permitir solo números
     const numericText = text.replace(/[^0-9]/g, '');
     setDisplayValue(numericText);
 
@@ -49,7 +47,6 @@ const NumericField: React.FC<NumericFieldProps> = ({
 
   const handleBlur = () => {
     setIsFocused(false);
-    // Si no hay valor válido, restaurar valor por defecto
     if (value === undefined || isNaN(Number(value))) {
       onChange(defaultValue);
       setDisplayValue(String(defaultValue));

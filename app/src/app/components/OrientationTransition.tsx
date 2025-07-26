@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -14,10 +14,10 @@ const TRANSITION_DELAYS = {
   LOCK: 300,
 } as const;
 
-export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
+export const OrientationTransition = ({
   children,
   targetOrientation = ScreenOrientation.OrientationLock.PORTRAIT_UP,
-}) => {
+}: OrientationTransitionProps) => {
   const theme = useAppTheme();
   const [isTransitioning, setIsTransitioning] = useState(Platform.OS !== 'web');
 
@@ -38,6 +38,7 @@ export const OrientationTransition: React.FC<OrientationTransitionProps> = ({
         setTimeout(resolve, TRANSITION_DELAYS.LOCK),
       );
     } catch (error) {
+      // Error during orientation change
     } finally {
       setIsTransitioning(false);
     }

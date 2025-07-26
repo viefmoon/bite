@@ -7,7 +7,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import {
   BusinessHours,
   CreateBusinessHoursDto,
-} from '../types/restaurantConfig.types';
+} from '../schema/restaurantConfig.schema';
 
 interface BusinessHoursFormProps {
   businessHours: BusinessHours[] | CreateBusinessHoursDto[];
@@ -194,7 +194,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
   const handleTimeConfirm = (date: Date) => {
     setShowTimePicker(false);
 
-    if (currentPickerConfig && onChange) {
+    if (currentPickerConfig) {
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       const timeString = `${hours}:${minutes}`;
@@ -234,7 +234,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                   <Switch
                     value={!dayHours.isClosed}
                     onValueChange={(value) => {
-                      if (isEditing && onChange) {
+                      if (isEditing) {
                         handleClosedChange(index, !value);
                       }
                     }}
@@ -338,7 +338,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
                             '--:--'}
                         </Text>
                       </View>
-                      {dayHours.closesNextDay && (
+                      {(dayHours as any)?.closesNextDay === true && (
                         <View style={styles.nextDayBadge}>
                           <MaterialCommunityIcons
                             name="moon-waning-crescent"
@@ -391,6 +391,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
         value={currentPickerConfig?.currentDate || new Date()}
         onConfirm={handleTimeConfirm}
         onCancel={handleTimeCancel}
+        minimumDate={undefined}
+        maximumDate={undefined}
         minuteInterval={1}
         title={
           currentPickerConfig?.type === 'opening'
@@ -430,9 +432,6 @@ const createStyles = (theme: AppTheme) =>
     dayActions: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    copyButton: {
-      margin: 0,
     },
     timeContainer: {
       flexDirection: 'row',

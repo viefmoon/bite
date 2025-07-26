@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { Modal, Portal, Text, Button, Surface } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -16,7 +16,7 @@ interface DateTimePickerSafeProps {
   allowManualInput?: boolean;
 }
 
-export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
+export const DateTimePickerSafe = ({
   visible,
   mode,
   value,
@@ -27,7 +27,7 @@ export const DateTimePickerSafe: React.FC<DateTimePickerSafeProps> = ({
   minuteInterval = 1,
   title,
   allowManualInput = false,
-}) => {
+}: DateTimePickerSafeProps) => {
   const [tempDate, setTempDate] = useState<Date>(() => {
     if (value) return new Date(value);
     const now = new Date();

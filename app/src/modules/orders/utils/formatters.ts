@@ -1,4 +1,4 @@
-import { OrderTypeEnum, type OrderType } from '../types/orders.types';
+import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 
 /**
  * Información consolidada para estados de orden

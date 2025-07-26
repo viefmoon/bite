@@ -38,7 +38,7 @@ export async function verifyStoredToken(): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error verificando token:', error);
+    // Error verificando token
     return false;
   }
 }

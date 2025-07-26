@@ -247,7 +247,6 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* Estado y características principales */}
             <View style={styles.section}>
               <View style={styles.statusContainer}>
                 <Chip
@@ -312,7 +311,6 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
 
             <Divider style={styles.divider} />
 
-            {/* Información de conexión */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Información de Conexión</Text>
 
@@ -354,7 +352,6 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
 
             <Divider style={styles.divider} />
 
-            {/* Configuración del papel */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Configuración del Papel</Text>
 
@@ -382,7 +379,6 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
 
             <Divider style={styles.divider} />
 
-            {/* Información adicional */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Información Adicional</Text>
 

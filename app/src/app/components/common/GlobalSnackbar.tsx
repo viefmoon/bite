@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { Snackbar, Portal, Text } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import {
@@ -7,11 +7,11 @@ import {
 } from '../../../app/store/snackbarStore';
 import { useAppTheme } from '../../../app/styles/theme';
 
-const GlobalSnackbar: React.FC = () => {
+const GlobalSnackbar = () => {
   const { visible, message, type, duration, hideSnackbar } = useSnackbarStore();
   const theme = useAppTheme();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible && message) {
       const timer = setTimeout(() => {
         hideSnackbar();

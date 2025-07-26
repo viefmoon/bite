@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo, createElement } from 'react';
 import EmptyState from '../components/common/EmptyState';
 
 interface UseListStateProps {
@@ -38,7 +38,7 @@ export const useListState = ({
       if (isLoading) return null;
 
       if (isError) {
-        return React.createElement(EmptyState, {
+        return createElement(EmptyState, {
           icon: errorConfig?.icon || 'alert-circle',
           title: errorConfig?.title || 'Error al cargar los datos',
           message:
@@ -50,7 +50,7 @@ export const useListState = ({
       }
 
       if (isEmpty) {
-        return React.createElement(EmptyState, {
+        return createElement(EmptyState, {
           icon: emptyConfig.icon || 'folder-open',
           title: emptyConfig.title,
           message: emptyConfig.message,

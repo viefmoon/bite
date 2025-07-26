@@ -517,6 +517,7 @@ function GenericDetailModal<TItem extends { id: string }>({
           message={deleteConfirmation.message}
           onConfirm={deleteConfirmation.onConfirm}
           onCancel={deleteConfirmation.onCancel}
+          onDismiss={deleteConfirmation.onCancel}
           confirmText="Eliminar"
           cancelText="Cancelar"
           confirmButtonColor={theme.colors.error}

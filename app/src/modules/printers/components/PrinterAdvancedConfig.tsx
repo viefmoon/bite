@@ -91,7 +91,6 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         Configuración del Papel
       </Text>
 
-      {/* Recomendaciones */}
       <Card style={styles.recommendationCard}>
         <Card.Content>
           <Text variant="bodyMedium" style={styles.recommendationTitle}>
@@ -116,7 +115,6 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         </Card.Content>
       </Card>
 
-      {/* Ancho del papel */}
       <Controller
         name="paperWidth"
         control={control}
@@ -146,7 +144,6 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         )}
       />
 
-      {/* Caracteres por línea */}
       <Controller
         name="charactersPerLine"
         control={control}
@@ -180,7 +177,6 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         Configuración de Corte
       </Text>
 
-      {/* Cortar papel */}
       <View style={styles.switchContainer}>
         <Text variant="bodyLarge" style={styles.switchLabel}>
           Cortar papel automáticamente
@@ -198,7 +194,6 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         />
       </View>
 
-      {/* Líneas de avance */}
       <Controller
         name="feedLines"
         control={control}

@@ -21,7 +21,6 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface HistoryItem {
   id: string | number;
@@ -50,8 +49,8 @@ interface HistoryItem {
 }
 
 interface OrderHistoryViewProps {
-  orderId: string | null;
-  orderNumber?: number;
+  orderId: string;
+  orderNumber?: number | null;
   onBack: () => void;
 }
 
@@ -307,12 +306,14 @@ const HistoryItemComponent: React.FC<{
               {String(change.anterior)}
             </Text>
           </View>
-          <Icon
-            name="arrow-right"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-            style={{ marginHorizontal: 4 }}
-          />
+          <Text
+            style={{
+              marginHorizontal: 4,
+              color: theme.colors.onSurfaceVariant,
+            }}
+          >
+            →
+          </Text>
           <View
             style={{
               backgroundColor: theme.colors.primaryContainer,
@@ -420,12 +421,14 @@ const HistoryItemComponent: React.FC<{
               {oldVal}
             </Text>
           </View>
-          <Icon
-            name="arrow-right"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-            style={{ marginHorizontal: 4 }}
-          />
+          <Text
+            style={{
+              marginHorizontal: 4,
+              color: theme.colors.onSurfaceVariant,
+            }}
+          >
+            →
+          </Text>
           <View
             style={{
               backgroundColor: theme.colors.primaryContainer,
@@ -503,11 +506,11 @@ const HistoryItemComponent: React.FC<{
                   justifyContent: 'center',
                 }}
               >
-                <Icon
-                  name={expanded ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
+                <Text
+                  style={{ color: theme.colors.onSurfaceVariant, fontSize: 20 }}
+                >
+                  {expanded ? '▲' : '▼'}
+                </Text>
               </View>
             </View>
             <View
@@ -531,16 +534,18 @@ const HistoryItemComponent: React.FC<{
                   borderRadius: 10,
                 }}
               >
-                <Icon
-                  name={getOperationIcon(item.operation, item.type)}
-                  size={10}
-                  color={
-                    item.type === 'order'
-                      ? theme.colors.primary
-                      : theme.colors.secondary
-                  }
-                  style={{ marginRight: 3 }}
-                />
+                <Text
+                  style={{
+                    marginRight: 3,
+                    color:
+                      item.type === 'order'
+                        ? theme.colors.primary
+                        : theme.colors.secondary,
+                    fontSize: 10,
+                  }}
+                >
+                  •
+                </Text>
                 <Text
                   style={{
                     color:
@@ -1336,12 +1341,16 @@ const HistoryItemComponent: React.FC<{
                       marginBottom: 4,
                     }}
                   >
-                    <Icon
-                      name={getOperationIcon(op.operation)}
-                      size={14}
-                      color={theme.colors.primary}
-                      style={{ marginRight: 6, marginTop: 2 }}
-                    />
+                    <Text
+                      style={{
+                        marginRight: 6,
+                        marginTop: 2,
+                        color: theme.colors.primary,
+                        fontSize: 14,
+                      }}
+                    >
+                      •
+                    </Text>
                     <View style={{ flex: 1 }}>
                       <Text
                         variant="labelSmall"
@@ -1434,21 +1443,15 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
       if (!orderId) throw new Error('No order ID');
 
       // Obtener historial consolidado de la orden
-      const orderHistoryResponse = await apiClient.get(
-        API_PATHS.ORDERS_HISTORY.replace(':orderId', orderId),
-        {
-          page: 1,
-          limit: 100,
-        },
-      );
+      const url = `${API_PATHS.ORDERS_HISTORY.replace(':orderId', orderId)}?page=1&limit=100`;
+      const orderHistoryResponse = await apiClient.get(url);
 
-      const orderHistory =
-        orderHistoryResponse.ok && orderHistoryResponse.data?.data
-          ? orderHistoryResponse.data.data.map((item: any) => ({
-              ...item,
-              type: 'order' as const,
-            }))
-          : [];
+      const orderHistory = orderHistoryResponse.data?.data
+        ? orderHistoryResponse.data.data.map((item: any) => ({
+            ...item,
+            type: 'order' as const,
+          }))
+        : [];
 
       return orderHistory;
     },
@@ -1462,12 +1465,15 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Icon
-        name="history"
-        size={48}
-        color={theme.colors.onSurfaceDisabled}
-        style={{ opacity: 0.5 }}
-      />
+      <Text
+        style={{
+          fontSize: 48,
+          color: theme.colors.onSurfaceDisabled,
+          opacity: 0.5,
+        }}
+      >
+        📋
+      </Text>
       <Text
         variant="bodyLarge"
         style={{
@@ -1503,12 +1509,15 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
       <View style={styles.content}>
         {isError ? (
           <View style={styles.emptyContainer}>
-            <Icon
-              name="alert-circle"
-              size={48}
-              color={theme.colors.error}
-              style={{ opacity: 0.7 }}
-            />
+            <Text
+              style={{
+                fontSize: 48,
+                color: theme.colors.error,
+                opacity: 0.7,
+              }}
+            >
+              ⚠️
+            </Text>
             <Text
               variant="bodyLarge"
               style={{

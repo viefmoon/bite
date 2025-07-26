@@ -1,4 +1,3 @@
-import React from 'react';
 import { ResponsiveConfirmModal } from '../responsive/ResponsiveModal';
 
 interface ConfirmationModalProps {
@@ -13,7 +12,7 @@ interface ConfirmationModalProps {
   confirmButtonColor?: string;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+const ConfirmationModal = ({
   visible,
   title,
   message,
@@ -23,7 +22,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   confirmButtonColor,
-}) => {
+}: ConfirmationModalProps) => {
   // Determinar si es destructivo basado en el color del botón
   const destructive =
     confirmButtonColor &&

@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -27,7 +27,7 @@ interface AdaptiveModalProps {
   stickyFooter?: boolean;
 }
 
-export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
+export const AdaptiveModal = ({
   visible,
   onDismiss,
   children,
@@ -40,7 +40,7 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
   scrollable = true,
   footer,
   stickyFooter = true,
-}) => {
+}: AdaptiveModalProps) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const screenHeight = Dimensions.get('window').height;

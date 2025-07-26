@@ -29,7 +29,7 @@ import { useRestaurantConfigQueries } from '../hooks/useRestaurantConfigQueries'
 import {
   UpdateRestaurantConfigDto,
   CreateBusinessHoursDto,
-} from '../types/restaurantConfig.types';
+} from '../schema/restaurantConfig.schema';
 import BusinessHoursForm from '../components/BusinessHoursForm';
 import TimeZoneSelector from '../components/TimeZoneSelector';
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
@@ -1006,6 +1006,11 @@ const RestaurantConfigScreen: React.FC = () => {
           setIsNavigatingAway(false);
           setPendingTab(null);
         }}
+        onDismiss={() => {
+          setShowDiscardDialog(false);
+          setIsNavigatingAway(false);
+          setPendingTab(null);
+        }}
         confirmText="Descartar"
         cancelText="Continuar editando"
         confirmButtonColor={theme.colors.error}
@@ -1304,11 +1309,7 @@ const createStyles = (
     },
     sectionContent: {
       gap: responsive.spacing(theme.spacing.m),
-    },
-    deliveryInfo: {
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      marginBottom: responsive.spacing(theme.spacing.s),
-    },
+},
     // Input styles
     input: {
       backgroundColor: theme.colors.surface,
@@ -1369,12 +1370,7 @@ const createStyles = (
     },
     chipText: {
       fontSize: responsive.fontSize(12),
-    },
-    // Delivery styles
-    deliveryInfo: {
-      marginTop: responsive.spacing(theme.spacing.m),
-      alignItems: 'center',
-    },
+},
     // Action styles
     actionContainer: {
       marginHorizontal: responsive.spacing(theme.spacing.m),
@@ -1437,29 +1433,6 @@ const createStyles = (
       fontSize: responsive.fontSize(14),
       fontWeight: '500',
       color: theme.colors.onSurfaceVariant,
-    },
-    deliveryContainer: {
-      flex: 1,
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      paddingTop: responsive.spacing(theme.spacing.m),
-    },
-    deliveryActions: {
-      position: 'absolute',
-      bottom: 16,
-      right: 16,
-    },
-    deliveryFab: {
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-    },
-    deliveryFabSmall: {
-      position: 'absolute',
-      right: 0,
-    },
-    mapSection: {
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      paddingBottom: responsive.spacing(theme.spacing.m),
     },
     // Estilos para el botón de área de cobertura
     deliveryButtonContainer: {
@@ -1532,13 +1505,6 @@ const createStyles = (
     deliveryDialogButton: {
       flex: 1,
       borderRadius: 12,
-    },
-    deliveryButtonContent: {
-      paddingVertical: responsive.spacing(theme.spacing.s),
-    },
-    deliveryButtonLabel: {
-      fontSize: responsive.fontSize(16),
-      fontWeight: '600',
     },
     cancelButtonLabel: {
       fontSize: responsive.fontSize(16),

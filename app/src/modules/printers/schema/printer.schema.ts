@@ -11,31 +11,6 @@ export type PrinterConnectionType = z.infer<typeof PrinterConnectionTypeSchema>;
 
 const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
 
-// Schema completo para entidad ThermalPrinter - derivado del base con campos adicionales
-export const thermalPrinterSchema = printerBaseSchema
-  .omit({
-    ipAddress: true,
-    port: true,
-    path: true,
-    macAddress: true,
-  })
-  .extend({
-    id: z.string().uuid(),
-    ipAddress: z.string().ip({ version: 'v4' }).nullable(),
-    port: z.number().int().positive().nullable(),
-    path: z.string().nullable(),
-    macAddress: z
-      .string()
-      .regex(macRegex, 'MAC inválida')
-      .nullable()
-      .optional(),
-    createdAt: z.string().datetime().optional(),
-    updatedAt: z.string().datetime().optional(),
-    deletedAt: z.string().datetime().nullable().optional(),
-  });
-
-export type ThermalPrinter = z.infer<typeof thermalPrinterSchema>;
-
 // Schema base para printer con campos comunes
 const printerBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
@@ -73,6 +48,31 @@ const printerBaseSchema = z.object({
     .optional()
     .default(3),
 });
+
+// Schema completo para entidad ThermalPrinter - derivado del base con campos adicionales
+export const thermalPrinterSchema = printerBaseSchema
+  .omit({
+    ipAddress: true,
+    port: true,
+    path: true,
+    macAddress: true,
+  })
+  .extend({
+    id: z.string().uuid(),
+    ipAddress: z.string().ip({ version: 'v4' }).nullable(),
+    port: z.number().int().positive().nullable(),
+    path: z.string().nullable(),
+    macAddress: z
+      .string()
+      .regex(macRegex, 'MAC inválida')
+      .nullable()
+      .optional(),
+    createdAt: z.string().datetime().optional(),
+    updatedAt: z.string().datetime().optional(),
+    deletedAt: z.string().datetime().nullable().optional(),
+  });
+
+export type ThermalPrinter = z.infer<typeof thermalPrinterSchema>;
 
 // Función helper para validación de conexión (reutilizable)
 const refinePrinterDto = (

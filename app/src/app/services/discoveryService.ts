@@ -168,7 +168,6 @@ export class DiscoveryService {
     }
   }
 
-
   private async discoverBackend(): Promise<string | null> {
     // Si ya hay un descubrimiento en progreso, devolver la promesa existente
     if (this.discoveryPromise && this.discovering) {
@@ -218,10 +217,7 @@ export class DiscoveryService {
       this.log(`📡 Iniciando búsqueda en redes: ${subnets.join(', ')}`);
 
       // Calcular total de IPs a escanear
-      let totalIps = 0;
-      for (const subnet of subnets) {
-        totalIps += 254; // IPs de .1 a .254
-      }
+      const totalIps = subnets.length * 254; // IPs de .1 a .254 por subnet
       this.updateProgress(0, totalIps, 'Iniciando búsqueda...');
 
       let globalIpsScanned = 0;
@@ -427,7 +423,7 @@ export class DiscoveryService {
         return data;
       }
     } catch (error) {
-      console.error('Error getting server info:', error);
+      // Error getting server info
     }
 
     return null;

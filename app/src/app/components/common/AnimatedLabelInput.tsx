@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useMemo } from 'react';
 import {
   View,
   TextInput,
@@ -28,7 +28,7 @@ interface AnimatedLabelInputProps extends TextInputProps {
   disabled?: boolean;
 }
 
-const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
+const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
   (
     {
       label,
@@ -105,7 +105,7 @@ const AnimatedLabelInput = React.forwardRef<TextInput, AnimatedLabelInputProps>(
         ? finalActiveBorderColor
         : finalBorderColor;
 
-    const styles = React.useMemo(
+    const styles = useMemo(
       () =>
         createStyles(theme, responsive, {
           multiline,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppTheme } from '@/app/styles/theme';
 import { getStackHeaderOptions } from '@/app/navigation/options';

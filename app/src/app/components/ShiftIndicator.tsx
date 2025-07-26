@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Icon, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
@@ -10,7 +10,7 @@ import type { Shift } from '@/services/shifts';
 import { useGlobalShift } from '../hooks/useGlobalShift';
 import { useQueryClient } from '@tanstack/react-query';
 
-export const ShiftIndicator: React.FC = () => {
+export const ShiftIndicator = () => {
   const theme = useAppTheme();
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
