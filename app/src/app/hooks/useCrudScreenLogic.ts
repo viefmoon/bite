@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient, QueryKey } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
@@ -68,23 +67,6 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     setSelectedItem(null);
   }, []);
 
-  const handleDeleteItem = useCallback(
-    (id: string) => {
-      Alert.alert(
-        `Confirmar Eliminación`,
-        `¿Estás seguro de que deseas eliminar este ${entityName.toLowerCase()}?`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Eliminar',
-            style: 'destructive',
-            onPress: () => deleteMutation.mutate(id),
-          },
-        ],
-      );
-    },
-    [deleteMutation, entityName],
-  );
 
   // Alternative deletion methods for use with ConfirmationModal
   const [deleteConfirmationState, setDeleteConfirmationState] = useState<{
@@ -120,8 +102,7 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    handleDeleteItem,
-    // New properties for ConfirmationModal integration
+    // Properties for ConfirmationModal integration
     deleteConfirmation: {
       visible: deleteConfirmationState.visible,
       title: 'Confirmar Eliminación',
