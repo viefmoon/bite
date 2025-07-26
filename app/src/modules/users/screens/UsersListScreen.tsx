@@ -64,10 +64,7 @@ export function UsersListScreen() {
 
   const { data, isLoading, error, refetch } = useGetUsers(queryParams);
 
-  // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('users');
-
-  // Funciones auxiliares definidas antes del useMemo
   const getStatusColor = (user: User) => {
     return user.isActive ? 'success' : 'error';
   };
@@ -95,7 +92,6 @@ export function UsersListScreen() {
     return parts.join('');
   };
 
-  // Mapear los usuarios para agregar campos calculados
   const mappedUsers = React.useMemo(() => {
     const users = data?.data || [];
 
@@ -297,7 +293,7 @@ export function UsersListScreen() {
       minHeight: responsive.isTablet ? 20 : 28,
       height: 'auto',
       borderRadius: theme.roundness * 2,
-      paddingHorizontal: responsive.isTablet ? 6 : responsive.spacing.s,
+      paddingHorizontal: responsive.isTablet ? 6 : theme.spacing.s,
       paddingVertical: responsive.isTablet ? 1 : 4,
     },
     roleChipText: {
@@ -323,7 +319,7 @@ export function UsersListScreen() {
             responsive.isTablet
               ? {
                   marginVertical: 1,
-                  marginHorizontal: responsive.spacing.xs,
+                  marginHorizontal: theme.spacing.xs,
                 }
               : undefined
           }
@@ -344,10 +340,10 @@ export function UsersListScreen() {
               : undefined
           }
           renderConfig={{
-            titleField: 'displayName' as any,
-            descriptionField: 'displayInfo' as any,
+            titleField: 'displayName' as keyof User,
+            descriptionField: 'displayInfo' as keyof User,
             statusConfig: {
-              field: 'isActive' as any,
+              field: 'isActive' as keyof User,
               activeValue: true,
               activeLabel: 'Activo',
               inactiveLabel: 'Inactivo',

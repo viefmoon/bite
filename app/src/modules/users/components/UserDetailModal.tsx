@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Portal,
@@ -60,7 +60,7 @@ export function UserDetailModal({
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      // Error handled in mutation
+      // Error is handled by mutation
     }
   };
 
@@ -69,7 +69,7 @@ export function UserDetailModal({
       await deleteUserMutation.mutateAsync(user.id);
       onDismiss();
     } catch (error) {
-      // Error handled in mutation
+      // Error is handled by mutation
     }
   };
 
@@ -134,7 +134,6 @@ export function UserDetailModal({
           contentContainerStyle={styles.modalContainer}
         >
           <Surface style={styles.modalContent} elevation={3}>
-            {/* Header */}
             <View
               style={[
                 styles.headerContainer,
@@ -191,8 +190,7 @@ export function UserDetailModal({
               style={styles.contentContainer}
               showsVerticalScrollIndicator={false}
             >
-              {/* Contact Information */}
-              <View style={styles.infoSection}>
+                <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="contacts"
@@ -229,7 +227,6 @@ export function UserDetailModal({
                 </View>
               </View>
 
-              {/* Personal Information */}
               <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
@@ -328,7 +325,6 @@ export function UserDetailModal({
                   </View>
                 </View>
 
-                {/* Preparation Screen for Kitchen Role */}
                 {user.role?.id === 5 && (
                   <View style={styles.compactRow}>
                     <Icon
@@ -348,7 +344,6 @@ export function UserDetailModal({
                 )}
               </View>
 
-              {/* Address Information */}
               <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
@@ -426,7 +421,6 @@ export function UserDetailModal({
                 </View>
               </View>
 
-              {/* Emergency Contact */}
               <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
@@ -488,7 +482,6 @@ export function UserDetailModal({
                 </View>
               </View>
 
-              {/* Actions */}
               <View style={styles.actionsContainer}>
                 <Button
                   mode="contained-tonal"
@@ -533,7 +526,6 @@ export function UserDetailModal({
         </Modal>
       </Portal>
 
-      {/* Password Reset Dialog */}
       <Portal>
         <Dialog
           visible={showPasswordDialog}
@@ -729,7 +721,6 @@ export function UserDetailModal({
         </Dialog>
       </Portal>
 
-      {/* Delete Confirmation Dialog */}
       <Portal>
         <Dialog
           visible={showDeleteDialog}

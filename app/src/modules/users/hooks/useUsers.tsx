@@ -51,11 +51,9 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
       usersApiService.update(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({
-        queryKey: [USERS_QUERY_KEY, variables.id],
-      });
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
       showSnackbar({
         message: 'Usuario actualizado exitosamente',
         type: 'success',
@@ -102,10 +100,8 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: ({ id, password }: { id: string; password: string }) =>
       usersApiService.resetPassword(id, password),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [USERS_QUERY_KEY, variables.id],
-      });
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
       showSnackbar({
         message: 'Contraseña actualizada exitosamente',
         type: 'success',
@@ -127,13 +123,11 @@ export function useToggleUserActive() {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       usersApiService.toggleActive(id, isActive),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id, isActive }) => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({
-        queryKey: [USERS_QUERY_KEY, variables.id],
-      });
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
       showSnackbar({
-        message: `Usuario ${variables.isActive ? 'activado' : 'desactivado'} exitosamente`,
+        message: `Usuario ${isActive ? 'activado' : 'desactivado'} exitosamente`,
         type: 'success',
       });
     },

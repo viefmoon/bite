@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Portal,
@@ -22,6 +22,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useCreateUser, useUpdateUser } from '../hooks';
 import type { User } from '../types';
+import { GenderEnum } from '../types';
 
 const createUserSchema = z.object({
   username: z
@@ -47,7 +48,7 @@ const createUserSchema = z.object({
       z.literal(''),
     ])
     .optional(),
-  gender: z.enum(['male', 'female', 'other']).nullable().optional(),
+  gender: z.nativeEnum(GenderEnum).nullable().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -95,7 +96,7 @@ export function UserFormModal({
     formState: { errors },
     reset,
   } = useForm<UserFormInputs>({
-    resolver: zodResolver(user ? updateUserSchema : createUserSchema) as any,
+    resolver: zodResolver(user ? updateUserSchema : createUserSchema),
     defaultValues: {
       username: '',
       email: '',
@@ -173,7 +174,6 @@ export function UserFormModal({
       };
 
       if (user) {
-        // For update, remove password if empty and remove username (can't be changed)
         const { username, password, ...updateData } = cleanData;
         const finalUpdateData = password
           ? { ...updateData, password }
@@ -181,18 +181,21 @@ export function UserFormModal({
 
         await updateUserMutation.mutateAsync({
           id: user.id,
-          data: finalUpdateData as any,
+          data: finalUpdateData,
         });
       } else {
-        // For create, password is required
         if (!data.password) {
-          return; // Should be caught by validation
+          return;
         }
-        await createUserMutation.mutateAsync(cleanData as any);
+        const createData = {
+          ...cleanData,
+          password: data.password,
+        };
+        await createUserMutation.mutateAsync(createData);
       }
       onDismiss();
     } catch (error) {
-      // Error handling is done in the mutation hooks
+      // Error is handled by mutation hooks
     }
   };
 
@@ -201,19 +204,19 @@ export function UserFormModal({
 
   const genderOptions = [
     {
-      value: 'male',
+      value: GenderEnum.MALE,
       label: 'Masculino',
       icon: 'gender-male',
       color: '#3498db',
     },
     {
-      value: 'female',
+      value: GenderEnum.FEMALE,
       label: 'Femenino',
       icon: 'gender-female',
       color: '#e74c3c',
     },
     {
-      value: 'other',
+      value: GenderEnum.OTHER,
       label: 'Otro',
       icon: 'gender-transgender',
       color: '#9b59b6',
@@ -267,7 +270,6 @@ export function UserFormModal({
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Información de Cuenta */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -493,7 +495,6 @@ export function UserFormModal({
 
             <Divider style={styles.divider} />
 
-            {/* Información Personal */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -643,7 +644,6 @@ export function UserFormModal({
 
             <Divider style={styles.divider} />
 
-            {/* Información de Contacto */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -794,7 +794,6 @@ export function UserFormModal({
 
             <Divider style={styles.divider} />
 
-            {/* Estado de la cuenta */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -835,7 +834,6 @@ export function UserFormModal({
               />
             </View>
 
-            {/* Espacio adicional para el teclado */}
             <View style={{ height: 10 }} />
           </ScrollView>
 
@@ -850,7 +848,7 @@ export function UserFormModal({
             </Button>
             <Button
               mode="contained"
-              onPress={handleSubmit(onSubmit as any)}
+              onPress={handleSubmit(onSubmit)}
               disabled={isSubmitting}
               loading={isSubmitting}
               style={[styles.button, styles.confirmButton]}
