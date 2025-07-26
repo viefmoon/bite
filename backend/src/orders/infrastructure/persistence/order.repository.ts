@@ -28,7 +28,7 @@ export abstract class OrderRepository {
   }: {
     filterOptions?: FindAllOrdersDto | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<[Order[], number]>; // Cambiado para devolver también el conteo total
+  }): Promise<[Order[], number]>;
 
   abstract findById(id: Order['id']): Promise<NullableType<Order>>;
   abstract findByUserId(userId: Order['userId']): Promise<Order[]>;

@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { OrderItemEntity } from '../../orders/infrastructure/persistence/relational/entities/order-item.entity';
@@ -30,11 +36,11 @@ export class OrderItemOperationsService {
   ): Promise<void> {
     const itemIds = this.parseItemIds(itemId);
     const items = await this.getOrderItems(itemIds);
-    
+
     this.validateItems(items);
     await this.validateScreenAccess(items, userId);
     await this.validatePreparationState(items, isPrepared);
-    
+
     await this.updateItemsPreparationStatus(items, userId, isPrepared);
   }
 
@@ -48,12 +54,14 @@ export class OrderItemOperationsService {
     userId: string | null,
   ): Promise<void> {
     const items = await this.getItemsByOrderAndScreen(orderId, screenId);
-    
+
     if (items.length === 0) {
       return;
     }
 
-    const updates = items.map(item => this.createItemUpdate(item, newStatus, userId));
+    const updates = items.map((item) =>
+      this.createItemUpdate(item, newStatus, userId),
+    );
     await this.orderItemRepository.save(updates);
   }
 
@@ -105,9 +113,11 @@ export class OrderItemOperationsService {
    * Valida que los items sean válidos y pertenezcan a la misma orden
    */
   private validateItems(items: OrderItemEntity[]): void {
-    const orderIds = [...new Set(items.map(item => item.order.id))];
+    const orderIds = [...new Set(items.map((item) => item.order.id))];
     if (orderIds.length > 1) {
-      throw new BadRequestException('Los items pertenecen a diferentes órdenes');
+      throw new BadRequestException(
+        'Los items pertenecen a diferentes órdenes',
+      );
     }
   }
 
@@ -119,10 +129,10 @@ export class OrderItemOperationsService {
     userId: string,
   ): Promise<void> {
     const preparationScreenId = items[0].product?.preparationScreenId;
-    
+
     if (!preparationScreenId) {
       throw new BadRequestException(
-        'El producto no tiene pantalla de preparación asignada'
+        'El producto no tiene pantalla de preparación asignada',
       );
     }
 
@@ -137,7 +147,7 @@ export class OrderItemOperationsService {
       user.preparationScreen.id !== preparationScreenId
     ) {
       throw new ForbiddenException(
-        'No tienes acceso a esta pantalla de preparación'
+        'No tienes acceso a esta pantalla de preparación',
       );
     }
   }
@@ -154,7 +164,7 @@ export class OrderItemOperationsService {
 
     if (!screenId) {
       throw new BadRequestException(
-        'El producto no tiene pantalla de preparación asignada'
+        'El producto no tiene pantalla de preparación asignada',
       );
     }
 
@@ -169,7 +179,7 @@ export class OrderItemOperationsService {
       screenStatus.status !== PreparationScreenStatus.IN_PREPARATION
     ) {
       throw new BadRequestException(
-        'Solo se pueden modificar los items cuando la pantalla está en preparación'
+        'Solo se pueden modificar los items cuando la pantalla está en preparación',
       );
     }
 
@@ -185,12 +195,12 @@ export class OrderItemOperationsService {
    */
   private validateItemsCanBeMarkedReady(items: OrderItemEntity[]): void {
     const allItemsInProgress = items.every(
-      item => item.preparationStatus === PreparationStatus.IN_PROGRESS,
+      (item) => item.preparationStatus === PreparationStatus.IN_PROGRESS,
     );
 
     if (!allItemsInProgress) {
       throw new BadRequestException(
-        'Solo se pueden marcar como preparados los items que están en preparación (IN_PROGRESS)'
+        'Solo se pueden marcar como preparados los items que están en preparación (IN_PROGRESS)',
       );
     }
   }
@@ -200,12 +210,12 @@ export class OrderItemOperationsService {
    */
   private validateItemsCanBeMarkedInProgress(items: OrderItemEntity[]): void {
     const allItemsReady = items.every(
-      item => item.preparationStatus === PreparationStatus.READY,
+      (item) => item.preparationStatus === PreparationStatus.READY,
     );
 
     if (!allItemsReady) {
       throw new BadRequestException(
-        'Solo se pueden regresar a preparación los items que están listos (READY)'
+        'Solo se pueden regresar a preparación los items que están listos (READY)',
       );
     }
   }
@@ -218,8 +228,10 @@ export class OrderItemOperationsService {
     userId: string,
     isPrepared: boolean,
   ): Promise<void> {
-    const updates = items.map(item => {
-      const newStatus = isPrepared ? PreparationStatus.READY : PreparationStatus.IN_PROGRESS;
+    const updates = items.map((item) => {
+      const newStatus = isPrepared
+        ? PreparationStatus.READY
+        : PreparationStatus.IN_PROGRESS;
       return this.createItemUpdate(item, newStatus, isPrepared ? userId : null);
     });
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Product } from '../../types/orders.types';
-import { CartItem, CartItemModifier } from '../../stores/useOrderCreationStore';
+import { CartItem, CartItemModifier } from '../../stores/useOrderStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 

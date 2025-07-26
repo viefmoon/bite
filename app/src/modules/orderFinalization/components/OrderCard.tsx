@@ -16,9 +16,9 @@ import { es } from 'date-fns/locale';
 import {
   formatOrderTypeShort,
   formatOrderStatus,
-  getStatusColor,
+  getOrderStatusColor,
   getPaymentStatus,
-} from '@/app/utils/orderFormatters';
+} from '@/modules/orders/utils/formatters';
 
 interface OrderCardProps {
   order: OrderForFinalizationList;
@@ -263,7 +263,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getStatusColor(order.orderStatus, theme),
+                      backgroundColor: getOrderStatusColor(order.orderStatus, theme),
                     },
                   ]}
                   textStyle={styles.statusChipText}

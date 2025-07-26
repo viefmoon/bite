@@ -22,7 +22,6 @@ import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useReceipts, useRecoverOrder } from '../hooks/useReceiptsQueries';
 import type { Receipt, ReceiptList } from '../types/receipt.types';
-import { getPaymentStatus } from '@/app/utils/orderFormatters';
 import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
@@ -32,7 +31,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { formatOrderTypeShort } from '@/app/utils/orderFormatters';
+import { formatOrderTypeShort, getPaymentStatus } from '@/modules/orders/utils/formatters';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 

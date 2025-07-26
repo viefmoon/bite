@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { audioOrderService, type AIOrderItem } from '@/services/audioOrderService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { Product } from '../../types/orders.types';
-import { CartItemModifier } from '../../stores/useOrderCreationStore';
+import { CartItemModifier } from '../../stores/useOrderStore';
 
 interface UseAudioOrderProps {
   menu: any;

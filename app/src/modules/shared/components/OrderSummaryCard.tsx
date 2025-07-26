@@ -2,11 +2,10 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Chip, Card, Icon } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { getPaymentStatus } from '@/app/utils/orderFormatters';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { formatOrderTypeShort } from '@/app/utils/orderFormatters';
+import { formatOrderTypeShort, getPaymentStatus } from '@/modules/orders/utils/formatters';
 
 interface OrderSummaryCardProps {
   item: any; // Union type for ReceiptList | Order

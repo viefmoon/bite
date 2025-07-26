@@ -37,6 +37,7 @@ import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ChangeCalculatorModal from './ChangeCalculatorModal';
 import { prepaymentService } from '@/modules/payments/services/prepaymentService';
+import { formatOrderStatus, formatPaymentMethod } from '../utils/formatters';
 
 interface PaymentModalProps {
   visible: boolean;
@@ -56,42 +57,9 @@ interface PaymentModalProps {
   onPrepaymentDeleted?: () => void; // Callback para eliminar pre-pago
 }
 
-const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  CASH: '💵 Efectivo',
-  CARD: '💳 Tarjeta',
-  TRANSFER: '📱 Transferencia',
-};
-
-const PAYMENT_METHOD_ICONS: Record<PaymentMethod, string> = {
-  CASH: 'cash',
-  CARD: 'credit-card',
-  TRANSFER: 'bank-transfer',
-};
 
 // Métodos de pago deshabilitados temporalmente
 const DISABLED_METHODS: PaymentMethod[] = ['CARD', 'TRANSFER'];
-
-// Helper para formatear el estado de la orden
-const formatOrderStatus = (status: string): string => {
-  switch (status) {
-    case 'PENDING':
-      return 'Pendiente';
-    case 'IN_PROGRESS':
-      return 'En Progreso';
-    case 'IN_PREPARATION':
-      return 'En Preparación';
-    case 'READY':
-      return 'Lista';
-    case 'DELIVERED':
-      return 'Entregada';
-    case 'COMPLETED':
-      return 'Completada';
-    case 'CANCELLED':
-      return 'Cancelada';
-    default:
-      return status;
-  }
-};
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   visible,
@@ -428,7 +396,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           <View style={styles.paymentLeftInfo}>
                             <View style={styles.paymentMethodRow}>
                               <Text style={styles.paymentMethodCompact}>
-                                {PAYMENT_METHOD_LABELS[payment.paymentMethod]}
+                                {formatPaymentMethod(payment.paymentMethod)}
                               </Text>
                             </View>
                             <Text style={styles.paymentDateCompact}>
@@ -529,7 +497,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 isDisabled && styles.methodTextDisabled,
                               ]}
                             >
-                              {PAYMENT_METHOD_LABELS[value]}
+                              {formatPaymentMethod(value)}
                             </Text>
                             {isDisabled && (
                               <Text style={styles.comingSoonText}>

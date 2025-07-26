@@ -34,7 +34,6 @@ export class OrderChangeTrackerV2Service {
       changes = this.detectChangesUsingSnapshots(order, previousState);
     }
 
-    // Solo guardar si hay cambios o es INSERT/DELETE
     if (changes || operation !== 'UPDATE') {
       const historyRecord = manager.create(OrderHistoryEntity, {
         orderId: order.id,
@@ -51,7 +50,6 @@ export class OrderChangeTrackerV2Service {
   private createInsertDiff(order: OrderEntity): ConsolidatedChangesV2 {
     const changes: ConsolidatedChangesV2 = {};
 
-    // Información de la orden
     changes.order = {
       fields: {
         orderType: [null, order.orderType],
@@ -61,7 +59,6 @@ export class OrderChangeTrackerV2Service {
       },
     };
 
-    // Información de entrega
     if (order.deliveryInfo) {
       changes.order.deliveryInfo = {};
       const info = order.deliveryInfo;
@@ -73,7 +70,6 @@ export class OrderChangeTrackerV2Service {
         changes.order.deliveryInfo.fullAddress = [null, info.fullAddress];
     }
 
-    // Items
     if (order.orderItems && order.orderItems.length > 0) {
       changes.items = {
         added: order.orderItems.map((item) => this.createItemSnapshot(item)),
@@ -93,14 +89,12 @@ export class OrderChangeTrackerV2Service {
     const changes: ConsolidatedChangesV2 = {};
     let hasChanges = false;
 
-    // 1. Detectar cambios en campos de la orden
     const orderFieldChanges = this.detectOrderFieldChanges(current, previous);
     if (orderFieldChanges) {
       changes.order = orderFieldChanges;
       hasChanges = true;
     }
 
-    // 2. Detectar cambios en items usando snapshots
     const currentSnapshot = this.createOrderSnapshot(current);
     const previousSnapshot = this.createOrderSnapshot(previous);
 
@@ -116,7 +110,6 @@ export class OrderChangeTrackerV2Service {
 
     if (!hasChanges) return null;
 
-    // Generar resumen
     const summaryParts: string[] = [];
 
     if (changes.order?.fields) {

@@ -25,7 +25,7 @@ import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
 import {
   formatOrderTypeShort,
   getPaymentStatus,
-} from '@/app/utils/orderFormatters';
+} from '@/modules/orders/utils/formatters';
 import { receiptService } from '@/modules/receipts/services/receiptService';
 import type { Receipt } from '@/modules/receipts/types/receipt.types';
 import { OrderDetailsView } from './OrderDetailsView';

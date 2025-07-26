@@ -35,9 +35,8 @@ export class OrdersRelationalRepository implements OrderRepository {
     isFromWhatsApp?: boolean;
     deliveryInfo: any;
     estimatedDeliveryTime?: Date | null;
-    operationalDate?: Date; // Nueva propiedad opcional para la fecha operacional
+    operationalDate?: Date;
   }): Promise<Order> {
-    // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
     if (!currentShift) {
       throw new BadRequestException(
@@ -45,7 +44,6 @@ export class OrdersRelationalRepository implements OrderRepository {
       );
     }
 
-    // Obtener el próximo número de orden para este turno
     const shiftOrderNumber = await this.getNextShiftOrderNumber(
       currentShift.id,
     );

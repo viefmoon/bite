@@ -7,7 +7,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Category, SubCategory, Product } from '../../types/orders.types';
 import CartButton from '../CartButton';
-import { useOrderCreationStore, CartItem } from '../../stores/useOrderCreationStore';
+import { useOrderStore, CartItem } from '../../stores/useOrderStore';
 import { CategoryQuickAccess } from './CategoryQuickAccess';
 
 interface CategoryGridProps {
@@ -147,7 +147,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   const theme = useAppTheme();
   const responsive = useResponsive();
   const { colors, fonts } = theme;
-  const storeCartItems = useOrderCreationStore((state) => state.items);
+  const storeCartItems = useOrderStore((state) => state.items);
   const activeCartItems = cartItems || storeCartItems;
   const getProductCount = useCallback((productId: string) => {
     return activeCartItems

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  ForbiddenException,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderEntity } from '../../orders/infrastructure/persistence/relational/entities/order.entity';
@@ -49,7 +45,8 @@ export class KitchenService {
     );
 
     // Procesar estados de pantalla desde las órdenes cargadas
-    const screenStatuses = this.screenProcessor.processScreenStatusesFromOrders(orders);
+    const screenStatuses =
+      this.screenProcessor.processScreenStatusesFromOrders(orders);
 
     // Filtrar órdenes según estado de pantalla
     const filteredOrders = this.screenProcessor.filterOrdersByScreenStatus(
@@ -60,7 +57,7 @@ export class KitchenService {
     );
 
     // Transformar a DTOs optimizados
-    return filteredOrders.map(order =>
+    return filteredOrders.map((order) =>
       this.mapper.transformToKitchenOrderOptimized(
         order,
         userScreenId || '',
@@ -73,7 +70,10 @@ export class KitchenService {
   /**
    * Obtiene la pantalla de preparación del usuario
    */
-  private async getUserScreenId(userId: string, filterScreenId?: string): Promise<string | null> {
+  private async getUserScreenId(
+    userId: string,
+    filterScreenId?: string,
+  ): Promise<string | null> {
     if (filterScreenId) {
       return filterScreenId;
     }
@@ -160,7 +160,8 @@ export class KitchenService {
     const screenId = await this.getUserScreenIdForUser(userId);
 
     // Verificar el estado actual
-    const currentStatus = await this.screenStatusRepository.findByOrderAndScreen(orderId, screenId);
+    const currentStatus =
+      await this.screenStatusRepository.findByOrderAndScreen(orderId, screenId);
 
     if (currentStatus) {
       if (currentStatus.status === PreparationScreenStatus.IN_PREPARATION) {
@@ -210,15 +211,20 @@ export class KitchenService {
     });
 
     if (!user?.preparationScreen) {
-      throw new ForbiddenException('No tienes una pantalla de preparación asignada');
+      throw new ForbiddenException(
+        'No tienes una pantalla de preparación asignada',
+      );
     }
 
     return user.preparationScreen.id;
   }
 
-  private async updateOrderStatusBasedOnScreens(orderId: string): Promise<void> {
+  private async updateOrderStatusBasedOnScreens(
+    orderId: string,
+  ): Promise<void> {
     // Obtener todos los estados de pantalla para esta orden
-    const screenStatuses = await this.screenStatusRepository.findByOrderId(orderId);
+    const screenStatuses =
+      await this.screenStatusRepository.findByOrderId(orderId);
 
     // Obtener la orden con sus items
     const order = await this.orderRepository.findOne({
@@ -236,16 +242,26 @@ export class KitchenService {
 
     // Procesar estados de pantalla
     const screenStatusMap = new Map<string, any>();
-    screenStatuses.forEach(status => {
+    screenStatuses.forEach((status) => {
       screenStatusMap.set(status.preparationScreenId, status);
     });
 
     // Verificar estados de pantallas
-    const allReady = this.screenProcessor.areAllScreensReady(screenIds, screenStatusMap);
-    const anyInPreparation = this.screenProcessor.isAnyScreenInPreparation(screenIds, screenStatusMap);
+    const allReady = this.screenProcessor.areAllScreensReady(
+      screenIds,
+      screenStatusMap,
+    );
+    const anyInPreparation = this.screenProcessor.isAnyScreenInPreparation(
+      screenIds,
+      screenStatusMap,
+    );
 
     // Determinar nuevo estado de la orden
-    const newOrderStatus = this.determineNewOrderStatus(order.orderStatus, allReady, anyInPreparation);
+    const newOrderStatus = this.determineNewOrderStatus(
+      order.orderStatus,
+      allReady,
+      anyInPreparation,
+    );
 
     // Solo actualizar si cambió el estado
     if (newOrderStatus !== order.orderStatus) {

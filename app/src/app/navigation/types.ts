@@ -29,9 +29,9 @@ export type OrdersStackParamList = {
     orderId: string; // ID de la orden a la que se están agregando productos
     orderNumber: number; // Número de la orden
     existingOrderItemsCount?: number; // Número de items que ya están en la orden
-    existingTempProducts?: import('../../modules/orders/stores/useOrderCreationStore').CartItem[]; // Productos temporales existentes
+    existingTempProducts?: import('../../modules/orders/stores/useOrderStore').CartItem[]; // Productos temporales existentes
     onProductsAdded?: (
-      products: import('../../modules/orders/stores/useOrderCreationStore').CartItem[],
+      products: import('../../modules/orders/stores/useOrderStore').CartItem[],
     ) => void; // Callback cuando se añaden productos
   }; // Pantalla para añadir productos a una orden existente
 };

@@ -18,15 +18,13 @@ import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
-import { CartItem, CartItemModifier } from '../stores/useOrderCreationStore';
+import { CartItem, CartItemModifier, useOrderStore } from '../stores/useOrderStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 type AddProductsRouteProps = {
   orderId: string;
   orderNumber: number;
-  existingOrderItemsCount?: number;
-  existingTempProducts?: CartItem[];
-  onProductsAdded?: (products: CartItem[]) => void;
+  onProductsAdded?: () => void;
 };
 
 const AddProductsToOrderScreen = () => {
@@ -37,16 +35,16 @@ const AddProductsToOrderScreen = () => {
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 
   const {
-    orderId: _orderId,
+    orderId,
     orderNumber,
-    existingTempProducts,
-    existingOrderItemsCount,
     onProductsAdded,
   } = route.params as AddProductsRouteProps;
 
-  const [selectedProducts, setSelectedProducts] = useState<CartItem[]>(
-    existingTempProducts || [],
-  );
+  // Conectar directamente al store
+  const { items: storeItems, addItem: addItemToStore } = useOrderStore();
+  
+  // Estado local para productos siendo añadidos en esta sesión
+  const [selectedProducts, setSelectedProducts] = useState<CartItem[]>([]);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [selectedProductForDescription, setSelectedProductForDescription] =
     useState<Product | null>(null);
@@ -219,26 +217,17 @@ const AddProductsToOrderScreen = () => {
   );
 
   const totalItemsCount = useMemo(() => {
+    const storeItemsCount = storeItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
     const newItemsCount = selectedProducts.reduce(
       (sum, item) => sum + item.quantity,
       0,
     );
-    const existingItemsCount = existingOrderItemsCount || 0;
-    return newItemsCount + existingItemsCount;
-  }, [selectedProducts, existingOrderItemsCount]);
+    return storeItemsCount + newItemsCount;
+  }, [storeItems, selectedProducts]);
 
-  useEffect(() => {
-    if (existingTempProducts && existingTempProducts.length > 0) {
-      const totalItems = existingTempProducts.reduce(
-        (sum, item) => sum + item.quantity,
-        0,
-      );
-      showSnackbar({
-        message: `${totalItems} producto${totalItems > 1 ? 's' : ''} recuperado${totalItems > 1 ? 's' : ''}`,
-        type: 'info',
-      });
-    }
-  }, []);
 
   const handleProductSelect = useCallback(
     (product: Product) => {
@@ -257,8 +246,23 @@ const AddProductsToOrderScreen = () => {
   }, [setSelectedProduct]);
 
   const handleConfirmSelection = () => {
+    // Agregar todos los productos seleccionados al store
+    selectedProducts.forEach((item) => {
+      const product = { id: item.productId, name: item.productName, price: item.unitPrice };
+      addItemToStore(
+        product as any,
+        item.quantity,
+        item.variantId,
+        item.modifiers,
+        item.preparationNotes,
+        item.selectedPizzaCustomizations,
+        item.pizzaExtraCost
+      );
+    });
+    
+    // Notificar que se completó
     if (onProductsAdded) {
-      onProductsAdded(selectedProducts);
+      onProductsAdded();
     }
     navigation.goBack();
   };
@@ -271,10 +275,13 @@ const AddProductsToOrderScreen = () => {
     } else if (navigationLevel === 'subcategories') {
       handleGoBackInternal();
     } else {
-      if (onProductsAdded) {
-        onProductsAdded(selectedProducts);
+      // Si hay productos seleccionados, preguntar antes de salir
+      if (selectedProducts.length > 0) {
+        // Por ahora, simplemente salir sin guardar
+        navigation.goBack();
+      } else {
+        navigation.goBack();
       }
-      navigation.goBack();
     }
   };
 
