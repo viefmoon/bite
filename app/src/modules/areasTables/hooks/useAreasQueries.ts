@@ -87,7 +87,7 @@ export const useUpdateArea = () => {
       if (previousAreas) {
         queryClient.setQueryData<Area[]>(
           listQueryKey,
-(old) =>
+          (old) =>
             old?.map((area) =>
               area.id === id ? { ...area, ...data } : area,
             ) ?? [],
