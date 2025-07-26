@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import type { CartItem } from '../stores/useOrderCreationStore';
-import type { OrderAdjustment } from '../types/adjustments.types';
-import type { Payment } from '../types/payment.types';
-import { PaymentStatusEnum } from '../types/payment.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
+import type { Payment } from '../schema/payment.schema';
+import { PaymentStatusEnum } from '../schema/payment.schema';
 
 interface UseOrderCalculationsProps {
   items: CartItem[];
@@ -19,7 +19,10 @@ interface UseOrderCalculationsReturn {
   hasPayments: boolean;
   canMakePayment: boolean;
   calculateItemTotal: (item: CartItem) => number;
-  calculateAdjustmentAmount: (adjustment: OrderAdjustment, subtotal: number) => number;
+  calculateAdjustmentAmount: (
+    adjustment: OrderAdjustment,
+    subtotal: number,
+  ) => number;
 }
 
 export const useOrderCalculations = ({
@@ -30,10 +33,14 @@ export const useOrderCalculations = ({
   // Función para calcular el total de un item
   const calculateItemTotal = (item: CartItem): number => {
     // Si el item ya tiene totalPrice calculado, usarlo
-    if (item.totalPrice !== undefined && item.totalPrice !== null && !isNaN(item.totalPrice)) {
+    if (
+      item.totalPrice !== undefined &&
+      item.totalPrice !== null &&
+      !isNaN(item.totalPrice)
+    ) {
       return item.totalPrice;
     }
-    
+
     // Si no, calcularlo basado en unitPrice
     const basePrice = item.unitPrice || 0;
     const modifiersTotal = item.modifiers.reduce(

@@ -20,7 +20,6 @@ import {
 } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
-
 const subcategoryKeys = {
   all: ['subcategories'] as const,
   lists: () => [...subcategoryKeys.all, 'list'] as const,

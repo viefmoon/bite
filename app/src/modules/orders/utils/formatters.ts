@@ -1,6 +1,5 @@
 import { OrderTypeEnum, type OrderType } from '../types/orders.types';
 
-
 /**
  * Información consolidada para estados de orden
  */
@@ -88,7 +87,6 @@ export const PreparationStatusInfo = {
     }
   },
 };
-
 
 /**
  * Formatea el tipo de orden a texto legible

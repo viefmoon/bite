@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { orderTypeSchema, orderStatusSchema } from '@/app/schemas/domain/order.schema';
+import {
+  orderTypeSchema,
+  orderStatusSchema,
+} from '@/app/schemas/domain/order.schema';
 import { deliveryInfoSchema } from '@/app/schemas/domain/delivery-info.schema';
 
 // Schema para modificadores de producto
@@ -16,7 +19,9 @@ export const selectedPizzaCustomizationDtoSchema = z.object({
   action: z.enum(['ADD', 'REMOVE']),
 });
 
-export type SelectedPizzaCustomizationDto = z.infer<typeof selectedPizzaCustomizationDtoSchema>;
+export type SelectedPizzaCustomizationDto = z.infer<
+  typeof selectedPizzaCustomizationDtoSchema
+>;
 
 // Schema para items en el DTO de actualización
 export const orderItemDtoForBackendSchema = z.object({
@@ -28,10 +33,14 @@ export const orderItemDtoForBackendSchema = z.object({
   finalPrice: z.number().nonnegative(),
   preparationNotes: z.string().nullable().optional(),
   productModifiers: z.array(productModifierDtoSchema).optional(),
-  selectedPizzaCustomizations: z.array(selectedPizzaCustomizationDtoSchema).optional(),
+  selectedPizzaCustomizations: z
+    .array(selectedPizzaCustomizationDtoSchema)
+    .optional(),
 });
 
-export type OrderItemDtoForBackend = z.infer<typeof orderItemDtoForBackendSchema>;
+export type OrderItemDtoForBackend = z.infer<
+  typeof orderItemDtoForBackendSchema
+>;
 
 // Schema para ajustes en el DTO
 export const orderAdjustmentDtoSchema = z.object({

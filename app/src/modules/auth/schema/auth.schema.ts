@@ -9,15 +9,20 @@ export const loginSchema = z.object({
 
 export type LoginFormInputs = z.infer<typeof loginSchema>;
 
+// Schema base para información de usuario
+const userInfoBaseSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  username: z.string(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+});
+
+// Schema para respuesta de autenticación - derivado del base
 export const authResponseSchema = z.object({
   token: z.string(),
-  user: z.object({
-    id: z.string(),
-    email: z.string().email(),
-    username: z.string(),
+  user: userInfoBaseSchema.extend({
     role: z.enum(['admin', 'staff']),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
     avatar: z.string().url().optional(),
   }),
 });
@@ -64,19 +69,24 @@ export const loginResponseDtoSchema = z.object({
 });
 export type LoginResponseDto = z.infer<typeof loginResponseDtoSchema>;
 
-export const registerSchema = z.object({
-  email: z.string().email('Correo electrónico inválido'),
-  username: z
-    .string()
-    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      'Solo se permiten letras, números y guiones bajos',
-    ),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
-  firstName: z.string().min(1, 'El nombre es requerido'),
-  lastName: z.string().min(1, 'El apellido es requerido'),
-});
+// Schema para registro - derivado con validaciones específicas
+export const registerSchema = userInfoBaseSchema
+  .pick({ email: true, username: true })
+  .extend({
+    email: z.string().email('Correo electrónico inválido'),
+    username: z
+      .string()
+      .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        'Solo se permiten letras, números y guiones bajos',
+      ),
+    password: z
+      .string()
+      .min(8, 'La contraseña debe tener al menos 8 caracteres'),
+    firstName: z.string().min(1, 'El nombre es requerido'),
+    lastName: z.string().min(1, 'El apellido es requerido'),
+  });
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
 

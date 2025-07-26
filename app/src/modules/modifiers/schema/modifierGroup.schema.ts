@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { modifierGroupSchema as domainModifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema'; // Importar el schema Zod
 import type { ModifierGroup } from '../../../app/schemas/domain/modifier-group.schema'; // Mantener importación de tipo
 
-// Schema base local para validaciones y transformaciones de DTO/Form
-const modifierGroupBaseSchemaForForm = z.object({
+// Schema base para modifier group con campos comunes
+export const modifierGroupBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   minSelections: z.number().int().min(0).optional(),
@@ -15,9 +15,9 @@ const modifierGroupBaseSchemaForForm = z.object({
   sortOrder: z.number().optional().default(0),
 });
 
-// Schema de validación para el formulario (usa el schema base local)
+// Schema de validación para el formulario - derivado del base con reglas de negocio
 export const modifierGroupFormValidationSchema =
-  modifierGroupBaseSchemaForForm.superRefine((data, ctx) => {
+  modifierGroupBaseSchema.superRefine((data, ctx) => {
     if (data.allowMultipleSelections) {
       if (data.maxSelections === undefined || data.maxSelections === null) {
         ctx.addIssue({
@@ -65,9 +65,9 @@ export type ModifierGroupFormInputs = z.infer<
   typeof modifierGroupFormValidationSchema
 >;
 
-// Schema para DTO de creación (usa el schema base local y transforma)
-export const createModifierGroupSchema =
-  modifierGroupBaseSchemaForForm.transform((data) => ({
+// Schema para DTO de creación - derivado del base con transformaciones
+export const createModifierGroupSchema = modifierGroupBaseSchema.transform(
+  (data) => ({
     ...data,
     minSelections: data.minSelections ?? 0,
     isRequired: data.isRequired ?? false,
@@ -75,15 +75,15 @@ export const createModifierGroupSchema =
     isActive: data.isActive ?? true,
     sortOrder: data.sortOrder ?? 0,
     maxSelections: data.allowMultipleSelections ? (data.maxSelections ?? 1) : 1,
-  }));
+  }),
+);
 // Tipo inferido para DTO de creación
 export type CreateModifierGroupInput = z.infer<
   typeof createModifierGroupSchema
 >;
 
-// Schema para DTO de actualización (usa el schema base local y lo hace parcial)
-export const updateModifierGroupSchema =
-  modifierGroupBaseSchemaForForm.partial();
+// Schema para DTO de actualización - derivado del base con todos los campos opcionales
+export const updateModifierGroupSchema = modifierGroupBaseSchema.partial();
 // Tipo inferido para DTO de actualización
 export type UpdateModifierGroupInput = z.infer<
   typeof updateModifierGroupSchema
@@ -104,6 +104,6 @@ export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
 // Re-exportar el tipo de dominio centralizado
 export type { ModifierGroup };
 
-// Mantener exportaciones anteriores si otros archivos dependen de ellas (revisar si es necesario)
-export const modifierGroupSchema = modifierGroupFormValidationSchema; // Alias para compatibilidad?
-export const modifierGroupBaseSchema = modifierGroupBaseSchemaForForm; // Alias para compatibilidad?
+// Alias para compatibilidad con código existente
+export const modifierGroupSchema = modifierGroupFormValidationSchema;
+// modifierGroupBaseSchema ya está exportado arriba

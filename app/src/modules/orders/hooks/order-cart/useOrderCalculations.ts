@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { CartItem } from '../../stores/useOrderCreationStore';
-import type { OrderAdjustment } from '../../types/adjustments.types';
+import type { OrderAdjustment } from '../../schema/adjustments.schema';
 
 export const useOrderCalculations = (
   items: CartItem[],

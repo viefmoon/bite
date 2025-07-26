@@ -18,7 +18,7 @@ import {
 
 // --- Schemas Zod ---
 
-// Schema para variantes en el formulario (sin requerir ID) - derivado del dominio
+// Schema para variantes en el formulario - derivado del dominio sin ID requerido
 const productVariantFormSchema = productVariantSchema
   .omit({ id: true })
   .extend({
@@ -26,7 +26,7 @@ const productVariantFormSchema = productVariantSchema
     sortOrder: z.number().optional().default(0),
   });
 
-// Schema base para formularios - compose desde el dominio con campos adicionales específicos del formulario
+// Schema base para productos con campos comunes del formulario
 const productFormBaseSchema = domainProductSchema
   .omit({
     id: true,
@@ -52,10 +52,24 @@ const productFormBaseSchema = domainProductSchema
     modifierGroupIds: z.array(z.string()).optional(), // IDs para asignar/actualizar
   });
 
-// Esquema para el formulario, con la validación condicional
-export const productSchema = productFormBaseSchema.superRefine((data, ctx) => {
-  if (data.hasVariants) {
-    if (!data.variants || data.variants.length === 0) {
+// Schema de creación/formulario - derivado del base con validación condicional
+export const productSchema = productFormBaseSchema.superRefine((data, ctx) =>
+  addVariantValidation(data, ctx, false),
+);
+
+// Tipo inferido para los inputs del formulario
+export type ProductFormInputs = z.infer<typeof productSchema>;
+
+// Función helper para validación de variantes (reutilizable)
+const addVariantValidation = (
+  data: any,
+  ctx: z.RefinementCtx,
+  isPartial = false,
+) => {
+  const checkVariants = isPartial ? data.hasVariants !== undefined : true;
+
+  if (checkVariants && data.hasVariants) {
+    if (data.variants !== undefined && data.variants.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Debe añadir al menos una variante si marca esta opción.',
@@ -70,7 +84,7 @@ export const productSchema = productFormBaseSchema.superRefine((data, ctx) => {
         path: ['price'],
       });
     }
-  } else {
+  } else if (checkVariants && data.hasVariants === false) {
     if (data.price === null || data.price === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -87,52 +101,12 @@ export const productSchema = productFormBaseSchema.superRefine((data, ctx) => {
       });
     }
   }
-});
+};
 
-// Tipo inferido para los inputs del formulario
-export type ProductFormInputs = z.infer<typeof productSchema>;
-
-// Schema para actualización de productos
+// Schema para actualización - derivado del base parcial con validación reutilizada
 export const updateProductSchema = productFormBaseSchema
   .partial()
-  .superRefine((data, ctx) => {
-    if (data.hasVariants !== undefined) {
-      if (data.hasVariants) {
-        if (data.variants !== undefined && data.variants.length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Debe añadir al menos una variante si marca esta opción.',
-            path: ['variants'],
-          });
-        }
-        if (data.price !== null && data.price !== undefined) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              'El precio principal debe estar vacío si el producto tiene variantes.',
-            path: ['price'],
-          });
-        }
-      } else {
-        if (data.price === null || data.price === undefined) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              'El precio es requerido si el producto no tiene variantes.',
-            path: ['price'],
-          });
-        }
-        if (data.variants && data.variants.length > 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              'No debe haber variantes si el producto no está marcado como "Tiene Variantes".',
-            path: ['variants'],
-          });
-        }
-      }
-    }
-  });
+  .superRefine((data, ctx) => addVariantValidation(data, ctx, true));
 
 export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 

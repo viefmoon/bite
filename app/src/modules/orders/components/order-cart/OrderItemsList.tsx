@@ -1,18 +1,10 @@
-<<<<<<< HEAD
-import React, { useMemo, useState } from 'react';
-=======
 import React, { useMemo } from 'react';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Text, IconButton, List } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
-<<<<<<< HEAD
-import type { CartItem } from '../../stores/useOrderCreationStore';
-=======
 import type { CartItem } from '../../stores/useOrderStore';
 import { PreparationStatusInfo } from '../../utils/formatters';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
 interface OrderItemsListProps {
   items: CartItem[];
@@ -33,48 +25,6 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-<<<<<<< HEAD
-  const [openSwipeableId, setOpenSwipeableId] = useState<string | null>(null);
-
-  const getPreparationStatusColor = (status: string | undefined) => {
-    switch (status) {
-      case 'NEW':
-        return '#2196F3';
-      case 'PENDING':
-        return theme.colors.error;
-      case 'IN_PROGRESS':
-        return '#FFA000';
-      case 'READY':
-        return '#4CAF50';
-      case 'DELIVERED':
-        return theme.colors.tertiary;
-      case 'CANCELLED':
-        return theme.colors.onSurfaceDisabled;
-      default:
-        return theme.colors.onSurfaceVariant;
-    }
-  };
-
-  const getPreparationStatusText = (status: string | undefined): string => {
-    switch (status) {
-      case 'NEW':
-        return 'Nuevo';
-      case 'PENDING':
-        return 'Pendiente';
-      case 'IN_PROGRESS':
-        return 'En Preparación';
-      case 'READY':
-        return 'Listo';
-      case 'DELIVERED':
-        return 'Entregado';
-      case 'CANCELLED':
-        return 'Cancelado';
-      default:
-        return '';
-    }
-  };
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
@@ -139,11 +89,7 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
       0,
     );
     const unitPriceWithModifiers = basePrice + modifiersPrice;
-<<<<<<< HEAD
-    const itemTotal = item.totalPrice || (unitPriceWithModifiers * item.quantity);
-=======
     const itemTotal = item.totalPrice || unitPriceWithModifiers * item.quantity;
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
     const canDelete =
       !isEditMode ||
@@ -167,97 +113,6 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
             </View>
           )}
           description={() => (
-<<<<<<< HEAD
-          <View>
-            {item.modifiers.length > 0 && (
-              <Text style={styles.modifiersText}>
-                {item.modifiers.map((m) => m.name).join(', ')}
-              </Text>
-            )}
-            {item.selectedPizzaCustomizations &&
-              item.selectedPizzaCustomizations.length > 0 && (
-                <Text style={styles.customizationText}>
-                  {item.selectedPizzaCustomizations.length} personalizaciones
-                </Text>
-              )}
-            {item.preparationNotes && (
-              <Text style={styles.notesText}>
-                Nota: {item.preparationNotes}
-              </Text>
-            )}
-            {isEditMode && item.preparationStatus && (
-              <View style={styles.statusContainer}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: getPreparationStatusColor(item.preparationStatus) + '20',
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.statusDot,
-                      {
-                        backgroundColor: getPreparationStatusColor(item.preparationStatus),
-                      },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color: getPreparationStatusColor(item.preparationStatus),
-                      },
-                    ]}
-                  >
-                    {getPreparationStatusText(item.preparationStatus)}
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-        right={() => (
-          <View style={styles.itemActionsContainer}>
-            <View style={styles.quantityActions}>
-              <IconButton
-                icon="minus-circle-outline"
-                size={24}
-                onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                disabled={
-                  disabled ||
-                  (isEditMode &&
-                    (item.preparationStatus === 'READY' ||
-                      item.preparationStatus === 'DELIVERED'))
-                }
-                style={styles.quantityButton}
-              />
-              <Text style={styles.quantityText}>{item.quantity}</Text>
-              <IconButton
-                icon="plus-circle-outline"
-                size={24}
-                onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                disabled={
-                  disabled ||
-                  (isEditMode &&
-                    (item.preparationStatus === 'READY' ||
-                      item.preparationStatus === 'DELIVERED'))
-                }
-                style={styles.quantityButton}
-              />
-            </View>
-            <View style={styles.priceContainer}>
-              <Text style={styles.itemPrice}>${itemTotal.toFixed(2)}</Text>
-              {item.quantity > 1 && (
-                <Text style={styles.unitPriceText}>
-                  (${unitPriceWithModifiers.toFixed(2)} c/u)
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
-=======
             <View>
               {item.modifiers.length > 0 && (
                 <Text style={styles.modifiersText}>
@@ -357,7 +212,6 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
               </View>
             </View>
           )}
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           style={styles.listItem}
         />
       </TouchableOpacity>

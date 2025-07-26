@@ -1,6 +1,6 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import type { Payment } from '../types/payment.types';
+import type { Payment } from '../../orders/schema/payment.schema';
 
 interface CreatePrepaymentDto {
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER';

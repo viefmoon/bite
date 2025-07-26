@@ -46,10 +46,7 @@ const createArea = async (data: CreateAreaDto): Promise<Area> => {
   return response.data;
 };
 
-const updateArea = async (
-  id: string,
-  data: UpdateAreaDto,
-): Promise<Area> => {
+const updateArea = async (id: string, data: UpdateAreaDto): Promise<Area> => {
   const response = await apiClient.patch<Area>(
     API_PATHS.AREAS_BY_ID.replace(':id', id),
     data,

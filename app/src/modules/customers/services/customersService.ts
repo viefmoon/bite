@@ -27,7 +27,10 @@ async function create(data: CreateCustomerInput): Promise<Customer> {
   return response.data;
 }
 
-async function update(id: string, data: UpdateCustomerInput): Promise<Customer> {
+async function update(
+  id: string,
+  data: UpdateCustomerInput,
+): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
     API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
     data,

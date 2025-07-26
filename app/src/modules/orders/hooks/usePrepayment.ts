@@ -35,19 +35,6 @@ export const usePrepayment = ({
   initialPaymentMethod = 'CASH',
 }: UsePrepaymentProps = {}): UsePrepaymentReturn => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-<<<<<<< HEAD
-  
-  const [prepaymentId, setPrepaymentId] = useState<string | null>(initialPrepaymentId);
-  const [paymentAmount, setPaymentAmount] = useState(initialPaymentAmount);
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER' | null>(
-    initialPaymentMethod
-  );
-  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
-  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
-
-  const handlePrepaymentCreated = useCallback(
-    (prepaymentIdCreated: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => {
-=======
 
   const [prepaymentId, setPrepaymentId] = useState<string | null>(
     initialPrepaymentId,
@@ -66,17 +53,12 @@ export const usePrepayment = ({
       amount: number,
       method: 'CASH' | 'CARD' | 'TRANSFER',
     ) => {
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       const isUpdate = prepaymentId === prepaymentIdCreated;
       setPrepaymentId(prepaymentIdCreated);
       setPaymentAmount(amount.toFixed(2));
       setPaymentMethod(method);
       setShowPrepaymentModal(false);
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       showSnackbar({
         message: isUpdate
           ? 'Pago actualizado correctamente'
@@ -84,11 +66,7 @@ export const usePrepayment = ({
         type: 'success',
       });
     },
-<<<<<<< HEAD
-    [prepaymentId, showSnackbar]
-=======
     [prepaymentId, showSnackbar],
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   );
 
   const handleDeletePrepayment = useCallback(() => {
@@ -98,32 +76,20 @@ export const usePrepayment = ({
 
   const confirmDeletePrepayment = useCallback(async () => {
     if (!prepaymentId) return;
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
     try {
       await prepaymentService.deletePrepayment(prepaymentId);
       setPrepaymentId(null);
       setPaymentAmount('');
       setPaymentMethod(null);
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       showSnackbar({
         message: 'Prepago eliminado correctamente',
         type: 'success',
       });
     } catch (error: any) {
       let errorMessage = 'Error al eliminar el prepago';
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       if (error?.response?.status === 404) {
         errorMessage = 'El prepago ya no existe o fue eliminado previamente';
         setPrepaymentId(null);
@@ -132,11 +98,7 @@ export const usePrepayment = ({
       } else if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       showSnackbar({
         message: errorMessage,
         type: 'error',
@@ -151,11 +113,7 @@ export const usePrepayment = ({
     setPaymentAmount('');
     setPaymentMethod('CASH');
     setShowPrepaymentModal(false);
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
     showSnackbar({
       message: 'Pago eliminado correctamente',
       type: 'success',
@@ -178,8 +136,4 @@ export const usePrepayment = ({
     confirmDeletePrepayment,
     handlePrepaymentDeleted,
   };
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b

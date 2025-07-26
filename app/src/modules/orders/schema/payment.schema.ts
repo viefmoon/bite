@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
 export const paymentMethodSchema = z.enum(['CASH', 'CARD', 'TRANSFER']);
-export const paymentStatusSchema = z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED']);
+export const paymentStatusSchema = z.enum([
+  'PENDING',
+  'COMPLETED',
+  'FAILED',
+  'REFUNDED',
+  'CANCELLED',
+]);
 
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>;
 export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
@@ -17,11 +23,13 @@ export const paymentSchema = z.object({
   paymentStatus: paymentStatusSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  order: z.object({
-    id: z.string().uuid(),
-    shiftOrderNumber: z.number(),
-    total: z.number(),
-  }).optional(),
+  order: z
+    .object({
+      id: z.string().uuid(),
+      shiftOrderNumber: z.number(),
+      total: z.number(),
+    })
+    .optional(),
 });
 
 export type Payment = z.infer<typeof paymentSchema>;

@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import React, { useMemo, useEffect, useCallback } from 'react';
-=======
 import React, {
   useMemo,
   useEffect,
@@ -8,7 +5,6 @@ import React, {
   useState,
   useRef,
 } from 'react';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import { Portal } from 'react-native-paper';
 import {
   View,
@@ -18,13 +14,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-<<<<<<< HEAD
-import {
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-=======
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import {
   Text,
   Divider,
@@ -34,128 +24,15 @@ import {
   Modal,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-<<<<<<< HEAD
-import { OrderTypeEnum, type OrderType } from '../types/orders.types';
-import { useGetAreas } from '@/modules/areasTables/services/areaService';
-import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
-import OrderHeader from './OrderHeader';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
-=======
 import { OrderTypeEnum } from '../types/orders.types';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
   useOrderStore,
   CartItem,
   CartItemModifier,
-<<<<<<< HEAD
-} from '../stores/useOrderCreationStore';
-import { useAuthStore } from '@/app/store/authStore';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
-import { useGetOrderMenu } from '../hooks/useMenuQueries';
-import { FAB } from 'react-native-paper';
-import type { OrderAdjustment } from '../types/adjustments.types';
-import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-
-import { useOrderType } from '../hooks/useOrderType';
-import { useOrderCalculations } from '../hooks/useOrderCalculations';
-import { useOrderValidation } from '../hooks/useOrderValidation';
-import { useOrderEditing } from '../hooks/useOrderEditing';
-import { usePrepayment } from '../hooks/usePrepayment';
-import { useOrderState } from '../hooks/useOrderState';
-import { useOrderDataLoader } from '../hooks/useOrderDataLoader';
-import { 
-  OrderTypeSelector, 
-  DineInForm, 
-  TakeAwayForm, 
-  DeliveryForm,
-  OrderItemsList,
-  OrderAdjustments,
-  PrepaymentSection,
-  ModalsContainer
-} from './order-cart';
-
-import type {
-  OrderItemDtoForBackend,
-} from '../types/update-order.types';
-
-export interface OrderDetailsForBackend {
-  userId?: string;
-  orderType: OrderType;
-  subtotal: number;
-  total: number;
-  items: OrderItemDtoForBackend[];
-  tableId?: string;
-  isTemporaryTable?: boolean;
-  temporaryTableName?: string;
-  temporaryTableAreaId?: string;
-  scheduledAt?: Date;
-  deliveryInfo: DeliveryInfo;
-  notes?: string;
-  payment?: {
-    amount: number;
-    method: 'CASH' | 'CARD' | 'TRANSFER';
-  };
-  adjustments?: {
-    orderId?: string;
-    name: string;
-    description?: string;
-    isPercentage: boolean;
-    value?: number;
-    amount?: number;
-  }[];
-  customerId?: string;
-  isFromWhatsApp?: boolean;
-  prepaymentId?: string;
-}
-
-const formatOrderStatus = (status: string): string => {
-  switch (status) {
-    case 'PENDING':
-      return 'Pendiente';
-    case 'IN_PROGRESS':
-      return 'En Progreso';
-    case 'IN_PREPARATION':
-      return 'En Preparación';
-    case 'READY':
-      return 'Lista';
-    case 'DELIVERED':
-      return 'Entregada';
-    case 'COMPLETED':
-      return 'Completada';
-    case 'CANCELLED':
-      return 'Cancelada';
-    default:
-      return status;
-  }
-};
-
-const getPreparationStatusText = (status: string | undefined): string => {
-  switch (status) {
-    case 'NEW':
-      return 'Nuevo';
-    case 'PENDING':
-      return 'Pendiente';
-    case 'IN_PROGRESS':
-      return 'En Preparación';
-    case 'READY':
-      return 'Listo';
-    case 'DELIVERED':
-      return 'Entregado';
-    case 'CANCELLED':
-      return 'Cancelado';
-    default:
-      return '';
-  }
-};
-=======
   useOrderSubtotal,
   useOrderTotal,
   useOrderItemsCount,
@@ -183,7 +60,6 @@ import {
   ModalsContainer,
 } from './order-cart';
 import { modalHelpers } from '../stores/useModalStore';
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
 interface OrderCartDetailProps {
   visible: boolean;
@@ -197,36 +73,8 @@ interface OrderCartDetailProps {
   onCancelOrder?: () => void;
   navigation?: any;
   onAddProducts?: () => void;
-<<<<<<< HEAD
-  pendingProductsToAdd?: CartItem[];
-  onItemsCountChanged?: (count: number) => void;
 }
 
-const getOrderStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case 'PENDING':
-      return '#FFA000';
-    case 'IN_PROGRESS':
-      return theme.colors.primary;
-    case 'IN_PREPARATION':
-      return '#FF6B35';
-    case 'READY':
-      return '#4CAF50';
-    case 'DELIVERED':
-      return theme.colors.tertiary;
-    case 'COMPLETED':
-      return '#10B981';
-    case 'CANCELLED':
-      return theme.colors.error;
-    default:
-      return theme.colors.onSurfaceVariant;
-  }
-};
-
-=======
-}
-
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   visible,
   onConfirmOrder,
@@ -243,8 +91,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-<<<<<<< HEAD
-=======
   // Referencias a los formularios
   const dineInFormRef = useRef<DineInFormRef>(null);
   const takeAwayFormRef = useRef<TakeAwayFormRef>(null);
@@ -300,7 +146,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const totalItemsCount = useOrderItemsCount();
   const isCartEmpty = useIsOrderEmpty();
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const {
     data: orderData,
     isLoading: isLoadingOrder,
@@ -309,173 +154,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     enabled: isEditMode && !!orderId && visible,
   });
 
-<<<<<<< HEAD
-  const { data: menu } = useGetOrderMenu();
-
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
     enabled: isEditMode && !!orderId && visible,
   });
 
-<<<<<<< HEAD
-  // Consolidate all states using useOrderState hook
-  const {
-    // States
-    editItems,
-    editOrderType,
-    editSelectedAreaId,
-    editSelectedTableId,
-    editScheduledTime,
-    editDeliveryInfo,
-    editOrderNotes,
-    editAdjustments,
-    editIsTemporaryTable,
-    editTemporaryTableName,
-    processedPendingProductsIds,
-    orderDataLoaded,
-    isTimePickerVisible,
-    isTimeAlertVisible,
-    isConfirming,
-    showExitConfirmation,
-    isModalReady,
-    showOptionsMenu,
-    showCancelConfirmation,
-    showModifyInProgressConfirmation,
-    pendingModifyAction,
-    modifyingItemName,
-    showHistoryModal,
-    showDetailModal,
-    showPaymentModal,
-    showAdjustmentModal,
-    adjustmentToEdit,
-    hasUnsavedChanges,
-    originalOrderState,
-    lastNotifiedCount,
-    // Setters
-    setEditItems,
-    setEditOrderType,
-    setEditSelectedAreaId,
-    setEditSelectedTableId,
-    setEditScheduledTime,
-    setEditDeliveryInfo,
-    setEditOrderNotes,
-    setEditAdjustments,
-    setEditIsTemporaryTable,
-    setEditTemporaryTableName,
-    setProcessedPendingProductsIds,
-    setOrderDataLoaded,
-    setTimeAlertVisible,
-    setIsConfirming,
-    setShowExitConfirmation,
-    setIsModalReady,
-    setShowOptionsMenu,
-    setShowCancelConfirmation,
-    setShowModifyInProgressConfirmation,
-    setPendingModifyAction,
-    setModifyingItemName,
-    setShowHistoryModal,
-    setShowDetailModal,
-    setShowPaymentModal,
-    setShowAdjustmentModal,
-    setAdjustmentToEdit,
-    setHasUnsavedChanges,
-    setOriginalOrderState,
-    setLastNotifiedCount,
-    // Helper functions
-    resetEditModeStates,
-    showTimePicker,
-    hideTimePicker,
-  } = useOrderState();
-
-  const orderCreationStore = useOrderCreationStore();
-
-  const cartItems = !isEditMode ? orderCreationStore.items : [];
-  const removeCartItem = !isEditMode ? orderCreationStore.removeItem : () => {};
-  const updateCartItemQuantity = !isEditMode
-    ? orderCreationStore.updateItemQuantity
-    : () => {};
-  const isCartVisible = !isEditMode ? orderCreationStore.isCartVisible : false;
-
-  const cartOrderType = !isEditMode
-    ? orderCreationStore.orderType
-    : OrderTypeEnum.DINE_IN;
-  const setCartOrderType = !isEditMode
-    ? orderCreationStore.setOrderType
-    : () => {};
-  const cartSelectedAreaId = !isEditMode
-    ? orderCreationStore.selectedAreaId
-    : null;
-  const setCartSelectedAreaId = !isEditMode
-    ? orderCreationStore.setSelectedAreaId
-    : () => {};
-  const cartSelectedTableId = !isEditMode
-    ? orderCreationStore.selectedTableId
-    : null;
-  const setCartSelectedTableId = !isEditMode
-    ? orderCreationStore.setSelectedTableId
-    : () => {};
-  const cartIsTemporaryTable = !isEditMode
-    ? orderCreationStore.isTemporaryTable
-    : false;
-  const setCartIsTemporaryTable = !isEditMode
-    ? orderCreationStore.setIsTemporaryTable
-    : () => {};
-  const cartTemporaryTableName = !isEditMode
-    ? orderCreationStore.temporaryTableName
-    : '';
-  const setCartTemporaryTableName = !isEditMode
-    ? orderCreationStore.setTemporaryTableName
-    : () => {};
-  const cartScheduledTime = !isEditMode
-    ? orderCreationStore.scheduledTime
-    : null;
-  const setCartScheduledTime = !isEditMode
-    ? orderCreationStore.setScheduledTime
-    : () => {};
-  const cartDeliveryInfo = !isEditMode ? orderCreationStore.deliveryInfo : {};
-  const setCartDeliveryInfo = orderCreationStore.setDeliveryInfo;
-  const cartOrderNotes = orderCreationStore.orderNotes;
-  const setCartOrderNotes = orderCreationStore.setOrderNotes;
-
-  const items = isEditMode ? editItems : cartItems;
-  const orderType = isEditMode ? editOrderType : cartOrderType;
-  const selectedAreaId = isEditMode ? editSelectedAreaId : cartSelectedAreaId;
-  const selectedTableId = isEditMode
-    ? editSelectedTableId
-    : cartSelectedTableId;
-  const isTemporaryTable = isEditMode
-    ? editIsTemporaryTable
-    : cartIsTemporaryTable;
-  const temporaryTableName = isEditMode
-    ? editTemporaryTableName
-    : cartTemporaryTableName;
-  const scheduledTime = isEditMode ? editScheduledTime : cartScheduledTime;
-  const deliveryInfo = isEditMode ? editDeliveryInfo : cartDeliveryInfo;
-  const orderNotes = isEditMode ? editOrderNotes : cartOrderNotes;
-  const adjustments = isEditMode ? editAdjustments : [];
-
-  const setOrderType = isEditMode ? setEditOrderType : setCartOrderType;
-  const setSelectedAreaId = isEditMode
-    ? setEditSelectedAreaId
-    : setCartSelectedAreaId;
-  const setSelectedTableId = isEditMode
-    ? setEditSelectedTableId
-    : setCartSelectedTableId;
-  const setIsTemporaryTable = isEditMode
-    ? setEditIsTemporaryTable
-    : setCartIsTemporaryTable;
-  const setTemporaryTableName = isEditMode
-    ? setEditTemporaryTableName
-    : setCartTemporaryTableName;
-  const setScheduledTime = isEditMode
-    ? setEditScheduledTime
-    : setCartScheduledTime;
-  const setDeliveryInfo = isEditMode
-    ? setEditDeliveryInfo
-    : setCartDeliveryInfo;
-  const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
-=======
   const validateOrder = () => {
     let isValid = true;
 
@@ -587,80 +269,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   const { user } = useAuthStore();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
-
-  const { cleanOrderDataForType } = useOrderType({
-    isEditMode,
-    initialOrderType: orderType,
-    onOrderTypeChange: setOrderType,
-  });
-
-  const {
-    subtotal,
-    adjustmentTotal: totalAdjustments,
-    total,
-    totalPaid,
-    remainingAmount: pendingAmount,
-  } = useOrderCalculations({
-    items,
-    adjustments,
-    payments,
-  });
-
-  const {
-    areaError,
-    tableError,
-    recipientNameError,
-    recipientPhoneError,
-    addressError,
-    setAreaError,
-    setTableError,
-    setRecipientNameError,
-    setRecipientPhoneError,
-    setAddressError,
-    validateOrder,
-    clearAllErrors,
-  } = useOrderValidation({
-    orderType,
-    items,
-    selectedAreaId,
-    selectedTableId,
-    isTemporaryTable,
-    temporaryTableName,
-    deliveryInfo,
-  });
-
-  const {
-    editingItemFromList,
-    editingProduct,
-    handleEditCartItem,
-    clearEditingState,
-  } = useOrderEditing({
-    isEditMode,
-    onEditItem,
-  });
-
-  // Hook para manejo de prepagos
-  const {
-    prepaymentId,
-    paymentAmount,
-    paymentMethod,
-    showPrepaymentModal,
-    showDeletePrepaymentConfirm,
-    setShowPrepaymentModal,
-    setShowDeletePrepaymentConfirm,
-    handlePrepaymentCreated,
-    handleDeletePrepayment,
-    confirmDeletePrepayment,
-    handlePrepaymentDeleted,
-  } = usePrepayment({
-    initialPrepaymentId: null,
-    initialPaymentAmount: '',
-    initialPaymentMethod: 'CASH',
-  });
-
-  const { user } = useAuthStore();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const removeItem = useCallback(
     (itemId: string) => {
@@ -680,24 +288,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-<<<<<<< HEAD
-          setModifyingItemName(item.productName);
-          setPendingModifyAction(() => () => {
-            setEditItems((prev) => prev.filter((i) => i.id !== itemId));
-=======
           modalHelpers.showModifyInProgressConfirmation({
             modifyingItemName: item.productName,
             pendingModifyAction: () => removeCartItem(itemId),
             setPendingModifyAction: () => {},
             setModifyingItemName: () => {},
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           });
         } else {
-<<<<<<< HEAD
-          setEditItems((prev) => prev.filter((i) => i.id !== itemId));
-=======
           removeCartItem(itemId);
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         }
       } else {
         removeCartItem(itemId);
@@ -733,18 +331,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         };
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-<<<<<<< HEAD
-          setModifyingItemName(item.productName);
-          setPendingModifyAction(() => updateQuantity);
-          setShowModifyInProgressConfirmation(true);
-=======
           modalHelpers.showModifyInProgressConfirmation({
             modifyingItemName: item.productName,
             pendingModifyAction: updateQuantity,
             setPendingModifyAction: () => {},
             setModifyingItemName: () => {},
           });
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         } else {
           updateQuantity();
         }
@@ -755,74 +347,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode, items, removeItem, showSnackbar, updateCartItemQuantity],
   );
 
-<<<<<<< HEAD
-  const totalItemsCount = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.quantity, 0);
-  }, [items]);
-
-  const existingItemsCount = useMemo(() => {
-    if (!isEditMode) return 0;
-    return editItems
-      .filter((item) => !item.id.startsWith('new-'))
-      .reduce((sum, item) => sum + item.quantity, 0);
-  }, [isEditMode, editItems]);
-
-  useEffect(() => {
-    if (isEditMode && onItemsCountChanged && visible && orderDataLoaded) {
-      if (existingItemsCount !== lastNotifiedCount) {
-        onItemsCountChanged(existingItemsCount);
-        setLastNotifiedCount(existingItemsCount);
-      }
-    }
-  }, [
-    isEditMode,
-    existingItemsCount,
-    visible,
-    orderDataLoaded,
-    lastNotifiedCount,
-    onItemsCountChanged,
-  ]);
-
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
 
-<<<<<<< HEAD
-  const {
-    data: areasData,
-    isLoading: isLoadingAreas,
-    error: errorAreas,
-  } = useGetAreas();
-  const {
-    data: tablesData,
-    isLoading: isLoadingTables,
-    error: errorTables,
-  } = useGetTablesByArea(selectedAreaId);
-
-  // Use the order data loader hook
-  const { findModifierById } = useOrderDataLoader({
-    isEditMode,
-    orderData,
-    visible,
-    setEditOrderType,
-    setEditSelectedTableId,
-    setEditScheduledTime,
-    setEditDeliveryInfo,
-    setEditOrderNotes,
-    setEditAdjustments,
-    setEditSelectedAreaId,
-    setEditIsTemporaryTable,
-    setEditTemporaryTableName,
-    setEditItems,
-    setOrderDataLoaded,
-    setOriginalOrderState,
-    setHasUnsavedChanges,
-  });
-
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
 
@@ -871,109 +399,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return result;
   }, []);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    if (
-      pendingProductsToAdd.length > 0 &&
-      isEditMode &&
-      visible &&
-      orderDataLoaded
-    ) {
-      const unprocessedProducts = pendingProductsToAdd.filter((item) => {
-        const productKey = `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`;
-        return !processedPendingProductsIds.includes(productKey);
-      });
-
-      if (unprocessedProducts.length > 0) {
-        const newProductsWithStatus = unprocessedProducts.map((item) => ({
-          ...item,
-          preparationStatus: 'NEW' as const,
-          id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-        }));
-
-        setEditItems((prevItems) => {
-          const allItems = [...prevItems, ...newProductsWithStatus];
-          const grouped = groupIdenticalItems(allItems);
-
-          return grouped;
-        });
-
-        const newProcessedIds = unprocessedProducts.map(
-          (item) =>
-            `${item.productId}-${item.variantId || 'null'}-${JSON.stringify(item.modifiers.map((m) => m.id).sort())}-${item.preparationNotes || ''}`,
-        );
-        setProcessedPendingProductsIds((prev) => [...prev, ...newProcessedIds]);
-
-        const uniqueNewItems = newProductsWithStatus.length;
-        showSnackbar({
-          message: `${uniqueNewItems} producto${uniqueNewItems > 1 ? 's' : ''} añadido${uniqueNewItems > 1 ? 's' : ''}`,
-          type: 'success',
-        });
-      }
-    }
-  }, [
-    pendingProductsToAdd,
-    isEditMode,
-    visible,
-    orderDataLoaded,
-    processedPendingProductsIds,
-    groupIdenticalItems,
-    showSnackbar,
-  ]);
-
-  useEffect(() => {
-    clearAllErrors();
-  }, [orderType, clearAllErrors]);
-
-  useEffect(() => {
-    if (!isEditMode || !originalOrderState || !visible) {
-      setHasUnsavedChanges(false);
-      return;
-    }
-
-    const hasChanges =
-      JSON.stringify(editItems) !== JSON.stringify(originalOrderState.items) ||
-      editOrderType !== originalOrderState.orderType ||
-      editSelectedTableId !== originalOrderState.tableId ||
-      editIsTemporaryTable !== originalOrderState.isTemporaryTable ||
-      editTemporaryTableName !== originalOrderState.temporaryTableName ||
-      JSON.stringify(editDeliveryInfo) !==
-        JSON.stringify(originalOrderState.deliveryInfo) ||
-      editOrderNotes !== originalOrderState.notes ||
-      (editScheduledTime?.getTime() ?? null) !==
-        (originalOrderState.scheduledAt?.getTime() ?? null) ||
-      JSON.stringify(editAdjustments) !==
-        JSON.stringify(originalOrderState.adjustments);
-
-    setHasUnsavedChanges(hasChanges);
-  }, [
-    isEditMode,
-    originalOrderState,
-    visible,
-    editItems,
-    editOrderType,
-    editSelectedTableId,
-    editIsTemporaryTable,
-    editTemporaryTableName,
-    editDeliveryInfo,
-    editOrderNotes,
-    editScheduledTime,
-    editAdjustments,
-  ]);
-
-  useEffect(() => {
-    if (!visible && isEditMode) {
-      resetEditModeStates();
-      clearEditingState();
-    }
-  }, [visible, isEditMode, resetEditModeStates, clearEditingState]);
-=======
   useEffect(() => {
     if (!visible && isEditMode) {
       clearEditingState();
     }
   }, [visible, isEditMode, clearEditingState]);
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
   useEffect(() => {
     if (visible && !isModalReady) {
@@ -987,18 +417,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const handleAddAdjustment = useCallback(
     (adjustment: OrderAdjustment) => {
       if (isEditMode) {
-<<<<<<< HEAD
-        const newAdjustment = {
-          ...adjustment,
-          id:
-            adjustment.id ||
-            `new-adjustment-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          isNew: true,
-        };
-        setEditAdjustments((prev) => [...prev, newAdjustment]);
-=======
         addAdjustment(adjustment);
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       }
     },
     [isEditMode, addAdjustment],
@@ -1019,18 +438,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         removeAdjustment(id);
       }
     },
-<<<<<<< HEAD
-    [isEditMode],
-  );
-
-  const handleConfirm = async () => {
-    if (isConfirming) return;
-
-    // Validar que haya items
-    if (items.length === 0) {
-      showSnackbar({
-        message: 'No hay productos en el carrito',
-=======
     [isEditMode, removeAdjustment],
   );
 
@@ -1038,151 +445,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     if (!user?.id) {
       showSnackbar({
         message: 'Error: No se pudo identificar el usuario',
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         type: 'error',
       });
       return;
     }
 
-<<<<<<< HEAD
-    // Validar prepago si existe
-    if (!isEditMode && prepaymentId && parseFloat(paymentAmount || '0') > total) {
-      showSnackbar({
-        message: 'El prepago excede el total de la orden. Por favor edite el pago antes de continuar.',
-        type: 'error',
-      });
-      return;
-    }
-
-    // Validar y mostrar errores específicos
-    if (!validateOrder()) {
-      // Los errores ya se establecen en el hook validateOrder
-      // Mostrar un mensaje general si hay errores
-      showSnackbar({
-        message: 'Por favor complete todos los campos requeridos',
-        type: 'error',
-      });
-      return;
-    }
-
-    const cleanedData = cleanOrderDataForType(
-      orderType,
-      deliveryInfo,
-      selectedTableId,
-      selectedAreaId,
-      isTemporaryTable,
-      temporaryTableName,
-    );
-
-    const itemsForBackend: OrderItemDtoForBackend[] = [];
-
-    items.forEach((item: CartItem) => {
-      if (isEditMode && item.id && !item.id.startsWith('new-')) {
-        const existingIds = item.id
-          .split(',')
-          .filter((id) => id.trim() && !id.startsWith('new-'));
-        const requiredQuantity = item.quantity;
-
-        for (let i = 0; i < requiredQuantity; i++) {
-          const isExistingItem = i < existingIds.length;
-
-          itemsForBackend.push({
-            id: isExistingItem ? existingIds[i] : undefined,
-            productId: item.productId,
-            productVariantId: item.variantId || null,
-            basePrice: Number(item.unitPrice),
-            finalPrice: Number(item.totalPrice / item.quantity),
-            preparationNotes: item.preparationNotes || null,
-            productModifiers:
-              item.modifiers && item.modifiers.length > 0
-                ? item.modifiers.map((mod) => ({
-                    modifierId: mod.id,
-                  }))
-                : undefined,
-            selectedPizzaCustomizations:
-              item.selectedPizzaCustomizations || undefined,
-          });
-        }
-      } else {
-        for (let i = 0; i < item.quantity; i++) {
-          itemsForBackend.push({
-            productId: item.productId,
-            productVariantId: item.variantId || null,
-            basePrice: Number(item.unitPrice),
-            finalPrice: Number(item.totalPrice / item.quantity),
-            preparationNotes: item.preparationNotes || null,
-            productModifiers:
-              item.modifiers && item.modifiers.length > 0
-                ? item.modifiers.map((mod) => ({
-                    modifierId: mod.id,
-                  }))
-                : undefined,
-            selectedPizzaCustomizations:
-              item.selectedPizzaCustomizations || undefined,
-          });
-        }
-      }
-    });
-
-    let formattedPhone: string | undefined = undefined;
-    if (
-      cleanedData.deliveryInfo.recipientPhone &&
-      cleanedData.deliveryInfo.recipientPhone.trim() !== ''
-    ) {
-      formattedPhone = cleanedData.deliveryInfo.recipientPhone.trim();
-    }
-
-    const orderDetails: OrderDetailsForBackend = {
-      userId: user?.id,
-      orderType,
-      subtotal,
-      total,
-      items: itemsForBackend,
-      tableId: cleanedData.tableId,
-      isTemporaryTable: cleanedData.isTemporaryTable,
-      temporaryTableName: cleanedData.temporaryTableName,
-      temporaryTableAreaId: cleanedData.temporaryTableAreaId,
-      scheduledAt: scheduledTime ? scheduledTime : undefined,
-      deliveryInfo: {
-        ...cleanedData.deliveryInfo,
-        recipientPhone: formattedPhone,
-      },
-      notes: orderNotes || undefined,
-      adjustments: isEditMode
-        ? editAdjustments
-            .filter((adj) => !adj.isDeleted)
-            .map((adj) => {
-              return {
-                orderId: orderId || undefined,
-                name: adj.name,
-                isPercentage: adj.isPercentage,
-                value: adj.value,
-                amount: adj.amount,
-              };
-            })
-        : undefined,
-    };
-
-    if (!orderDetails.userId) {
-      showSnackbar({
-        message: 'Error: No se pudo identificar el usuario',
-        type: 'error',
-      });
-      return;
-    }
-
-    setIsConfirming(true);
-
-    if (!isEditMode && prepaymentId) {
-      orderDetails.prepaymentId = prepaymentId;
-    }
-
-=======
     if (!validateOrder()) {
       return;
     }
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
     try {
       await confirmOrder(user.id, onConfirmOrder);
 
@@ -1194,22 +465,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         onClose?.();
       }
     } catch (error) {
-<<<<<<< HEAD
-      setIsConfirming(false);
-    }
-  };
-
-  const selectedAreaName = useMemo(
-    () => areasData?.find((a: any) => a.id === selectedAreaId)?.name,
-    [areasData, selectedAreaId],
-  );
-  const selectedTableName = useMemo(() => {
-    return tablesData?.find((t) => t.id === selectedTableId)?.name;
-  }, [tablesData, selectedTableId]);
-
-  // showTimePicker and hideTimePicker are now provided by useOrderState hook
-
-=======
       showSnackbar({
         message:
           error instanceof Error ? error.message : 'Error al procesar la orden',
@@ -1218,7 +473,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   };
 
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
     now.setSeconds(0, 0);
@@ -1232,18 +486,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   };
 
-<<<<<<< HEAD
-  const formattedScheduledTime = useMemo(() => {
-    if (!scheduledTime) return null;
-    try {
-      return format(scheduledTime, 'h:mm a').toLowerCase();
-    } catch (error) {
-      return 'Hora inválida';
-    }
-  }, [scheduledTime]);
-
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const handleUpdateEditedItem = useCallback(
     (
       itemId: string,
@@ -1272,11 +514,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
       clearEditingState();
     },
-<<<<<<< HEAD
-    [isEditMode, clearEditingState],
-=======
     [isEditMode, updateCartItem, clearEditingState],
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   );
 
   const renderFields = () => {
@@ -1284,83 +522,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       case OrderTypeEnum.DINE_IN:
         return (
           <DineInForm
-<<<<<<< HEAD
-            selectedAreaId={selectedAreaId}
-            selectedAreaName={selectedAreaName}
-            selectedTableId={selectedTableId}
-            selectedTableName={selectedTableName}
-            isTemporaryTable={isTemporaryTable}
-            temporaryTableName={temporaryTableName}
-            orderNotes={orderNotes}
-            formattedScheduledTime={formattedScheduledTime}
-            areaError={areaError}
-            tableError={tableError}
-            areasData={areasData || []}
-            tablesData={tablesData || []}
-            isLoadingAreas={isLoadingAreas}
-            isLoadingTables={isLoadingTables}
-            errorAreas={errorAreas}
-            errorTables={errorTables}
-            isEditMode={isEditMode}
-            orderData={orderData}
-            onAreaSelect={(areaId) => {
-              setSelectedAreaId(areaId);
-              setSelectedTableId(null);
-            }}
-            onTableSelect={setSelectedTableId}
-            onTemporaryTableToggle={setIsTemporaryTable}
-            onTemporaryTableNameChange={setTemporaryTableName}
-            onNotesChange={setOrderNotes}
-            onScheduleTimePress={showTimePicker}
-            onScheduleTimeClear={() => setScheduledTime(null)}
-            setAreaError={setAreaError}
-            setTableError={setTableError}
-=======
             ref={dineInFormRef}
             onScheduleTimePress={showTimePicker}
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       case OrderTypeEnum.TAKE_AWAY:
         return (
           <TakeAwayForm
-<<<<<<< HEAD
-            deliveryInfo={deliveryInfo}
-            orderNotes={orderNotes}
-            formattedScheduledTime={formattedScheduledTime}
-            recipientNameError={recipientNameError}
-            recipientPhoneError={recipientPhoneError}
-            onDeliveryInfoChange={setDeliveryInfo}
-            onNotesChange={setOrderNotes}
-            onScheduleTimePress={showTimePicker}
-            onScheduleTimeClear={() => setScheduledTime(null)}
-            setRecipientNameError={setRecipientNameError}
-            setRecipientPhoneError={setRecipientPhoneError}
-=======
             ref={takeAwayFormRef}
             onScheduleTimePress={showTimePicker}
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       case OrderTypeEnum.DELIVERY:
         return (
           <DeliveryForm
-<<<<<<< HEAD
-            deliveryInfo={deliveryInfo}
-            orderNotes={orderNotes}
-            formattedScheduledTime={formattedScheduledTime}
-            addressError={addressError}
-            recipientPhoneError={recipientPhoneError}
-            onDeliveryInfoChange={setDeliveryInfo}
-            onNotesChange={setOrderNotes}
-            onScheduleTimePress={showTimePicker}
-            onScheduleTimeClear={() => setScheduledTime(null)}
-            setAddressError={setAddressError}
-            setRecipientPhoneError={setRecipientPhoneError}
-=======
             ref={deliveryFormRef}
             onScheduleTimePress={showTimePicker}
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       default:
@@ -1485,7 +662,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   <View style={styles.headerTitleContainer}>
                     <Text style={styles.headerTitle}>
                       {orderNumber && orderDate
-                        ? `Editar Orden #${orderNumber} - ${format(orderDate, 'dd/MM/yyyy', { locale: es })}`
+                        ? `Editar Orden #${orderNumber}`
                         : orderNumber
                           ? `Editando Orden #${orderNumber}`
                           : 'Editar Orden'}
@@ -1602,10 +779,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               onUpdateQuantity={updateItemQuantity}
             />
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
             {isEditMode && (
               <Button
                 onPress={() => {
@@ -1616,11 +789,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       navigation.navigate('AddProductsToOrder', {
                         orderId,
                         orderNumber,
-<<<<<<< HEAD
-                        existingOrderItemsCount: editItems
-=======
                         existingOrderItemsCount: items
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                           .filter((item) => !item.id.startsWith('new-'))
                           .reduce((sum, item) => sum + item.quantity, 0),
                         onProductsAdded: (newProducts: CartItem[]) => {
@@ -1632,13 +801,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             }),
                           );
 
-<<<<<<< HEAD
-                          const allItems = [
-                            ...editItems,
-                            ...newProductsWithStatus,
-                          ];
-                          const groupedItems = groupIdenticalItems(allItems);
-=======
                           newProductsWithStatus.forEach((item) => {
                             addItem(
                               {
@@ -1654,7 +816,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                               item.pizzaExtraCost,
                             );
                           });
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
                           showSnackbar({
                             message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
@@ -1662,12 +823,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                           });
                         },
                       });
-<<<<<<< HEAD
-                    } catch (error) {
-                    }
-=======
                     } catch (error) {}
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                   }
                 }}
                 mode="outlined"
@@ -1685,12 +841,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <OrderAdjustments
                 adjustments={adjustments}
                 subtotal={subtotal}
-<<<<<<< HEAD
-                onAddAdjustment={() => setShowAdjustmentModal(true)}
-                onEditAdjustment={(adjustment) => {
-                  setAdjustmentToEdit(adjustment);
-                  setShowAdjustmentModal(true);
-=======
                 onAddAdjustment={() =>
                   modalHelpers.showAdjustment({
                     adjustmentToEdit: null,
@@ -1709,7 +859,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     handleUpdateAdjustment,
                     subtotal,
                   });
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                 }}
                 onRemoveAdjustment={handleRemoveAdjustment}
                 disabled={false}
@@ -1747,9 +896,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               totalPaid={totalPaid}
               pendingAmount={pendingAmount}
               canRegisterPayments={canRegisterPayments}
-<<<<<<< HEAD
-              onShowPrepaymentModal={() => setShowPrepaymentModal(true)}
-=======
               onShowPrepaymentModal={() =>
                 modalHelpers.showPrepayment({
                   orderTotal: total,
@@ -1758,7 +904,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   handlePrepaymentDeleted,
                 })
               }
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
               onDeletePrepayment={handleDeletePrepayment}
             />
           </ScrollView>
@@ -1830,81 +975,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             />
           )}
 
-<<<<<<< HEAD
-          <ModalsContainer
-            // DateTimePicker props
-            isTimePickerVisible={isTimePickerVisible}
-            scheduledTime={scheduledTime}
-            orderType={orderType}
-            onTimeConfirm={handleTimeConfirm}
-            hideTimePicker={hideTimePicker}
-            
-            // Alert modals props
-            isTimeAlertVisible={isTimeAlertVisible}
-            setTimeAlertVisible={setTimeAlertVisible}
-            showExitConfirmation={showExitConfirmation}
-            setShowExitConfirmation={setShowExitConfirmation}
-            showCancelConfirmation={showCancelConfirmation}
-            setShowCancelConfirmation={setShowCancelConfirmation}
-            showModifyInProgressConfirmation={showModifyInProgressConfirmation}
-            setShowModifyInProgressConfirmation={setShowModifyInProgressConfirmation}
-            showDeletePrepaymentConfirm={showDeletePrepaymentConfirm}
-            setShowDeletePrepaymentConfirm={setShowDeletePrepaymentConfirm}
-            
-            // Modal data props
-            orderNumber={orderNumber}
-            modifyingItemName={modifyingItemName}
-            pendingModifyAction={pendingModifyAction}
-            setPendingModifyAction={setPendingModifyAction}
-            setModifyingItemName={setModifyingItemName}
-            
-            // Callbacks
-            onClose={onClose}
-            onCancelOrder={onCancelOrder}
-            confirmDeletePrepayment={confirmDeletePrepayment}
-            
-            // Edit mode specific modals
-            isEditMode={isEditMode}
-            editingProduct={editingProduct}
-            editingItemFromList={editingItemFromList}
-            clearEditingState={clearEditingState}
-            handleUpdateEditedItem={handleUpdateEditedItem}
-            
-            // Order detail modal
-            showDetailModal={showDetailModal}
-            setShowDetailModal={setShowDetailModal}
-            orderId={orderId}
-            orderData={orderData}
-            
-            // Order history modal  
-            showHistoryModal={showHistoryModal}
-            setShowHistoryModal={setShowHistoryModal}
-            
-            // Payment modal
-            showPaymentModal={showPaymentModal}
-            setShowPaymentModal={setShowPaymentModal}
-            orderTotal={total}
-            orderStatus={orderData?.orderStatus}
-            
-            // Adjustment modal
-            showAdjustmentModal={showAdjustmentModal}
-            setShowAdjustmentModal={setShowAdjustmentModal}
-            adjustmentToEdit={adjustmentToEdit}
-            setAdjustmentToEdit={setAdjustmentToEdit}
-            handleAddAdjustment={handleAddAdjustment}
-            handleUpdateAdjustment={handleUpdateAdjustment}
-            subtotal={subtotal}
-            
-            // Prepayment modal
-            showPrepaymentModal={showPrepaymentModal}
-            setShowPrepaymentModal={setShowPrepaymentModal}
-            prepaymentId={prepaymentId}
-            handlePrepaymentCreated={handlePrepaymentCreated}
-            handlePrepaymentDeleted={handlePrepaymentDeleted}
-          />
-=======
           <ModalsContainer />
->>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         </GestureHandlerRootView>
       </Modal>
     </Portal>
@@ -2363,6 +1434,9 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     addProductsButton: {
       marginTop: theme.spacing.m,
       marginBottom: theme.spacing.m,
+    },
+    iconButtonNoMargin: {
+      margin: 0,
     },
   });
 export default OrderCartDetail;

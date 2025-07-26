@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import type { CartItem } from '../stores/useOrderCreationStore';
-import type { OrderAdjustment } from '../types/adjustments.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import type { OrderType } from '../types/orders.types';
 import { useFullMenuQuery } from '@/modules/products/hooks/useFullMenuQuery';
@@ -54,7 +54,7 @@ export const useOrderDataLoader = ({
   const findModifierById = useCallback(
     (modifierId: string) => {
       if (!fullMenuData) return null;
-      
+
       for (const product of fullMenuData) {
         for (const group of product.modifierGroups || []) {
           for (const modifier of group.modifiers || []) {
@@ -71,7 +71,7 @@ export const useOrderDataLoader = ({
       }
       return null;
     },
-    [fullMenuData]
+    [fullMenuData],
   );
 
   useEffect(() => {
@@ -134,8 +134,7 @@ export const useOrderDataLoader = ({
               price: parseFloat(mod.price) || 0,
             });
           });
-        }
-        else if (
+        } else if (
           item.productModifiers &&
           Array.isArray(item.productModifiers)
         ) {
@@ -162,7 +161,9 @@ export const useOrderDataLoader = ({
           .join(',');
         const pizzaCustomizationIds = item.selectedPizzaCustomizations
           ? item.selectedPizzaCustomizations
-              .map((c: any) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`)
+              .map(
+                (c: any) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`,
+              )
               .sort()
               .join(',')
           : '';

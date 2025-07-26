@@ -11,30 +11,33 @@ export type PrinterConnectionType = z.infer<typeof PrinterConnectionTypeSchema>;
 
 const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
 
-export const thermalPrinterSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  connectionType: PrinterConnectionTypeSchema,
-  ipAddress: z.string().ip({ version: 'v4' }).nullable(),
-  port: z.number().int().positive().nullable(),
-  path: z.string().nullable(),
-  isActive: z.boolean(),
-  macAddress: z.string().regex(macRegex, 'MAC inválida').nullable().optional(),
-  isDefaultPrinter: z.boolean().optional().default(false),
-  autoDeliveryPrint: z.boolean().optional().default(false),
-  autoPickupPrint: z.boolean().optional().default(false),
-  paperWidth: z.number().optional().default(80),
-  charactersPerLine: z.number().optional().default(48),
-  cutPaper: z.boolean().optional().default(true),
-  feedLines: z.number().optional().default(3),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-  deletedAt: z.string().datetime().nullable().optional(),
-});
+// Schema completo para entidad ThermalPrinter - derivado del base con campos adicionales
+export const thermalPrinterSchema = printerBaseSchema
+  .omit({
+    ipAddress: true,
+    port: true,
+    path: true,
+    macAddress: true,
+  })
+  .extend({
+    id: z.string().uuid(),
+    ipAddress: z.string().ip({ version: 'v4' }).nullable(),
+    port: z.number().int().positive().nullable(),
+    path: z.string().nullable(),
+    macAddress: z
+      .string()
+      .regex(macRegex, 'MAC inválida')
+      .nullable()
+      .optional(),
+    createdAt: z.string().datetime().optional(),
+    updatedAt: z.string().datetime().optional(),
+    deletedAt: z.string().datetime().nullable().optional(),
+  });
 
 export type ThermalPrinter = z.infer<typeof thermalPrinterSchema>;
 
-const thermalPrinterDtoObjectSchema = z.object({
+// Schema base para printer con campos comunes
+const printerBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
   connectionType: PrinterConnectionTypeSchema,
   ipAddress: z
@@ -71,8 +74,9 @@ const thermalPrinterDtoObjectSchema = z.object({
     .default(3),
 });
 
+// Función helper para validación de conexión (reutilizable)
 const refinePrinterDto = (
-  data: Partial<z.infer<typeof thermalPrinterDtoObjectSchema>>,
+  data: Partial<z.infer<typeof printerBaseSchema>>,
   ctx: z.RefinementCtx,
 ) => {
   if (data.connectionType === undefined) return;
@@ -125,14 +129,16 @@ const refinePrinterDto = (
   }
 };
 
+// Schema para creación - derivado del base con validación
 export const createThermalPrinterDtoSchema =
-  thermalPrinterDtoObjectSchema.superRefine(refinePrinterDto);
+  printerBaseSchema.superRefine(refinePrinterDto);
 
 export type CreateThermalPrinterDto = z.infer<
   typeof createThermalPrinterDtoSchema
 >;
 
-export const updateThermalPrinterDtoSchema = thermalPrinterDtoObjectSchema
+// Schema para actualización - derivado del base parcial con validación
+export const updateThermalPrinterDtoSchema = printerBaseSchema
   .partial()
   .superRefine(refinePrinterDto);
 
@@ -140,6 +146,7 @@ export type UpdateThermalPrinterDto = z.infer<
   typeof updateThermalPrinterDtoSchema
 >;
 
+// Schema para filtros de búsqueda - derivado del base con campos específicos
 export const findAllThermalPrintersFilterSchema = baseListQuerySchema.extend({
   name: z.string().optional(),
   connectionType: PrinterConnectionTypeSchema.optional(),
@@ -150,6 +157,7 @@ export type FindAllThermalPrintersDto = z.infer<
   typeof findAllThermalPrintersFilterSchema
 >;
 
+// Schema para formulario - alias del schema de creación
 export const printerFormSchema = createThermalPrinterDtoSchema;
 export type PrinterFormData = z.input<typeof printerFormSchema>;
 

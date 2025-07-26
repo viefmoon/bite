@@ -76,19 +76,19 @@ export const AdaptiveModal: React.FC<AdaptiveModalProps> = ({
         },
         scrollContent: {
           padding: responsive.isTablet
-            ? responsive.spacing.l
-            : responsive.spacing.m,
+            ? responsive.spacing(4)
+            : responsive.spacing(3),
         },
         contentPadding: {
           padding: responsive.isTablet
-            ? responsive.spacing.l
-            : responsive.spacing.m,
+            ? responsive.spacing(4)
+            : responsive.spacing(3),
           flex: 1,
         },
         footer: {
           borderTopWidth: 1,
           borderTopColor: theme.colors.surfaceVariant,
-          padding: responsive.spacing.m,
+          padding: responsive.spacing(3),
           backgroundColor: theme.colors.surface,
         },
       }),

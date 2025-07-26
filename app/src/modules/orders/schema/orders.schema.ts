@@ -62,10 +62,9 @@ export interface FullMenuCategory extends Category {
 export const findAllOrdersDtoSchema = z.object({
   userId: z.string().uuid().optional(),
   tableId: z.string().uuid().optional(),
-  orderStatus: z.union([
-    orderStatusSchema,
-    z.array(orderStatusSchema)
-  ]).optional(),
+  orderStatus: z
+    .union([orderStatusSchema, z.array(orderStatusSchema)])
+    .optional(),
   orderType: orderTypeSchema.optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -87,35 +86,48 @@ export const orderOpenListSchema = z.object({
   itemCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  table: z.object({
-    id: z.string().uuid(),
-    number: z.number(),
-    name: z.string(),
-    isTemporary: z.boolean(),
-    area: z.object({
-      name: z.string(),
-    }).optional(),
-  }).nullable().optional(),
-  deliveryInfo: z.object({
-    recipientName: z.string(),
-    recipientPhone: z.string().nullable(),
-    address: z.object({
+  table: z
+    .object({
       id: z.string().uuid(),
+      number: z.number(),
       name: z.string(),
-      street: z.string(),
-      number: z.string(),
-      interiorNumber: z.string().nullable(),
-      neighborhood: z.string(),
-      latitude: z.number().nullable(),
-      longitude: z.number().nullable(),
-    }).nullable(),
-  }).nullable().optional(),
-  customer: z.object({
-    id: z.string().uuid(),
-    firstName: z.string(),
-    lastName: z.string(),
-    whatsappPhoneNumber: z.string(),
-  }).nullable().optional(),
+      isTemporary: z.boolean(),
+      area: z
+        .object({
+          name: z.string(),
+        })
+        .optional(),
+    })
+    .nullable()
+    .optional(),
+  deliveryInfo: z
+    .object({
+      recipientName: z.string(),
+      recipientPhone: z.string().nullable(),
+      address: z
+        .object({
+          id: z.string().uuid(),
+          name: z.string(),
+          street: z.string(),
+          number: z.string(),
+          interiorNumber: z.string().nullable(),
+          neighborhood: z.string(),
+          latitude: z.number().nullable(),
+          longitude: z.number().nullable(),
+        })
+        .nullable(),
+    })
+    .nullable()
+    .optional(),
+  customer: z
+    .object({
+      id: z.string().uuid(),
+      firstName: z.string(),
+      lastName: z.string(),
+      whatsappPhoneNumber: z.string(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
@@ -160,20 +172,24 @@ export type AudioOrderParams = z.infer<typeof audioOrderParamsSchema>;
 // Schema para respuesta de audio
 export const audioOrderResponseSchema = z.object({
   success: z.boolean(),
-  parsedOrder: z.object({
-    items: z.array(z.object({
-      productName: z.string(),
-      variantName: z.string().nullable(),
-      quantity: z.number(),
-      modifiers: z.array(z.string()),
-      specialInstructions: z.string().nullable(),
-    })),
-    tableNumber: z.number().nullable(),
-    customerPhone: z.string().nullable(),
-    orderType: orderTypeSchema,
-    specialRequests: z.string().nullable(),
-    deliveryAddress: z.string().nullable(),
-  }).optional(),
+  parsedOrder: z
+    .object({
+      items: z.array(
+        z.object({
+          productName: z.string(),
+          variantName: z.string().nullable(),
+          quantity: z.number(),
+          modifiers: z.array(z.string()),
+          specialInstructions: z.string().nullable(),
+        }),
+      ),
+      tableNumber: z.number().nullable(),
+      customerPhone: z.string().nullable(),
+      orderType: orderTypeSchema,
+      specialRequests: z.string().nullable(),
+      deliveryAddress: z.string().nullable(),
+    })
+    .optional(),
   error: z.string().optional(),
   transcription: z.string().optional(),
 });

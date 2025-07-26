@@ -42,8 +42,12 @@ export const useOrderValidation = ({
 }: UseOrderValidationProps): UseOrderValidationReturn => {
   const [areaError, setAreaError] = useState<string | null>(null);
   const [tableError, setTableError] = useState<string | null>(null);
-  const [recipientNameError, setRecipientNameError] = useState<string | null>(null);
-  const [recipientPhoneError, setRecipientPhoneError] = useState<string | null>(null);
+  const [recipientNameError, setRecipientNameError] = useState<string | null>(
+    null,
+  );
+  const [recipientPhoneError, setRecipientPhoneError] = useState<string | null>(
+    null,
+  );
   const [addressError, setAddressError] = useState<string | null>(null);
 
   const clearAllErrors = useCallback(() => {
@@ -96,7 +100,10 @@ export const useOrderValidation = ({
         }
 
         // Validar teléfono solo si se proporciona (es opcional)
-        if (deliveryInfo.recipientPhone?.trim() && !isValidPhoneNumber(deliveryInfo.recipientPhone)) {
+        if (
+          deliveryInfo.recipientPhone?.trim() &&
+          !isValidPhoneNumber(deliveryInfo.recipientPhone)
+        ) {
           setRecipientPhoneError('Por favor ingresa un teléfono válido');
           isValid = false;
         }
@@ -152,9 +159,9 @@ export const useOrderValidation = ({
 function isValidPhoneNumber(phone: string): boolean {
   // Eliminar espacios y caracteres especiales
   const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-  
+
   // Validar que solo tenga números y opcionalmente un + al inicio
   const phoneRegex = /^\+?\d{7,15}$/;
-  
+
   return phoneRegex.test(cleanPhone);
 }
