@@ -18,7 +18,7 @@ export class CreateAddressDto {
       'ID del cliente al que pertenece la dirección (requerido si no se usa la ruta anidada)',
   })
   @IsUUID()
-  @IsOptional() // Hacerlo opcional aquí, pero la lógica del servicio lo requerirá si no viene de la ruta
+  @IsOptional()
   customerId?: string;
 
   @ApiProperty({
@@ -62,55 +62,55 @@ export class CreateAddressDto {
   @MaxLength(50)
   interiorNumber?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'Colonia Centro',
     description: 'Colonia o barrio',
   })
-  @IsNotEmpty({ message: 'La colonia es obligatoria' })
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  neighborhood: string;
+  neighborhood?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'Ciudad Ejemplo',
     description: 'Ciudad',
   })
-  @IsNotEmpty({ message: 'La ciudad es obligatoria' })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  city: string;
+  city?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'Estado Ejemplo',
     description: 'Estado o provincia',
   })
-  @IsNotEmpty({ message: 'El estado es obligatorio' })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  state: string;
+  state?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: '12345',
     description: 'Código postal',
   })
-  @IsNotEmpty({ message: 'El código postal es obligatorio' })
+  @IsOptional()
   @IsString()
   @MaxLength(10)
-  zipCode: string;
+  zipCode?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'México',
     description: 'País',
   })
-  @IsNotEmpty({ message: 'El país es obligatorio' })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  country: string;
+  country?: string;
 
   @ApiPropertyOptional({
     type: String,

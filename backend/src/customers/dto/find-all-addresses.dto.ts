@@ -33,7 +33,6 @@ export class FindAllAddressesDto {
   @IsString()
   zipCode?: string;
 
-  // Añadir otros filtros según sea necesario (ej. city, state)
   @ApiPropertyOptional({
     description:
       'Filtrar por ciudad (búsqueda parcial, insensible a mayúsculas)',

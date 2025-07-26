@@ -24,11 +24,11 @@ export class AddressEntity extends EntityRelationalHelper {
   customerId: string;
 
   @ManyToOne(() => CustomerEntity, (customer) => customer.addresses, {
-    nullable: false, // Una dirección siempre debe pertenecer a un cliente
-    onDelete: 'CASCADE', // Si se elimina el cliente, se eliminan sus direcciones
+    nullable: false,
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'customer_id' }) // Especificar la columna de unión
-  customer: CustomerEntity; // Relación muchos a uno con Customer
+  @JoinColumn({ name: 'customer_id' })
+  customer: CustomerEntity;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
   name: string;

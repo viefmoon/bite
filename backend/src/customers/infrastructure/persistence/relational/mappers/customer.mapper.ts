@@ -6,7 +6,6 @@ import {
   BaseMapper,
   mapArray,
 } from '../../../../../common/mappers/base.mapper';
-// Address import removed as it was unused
 
 @Injectable()
 export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {

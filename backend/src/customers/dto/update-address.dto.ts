@@ -60,7 +60,7 @@ export class UpdateAddressDto {
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  interiorNumber?: string | null; // Permitir null para borrar
+  interiorNumber?: string | null;
 
   @ApiPropertyOptional({
     type: String,
@@ -120,7 +120,7 @@ export class UpdateAddressDto {
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  deliveryInstructions?: string | null; // Permitir null para borrar
+  deliveryInstructions?: string | null;
 
   @ApiPropertyOptional({
     type: Number,

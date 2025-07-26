@@ -9,8 +9,8 @@ import {
   Checkbox,
   TouchableRipple,
 } from 'react-native-paper';
-import { useAppTheme } from '../../../app/styles/theme';
-import { useResponsive } from '../../../app/hooks/useResponsive';
+import { useAppTheme } from '@/app/styles/theme';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { loginSchema, LoginFormInputs } from '../schema/auth.schema';
 
 interface LoginFormProps {
@@ -86,7 +86,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
           marginTop: 4,
           marginBottom: 8,
         },
-        checkbox: {},
+        checkbox: {
+          borderRadius: 4,
+        },
         checkboxLabel: {
           color: theme.colors.onSurface,
           marginLeft: responsive.spacingPreset.s,

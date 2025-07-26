@@ -26,6 +26,7 @@ export class AddressMapper extends BaseMapper<AddressEntity, Address> {
     domain.latitude = entity.latitude ?? undefined;
     domain.longitude = entity.longitude ?? undefined;
     domain.isDefault = entity.isDefault;
+    domain.customer = undefined as any;
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;

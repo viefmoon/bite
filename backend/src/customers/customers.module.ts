@@ -10,11 +10,8 @@ const infrastructurePersistenceModule = RelationalCustomerPersistenceModule;
 
 @Module({
   imports: [infrastructurePersistenceModule, AuthModule],
-  // Añadir AddressesController a los controllers
   controllers: [CustomersController, AddressesController],
-  // Añadir AddressesService a los providers
   providers: [CustomersService, AddressesService],
-  // Exportar AddressesService si se va a usar fuera de este módulo
   exports: [
     CustomersService,
     AddressesService,

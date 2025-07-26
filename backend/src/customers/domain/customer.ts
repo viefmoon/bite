@@ -10,19 +10,19 @@ export class Customer {
   id: string;
   firstName: string | null;
   lastName: string | null;
-  whatsappPhoneNumber: string; // Número de WhatsApp único (ahora es el principal)
-  stripeCustomerId: string | null; // ID del cliente en Stripe
+  whatsappPhoneNumber: string;
+  stripeCustomerId: string | null;
   email: string | null;
   birthDate: Date | null;
-  fullChatHistory: ChatMessage[] | null; // Historial completo de conversaciones
-  relevantChatHistory: ChatMessage[] | null; // Historial relevante/resumido
-  lastInteraction: Date | null; // Última interacción con el cliente
-  totalOrders: number; // Total de pedidos realizados
-  totalSpent: number; // Total gastado
-  isActive: boolean; // Cliente activo
-  isBanned: boolean; // Si el cliente está baneado
-  bannedAt: Date | null; // Fecha de baneo
-  banReason: string | null; // Razón del baneo
+  fullChatHistory: ChatMessage[] | null;
+  relevantChatHistory: ChatMessage[] | null;
+  lastInteraction: Date | null;
+  totalOrders: number;
+  totalSpent: number;
+  isActive: boolean;
+  isBanned: boolean;
+  bannedAt: Date | null;
+  banReason: string | null;
   addresses: Address[];
   createdAt: Date;
   updatedAt: Date;

@@ -8,10 +8,9 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { PaginationParams } from '../../utils/types/pagination-params'; // Asumiendo que tienes un DTO base para paginación
+import { PaginationParams } from '../../utils/types/pagination-params';
 
 export class FindAllCustomersDto extends PaginationParams {
-  // Extender de PaginationParams si existe
   @ApiPropertyOptional({
     description:
       'Filtrar por nombre (búsqueda parcial, insensible a mayúsculas)',

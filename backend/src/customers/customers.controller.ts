@@ -93,8 +93,6 @@ export class CustomersController {
     await this.customersService.remove(id);
   }
 
-  // Chat History endpoints
-
   @Post(':id/chat-message')
   @ApiOperation({ summary: 'Append a message to customer chat history' })
   @ApiParam({ name: 'id', description: 'Customer ID' })
@@ -186,8 +184,6 @@ export class CustomersController {
     return this.customersService.getActiveCustomersWithRecentInteraction(days);
   }
 
-  // Ban/Unban endpoints
-
   @Post(':id/ban')
   @ApiOperation({ summary: 'Ban a customer' })
   @ApiParam({ name: 'id', description: 'Customer ID' })
@@ -223,8 +219,6 @@ export class CustomersController {
     return this.customersService.getBannedCustomers();
   }
 
-  // Address endpoints
-
   @Post(':id/addresses')
   @ApiOperation({ summary: 'Add an address to a customer' })
   @ApiParam({ name: 'id', description: 'Customer ID' })
@@ -236,7 +230,6 @@ export class CustomersController {
     @Param('id') customerId: string,
     @Body() createAddressDto: CreateAddressDto,
   ): Promise<Address> {
-    // Asignar el customerId al DTO
     const addressData = {
       ...createAddressDto,
       customerId,
@@ -270,7 +263,6 @@ export class CustomersController {
     @Param('addressId') addressId: string,
     @Body() updateAddressDto: UpdateAddressDto,
   ): Promise<Address> {
-    // Verificar que la dirección pertenece al cliente
     const address = await this.addressesService.findOne(addressId);
     if (address.customerId !== customerId) {
       throw new NotFoundException('Address not found for this customer');
@@ -297,7 +289,6 @@ export class CustomersController {
     @Param('id') customerId: string,
     @Param('addressId') addressId: string,
   ): Promise<void> {
-    // Verificar que la dirección pertenece al cliente
     const address = await this.addressesService.findOne(addressId);
     if (address.customerId !== customerId) {
       throw new NotFoundException('Address not found for this customer');

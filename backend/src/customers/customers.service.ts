@@ -14,12 +14,11 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FindAllCustomersDto } from './dto/find-all-customers.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
-import { CUSTOMER_REPOSITORY } from '../common/tokens'; // Solo CUSTOMER_REPOSITORY
+import { CUSTOMER_REPOSITORY } from '../common/tokens';
 import { BaseCrudService } from '../common/application/base-crud.service';
 
 @Injectable()
 export class CustomersService extends BaseCrudService<
-  // Extender BaseCrudService
   Customer,
   CreateCustomerDto,
   UpdateCustomerDto,
@@ -39,10 +38,7 @@ export class CustomersService extends BaseCrudService<
   ): Promise<Customer> {
     const { addresses: addressDtos, ...customerData } = createCustomerDto;
 
-    // Crear el cliente usando el método base
     const createdCustomer = await super.create(customerData);
-
-    // Crear direcciones si se proporcionan
     if (addressDtos && addressDtos.length > 0) {
       let hasDefault = false;
       for (const addressDto of addressDtos) {
@@ -62,18 +58,11 @@ export class CustomersService extends BaseCrudService<
     return createdCustomer;
   }
 
-  // Sobrescribir 'update' para añadir lógica de validación y sincronización de direcciones
   override async update(
     id: string,
     updateCustomerDto: UpdateCustomerDto,
   ): Promise<Customer> {
-    // findOne es heredado, lo usamos para validar la existencia del cliente
     await this.findOne(id);
-
-    // Se eliminan las validaciones preventivas de email y teléfono para la actualización.
-    // La base de datos y el UniqueViolationFilter se encargarán de la unicidad.
-
-    // Preparar payload para el update base (solo campos del cliente)
     const customerUpdatePayload: UpdateCustomerDto = {
       firstName: updateCustomerDto.firstName,
       lastName: updateCustomerDto.lastName,
@@ -91,22 +80,16 @@ export class CustomersService extends BaseCrudService<
     return this.findOne(id);
   }
 
-  // --- Métodos específicos para Direcciones (mantenerlos) ---
-
-  /* --------- Address helpers --------- */
 
   async addAddressToCustomer(
     customerId: string,
     dto: CreateAddressDto,
   ): Promise<Address> {
-    await this.findOne(customerId); // valida cliente existente
-    // 🔑 Inyectar customerId en el DTO antes de llamar al servicio de direcciones
+    await this.findOne(customerId);
     const fullDto = { ...dto, customerId };
-    // Si la nueva dirección es default, quitar la marca de las otras
     if (fullDto.isDefault) {
       await this.addressesService.unsetDefaultForOtherAddresses(customerId);
     }
-    // Delegar la creación al AddressesService
     return this.addressesService.create(fullDto);
   }
 
@@ -115,24 +98,19 @@ export class CustomersService extends BaseCrudService<
     addressId: string,
     dto: UpdateAddressDto,
   ): Promise<Address> {
-    // Usar addressesService para buscar la dirección y validar existencia
     const address = await this.addressesService.findOne(addressId);
-    // Validar pertenencia al cliente
     if (address.customerId !== customerId) {
       throw new NotFoundException(
         `Dirección con ID ${addressId} no encontrada o no pertenece al cliente ${customerId}.`,
       );
     }
 
-    // Lógica para manejar isDefault al actualizar
     if (dto.isDefault === true && !address.isDefault) {
-      // Si se está marcando como default, desmarcar las otras
       await this.addressesService.unsetDefaultForOtherAddresses(
         customerId,
         addressId,
       );
     } else if (dto.isDefault === false && address.isDefault) {
-      // Si se está desmarcando la default, verificar que no sea la única
       const customerAddresses = await this.addressesService.findAll({
         customerId,
       });
@@ -146,13 +124,9 @@ export class CustomersService extends BaseCrudService<
       }
     }
 
-    // Delegar la actualización al AddressesService
-    // El método update base ya maneja NotFoundException si la entidad no existe al momento de actualizar
     const updatedAddress = await this.addressesService.update(addressId, dto);
-    // El servicio base update devuelve NullableType, pero findOne ya validó existencia.
-    // Si por alguna razón falla el update (ej. concurrencia), el repo podría devolver null.
     if (!updatedAddress) {
-      throw new InternalServerErrorException( // O NotFoundException si prefieres
+      throw new InternalServerErrorException(
         `Error al actualizar la dirección con ID ${addressId}.`,
       );
     }
@@ -163,28 +137,20 @@ export class CustomersService extends BaseCrudService<
     customerId: string,
     addressId: string,
   ): Promise<void> {
-    // Usar addressesService para buscar la dirección y validar existencia
     const address = await this.addressesService.findOne(addressId);
-    // Validar pertenencia al cliente
     if (address.customerId !== customerId) {
       throw new NotFoundException(
         `Dirección con ID ${addressId} no encontrada o no pertenece al cliente ${customerId}.`,
       );
     }
-    // Validar si es la dirección predeterminada antes de borrar
     if (address.isDefault) {
       throw new BadRequestException(
         'No puedes borrar la dirección predeterminada.',
       );
     }
-    // Delegar la eliminación al AddressesService
-    // El método remove base ya maneja NotFoundException si no existe al momento de borrar
     await this.addressesService.remove(addressId);
   }
 
-  // Se elimina el método syncAddresses (si existía)
-
-  // --- Métodos específicos para Chat History ---
 
   async appendToChatHistory(
     customerId: string,
@@ -199,8 +165,6 @@ export class CustomersService extends BaseCrudService<
 
     const fullChatHistory = customer.fullChatHistory || [];
     fullChatHistory.push(newMessage);
-
-    // Actualizar el historial completo y la última interacción
     await super.update(customerId, {
       fullChatHistory,
       lastInteraction: new Date().toISOString(),
@@ -213,7 +177,7 @@ export class CustomersService extends BaseCrudService<
     customerId: string,
     relevantHistory: any[],
   ): Promise<Customer> {
-    await this.findOne(customerId); // Validar que existe
+    await this.findOne(customerId);
 
     await super.update(customerId, {
       relevantChatHistory: relevantHistory,
@@ -226,7 +190,7 @@ export class CustomersService extends BaseCrudService<
     customerId: string,
     stats: { totalOrders?: number; totalSpent?: number },
   ): Promise<Customer> {
-    await this.findOne(customerId); // Validar que existe
+    await this.findOne(customerId);
 
     const updatePayload: any = {};
     if (stats.totalOrders !== undefined) {
@@ -253,7 +217,6 @@ export class CustomersService extends BaseCrudService<
     });
   }
 
-  // --- Métodos de Baneo ---
 
   async banCustomer(customerId: string, banReason: string): Promise<Customer> {
     const customer = await this.findOne(customerId);
@@ -262,15 +225,11 @@ export class CustomersService extends BaseCrudService<
       throw new BadRequestException('El cliente ya está baneado');
     }
 
-    // Usar super.update para campos incluidos en UpdateCustomerDto
     await super.update(customerId, {
       isBanned: true,
       isActive: false, // Desactivar al cliente cuando se banea
     });
-
-    // Actualizar campos adicionales directamente con el ORM repository
-    // @ts-expect-error - Acceder al repositorio ORM interno para campos específicos
-    await this.repo.ormRepo.update(customerId, {
+    await this.updateBanFields(customerId, {
       bannedAt: new Date(),
       banReason,
     });
@@ -285,15 +244,11 @@ export class CustomersService extends BaseCrudService<
       throw new BadRequestException('El cliente no está baneado');
     }
 
-    // Usar super.update para campos incluidos en UpdateCustomerDto
     await super.update(customerId, {
       isBanned: false,
       isActive: true, // Reactivar al cliente cuando se desbanea
     });
-
-    // Actualizar campos adicionales directamente con el ORM repository
-    // @ts-expect-error - Acceder al repositorio ORM interno para campos específicos
-    await this.repo.ormRepo.update(customerId, {
+    await this.updateBanFields(customerId, {
       bannedAt: null,
       banReason: null,
     });
@@ -310,8 +265,17 @@ export class CustomersService extends BaseCrudService<
       const customer = await this.findOne(customerId);
       return customer.isBanned;
     } catch {
-      // Si el cliente no existe, considerarlo como no baneado
       return false;
+    }
+  }
+
+  private async updateBanFields(
+    customerId: string,
+    fields: { bannedAt: Date | null; banReason: string | null },
+  ): Promise<void> {
+    const repository = this.repo as any;
+    if (repository.ormRepo) {
+      await repository.ormRepo.update(customerId, fields);
     }
   }
 }
