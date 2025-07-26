@@ -198,7 +198,7 @@ const ModifierGroupsScreen = () => {
       message:
         'No se pudieron cargar los grupos de modificadores. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetch,
+      onAction: refetch,
     },
   });
 

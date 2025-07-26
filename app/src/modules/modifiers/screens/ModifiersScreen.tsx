@@ -153,7 +153,7 @@ const ModifiersScreen = () => {
       title: 'Error al cargar modificadores',
       message: 'No se pudieron cargar los modificadores. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetch,
+      onAction: refetch,
     },
   });
 
