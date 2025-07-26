@@ -49,14 +49,12 @@ export const useCreateArea = () => {
   return useMutation<Area, Error, CreateAreaDto>({
     mutationFn: areaService.createArea,
     onSuccess: (_newArea) => {
-      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
       showSnackbar({ message: 'Área creada con éxito', type: 'success' });
     },
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al crear área
     },
   });
 };
@@ -89,7 +87,7 @@ export const useUpdateArea = () => {
       if (previousAreas) {
         queryClient.setQueryData<Area[]>(
           listQueryKey,
-          (old) =>
+(old) =>
             old?.map((area) =>
               area.id === id ? { ...area, ...data } : area,
             ) ?? [],
@@ -99,9 +97,7 @@ export const useUpdateArea = () => {
       if (previousDetail) {
         queryClient.setQueryData<Area>(
           detailQueryKey,
-          (
-            old: Area | undefined, // Añadido tipo explícito
-          ) => (old ? { ...old, ...data } : undefined),
+          (old: Area | undefined) => (old ? { ...old, ...data } : undefined),
         );
       }
 
@@ -111,7 +107,6 @@ export const useUpdateArea = () => {
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al actualizar área
 
       if (context?.previousAreas) {
         queryClient.setQueryData(areasQueryKeys.lists(), context.previousAreas);
@@ -125,7 +120,6 @@ export const useUpdateArea = () => {
     },
 
     onSettled: (data, error, variables, _context) => {
-      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: areasQueryKeys.detail(variables.id),
@@ -165,7 +159,6 @@ export const useDeleteArea = () => {
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al eliminar área
 
       if (context?.previousDetail) {
         queryClient.setQueryData(
@@ -176,7 +169,6 @@ export const useDeleteArea = () => {
     },
 
     onSettled: (_data, error, deletedId) => {
-      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
       if (!error) {
         queryClient.removeQueries({

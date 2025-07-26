@@ -1,6 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../app/services/apiClient';
-import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BaseListQuery } from '../../../app/types/query.types';
 import {
@@ -59,10 +57,6 @@ const deleteArea = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.AREAS_BY_ID.replace(':id', id));
 };
 
-const areaQueryKeys = {
-  all: ['areas'] as const,
-};
-
 export const areaService = {
   getAreas,
   getAreaById,
@@ -70,10 +64,3 @@ export const areaService = {
   updateArea,
   deleteArea,
 };
-
-export function useGetAreas() {
-  return useQuery<Area[], ApiError>({
-    queryKey: areaQueryKeys.all,
-    queryFn: () => areaService.getAreas(),
-  });
-}

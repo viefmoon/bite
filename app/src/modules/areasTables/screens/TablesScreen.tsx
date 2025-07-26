@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
+
 import GenericList, {
   RenderItemConfig,
   FilterOption,
@@ -10,6 +11,12 @@ import GenericList, {
 import GenericDetailModal, {
   DisplayFieldConfig,
 } from '../../../app/components/crud/GenericDetailModal';
+import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
+import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { useListState } from '../../../app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
+
 import TableFormModal from '../components/TableFormModal';
 import {
   useGetTablesByAreaId,
@@ -19,11 +26,6 @@ import {
 } from '../hooks/useTablesQueries';
 import { Table, CreateTableDto, UpdateTableDto } from '../schema/table.schema';
 import { TablesListScreenProps } from '../navigation/types';
-import { useAppTheme, AppTheme } from '../../../app/styles/theme';
-import { useResponsive } from '../../../app/hooks/useResponsive';
-import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
-import { useListState } from '../../../app/hooks/useListState';
-import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
   const theme = useAppTheme();
@@ -47,7 +49,6 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     isRefetching,
   } = useGetTablesByAreaId(areaId, { enabled: !!areaId });
 
-  // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('tables');
 
   const createTableMutation = useCreateTable();
@@ -65,7 +66,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     handleOpenDetailModal,
     handleCloseModals,
     deleteConfirmation,
-  } = useCrudScreenLogic<Table>({
+  } = useCrudScreenLogic<Table & { id: string }>({
     entityName: 'Mesa',
     queryKey: ['tables', areaId],
     deleteMutationFn: deleteTable,
@@ -87,7 +88,9 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
         await createTableMutation.mutateAsync(dataWithAreaId as CreateTableDto);
       }
       handleCloseModals();
-    } catch (error) {}
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const listRenderConfig: RenderItemConfig<Table> = useMemo(
@@ -185,7 +188,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
       title: 'Error al cargar mesas',
       message: 'No se pudieron cargar las mesas. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetchTables,
+      onAction: refetchTables,
     },
   });
 
@@ -247,12 +250,6 @@ const getStyles = (
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    centered: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: responsive.spacing(theme.spacing.l),
     },
     fieldValueText: {
       flexShrink: 1,

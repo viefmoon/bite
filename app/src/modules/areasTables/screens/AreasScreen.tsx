@@ -1,8 +1,9 @@
 import React, { useMemo, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import { IconButton } from 'react-native-paper';
-import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDrawerStatus } from '@react-navigation/drawer';
+
 import GenericList, {
   RenderItemConfig,
   FilterOption,
@@ -10,6 +11,13 @@ import GenericList, {
 import GenericDetailModal, {
   DisplayFieldConfig,
 } from '../../../app/components/crud/GenericDetailModal';
+import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
+import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { useListState } from '../../../app/hooks/useListState';
+import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
+import { NAVIGATION_PATHS } from '../../../app/constants/navigationPaths';
+
 import AreaFormModal from '../components/AreaFormModal';
 import {
   useGetAreas,
@@ -19,12 +27,6 @@ import {
 } from '../hooks/useAreasQueries';
 import { Area, CreateAreaDto, UpdateAreaDto } from '../schema/area.schema';
 import { AreasListScreenProps } from '../navigation/types';
-import { useAppTheme, AppTheme } from '../../../app/styles/theme';
-import { useResponsive } from '../../../app/hooks/useResponsive';
-import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
-import { useListState } from '../../../app/hooks/useListState';
-import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
-import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
@@ -57,7 +59,6 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const updateAreaMutation = useUpdateArea();
   const { mutateAsync: deleteArea } = useDeleteArea();
 
-  // Refrescar áreas cuando la pantalla recibe foco
   useRefreshModuleOnFocus('areas');
 
   const {
@@ -97,7 +98,9 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
         await createAreaMutation.mutateAsync(data as CreateAreaDto);
       }
       handleCloseModals();
-    } catch (error) {}
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const handleNavigateToTables = (area: Area) => {
@@ -169,7 +172,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
       title: 'Error al cargar áreas',
       message: 'No se pudieron cargar las áreas. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetchAreas,
+      onAction: refetchAreas,
     },
   });
 
@@ -232,12 +235,6 @@ const getStyles = (
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    centered: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: responsive.spacing(theme.spacing.l),
     },
   });
 

@@ -1,6 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../app/services/apiClient';
-import { ApiError } from '../../../app/lib/errors';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BaseListQuery } from '../../../app/types/query.types';
 import {
@@ -83,22 +81,3 @@ export const tableService = {
   updateTable,
   deleteTable,
 };
-
-const tableQueryKeys = {
-  base: ['tables'] as const,
-  byArea: (areaId: string | null | undefined) =>
-    [...tableQueryKeys.base, 'area', areaId] as const,
-};
-
-export function useGetTablesByArea(areaId: string | null | undefined) {
-  return useQuery<Table[], ApiError>({
-    queryKey: tableQueryKeys.byArea(areaId),
-    queryFn: () => {
-      if (!areaId) {
-        return Promise.resolve([]);
-      }
-      return tableService.getTablesByAreaId(areaId);
-    },
-    enabled: !!areaId,
-  });
-}

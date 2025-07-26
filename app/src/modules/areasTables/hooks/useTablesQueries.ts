@@ -5,7 +5,7 @@ import {
   CreateTableDto,
   UpdateTableDto,
   FindAllTablesDto,
-} from '../schema/table.schema'; // Corregida ruta de importación
+} from '../schema/table.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
@@ -63,14 +63,12 @@ export const useCreateTable = () => {
   return useMutation<Table, Error, CreateTableDto>({
     mutationFn: tableService.createTable,
     onSuccess: (_newTable) => {
-      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
       showSnackbar({ message: 'Mesa creada con éxito', type: 'success' });
     },
     onError: (error) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al crear mesa
     },
   });
 };
@@ -100,9 +98,7 @@ export const useUpdateTable = () => {
       if (previousDetail) {
         queryClient.setQueryData<Table>(
           detailQueryKey,
-          (
-            old: Table | undefined, // Añadido tipo explícito
-          ) => (old ? { ...old, ...data } : undefined),
+          (old: Table | undefined) => (old ? { ...old, ...data } : undefined),
         );
       }
 
@@ -112,7 +108,6 @@ export const useUpdateTable = () => {
     onError: (error, variables, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al actualizar mesa
 
       if (context?.previousDetail) {
         queryClient.setQueryData(
@@ -124,7 +119,6 @@ export const useUpdateTable = () => {
 
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
-      // Considerar invalidar listsByArea si areaId cambia
       queryClient.invalidateQueries({
         queryKey: tablesQueryKeys.detail(variables.id),
       });
@@ -163,7 +157,6 @@ export const useDeleteTable = () => {
     onError: (error, deletedId, context) => {
       const errorMessage = getApiErrorMessage(error);
       showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al eliminar mesa
 
       if (context?.previousDetail) {
         queryClient.setQueryData(
@@ -174,7 +167,6 @@ export const useDeleteTable = () => {
     },
 
     onSettled: (_data, error, deletedId, context) => {
-      // Prefijado parámetro no usado
       queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
       if (context?.previousDetail?.areaId) {
         queryClient.invalidateQueries({
