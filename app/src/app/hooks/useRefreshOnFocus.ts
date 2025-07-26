@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -16,31 +16,27 @@ export function useRefreshOnFocus(
 ) {
   const queryClient = useQueryClient();
   const { enabled = true, refetchOnMount = true } = options || {};
+  const isInitialMount = useRef(true);
 
-  // Invalidar queries cuando la pantalla recibe foco
   useFocusEffect(
     useCallback(() => {
       if (!enabled) return;
 
-      // Invalidar todas las queries especificadas
+      const isFirstRun = isInitialMount.current;
+      isInitialMount.current = false;
+
+      // No refrescar en el primer montaje si refetchOnMount es falso
+      if (isFirstRun && !refetchOnMount) {
+        return;
+      }
+
       queryKeys.forEach((queryKey) => {
         queryClient.invalidateQueries({
           queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
         });
       });
-    }, [enabled, queryKeys, queryClient]),
+    }, [enabled, refetchOnMount, queryKeys, queryClient]),
   );
-
-  // También invalidar al montar si está habilitado
-  useEffect(() => {
-    if (!enabled || !refetchOnMount) return;
-
-    queryKeys.forEach((queryKey) => {
-      queryClient.invalidateQueries({
-        queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-      });
-    });
-  }, [enabled, refetchOnMount, queryKeys, queryClient]);
 
   return {
     refetch: () => {
