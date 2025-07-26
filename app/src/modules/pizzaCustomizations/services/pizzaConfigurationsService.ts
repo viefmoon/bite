@@ -1,6 +1,6 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import type { PizzaConfiguration } from '../types/pizzaConfiguration.types';
+import type { PizzaConfiguration } from '../schema/pizzaConfiguration.schema';
 import type {
   PizzaConfigurationFormInputs,
   UpdatePizzaConfigurationInputs,

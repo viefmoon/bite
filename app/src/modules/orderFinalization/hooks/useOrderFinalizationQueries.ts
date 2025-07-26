@@ -10,7 +10,7 @@ export const useOrdersForFinalizationList = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 5000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
     notifyOnChangeProps: ['data', 'error'],
   });
 };

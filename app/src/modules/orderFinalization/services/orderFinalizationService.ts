@@ -4,7 +4,7 @@ import {
   OrderForFinalization,
   OrderForFinalizationList,
   FinalizeOrdersPayload,
-} from '../types/orderFinalization.types';
+} from '../schema/orderFinalization.schema';
 
 export const orderFinalizationService = {
   async getOrdersForFinalizationList(): Promise<OrderForFinalizationList[]> {

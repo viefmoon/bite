@@ -1,5 +1,38 @@
 import { z } from 'zod';
 
+// Esquema principal para PizzaConfiguration
+export const pizzaConfigurationSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  includedToppings: z.number(),
+  extraToppingCost: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type PizzaConfiguration = z.infer<typeof pizzaConfigurationSchema>;
+
+// Esquemas para inputs
+export const createPizzaConfigurationInputSchema = z.object({
+  productId: z.string(),
+  includedToppings: z.number(),
+  extraToppingCost: z.number(),
+});
+
+export type CreatePizzaConfigurationInput = z.infer<
+  typeof createPizzaConfigurationInputSchema
+>;
+
+export const updatePizzaConfigurationInputSchema = z.object({
+  includedToppings: z.number().optional(),
+  extraToppingCost: z.number().optional(),
+});
+
+export type UpdatePizzaConfigurationInput = z.infer<
+  typeof updatePizzaConfigurationInputSchema
+>;
+
+// Esquemas para formularios
 export const pizzaConfigurationFormSchema = z.object({
   productId: z.string().min(1, 'El producto es requerido'),
   includedToppings: z
