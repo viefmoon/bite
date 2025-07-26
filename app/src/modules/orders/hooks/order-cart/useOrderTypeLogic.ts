@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { OrderTypeEnum, type OrderType } from '../../types/orders.types';
+import { OrderTypeEnum, type OrderType } from '../../schema/orders.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 
 interface OrderTypeState {
@@ -13,16 +13,8 @@ interface OrderTypeState {
   orderNotes: string;
 }
 
-interface _ValidationErrors {
-  areaError: string | null;
-  tableError: string | null;
-  recipientNameError: string | null;
-  recipientPhoneError: string | null;
-  addressError: string | null;
-}
 
 export const useOrderTypeLogic = (
-  isEditMode: boolean,
   initialState?: Partial<OrderTypeState>,
 ) => {
   // Estados principales
@@ -126,7 +118,7 @@ export const useOrderTypeLogic = (
       setRecipientPhoneError(null);
     }
 
-    if (!deliveryInfo.address?.trim()) {
+    if (!deliveryInfo.fullAddress?.trim()) {
       setAddressError('La dirección es requerida');
       isValid = false;
     } else {
@@ -199,12 +191,10 @@ export const useOrderTypeLogic = (
           cleanedData.deliveryInfo = {
             recipientName: deliveryInfo.recipientName,
             recipientPhone: deliveryInfo.recipientPhone,
-            address: deliveryInfo.address,
+            fullAddress: deliveryInfo.fullAddress,
             city: deliveryInfo.city,
             neighborhood: deliveryInfo.neighborhood,
-            deliveryNotes: deliveryInfo.deliveryNotes,
-            reference: deliveryInfo.reference,
-            coordinates: deliveryInfo.coordinates,
+            deliveryInstructions: deliveryInfo.deliveryInstructions,
           };
           break;
 

@@ -4,7 +4,7 @@ import {
   type AIOrderItem,
 } from '@/services/audioOrderService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { Product } from '../../types/orders.types';
+import { Product, FullMenuModifierGroup } from '../../schema/orders.schema';
 import { CartItemModifier } from '../../stores/useOrderStore';
 
 interface UseAudioOrderProps {
@@ -20,7 +20,7 @@ interface UseAudioOrderProps {
   ) => void;
   setDeliveryInfo?: (info: any) => void;
   setOrderType?: (type: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => void;
-  cartButtonRef: React.RefObject<{ animate: () => void }>;
+  cartButtonRef: React.RefObject<{ animate: () => void } | null>;
 }
 
 export const useAudioOrder = ({
@@ -105,8 +105,8 @@ export const useAudioOrder = ({
           if (item.modifiers && item.modifiers.length > 0) {
             for (const modName of item.modifiers) {
               for (const modGroup of foundProduct.modifierGroups || []) {
-                const modifier = modGroup.productModifiers?.find(
-                  (m: any) => m.name === modName,
+                const modifier = (modGroup as FullMenuModifierGroup).productModifiers?.find(
+                  (m) => m.name === modName,
                 );
                 if (modifier) {
                   selectedModifiers.push({

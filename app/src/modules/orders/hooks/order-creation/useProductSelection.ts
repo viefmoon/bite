@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Product } from '../../types/orders.types';
+import { Product } from '../../schema/orders.schema';
 import { CartItem, CartItemModifier } from '../../stores/useOrderStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
@@ -21,9 +21,11 @@ interface UseProductSelectionProps {
   updateItem: (
     itemId: string,
     quantity: number,
-    selectedVariantId?: string,
-    selectedModifiers?: CartItemModifier[],
+    modifiers: CartItemModifier[],
     preparationNotes?: string,
+    variantId?: string,
+    variantName?: string,
+    unitPrice?: number,
     selectedPizzaCustomizations?: SelectedPizzaCustomization[],
     pizzaExtraCost?: number,
   ) => void;
@@ -56,7 +58,7 @@ export const useProductSelection = ({
       product.modifierGroups &&
       Array.isArray(product.modifierGroups) &&
       product.modifierGroups.length > 0;
-    return hasVariants || hasModifiers;
+    return Boolean(hasVariants || hasModifiers);
   }, []);
 
   const handleAddItem = useCallback(

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Product } from '../../types/orders.types';
+import { Product } from '../../schema/orders.schema';
 
 export type NavigationLevel = 'categories' | 'subcategories' | 'products';
 

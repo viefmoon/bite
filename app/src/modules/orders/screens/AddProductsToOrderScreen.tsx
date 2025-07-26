@@ -3,7 +3,7 @@ import { Portal } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import { useGetOrderMenu } from '../hooks/useMenuQueries';
-import { Product, Category, SubCategory } from '../types/orders.types';
+import { Product, Category, SubCategory } from '../schema/orders.schema';
 
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
@@ -73,7 +73,7 @@ const AddProductsToOrderScreen = () => {
       product.modifierGroups &&
       Array.isArray(product.modifierGroups) &&
       product.modifierGroups.length > 0;
-    return hasVariants || hasModifiers;
+    return Boolean(hasVariants || hasModifiers);
   }, []);
 
   const addItemToSelection = useCallback(
@@ -89,7 +89,7 @@ const AddProductsToOrderScreen = () => {
       const selectedVariant = product.variants?.find(
         (v) => v.id === selectedVariantId,
       );
-      const variantPrice = selectedVariant?.price || product.price;
+      const variantPrice = selectedVariant?.price ?? product.price ?? 0;
       const modifiersPrice =
         selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
       const pizzaCost = pizzaExtraCost || 0;
@@ -450,8 +450,8 @@ const AddProductsToOrderScreen = () => {
           selectedVariantId,
           product.variants?.find((v) => v.id === selectedVariantId)?.name,
           selectedVariantId
-            ? product.variants?.find((v) => v.id === selectedVariantId)?.price
-            : product.price,
+            ? product.variants?.find((v) => v.id === selectedVariantId)?.price ?? 0
+            : product.price ?? 0,
           selectedPizzaCustomizations,
           pizzaExtraCost,
         );

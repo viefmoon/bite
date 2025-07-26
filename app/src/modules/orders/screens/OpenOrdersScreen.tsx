@@ -33,7 +33,7 @@ import {
   OrderType,
   OrderTypeEnum,
   OrderStatusEnum,
-} from '../types/orders.types';
+} from '../schema/orders.schema';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';

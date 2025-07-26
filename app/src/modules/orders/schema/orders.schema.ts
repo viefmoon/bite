@@ -38,7 +38,7 @@ export type {
 export const OrderStatusEnum = orderStatusSchema.enum;
 export const OrderTypeEnum = orderTypeSchema.enum;
 
-// --- Schemas específicos del módulo de Órdenes ---
+// --- Interfaces específicas del módulo de Órdenes ---
 
 // Tipos extendidos para el menú completo con relaciones anidadas
 export interface FullMenuModifierGroup extends ModifierGroup {

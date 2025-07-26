@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { OrderTypeEnum, type OrderType } from '../../types/orders.types';
-import type { CartItem } from '../../stores/useOrderCreationStore';
+import { OrderTypeEnum, type OrderType } from '../../schema/orders.schema';
+import type { CartItem } from '../../stores/useOrderStore';
 
 interface ValidationParams {
   items: CartItem[];
