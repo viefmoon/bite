@@ -20,7 +20,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
   isEditMode,
   prepaymentId,
   paymentAmount,
-  paymentMethod,
+  _paymentMethod,
   total,
   totalPaid,
   pendingAmount,
@@ -50,10 +50,9 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
             style={[
               styles.totalsValue,
               styles.boldText,
-              {
-                color:
-                  (pendingAmount || 0) > 0 ? theme.colors.error : '#4CAF50',
-              },
+              (pendingAmount || 0) > 0
+                ? styles.errorColor
+                : styles.successColor,
             ]}
           >
             ${(pendingAmount || 0).toFixed(2)}
@@ -114,9 +113,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
             style={[
               styles.totalsValue,
               styles.boldText,
-              {
-                color: remainingAmount === 0 ? '#4CAF50' : theme.colors.error,
-              },
+              remainingAmount === 0 ? styles.successColor : styles.errorColor,
             ]}
           >
             ${remainingAmount.toFixed(2)}
@@ -215,5 +212,11 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     iconButtonNoMargin: {
       margin: 0,
+    },
+    errorColor: {
+      color: theme.colors.error,
+    },
+    successColor: {
+      color: '#4CAF50',
     },
   });

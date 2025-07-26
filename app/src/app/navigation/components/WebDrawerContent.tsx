@@ -115,6 +115,41 @@ const createStyles = (
       paddingTop: responsive.spacing(theme.spacing.s),
       paddingBottom: responsive.spacing(theme.spacing.xxs),
     },
+    drawerContentStyle: {
+      paddingTop: 0,
+    },
+    containerStyle: {
+      flex: 1,
+    },
+    rowContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    fullWidthRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+    },
+    pointerEventsNone: {
+      pointerEvents: 'none',
+    },
+    dialogStyle: {
+      maxWidth: 600,
+      alignSelf: 'center',
+    },
+    dialogScrollArea: {
+      maxHeight: 400,
+    },
+    dialogText: {
+      marginBottom: 16,
+    },
+    dialogTextSpaced: {
+      marginBottom: 8,
+    },
+    dialogTextIndented: {
+      marginLeft: 16,
+    },
   });
 
 export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
@@ -161,10 +196,10 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
   return (
     <Surface style={styles.container} elevation={0}>
       <ScrollView
-        contentContainerStyle={{ paddingTop: 0 }}
+        contentContainerStyle={styles.drawerContentStyle}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ flex: 1 }}>
+        <View style={styles.containerStyle}>
           <Surface style={styles.userInfoSection} elevation={0}>
             {user ? (
               <>
@@ -201,7 +236,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
                 style={styles.drawerItemContainer}
                 rippleColor={`${theme.colors.primary}20`}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.rowContainer}>
                   <View style={styles.drawerItemIconContainer}>
                     <Icon
                       source="chef-hat"
@@ -234,15 +269,8 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           }}
           style={styles.preference}
         >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.fullWidthRow}>
+            <View style={styles.rowContainer}>
               <View style={styles.drawerItemIconContainer}>
                 <Icon
                   source={theme.dark ? 'weather-night' : 'white-balance-sunny'}
@@ -259,7 +287,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
                 Modo Oscuro
               </Text>
             </View>
-            <View style={{ pointerEvents: 'none' }}>
+            <View style={styles.pointerEventsNone}>
               <Switch value={theme.dark} color={theme.colors.primary} />
             </View>
           </View>
@@ -270,7 +298,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="broom"
@@ -297,7 +325,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="server-network"
@@ -323,7 +351,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.error}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="logout"
@@ -346,22 +374,24 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           <Dialog
             visible={showServerSettings}
             onDismiss={() => setShowServerSettings(false)}
-            style={{ maxWidth: 600, alignSelf: 'center' }}
+            style={styles.dialogStyle}
           >
             <Dialog.Title>Configuración del Servidor</Dialog.Title>
-            <Dialog.ScrollArea style={{ maxHeight: 400 }}>
-              <Text style={{ marginBottom: 16 }}>
+            <Dialog.ScrollArea style={styles.dialogScrollArea}>
+              <Text style={styles.dialogText}>
                 Para configurar el servidor en la versión web, utiliza la
                 aplicación móvil.
               </Text>
-              <Text style={{ marginBottom: 8 }}>
+              <Text style={styles.dialogTextSpaced}>
                 La configuración del servidor incluye:
               </Text>
-              <Text style={{ marginLeft: 16 }}>
+              <Text style={styles.dialogTextIndented}>
                 • Modo de conexión (Auto/Manual)
               </Text>
-              <Text style={{ marginLeft: 16 }}>• URL del servidor</Text>
-              <Text style={{ marginLeft: 16 }}>• Prueba de conexión</Text>
+              <Text style={styles.dialogTextIndented}>• URL del servidor</Text>
+              <Text style={styles.dialogTextIndented}>
+                • Prueba de conexión
+              </Text>
             </Dialog.ScrollArea>
             <Dialog.Actions>
               <Button onPress={() => setShowServerSettings(false)}>

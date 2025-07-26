@@ -14,6 +14,28 @@ export function ConditionalAppNavigator() {
   const [showNoScreenAlert, setShowNoScreenAlert] = useState(false);
   const [isKitchenUser, setIsKitchenUser] = useState(false);
 
+  const styles = {
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      backgroundColor: theme.colors.background,
+    },
+    dialogSurface: {
+      backgroundColor: theme.colors.surface,
+    },
+    dialogTitleCenter: {
+      textAlign: 'center' as const,
+    },
+    dialogContentCenter: {
+      textAlign: 'center' as const,
+    },
+    dialogContentSpaced: {
+      textAlign: 'center' as const,
+      marginTop: 8,
+    },
+  };
+
   const checkUserAccess = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -50,14 +72,7 @@ export function ConditionalAppNavigator() {
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: theme.colors.background,
-        }}
-      >
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
@@ -71,25 +86,22 @@ export function ConditionalAppNavigator() {
         <Dialog
           visible={showNoScreenAlert}
           onDismiss={() => setShowNoScreenAlert(false)}
-          style={{ backgroundColor: theme.colors.surface }}
+          style={styles.dialogSurface}
         >
           <Dialog.Icon
             icon="alert-circle"
             size={64}
             color={theme.colors.error}
           />
-          <Dialog.Title style={{ textAlign: 'center' }}>
+          <Dialog.Title style={styles.dialogTitleCenter}>
             Sin Pantalla Asignada
           </Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyLarge" style={{ textAlign: 'center' }}>
+            <Text variant="bodyLarge" style={styles.dialogContentCenter}>
               Tu usuario de cocina no tiene una pantalla de preparación
               asignada.
             </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ textAlign: 'center', marginTop: 8 }}
-            >
+            <Text variant="bodyMedium" style={styles.dialogContentSpaced}>
               Por favor, contacta a tu administrador para que te asigne una
               pantalla de preparación.
             </Text>

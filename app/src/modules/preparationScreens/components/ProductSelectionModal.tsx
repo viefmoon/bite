@@ -442,35 +442,23 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       <Modal
         visible={showConfirmDialog}
         onDismiss={handleCancelSave}
-        contentContainerStyle={{
-          backgroundColor: theme.colors.surface,
-          margin: 20,
-          borderRadius: 16,
-          maxHeight: '75%',
-          elevation: 8,
-        }}
+        contentContainerStyle={[
+          styles.confirmModalContainer,
+          { backgroundColor: theme.colors.surface },
+        ]}
       >
         {/* Header */}
         <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 20,
-            paddingBottom: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.colors.surfaceVariant,
-          }}
+          style={[
+            styles.confirmModalHeader,
+            { borderBottomColor: theme.colors.surfaceVariant },
+          ]}
         >
           <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: theme.colors.errorContainer,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginRight: 12,
-            }}
+            style={[
+              styles.confirmModalIcon,
+              { backgroundColor: theme.colors.errorContainer },
+            ]}
           >
             <MaterialCommunityIcons
               name="alert"
@@ -478,13 +466,13 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               color={theme.colors.error}
             />
           </View>
-          <Text variant="headlineSmall" style={{ flex: 1 }}>
+          <Text variant="headlineSmall" style={styles.confirmModalTitle}>
             Reasignar Productos
           </Text>
         </View>
 
         {/* Subtitle */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <View style={styles.confirmModalSubtitleContainer}>
           <Text
             variant="bodyLarge"
             style={{
@@ -499,61 +487,51 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
         {/* Scrollable Product List */}
         <ScrollView
-          style={{
-            maxHeight: 250,
-            marginTop: 16,
-            marginHorizontal: 20,
-          }}
+          style={styles.confirmModalScrollView}
           showsVerticalScrollIndicator={true}
         >
           {conflictingProducts.map((product, _index) => (
             <View
               key={product.id}
-              style={{
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-                backgroundColor: theme.colors.surfaceVariant,
-                borderRadius: 12,
-                marginBottom: 8,
-                borderLeftWidth: 4,
-                borderLeftColor: theme.colors.error,
-              }}
+              style={[
+                styles.confirmModalProductItem,
+                {
+                  backgroundColor: theme.colors.surfaceVariant,
+                  borderLeftColor: theme.colors.error,
+                },
+              ]}
             >
               <Text
                 variant="bodyLarge"
-                style={{
-                  fontWeight: '600',
-                  color: theme.colors.onSurface,
-                  marginBottom: 8,
-                }}
+                style={[
+                  styles.confirmModalProductName,
+                  { color: theme.colors.onSurface },
+                ]}
               >
                 {product.name}
               </Text>
               <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: theme.colors.surface,
-                  padding: 8,
-                  borderRadius: 8,
-                }}
+                style={[
+                  styles.confirmModalProductContent,
+                  { backgroundColor: theme.colors.surface },
+                ]}
               >
-                <View style={{ flex: 1, alignItems: 'center' }}>
+                <View style={styles.confirmModalProductSection}>
                   <Text
                     variant="labelSmall"
-                    style={{
-                      color: theme.colors.onSurfaceVariant,
-                      marginBottom: 2,
-                    }}
+                    style={[
+                      styles.confirmModalProductSectionText,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
                   >
                     Desde
                   </Text>
                   <Text
                     variant="bodySmall"
-                    style={{
-                      color: theme.colors.error,
-                      fontWeight: '500',
-                    }}
+                    style={[
+                      styles.confirmModalProductSectionLabel,
+                      { color: theme.colors.error },
+                    ]}
                   >
                     {product.currentScreen}
                   </Text>
@@ -563,25 +541,25 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   name="arrow-right"
                   size={20}
                   color={theme.colors.primary}
-                  style={{ marginHorizontal: 8 }}
+                  style={styles.confirmModalDivider}
                 />
 
-                <View style={{ flex: 1, alignItems: 'center' }}>
+                <View style={styles.confirmModalProductSection}>
                   <Text
                     variant="labelSmall"
-                    style={{
-                      color: theme.colors.onSurfaceVariant,
-                      marginBottom: 2,
-                    }}
+                    style={[
+                      styles.confirmModalProductSectionText,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
                   >
                     Hacia
                   </Text>
                   <Text
                     variant="bodySmall"
-                    style={{
-                      color: theme.colors.primary,
-                      fontWeight: '500',
-                    }}
+                    style={[
+                      styles.confirmModalProductSectionLabel,
+                      { color: theme.colors.primary },
+                    ]}
                   >
                     {menuData?.screenName || 'Esta pantalla'}
                   </Text>
@@ -593,29 +571,23 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
         {/* Info Box */}
         <View
-          style={{
-            margin: 20,
-            marginTop: 16,
-            marginBottom: 0,
-            padding: 16,
-            backgroundColor: theme.colors.secondaryContainer,
-            borderRadius: 12,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
+          style={[
+            styles.confirmModalInfoContainer,
+            { backgroundColor: theme.colors.secondaryContainer },
+          ]}
         >
           <MaterialCommunityIcons
             name="information"
             size={20}
             color={theme.colors.onSecondaryContainer}
-            style={{ marginRight: 12 }}
+            style={styles.confirmModalInfoIcon}
           />
           <Text
             variant="bodySmall"
-            style={{
-              color: theme.colors.onSecondaryContainer,
-              flex: 1,
-            }}
+            style={[
+              styles.confirmModalInfoText,
+              { color: theme.colors.onSecondaryContainer },
+            ]}
           >
             Los productos serán removidos automáticamente de sus pantallas
             actuales al confirmar.
@@ -624,27 +596,19 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
         {/* Actions */}
         <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
-            paddingTop: 16,
-            gap: 16,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.surfaceVariant,
-            marginTop: 16,
-          }}
+          style={[
+            styles.confirmModalActions,
+            { borderTopColor: theme.colors.surfaceVariant },
+          ]}
         >
           <Button
             onPress={handleCancelSave}
             mode="outlined"
-            style={{
-              flex: 1,
-              maxWidth: 150,
-              borderColor: theme.colors.outline,
-            }}
-            contentStyle={{ paddingVertical: 4 }}
+            style={[
+              styles.confirmModalActionButton,
+              { borderColor: theme.colors.outline },
+            ]}
+            contentStyle={styles.confirmModalActionButtonContent}
           >
             Cancelar
           </Button>
@@ -653,11 +617,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             mode="contained"
             buttonColor={theme.colors.error}
             icon="check-circle"
-            style={{
-              flex: 1,
-              maxWidth: 150,
-            }}
-            contentStyle={{ paddingVertical: 4 }}
+            style={styles.confirmModalActionButton}
+            contentStyle={styles.confirmModalActionButtonContent}
           >
             Reasignar
           </Button>
@@ -754,5 +715,101 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+  },
+  // Estilos para el modal de confirmación
+  confirmModalContainer: {
+    margin: 20,
+    borderRadius: 16,
+    maxHeight: '75%',
+    elevation: 8,
+  },
+  confirmModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+  },
+  confirmModalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  confirmModalTitle: {
+    flex: 1,
+  },
+  confirmModalSubtitleContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  confirmModalScrollView: {
+    maxHeight: 250,
+    marginTop: 16,
+    marginHorizontal: 20,
+  },
+  confirmModalProductItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+  },
+  confirmModalProductName: {
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  confirmModalProductContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 8,
+  },
+  confirmModalProductSection: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  confirmModalProductSectionText: {
+    marginBottom: 2,
+  },
+  confirmModalProductSectionLabel: {
+    fontWeight: '500',
+  },
+  confirmModalDivider: {
+    marginHorizontal: 8,
+  },
+  confirmModalInfoContainer: {
+    margin: 20,
+    marginTop: 16,
+    marginBottom: 0,
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  confirmModalInfoIcon: {
+    marginRight: 12,
+  },
+  confirmModalInfoText: {
+    flex: 1,
+  },
+  confirmModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 16,
+    gap: 16,
+    borderTopWidth: 1,
+    marginTop: 16,
+  },
+  confirmModalActionButton: {
+    flex: 1,
+    maxWidth: 150,
+  },
+  confirmModalActionButtonContent: {
+    paddingVertical: 4,
   },
 });

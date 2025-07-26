@@ -62,6 +62,9 @@ const getStyles = (theme: AppTheme) =>
     statusChip: {
       paddingHorizontal: theme.spacing.s,
     },
+    statusChipText: {
+      fontSize: 12,
+    },
     description: {
       color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.m,
@@ -171,12 +174,14 @@ const PreparationScreenListItem: React.FC<PreparationScreenListItemProps> = ({
                     : theme.colors.surfaceVariant,
                 },
               ]}
-              textStyle={{
-                color: isActive
-                  ? theme.colors.onSuccessContainer
-                  : theme.colors.onSurfaceVariant,
-                fontSize: 12,
-              }}
+              textStyle={[
+                styles.statusChipText,
+                {
+                  color: isActive
+                    ? theme.colors.onSuccessContainer
+                    : theme.colors.onSurfaceVariant,
+                },
+              ]}
             >
               {isActive ? 'Activa' : 'Inactiva'}
             </Chip>

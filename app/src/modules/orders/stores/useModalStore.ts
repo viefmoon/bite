@@ -31,7 +31,7 @@ interface ModalActions {
 
 export interface ModalStore extends ModalState, ModalActions {}
 
-export const useModalStore = create<ModalStore>((set, get) => ({
+export const useModalStore = create<ModalStore>((set) => ({
   modalType: null,
   modalProps: {},
   isVisible: false,

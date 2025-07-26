@@ -119,6 +119,25 @@ const createStyles = (
       paddingTop: responsive.spacing(theme.spacing.s),
       paddingBottom: responsive.spacing(theme.spacing.xxs),
     },
+    containerStyle: {
+      flex: 1,
+    },
+    drawerContentStyle: {
+      paddingTop: 0,
+    },
+    rowContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    fullWidthRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+    },
+    pointerEventsNone: {
+      pointerEvents: 'none',
+    },
   });
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
@@ -168,7 +187,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         ]}
         rippleColor={`${theme.colors.primary}20`}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.rowContainer}>
           <View style={styles.drawerItemIconContainer}>
             <Icon
               source={iconName}
@@ -223,16 +242,10 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   };
 
   return (
-    <Surface
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.surface,
-      }}
-      elevation={0}
-    >
+    <Surface style={styles.containerStyle} elevation={0}>
       <DrawerContentScrollView
         {...props}
-        contentContainerStyle={{ paddingTop: 0 }}
+        contentContainerStyle={styles.drawerContentStyle}
       >
         <View style={styles.container}>
           <Surface style={styles.userInfoSection} elevation={0}>
@@ -344,15 +357,8 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           }}
           style={styles.preference}
         >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.fullWidthRow}>
+            <View style={styles.rowContainer}>
               <View style={styles.drawerItemIconContainer}>
                 <Icon
                   source={theme.dark ? 'weather-night' : 'white-balance-sunny'}
@@ -369,7 +375,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                 Modo Oscuro
               </Text>
             </View>
-            <View style={{ pointerEvents: 'none' }}>
+            <View style={styles.pointerEventsNone}>
               <Switch value={theme.dark} color={theme.colors.primary} />
             </View>
           </View>
@@ -380,7 +386,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="broom"
@@ -406,7 +412,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="server-network"
@@ -432,7 +438,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.error}20`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.rowContainer}>
             <View style={styles.drawerItemIconContainer}>
               <Icon
                 source="logout"

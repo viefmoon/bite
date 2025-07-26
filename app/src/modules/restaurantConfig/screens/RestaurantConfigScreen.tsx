@@ -913,7 +913,7 @@ const RestaurantConfigScreen: React.FC = () => {
 
       {/* Content */}
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
@@ -1229,6 +1229,9 @@ const createStyles = (
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
     },
     scrollContent: {
       paddingBottom: responsive.spacing(theme.spacing.xl),

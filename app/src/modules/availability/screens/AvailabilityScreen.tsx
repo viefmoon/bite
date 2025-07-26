@@ -180,9 +180,7 @@ export const AvailabilityScreen: React.FC = () => {
                 leadingIcon="food"
                 trailingIcon={viewMode === 'menu' ? 'check' : undefined}
                 titleStyle={
-                  viewMode === 'menu'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
-                    : undefined
+                  viewMode === 'menu' ? styles.activeMenuTitle : undefined
                 }
               />
               <Menu.Item
@@ -194,9 +192,7 @@ export const AvailabilityScreen: React.FC = () => {
                 leadingIcon="tune"
                 trailingIcon={viewMode === 'modifiers' ? 'check' : undefined}
                 titleStyle={
-                  viewMode === 'modifiers'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
-                    : undefined
+                  viewMode === 'modifiers' ? styles.activeMenuTitle : undefined
                 }
               />
               <Menu.Item
@@ -211,7 +207,7 @@ export const AvailabilityScreen: React.FC = () => {
                 }
                 titleStyle={
                   viewMode === 'pizzaCustomizations'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    ? styles.activeMenuTitle
                     : undefined
                 }
               />
@@ -371,5 +367,9 @@ const createStyles = (
     },
     listContent: {
       paddingVertical: responsive.spacing(theme.spacing.m),
+    },
+    activeMenuTitle: {
+      color: theme.colors.primary,
+      fontWeight: '600',
     },
   });

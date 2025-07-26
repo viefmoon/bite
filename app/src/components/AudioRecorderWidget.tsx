@@ -96,7 +96,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       tension: 40,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [bounceAnim]);
 
   useEffect(() => {
     if (isRecording) {
@@ -204,7 +204,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       waveAnim3.setValue(0.8);
       glowAnim.setValue(0);
     }
-  }, [isRecording]);
+  }, [isRecording, fadeAnim, glowAnim, waveAnim1, waveAnim2, waveAnim3]);
 
   useEffect(() => {
     if (isProcessing || isPreparing) {
@@ -222,7 +222,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         rotateAnim.setValue(0);
       };
     }
-  }, [isProcessing, isPreparing]);
+  }, [isProcessing, isPreparing, rotateAnim]);
 
   const hasCompletedRef = useRef(false);
 
@@ -335,7 +335,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   const getBackgroundColor = () => {
     if (!isServiceAvailable) return '#B0B0B0';
     if (isProcessing || isPreparing) return theme.colors.secondary;
-    if (isRecording) return '#FF3B30';
+    if (isRecording) return RECORDING_COLOR;
     return theme.colors.primary;
   };
 
@@ -423,7 +423,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             },
           ]}
         >
-          <View style={[styles.timerBadge, { backgroundColor: '#FF3B30' }]}>
+          <View style={[styles.timerBadge, styles.timerBadgeRecording]}>
             <View style={styles.recordingDot} />
             <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>
           </View>
@@ -460,8 +460,8 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
             <Animated.View
               style={[
                 styles.glowEffect,
+                styles.glowRecording,
                 {
-                  backgroundColor: '#FF3B30',
                   opacity: glowAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: [0.3, 0.6],
@@ -496,7 +496,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                     shadowColor: !isServiceAvailable
                       ? 'transparent'
                       : isRecording
-                        ? '#FF3B30'
+                        ? RECORDING_COLOR
                         : theme.colors.primary,
                     shadowOpacity: !isServiceAvailable
                       ? 0
@@ -525,6 +525,8 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     </Animated.View>
   );
 };
+
+const RECORDING_COLOR = '#FF3B30';
 
 const styles = StyleSheet.create({
   container: {
@@ -612,5 +614,11 @@ const styles = StyleSheet.create({
     elevation: 12,
     borderWidth: 2,
     borderColor: 'white',
+  },
+  timerBadgeRecording: {
+    backgroundColor: RECORDING_COLOR,
+  },
+  glowRecording: {
+    backgroundColor: RECORDING_COLOR,
   },
 });

@@ -201,6 +201,9 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
       right: responsive.spacingPreset.xs,
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
+    transparentBackground: {
+      backgroundColor: 'transparent',
+    },
   });
 
   return (
@@ -222,7 +225,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
             <Avatar.Icon
               size={responsiveSize * 0.4}
               icon={placeholderIcon}
-              style={{ backgroundColor: 'transparent' }}
+              style={styles.transparentBackground}
               color={theme.colors.onSurfaceVariant}
             />
             <Text style={styles.placeholderText} variant="bodySmall">

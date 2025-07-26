@@ -266,7 +266,7 @@ export async function prefetchImages(
   }
 
   let completed = 0;
-  let failed = 0;
+  let _failed = 0;
 
   const processSingleImage = async (imagePath: string) => {
     try {
@@ -277,13 +277,13 @@ export async function prefetchImages(
 
       const serverUrl = serverConnectionService.getCurrentUrl();
       if (!serverUrl) {
-        failed++;
+        _failed++;
         return;
       }
 
       const fullUrl = getImageUrlSync(imagePath, serverUrl);
       if (!fullUrl) {
-        failed++;
+        _failed++;
         return;
       }
 
@@ -299,10 +299,10 @@ export async function prefetchImages(
 
       const result = await getCachedImageUri(fullUrl);
       if (!result) {
-        failed++;
+        _failed++;
       }
     } catch (error) {
-      failed++;
+      _failed++;
     } finally {
       completed++;
       onProgress?.(completed, imagePaths.length);

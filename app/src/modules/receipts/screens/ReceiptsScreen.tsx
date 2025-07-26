@@ -28,7 +28,6 @@ import EmptyState from '@/app/components/common/EmptyState';
 import { ReceiptDetailsModal } from '../components/ReceiptDetailsModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';

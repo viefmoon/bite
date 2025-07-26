@@ -61,11 +61,10 @@ export const KitchenFilterButton: React.FC = () => {
         <Animated.View
           style={[
             styles.filterButton,
+            activeFiltersCount > 0
+              ? styles.filterButtonActive
+              : styles.filterButtonInactive,
             {
-              backgroundColor:
-                activeFiltersCount > 0
-                  ? theme.colors.primaryContainer
-                  : 'rgba(255,255,255,0.2)',
               transform: [{ scale: scaleAnim }],
             },
           ]}
@@ -193,10 +192,7 @@ export const KitchenFilterButton: React.FC = () => {
                             backgroundColor: theme.colors.primaryContainer,
                             borderColor: theme.colors.primary,
                           },
-                          !isSelected && {
-                            backgroundColor: theme.colors.surfaceVariant,
-                            borderColor: 'transparent',
-                          },
+                          !isSelected && styles.orderTypeButtonInactive,
                         ]}
                         onPress={() =>
                           setFilters({ ...filters, orderType: option.value })
@@ -216,12 +212,9 @@ export const KitchenFilterButton: React.FC = () => {
                           variant="labelMedium"
                           style={[
                             styles.orderTypeLabel,
-                            {
-                              color: isSelected
-                                ? theme.colors.onPrimaryContainer
-                                : theme.colors.onSurfaceVariant,
-                              fontWeight: isSelected ? '700' : '500',
-                            },
+                            isSelected
+                              ? styles.orderTypeLabelSelected
+                              : styles.orderTypeLabelUnselected,
                           ]}
                         >
                           {option.label}
@@ -450,6 +443,12 @@ const createStyles = (screenHeight: number, theme: any) =>
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
     },
+    filterButtonActive: {
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    filterButtonInactive: {
+      backgroundColor: 'rgba(255,255,255,0.2)',
+    },
     badge: {
       position: 'absolute',
       top: -4,
@@ -568,6 +567,18 @@ const createStyles = (screenHeight: number, theme: any) =>
     },
     orderTypeLabel: {
       marginTop: 4,
+    },
+    orderTypeButtonInactive: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderColor: 'transparent',
+    },
+    orderTypeLabelSelected: {
+      color: theme.colors.onPrimaryContainer,
+      fontWeight: '700',
+    },
+    orderTypeLabelUnselected: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
     },
     filterItemTitle: {
       color: theme.colors.onSurface,

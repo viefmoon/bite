@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Text,
   Button,
   Chip,
   ActivityIndicator,
-  IconButton,
   Divider,
 } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -127,6 +126,13 @@ const getStyles = (theme: AppTheme) =>
       alignItems: 'center',
       padding: theme.spacing.xl * 2,
     },
+    headerActionsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statusChipText: {
+      fontSize: 12,
+    },
   });
 
 const PreparationScreenDetailModal: React.FC<
@@ -142,18 +148,6 @@ const PreparationScreenDetailModal: React.FC<
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-
-  const handleEdit = () => {
-    if (onEdit && item) {
-      onEdit(item);
-    }
-  };
-
-  const handleDelete = () => {
-    if (onDelete && item) {
-      onDelete(item.id);
-    }
-  };
 
   // Get color based on screen name
   const getColor = () => {
@@ -275,12 +269,12 @@ const PreparationScreenDetailModal: React.FC<
   };
 
   const headerActions = item && (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <View style={styles.headerActionsContainer}>
       <Chip
         mode="flat"
         compact
         style={styles.statusChip}
-        textStyle={{ fontSize: 12 }}
+        textStyle={styles.statusChipText}
         selected={item.isActive}
       >
         {item.isActive ? 'Activa' : 'Inactiva'}

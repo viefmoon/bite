@@ -41,6 +41,7 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
   onPrint,
 }) => {
   const theme = useAppTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const { data: printersResponse, isLoading: isLoadingPrinters } =
     usePrintersQuery({ page: 1, limit: 100 });
   const [selectedTicketType, setSelectedTicketType] = useState<
@@ -129,14 +130,10 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
                 <Surface
                   style={[
                     styles.radioItem,
-                    {
-                      backgroundColor: theme.colors.surface,
-                      borderColor:
-                        selectedTicketType === 'GENERAL'
-                          ? theme.colors.primary
-                          : 'transparent',
-                      borderWidth: selectedTicketType === 'GENERAL' ? 2 : 0,
-                    },
+                    { backgroundColor: theme.colors.surface },
+                    selectedTicketType === 'GENERAL'
+                      ? styles.selectedGeneralItem
+                      : styles.unselectedGeneralItem,
                   ]}
                 >
                   <View style={styles.radioContent}>
@@ -169,14 +166,10 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
                 <Surface
                   style={[
                     styles.radioItem,
-                    {
-                      backgroundColor: theme.colors.surface,
-                      borderColor:
-                        selectedTicketType === 'BILLING'
-                          ? theme.colors.primary
-                          : 'transparent',
-                      borderWidth: selectedTicketType === 'BILLING' ? 2 : 0,
-                    },
+                    { backgroundColor: theme.colors.surface },
+                    selectedTicketType === 'BILLING'
+                      ? styles.selectedBillingItem
+                      : styles.unselectedBillingItem,
                   ]}
                 >
                   <View style={styles.radioContent}>
@@ -233,14 +226,10 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
                     <Surface
                       style={[
                         styles.radioItem,
-                        {
-                          backgroundColor: theme.colors.surface,
-                          borderColor:
-                            selectedPrinterId === printer.id
-                              ? theme.colors.primary
-                              : 'transparent',
-                          borderWidth: selectedPrinterId === printer.id ? 2 : 0,
-                        },
+                        { backgroundColor: theme.colors.surface },
+                        selectedPrinterId === printer.id
+                          ? styles.selectedPrinterItem
+                          : styles.unselectedPrinterItem,
                       ]}
                     >
                       <View style={styles.radioContent}>
@@ -305,92 +294,117 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  modalContent: {
-    margin: 16,
-    borderRadius: 16,
-    maxHeight: '85%',
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    modalContent: {
+      margin: 16,
+      borderRadius: 16,
+      maxHeight: '85%',
+      overflow: 'hidden',
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    flex: 1,
-  },
-  closeButton: {
-    margin: -8,
-  },
-  content: {
-    maxHeight: 400,
-  },
-  section: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  radioItem: {
-    marginBottom: 6,
-    borderRadius: 10,
-    elevation: 1,
-    padding: 2,
-  },
-  radioContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  radioTextContainer: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  radioLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  radioDescription: {
-    fontSize: 11,
-    opacity: 0.7,
-  },
-  noPrintersText: {
-    fontSize: 13,
-    textAlign: 'center',
-    padding: 12,
-    fontWeight: '500',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  footerButton: {
-    minWidth: 100,
-    borderRadius: 8,
-  },
-  printButton: {
-    paddingHorizontal: 4,
-  },
-});
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '700',
+      flex: 1,
+    },
+    closeButton: {
+      margin: -8,
+    },
+    content: {
+      maxHeight: 400,
+    },
+    section: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    radioItem: {
+      marginBottom: 6,
+      borderRadius: 10,
+      elevation: 1,
+      padding: 2,
+    },
+    radioContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    radioTextContainer: {
+      flex: 1,
+      marginLeft: 8,
+    },
+    radioLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    radioDescription: {
+      fontSize: 11,
+      opacity: 0.7,
+    },
+    noPrintersText: {
+      fontSize: 13,
+      textAlign: 'center',
+      padding: 12,
+      fontWeight: '500',
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      gap: 12,
+    },
+    footerButton: {
+      minWidth: 100,
+      borderRadius: 8,
+    },
+    printButton: {
+      paddingHorizontal: 4,
+    },
+    selectedGeneralItem: {
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
+    },
+    unselectedGeneralItem: {
+      borderColor: 'transparent',
+      borderWidth: 0,
+    },
+    selectedBillingItem: {
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
+    },
+    unselectedBillingItem: {
+      borderColor: 'transparent',
+      borderWidth: 0,
+    },
+    selectedPrinterItem: {
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
+    },
+    unselectedPrinterItem: {
+      borderColor: 'transparent',
+      borderWidth: 0,
+    },
+  });

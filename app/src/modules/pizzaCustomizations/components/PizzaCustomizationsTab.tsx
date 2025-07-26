@@ -310,6 +310,10 @@ export function PizzaCustomizationsTab() {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    activeMenuTitle: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
   });
 
   if (isLoading) {
@@ -370,9 +374,7 @@ export function PizzaCustomizationsTab() {
                 leadingIcon="filter-variant"
                 trailingIcon={selectedType === 'all' ? 'check' : undefined}
                 titleStyle={
-                  selectedType === 'all'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
-                    : undefined
+                  selectedType === 'all' ? styles.activeMenuTitle : undefined
                 }
               />
               <Menu.Item
@@ -389,7 +391,7 @@ export function PizzaCustomizationsTab() {
                 }
                 titleStyle={
                   selectedType === CustomizationType.FLAVOR
-                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    ? styles.activeMenuTitle
                     : undefined
                 }
               />
@@ -407,7 +409,7 @@ export function PizzaCustomizationsTab() {
                 }
                 titleStyle={
                   selectedType === CustomizationType.INGREDIENT
-                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    ? styles.activeMenuTitle
                     : undefined
                 }
               />

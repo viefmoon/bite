@@ -202,7 +202,7 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
+          style={styles.keyboardAvoidingView}
         >
           <ScrollView
             contentContainerStyle={styles.scrollViewContent}
@@ -346,7 +346,9 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
                       <Text
                         style={[
                           styles.differenceText,
-                          { color: difference >= 0 ? '#4CAF50' : '#FF5722' },
+                          difference >= 0
+                            ? styles.positiveText
+                            : styles.negativeText,
                         ]}
                       >
                         {difference >= 0 ? 'Sobrante: ' : 'Faltante: '}
@@ -614,5 +616,14 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     closeConfirmButtonText: {
       color: '#FFFFFF',
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    positiveText: {
+      color: '#4CAF50',
+    },
+    negativeText: {
+      color: '#FF5722',
     },
   });

@@ -221,6 +221,20 @@ const getStyles = (
       right: responsive.spacing(theme.spacing.xs),
       zIndex: 1,
     },
+    renderContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
+    buttonContent: {
+      flexDirection: 'row',
+    },
+    buttonLabel: {
+      fontSize: responsive.isTablet ? 13 : 12,
+    },
+    closeButtonLabel: {
+      fontSize: responsive.isTablet ? 14 : 13,
+    },
   });
 };
 
@@ -380,13 +394,7 @@ function GenericDetailModal<TItem extends { id: string }>({
                     {label}
                   </Text>
                   {render ? (
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: 'row',
-                        justifyContent: 'flex-end',
-                      }}
-                    >
+                    <View style={styles.renderContainer}>
                       {(() => {
                         const rendered = render(value, item);
                         // Si el render devuelve un string o número, lo envolvemos en Text
@@ -448,8 +456,8 @@ function GenericDetailModal<TItem extends { id: string }>({
                 style={styles.actionButton}
                 buttonColor={theme.colors.secondaryContainer}
                 textColor={theme.colors.onSecondaryContainer}
-                contentStyle={{ flexDirection: 'row' }}
-                labelStyle={{ fontSize: responsive.isTablet ? 13 : 12 }}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
                 compact={!responsive.isTablet}
               >
                 {editButtonLabel}
@@ -465,8 +473,8 @@ function GenericDetailModal<TItem extends { id: string }>({
                 loading={isDeleting}
                 disabled={isDeleting}
                 style={styles.actionButton}
-                contentStyle={{ flexDirection: 'row' }}
-                labelStyle={{ fontSize: responsive.isTablet ? 13 : 12 }}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
                 compact={!responsive.isTablet}
               >
                 {deleteButtonLabel}
@@ -482,7 +490,7 @@ function GenericDetailModal<TItem extends { id: string }>({
           disabled={isDeleting}
           buttonColor={theme.colors.surfaceVariant}
           textColor={theme.colors.onSurfaceVariant}
-          labelStyle={{ fontSize: responsive.isTablet ? 14 : 13 }}
+          labelStyle={styles.closeButtonLabel}
           contentStyle={{
             paddingHorizontal: responsive.spacing(theme.spacing.s),
           }}

@@ -355,6 +355,91 @@ const LoginScreen = () => {
           right: responsive.spacingPreset.l,
           zIndex: 10,
         },
+        loadingContainer: {
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        webMainContainer: {
+          flex: 1,
+          minHeight: '100%',
+          backgroundColor: theme.colors.background,
+        },
+        webThemeTogglePosition: {
+          position: 'absolute',
+          top: 20,
+          right: 20,
+          zIndex: 10,
+        },
+        webScrollContainer: {
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        },
+        webFormContainer: {
+          width: '100%',
+          maxWidth: 380,
+          alignItems: 'center',
+        },
+        webLogo: {
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          marginBottom: 30,
+        },
+        webCard: {
+          width: '100%',
+          backgroundColor: theme.colors.surface,
+          borderRadius: 16,
+          padding: 24,
+          shadowColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 1,
+          shadowRadius: 12,
+          elevation: 4,
+          borderWidth: theme.dark ? 1 : 0,
+          borderColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'transparent',
+        },
+        webCardTitle: {
+          fontSize: 24,
+          fontWeight: 'bold',
+          color: theme.colors.onSurface,
+          marginBottom: 8,
+          textAlign: 'center',
+        },
+        webCardSubtitle: {
+          fontSize: 14,
+          color: theme.colors.onSurfaceVariant,
+          marginBottom: 20,
+          textAlign: 'center',
+        },
+        webRegisterContainer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 16,
+        },
+        webRegisterText: {
+          color: theme.colors.onSurfaceVariant,
+          fontSize: 14,
+        },
+        webRegisterLink: {
+          marginLeft: 5,
+        },
+        webRegisterLinkText: {
+          color: theme.colors.primary,
+          fontWeight: 'bold',
+          fontSize: 14,
+        },
+        mobileThemeToggleContainer: {
+          position: 'absolute',
+          top: -responsive.spacingPreset.s,
+          right: -responsive.spacingPreset.s,
+          zIndex: 1,
+        },
+        keyboardContainer: {
+          flex: 1,
+        },
       }),
     [
       theme,
@@ -365,33 +450,23 @@ const LoginScreen = () => {
       responsive.spacingPreset.xxl,
       responsive.spacingPreset.m,
       responsive.spacingPreset.l,
+      responsive.spacingPreset.s,
       responsive.fontSizePreset.m,
     ],
   );
 
   if (isLoadingCredentials) {
     return (
-      <SafeAreaView
-        style={[
-          styles.safeArea,
-          { justifyContent: 'center', alignItems: 'center' },
-        ]}
-      >
+      <SafeAreaView style={[styles.safeArea, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   const webContent = (
-    <View
-      style={{
-        flex: 1,
-        minHeight: '100%',
-        backgroundColor: theme.colors.background,
-      }}
-    >
+    <View style={styles.webMainContainer}>
       {/* Theme toggle button */}
-      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+      <View style={styles.webThemeTogglePosition}>
         <IconButton
           icon={theme.dark ? 'weather-night' : 'weather-sunny'}
           size={30}
@@ -400,70 +475,19 @@ const LoginScreen = () => {
         />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
-      >
-        <View
-          style={{
-            width: '100%',
-            maxWidth: 380,
-            alignItems: 'center',
-          }}
-        >
+      <ScrollView contentContainerStyle={styles.webScrollContainer}>
+        <View style={styles.webFormContainer}>
           {/* Logo */}
           <Image
             source={require('../../../../assets/icon.png')}
-            style={{
-              width: 200,
-              height: 200,
-              borderRadius: 100,
-              marginBottom: 30,
-            }}
+            style={styles.webLogo}
             resizeMode="cover"
           />
 
           {/* Login form card */}
-          <View
-            style={{
-              width: '100%',
-              backgroundColor: theme.colors.surface,
-              borderRadius: 16,
-              padding: 24,
-              shadowColor: theme.dark
-                ? 'rgba(255,255,255,0.1)'
-                : 'rgba(0,0,0,0.1)',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 1,
-              shadowRadius: 12,
-              elevation: 4,
-              borderWidth: theme.dark ? 1 : 0,
-              borderColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'transparent',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: 'bold',
-                color: theme.colors.onSurface,
-                marginBottom: 8,
-                textAlign: 'center',
-              }}
-            >
-              Iniciar Sesión
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: theme.colors.onSurfaceVariant,
-                marginBottom: 20,
-                textAlign: 'center',
-              }}
-            >
+          <View style={styles.webCard}>
+            <Text style={styles.webCardTitle}>Iniciar Sesión</Text>
+            <Text style={styles.webCardSubtitle}>
               Ingresa tus credenciales para continuar
             </Text>
 
@@ -475,35 +499,13 @@ const LoginScreen = () => {
               initialRememberMe={initialRememberMe}
             />
 
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 16,
-              }}
-            >
-              <Text
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                  fontSize: 14,
-                }}
-              >
-                ¿No tienes una cuenta?
-              </Text>
+            <View style={styles.webRegisterContainer}>
+              <Text style={styles.webRegisterText}>¿No tienes una cuenta?</Text>
               <TouchableRipple
                 onPress={() => setShowRegisterModal(true)}
-                style={{ marginLeft: 5 }}
+                style={styles.webRegisterLink}
               >
-                <Text
-                  style={{
-                    color: theme.colors.primary,
-                    fontWeight: 'bold',
-                    fontSize: 14,
-                  }}
-                >
-                  Regístrate
-                </Text>
+                <Text style={styles.webRegisterLinkText}>Regístrate</Text>
               </TouchableRipple>
             </View>
           </View>
@@ -516,7 +518,7 @@ const LoginScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+        style={styles.keyboardContainer}
       >
         <ScrollView
           contentContainerStyle={styles.scrollView}
@@ -524,14 +526,7 @@ const LoginScreen = () => {
         >
           <View style={styles.container}>
             <View>
-              <View
-                style={{
-                  position: 'absolute',
-                  top: -responsive.spacingPreset.s,
-                  right: -responsive.spacingPreset.s,
-                  zIndex: 1,
-                }}
-              >
+              <View style={styles.mobileThemeToggleContainer}>
                 <ConnectionIndicator />
               </View>
               <View style={styles.logoContainer}>

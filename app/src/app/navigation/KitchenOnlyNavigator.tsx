@@ -106,6 +106,42 @@ function KitchenOnlyNavigatorContent() {
           fontWeight: '500',
           opacity: 0.9,
         },
+        transparentSurface: {
+          backgroundColor: 'transparent',
+        },
+        headerRightContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        preparedOrdersToggle: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          marginRight: 8,
+          borderRadius: 20,
+        },
+        preparedOrdersText: {
+          marginLeft: 4,
+        },
+        preparedOrdersToggleActive: {
+          backgroundColor: 'rgba(255,255,255,0.2)',
+        },
+        preparedOrdersToggleInactive: {
+          backgroundColor: 'transparent',
+        },
+        preparedOrdersTextWeb: {
+          fontSize: 16,
+        },
+        preparedOrdersTextMobile: {
+          fontSize: 14,
+        },
+        preparedOrdersTextBold: {
+          fontWeight: 'bold',
+        },
+        preparedOrdersTextNormal: {
+          fontWeight: 'normal',
+        },
       }),
     [theme, responsive],
   );
@@ -158,12 +194,7 @@ function KitchenOnlyNavigatorContent() {
             </TouchableOpacity>
           ),
           headerTitle: () => (
-            <Surface
-              elevation={0}
-              style={{
-                backgroundColor: 'transparent',
-              }}
-            >
+            <Surface elevation={0} style={styles.transparentSurface}>
               <View style={styles.titleContainer}>
                 <Text style={styles.headerTitleStyle}>{screenName}</Text>
                 {filters.orderType && (
@@ -180,20 +211,15 @@ function KitchenOnlyNavigatorContent() {
             </Surface>
           ),
           headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.headerRightContainer}>
               {/* Checkbox para mostrar/ocultar ordenes listas */}
               <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  marginRight: 8,
-                  backgroundColor: filters.showPrepared
-                    ? 'rgba(255,255,255,0.2)'
-                    : 'transparent',
-                  borderRadius: 20,
-                }}
+                style={[
+                  styles.preparedOrdersToggle,
+                  filters.showPrepared
+                    ? styles.preparedOrdersToggleActive
+                    : styles.preparedOrdersToggleInactive,
+                ]}
                 onPress={() =>
                   setFilters({
                     ...filters,
@@ -213,12 +239,16 @@ function KitchenOnlyNavigatorContent() {
                   uncheckedColor={theme.colors.onPrimary}
                 />
                 <Text
-                  style={{
-                    color: theme.colors.onPrimary,
-                    fontSize: responsive.isWeb ? 16 : 14,
-                    marginLeft: 4,
-                    fontWeight: filters.showPrepared ? 'bold' : 'normal',
-                  }}
+                  style={[
+                    styles.preparedOrdersText,
+                    { color: theme.colors.onPrimary },
+                    responsive.isWeb
+                      ? styles.preparedOrdersTextWeb
+                      : styles.preparedOrdersTextMobile,
+                    filters.showPrepared
+                      ? styles.preparedOrdersTextBold
+                      : styles.preparedOrdersTextNormal,
+                  ]}
                 >
                   Mostrar Listas
                 </Text>
@@ -265,8 +295,11 @@ function KitchenOnlyNavigatorContent() {
 export function KitchenOnlyNavigator() {
   // Usar navegador web personalizado en plataforma web
   if (Platform.OS === 'web') {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { KitchenWebNavigator } = require('./KitchenWebNavigator');
+    // Importación dinámica para evitar problemas de bundling
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { KitchenWebNavigator } = require('./KitchenWebNavigator') as {
+      KitchenWebNavigator: React.ComponentType;
+    };
     return <KitchenWebNavigator />;
   }
 

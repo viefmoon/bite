@@ -836,7 +836,7 @@ export function UserFormModal({
               />
             </View>
 
-            <View style={{ height: 10 }} />
+            <View style={styles.scrollSpacer} />
           </ScrollView>
 
           <Surface style={styles.buttonContainer} elevation={2}>
@@ -1119,5 +1119,8 @@ const getStyles = (
       marginTop: 2,
       fontSize: 10,
       textAlign: 'center',
+    },
+    scrollSpacer: {
+      height: 10,
     },
   });

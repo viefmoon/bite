@@ -220,7 +220,8 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
         key={`${item.id}`}
         style={[
           styles.itemCard,
-          { backgroundColor: theme.colors.elevation.level1, marginBottom: 8 },
+          styles.itemCardSpacing,
+          { backgroundColor: theme.colors.elevation.level1 },
         ]}
         elevation={1}
       >
@@ -480,69 +481,77 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       >
         <View style={styles.infoSection}>
           {order?.deliveryInfo &&
-          typeof order.deliveryInfo === 'object' &&
-          'recipientName' in order.deliveryInfo &&
-          order.deliveryInfo.recipientName ? (
-            <View style={styles.infoRow}>
-              <Text
-                style={[styles.contactText, { color: theme.colors.onSurface }]}
-              >
-                👤 Nombre del Cliente:{' '}
-                {String(order.deliveryInfo.recipientName)}
-              </Text>
-            </View>
-          ) : null}
+            typeof order.deliveryInfo === 'object' &&
+            'recipientName' in order.deliveryInfo &&
+            order.deliveryInfo.recipientName && (
+              <View style={styles.infoRow}>
+                <Text
+                  style={[
+                    styles.contactText,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
+                  👤 Nombre del Cliente:{' '}
+                  {String((order.deliveryInfo as any).recipientName)}
+                </Text>
+              </View>
+            )}
 
           {order?.deliveryInfo &&
-          typeof order.deliveryInfo === 'object' &&
-          'recipientPhone' in order.deliveryInfo &&
-          order.deliveryInfo.recipientPhone ? (
-            <View style={styles.infoRow}>
-              <Text
-                style={[styles.contactText, { color: theme.colors.onSurface }]}
-              >
-                📞 Teléfono: {String(order.deliveryInfo.recipientPhone)}
-              </Text>
-            </View>
-          ) : null}
+            typeof order.deliveryInfo === 'object' &&
+            'recipientPhone' in order.deliveryInfo &&
+            order.deliveryInfo.recipientPhone && (
+              <View style={styles.infoRow}>
+                <Text
+                  style={[
+                    styles.contactText,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
+                  📞 Teléfono:{' '}
+                  {String((order.deliveryInfo as any).recipientPhone)}
+                </Text>
+              </View>
+            )}
 
           {order?.orderType === 'DELIVERY' &&
-          order?.deliveryInfo &&
-          typeof order.deliveryInfo === 'object' &&
-          'fullAddress' in order.deliveryInfo &&
-          order.deliveryInfo.fullAddress ? (
-            <View style={styles.infoRow}>
-              <Text
-                style={[
-                  styles.addressText,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                📦 Dirección de Entrega:{' '}
-                {String(order.deliveryInfo.fullAddress)}
-              </Text>
-            </View>
-          ) : null}
+            order?.deliveryInfo &&
+            typeof order.deliveryInfo === 'object' &&
+            'fullAddress' in order.deliveryInfo &&
+            order.deliveryInfo.fullAddress && (
+              <View style={styles.infoRow}>
+                <Text
+                  style={[
+                    styles.addressText,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  📦 Dirección de Entrega:{' '}
+                  {String((order.deliveryInfo as any).fullAddress)}
+                </Text>
+              </View>
+            )}
 
           {order?.orderType === 'DINE_IN' &&
-          order?.table &&
-          typeof order.table === 'object' ? (
-            <View style={styles.infoRow}>
-              <Text
-                style={[styles.tableText, { color: theme.colors.onSurface }]}
-              >
-                🏛️ Mesa: {(order.table as any)?.area?.name || 'Sin área'} -{' '}
-                {(order.table as any)?.name}
-              </Text>
-            </View>
-          ) : null}
+            order?.table &&
+            typeof order.table === 'object' && (
+              <View style={styles.infoRow}>
+                <Text
+                  style={[styles.tableText, { color: theme.colors.onSurface }]}
+                >
+                  🏛️ Mesa: {(order.table as any)?.area?.name || 'Sin área'} -{' '}
+                  {(order.table as any)?.name}
+                </Text>
+              </View>
+            )}
 
-          {order?.scheduledAt ? (
+          {order?.scheduledAt && (
             <View style={styles.infoRow}>
               <Text
                 style={[
                   styles.contactText,
-                  { color: theme.colors.primary, fontWeight: '600' },
+                  styles.primaryFont,
+                  { color: theme.colors.primary },
                 ]}
               >
                 ⏰ Hora de Entrega Programada:{' '}
@@ -553,9 +562,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   : 'No especificada'}
               </Text>
             </View>
-          ) : null}
+          )}
 
-          {order?.user ? (
+          {order?.user && (
             <View style={styles.infoRow}>
               <Text
                 style={[
@@ -567,9 +576,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 {(order.user as any)?.lastName}
               </Text>
             </View>
-          ) : null}
+          )}
 
-          {order?.notes ? (
+          {order?.notes && (
             <View style={styles.infoRow}>
               <Text
                 style={[
@@ -580,14 +589,14 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 📋 Notas: {order.notes as string}
               </Text>
             </View>
-          ) : null}
+          )}
         </View>
 
         <Divider style={styles.divider} />
 
         <View style={styles.itemsList}>
           {Array.isArray(order?.orderItems)
-            ? order.orderItems.map((item) => renderItem(item))
+            ? order.orderItems.map((item: any) => renderItem(item))
             : []}
         </View>
 
@@ -614,7 +623,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                           : '0.00'}
                     </Text>
                     <Text
-                      style={[styles.summaryCompactLabel, { color: '#10B981' }]}
+                      style={[styles.summaryCompactLabel, styles.paidTextColor]}
                     >
                       Pagado: $
                       {Array.isArray(order.payments)
@@ -645,9 +654,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                           <Text
                             style={[
                               styles.summaryCompactLabel,
+                              styles.primaryFont,
                               {
                                 color: theme.colors.error,
-                                fontWeight: '600',
                               },
                             ]}
                           >
@@ -661,7 +670,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 </View>
 
                 {Array.isArray(order.payments)
-                  ? order.payments.map((payment, index) => {
+                  ? order.payments.map((payment: any, index: number) => {
                       const getPaymentMethodLabel = (method: string) => {
                         switch (method) {
                           case 'CASH':
@@ -811,81 +820,85 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 {showPrintHistory && (
                   <View style={styles.collapsibleContent}>
                     {Array.isArray(order.ticketImpressions)
-                      ? order.ticketImpressions.map((impression, index) => {
-                          const getTicketTypeLabel = (type: string) => {
-                            switch (type) {
-                              case 'KITCHEN':
-                                return '🍳 Cocina';
-                              case 'BAR':
-                                return '🍺 Barra';
-                              case 'BILLING':
-                                return '💵 Cuenta';
-                              case 'CUSTOMER_COPY':
-                                return '📄 Copia Cliente';
-                              case 'GENERAL':
-                                return '📋 General';
-                              default:
-                                return type;
-                            }
-                          };
+                      ? order.ticketImpressions.map(
+                          (impression: any, index: number) => {
+                            const getTicketTypeLabel = (type: string) => {
+                              switch (type) {
+                                case 'KITCHEN':
+                                  return '🍳 Cocina';
+                                case 'BAR':
+                                  return '🍺 Barra';
+                                case 'BILLING':
+                                  return '💵 Cuenta';
+                                case 'CUSTOMER_COPY':
+                                  return '📄 Copia Cliente';
+                                case 'GENERAL':
+                                  return '📋 General';
+                                default:
+                                  return type;
+                              }
+                            };
 
-                          return (
-                            <View
-                              key={impression.id || index}
-                              style={styles.impressionRow}
-                            >
-                              <View style={styles.impressionLeft}>
+                            return (
+                              <View
+                                key={impression.id || index}
+                                style={styles.impressionRow}
+                              >
+                                <View style={styles.impressionLeft}>
+                                  <Text
+                                    style={[
+                                      styles.impressionType,
+                                      { color: theme.colors.onSurface },
+                                    ]}
+                                  >
+                                    {getTicketTypeLabel(impression.ticketType)}
+                                  </Text>
+                                  <View style={styles.impressionDetails}>
+                                    {impression.user && (
+                                      <Text
+                                        style={[
+                                          styles.impressionUser,
+                                          {
+                                            color:
+                                              theme.colors.onSurfaceVariant,
+                                          },
+                                        ]}
+                                      >
+                                        por {impression.user.firstName || ''}{' '}
+                                        {impression.user.lastName || ''}
+                                      </Text>
+                                    )}
+                                    {impression.printer && (
+                                      <Text
+                                        style={[
+                                          styles.impressionPrinter,
+                                          {
+                                            color:
+                                              theme.colors.onSurfaceVariant,
+                                          },
+                                        ]}
+                                      >
+                                        🖨️ {impression.printer.name}
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
                                 <Text
                                   style={[
-                                    styles.impressionType,
-                                    { color: theme.colors.onSurface },
+                                    styles.impressionTime,
+                                    { color: theme.colors.onSurfaceVariant },
                                   ]}
                                 >
-                                  {getTicketTypeLabel(impression.ticketType)}
+                                  {format(
+                                    new Date(impression.impressionTime),
+                                    'HH:mm:ss',
+                                    { locale: es },
+                                  )}
                                 </Text>
-                                <View style={styles.impressionDetails}>
-                                  {impression.user && (
-                                    <Text
-                                      style={[
-                                        styles.impressionUser,
-                                        {
-                                          color: theme.colors.onSurfaceVariant,
-                                        },
-                                      ]}
-                                    >
-                                      por {impression.user.firstName || ''}{' '}
-                                      {impression.user.lastName || ''}
-                                    </Text>
-                                  )}
-                                  {impression.printer && (
-                                    <Text
-                                      style={[
-                                        styles.impressionPrinter,
-                                        {
-                                          color: theme.colors.onSurfaceVariant,
-                                        },
-                                      ]}
-                                    >
-                                      🖨️ {impression.printer.name}
-                                    </Text>
-                                  )}
-                                </View>
                               </View>
-                              <Text
-                                style={[
-                                  styles.impressionTime,
-                                  { color: theme.colors.onSurfaceVariant },
-                                ]}
-                              >
-                                {format(
-                                  new Date(impression.impressionTime),
-                                  'HH:mm:ss',
-                                  { locale: es },
-                                )}
-                              </Text>
-                            </View>
-                          );
-                        })
+                            );
+                          },
+                        )
                       : null}
                   </View>
                 )}
@@ -956,6 +969,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  itemCardSpacing: {
+    marginBottom: 8,
+  },
+  primaryFont: {
+    fontWeight: '600',
+  },
+  paidTextColor: {
+    color: '#10B981',
   },
   headerDatesRow: {
     gap: 8,

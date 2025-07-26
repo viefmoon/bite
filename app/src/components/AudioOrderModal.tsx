@@ -301,7 +301,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       // Solo cambiar a DELIVERY si hay datos de la orden pero orderType es undefined
       setEditableOrderType(OrderTypeEnum.DELIVERY);
     }
-  }, [orderData?.deliveryInfo, orderData?.orderItems, orderData?.orderType]);
+  }, [orderData]);
 
   // Limpiar errores cuando cambie el tipo de orden
   useEffect(() => {
@@ -1200,7 +1200,8 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         <View
           style={[
             styles.compactSectionContainer,
-            { borderTopWidth: 1, borderTopColor: colors.primary + '40' },
+            styles.compactSectionContainerBordered,
+            { borderTopColor: colors.primary + '40' },
           ]}
         >
           <View style={styles.compactSectionHeader}>
@@ -1321,11 +1322,13 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                         activeOpacity={0.7}
                         style={[
                           styles.compactItemContainer,
-                          itemsWithErrors.has(index) && {
-                            borderWidth: 1,
-                            borderColor: colors.error,
-                            backgroundColor: colors.errorContainer + '20',
-                          },
+                          itemsWithErrors.has(index) && [
+                            styles.compactItemContainerError,
+                            {
+                              borderColor: colors.error,
+                              backgroundColor: colors.errorContainer + '20',
+                            },
+                          ],
                         ]}
                       >
                         <View style={styles.compactItemContent}>
@@ -1473,19 +1476,11 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             onDismiss={onDismiss}
             contentContainerStyle={[
               styles.modalContainer,
+              styles.modalContainerStyle,
               {
-                width: '95%',
-                maxWidth: 500,
                 backgroundColor: colors.surface,
-                maxHeight: '90%',
-                height: '85%',
-                borderWidth: 6,
                 borderColor: colors.primary,
                 shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.6,
-                shadowRadius: 16,
-                elevation: 20,
               },
             ]}
           >
@@ -1552,7 +1547,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                     <Button
                       mode="contained"
                       onPress={handleAttemptExit}
-                      style={[styles.footerButton, { flex: 1 }]}
+                      style={[styles.footerButton, styles.footerButtonFull]}
                     >
                       Cerrar
                     </Button>
@@ -1920,5 +1915,26 @@ const styles = StyleSheet.create({
   validationErrorText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  // Estilos para reemplazar inline styles
+  compactSectionContainerBordered: {
+    borderTopWidth: 1,
+  },
+  compactItemContainerError: {
+    borderWidth: 1,
+  },
+  modalContainerStyle: {
+    width: '95%',
+    maxWidth: 500,
+    maxHeight: '90%',
+    height: '85%',
+    borderWidth: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+    elevation: 20,
+  },
+  footerButtonFull: {
+    flex: 1,
   },
 });

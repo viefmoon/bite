@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Product, FullMenuModifierGroup } from '../types/orders.types';
+import { Product } from '../types/orders.types';
 import { CartItemModifier } from '../stores/useOrderStore';
 import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {

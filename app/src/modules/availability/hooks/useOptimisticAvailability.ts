@@ -168,7 +168,7 @@ export const useOptimisticAvailability = () => {
     onSuccess: () => {
       showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousMenuData) {
         queryClient.setQueryData(
           ['availability', 'menu'],

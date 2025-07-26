@@ -727,21 +727,23 @@ export function UserDetailModal({
           onDismiss={() => setShowDeleteDialog(false)}
         >
           <Dialog.Icon icon="alert" color={theme.colors.error} />
-          <Dialog.Title style={{ textAlign: 'center' }}>
+          <Dialog.Title style={styles.dialogTitle}>
             Eliminar Usuario
           </Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={{ textAlign: 'center' }}>
+            <Text variant="bodyMedium" style={styles.dialogText}>
               ¿Estás seguro de que deseas eliminar al usuario{' '}
-              <Text style={{ fontWeight: 'bold' }}>{user.username}</Text>?
+              <Text style={styles.boldText}>{user.username}</Text>?
             </Text>
             <Text
               variant="bodySmall"
-              style={{
-                textAlign: 'center',
-                marginTop: theme.spacing.s,
-                color: theme.colors.error,
-              }}
+              style={[
+                styles.dialogText,
+                {
+                  marginTop: theme.spacing.s,
+                  color: theme.colors.error,
+                },
+              ]}
             >
               Esta acción no se puede deshacer
             </Text>
@@ -1012,5 +1014,14 @@ const getStyles = (
       fontSize: responsive.isTablet ? 13 : 13,
       fontWeight: '500',
       lineHeight: responsive.isTablet ? 16 : 16,
+    },
+    dialogTitle: {
+      textAlign: 'center',
+    },
+    dialogText: {
+      textAlign: 'center',
+    },
+    boldText: {
+      fontWeight: 'bold',
     },
   });

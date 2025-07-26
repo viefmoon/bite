@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGetOrderByIdQuery } from '../../hooks/useOrdersQueries';
 import { useGetOrderMenu } from '../../hooks/useMenuQueries';
 import type { CartItem } from '../../stores/useOrderCreationStore';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
-import { OrderTypeEnum } from '../../types/orders.types';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 
 interface OriginalOrderState {

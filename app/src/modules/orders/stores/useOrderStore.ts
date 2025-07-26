@@ -477,7 +477,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   setSelectedTableId: (id: string | null) => {
-    set((state) => {
+    set((_state) => {
       const newState: Partial<OrderState> = { selectedTableId: id };
 
       // Si se selecciona una mesa existente, desmarcar mesa temporal
@@ -492,7 +492,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   setIsTemporaryTable: (isTemp: boolean) => {
-    set((state) => {
+    set((_state) => {
       const newState: Partial<OrderState> = { isTemporaryTable: isTemp };
 
       // Si se desmarca mesa temporal, limpiar el nombre
@@ -1184,8 +1184,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       } else {
         get().resetOrder();
       }
-    } catch (error) {
-      throw error;
     } finally {
       set({ isConfirming: false });
     }

@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { Modal, Portal, Text, IconButton } from 'react-native-paper';
 import {
   ScrollView,
@@ -7,6 +7,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResponsive } from '@/app/hooks/useResponsive';
@@ -290,23 +291,13 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       {title && (
         <Text
           variant="titleLarge"
-          style={{
-            color: theme.colors.onSurface,
-            fontWeight: '600',
-            flex: 1,
-          }}
+          style={[styles.titleText, { color: theme.colors.onSurface }]}
           numberOfLines={1}
         >
           {title}
         </Text>
       )}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: responsive.spacingPreset.s,
-        }}
-      >
+      <View style={styles.headerActions}>
         {headerActions}
         {!hideCloseButton && (
           <IconButton
@@ -323,22 +314,26 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   // Contenido del modal
   const modalContent = (
     <View
-      style={{
-        flex: scrollable ? 1 : undefined,
-        padding: title ? 0 : modalPadding,
-      }}
+      style={[
+        styles.contentContainer,
+        scrollable && styles.contentContainerScrollable,
+        title && styles.contentContainerNoPadding,
+        !title && { padding: modalPadding },
+      ]}
     >
       {title && modalHeader}
       <View
-        style={{
-          flex: scrollable ? 1 : undefined,
-          padding: title ? modalPadding : 0,
-        }}
+        style={[
+          styles.innerContent,
+          scrollable && styles.innerContentScrollable,
+          !title && styles.innerContentNoPadding,
+          title && { padding: modalPadding },
+        ]}
       >
         {scrollable ? (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
             {children}
@@ -354,11 +349,11 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   const modalFooter = footer && (
     <View
       style={[
+        styles.footerContainer,
         {
           padding: modalPadding,
           paddingTop: modalPadding / 2,
           backgroundColor: theme.colors.surface,
-          borderTopWidth: 1,
           borderTopColor: theme.colors.surfaceVariant,
         },
         footerStyle,
@@ -378,7 +373,10 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
             dismissable={dismissable}
             dismissableBackButton={dismissableBackButton}
             contentContainerStyle={[positionStyles, style]}
-            style={{ margin: isFullScreen ? 0 : undefined }}
+            style={[
+              styles.modalContainer,
+              isFullScreen && styles.modalContainerFullScreen,
+            ]}
           >
             {keyboardAvoiding && Platform.OS === 'ios' ? (
               <KeyboardAvoidingView
@@ -465,22 +463,19 @@ export const ResponsiveConfirmModal: React.FC<ResponsiveConfirmModalProps> = ({
           {message}
         </Text>
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-          gap: responsive.spacingPreset.s,
-          marginTop: responsive.spacingPreset.l,
-        }}
-      >
-        <Button mode="text" onPress={handleCancel} style={{ minWidth: 80 }}>
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="text"
+          onPress={handleCancel}
+          style={styles.buttonMinWidth}
+        >
           {cancelText}
         </Button>
         <Button
           mode="contained"
           onPress={handleConfirm}
           buttonColor={destructive ? theme.colors.error : undefined}
-          style={{ minWidth: 80 }}
+          style={styles.buttonMinWidth}
         >
           {confirmText}
         </Button>
@@ -488,6 +483,58 @@ export const ResponsiveConfirmModal: React.FC<ResponsiveConfirmModalProps> = ({
     </ResponsiveModal>
   );
 };
+
+// Estilos compartidos
+const styles = StyleSheet.create({
+  titleText: {
+    fontWeight: '600',
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8, // responsive.spacingPreset.s equivale a 8
+  },
+  contentContainer: {
+    // Estilos base para el contenedor de contenido
+  },
+  contentContainerScrollable: {
+    flex: 1,
+  },
+  contentContainerNoPadding: {
+    padding: 0,
+  },
+  innerContent: {
+    // Estilos base para el contenido interno
+  },
+  innerContentScrollable: {
+    flex: 1,
+  },
+  innerContentNoPadding: {
+    padding: 0,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  footerContainer: {
+    borderTopWidth: 1,
+  },
+  modalContainer: {
+    // Estilos base para el modal
+  },
+  modalContainerFullScreen: {
+    margin: 0,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8, // responsive.spacingPreset.s
+    marginTop: 24, // responsive.spacingPreset.l
+  },
+  buttonMinWidth: {
+    minWidth: 80,
+  },
+});
 
 // Imports necesarios para los componentes de React Native Paper
 import { Button } from 'react-native-paper';

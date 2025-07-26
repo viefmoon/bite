@@ -88,9 +88,9 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
                 mode="outlined"
                 style={[
                   styles.statusChip,
-                  { borderColor: isShiftOpen ? '#4CAF50' : '#FF9800' },
+                  isShiftOpen ? styles.openBorder : styles.closedBorder,
                 ]}
-                textStyle={{ color: isShiftOpen ? '#4CAF50' : '#FF9800' }}
+                textStyle={isShiftOpen ? styles.openText : styles.closedText}
               >
                 {isShiftOpen ? 'ABIERTO' : 'CERRADO'}
               </Chip>
@@ -437,5 +437,17 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     closeShiftButtonText: {
       color: '#FFFFFF',
       fontWeight: '600',
+    },
+    openBorder: {
+      borderColor: '#4CAF50',
+    },
+    closedBorder: {
+      borderColor: '#FF9800',
+    },
+    openText: {
+      color: '#4CAF50',
+    },
+    closedText: {
+      color: '#FF9800',
     },
   });

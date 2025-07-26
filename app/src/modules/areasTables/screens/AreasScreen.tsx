@@ -31,10 +31,7 @@ import { AreasListScreenProps } from '../navigation/types';
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = React.useMemo(
-    () => getStyles(theme, responsive),
-    [theme, responsive],
-  );
+  const styles = React.useMemo(() => getStyles(theme), [theme]);
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
@@ -227,10 +224,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
   );
 };
 
-const getStyles = (
-  theme: AppTheme,
-  responsive: ReturnType<typeof useResponsive>,
-) =>
+const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,

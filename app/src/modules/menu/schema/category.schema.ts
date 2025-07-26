@@ -19,7 +19,7 @@ export const updateCategoryDtoSchema = categoryBaseSchema.partial();
 
 export const categoryFormSchema = categoryBaseSchema
   .extend({
-    sortOrder: z.number().default(0),
+    sortOrder: z.number().optional().default(0),
     imageUri: z
       .union([
         z.string().url(),

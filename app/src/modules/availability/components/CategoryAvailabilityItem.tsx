@@ -68,7 +68,9 @@ export const CategoryAvailabilityItem: React.FC<
           <View
             style={[
               styles.subcategoryHeader,
-              { opacity: subcategory.isActive ? 1 : 0.6 },
+              subcategory.isActive
+                ? styles.activeSubcategory
+                : styles.inactiveSubcategory,
             ]}
           >
             <View style={styles.subcategoryLeft}>
@@ -80,7 +82,7 @@ export const CategoryAvailabilityItem: React.FC<
                     ? theme.colors.primary
                     : theme.colors.outline
                 }
-                style={{ margin: 0, marginRight: 8 }}
+                style={styles.subcategoryIcon}
               />
               <Text
                 style={[
@@ -105,7 +107,9 @@ export const CategoryAvailabilityItem: React.FC<
                 key={product.id}
                 style={[
                   styles.productItem,
-                  { opacity: !product.isActive ? 0.5 : 1 },
+                  product.isActive
+                    ? styles.activeProduct
+                    : styles.inactiveProduct,
                 ]}
               >
                 <Text
@@ -166,5 +170,21 @@ const styles = StyleSheet.create({
   },
   strikethrough: {
     textDecorationLine: 'line-through',
+  },
+  activeSubcategory: {
+    opacity: 1,
+  },
+  inactiveSubcategory: {
+    opacity: 0.6,
+  },
+  subcategoryIcon: {
+    margin: 0,
+    marginRight: 8,
+  },
+  activeProduct: {
+    opacity: 1,
+  },
+  inactiveProduct: {
+    opacity: 0.5,
   },
 });

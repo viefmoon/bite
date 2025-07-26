@@ -1,11 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ScrollView,
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { ScrollView, View, StyleSheet, ActivityIndicator } from 'react-native';
 import {
   Text,
   RadioButton,
@@ -67,7 +61,7 @@ export function ServerSettingsScreen() {
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [loadSettings]);
 
   useEffect(() => {
     if (serverUrl && !loading) {
@@ -82,7 +76,7 @@ export function ServerSettingsScreen() {
     }
   }, [serverUrl, loading]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const [savedMode, savedUrl] = await Promise.all([
         EncryptedStorage.getItem(
@@ -117,7 +111,7 @@ export function ServerSettingsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [serverUrl]);
 
   const validateUrl = (url: string): boolean => {
     // Validar que sea una IP válida o un dominio
@@ -277,7 +271,7 @@ export function ServerSettingsScreen() {
           backgroundColor: chipBgColor,
           transform: [{ scale: 0.85 }],
         }}
-        textStyle={{ color: chipColor, fontSize: 12 }}
+        textStyle={[styles.chipText, { color: chipColor }]}
       >
         {chipText}
       </Chip>
@@ -307,7 +301,7 @@ export function ServerSettingsScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Estado de Conexión</Text>
           {renderConnectionStatus()}
-          <View style={{ flex: 1 }} />
+          <View style={styles.spacer} />
           <IconButton
             icon="information"
             size={20}
@@ -426,7 +420,7 @@ export function ServerSettingsScreen() {
             style={[
               styles.radioOption,
               mode === 'manual' && styles.radioOptionActive,
-              { marginBottom: 0 },
+              styles.lastInput,
             ]}
             rippleColor={`${theme.colors.primary}20`}
           >
@@ -755,5 +749,14 @@ const createStyles = (theme: AppTheme, responsive: ResponsiveInfo) =>
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
+    },
+    chipText: {
+      fontSize: 12,
+    },
+    spacer: {
+      flex: 1,
+    },
+    lastInput: {
+      marginBottom: 0,
     },
   });

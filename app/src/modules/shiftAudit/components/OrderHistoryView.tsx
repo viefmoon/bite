@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -29,8 +29,8 @@ interface HistoryItem {
   operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'BATCH';
   changedBy: string;
   changedAt: string;
-  diff?: Record<string, any> | null;
-  snapshot?: Record<string, any>;
+  diff?: Record<string, unknown> | null;
+  snapshot?: Record<string, unknown>;
   productId?: string;
   preparationStatus?: string;
   changedByUser?: {
@@ -43,8 +43,8 @@ interface HistoryItem {
     lastName: string;
   };
   itemDescription?: string;
-  formattedChanges?: Record<string, any>;
-  batchOperations?: any[];
+  formattedChanges?: Record<string, unknown>;
+  batchOperations?: Record<string, unknown>[];
   type: 'order' | 'item';
 }
 
@@ -141,7 +141,7 @@ const formatFieldName = (field: string): string => {
 };
 
 // Helper para formatear valores
-const formatValue = (field: string, value: any): string => {
+const formatValue = (field: string, value: unknown): string => {
   if (value === null || value === undefined) {
     return 'No especificado';
   }
@@ -176,8 +176,13 @@ const formatValue = (field: string, value: any): string => {
     return statusMap[value] || value;
   }
 
-  if (field === 'tableId' && typeof value === 'object' && value.name) {
-    return value.name;
+  if (
+    field === 'tableId' &&
+    typeof value === 'object' &&
+    value &&
+    (value as any).name
+  ) {
+    return (value as any).name;
   }
 
   if (
@@ -186,23 +191,25 @@ const formatValue = (field: string, value: any): string => {
     field === 'finalizedAt'
   ) {
     try {
-      return format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es });
+      return format(new Date(String(value)), 'dd/MM/yyyy HH:mm', {
+        locale: es,
+      });
     } catch {
-      return value;
+      return String(value);
     }
   }
 
   if (field === 'total' || field === 'subtotal') {
-    return `$${parseFloat(value).toFixed(2)}`;
+    return `$${parseFloat(String(value)).toFixed(2)}`;
   }
 
   if (field === 'customerId') {
-    return value || 'Sin cliente registrado';
+    return String(value) || 'Sin cliente registrado';
   }
 
   if (field === 'scheduledAt') {
     return value
-      ? format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es })
+      ? format(new Date(String(value)), 'dd/MM/yyyy HH:mm', { locale: es })
       : 'No programado';
   }
 
@@ -217,181 +224,214 @@ const HistoryItemComponent: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const renderChangeDetail = (change: any, fieldName?: string) => {
-    if (
-      change &&
-      typeof change === 'object' &&
-      change.anterior !== undefined &&
-      change.nuevo !== undefined
-    ) {
-      // Para descripción del item, mostrar en formato vertical si es muy largo
+  const renderChangeDetail = useCallback(
+    (change: unknown, fieldName?: string) => {
       if (
-        (fieldName === 'Descripción del Item' || fieldName === 'Descripción') &&
-        (String(change.anterior).length > 30 ||
-          String(change.nuevo).length > 30)
+        change &&
+        typeof change === 'object' &&
+        (change as any).anterior !== undefined &&
+        (change as any).nuevo !== undefined
       ) {
+        // Para descripción del item, mostrar en formato vertical si es muy largo
+        if (
+          (fieldName === 'Descripción del Item' ||
+            fieldName === 'Descripción') &&
+          (String((change as any).anterior).length > 30 ||
+            String((change as any).nuevo).length > 30)
+        ) {
+          return (
+            <View style={styles.marginTop4}>
+              <View
+                style={[
+                  styles.errorContainer,
+                  { backgroundColor: theme.colors.errorContainer },
+                ]}
+              >
+                <Text
+                  variant="labelSmall"
+                  style={[
+                    styles.labelSmallBold,
+                    { color: theme.colors.onErrorContainer },
+                  ]}
+                >
+                  Antes:
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onErrorContainer }}
+                >
+                  {String((change as any).anterior)}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.primaryContainer,
+                  { backgroundColor: theme.colors.primaryContainer },
+                ]}
+              >
+                <Text
+                  variant="labelSmall"
+                  style={[
+                    styles.labelSmallBold,
+                    { color: theme.colors.onPrimaryContainer },
+                  ]}
+                >
+                  Después:
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onPrimaryContainer }}
+                >
+                  {String((change as any).nuevo)}
+                </Text>
+              </View>
+            </View>
+          );
+        }
+        // Formato horizontal para cambios cortos
         return (
-          <View style={{ marginTop: 4 }}>
+          <View style={styles.changeDetail}>
             <View
-              style={{
-                backgroundColor: theme.colors.errorContainer,
-                padding: 8,
-                borderRadius: 6,
-                marginBottom: 8,
-              }}
+              style={[
+                styles.errorTag,
+                { backgroundColor: theme.colors.errorContainer },
+              ]}
             >
               <Text
                 variant="labelSmall"
-                style={{
-                  color: theme.colors.onErrorContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
+                style={[
+                  styles.labelSmallMedium,
+                  { color: theme.colors.onErrorContainer },
+                ]}
               >
-                Antes:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onErrorContainer }}
-              >
-                {String(change.anterior)}
+                {String((change as any).anterior)}
               </Text>
             </View>
+            <Text
+              style={[
+                styles.marginHorizontal4,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              →
+            </Text>
             <View
-              style={{
-                backgroundColor: theme.colors.primaryContainer,
-                padding: 8,
-                borderRadius: 6,
-              }}
+              style={[
+                styles.primaryTag,
+                { backgroundColor: theme.colors.primaryContainer },
+              ]}
             >
               <Text
                 variant="labelSmall"
-                style={{
-                  color: theme.colors.onPrimaryContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
+                style={[
+                  styles.labelSmallMedium,
+                  { color: theme.colors.onPrimaryContainer },
+                ]}
               >
-                Después:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onPrimaryContainer }}
-              >
-                {String(change.nuevo)}
+                {String((change as any).nuevo)}
               </Text>
             </View>
           </View>
         );
-      }
-      // Formato horizontal para cambios cortos
-      return (
-        <View style={styles.changeDetail}>
-          <View
-            style={{
-              backgroundColor: theme.colors.errorContainer,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 4,
-              marginRight: 6,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onErrorContainer,
-                fontWeight: '500',
-              }}
-            >
-              {String(change.anterior)}
-            </Text>
-          </View>
-          <Text
-            style={{
-              marginHorizontal: 4,
-              color: theme.colors.onSurfaceVariant,
-            }}
-          >
-            →
-          </Text>
-          <View
-            style={{
-              backgroundColor: theme.colors.primaryContainer,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 4,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onPrimaryContainer,
-                fontWeight: '500',
-              }}
-            >
-              {String(change.nuevo)}
-            </Text>
-          </View>
-        </View>
-      );
-    } else if (Array.isArray(change) && change.length === 2) {
-      // Para el formato de array [antes, después] - usado en cambios de orden
-      const oldVal = formatValue(fieldName || '', change[0]);
-      const newVal = formatValue(fieldName || '', change[1]);
-      // Para campos largos o especiales, usar formato vertical
-      if (
-        fieldName &&
-        ['notes', 'deliveryInfo', 'customerName', 'deliveryAddress'].includes(
-          fieldName,
-        )
-      ) {
+      } else if (Array.isArray(change) && change.length === 2) {
+        // Para el formato de array [antes, después] - usado en cambios de orden
+        const oldVal = formatValue(fieldName || '', change[0]);
+        const newVal = formatValue(fieldName || '', change[1]);
+        // Para campos largos o especiales, usar formato vertical
+        if (
+          fieldName &&
+          ['notes', 'deliveryInfo', 'customerName', 'deliveryAddress'].includes(
+            fieldName,
+          )
+        ) {
+          return (
+            <View style={styles.marginTop4}>
+              <View
+                style={[
+                  styles.errorContainer,
+                  { backgroundColor: theme.colors.errorContainer },
+                ]}
+              >
+                <Text
+                  variant="labelSmall"
+                  style={[
+                    styles.labelSmallBold,
+                    { color: theme.colors.onErrorContainer },
+                  ]}
+                >
+                  Antes:
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onErrorContainer }}
+                >
+                  {oldVal}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.primaryContainer,
+                  { backgroundColor: theme.colors.primaryContainer },
+                ]}
+              >
+                <Text
+                  variant="labelSmall"
+                  style={[
+                    styles.labelSmallBold,
+                    { color: theme.colors.onPrimaryContainer },
+                  ]}
+                >
+                  Después:
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onPrimaryContainer }}
+                >
+                  {newVal}
+                </Text>
+              </View>
+            </View>
+          );
+        }
+        // Formato horizontal para cambios cortos
         return (
-          <View style={{ marginTop: 4 }}>
+          <View style={styles.changeDetail}>
             <View
-              style={{
-                backgroundColor: theme.colors.errorContainer,
-                padding: 8,
-                borderRadius: 6,
-                marginBottom: 8,
-              }}
+              style={[
+                styles.errorTagLarge,
+                { backgroundColor: theme.colors.errorContainer },
+              ]}
             >
               <Text
                 variant="labelSmall"
-                style={{
-                  color: theme.colors.onErrorContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
-              >
-                Antes:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onErrorContainer }}
+                style={[
+                  styles.labelSmallMedium,
+                  { color: theme.colors.onErrorContainer },
+                ]}
               >
                 {oldVal}
               </Text>
             </View>
+            <Text
+              style={[
+                styles.marginHorizontal4,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              →
+            </Text>
             <View
-              style={{
-                backgroundColor: theme.colors.primaryContainer,
-                padding: 8,
-                borderRadius: 6,
-              }}
+              style={[
+                styles.primaryTagLarge,
+                { backgroundColor: theme.colors.primaryContainer },
+              ]}
             >
               <Text
                 variant="labelSmall"
-                style={{
-                  color: theme.colors.onPrimaryContainer,
-                  fontWeight: '600',
-                  marginBottom: 4,
-                }}
-              >
-                Después:
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onPrimaryContainer }}
+                style={[
+                  styles.labelSmallMedium,
+                  { color: theme.colors.onPrimaryContainer },
+                ]}
               >
                 {newVal}
               </Text>
@@ -399,59 +439,23 @@ const HistoryItemComponent: React.FC<{
           </View>
         );
       }
-      // Formato horizontal para cambios cortos
-      return (
-        <View style={styles.changeDetail}>
-          <View
-            style={{
-              backgroundColor: theme.colors.errorContainer,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 4,
-              marginRight: 6,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onErrorContainer,
-                fontWeight: '500',
-              }}
-            >
-              {oldVal}
-            </Text>
-          </View>
-          <Text
-            style={{
-              marginHorizontal: 4,
-              color: theme.colors.onSurfaceVariant,
-            }}
-          >
-            →
-          </Text>
-          <View
-            style={{
-              backgroundColor: theme.colors.primaryContainer,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 4,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: theme.colors.onPrimaryContainer,
-                fontWeight: '500',
-              }}
-            >
-              {newVal}
-            </Text>
-          </View>
-        </View>
-      );
-    }
-    return null;
-  };
+      return null;
+    },
+    [
+      theme,
+      styles.changeDetail,
+      styles.errorContainer,
+      styles.errorTag,
+      styles.errorTagLarge,
+      styles.labelSmallBold,
+      styles.labelSmallMedium,
+      styles.marginHorizontal4,
+      styles.marginTop4,
+      styles.primaryContainer,
+      styles.primaryTag,
+      styles.primaryTagLarge,
+    ],
+  );
 
   return (
     <Surface
@@ -466,28 +470,24 @@ const HistoryItemComponent: React.FC<{
         activeOpacity={0.7}
       >
         <View style={styles.historyHeader}>
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 4,
-              }}
-            >
+          <View style={styles.userInfoContainer}>
+            <View style={styles.userInfoRow}>
               <Avatar.Icon
                 size={24}
                 icon={getOperationIcon(item.operation, item.type)}
-                style={{
-                  backgroundColor:
-                    item.type === 'order'
-                      ? theme.colors.primary
-                      : theme.colors.secondary,
-                  marginRight: 6,
-                }}
+                style={[
+                  styles.avatarMargin,
+                  {
+                    backgroundColor:
+                      item.type === 'order'
+                        ? theme.colors.primary
+                        : theme.colors.secondary,
+                  },
+                ]}
               />
               <Text
                 variant="bodySmall"
-                style={{ fontWeight: '600', flex: 1 }}
+                style={styles.userNameText}
                 numberOfLines={1}
               >
                 {item.changedByUser
@@ -497,64 +497,56 @@ const HistoryItemComponent: React.FC<{
                     : 'Sistema'}
               </Text>
               <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: theme.colors.surfaceVariant,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                style={[
+                  styles.expandButton,
+                  { backgroundColor: theme.colors.surfaceVariant },
+                ]}
               >
                 <Text
-                  style={{ color: theme.colors.onSurfaceVariant, fontSize: 20 }}
+                  style={[
+                    styles.expandButtonText,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
                 >
                   {expanded ? '▲' : '▼'}
                 </Text>
               </View>
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 4,
-              }}
-            >
+            <View style={styles.chipContainer}>
               <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor:
-                    (item.type === 'order'
-                      ? theme.colors.primary
-                      : theme.colors.secondary) + '15',
-                  paddingHorizontal: 5,
-                  paddingVertical: 1,
-                  borderRadius: 10,
-                }}
+                style={[
+                  styles.operationChip,
+                  {
+                    backgroundColor:
+                      (item.type === 'order'
+                        ? theme.colors.primary
+                        : theme.colors.secondary) + '15',
+                  },
+                ]}
               >
                 <Text
-                  style={{
-                    marginRight: 3,
-                    color:
-                      item.type === 'order'
-                        ? theme.colors.primary
-                        : theme.colors.secondary,
-                    fontSize: 10,
-                  }}
+                  style={[
+                    styles.operationDot,
+                    {
+                      color:
+                        item.type === 'order'
+                          ? theme.colors.primary
+                          : theme.colors.secondary,
+                    },
+                  ]}
                 >
                   •
                 </Text>
                 <Text
-                  style={{
-                    color:
-                      item.type === 'order'
-                        ? theme.colors.primary
-                        : theme.colors.secondary,
-                    fontSize: 9,
-                    fontWeight: '600',
-                  }}
+                  style={[
+                    styles.operationText,
+                    {
+                      color:
+                        item.type === 'order'
+                          ? theme.colors.primary
+                          : theme.colors.secondary,
+                    },
+                  ]}
                 >
                   {getOperationLabel(item.operation, item.type)}
                 </Text>
@@ -562,19 +554,21 @@ const HistoryItemComponent: React.FC<{
               {item.preparationStatus && (
                 <Chip
                   mode="flat"
-                  textStyle={{ fontSize: 9 }}
-                  style={{
-                    backgroundColor:
-                      getStatusColor(item.preparationStatus, theme) + '20',
-                    transform: [{ scale: 0.8 }],
-                    height: 20,
-                  }}
+                  textStyle={styles.statusChipText}
+                  style={[
+                    styles.statusChipStyle,
+                    {
+                      backgroundColor:
+                        getStatusColor(item.preparationStatus, theme) + '20',
+                      transform: [{ scale: 0.8 }],
+                    },
+                  ]}
                   compact
                 >
                   {formatValue('preparationStatus', item.preparationStatus)}
                 </Chip>
               )}
-              <Text variant="labelSmall" style={{ opacity: 0.6, fontSize: 10 }}>
+              <Text variant="labelSmall" style={styles.timestampText}>
                 {format(new Date(item.changedAt), 'dd/MM/yyyy HH:mm', {
                   locale: es,
                 })}
@@ -585,7 +579,7 @@ const HistoryItemComponent: React.FC<{
       </TouchableOpacity>
       {expanded && (
         <View style={styles.expandedContent}>
-          <Divider style={{ marginBottom: 8 }} />
+          <Divider style={styles.dividerMargin} />
           {/* Contenido para órdenes */}
           {item.type === 'order' && (
             <View style={styles.changesContainer}>
@@ -597,12 +591,10 @@ const HistoryItemComponent: React.FC<{
                       {item.diff.summary && (
                         <Text
                           variant="bodySmall"
-                          style={{
-                            color: theme.colors.primary,
-                            fontWeight: '600',
-                            marginBottom: 8,
-                            fontStyle: 'italic',
-                          }}
+                          style={[
+                            styles.summaryText,
+                            { color: theme.colors.primary },
+                          ]}
                         >
                           {item.diff.summary}
                         </Text>
@@ -611,30 +603,24 @@ const HistoryItemComponent: React.FC<{
                       {/* Información de la orden */}
                       {item.diff.order && (
                         <View
-                          style={{
-                            backgroundColor: theme.colors.surface,
-                            padding: 8,
-                            borderRadius: 6,
-                            marginBottom: 8,
-                          }}
+                          style={[
+                            styles.orderDetailsContainer,
+                            { backgroundColor: theme.colors.surface },
+                          ]}
                         >
                           <Text
                             variant="labelSmall"
-                            style={{
-                              color: theme.colors.primary,
-                              fontWeight: '600',
-                              marginBottom: 6,
-                            }}
+                            style={[
+                              styles.orderDetailsTitle,
+                              { color: theme.colors.primary },
+                            ]}
                           >
                             Detalles de la orden:
                           </Text>
 
                           {item.diff.order.fields?.orderType && (
-                            <Text
-                              variant="bodySmall"
-                              style={{ marginBottom: 4 }}
-                            >
-                              <Text style={{ fontWeight: '600' }}>Tipo:</Text>{' '}
+                            <Text variant="bodySmall" style={styles.fieldRow}>
+                              <Text style={styles.fieldLabel}>Tipo:</Text>{' '}
                               {formatValue(
                                 'orderType',
                                 item.diff.order.fields.orderType[1],
@@ -642,21 +628,15 @@ const HistoryItemComponent: React.FC<{
                             </Text>
                           )}
                           {item.diff.order.fields?.tableId && (
-                            <Text
-                              variant="bodySmall"
-                              style={{ marginBottom: 4 }}
-                            >
-                              <Text style={{ fontWeight: '600' }}>Mesa:</Text>{' '}
+                            <Text variant="bodySmall" style={styles.fieldRow}>
+                              <Text style={styles.fieldLabel}>Mesa:</Text>{' '}
                               {item.snapshot?.table?.name ||
                                 `Mesa ${item.diff.order.fields.tableId[1]}`}
                             </Text>
                           )}
                           {item.diff.order.fields?.notes && (
-                            <Text
-                              variant="bodySmall"
-                              style={{ marginBottom: 4 }}
-                            >
-                              <Text style={{ fontWeight: '600' }}>Notas:</Text>{' '}
+                            <Text variant="bodySmall" style={styles.fieldRow}>
+                              <Text style={styles.fieldLabel}>Notas:</Text>{' '}
                               {item.diff.order.fields.notes[1]}
                             </Text>
                           )}
@@ -667,9 +647,9 @@ const HistoryItemComponent: React.FC<{
                               {item.diff.order.deliveryInfo.recipientName && (
                                 <Text
                                   variant="bodySmall"
-                                  style={{ marginBottom: 4 }}
+                                  style={styles.fieldRow}
                                 >
-                                  <Text style={{ fontWeight: '600' }}>
+                                  <Text style={styles.fieldLabel}>
                                     Cliente:
                                   </Text>{' '}
                                   {
@@ -681,9 +661,9 @@ const HistoryItemComponent: React.FC<{
                               {item.diff.order.deliveryInfo.recipientPhone && (
                                 <Text
                                   variant="bodySmall"
-                                  style={{ marginBottom: 4 }}
+                                  style={styles.fieldRow}
                                 >
-                                  <Text style={{ fontWeight: '600' }}>
+                                  <Text style={styles.fieldLabel}>
                                     Teléfono:
                                   </Text>{' '}
                                   {
@@ -695,9 +675,9 @@ const HistoryItemComponent: React.FC<{
                               {item.diff.order.deliveryInfo.fullAddress && (
                                 <Text
                                   variant="bodySmall"
-                                  style={{ marginBottom: 4 }}
+                                  style={styles.fieldRow}
                                 >
-                                  <Text style={{ fontWeight: '600' }}>
+                                  <Text style={styles.fieldLabel}>
                                     Dirección:
                                   </Text>{' '}
                                   {item.diff.order.deliveryInfo.fullAddress[1]}
@@ -714,34 +694,32 @@ const HistoryItemComponent: React.FC<{
                           <>
                             <Text
                               variant="labelSmall"
-                              style={{
-                                color: theme.colors.primary,
-                                fontWeight: '600',
-                                marginBottom: 8,
-                                marginTop: 8,
-                              }}
+                              style={[
+                                styles.sectionTitleWithMargins,
+                                { color: theme.colors.primary },
+                              ]}
                             >
                               Productos incluidos en la orden:
                             </Text>
                             {item.diff.items.added.map(
-                              (addedItem: any, idx: number) => (
+                              (
+                                addedItem: Record<string, unknown>,
+                                idx: number,
+                              ) => (
                                 <View
                                   key={`added-${idx}`}
-                                  style={{
-                                    marginBottom: 8,
-                                    paddingLeft: 8,
-                                    borderLeftWidth: 2,
-                                    borderLeftColor:
-                                      theme.colors.primary + '50',
-                                    backgroundColor: theme.colors.surface,
-                                    padding: 8,
-                                    marginLeft: 4,
-                                    borderRadius: 4,
-                                  }}
+                                  style={[
+                                    styles.productItemBorder,
+                                    {
+                                      borderLeftColor:
+                                        theme.colors.primary + '50',
+                                      backgroundColor: theme.colors.surface,
+                                    },
+                                  ]}
                                 >
                                   <Text
                                     variant="bodySmall"
-                                    style={{ fontWeight: '600' }}
+                                    style={styles.productNameText}
                                   >
                                     {addedItem.productName}
                                     {addedItem.variantName
@@ -751,10 +729,12 @@ const HistoryItemComponent: React.FC<{
                                   {addedItem.modifiers?.length > 0 && (
                                     <Text
                                       variant="labelSmall"
-                                      style={{
-                                        marginTop: 2,
-                                        color: theme.colors.onSurfaceVariant,
-                                      }}
+                                      style={[
+                                        styles.modifierText,
+                                        {
+                                          color: theme.colors.onSurfaceVariant,
+                                        },
+                                      ]}
                                     >
                                       Modificadores:{' '}
                                       {addedItem.modifiers.join(', ')}
@@ -763,10 +743,12 @@ const HistoryItemComponent: React.FC<{
                                   {addedItem.customizations?.length > 0 && (
                                     <Text
                                       variant="labelSmall"
-                                      style={{
-                                        marginTop: 2,
-                                        color: theme.colors.onSurfaceVariant,
-                                      }}
+                                      style={[
+                                        styles.modifierText,
+                                        {
+                                          color: theme.colors.onSurfaceVariant,
+                                        },
+                                      ]}
                                     >
                                       Personalizaciones:{' '}
                                       {addedItem.customizations.join(', ')}
@@ -775,21 +757,20 @@ const HistoryItemComponent: React.FC<{
                                   {addedItem.notes && (
                                     <Text
                                       variant="labelSmall"
-                                      style={{
-                                        marginTop: 2,
-                                        fontStyle: 'italic',
-                                      }}
+                                      style={[
+                                        styles.modifierText,
+                                        styles.italicText,
+                                      ]}
                                     >
                                       Notas: {addedItem.notes}
                                     </Text>
                                   )}
                                   <Text
                                     variant="labelSmall"
-                                    style={{
-                                      marginTop: 4,
-                                      color: theme.colors.primary,
-                                      fontWeight: '600',
-                                    }}
+                                    style={[
+                                      styles.productPriceText,
+                                      { color: theme.colors.primary },
+                                    ]}
                                   >
                                     Precio: $
                                     {addedItem.finalPrice ||
@@ -810,41 +791,35 @@ const HistoryItemComponent: React.FC<{
                             <Text
                               key={section}
                               variant="bodySmall"
-                              style={{
-                                color: theme.colors.primary,
-                                fontWeight: '600',
-                                marginBottom: 8,
-                                fontStyle: 'italic',
-                              }}
+                              style={[
+                                styles.summaryText,
+                                { color: theme.colors.primary },
+                              ]}
                             >
                               {changes as string}
                             </Text>
                           );
                         }
                         return (
-                          <View key={section} style={{ marginBottom: 12 }}>
+                          <View key={section} style={styles.sectionMargin}>
                             <Text
                               variant="labelSmall"
-                              style={{
-                                color: theme.colors.primary,
-                                fontWeight: '600',
-                                marginBottom: 6,
-                              }}
+                              style={[
+                                styles.orderDetailsTitle,
+                                { color: theme.colors.primary },
+                              ]}
                             >
                               {section}:
                             </Text>
                             {typeof changes === 'object' &&
                               Object.entries(changes).map(([field, change]) => (
-                                <View
-                                  key={field}
-                                  style={{ marginBottom: 4, marginLeft: 8 }}
-                                >
+                                <View key={field} style={styles.fieldContainer}>
                                   <Text
                                     variant="labelSmall"
-                                    style={{
-                                      color: theme.colors.onSurfaceVariant,
-                                      marginBottom: 2,
-                                    }}
+                                    style={[
+                                      styles.fieldLabelSmall,
+                                      { color: theme.colors.onSurfaceVariant },
+                                    ]}
                                   >
                                     {field}:
                                   </Text>
@@ -857,10 +832,7 @@ const HistoryItemComponent: React.FC<{
                     )
                   ) : (
                     // Formato original (legacy)
-                    <Text
-                      variant="bodySmall"
-                      style={{ fontWeight: '600', marginBottom: 8 }}
-                    >
+                    <Text variant="bodySmall" style={styles.changesEmptyText}>
                       Nueva orden creada
                       {item.snapshot?.orderType &&
                         ` - ${formatValue('orderType', item.snapshot.orderType)}`}
@@ -880,41 +852,35 @@ const HistoryItemComponent: React.FC<{
                             <Text
                               key={section}
                               variant="bodySmall"
-                              style={{
-                                color: theme.colors.primary,
-                                fontWeight: '600',
-                                marginBottom: 8,
-                                fontStyle: 'italic',
-                              }}
+                              style={[
+                                styles.summaryText,
+                                { color: theme.colors.primary },
+                              ]}
                             >
                               {changes as string}
                             </Text>
                           );
                         }
                         return (
-                          <View key={section} style={{ marginBottom: 12 }}>
+                          <View key={section} style={styles.sectionMargin}>
                             <Text
                               variant="labelSmall"
-                              style={{
-                                color: theme.colors.primary,
-                                fontWeight: '600',
-                                marginBottom: 6,
-                              }}
+                              style={[
+                                styles.orderDetailsTitle,
+                                { color: theme.colors.primary },
+                              ]}
                             >
                               {section}:
                             </Text>
                             {typeof changes === 'object' &&
                               Object.entries(changes).map(([field, change]) => (
-                                <View
-                                  key={field}
-                                  style={{ marginBottom: 4, marginLeft: 8 }}
-                                >
+                                <View key={field} style={styles.fieldContainer}>
                                   <Text
                                     variant="labelSmall"
-                                    style={{
-                                      color: theme.colors.onSurfaceVariant,
-                                      marginBottom: 2,
-                                    }}
+                                    style={[
+                                      styles.fieldLabelSmall,
+                                      { color: theme.colors.onSurfaceVariant },
+                                    ]}
                                   >
                                     {field}:
                                   </Text>
@@ -934,12 +900,10 @@ const HistoryItemComponent: React.FC<{
                         {item.diff.summary && (
                           <Text
                             variant="bodySmall"
-                            style={{
-                              color: theme.colors.primary,
-                              fontWeight: '600',
-                              marginBottom: 8,
-                              fontStyle: 'italic',
-                            }}
+                            style={[
+                              styles.summaryText,
+                              { color: theme.colors.primary },
+                            ]}
                           >
                             {item.diff.summary}
                           </Text>
@@ -947,14 +911,13 @@ const HistoryItemComponent: React.FC<{
                         {item.diff.order?.fields &&
                           Object.entries(item.diff.order.fields).map(
                             ([field, values]) => (
-                              <View key={field} style={{ marginBottom: 8 }}>
+                              <View key={field} style={styles.changeSectionContainer}>
                                 <Text
                                   variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.onSurfaceVariant,
-                                    fontWeight: '600',
-                                    marginBottom: 4,
-                                  }}
+                                  style={[
+                                    styles.changeSectionTitle,
+                                    { color: theme.colors.onSurfaceVariant },
+                                  ]}
                                 >
                                   {formatFieldName(field)}:
                                 </Text>
@@ -997,24 +960,21 @@ const HistoryItemComponent: React.FC<{
                     <>
                       <Text
                         variant="bodySmall"
-                        style={{
-                          color: theme.colors.primary,
-                          fontWeight: '600',
-                          marginBottom: 8,
-                        }}
+                        style={[
+                          styles.changesEmptyText,
+                          { color: theme.colors.primary },
+                        ]}
                       >
                         Cambios en la orden:
                       </Text>
                       {relevantChanges.map(({ field, change }) => (
-                        <View key={field} style={{ marginBottom: 8 }}>
+                        <View key={field} style={styles.changeSectionContainer}>
                           <Text
                             variant="labelSmall"
-                            style={{
-                              color: theme.colors.onSurfaceVariant,
-                              fontWeight: '600',
-                              marginBottom: 4,
-                              textTransform: 'capitalize',
-                            }}
+                            style={[
+                              styles.changeSectionTitle,
+                              { color: theme.colors.onSurfaceVariant },
+                            ]}
                           >
                             {formatFieldName(field)}:
                           </Text>
@@ -1041,12 +1001,10 @@ const HistoryItemComponent: React.FC<{
                 {item.diff.summary && (
                   <Text
                     variant="bodySmall"
-                    style={{
-                      color: theme.colors.primary,
-                      fontWeight: '600',
-                      marginBottom: 8,
-                      fontStyle: 'italic',
-                    }}
+                    style={[
+                      styles.summaryText,
+                      { color: theme.colors.primary },
+                    ]}
                   >
                     {item.diff.summary}
                   </Text>
@@ -1059,32 +1017,28 @@ const HistoryItemComponent: React.FC<{
                       <>
                         <Text
                           variant="labelSmall"
-                          style={{
-                            color: theme.colors.success,
-                            fontWeight: '600',
-                            marginBottom: 6,
-                          }}
+                          style={[
+                            styles.orderDetailsTitle,
+                            { color: theme.colors.success },
+                          ]}
                         >
                           Productos agregados:
                         </Text>
                         {item.diff.items.added.map(
-                          (addedItem: any, idx: number) => (
+                          (addedItem: Record<string, unknown>, idx: number) => (
                             <View
                               key={`added-${idx}`}
-                              style={{
-                                marginBottom: 8,
-                                paddingLeft: 8,
-                                borderLeftWidth: 2,
-                                borderLeftColor: theme.colors.success + '50',
-                                backgroundColor: theme.colors.surface,
-                                padding: 8,
-                                marginLeft: 4,
-                                borderRadius: 4,
-                              }}
+                              style={[
+                                styles.addedProductContainer,
+                                {
+                                  borderLeftColor: theme.colors.success + '50',
+                                  backgroundColor: theme.colors.surface,
+                                },
+                              ]}
                             >
                               <Text
                                 variant="bodySmall"
-                                style={{ fontWeight: '600' }}
+                                style={styles.productNameText}
                               >
                                 {addedItem.productName}
                                 {addedItem.variantName
@@ -1096,10 +1050,10 @@ const HistoryItemComponent: React.FC<{
                                 addedItem.notes) && (
                                 <Text
                                   variant="labelSmall"
-                                  style={{
-                                    marginTop: 2,
-                                    color: theme.colors.onSurfaceVariant,
-                                  }}
+                                  style={[
+                                    styles.modifierText,
+                                    { color: theme.colors.onSurfaceVariant },
+                                  ]}
                                 >
                                   {[
                                     addedItem.modifiers?.length > 0 &&
@@ -1115,11 +1069,10 @@ const HistoryItemComponent: React.FC<{
                               )}
                               <Text
                                 variant="labelSmall"
-                                style={{
-                                  marginTop: 4,
-                                  color: theme.colors.primary,
-                                  fontWeight: '600',
-                                }}
+                                style={[
+                                  styles.productPriceText,
+                                  { color: theme.colors.primary },
+                                ]}
                               >
                                 Precio: $
                                 {addedItem.finalPrice || addedItem.basePrice}
@@ -1134,36 +1087,34 @@ const HistoryItemComponent: React.FC<{
                       <>
                         <Text
                           variant="labelSmall"
-                          style={{
-                            color: theme.colors.error,
-                            fontWeight: '600',
-                            marginBottom: 6,
-                            marginTop: 8,
-                          }}
+                          style={[
+                            styles.sectionTitleWithMargins,
+                            { color: theme.colors.error },
+                          ]}
                         >
                           Productos eliminados:
                         </Text>
                         {item.diff.items.removed.map(
-                          (removedItem: any, idx: number) => (
+                          (
+                            removedItem: Record<string, unknown>,
+                            idx: number,
+                          ) => (
                             <View
                               key={`removed-${idx}`}
-                              style={{
-                                marginBottom: 8,
-                                paddingLeft: 8,
-                                borderLeftWidth: 2,
-                                borderLeftColor: theme.colors.error + '50',
-                                backgroundColor: theme.colors.surface,
-                                padding: 8,
-                                marginLeft: 4,
-                                borderRadius: 4,
-                              }}
+                              style={[
+                                styles.removedProductContainer,
+                                {
+                                  borderLeftColor: theme.colors.error + '50',
+                                  backgroundColor: theme.colors.surface,
+                                },
+                              ]}
                             >
                               <Text
                                 variant="bodySmall"
-                                style={{
-                                  textDecorationLine: 'line-through',
-                                  color: theme.colors.error,
-                                }}
+                                style={[
+                                  styles.removedProductText,
+                                  { color: theme.colors.error },
+                                ]}
                               >
                                 {removedItem.productName}
                                 {removedItem.variantName
@@ -1180,12 +1131,13 @@ const HistoryItemComponent: React.FC<{
                       <>
                         <Text
                           variant="labelSmall"
-                          style={{
-                            color: theme.colors.warning || theme.colors.primary,
-                            fontWeight: '600',
-                            marginBottom: 6,
-                            marginTop: 8,
-                          }}
+                          style={[
+                            styles.sectionTitleWithMargins,
+                            {
+                              color:
+                                theme.colors.warning || theme.colors.primary,
+                            },
+                          ]}
                         >
                           Productos modificados:
                         </Text>
@@ -1193,22 +1145,19 @@ const HistoryItemComponent: React.FC<{
                           (modifiedItem: any, idx: number) => (
                             <View
                               key={`modified-${idx}`}
-                              style={{
-                                marginBottom: 8,
-                                paddingLeft: 8,
-                                borderLeftWidth: 2,
-                                borderLeftColor:
-                                  (theme.colors.warning ||
-                                    theme.colors.primary) + '50',
-                                backgroundColor: theme.colors.surface,
-                                padding: 8,
-                                marginLeft: 4,
-                                borderRadius: 4,
-                              }}
+                              style={[
+                                styles.productModifiedContainer,
+                                {
+                                  borderLeftColor:
+                                    (theme.colors.warning ||
+                                      theme.colors.primary) + '50',
+                                  backgroundColor: theme.colors.surface,
+                                },
+                              ]}
                             >
                               <Text
                                 variant="bodySmall"
-                                style={{ fontWeight: '600' }}
+                                style={styles.productNameText}
                               >
                                 {modifiedItem.productName}
                                 {modifiedItem.variantName
@@ -1217,8 +1166,11 @@ const HistoryItemComponent: React.FC<{
                               </Text>
                               {modifiedItem.changes &&
                                 Object.entries(modifiedItem.changes).map(
-                                  ([field, change]: [string, any]) => (
-                                    <View key={field} style={{ marginTop: 4 }}>
+                                  ([field, change]: [string, unknown]) => (
+                                    <View
+                                      key={field}
+                                      style={styles.modifiedChangeContainer}
+                                    >
                                       <Text
                                         variant="labelSmall"
                                         style={{
@@ -1247,7 +1199,10 @@ const HistoryItemComponent: React.FC<{
               {item.operation === 'INSERT' && (
                 <Text
                   variant="bodySmall"
-                  style={{ color: theme.colors.success, marginBottom: 8 }}
+                  style={[
+                    styles.itemOperationText,
+                    { color: theme.colors.success },
+                  ]}
                 >
                   Item agregado:
                 </Text>
@@ -1256,24 +1211,25 @@ const HistoryItemComponent: React.FC<{
                 <>
                   <Text
                     variant="bodySmall"
-                    style={{
-                      color: theme.colors.primary,
-                      fontWeight: '600',
-                      marginBottom: 8,
-                    }}
+                    style={[
+                      styles.changesEmptyText,
+                      { color: theme.colors.primary },
+                    ]}
                   >
                     Cambios en el item:
                   </Text>
                   {Object.entries(item.formattedChanges).map(
                     ([field, change]) => (
-                      <View key={field} style={{ marginBottom: 8 }}>
+                      <View key={field} style={styles.changeSectionContainer}>
                         <Text
                           variant="labelSmall"
-                          style={{
-                            color: theme.colors.onSurfaceVariant,
-                            fontWeight: '600',
-                            marginBottom: 4,
-                          }}
+                          style={[
+                            styles.changeSectionTitle,
+                            {
+                              color: theme.colors.onSurfaceVariant,
+                              textTransform: 'none',
+                            },
+                          ]}
                         >
                           {field}:
                         </Text>
@@ -1286,7 +1242,10 @@ const HistoryItemComponent: React.FC<{
               {item.operation === 'DELETE' && (
                 <Text
                   variant="bodySmall"
-                  style={{ color: theme.colors.error, marginBottom: 8 }}
+                  style={[
+                    styles.itemOperationText,
+                    { color: theme.colors.error },
+                  ]}
                 >
                   Item eliminado:
                 </Text>
@@ -1296,12 +1255,13 @@ const HistoryItemComponent: React.FC<{
                 item.itemDescription && (
                   <Text
                     variant="bodySmall"
-                    style={{
-                      color: theme.colors.onSurface,
-                      backgroundColor: theme.colors.surface,
-                      padding: 8,
-                      borderRadius: 6,
-                    }}
+                    style={[
+                      styles.itemDescriptionContainer,
+                      {
+                        color: theme.colors.onSurface,
+                        backgroundColor: theme.colors.surface,
+                      },
+                    ]}
                   >
                     {item.itemDescription}
                   </Text>
@@ -1314,107 +1274,101 @@ const HistoryItemComponent: React.FC<{
             <View style={styles.changesContainer}>
               <Text
                 variant="bodySmall"
-                style={{
-                  color: theme.colors.primary,
-                  fontWeight: '600',
-                  marginBottom: 8,
-                }}
+                style={[styles.batchTitle, { color: theme.colors.primary }]}
               >
                 Cambios realizados en una sola edición:
               </Text>
-              {item.batchOperations.map((op: any, idx: number) => (
-                <View
-                  key={idx}
-                  style={{
-                    marginBottom:
-                      idx < item.batchOperations!.length - 1 ? 12 : 0,
-                    paddingLeft: 8,
-                    borderLeftWidth: 2,
-                    borderLeftColor: theme.colors.primary + '30',
-                    marginLeft: 4,
-                  }}
-                >
+              {item.batchOperations.map(
+                (op: Record<string, unknown>, idx: number) => (
                   <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'flex-start',
-                      marginBottom: 4,
-                    }}
+                    key={idx}
+                    style={[
+                      styles.batchOperationContainer,
+                      {
+                        marginBottom:
+                          idx < item.batchOperations!.length - 1 ? 12 : 0,
+                        borderLeftColor: theme.colors.primary + '30',
+                      },
+                    ]}
                   >
-                    <Text
-                      style={{
-                        marginRight: 6,
-                        marginTop: 2,
-                        color: theme.colors.primary,
-                        fontSize: 14,
-                      }}
-                    >
-                      •
-                    </Text>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.batchOperationRow}>
                       <Text
-                        variant="labelSmall"
-                        style={{
-                          color: theme.colors.primary,
-                          fontWeight: '500',
-                          marginBottom: 4,
-                        }}
+                        style={[
+                          styles.batchBulletText,
+                          { color: theme.colors.primary },
+                        ]}
                       >
-                        {getOperationLabel(op.operation)}
+                        •
                       </Text>
-
-                      {/* Mostrar descripción del item */}
-                      {(op.itemDescription || op.snapshot?.itemDescription) && (
+                      <View style={styles.batchOperationContent}>
                         <Text
-                          variant="bodySmall"
-                          style={{
-                            color: theme.colors.onSurface,
-                            backgroundColor: theme.colors.surface,
-                            padding: 6,
-                            borderRadius: 4,
-                          }}
+                          variant="labelSmall"
+                          style={[
+                            styles.batchOperationLabel,
+                            { color: theme.colors.primary },
+                          ]}
                         >
-                          {op.itemDescription || op.snapshot?.itemDescription}
+                          {getOperationLabel(op.operation)}
                         </Text>
-                      )}
 
-                      {/* Para UPDATE, mostrar el cambio */}
-                      {op.operation === 'UPDATE' && op.formattedChanges && (
-                        <View style={{ marginTop: 4 }}>
-                          {Object.entries(op.formattedChanges)
-                            .filter(([fieldName]) => {
-                              // Solo mostrar campos relevantes (no precios)
-                              const allowedFields = [
-                                'Descripción del Item',
-                                'Descripción',
-                                'Estado',
-                                'Notas de preparación',
-                                'Estado de preparación',
-                              ];
-                              return allowedFields.some((allowed) =>
-                                fieldName.includes(allowed),
-                              );
-                            })
-                            .map(([field, change]) => (
-                              <View key={field} style={{ marginBottom: 4 }}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.onSurfaceVariant,
-                                    fontSize: 11,
-                                  }}
+                        {/* Mostrar descripción del item */}
+                        {(op.itemDescription ||
+                          op.snapshot?.itemDescription) && (
+                          <Text
+                            variant="bodySmall"
+                            style={[
+                              styles.batchItemDescription,
+                              {
+                                color: theme.colors.onSurface,
+                                backgroundColor: theme.colors.surface,
+                              },
+                            ]}
+                          >
+                            {op.itemDescription || op.snapshot?.itemDescription}
+                          </Text>
+                        )}
+
+                        {/* Para UPDATE, mostrar el cambio */}
+                        {op.operation === 'UPDATE' && op.formattedChanges && (
+                          <View style={styles.batchUpdateMargin}>
+                            {Object.entries(op.formattedChanges)
+                              .filter(([fieldName]) => {
+                                // Solo mostrar campos relevantes (no precios)
+                                const allowedFields = [
+                                  'Descripción del Item',
+                                  'Descripción',
+                                  'Estado',
+                                  'Notas de preparación',
+                                  'Estado de preparación',
+                                ];
+                                return allowedFields.some((allowed) =>
+                                  fieldName.includes(allowed),
+                                );
+                              })
+                              .map(([field, change]) => (
+                                <View
+                                  key={field}
+                                  style={styles.batchFieldContainer}
                                 >
-                                  {field}:
-                                </Text>
-                                {renderChangeDetail(change, field)}
-                              </View>
-                            ))}
-                        </View>
-                      )}
+                                  <Text
+                                    variant="labelSmall"
+                                    style={[
+                                      styles.batchFieldLabel,
+                                      { color: theme.colors.onSurfaceVariant },
+                                    ]}
+                                  >
+                                    {field}:
+                                  </Text>
+                                  {renderChangeDetail(change, field)}
+                                </View>
+                              ))}
+                          </View>
+                        )}
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
+                ),
+              )}
             </View>
           )}
         </View>
@@ -1430,6 +1384,11 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const titleText = useMemo(
+    () => `Historial de Orden #${orderNumber || ''}`,
+    [orderNumber],
+  );
 
   // Query combinado para obtener ambos historiales
   const {
@@ -1447,10 +1406,12 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
       const orderHistoryResponse = await apiClient.get(url);
 
       const orderHistory = orderHistoryResponse.data?.data
-        ? orderHistoryResponse.data.data.map((item: any) => ({
-            ...item,
-            type: 'order' as const,
-          }))
+        ? orderHistoryResponse.data.data.map(
+            (item: Record<string, unknown>) => ({
+              ...item,
+              type: 'order' as const,
+            }),
+          )
         : [];
 
       return orderHistory;
@@ -1459,41 +1420,45 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
     staleTime: 30000,
   });
 
-  const renderHistoryItem = ({ item }: { item: HistoryItem }) => {
-    return <HistoryItemComponent item={item} theme={theme} />;
-  };
+  const renderHistoryItem = useCallback(
+    ({ item }: { item: HistoryItem }) => {
+      return <HistoryItemComponent item={item} theme={theme} />;
+    },
+    [theme],
+  );
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text
-        style={{
-          fontSize: 48,
-          color: theme.colors.onSurfaceDisabled,
-          opacity: 0.5,
-        }}
-      >
-        📋
-      </Text>
-      <Text
-        variant="bodyLarge"
-        style={{
-          color: theme.colors.onSurfaceDisabled,
-          marginTop: theme.spacing.m,
-        }}
-      >
-        No hay historial disponible
-      </Text>
-      <Text
-        variant="bodySmall"
-        style={{
-          color: theme.colors.onSurfaceVariant,
-          marginTop: theme.spacing.s,
-          textAlign: 'center',
-        }}
-      >
-        Los cambios realizados en esta orden aparecerán aquí
-      </Text>
-    </View>
+  const renderEmpty = useCallback(
+    () => (
+      <View style={styles.emptyContainer}>
+        <Text
+          style={[styles.emptyIcon, { color: theme.colors.onSurfaceDisabled }]}
+        >
+          📋
+        </Text>
+        <Text
+          variant="bodyLarge"
+          style={{
+            color: theme.colors.onSurfaceDisabled,
+            marginTop: theme.spacing.m,
+          }}
+        >
+          No hay historial disponible
+        </Text>
+        <Text
+          variant="bodySmall"
+          style={[
+            styles.emptyText,
+            {
+              color: theme.colors.onSurfaceVariant,
+              marginTop: theme.spacing.s,
+            },
+          ]}
+        >
+          Los cambios realizados en esta orden aparecerán aquí
+        </Text>
+      </View>
+    ),
+    [styles.emptyContainer, styles.emptyIcon, styles.emptyText, theme],
   );
 
   return (
@@ -1501,7 +1466,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
       <Appbar.Header style={styles.header}>
         <Appbar.BackAction onPress={onBack} />
         <Appbar.Content
-          title={`Historial de Orden #${orderNumber || ''}`}
+          title={titleText}
           subtitle={`${historyData?.length || 0} cambios registrados`}
         />
       </Appbar.Header>
@@ -1509,29 +1474,25 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
       <View style={styles.content}>
         {isError ? (
           <View style={styles.emptyContainer}>
-            <Text
-              style={{
-                fontSize: 48,
-                color: theme.colors.error,
-                opacity: 0.7,
-              }}
-            >
+            <Text style={[styles.errorIcon, { color: theme.colors.error }]}>
               ⚠️
             </Text>
             <Text
               variant="bodyLarge"
-              style={{
-                color: theme.colors.error,
-                marginTop: theme.spacing.m,
-                textAlign: 'center',
-              }}
+              style={[
+                styles.emptyText,
+                {
+                  color: theme.colors.error,
+                  marginTop: theme.spacing.m,
+                },
+              ]}
             >
               Error al cargar el historial
             </Text>
             <Button
               onPress={() => refetch()}
               mode="text"
-              style={{ marginTop: 16 }}
+              style={styles.retryButton}
             >
               Reintentar
             </Button>
@@ -1618,6 +1579,319 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: theme.spacing.xl,
+    },
+    verticalChangeContainer: {
+      marginTop: 4,
+    },
+    beforeValueContainer: {
+      padding: 8,
+      borderRadius: 6,
+      marginBottom: 8,
+    },
+    afterValueContainer: {
+      padding: 8,
+      borderRadius: 6,
+    },
+    horizontalBeforeValue: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginRight: 6,
+    },
+    horizontalAfterValue: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    arrowText: {
+      marginHorizontal: 4,
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    itemContainer: {
+      marginBottom: 8,
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      backgroundColor: theme.colors.surface,
+      padding: 8,
+      marginLeft: 4,
+      borderRadius: 4,
+    },
+    // Nuevos estilos para reemplazar inline styles
+    marginTop4: {
+      marginTop: 4,
+    },
+    errorContainer: {
+      padding: 8,
+      borderRadius: 6,
+      marginBottom: 8,
+    },
+    labelSmallBold: {
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    primaryContainer: {
+      padding: 8,
+      borderRadius: 6,
+    },
+    errorTag: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginRight: 6,
+    },
+    labelSmallMedium: {
+      fontWeight: '500',
+    },
+    marginHorizontal4: {
+      marginHorizontal: 4,
+    },
+    primaryTag: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    errorTagLarge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+      marginRight: 6,
+    },
+    primaryTagLarge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
+    userInfoContainer: {
+      flex: 1,
+      marginRight: 12,
+    },
+    userInfoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    avatarMargin: {
+      marginRight: 6,
+    },
+    userNameText: {
+      fontWeight: '600',
+      flex: 1,
+    },
+    expandButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    expandButtonText: {
+      fontSize: 20,
+    },
+    chipContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 4,
+    },
+    operationChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+      borderRadius: 10,
+    },
+    operationDot: {
+      marginRight: 3,
+      fontSize: 10,
+    },
+    operationText: {
+      fontSize: 9,
+      fontWeight: '600',
+    },
+    statusChipText: {
+      fontSize: 9,
+    },
+    statusChipStyle: {
+      height: 20,
+    },
+    timestampText: {
+      opacity: 0.6,
+      fontSize: 10,
+    },
+    dividerMargin: {
+      marginBottom: 8,
+    },
+    summaryText: {
+      fontWeight: '600',
+      marginBottom: 8,
+      fontStyle: 'italic',
+    },
+    orderDetailsContainer: {
+      padding: 8,
+      borderRadius: 6,
+      marginBottom: 8,
+    },
+    orderDetailsTitle: {
+      fontWeight: '600',
+      marginBottom: 6,
+    },
+    fieldRow: {
+      marginBottom: 4,
+    },
+    fieldLabel: {
+      fontWeight: '600',
+    },
+    sectionTitleWithMargins: {
+      fontWeight: '600',
+      marginBottom: 8,
+      marginTop: 8,
+    },
+    productItemBorder: {
+      marginBottom: 8,
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      padding: 8,
+      marginLeft: 4,
+      borderRadius: 4,
+    },
+    productNameText: {
+      fontWeight: '600',
+    },
+    modifierText: {
+      marginTop: 2,
+    },
+    productPriceText: {
+      marginTop: 4,
+      fontWeight: '600',
+    },
+    sectionMargin: {
+      marginBottom: 12,
+    },
+    fieldContainer: {
+      marginBottom: 4,
+      marginLeft: 8,
+    },
+    fieldLabelSmall: {
+      marginBottom: 2,
+    },
+    errorColorText: {
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    changeSectionContainer: {
+      marginBottom: 8,
+    },
+    changeSectionTitle: {
+      fontWeight: '600',
+      marginBottom: 4,
+      textTransform: 'capitalize',
+    },
+    changesEmptyText: {
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    productModifiedContainer: {
+      marginBottom: 8,
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      padding: 8,
+      marginLeft: 4,
+      borderRadius: 4,
+    },
+    addedProductContainer: {
+      marginBottom: 8,
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      padding: 8,
+      marginLeft: 4,
+      borderRadius: 4,
+    },
+    removedProductContainer: {
+      marginBottom: 8,
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      padding: 8,
+      marginLeft: 4,
+      borderRadius: 4,
+    },
+    removedProductText: {
+      textDecorationLine: 'line-through',
+    },
+    modifiedChangeContainer: {
+      marginTop: 4,
+    },
+    itemOperationText: {
+      marginBottom: 8,
+    },
+    itemDescriptionContainer: {
+      padding: 8,
+      borderRadius: 6,
+    },
+    batchTitle: {
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    batchOperationContainer: {
+      paddingLeft: 8,
+      borderLeftWidth: 2,
+      marginLeft: 4,
+    },
+    batchOperationRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 4,
+    },
+    batchBulletText: {
+      marginRight: 6,
+      marginTop: 2,
+      fontSize: 14,
+    },
+    batchOperationContent: {
+      flex: 1,
+    },
+    batchOperationLabel: {
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    batchItemDescription: {
+      padding: 6,
+      borderRadius: 4,
+    },
+    batchUpdateMargin: {
+      marginTop: 4,
+    },
+    batchFieldContainer: {
+      marginBottom: 4,
+    },
+    batchFieldLabel: {
+      fontSize: 11,
+    },
+    emptyIcon: {
+      fontSize: 48,
+      opacity: 0.5,
+    },
+    emptyText: {
+      textAlign: 'center',
+    },
+    errorIcon: {
+      fontSize: 48,
+      opacity: 0.7,
+    },
+    retryButton: {
+      marginTop: 16,
+    },
+    // Nuevos estilos para reemplazar inline styles
+    italicText: {
+      fontStyle: 'italic',
+    },
+    noTextTransform: {
+      textTransform: 'none',
+    },
+    dynamicMarginBottom: {
+      // Este será usado con lógica condicional inline
     },
   });
 };

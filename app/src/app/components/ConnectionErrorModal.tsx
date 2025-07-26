@@ -77,7 +77,7 @@ export function ConnectionErrorModal() {
     } else if (!isPaused) {
       setPausedLogs([]);
     }
-  }, [isPaused, reconnectState.logs]);
+  }, [isPaused, pausedLogs.length, reconnectState.logs]);
 
   useEffect(() => {
     if (Platform.OS === 'web') {

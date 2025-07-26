@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import AnimatedLabelInput from '../../../app/components/common/AnimatedLabelInput';
 
 interface NumericFieldProps {
@@ -68,9 +69,15 @@ const NumericField: React.FC<NumericFieldProps> = ({
       error={error}
       disabled={disabled}
       keyboardType="number-pad"
-      containerStyle={{ marginBottom: 12 }}
+      containerStyle={styles.container}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 12,
+  },
+});
 
 export default NumericField;

@@ -510,19 +510,19 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       setShowExitConfirmation(false);
     }, []);
 
-    if (!product || !visible) {
-      return null;
-    }
-
     const selectedVariant = useMemo(
       () =>
-        hasVariants
+        hasVariants && product
           ? product.variants.find(
               (variant: ProductVariant) => variant.id === selectedVariantId,
             )
           : undefined,
-      [hasVariants, product?.variants, selectedVariantId],
+      [hasVariants, product, selectedVariantId],
     );
+
+    if (!product || !visible) {
+      return null;
+    }
 
     const basePrice = selectedVariant
       ? Number(selectedVariant.price)
@@ -563,7 +563,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
 
             <ScrollView
               style={styles.scrollView}
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={styles.scrollViewContent}
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
               nestedScrollEnabled={true}
@@ -583,7 +583,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                               compact
                               style={styles.errorChip}
                               icon="alert-circle"
-                              textStyle={{ fontSize: 12 }}
+                              textStyle={styles.errorChipText}
                             >
                               {getFieldError('variant')}
                             </Chip>
@@ -673,7 +673,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                           compact
                           style={styles.errorChip}
                           icon="alert-circle"
-                          textStyle={{ fontSize: 12 }}
+                          textStyle={styles.errorChipText}
                         >
                           {getFieldError('pizza')}
                         </Chip>
@@ -731,7 +731,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                               compact
                               style={styles.errorChip}
                               icon="alert-circle"
-                              textStyle={{ fontSize: 12 }}
+                              textStyle={styles.errorChipText}
                             >
                               {getGroupError(group.id)}
                             </Chip>
@@ -1456,6 +1456,12 @@ const createStyles = (theme: AppTheme) =>
     },
     warningIcon: {
       margin: 0,
+    },
+    scrollViewContent: {
+      paddingBottom: 20,
+    },
+    errorChipText: {
+      fontSize: 12,
     },
   });
 

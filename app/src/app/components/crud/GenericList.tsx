@@ -94,6 +94,7 @@ interface GenericListProps<TItem extends { id: string }> {
 const getStyles = (
   theme: AppTheme,
   responsive: ReturnType<typeof useResponsive>,
+  itemSpacing?: number,
 ) => {
   const listItemHorizontalMargin = responsive.spacing(theme.spacing.m);
   return StyleSheet.create({
@@ -242,6 +243,29 @@ const getStyles = (
       right: 0,
       bottom: 0,
     },
+    chipTextStyle: {
+      fontSize: responsive.isTablet ? 12 : 11,
+      marginVertical: 0,
+    },
+    searchInputStyle: {
+      color: theme.colors.onSurface,
+      fontSize: 14,
+      minHeight: 40,
+    },
+    itemSeparator: {
+      height: itemSpacing || responsive.spacing(theme.spacing.m),
+    },
+    fabTheme: {
+      colors: { primaryContainer: theme.colors.primary },
+    } as any,
+    rightContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    selectedMenuItemTitle: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
   });
 };
 
@@ -285,8 +309,8 @@ const GenericList = <TItem extends { id: string }>({
   const theme = useAppTheme();
   const responsive = useResponsive();
   const styles = useMemo(
-    () => getStyles(theme, responsive),
-    [theme, responsive],
+    () => getStyles(theme, responsive, itemSpacing),
+    [theme, responsive, itemSpacing],
   );
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
@@ -358,6 +382,7 @@ const GenericList = <TItem extends { id: string }>({
     responsive,
     gridColumns,
     gridColumnsTablet,
+    theme.spacing.m,
   ]);
 
   const renderGenericItem = useCallback(
@@ -460,10 +485,7 @@ const GenericList = <TItem extends { id: string }>({
                   : theme.colors.surfaceVariant,
               },
             ]}
-            textStyle={{
-              fontSize: responsive.isTablet ? 12 : 11,
-              marginVertical: 0,
-            }}
+            textStyle={styles.chipTextStyle}
             compact
           >
             {chipLabel}
@@ -548,7 +570,7 @@ const GenericList = <TItem extends { id: string }>({
               }
             }}
             right={() => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={styles.rightContainer}>
                 {statusChip && statusChip({ color: theme.colors.onSurface })}
                 {renderItemActions && (
                   <View
@@ -582,7 +604,6 @@ const GenericList = <TItem extends { id: string }>({
       numColumns,
       showImagePlaceholder,
       placeholderIcon,
-      responsive,
     ],
   );
 
@@ -612,11 +633,7 @@ const GenericList = <TItem extends { id: string }>({
                   styles.searchbar,
                   filterOptions ? styles.searchbarWithFilter : {},
                 ]}
-                inputStyle={{
-                  color: theme.colors.onSurface,
-                  fontSize: 14,
-                  minHeight: 40,
-                }}
+                inputStyle={styles.searchInputStyle}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
                 iconColor={theme.colors.onSurfaceVariant}
                 clearIcon={
@@ -668,7 +685,7 @@ const GenericList = <TItem extends { id: string }>({
                       disabled={option.disabled}
                       titleStyle={
                         filterValue === option.value
-                          ? { color: theme.colors.primary, fontWeight: '600' }
+                          ? styles.selectedMenuItemTitle
                           : undefined
                       }
                     />
@@ -695,13 +712,7 @@ const GenericList = <TItem extends { id: string }>({
         }
         ItemSeparatorComponent={
           enableGrid && numColumns > 1
-            ? () => (
-                <View
-                  style={{
-                    height: itemSpacing || responsive.spacing(theme.spacing.m),
-                  }}
-                />
-              )
+            ? () => <View style={styles.itemSeparator} />
             : undefined
         }
         refreshControl={
@@ -736,7 +747,7 @@ const GenericList = <TItem extends { id: string }>({
             }
             label={fabLabel}
             color={theme.colors.onPrimary}
-            theme={{ colors: { primaryContainer: theme.colors.primary } }}
+            theme={styles.fabTheme}
           />
         </Portal>
       )}

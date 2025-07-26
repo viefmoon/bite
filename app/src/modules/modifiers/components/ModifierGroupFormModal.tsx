@@ -123,6 +123,9 @@ const getStyles = (theme: AppTheme) =>
       marginVertical: theme.spacing.m,
       backgroundColor: theme.colors.outlineVariant,
     },
+    disabledRow: {
+      opacity: 0.5,
+    },
   });
 
 const ModifierGroupFormModal: React.FC<Props> = ({
@@ -327,7 +330,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
             <View
               style={[
                 styles.row,
-                !watchedAllowMultipleSelections ? { opacity: 0.5 } : {},
+                !watchedAllowMultipleSelections && styles.disabledRow,
               ]}
             >
               <View style={styles.column}>

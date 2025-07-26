@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Portal,
@@ -679,7 +679,7 @@ export default function CustomerFormModal({
                 </View>
               )}
 
-              <View style={{ height: 10 }} />
+              <View style={styles.scrollSpacer} />
             </ScrollView>
 
             <Surface style={styles.buttonContainer} elevation={2}>
@@ -1033,5 +1033,8 @@ const getStyles = (
     emptyAddressText: {
       color: theme.colors.onSurfaceVariant,
       fontSize: responsive.isTablet ? 13 : 14,
+    },
+    scrollSpacer: {
+      height: 10,
     },
   });

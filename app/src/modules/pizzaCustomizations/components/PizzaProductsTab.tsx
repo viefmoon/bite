@@ -286,6 +286,10 @@ export function PizzaProductsTab() {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    activeMenuTitle: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
   });
 
   if (isLoading) {
@@ -340,9 +344,7 @@ export function PizzaProductsTab() {
                 leadingIcon="filter-variant"
                 trailingIcon={filter === 'all' ? 'check' : undefined}
                 titleStyle={
-                  filter === 'all'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
-                    : undefined
+                  filter === 'all' ? styles.activeMenuTitle : undefined
                 }
               />
               <Menu.Item
@@ -354,9 +356,7 @@ export function PizzaProductsTab() {
                 leadingIcon="check-circle"
                 trailingIcon={filter === 'configured' ? 'check' : undefined}
                 titleStyle={
-                  filter === 'configured'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
-                    : undefined
+                  filter === 'configured' ? styles.activeMenuTitle : undefined
                 }
               />
               <Menu.Item
@@ -369,7 +369,7 @@ export function PizzaProductsTab() {
                 trailingIcon={filter === 'not_configured' ? 'check' : undefined}
                 titleStyle={
                   filter === 'not_configured'
-                    ? { color: theme.colors.primary, fontWeight: '600' }
+                    ? styles.activeMenuTitle
                     : undefined
                 }
               />

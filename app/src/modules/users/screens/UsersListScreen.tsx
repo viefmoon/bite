@@ -303,6 +303,17 @@ export function UsersListScreen() {
       marginVertical: 0,
       paddingVertical: 0,
     },
+    tabletListItem: {
+      marginVertical: 1,
+    },
+    tabletListItemContent: {
+      paddingVertical: 2,
+      minHeight: 36,
+    },
+    tabletContentContainer: {
+      paddingTop: 2,
+      paddingBottom: 80,
+    },
   });
 
   return (
@@ -317,27 +328,14 @@ export function UsersListScreen() {
           ListEmptyComponent={ListEmptyComponent}
           listItemStyle={
             responsive.isTablet
-              ? {
-                  marginVertical: 1,
-                  marginHorizontal: theme.spacing.xs,
-                }
+              ? [styles.tabletListItem, { marginHorizontal: theme.spacing.xs }]
               : undefined
           }
           listItemContentStyle={
-            responsive.isTablet
-              ? {
-                  paddingVertical: 2,
-                  minHeight: 36,
-                }
-              : undefined
+            responsive.isTablet ? styles.tabletListItemContent : undefined
           }
           contentContainerStyle={
-            responsive.isTablet
-              ? {
-                  paddingTop: 2,
-                  paddingBottom: 80,
-                }
-              : undefined
+            responsive.isTablet ? styles.tabletContentContainer : undefined
           }
           renderConfig={{
             titleField: 'displayName' as keyof User,

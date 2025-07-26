@@ -61,6 +61,9 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
           categoryTextInactive: {
             color: theme.colors.onSurfaceDisabled,
           },
+          flexOne: {
+            flex: 1,
+          },
         }),
       [theme],
     );
@@ -90,7 +93,7 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
               return (
                 <Pressable
                   key={category.id}
-                  style={[styles.categoryChip, { flex: 1 }]}
+                  style={[styles.categoryChip, styles.flexOne]}
                   onPress={() => !isInactive && onCategorySelect(category.id)}
                   disabled={isInactive}
                 >

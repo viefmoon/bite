@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Text,
-  Checkbox,
   Card,
   ActivityIndicator,
   Surface,
@@ -39,7 +38,7 @@ interface FlavorItemProps {
 }
 
 const FlavorItem = memo<FlavorItemProps>(
-  ({ flavor, isSelected, isDisabled, onToggle, styles, theme }) => (
+  ({ flavor, isSelected, isDisabled, onToggle, styles }) => (
     <Surface
       style={[
         styles.flavorChip,
@@ -51,27 +50,17 @@ const FlavorItem = memo<FlavorItemProps>(
       <TouchableRipple
         onPress={() => !isDisabled && onToggle(flavor.id)}
         disabled={isDisabled}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          borderRadius: 8,
-        }}
+        style={styles.touchableRippleStyle}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.flavorItemContainer}>
           <RadioButton
             value={flavor.id}
             status={isSelected ? 'checked' : 'unchecked'}
             disabled={isDisabled}
             onPress={() => !isDisabled && onToggle(flavor.id)}
           />
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
+          <View style={styles.flavorContentContainer}>
+            <View style={styles.flavorTitleContainer}>
               <Text
                 style={[
                   styles.flavorLabel,
@@ -412,7 +401,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
 
       return (
         <Card style={styles.optionCard}>
-          <Card.Content style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
+          <Card.Content style={styles.cardContentStyle}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 {sectionTitle}:{' '}
@@ -428,7 +417,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                     [sectionKey]: !prev[sectionKey],
                   }))
                 }
-                style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                style={styles.subsectionTouchableStyle}
               >
                 <View style={styles.subsectionHeader}>
                   <Text style={styles.subsectionTitle}>
@@ -437,13 +426,13 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                   <IconButton
                     icon={isExpanded ? 'chevron-up' : 'chevron-down'}
                     size={20}
-                    style={{ margin: -8 }}
+                    style={styles.iconButtonStyle}
                   />
                 </View>
               </TouchableRipple>
 
               {isExpanded && (
-                <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                <View style={styles.ingredientsContainer}>
                   {ingredients.map((ingredient) => {
                     const isAddSelected = isIngredientSelected(
                       ingredient.id,
@@ -482,22 +471,11 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                               );
                             }
                           }}
-                          style={{ paddingVertical: 8, paddingHorizontal: 8 }}
+                          style={styles.ingredientTouchableStyle}
                         >
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <View style={{ flex: 1 }}>
-                              <View
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                }}
-                              >
+                          <View style={styles.ingredientRowContainer}>
+                            <View style={styles.ingredientInfoContainer}>
+                              <View style={styles.ingredientNameContainer}>
                                 <Text style={styles.ingredientLabel}>
                                   {ingredient.name}
                                 </Text>
@@ -583,14 +561,19 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
       <View style={styles.container}>
         {/* Selección de Sabores */}
         <Card style={styles.optionCard}>
-          <Card.Content style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
+          <Card.Content style={styles.cardContentStyle}>
             <TouchableRipple
               onPress={() => setExpandedFlavors(!expandedFlavors)}
-              style={{ marginBottom: expandedFlavors ? 12 : 0 }}
+              style={[
+                styles.dynamicMarginBottom,
+                expandedFlavors
+                  ? styles.expandedMarginBottom
+                  : styles.collapsedMarginBottom,
+              ]}
             >
               <View style={styles.sectionHeaderWithSwitch}>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.flavorSectionContainer}>
+                  <View style={styles.flavorHeaderContainer}>
                     <Text style={styles.sectionTitle}>
                       Sabores
                       {selectedFlavors.length > 0 && (
@@ -610,7 +593,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                     <IconButton
                       icon={expandedFlavors ? 'chevron-up' : 'chevron-down'}
                       size={20}
-                      style={{ margin: -8 }}
+                      style={styles.iconButtonStyle}
                     />
                   </View>
                   {expandedFlavors && (
@@ -861,6 +844,71 @@ const createStyles = (theme: any) =>
     priceInfoText: {
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
+    },
+    touchableRippleStyle: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    flavorItemContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    flavorContentContainer: {
+      flex: 1,
+      marginLeft: 8,
+    },
+    flavorTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    cardContentStyle: {
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+    },
+    subsectionTouchableStyle: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    iconButtonStyle: {
+      margin: -8,
+    },
+    ingredientsContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    ingredientTouchableStyle: {
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+    },
+    ingredientRowContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    ingredientInfoContainer: {
+      flex: 1,
+    },
+    ingredientNameContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    dynamicMarginBottom: {
+      // Base style for dynamic margin
+    },
+    expandedMarginBottom: {
+      marginBottom: 12,
+    },
+    collapsedMarginBottom: {
+      marginBottom: 0,
+    },
+    flavorSectionContainer: {
+      flex: 1,
+    },
+    flavorHeaderContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
   });
 

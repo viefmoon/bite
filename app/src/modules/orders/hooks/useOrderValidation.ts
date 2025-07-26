@@ -158,7 +158,7 @@ export const useOrderValidation = ({
 // Función auxiliar para validar números de teléfono
 function isValidPhoneNumber(phone: string): boolean {
   // Eliminar espacios y caracteres especiales
-  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  const cleanPhone = phone.replace(/[\s\-()]/g, '');
 
   // Validar que solo tenga números y opcionalmente un + al inicio
   const phoneRegex = /^\+?\d{7,15}$/;

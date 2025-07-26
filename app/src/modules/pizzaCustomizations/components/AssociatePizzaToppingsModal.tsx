@@ -326,6 +326,9 @@ export function AssociatePizzaToppingsModal({
     saveButton: {
       borderWidth: 0,
     },
+    buttonContent: {
+      paddingVertical: 6,
+    },
   });
 
   if (!product) return null;
@@ -535,7 +538,7 @@ export function AssociatePizzaToppingsModal({
                 }
               }}
               style={[styles.actionButton, styles.cancelButton]}
-              contentStyle={{ paddingVertical: 6 }}
+              contentStyle={styles.buttonContent}
             >
               Cancelar
             </Button>
@@ -545,7 +548,7 @@ export function AssociatePizzaToppingsModal({
               loading={updateMutation.isPending}
               disabled={!hasChanges}
               style={[styles.actionButton, styles.saveButton]}
-              contentStyle={{ paddingVertical: 6 }}
+              contentStyle={styles.buttonContent}
             >
               Guardar
             </Button>

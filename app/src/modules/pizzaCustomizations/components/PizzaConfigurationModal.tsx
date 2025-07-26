@@ -144,6 +144,9 @@ const createStyles = (
       fontSize: responsive.fontSize(14),
       fontWeight: '600',
     },
+    buttonContent: {
+      paddingVertical: responsive.isTablet ? 4 : 6,
+    },
   });
 
 export function PizzaConfigurationModal({
@@ -443,7 +446,7 @@ export function PizzaConfigurationModal({
               }
             }}
             style={[styles.actionButton, styles.cancelButton]}
-            contentStyle={{ paddingVertical: responsive.isTablet ? 4 : 6 }}
+            contentStyle={styles.buttonContent}
             labelStyle={styles.buttonLabel}
           >
             Cancelar
@@ -453,7 +456,7 @@ export function PizzaConfigurationModal({
             onPress={handleSubmit(onSubmit)}
             loading={saveMutation.isPending}
             style={[styles.actionButton, styles.saveButton]}
-            contentStyle={{ paddingVertical: responsive.isTablet ? 4 : 6 }}
+            contentStyle={styles.buttonContent}
             labelStyle={styles.buttonLabel}
           >
             Guardar

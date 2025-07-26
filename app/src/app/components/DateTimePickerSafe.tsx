@@ -94,7 +94,6 @@ export const DateTimePickerSafe = ({
               testID="dateTimePicker"
               value={tempDate}
               mode={mode}
-              is24Hour={false}
               display="spinner"
               onChange={handleChange}
               minimumDate={minimumDate}
@@ -115,7 +114,6 @@ export const DateTimePickerSafe = ({
           testID="dateTimePicker"
           value={tempDate}
           mode={mode}
-          is24Hour={false}
           onChange={(event, selectedDate) => {
             onCancel();
             if (event.type === 'set' && selectedDate) {
@@ -125,6 +123,7 @@ export const DateTimePickerSafe = ({
           minimumDate={minimumDate}
           maximumDate={maximumDate}
           minuteInterval={minuteInterval as any}
+          {...(Platform.OS === 'android' && { is24Hour: false })}
           {...(allowManualInput && Platform.OS === 'android' && mode === 'time'
             ? {
                 display: 'clock' as any,

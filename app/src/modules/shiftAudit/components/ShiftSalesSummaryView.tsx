@@ -59,7 +59,7 @@ export function ShiftSalesSummaryView({ shiftId, shiftNumber, onBack }: Props) {
       <Appbar.BackAction onPress={onBack} />
       <Appbar.Content
         title={`Resumen de Ventas - Turno #${shiftNumber || summary?.shiftNumber || 'N/A'}`}
-        titleStyle={{ fontSize: 18 }}
+        titleStyle={styles.headerTitle}
       />
     </Appbar.Header>
   );
@@ -546,6 +546,9 @@ export function ShiftSalesSummaryView({ shiftId, shiftNumber, onBack }: Props) {
     topProductName: {
       fontSize: 13,
       color: theme.colors.onSurface,
+    },
+    headerTitle: {
+      fontSize: 18,
     },
   });
 

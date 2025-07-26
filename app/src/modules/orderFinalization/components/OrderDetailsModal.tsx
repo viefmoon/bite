@@ -125,7 +125,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onDismiss,
   order,
   isLoading = false,
-  onPrintPress,
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();
@@ -217,10 +216,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     return (
       <Surface
         key={`${item.product.id}-${item.productVariant?.id || ''}-${item.preparationStatus || ''}`}
-        style={[
-          styles.itemCard,
-          { backgroundColor: theme.colors.elevation.level1, marginBottom: 8 },
-        ]}
+        style={[styles.itemCard, styles.itemCardWithMargin]}
         elevation={1}
       >
         <View style={styles.itemContent}>
@@ -526,10 +522,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {order?.scheduledAt && (
                   <View style={styles.infoRow}>
                     <Text
-                      style={[
-                        styles.contactText,
-                        { color: theme.colors.primary, fontWeight: '600' },
-                      ]}
+                      style={[styles.contactText, styles.scheduledTimeText]}
                     >
                       ⏰ Hora de Entrega Programada:{' '}
                       {format(new Date(order.scheduledAt), 'HH:mm', {
@@ -567,7 +560,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         <Text
                           style={[
                             styles.summaryCompactLabel,
-                            { color: '#10B981' },
+                            styles.paidAmountText,
                           ]}
                         >
                           Pagado: $
@@ -590,10 +583,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                               <Text
                                 style={[
                                   styles.summaryCompactLabel,
-                                  {
-                                    color: theme.colors.error,
-                                    fontWeight: '600',
-                                  },
+                                  styles.remainingAmountText,
                                 ]}
                               >
                                 Resta: ${remaining.toFixed(2)}
@@ -1256,6 +1246,21 @@ const createStyles = (
     loadingText: {
       marginTop: 16,
       fontSize: responsive.fontSize(14),
+    },
+    itemCardWithMargin: {
+      backgroundColor: theme.colors.elevation.level1,
+      marginBottom: 8,
+    },
+    scheduledTimeText: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    paidAmountText: {
+      color: '#10B981',
+    },
+    remainingAmountText: {
+      color: theme.colors.error,
+      fontWeight: '600',
     },
   });
 

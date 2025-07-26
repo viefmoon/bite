@@ -403,36 +403,6 @@ const CategoriesScreen: React.FC = () => {
               label: 'Orden de visualización',
               render: (value) => value ?? '0',
             },
-            {
-              field: 'createdAt',
-              label: 'Fecha de creación',
-              render: (value) => {
-                if (!value) return 'N/A';
-                const date = new Date(value as string);
-                return date.toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-              },
-            },
-            {
-              field: 'updatedAt',
-              label: 'Última actualización',
-              render: (value) => {
-                if (!value) return 'N/A';
-                const date = new Date(value as string);
-                return date.toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-              },
-            },
           ]}
           onEdit={openEditModal as (item: any) => void}
           onDelete={handleDelete}

@@ -75,6 +75,9 @@ const getStyles = (theme: AppTheme) =>
     chip: {
       marginRight: theme.spacing.xs,
     },
+    labelText: {
+      marginBottom: 8,
+    },
   });
 
 const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
@@ -120,7 +123,7 @@ const PrinterAdvancedConfig: React.FC<PrinterAdvancedConfigProps> = ({
         control={control}
         render={({ field: { onChange, value } }) => (
           <View>
-            <Text variant="bodyMedium" style={{ marginBottom: 8 }}>
+            <Text variant="bodyMedium" style={styles.labelText}>
               Ancho del papel
             </Text>
             <SegmentedButtons

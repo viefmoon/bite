@@ -43,7 +43,7 @@ export default function AddressFormModal({
   onSubmit,
   editingItem,
   isSubmitting,
-  customerId,
+  customerId: _customerId,
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
@@ -342,7 +342,7 @@ export default function AddressFormModal({
         longitude,
       });
     }
-  }, [latitude, longitude, mapReady]);
+  }, [latitude, longitude, mapReady, sendMessageToWebView]);
 
   useEffect(() => {
     if (visible) {

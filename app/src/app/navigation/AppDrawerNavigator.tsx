@@ -92,6 +92,41 @@ export function AppDrawerNavigator() {
           borderTopRightRadius: theme.roundness * 2,
           borderBottomRightRadius: theme.roundness * 2,
         },
+        transparentSurface: {
+          backgroundColor: 'transparent',
+        },
+        headerRightContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        preparedOrdersToggle: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          marginRight: 8,
+          borderRadius: 20,
+        },
+        preparedOrdersText: {
+          fontSize: 14,
+          marginLeft: 4,
+        },
+        preparedOrdersTextBold: {
+          fontSize: 14,
+          marginLeft: 4,
+          fontWeight: 'bold',
+        },
+        preparedOrdersTextNormal: {
+          fontSize: 14,
+          marginLeft: 4,
+          fontWeight: 'normal',
+        },
+        preparedOrdersToggleActive: {
+          backgroundColor: 'rgba(255,255,255,0.2)',
+        },
+        preparedOrdersToggleInactive: {
+          backgroundColor: 'transparent',
+        },
       }),
     [theme, responsive],
   );
@@ -196,12 +231,7 @@ export function AppDrawerNavigator() {
                 title = children?.toString() || '';
             }
             return (
-              <Surface
-                elevation={0}
-                style={{
-                  backgroundColor: 'transparent',
-                }}
-              >
+              <Surface elevation={0} style={styles.transparentSurface}>
                 <Text style={styles.headerTitleStyle}>{title}</Text>
               </Surface>
             );
@@ -216,7 +246,7 @@ export function AppDrawerNavigator() {
             const showShiftIndicator = salesScreens.includes(route.name);
 
             return (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={styles.headerRightContainer}>
                 {showShiftIndicator && <ShiftIndicator />}
                 <ConnectionIndicator />
               </View>
@@ -448,20 +478,15 @@ export function AppDrawerNavigator() {
               />
             ),
             headerRight: () => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={styles.headerRightContainer}>
                 {/* Checkbox para mostrar/ocultar ordenes listas */}
                 <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    marginRight: 8,
-                    backgroundColor: filters.showPrepared
-                      ? 'rgba(255,255,255,0.2)'
-                      : 'transparent',
-                    borderRadius: 20,
-                  }}
+                  style={[
+                    styles.preparedOrdersToggle,
+                    filters.showPrepared
+                      ? styles.preparedOrdersToggleActive
+                      : styles.preparedOrdersToggleInactive,
+                  ]}
                   onPress={() =>
                     setFilters({
                       ...filters,
@@ -481,12 +506,14 @@ export function AppDrawerNavigator() {
                     uncheckedColor={theme.colors.onPrimary}
                   />
                   <PaperText
-                    style={{
-                      color: theme.colors.onPrimary,
-                      fontSize: 14,
-                      marginLeft: 4,
-                      fontWeight: filters.showPrepared ? 'bold' : 'normal',
-                    }}
+                    style={[
+                      filters.showPrepared
+                        ? styles.preparedOrdersTextBold
+                        : styles.preparedOrdersTextNormal,
+                      {
+                        color: theme.colors.onPrimary,
+                      },
+                    ]}
                   >
                     Mostrar Listas
                   </PaperText>

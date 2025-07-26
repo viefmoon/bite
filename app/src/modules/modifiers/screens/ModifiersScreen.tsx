@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useCallback, useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Portal, Button } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +9,6 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 import { modifierService } from '../services/modifierService';
 import { Modifier } from '../schema/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
 import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
@@ -56,9 +55,9 @@ const ModifiersScreen = () => {
 
   const QUERY_KEY = ['modifiers', groupId];
 
-  const debouncedSetSearch = useCallback(
-    debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [],
+  const debouncedSetSearch = useMemo(
+    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
+    [setDebouncedSearchQuery],
   );
 
   const handleSearchChange = (query: string) => {

@@ -55,7 +55,9 @@ export const ModifierGroupAvailabilityItem: React.FC<
             key={modifier.id}
             style={[
               styles.modifierItem,
-              { opacity: !modifier.isActive ? 0.5 : 1 },
+              modifier.isActive
+                ? styles.activeModifier
+                : styles.inactiveModifier,
             ]}
           >
             <Text
@@ -96,5 +98,11 @@ const styles = StyleSheet.create({
   },
   strikethrough: {
     textDecorationLine: 'line-through',
+  },
+  activeModifier: {
+    opacity: 1,
+  },
+  inactiveModifier: {
+    opacity: 0.5,
   },
 });

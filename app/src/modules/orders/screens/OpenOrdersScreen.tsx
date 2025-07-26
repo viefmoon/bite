@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Pressable,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+import { StyleSheet, View, Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import {
@@ -45,9 +39,7 @@ import { es } from 'date-fns/locale';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
-import type { OrderDetailsForBackend } from '../stores/useOrderStore';
 import { useListState } from '../../../app/hooks/useListState';
-import { useOrderStore } from '../stores/useOrderStore';
 import {
   OrderStatusInfo,
   formatOrderTypeShort,
@@ -136,13 +128,11 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     setIsPrintModalVisible(true);
   }, []);
 
-  const { loadOrderForEditing } = useOrderStore();
-
-  const handleOrderItemPress = async (order: OrderOpenList) => {
+  const handleOrderItemPress = useCallback(async (order: OrderOpenList) => {
     // Cargar la orden en el store antes de abrir el modal
     setEditingOrderId(order.id);
     setIsEditModalVisible(true);
-  };
+  }, []);
 
   const renderOrderItem = useCallback(
     ({ item: order }: { item: OrderOpenList }) => {
@@ -203,10 +193,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     <Text
                       style={[
                         styles.orderPrice,
-                        {
-                          color:
-                            pendingAmount > 0 ? theme.colors.error : '#10B981',
-                        },
+                        pendingAmount > 0
+                          ? styles.orderPricePending
+                          : styles.orderPricePaid,
                       ]}
                     >
                       {' • '}
@@ -267,10 +256,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                       <View
                         style={[
                           styles.inlinePreparationBadge,
-                          {
-                            backgroundColor: '#25D366',
-                            borderColor: '#25D366',
-                          },
+                          styles.whatsappButton,
                         ]}
                       >
                         <Icon source="whatsapp" size={12} color="#FFFFFF" />
@@ -458,7 +444,13 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         />
       ),
     });
-  }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
+  }, [
+    navigation,
+    handleRefresh,
+    isFetching,
+    theme.colors.onPrimary,
+    styles.headerRefreshButton,
+  ]); // Añadir dependencias
 
   // Función para manejar la impresión del ticket
   const handlePrint = useCallback(
@@ -1165,6 +1157,12 @@ const createStyles = (
       fontSize: responsive.isTablet ? 13 : 15,
       fontWeight: '700',
     },
+    orderPricePending: {
+      color: theme.colors.error,
+    },
+    orderPricePaid: {
+      color: '#10B981',
+    },
     statusChip: {
       minHeight: responsive.isTablet ? 22 : 24,
       alignSelf: 'flex-end',
@@ -1333,6 +1331,10 @@ const createStyles = (
     // Estilo adicional para eliminar inline style
     headerRefreshButton: {
       marginRight: 8,
+    },
+    whatsappButton: {
+      backgroundColor: '#25D366',
+      borderColor: '#25D366',
     },
   });
 

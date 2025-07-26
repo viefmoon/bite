@@ -29,7 +29,7 @@ export const OrderDetailContent: React.FC<{
   orderId: string | null;
   orderNumber?: number;
   orderData?: any; // Datos de la orden pasados como prop
-}> = ({ orderId: _orderId, orderNumber: _orderNumber, orderData }) => {
+}> = ({ orderData }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 

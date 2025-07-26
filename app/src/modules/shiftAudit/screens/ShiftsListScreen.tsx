@@ -272,7 +272,7 @@ export function ShiftsListScreen() {
           <View style={styles.shiftDetails}>
             {/* Sección de tiempo y estadísticas en una sola línea */}
             <View style={styles.timeSection}>
-              <View style={{ flex: 1 }}>
+              <View style={styles.timeContainer}>
                 <Text style={styles.timeText}>
                   {shift.openedAt ? formatShiftTime(shift.openedAt) : 'N/A'} -{' '}
                   {shift.closedAt
@@ -982,6 +982,9 @@ export function ShiftsListScreen() {
     loadingText: {
       fontSize: 16,
       color: theme.colors.onSurfaceVariant,
+    },
+    timeContainer: {
+      flex: 1,
     },
   });
 

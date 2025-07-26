@@ -20,12 +20,7 @@ class SecureStorageService {
       return;
     }
 
-    try {
-      await SecureStore.setItemAsync(key, value);
-    } catch (error) {
-      // Error storing secure item
-      throw error;
-    }
+    await SecureStore.setItemAsync(key, value);
   }
 
   async getItem(key: string): Promise<string | null> {
@@ -54,12 +49,7 @@ class SecureStorageService {
       return;
     }
 
-    try {
-      await SecureStore.deleteItemAsync(key);
-    } catch (error) {
-      // Error removing secure item
-      throw error;
-    }
+    await SecureStore.deleteItemAsync(key);
   }
 
   async clear(): Promise<void> {

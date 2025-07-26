@@ -27,9 +27,9 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const renderRightActions = (
-    progress: Animated.AnimatedInterpolation<number>,
+    _progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>,
-    item: CartItem,
+    _item: CartItem,
   ) => {
     const translateX = dragX.interpolate({
       inputRange: [-100, 0],

@@ -18,28 +18,27 @@ function withCustomIcons(config) {
       );
       const splashPath = path.join(projectRoot, 'assets', 'splash.png');
 
-      console.log('🎨 CloudBite Icon Plugin - Starting icon generation...');
+      // Plugin: CloudBite Icon Plugin - Starting icon generation...
 
       // Verificar que existen los iconos
       if (!fs.existsSync(iconPath)) {
-        console.error('❌ Icon not found at:', iconPath);
-        return config;
+        throw new Error(`Icon not found at: ${iconPath}`);
       }
 
-      console.log('✅ Icon found at:', iconPath);
+      // Icon found at: iconPath
 
       // Durante el prebuild, los iconos ya son procesados por Expo
       // Este plugin solo sirve para logging y verificación
-      console.log('📱 Icons will be processed during EAS build');
+      // Icons will be processed during EAS build
 
       // Para splash screen
       if (fs.existsSync(splashPath)) {
-        console.log('✅ Splash screen found at:', splashPath);
+        // Splash screen found at: splashPath
       }
 
       // Para icono adaptativo
       if (fs.existsSync(adaptiveIconPath)) {
-        console.log('✅ Adaptive icon found at:', adaptiveIconPath);
+        // Adaptive icon found at: adaptiveIconPath
       }
 
       return config;

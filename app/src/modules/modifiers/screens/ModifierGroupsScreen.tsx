@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
@@ -41,9 +41,9 @@ const ModifierGroupsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const debouncedSetSearch = useCallback(
-    debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [],
+  const debouncedSetSearch = useMemo(
+    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
+    [setDebouncedSearchQuery],
   );
 
   const handleSearchChange = (query: string) => {
@@ -138,11 +138,7 @@ const ModifierGroupsScreen = () => {
         parts.push(item.description);
       }
 
-      return (
-        <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
-          {parts.join(' • ')}
-        </Text>
-      );
+      return <Text style={styles.descriptionText}>{parts.join(' • ')}</Text>;
     },
   };
 
@@ -293,6 +289,10 @@ const createStyles = (theme: AppTheme) =>
       marginTop: theme.spacing.m,
       alignSelf: 'stretch',
       borderRadius: theme.roundness,
+    },
+    descriptionText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
     },
   });
 

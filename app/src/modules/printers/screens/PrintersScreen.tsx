@@ -282,6 +282,7 @@ const PrintersScreen: React.FC = () => {
           onStateChange={({ open }) => setFabOpen(open)}
           onPress={() => {
             if (fabOpen) {
+              setFabOpen(false);
             }
           }}
           fabStyle={{ backgroundColor: theme.colors.primary }}

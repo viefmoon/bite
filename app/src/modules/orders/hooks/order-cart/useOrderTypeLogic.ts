@@ -13,7 +13,7 @@ interface OrderTypeState {
   orderNotes: string;
 }
 
-interface ValidationErrors {
+interface _ValidationErrors {
   areaError: string | null;
   tableError: string | null;
   recipientNameError: string | null;

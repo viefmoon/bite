@@ -238,7 +238,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         key={`${item.id}`}
         style={[
           styles.itemCard,
-          { backgroundColor: theme.colors.elevation.level1, marginBottom: 8 },
+          styles.itemCardWithBackground,
+          { backgroundColor: theme.colors.elevation.level1 },
         ]}
         elevation={1}
       >
@@ -375,7 +376,7 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         maxHeightTablet="90%"
         scrollable={true}
         footer={footerContent}
-        footerStyle={{ paddingTop: 0 }}
+        footerStyle={styles.footerNoPadding}
       >
         <View style={styles.headerInfo}>
           <View style={styles.chipsRow}>
@@ -485,7 +486,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
               <Text
                 style={[
                   styles.contactText,
-                  { color: theme.colors.primary, fontWeight: '600' },
+                  styles.scheduledTimeText,
+                  { color: theme.colors.primary },
                 ]}
               >
                 ⏰ Hora de Entrega Programada:{' '}
@@ -549,7 +551,7 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                       : (receipt.total || 0).toFixed(2)}
                   </Text>
                   <Text
-                    style={[styles.summaryCompactLabel, { color: '#10B981' }]}
+                    style={[styles.summaryCompactLabel, styles.paidAmountText]}
                   >
                     Pagado: $
                     {receipt.payments
@@ -571,10 +573,8 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                         <Text
                           style={[
                             styles.summaryCompactLabel,
-                            {
-                              color: theme.colors.error,
-                              fontWeight: '600',
-                            },
+                            styles.remainingAmountText,
+                            { color: theme.colors.error },
                           ]}
                         >
                           Resta: ${remaining.toFixed(2)}
@@ -1117,6 +1117,21 @@ const styles = StyleSheet.create({
   paymentBadgeText: {
     color: 'white',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  itemCardWithBackground: {
+    marginBottom: 8,
+  },
+  footerNoPadding: {
+    paddingTop: 0,
+  },
+  scheduledTimeText: {
+    fontWeight: '600',
+  },
+  paidAmountText: {
+    color: '#10B981',
+  },
+  remainingAmountText: {
     fontWeight: '600',
   },
 });

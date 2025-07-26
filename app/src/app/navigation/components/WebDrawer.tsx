@@ -103,6 +103,9 @@ export function WebDrawer({
       borderRightWidth: 1,
       borderRightColor: theme.colors.outlineVariant,
     },
+    scrollViewContent: {
+      flexGrow: 1,
+    },
   });
 
   // Solo mostrar el drawer personalizado en web
@@ -134,7 +137,7 @@ export function WebDrawer({
             ]}
           >
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1 }}
+              contentContainerStyle={styles.scrollViewContent}
               showsVerticalScrollIndicator={false}
             >
               {drawerContent}

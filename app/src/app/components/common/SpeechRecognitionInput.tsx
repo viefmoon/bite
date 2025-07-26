@@ -318,7 +318,7 @@ const SpeechRecognitionInput: React.FC<SpeechRecognitionInputProps> = ({
         error={error}
         errorColor={errorColor}
         activeBorderColor={activeBorderColor}
-        containerStyle={[containerStyle, { flex: 1 }]}
+        containerStyle={[containerStyle, styles.flexContainer]}
         inputStyle={inputStyle}
         labelStyle={labelStyle}
         style={style}
@@ -347,6 +347,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginVertical: 0,
     padding: 0,
+  },
+  flexContainer: {
+    flex: 1,
   },
 });
 

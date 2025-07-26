@@ -403,7 +403,10 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
         <Modal
           visible={showUserDropdown}
           onDismiss={() => setShowUserDropdown(false)}
-          contentContainerStyle={[styles.dropdownModal, { maxHeight: 300 }]}
+          contentContainerStyle={[
+            styles.dropdownModal,
+            styles.dropdownModalMaxHeight,
+          ]}
         >
           <Surface style={styles.dropdownContent}>
             <View style={styles.dropdownHeader}>
@@ -517,6 +520,9 @@ const getStyles = (theme: AppTheme) =>
     dropdownModal: {
       margin: 20,
       marginTop: '30%',
+    },
+    dropdownModalMaxHeight: {
+      maxHeight: 300,
     },
     dropdownContent: {
       borderRadius: theme.roundness * 2,

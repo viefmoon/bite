@@ -165,9 +165,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                 <Text
                   style={[
                     styles.orderPrice,
-                    {
-                      color: pendingAmount > 0 ? theme.colors.error : '#10B981',
-                    },
+                    pendingAmount > 0 ? styles.unpaidPrice : styles.paidPrice,
                   ]}
                 >
                   {' • '}
@@ -214,10 +212,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                   <View
                     style={[
                       styles.inlinePreparationBadge,
-                      {
-                        backgroundColor: '#25D366',
-                        borderColor: '#25D366',
-                      },
+                      styles.whatsappBadge,
                     ]}
                   >
                     <Icon source="whatsapp" size={12} color="#FFFFFF" />
@@ -314,7 +309,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
     orderCard: {
       marginBottom: 8,
@@ -398,6 +393,16 @@ const createStyles = (theme: AppTheme) =>
     },
     actionsContainer: {
       alignItems: 'center',
+    },
+    unpaidPrice: {
+      color: _theme.colors.error,
+    },
+    paidPrice: {
+      color: '#10B981',
+    },
+    whatsappBadge: {
+      backgroundColor: '#25D366',
+      borderColor: '#25D366',
     },
   });
 

@@ -11,7 +11,7 @@ import { OrderTypeEnum } from '../../types/orders.types';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import { useModalStore, modalHelpers } from '../../stores/useModalStore';
 
-export const ModalsContainer: React.FC<{}> = () => {
+export const ModalsContainer: React.FC<Record<string, never>> = () => {
   const { modalType, modalProps, isVisible } = useModalStore();
   if (!isVisible || !modalType) {
     return null;

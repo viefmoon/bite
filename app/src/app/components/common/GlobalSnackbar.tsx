@@ -67,7 +67,6 @@ const GlobalSnackbar = () => {
           styles.snackbar,
           {
             backgroundColor,
-            marginBottom: 40,
           },
         ]}
         theme={{
@@ -97,6 +96,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
+    marginBottom: 40,
   },
   messageText: {
     textAlign: 'center',

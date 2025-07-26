@@ -40,10 +40,8 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
       <TouchableOpacity
         style={[
           styles.header,
-          {
-            backgroundColor: theme.colors.elevation.level2,
-            opacity: isActive ? 1 : 0.7,
-          },
+          styles.headerBackground,
+          isActive ? styles.activeHeader : styles.inactiveHeader,
         ]}
         onPress={onToggleExpand}
         activeOpacity={0.7}
@@ -64,7 +62,7 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
               icon={icon}
               size={20}
               iconColor={isActive ? theme.colors.primary : theme.colors.outline}
-              style={{ margin: 0 }}
+              style={styles.iconButton}
             />
           </View>
           <View style={styles.info}>
@@ -99,7 +97,7 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
               icon={isExpanded ? 'chevron-up' : 'chevron-down'}
               size={20}
               iconColor={theme.colors.onSurfaceVariant}
-              style={{ margin: 0 }}
+              style={styles.iconButton}
             />
           )}
         </View>
@@ -170,5 +168,17 @@ const createStyles = (
     expandedContent: {
       paddingHorizontal: responsive.spacing(theme.spacing.m),
       paddingBottom: responsive.spacing(theme.spacing.m),
+    },
+    headerBackground: {
+      backgroundColor: theme.colors.elevation.level2,
+    },
+    activeHeader: {
+      opacity: 1,
+    },
+    inactiveHeader: {
+      opacity: 0.7,
+    },
+    iconButton: {
+      margin: 0,
     },
   });

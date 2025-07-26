@@ -157,6 +157,16 @@ const createStyles = (theme: any, responsive: any) => {
     inputStyle: {
       backgroundColor: theme.colors.elevation.level1,
     },
+    keyboardView: {
+      width: '100%',
+    },
+    inputOutline: {
+      borderRadius: 12,
+    },
+    buttonLabel: {
+      fontSize: responsive.fontSize(16),
+      fontWeight: '600',
+    },
   });
 };
 
@@ -291,7 +301,7 @@ export function PizzaCustomizationFormModal({
         <Pressable style={styles.backdrop} onPress={onDismiss} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ width: '100%' }}
+          style={styles.keyboardView}
         >
           <Surface style={styles.modalContent} elevation={5}>
             <View style={styles.header}>
@@ -327,7 +337,7 @@ export function PizzaCustomizationFormModal({
                       outlineColor={theme.colors.outline}
                       activeOutlineColor={theme.colors.primary}
                       style={styles.inputStyle}
-                      outlineStyle={{ borderRadius: 12 }}
+                      outlineStyle={styles.inputOutline}
                     />
                   )}
                 />
@@ -396,7 +406,7 @@ export function PizzaCustomizationFormModal({
                         outlineColor={theme.colors.outline}
                         activeOutlineColor={theme.colors.primary}
                         style={styles.inputStyle}
-                        outlineStyle={{ borderRadius: 12 }}
+                        outlineStyle={styles.inputOutline}
                       />
                     )}
                   />
@@ -429,7 +439,7 @@ export function PizzaCustomizationFormModal({
                         outlineColor={theme.colors.outline}
                         activeOutlineColor={theme.colors.primary}
                         style={styles.inputStyle}
-                        outlineStyle={{ borderRadius: 12 }}
+                        outlineStyle={styles.inputOutline}
                       />
                     )}
                   />
@@ -460,7 +470,7 @@ export function PizzaCustomizationFormModal({
                         outlineColor={theme.colors.outline}
                         activeOutlineColor={theme.colors.primary}
                         style={styles.inputStyle}
-                        outlineStyle={{ borderRadius: 12 }}
+                        outlineStyle={styles.inputOutline}
                       />
                     )}
                   />
@@ -499,10 +509,7 @@ export function PizzaCustomizationFormModal({
                 }
                 style={styles.button}
                 contentStyle={styles.buttonContent}
-                labelStyle={{
-                  fontSize: responsive.fontSize(16),
-                  fontWeight: '600',
-                }}
+                labelStyle={styles.buttonLabel}
               >
                 Cancelar
               </Button>
@@ -524,10 +531,7 @@ export function PizzaCustomizationFormModal({
                   { backgroundColor: theme.colors.primary },
                 ]}
                 contentStyle={styles.buttonContent}
-                labelStyle={{
-                  fontSize: responsive.fontSize(16),
-                  fontWeight: '600',
-                }}
+                labelStyle={styles.buttonLabel}
                 icon={isEditMode ? 'check' : 'plus'}
               >
                 {isEditMode ? 'Guardar' : 'Crear'}

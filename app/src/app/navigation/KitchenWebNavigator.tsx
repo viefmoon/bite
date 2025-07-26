@@ -88,6 +88,42 @@ export function KitchenWebNavigator() {
     content: {
       flex: 1,
     },
+    transparentSurface: {
+      backgroundColor: 'transparent',
+    },
+    headerRightContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    preparedOrdersToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginRight: 8,
+      borderRadius: 20,
+    },
+    preparedOrdersText: {
+      marginLeft: 4,
+    },
+    preparedOrdersToggleActive: {
+      backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+    preparedOrdersToggleInactive: {
+      backgroundColor: 'transparent',
+    },
+    preparedOrdersTextWeb: {
+      fontSize: 16,
+    },
+    preparedOrdersTextMobile: {
+      fontSize: 14,
+    },
+    preparedOrdersTextBold: {
+      fontWeight: 'bold',
+    },
+    preparedOrdersTextNormal: {
+      fontWeight: 'normal',
+    },
   });
 
   return (
@@ -124,12 +160,7 @@ export function KitchenWebNavigator() {
               </TouchableOpacity>
 
               <View style={styles.headerContent}>
-                <Surface
-                  elevation={0}
-                  style={{
-                    backgroundColor: 'transparent',
-                  }}
-                >
+                <Surface elevation={0} style={styles.transparentSurface}>
                   <View style={styles.titleContainer}>
                     <Text style={styles.headerTitle}>{screenName}</Text>
                     {filters.orderType && (
@@ -140,20 +171,15 @@ export function KitchenWebNavigator() {
                   </View>
                 </Surface>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.headerRightContainer}>
                   {/* Checkbox para mostrar/ocultar ordenes listas */}
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      marginRight: 8,
-                      backgroundColor: filters.showPrepared
-                        ? 'rgba(255,255,255,0.2)'
-                        : 'transparent',
-                      borderRadius: 20,
-                    }}
+                    style={[
+                      styles.preparedOrdersToggle,
+                      filters.showPrepared
+                        ? styles.preparedOrdersToggleActive
+                        : styles.preparedOrdersToggleInactive,
+                    ]}
                     onPress={() =>
                       setFilters({
                         ...filters,
@@ -173,12 +199,16 @@ export function KitchenWebNavigator() {
                       uncheckedColor={theme.colors.onPrimary}
                     />
                     <Text
-                      style={{
-                        color: theme.colors.onPrimary,
-                        fontSize: responsive.isWeb ? 16 : 14,
-                        marginLeft: 4,
-                        fontWeight: filters.showPrepared ? 'bold' : 'normal',
-                      }}
+                      style={[
+                        styles.preparedOrdersText,
+                        { color: theme.colors.onPrimary },
+                        responsive.isWeb
+                          ? styles.preparedOrdersTextWeb
+                          : styles.preparedOrdersTextMobile,
+                        filters.showPrepared
+                          ? styles.preparedOrdersTextBold
+                          : styles.preparedOrdersTextNormal,
+                      ]}
                     >
                       Mostrar Listas
                     </Text>

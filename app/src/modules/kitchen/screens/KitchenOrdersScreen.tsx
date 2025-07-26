@@ -189,13 +189,10 @@ export default function KitchenOrdersScreen() {
               key={item.id}
               style={[
                 styles.cardContainer,
-                {
-                  width: cardWidth,
-                  marginRight:
-                    index === orders.length - 1
-                      ? 0
-                      : responsive.spacingPreset.xxs,
-                },
+                { width: cardWidth },
+                index === orders.length - 1
+                  ? styles.lastCardContainer
+                  : styles.cardContainerWithMargin,
                 responsive.isWeb &&
                   responsive.width >= 1200 &&
                   styles.cardContainerWeb,
@@ -394,5 +391,11 @@ const createStyles = (theme: any, responsive: any) =>
       marginRight: responsive.spacingPreset.s,
       marginBottom: responsive.spacingPreset.s,
       height: 'auto',
+    },
+    lastCardContainer: {
+      marginRight: 0,
+    },
+    cardContainerWithMargin: {
+      marginRight: responsive.spacingPreset.xxs,
     },
   });

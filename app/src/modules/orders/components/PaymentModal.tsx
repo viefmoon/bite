@@ -30,7 +30,6 @@ import {
 import {
   useGetPaymentsByOrderIdQuery,
   useCreatePaymentMutation,
-  useUpdatePaymentMutation as _useUpdatePaymentMutation,
   useDeletePaymentMutation,
 } from '../hooks/usePaymentQueries';
 import { useCompleteOrderMutation } from '../hooks/useOrdersQueries';
@@ -351,7 +350,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     <View style={styles.summaryItem}>
                       <Text style={styles.summaryLabel}>Pagado</Text>
                       <Text
-                        style={[styles.summaryAmount, { color: '#4CAF50' }]}
+                        style={[styles.summaryAmount, styles.summaryAmountPaid]}
                       >
                         ${totalPaid.toFixed(2)}
                       </Text>
@@ -359,20 +358,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     <View style={styles.summaryDividerVertical} />
                     <View style={styles.summaryItem}>
                       <Text
-                        style={[styles.summaryLabel, { fontWeight: 'bold' }]}
+                        style={[
+                          styles.summaryLabel,
+                          styles.summaryLabelPending,
+                        ]}
                       >
                         Pendiente
                       </Text>
                       <Text
                         style={[
                           styles.summaryAmount,
-                          {
-                            fontWeight: 'bold',
-                            color:
-                              pendingAmount > 0
-                                ? theme.colors.error
-                                : '#4CAF50',
-                          },
+                          styles.summaryAmountPendingBold,
+                          pendingAmount > 0
+                            ? styles.summaryAmountError
+                            : styles.summaryAmountPaid,
                         ]}
                       >
                         ${pendingAmount.toFixed(2)}
@@ -564,10 +563,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <Button
                   mode="outlined"
                   onPress={() => setShowDeletePrepaymentConfirm(true)}
-                  style={[
-                    styles.footerButton,
-                    { borderColor: theme.colors.error },
-                  ]}
+                  style={[styles.footerButton, styles.deleteButton]}
                   contentStyle={styles.footerButtonContent}
                   textColor={theme.colors.error}
                   icon="delete"
@@ -603,7 +599,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   onPress={() => setShowFinalizeConfirm(true)}
                   disabled={completeOrderMutation.isPending}
                   loading={completeOrderMutation.isPending}
-                  style={[styles.footerButton, { backgroundColor: '#10B981' }]}
+                  style={[styles.footerButton, styles.finalizeButton]}
                   contentStyle={styles.footerButtonContent}
                   icon="check-circle"
                 >
@@ -948,6 +944,24 @@ const createStyles = (
     },
     cancelButton: {
       borderColor: theme.colors.outline,
+    },
+    summaryAmountPaid: {
+      color: '#4CAF50',
+    },
+    summaryLabelPending: {
+      fontWeight: 'bold',
+    },
+    summaryAmountPendingBold: {
+      fontWeight: 'bold',
+    },
+    summaryAmountError: {
+      color: theme.colors.error,
+    },
+    finalizeButton: {
+      backgroundColor: '#10B981',
+    },
+    deleteButton: {
+      borderColor: theme.colors.error,
     },
   });
 

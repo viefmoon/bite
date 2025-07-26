@@ -166,6 +166,9 @@ const getStyles = (theme: AppTheme) =>
       color: theme.colors.onSurfaceVariant,
       fontSize: 16,
     },
+    iconButtonCompact: {
+      margin: 0,
+    },
   });
 
 const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
@@ -283,7 +286,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
                         icon="home-export-outline"
                         size={16}
                         iconColor={theme.colors.onSecondaryContainer}
-                        style={{ margin: 0 }}
+                        style={styles.iconButtonCompact}
                       />
                     </View>
                     <Text style={styles.featureText}>
@@ -298,7 +301,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
                         icon="bag-checked"
                         size={16}
                         iconColor={theme.colors.onSecondaryContainer}
-                        style={{ margin: 0 }}
+                        style={styles.iconButtonCompact}
                       />
                     </View>
                     <Text style={styles.featureText}>

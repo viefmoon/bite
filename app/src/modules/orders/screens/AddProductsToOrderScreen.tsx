@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useRef,
-  useCallback,
-  useEffect,
-} from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { Portal } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -14,7 +7,6 @@ import { Product, Category, SubCategory } from '../types/orders.types';
 
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
-import CartButton from '../components/CartButton';
 import { AudioRecorderWidget } from '@/components/AudioRecorderWidget';
 import { AudioOrderModal } from '@/components/AudioOrderModal';
 
@@ -22,7 +14,6 @@ import { CategoryGrid } from '../components/order-creation';
 import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
 import {
   CartItem,
@@ -38,14 +29,13 @@ type AddProductsRouteProps = {
 };
 
 const AddProductsToOrderScreen = () => {
-  const theme = useAppTheme();
   const navigation = useNavigation();
   const route =
     useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 
-  const { orderId, orderNumber, onProductsAdded } =
+  const { orderNumber, onProductsAdded } =
     route.params as AddProductsRouteProps;
 
   // Conectar directamente al store
@@ -227,9 +217,9 @@ const AddProductsToOrderScreen = () => {
   const handleConfirmAudioOrder = useCallback(
     async (
       items: any[],
-      deliveryInfo?: any,
-      scheduledDelivery?: any,
-      orderType?: any,
+      _deliveryInfo?: any,
+      _scheduledDelivery?: any,
+      _orderType?: any,
     ) => {
       await handleConfirmAudioOrderBase(items);
     },
@@ -485,28 +475,6 @@ const AddProductsToOrderScreen = () => {
       updateItemInSelection,
       setSelectedProduct,
     ],
-  );
-
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        safeArea: {
-          flex: 1,
-          backgroundColor: theme.colors.background,
-        },
-        appBar: {
-          backgroundColor: theme.colors.elevation.level2,
-          alignItems: 'center',
-        },
-        appBarTitle: {
-          ...theme.fonts.titleMedium,
-          color: theme.colors.onSurface,
-          fontWeight: 'bold',
-          textAlign: 'center',
-        },
-        appBarContent: {},
-      }),
-    [theme],
   );
 
   const itemsToDisplay = getItemsToDisplay();

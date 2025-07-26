@@ -41,7 +41,7 @@ const AnimatedItem: React.FC<{
   onPress: () => void;
   children: React.ReactNode;
   disabled?: boolean;
-}> = ({ item, styles, onPress, children, disabled }) => {
+}> = ({ item: _item, styles, onPress, children, disabled }) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
   const opacityValue = useRef(new Animated.Value(1)).current;
 
@@ -126,7 +126,7 @@ const AnimatedItem: React.FC<{
         onPressOut={handlePressOut}
         onPress={handlePress}
         disabled={disabled}
-        style={{ flex: 1 }}
+        style={styles.pressableStyle}
       >
         {children}
       </Pressable>
@@ -184,7 +184,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     const totalGaps = gap * (numColumns - 1);
     const availableWidth = responsive.width - totalPadding - totalGaps;
     return Math.floor(availableWidth / numColumns);
-  }, [responsive.width, numColumns, theme.spacing.m, responsive]);
+  }, [responsive, numColumns, theme.spacing.m]);
 
   const styles = useMemo(
     () =>
@@ -321,6 +321,12 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
           fontSize: 12,
           fontWeight: 'bold',
         },
+        pressableStyle: {
+          flex: 1,
+        },
+        flexOne: {
+          flex: 1,
+        },
       }),
     [colors, fonts, theme, responsive, itemWidth],
   );
@@ -414,7 +420,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               onProductInfo ? (
                 <View style={styles.cardHeader}>
                   <Title
-                    style={[styles.cardTitle, { flex: 1 }]}
+                    style={[styles.cardTitle, styles.flexOne]}
                     numberOfLines={2}
                     ellipsizeMode="tail"
                   >

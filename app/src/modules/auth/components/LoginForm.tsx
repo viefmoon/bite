@@ -75,6 +75,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
         button: {
           marginTop: 16,
           paddingVertical: responsive.spacingPreset.xs,
+          backgroundColor: theme.colors.primary,
+          borderRadius: 30,
+        },
+        buttonContent: {
+          height: 42,
+          paddingHorizontal: responsive.spacingPreset.s,
+        },
+        buttonLabel: {
+          fontSize: responsive.fontSizePreset.m,
+          fontWeight: '600',
         },
         helperText: {
           marginBottom: responsive.spacingPreset.xs,
@@ -197,21 +207,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
         onPress={handleSubmit((data) => onSubmit(data, rememberMe))}
         loading={isLoading}
         disabled={isLoading}
-        style={[
-          styles.button,
-          {
-            backgroundColor: theme.colors.primary,
-            borderRadius: 30,
-          },
-        ]}
-        contentStyle={{
-          height: 42,
-          paddingHorizontal: responsive.spacingPreset.s,
-        }}
-        labelStyle={{
-          fontSize: responsive.fontSizePreset.m,
-          fontWeight: '600',
-        }}
+        style={styles.button}
+        contentStyle={styles.buttonContent}
+        labelStyle={styles.buttonLabel}
       >
         {isLoading ? 'Ingresando...' : 'Ingresar'}
       </Button>

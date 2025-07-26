@@ -31,7 +31,10 @@ export const OrderCard = React.memo<OrderCardProps>(
   ({ order, isSelected, onToggleSelection, onShowDetails, onPrintPress }) => {
     const theme = useAppTheme();
     const responsive = useResponsive();
-    const styles = React.useMemo(() => createStyles(responsive), [responsive]);
+    const styles = React.useMemo(
+      () => createStyles(responsive, theme),
+      [responsive, theme],
+    );
 
     let orderTitle = `#${order.shiftOrderNumber} • ${formatOrderTypeShort(order.orderType)}`;
 
@@ -71,13 +74,7 @@ export const OrderCard = React.memo<OrderCardProps>(
         <Card
           style={[
             styles.orderCard,
-            {
-              backgroundColor: isSelected
-                ? theme.colors.primaryContainer
-                : theme.colors.surface,
-              borderColor: isSelected ? theme.colors.primary : 'transparent',
-              borderWidth: isSelected ? 2 : 0,
-            },
+            isSelected ? styles.selectedCard : styles.unselectedCard,
           ]}
           mode="elevated"
         >
@@ -98,10 +95,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                   <Text
                     style={[
                       styles.orderPrice,
-                      {
-                        color:
-                          pendingAmount > 0 ? theme.colors.error : '#10B981',
-                      },
+                      pendingAmount > 0 ? styles.unpaidPrice : styles.paidPrice,
                     ]}
                   >
                     {' • '}
@@ -169,10 +163,7 @@ export const OrderCard = React.memo<OrderCardProps>(
                     <View
                       style={[
                         styles.inlinePreparationBadge,
-                        {
-                          backgroundColor: '#25D366',
-                          borderColor: '#25D366',
-                        },
+                        styles.whatsappBadge,
                       ]}
                     >
                       <Icon source="whatsapp" size={12} color="#FFFFFF" />
@@ -316,7 +307,10 @@ export const OrderCard = React.memo<OrderCardProps>(
 
 OrderCard.displayName = 'OrderCard';
 
-const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
+const createStyles = (
+  responsive: ReturnType<typeof useResponsive>,
+  theme: ReturnType<typeof useAppTheme>,
+) =>
   StyleSheet.create({
     orderCard: {
       marginBottom: responsive.isTablet ? 6 : 8,
@@ -445,5 +439,25 @@ const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
       color: '#FFFFFF',
       fontSize: 10,
       fontWeight: 'bold',
+    },
+    selectedCard: {
+      backgroundColor: theme.colors.primaryContainer,
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
+    },
+    unselectedCard: {
+      backgroundColor: theme.colors.surface,
+      borderColor: 'transparent',
+      borderWidth: 0,
+    },
+    paidPrice: {
+      color: '#10B981',
+    },
+    unpaidPrice: {
+      color: theme.colors.error,
+    },
+    whatsappBadge: {
+      backgroundColor: '#25D366',
+      borderColor: '#25D366',
     },
   });

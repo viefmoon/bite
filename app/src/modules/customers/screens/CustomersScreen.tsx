@@ -42,9 +42,9 @@ function CustomersScreen(): React.ReactElement {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
-  const debouncedSetSearch = useCallback(
-    debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [],
+  const debouncedSetSearch = useMemo(
+    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
+    [], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const handleSearchChange = (query: string) => {
@@ -261,15 +261,15 @@ function CustomersScreen(): React.ReactElement {
             renderDescription: (item: any) => (
               <View>
                 {item.email && (
-                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                  <Text variant="bodySmall" style={styles.subtitleText}>
                     {item.email}
                   </Text>
                 )}
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
-                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                <View style={styles.infoRow}>
+                  <Text variant="bodySmall" style={styles.subtitleText}>
                     {item.isBanned ? '⛔ Baneado' : '✅ No baneado'}
                   </Text>
-                  <Text variant="bodySmall" style={{ opacity: 0.7 }}>
+                  <Text variant="bodySmall" style={styles.subtitleText}>
                     • 📍 {item.addresses?.length || 0} direcciones
                   </Text>
                 </View>
@@ -440,6 +440,14 @@ const createStyles = (theme: AppTheme) =>
     },
     statsChip: {
       backgroundColor: theme.colors.surfaceVariant,
+    },
+    subtitleText: {
+      opacity: 0.7,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 2,
     },
   });
 

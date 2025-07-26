@@ -27,7 +27,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
     showPrice = true,
   }) => {
     const theme = useAppTheme();
-    const { colors, fonts } = theme;
+    const { colors } = theme;
     const responsive = useResponsive();
 
     const blurhash =
@@ -68,6 +68,9 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             justifyContent: 'space-between',
             alignItems: 'flex-start',
           },
+          cardHeaderTitle: {
+            flex: 1,
+          },
           infoButton: {
             margin: -4,
             marginTop: -6,
@@ -106,7 +109,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
             lineHeight: responsive.fontSize.xs * 1.3,
           },
         }),
-      [colors, fonts, theme, responsive],
+      [colors, theme, responsive],
     );
 
     // Determinar si el item está activo
@@ -188,7 +191,9 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
         <View style={styles.cardContent}>
           {shouldShowInfoButton() ? (
             <View style={styles.cardHeader}>
-              <Title style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Title>
+              <Title style={[styles.cardTitle, styles.cardHeaderTitle]}>
+                {item.name}
+              </Title>
               <IconButton
                 icon="information-outline"
                 size={20}

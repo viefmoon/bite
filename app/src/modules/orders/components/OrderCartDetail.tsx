@@ -36,7 +36,6 @@ import {
   useOrderSubtotal,
   useOrderTotal,
   useOrderItemsCount,
-  useIsOrderEmpty,
   OrderDetailsForBackend,
 } from '../stores/useOrderStore';
 import { useAuthStore } from '@/app/store/authStore';
@@ -99,31 +98,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const {
     items,
     orderType,
-    selectedAreaId,
-    selectedTableId,
-    isTemporaryTable,
-    temporaryTableName,
     scheduledTime,
-    deliveryInfo,
-    orderNotes,
     adjustments,
     prepaymentId,
     prepaymentAmount: paymentAmount,
     prepaymentMethod: paymentMethod,
     isCartVisible,
     hasUnsavedChanges,
-    isLoading: storeIsLoading,
     isConfirming,
-    orderDataLoaded,
     setOrderType,
-    setSelectedAreaId,
-    setSelectedTableId,
-    setIsTemporaryTable,
-    setTemporaryTableName,
     setScheduledTime,
-    setDeliveryInfo,
-    setOrderNotes,
-    setAdjustments,
     setPrepaymentId,
     setPrepaymentAmount,
     setPrepaymentMethod,
@@ -131,10 +115,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     updateItemQuantity: updateCartItemQuantity,
     updateItem: updateCartItem,
     addItem,
-    loadOrderForEditing,
-    resetOrder,
-    setIsConfirming,
-    checkForUnsavedChanges,
     addAdjustment,
     updateAdjustment,
     removeAdjustment,
@@ -144,7 +124,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
-  const isCartEmpty = useIsOrderEmpty();
 
   const {
     data: orderData,
@@ -187,10 +166,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return isValid;
   };
 
-  const [editingItemFromList, setEditingItemFromList] =
-    useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [adjustmentToEdit, setAdjustmentToEdit] = useState<any>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [isModalReady, setIsModalReady] = useState(false);
 
@@ -235,10 +211,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   };
 
-  const clearEditingState = () => {
-    setEditingItemFromList(null);
+  const clearEditingState = useCallback(() => {
     setEditingProduct(null);
-  };
+  }, []);
 
   const handlePrepaymentCreated = useCallback(
     (id: string, amount: string, method: 'CASH' | 'CARD' | 'TRANSFER') => {
@@ -351,7 +326,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return checkCanRegisterPayments(user);
   }, [user]);
 
-  const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
+  const _groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
 
     items.forEach((item) => {
@@ -919,10 +894,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               }
               style={[
                 styles.confirmButton,
-                isEditMode &&
-                  hasUnsavedChanges && {
-                    backgroundColor: '#FF6B35',
-                  },
+                isEditMode && hasUnsavedChanges && styles.cancelButton,
               ]}
               loading={isConfirming}
             >
@@ -943,13 +915,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               icon="cash-multiple"
               style={[
                 styles.paymentFab,
-                {
-                  backgroundColor: hasUnsavedChanges
-                    ? '#9CA3AF'
-                    : pendingAmount <= 0
-                      ? '#4CAF50'
-                      : theme.colors.primary,
-                },
+                hasUnsavedChanges
+                  ? styles.paymentFabUnsaved
+                  : pendingAmount <= 0
+                    ? styles.paymentFabCompleted
+                    : { backgroundColor: theme.colors.primary },
               ]}
               color="white"
               onPress={() => {
@@ -1437,6 +1407,15 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     iconButtonNoMargin: {
       margin: 0,
+    },
+    cancelButton: {
+      backgroundColor: '#FF6B35',
+    },
+    paymentFabUnsaved: {
+      backgroundColor: '#9CA3AF',
+    },
+    paymentFabCompleted: {
+      backgroundColor: '#4CAF50',
     },
   });
 export default OrderCartDetail;

@@ -488,12 +488,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     style={[
                       styles.statusChip,
                       styles.statusChipSwipeable,
-                      {
-                        backgroundColor: orderStatus.color,
-                        borderWidth:
-                          orderStatus.label === 'En progreso' ? 1 : 0,
-                        borderColor: theme.colors.outline,
-                      },
+                      { backgroundColor: orderStatus.color },
+                      orderStatus.label === 'En progreso'
+                        ? styles.statusChipWithBorder
+                        : null,
                     ]}
                   >
                     <Text
@@ -520,14 +518,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   <Animated.View
                     style={[
                       styles.progressBar,
+                      canMarkAsReady()
+                        ? styles.progressBarReady
+                        : styles.progressBarInProgress,
                       {
                         width: animatedValue.interpolate({
                           inputRange: [0, 1],
                           outputRange: ['0%', '100%'],
                         }),
-                        backgroundColor: canMarkAsReady()
-                          ? theme.colors.success
-                          : '#FF6B35',
                       },
                     ]}
                   />
@@ -593,12 +591,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               <View
                 style={[
                   styles.statusChip,
-                  {
-                    backgroundColor: orderStatus.color,
-                    borderWidth: orderStatus.borderColor ? 1 : 0,
-                    borderColor: orderStatus.borderColor || 'transparent',
-                    marginBottom: 2,
-                  },
+                  styles.statusChipNormal,
+                  { backgroundColor: orderStatus.color },
+                  orderStatus.borderColor
+                    ? [
+                        styles.statusChipWithBorderColor,
+                        { borderColor: orderStatus.borderColor },
+                      ]
+                    : null,
                 ]}
               >
                 <Text
@@ -643,15 +643,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             <View
               style={[
                 styles.screenStatusContainer,
-                {
-                  backgroundColor: theme.colors.surfaceVariant,
-                  paddingVertical: 8,
-                  paddingHorizontal: 8,
-                },
+                styles.screenStatusContainerWithBackground,
               ]}
             >
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={[styles.screenStatusList, { gap: 8 }]}>
+                <View
+                  style={[
+                    styles.screenStatusList,
+                    styles.screenStatusListWithGap,
+                  ]}
+                >
                   {order.screenStatuses.map((screenStatus) => (
                     <View
                       key={screenStatus.screenId}
@@ -740,12 +741,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             iconColor={theme.colors.surface}
             style={[
               styles.floatingButton,
-              {
-                backgroundColor: theme.colors.primary,
-                width: responsive.isWeb ? 56 : 48,
-                height: responsive.isWeb ? 56 : 48,
-                borderRadius: responsive.isWeb ? 28 : 24,
-              },
+              styles.floatingButtonBackground,
+              responsive.isWeb
+                ? styles.floatingButtonWeb
+                : styles.floatingButtonMobile,
             ]}
             onPress={() => setShowHistory(true)}
           />
@@ -1035,5 +1034,39 @@ const createStyles = (responsive: any, theme: any) =>
       shadowRadius: 4.65,
       margin: 0,
       opacity: 0.7,
+    },
+    statusChipWithBorder: {
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    progressBarReady: {
+      backgroundColor: theme.colors.success,
+    },
+    progressBarInProgress: {
+      backgroundColor: '#FF6B35',
+    },
+    screenStatusContainerWithBackground: {
+      backgroundColor: theme.colors.surfaceVariant,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+    },
+    screenStatusListWithGap: {
+      gap: 8,
+    },
+    floatingButtonBackground: {
+      backgroundColor: theme.colors.primary,
+    },
+    floatingButtonWeb: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+    },
+    floatingButtonMobile: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    },
+    statusChipWithBorderColor: {
+      borderWidth: 1,
     },
   });
