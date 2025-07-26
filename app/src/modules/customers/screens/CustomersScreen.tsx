@@ -68,13 +68,11 @@ function CustomersScreen(): React.ReactElement {
   const queryFilters = useMemo(() => {
     const filters: any = {};
 
-    // Solo agregar búsqueda si hay texto
     if (debouncedSearchQuery) {
       filters.firstName = debouncedSearchQuery;
       filters.lastName = debouncedSearchQuery;
     }
 
-    // Manejar filtros de estado
     if (statusFilter === 'active') {
       filters.isActive = true;
     } else if (statusFilter === 'inactive') {
@@ -98,7 +96,6 @@ function CustomersScreen(): React.ReactElement {
   const updateMutation = useUpdateCustomer();
   const { mutateAsync: deleteCustomer } = useDeleteCustomer();
 
-  // Refrescar clientes cuando la pantalla recibe foco
   useRefreshModuleOnFocus('customers');
 
   const {
@@ -116,7 +113,6 @@ function CustomersScreen(): React.ReactElement {
   const handleOpenEditModal = useCallback(
     (item: any) => {
       setDetailModalVisible(false);
-      // Remover el fullName antes de pasar al modal de edición
       const { fullName, ...originalCustomer } = item;
       originalHandleOpenEditModal(originalCustomer as Customer);
     },
@@ -189,11 +185,10 @@ function CustomersScreen(): React.ReactElement {
       title: 'Error al cargar clientes',
       message: 'No se pudieron cargar los clientes. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetch,
+      onAction: refetch,
     },
   });
 
-  // Mapear los clientes para combinar firstName y lastName
   const mappedCustomers = useMemo(() => {
     return (
       customers?.map((customer) => ({
