@@ -10,10 +10,16 @@ export const useShifts = (params?: {
     queryKey: ['shifts', 'history', params],
     queryFn: async () => {
       const data = await shiftsService.getHistory(params);
-      return data.map(shift => ({
+      return data.map((shift) => ({
         ...shift,
-        status: shift.status === 'OPEN' ? 'open' as const : 'closed' as const,
-        openedBy: shift.openedBy || { id: '', firstName: '', lastName: '', email: '' },
+        status:
+          shift.status === 'OPEN' ? ('open' as const) : ('closed' as const),
+        openedBy: shift.openedBy || {
+          id: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+        },
         closedBy: shift.closedBy,
         createdAt: shift.openedAt,
         updatedAt: shift.closedAt || shift.openedAt,
@@ -34,8 +40,14 @@ export const useCurrentShift = () => {
       if (!data) return null;
       return {
         ...data,
-        status: data.status === 'OPEN' ? 'open' as const : 'closed' as const,
-        openedBy: data.openedBy || { id: '', firstName: '', lastName: '', email: '' },
+        status:
+          data.status === 'OPEN' ? ('open' as const) : ('closed' as const),
+        openedBy: data.openedBy || {
+          id: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+        },
         closedBy: data.closedBy,
         createdAt: data.openedAt,
         updatedAt: data.closedAt || data.openedAt,
@@ -55,8 +67,14 @@ export const useShiftDetail = (shiftId: string | undefined) => {
       const data = await shiftsService.getById(shiftId!);
       return {
         ...data,
-        status: data.status === 'OPEN' ? 'open' as const : 'closed' as const,
-        openedBy: data.openedBy || { id: '', firstName: '', lastName: '', email: '' },
+        status:
+          data.status === 'OPEN' ? ('open' as const) : ('closed' as const),
+        openedBy: data.openedBy || {
+          id: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+        },
         closedBy: data.closedBy,
         createdAt: data.openedAt,
         updatedAt: data.closedAt || data.openedAt,

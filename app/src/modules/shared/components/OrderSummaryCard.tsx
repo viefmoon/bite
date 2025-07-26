@@ -10,10 +10,48 @@ import {
   getPaymentStatus,
 } from '@/modules/orders/utils/formatters';
 
+interface OrderItemType {
+  id: string | number;
+  shiftOrderNumber?: number;
+  orderNumber?: number;
+  orderType: OrderTypeEnum;
+  orderStatus: string;
+  createdAt: string;
+  total: string | number;
+  table?: {
+    name?: string;
+    number?: number;
+    isTemporary?: boolean;
+    area?: { name: string };
+  };
+  area?: { name: string };
+  deliveryInfo?: {
+    recipientName?: string;
+    customerName?: string;
+    recipientPhone?: string;
+    customerPhone?: string;
+    fullAddress?: string;
+    address?: string;
+  };
+  notes?: string;
+  paymentsSummary?: { totalPaid: number };
+  payments?: Array<{ amount: number }>;
+  createdBy?: {
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+  };
+  isFromWhatsApp?: boolean;
+  preparationScreenStatuses?: Array<{
+    name: string;
+    status: string;
+  }>;
+}
+
 interface OrderSummaryCardProps {
-  item: any; // Union type for ReceiptList | Order
+  item: OrderItemType;
   onPress: () => void;
-  renderActions?: (item: any) => React.ReactNode;
+  renderActions?: (item: OrderItemType) => React.ReactNode;
   getStatusColor?: (status: string) => string;
   getStatusLabel?: (status: string) => string;
 }
@@ -28,11 +66,9 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  // Construir el título según el tipo de orden
   let orderTitle = `#${item.shiftOrderNumber || item.orderNumber} • ${formatOrderTypeShort(item.orderType)}`;
 
   if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
-    // Para mesas temporales, mostrar solo el nombre sin prefijo "Mesa"
     const tableDisplay = item.table.isTemporary
       ? item.table.name
       : `Mesa ${item.table.name || item.table.number || 'N/A'}`;
@@ -57,12 +93,11 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
     typeof item.total === 'string' ? parseFloat(item.total) : item.total;
   const totalPaid =
     item.paymentsSummary?.totalPaid ||
-    item.payments?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) ||
+    item.payments?.reduce((sum: number, p) => sum + (p.amount || 0), 0) ||
     0;
   const pendingAmount = totalAmount - totalPaid;
 
-  // Determinar colores y íconos de estado de pago
-  const paymentStatus = getPaymentStatus(item as any);
+  const paymentStatus = getPaymentStatus(item);
   const paymentColor =
     paymentStatus === 'paid'
       ? '#10B981'
@@ -72,7 +107,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   const paymentIcon =
     paymentStatus === 'paid' ? '✓' : paymentStatus === 'partial' ? '½' : '•';
 
-  // Colores de estado por defecto si no se proporcionan
   const defaultGetStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
@@ -157,7 +191,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                   {format(new Date(item.createdAt), 'p', { locale: es })}
                 </Text>
 
-                {/* Badge de estado de pago */}
                 <View
                   style={[
                     styles.miniPaymentBadge,
@@ -167,7 +200,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                   <Text style={styles.miniPaymentText}>{paymentIcon}</Text>
                 </View>
 
-                {/* Badge de WhatsApp */}
                 {item.isFromWhatsApp && (
                   <View
                     style={[
@@ -178,16 +210,15 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                       },
                     ]}
                   >
-                    <Icon source="whatsapp" size={12} color="#FFFFFF" />
+                    <Icon name="whatsapp" size={12} color="#FFFFFF" />
                   </View>
                 )}
 
-                {/* Badges de pantallas de preparación */}
                 {item.preparationScreenStatuses &&
                   item.preparationScreenStatuses.length > 0 && (
                     <>
                       {item.preparationScreenStatuses.map(
-                        (screen: any, index: number) => {
+                        (screen, index: number) => {
                           const backgroundColor =
                             screen.status === 'READY'
                               ? '#4CAF50'
@@ -260,7 +291,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                 {statusLabel}
               </Chip>
 
-              {/* Contenedor de acciones personalizables */}
               {renderActions && (
                 <View style={styles.actionsContainer}>
                   {renderActions(item)}

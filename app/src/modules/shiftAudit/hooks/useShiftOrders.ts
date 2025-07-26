@@ -19,8 +19,14 @@ export const useShiftSummary = (shiftId: string | undefined) => {
       const data = await shiftsService.getById(shiftId!);
       return {
         ...data,
-        status: data.status === 'OPEN' ? 'open' as const : 'closed' as const,
-        openedBy: data.openedBy || { id: '', firstName: '', lastName: '', email: '' },
+        status:
+          data.status === 'OPEN' ? ('open' as const) : ('closed' as const),
+        openedBy: data.openedBy || {
+          id: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+        },
         closedBy: data.closedBy,
         createdAt: data.openedAt,
         updatedAt: data.closedAt || data.openedAt,
@@ -43,7 +49,7 @@ export const useShiftSummary = (shiftId: string | undefined) => {
             ...shiftQuery.data,
             status: shiftQuery.data.status === 'open' ? 'OPEN' : 'CLOSED',
           } as any,
-          ordersQuery.data
+          ordersQuery.data,
         )
       : undefined;
 

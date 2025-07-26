@@ -50,11 +50,11 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
   const [isPrinting, setIsPrinting] = useState(false);
 
   const printers = printersResponse?.data || [];
-  const activePrinters = printers.filter((printer: any) => printer.isActive);
+  const activePrinters = printers.filter((printer: { isActive: boolean }) => printer.isActive);
 
   useEffect(() => {
     if (activePrinters.length > 0 && !selectedPrinterId) {
-      setSelectedPrinterId(activePrinters[0].id);
+      setSelectedPrinterId((activePrinters[0] as { id: string }).id);
     }
   }, [activePrinters, selectedPrinterId]);
 
@@ -222,7 +222,7 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
                 onValueChange={(value) => setSelectedPrinterId(value)}
                 value={selectedPrinterId}
               >
-                {activePrinters.map((printer: any) => (
+                {activePrinters.map((printer: { id: string; name: string; ipAddress: string; port: number }) => (
                   <TouchableOpacity
                     key={printer.id}
                     activeOpacity={0.7}

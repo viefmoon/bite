@@ -617,7 +617,11 @@ export function ShiftsListScreen() {
       <Text style={styles.errorMessage}>
         {error?.message || 'No se pudieron cargar los turnos'}
       </Text>
-      <Button mode="contained" onPress={() => refetch()} style={styles.retryButton}>
+      <Button
+        mode="contained"
+        onPress={() => refetch()}
+        style={styles.retryButton}
+      >
         Reintentar
       </Button>
     </View>

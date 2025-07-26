@@ -25,6 +25,45 @@ import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+interface ChangeDetail {
+  anterior: unknown;
+  nuevo: unknown;
+}
+
+interface OrderDiff {
+  summary?: string;
+  order?: {
+    fields?: Record<string, [unknown, unknown]>;
+    deliveryInfo?: Record<string, [unknown, unknown]>;
+  };
+  items?: {
+    added?: Array<{
+      productName: string;
+      variantName?: string;
+      modifiers?: string[];
+      customizations?: string[];
+      notes?: string;
+      price: number;
+    }>;
+    modified?: Array<{
+      before: { productName: string; variantName?: string };
+      after: { productName: string; variantName?: string };
+    }>;
+    removed?: Array<{
+      productName: string;
+      variantName?: string;
+      price?: number;
+    }>;
+  };
+}
+
+interface BatchOperation {
+  operation: string;
+  itemDescription?: string;
+  snapshot?: { itemDescription?: string };
+  formattedChanges?: Record<string, ChangeDetail>;
+}
+
 interface HistoryItem {
   id: string | number;
   orderId: string;
@@ -32,8 +71,13 @@ interface HistoryItem {
   operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'BATCH';
   changedBy: string;
   changedAt: string;
-  diff?: Record<string, any> | null;
-  snapshot?: Record<string, any>;
+  diff?: OrderDiff | null;
+  snapshot?: {
+    orderType?: string;
+    tableId?: string;
+    table?: { name?: string };
+    notes?: string;
+  };
   productId?: string;
   preparationStatus?: string;
   changedByUser?: {
@@ -46,8 +90,15 @@ interface HistoryItem {
     lastName: string;
   };
   itemDescription?: string;
-  formattedChanges?: Record<string, any>;
-  batchOperations?: any[];
+  formattedChanges?: {
+    'Cambios en productos'?: {
+      'Productos modificados'?: Array<{ antes: string; después: string }>;
+      'Productos agregados'?: string[];
+      'Productos eliminados'?: string[];
+    };
+    [key: string]: ChangeDetail | unknown;
+  };
+  batchOperations?: BatchOperation[];
   type: 'order' | 'item';
 }
 
@@ -58,7 +109,6 @@ interface OrderHistoryModalProps {
   orderNumber?: number;
 }
 
-// Helper para obtener el icono de la operación
 const getOperationIcon = (
   operation: string,
   type: 'order' | 'item' = 'item',
@@ -80,7 +130,6 @@ const getOperationIcon = (
   }
 };
 
-// Helper para obtener el label de la operación
 const getOperationLabel = (
   operation: string,
   type: 'order' | 'item' = 'item',
@@ -103,8 +152,10 @@ const getOperationLabel = (
   return operationMap[operation] || operation;
 };
 
-// Helper para obtener el color del status
-const getStatusColor = (status: string, theme: any) => {
+const getStatusColor = (
+  status: string,
+  theme: ReturnType<typeof useAppTheme>,
+) => {
   switch (status) {
     case 'PENDING':
       return theme.colors.error;
@@ -122,7 +173,6 @@ const getStatusColor = (status: string, theme: any) => {
   }
 };
 
-// Helper para formatear nombres de campos
 const formatFieldName = (field: string): string => {
   const fieldMap: Record<string, string> = {
     orderStatus: 'Estado de la orden',
@@ -149,8 +199,7 @@ const formatFieldName = (field: string): string => {
   return fieldMap[field] || field;
 };
 
-// Helper para formatear valores
-const formatValue = (field: string, value: any): string => {
+const formatValue = (field: string, value: unknown): string => {
   if (value === null || value === undefined) return 'Sin valor';
 
   if (field === 'orderStatus' || field === 'preparationStatus') {
@@ -163,7 +212,7 @@ const formatValue = (field: string, value: any): string => {
       COMPLETED: 'Completada',
       CANCELLED: 'Cancelada',
     };
-    return statusMap[value] || value;
+    return statusMap[String(value)] || String(value);
   }
 
   if (field === 'orderType') {
@@ -172,27 +221,27 @@ const formatValue = (field: string, value: any): string => {
       TAKE_AWAY: 'Para Llevar',
       DELIVERY: 'Domicilio',
     };
-    return typeMap[value] || value;
+    return typeMap[String(value)] || String(value);
   }
 
   if (field === 'table' || field === 'tableId') {
-    if (typeof value === 'object' && value !== null) {
-      return value.name || 'Sin mesa';
+    if (typeof value === 'object' && value !== null && 'name' in value) {
+      return (value as { name: string }).name || 'Sin mesa';
     }
-    return value || 'Sin mesa';
+    return String(value) || 'Sin mesa';
   }
 
   // Para datos de entrega
   if (field === 'recipientName') {
-    return value || 'Sin nombre';
+    return String(value) || 'Sin nombre';
   }
 
   if (field === 'recipientPhone') {
-    return value || 'Sin teléfono';
+    return String(value) || 'Sin teléfono';
   }
 
   if (field === 'fullAddress') {
-    return value || 'Sin dirección';
+    return String(value) || 'Sin dirección';
   }
 
   if (field === 'isFromWhatsApp') {
@@ -200,19 +249,20 @@ const formatValue = (field: string, value: any): string => {
   }
 
   if (field === 'customerId') {
-    return value || 'Sin cliente registrado';
+    return String(value) || 'Sin cliente registrado';
   }
 
   if (field === 'scheduledAt') {
     return value
-      ? format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es })
+      ? format(new Date(value as string | number | Date), 'dd/MM/yyyy HH:mm', {
+          locale: es,
+        })
       : 'No programado';
   }
 
   return String(value);
 };
 
-// Componente para cada item del historial
 const HistoryItemComponent: React.FC<{
   item: HistoryItem;
   theme: ReturnType<typeof useAppTheme>;
@@ -220,18 +270,19 @@ const HistoryItemComponent: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const renderChangeDetail = (change: any, fieldName?: string) => {
+  const renderChangeDetail = (change: unknown, fieldName?: string) => {
     if (
       change &&
       typeof change === 'object' &&
-      change.anterior !== undefined &&
-      change.nuevo !== undefined
+      change !== null &&
+      'anterior' in change &&
+      'nuevo' in change
     ) {
-      // Para descripción del item, mostrar en formato vertical si es muy largo
+      const changeDetail = change as ChangeDetail;
       if (
         (fieldName === 'Descripción del Item' || fieldName === 'Descripción') &&
-        (String(change.anterior).length > 30 ||
-          String(change.nuevo).length > 30)
+        (String(changeDetail.anterior).length > 30 ||
+          String(changeDetail.nuevo).length > 30)
       ) {
         return (
           <View style={{ marginTop: 4 }}>
@@ -257,7 +308,7 @@ const HistoryItemComponent: React.FC<{
                 variant="bodySmall"
                 style={{ color: theme.colors.onErrorContainer }}
               >
-                {String(change.anterior)}
+                {String(changeDetail.anterior)}
               </Text>
             </View>
             <View
@@ -281,7 +332,7 @@ const HistoryItemComponent: React.FC<{
                 variant="bodySmall"
                 style={{ color: theme.colors.onPrimaryContainer }}
               >
-                {String(change.nuevo)}
+                {String(changeDetail.nuevo)}
               </Text>
             </View>
           </View>
@@ -307,7 +358,7 @@ const HistoryItemComponent: React.FC<{
                 fontWeight: '500',
               }}
             >
-              {String(change.anterior)}
+              {String(changeDetail.anterior)}
             </Text>
           </View>
           <Icon
@@ -331,15 +382,15 @@ const HistoryItemComponent: React.FC<{
                 fontWeight: '500',
               }}
             >
-              {String(change.nuevo)}
+              {String(changeDetail.nuevo)}
             </Text>
           </View>
         </View>
       );
     } else if (Array.isArray(change) && change.length === 2) {
       // Para el formato de array [antes, después] - usado en cambios de orden
-      const oldVal = formatValue(fieldName || '', change[0]);
-      const newVal = formatValue(fieldName || '', change[1]);
+      const oldVal = formatValue(fieldName || '', (change as any[])[0]);
+      const newVal = formatValue(fieldName || '', (change as any[])[1]);
 
       // Para campos largos o especiales, usar formato vertical
       if (
@@ -591,7 +642,6 @@ const HistoryItemComponent: React.FC<{
         <View style={styles.expandedContent}>
           <Divider style={{ marginBottom: 8 }} />
 
-          {/* Contenido para órdenes */}
           {item.type === 'order' && (
             <View style={styles.changesContainer}>
               {item.operation === 'INSERT' && (
@@ -609,7 +659,7 @@ const HistoryItemComponent: React.FC<{
                             fontStyle: 'italic',
                           }}
                         >
-                          {item.diff.summary}
+                          {String(item.diff.summary)}
                         </Text>
                       )}
 
@@ -653,7 +703,7 @@ const HistoryItemComponent: React.FC<{
                             >
                               <Text style={{ fontWeight: '600' }}>Mesa:</Text>{' '}
                               {item.snapshot?.table?.name ||
-                                `Mesa ${item.diff.order.fields.tableId[1]}`}
+                                `Mesa ${String(item.diff.order.fields.tableId[1])}`}
                             </Text>
                           )}
                           {item.diff.order.fields?.notes && (
@@ -662,7 +712,7 @@ const HistoryItemComponent: React.FC<{
                               style={{ marginBottom: 4 }}
                             >
                               <Text style={{ fontWeight: '600' }}>Notas:</Text>{' '}
-                              {item.diff.order.fields.notes[1]}
+                              {String(item.diff.order.fields.notes[1])}
                             </Text>
                           )}
 
@@ -677,10 +727,10 @@ const HistoryItemComponent: React.FC<{
                                   <Text style={{ fontWeight: '600' }}>
                                     Cliente:
                                   </Text>{' '}
-                                  {
+                                  {String(
                                     item.diff.order.deliveryInfo
                                       .recipientName[1]
-                                  }
+                                  )}
                                 </Text>
                               )}
                               {item.diff.order.deliveryInfo.recipientPhone && (
@@ -691,10 +741,10 @@ const HistoryItemComponent: React.FC<{
                                   <Text style={{ fontWeight: '600' }}>
                                     Teléfono:
                                   </Text>{' '}
-                                  {
+                                  {String(
                                     item.diff.order.deliveryInfo
                                       .recipientPhone[1]
-                                  }
+                                  )}
                                 </Text>
                               )}
                               {item.diff.order.deliveryInfo.fullAddress && (
@@ -705,7 +755,7 @@ const HistoryItemComponent: React.FC<{
                                   <Text style={{ fontWeight: '600' }}>
                                     Dirección:
                                   </Text>{' '}
-                                  {item.diff.order.deliveryInfo.fullAddress[1]}
+                                  {String(item.diff.order.deliveryInfo.fullAddress[1])}
                                 </Text>
                               )}
                             </>
@@ -729,7 +779,7 @@ const HistoryItemComponent: React.FC<{
                               Productos incluidos en la orden:
                             </Text>
                             {item.diff.items.added.map(
-                              (addedItem: any, idx: number) => (
+                              (addedItem, idx: number) => (
                                 <View
                                   key={`added-${idx}`}
                                   style={{
@@ -753,7 +803,7 @@ const HistoryItemComponent: React.FC<{
                                       ? ` - ${addedItem.variantName}`
                                       : ''}
                                   </Text>
-                                  {addedItem.modifiers?.length > 0 && (
+                                  {addedItem.modifiers && addedItem.modifiers.length > 0 && (
                                     <Text
                                       variant="labelSmall"
                                       style={{
@@ -765,7 +815,7 @@ const HistoryItemComponent: React.FC<{
                                       {addedItem.modifiers.join(', ')}
                                     </Text>
                                   )}
-                                  {addedItem.customizations?.length > 0 && (
+                                  {addedItem.customizations && addedItem.customizations.length > 0 && (
                                     <Text
                                       variant="labelSmall"
                                       style={{
@@ -947,7 +997,6 @@ const HistoryItemComponent: React.FC<{
             </View>
           )}
 
-          {/* Contenido consolidado nuevo formato */}
           {item.diff &&
             (item.diff.order || item.diff.items || item.diff.summary) && (
               <View style={styles.changesContainer}>
@@ -962,7 +1011,7 @@ const HistoryItemComponent: React.FC<{
                       fontStyle: 'italic',
                     }}
                   >
-                    {item.diff.summary}
+                    {String(item.diff.summary)}
                   </Text>
                 )}
 
@@ -1056,7 +1105,7 @@ const HistoryItemComponent: React.FC<{
                         <View style={{ marginTop: 8 }}>
                           {item.formattedChanges['Cambios en productos'][
                             'Productos modificados'
-                          ].map((modItem: any, idx: number) => (
+                          ].map((modItem, idx: number) => (
                             <View
                               key={`mod-${idx}`}
                               style={{
@@ -1306,7 +1355,7 @@ const HistoryItemComponent: React.FC<{
 
                       {/* Items agregados */}
                       {item.diff.items.added?.map(
-                        (addedItem: any, idx: number) => (
+                        (addedItem, idx: number) => (
                           <View
                             key={`added-${idx}`}
                             style={{
@@ -1347,7 +1396,7 @@ const HistoryItemComponent: React.FC<{
                                     ? ` - ${addedItem.variantName}`
                                     : ''}
                                 </Text>
-                                {addedItem.modifiers?.length > 0 && (
+                                {addedItem.modifiers && addedItem.modifiers.length > 0 && (
                                   <Text
                                     variant="labelSmall"
                                     style={{
@@ -1375,7 +1424,7 @@ const HistoryItemComponent: React.FC<{
 
                       {/* Items modificados - Solo mostrar antes y después */}
                       {item.diff.items.modified?.map(
-                        (modItem: any, idx: number) => (
+                        (modItem, idx: number) => (
                           <View
                             key={`mod-${idx}`}
                             style={{
@@ -1478,7 +1527,7 @@ const HistoryItemComponent: React.FC<{
 
                       {/* Items eliminados */}
                       {item.diff.items.removed?.map(
-                        (removedItem: any, idx: number) => (
+                        (removedItem, idx: number) => (
                           <View
                             key={`removed-${idx}`}
                             style={{
@@ -1537,7 +1586,6 @@ const HistoryItemComponent: React.FC<{
               </View>
             )}
 
-          {/* Contenido para items individuales (legacy) */}
           {item.type === 'item' && item.operation !== 'BATCH' && (
             <View style={styles.changesContainer}>
               {item.operation === 'INSERT' && (
@@ -1620,7 +1668,6 @@ const HistoryItemComponent: React.FC<{
             </View>
           )}
 
-          {/* Contenido para batch de items */}
           {item.operation === 'BATCH' && item.batchOperations && (
             <View style={styles.changesContainer}>
               <Text
@@ -1633,7 +1680,7 @@ const HistoryItemComponent: React.FC<{
               >
                 Cambios realizados en una sola edición:
               </Text>
-              {item.batchOperations.map((op: any, idx: number) => (
+              {item.batchOperations.map((op, idx: number) => (
                 <View
                   key={idx}
                   style={{
@@ -1741,7 +1788,6 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Query combinado para obtener ambos historiales
   const {
     data: historyData,
     isError,
@@ -1763,8 +1809,8 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 
       const orderHistory =
         orderHistoryResponse.ok && orderHistoryResponse.data?.data
-          ? orderHistoryResponse.data.data.map((item: any) => ({
-              ...item,
+          ? orderHistoryResponse.data.data.map((item: unknown) => ({
+              ...(item as Record<string, unknown>),
               type: 'order' as const,
             }))
           : [];
@@ -1779,7 +1825,6 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     staleTime: 30000,
   });
 
-  // Refrescar cuando se abre el modal
   useEffect(() => {
     if (visible && orderId) {
       refetch();
