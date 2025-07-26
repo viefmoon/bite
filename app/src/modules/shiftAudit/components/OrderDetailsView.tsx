@@ -1003,6 +1003,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     // Contenedor para toda la información del header
+    flex: 1,
   },
   infoSection: {
     paddingHorizontal: 16,

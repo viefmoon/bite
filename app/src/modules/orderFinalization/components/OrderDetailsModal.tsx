@@ -904,6 +904,9 @@ const createStyles = (
       paddingTop: 10,
       paddingBottom: 6,
     },
+    headerInfo: {
+      flex: 1,
+    },
     headerTopRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

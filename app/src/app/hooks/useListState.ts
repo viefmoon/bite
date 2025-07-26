@@ -17,6 +17,7 @@ interface UseListStateProps {
     message?: string;
     actionLabel?: string;
     onAction?: () => void;
+    onRetry?: (...args: any[]) => any;
     icon?: string;
   };
 }
@@ -45,7 +46,7 @@ export const useListState = ({
             errorConfig?.message ||
             'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
           actionLabel: errorConfig?.actionLabel || 'Reintentar',
-          onAction: errorConfig?.onAction || emptyConfig.onAction,
+          onAction: errorConfig?.onAction || errorConfig?.onRetry || emptyConfig.onAction,
         });
       }
 

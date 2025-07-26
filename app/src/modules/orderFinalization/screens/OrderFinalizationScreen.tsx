@@ -260,7 +260,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   );
 
   const renderOrderCard = useCallback(
-    ({ item }) => (
+    ({ item }: { item: OrderForFinalizationList }) => (
       <OrderCard
         order={item}
         isSelected={selectionState.selectedOrders.has(item.id)}
@@ -479,7 +479,7 @@ export const OrderFinalizationScreen: React.FC = () => {
         {filteredOrders.length === 0 ? (
           <EmptyState
             title="No hay órdenes para finalizar"
-            description="Las órdenes aparecerán aquí cuando estén listas para finalizar"
+            message="Las órdenes aparecerán aquí cuando estén listas para finalizar"
             icon="clipboard-check-outline"
           />
         ) : (
@@ -499,7 +499,7 @@ export const OrderFinalizationScreen: React.FC = () => {
       </View>
 
       {selectionState.selectedOrders.size > 0 && (
-        <Surface style={styles.floatingButton} elevation={8}>
+        <Surface style={styles.floatingButton} elevation={4}>
           <Button
             mode="contained"
             onPress={handleQuickFinalizeOrders}
@@ -516,7 +516,7 @@ export const OrderFinalizationScreen: React.FC = () => {
       <OrderDetailsModal
         visible={selectedOrderIdForDetails !== null}
         onDismiss={() => setSelectedOrderIdForDetails(null)}
-        order={selectedOrderDetails}
+        order={selectedOrderDetails || null}
         isLoading={isLoadingDetails}
         onPrintPress={handlePrintPress}
       />
@@ -527,7 +527,7 @@ export const OrderFinalizationScreen: React.FC = () => {
           setShowPrintModal(false);
           setSelectedOrderForPrint(null);
         }}
-        order={orderForPrint || selectedOrderDetails}
+        order={orderForPrint || selectedOrderDetails || null}
         onPrint={handlePrint}
       />
 

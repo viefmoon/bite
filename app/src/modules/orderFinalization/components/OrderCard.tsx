@@ -135,15 +135,15 @@ export const OrderCard = React.memo<OrderCardProps>(
                   </Text>
                   {(() => {
                     const color =
-                      paymentStatus === 'paid'
+                      paymentStatus.status === 'paid'
                         ? '#10B981'
-                        : paymentStatus === 'partial'
+                        : paymentStatus.status === 'partial'
                           ? '#F59E0B'
                           : '#EF4444';
                     const icon =
-                      paymentStatus === 'paid'
+                      paymentStatus.status === 'paid'
                         ? '✓'
-                        : paymentStatus === 'partial'
+                        : paymentStatus.status === 'partial'
                           ? '½'
                           : '•';
                     return (
@@ -285,14 +285,13 @@ export const OrderCard = React.memo<OrderCardProps>(
                       )}
                     </TouchableOpacity>
                   )}
-                  <View style={styles.checkboxContainer}>
+                  <View style={[styles.checkboxContainer, styles.checkbox]}>
                     <Checkbox
                       status={isSelected ? 'checked' : 'unchecked'}
                       onPress={() => {
                         onToggleSelection(order.id);
                       }}
                       color={theme.colors.primary}
-                      style={styles.checkbox}
                     />
                   </View>
                 </View>

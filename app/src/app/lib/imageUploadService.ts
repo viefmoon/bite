@@ -77,41 +77,14 @@ export class ImageUploadService {
    *   - `undefined`: No hay cambios en la foto O se va a subir una nueva. El DTO NO debe incluir `photoId`.
    *   - `null`: Se debe eliminar la foto existente en el backend. El DTO DEBE incluir `photoId: null`.
    */
-  static async determinePhotoId(
-    formImageUri: string | null | undefined,
-    existingEntity?: EntityWithOptionalPhoto,
-  ): Promise<undefined | null> {
-    const existingPhotoPath = existingEntity?.photo?.path;
-    const existingPhotoFullUrl = existingPhotoPath
-      ? await getImageUrl(existingPhotoPath)
-      : null;
-
-    if (formImageUri && formImageUri.startsWith('file://')) {
-      return undefined;
-    } else if (
-      (formImageUri === null || formImageUri === undefined) &&
-      existingEntity?.photo
-    ) {
+  static determinePhotoId(
+    currentImageUri: string | null,
+    editingItem?: EntityWithOptionalPhoto,
+  ): string | null | undefined {
+    if (!currentImageUri && editingItem?.photo) {
       return null;
-    } else if (
-      formImageUri &&
-      !formImageUri.startsWith('file://') &&
-      formImageUri === existingPhotoFullUrl
-    ) {
-      return undefined;
-    } else if (
-      formImageUri &&
-      !formImageUri.startsWith('file://') &&
-      formImageUri !== existingPhotoFullUrl
-    ) {
-      return undefined;
-    } else if (
-      (formImageUri === null || formImageUri === undefined) &&
-      !existingEntity?.photo
-    ) {
-      return undefined;
     }
-
+    
     return undefined;
   }
 }
