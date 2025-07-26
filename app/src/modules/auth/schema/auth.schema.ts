@@ -79,3 +79,18 @@ export const registerSchema = z.object({
 });
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
+
+// Pure TypeScript interfaces/types that cannot be represented by Zod
+export interface AuthState {
+  token: string | null;
+  user: AuthResponse['user'] | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (credentials: LoginFormInputs) => Promise<void>;
+  logout: () => void;
+  clearError: () => void;
+}
+
+export interface RegisterResponseDto {
+  message: string;
+}

@@ -7,8 +7,6 @@ import {
   FindAllCustomersQuery,
   ChatMessage,
   Address,
-} from '../types/customer.types';
-import {
   CreateCustomerInput,
   UpdateCustomerInput,
 } from '../schema/customer.schema';

@@ -9,7 +9,7 @@ import { Text, Menu, HelperText, Checkbox } from 'react-native-paper';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useAppTheme } from '@/app/styles/theme';
-import type { Table } from '@/modules/areasTables/types/areasTables.types';
+import type { Table } from '@/modules/areasTables/schema/table.schema';
 import { useOrderStore } from '../../stores/useOrderStore';
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';

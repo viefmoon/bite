@@ -8,7 +8,7 @@ import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal';
 import PaymentModal from '../PaymentModal';
 import { AdjustmentFormModal } from '../AdjustmentFormModal';
 import { OrderTypeEnum } from '../../types/orders.types';
-import type { OrderAdjustment } from '../../types/adjustments.types';
+import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import { useModalStore, modalHelpers } from '../../stores/useModalStore';
 
 export const ModalsContainer: React.FC<{}> = () => {

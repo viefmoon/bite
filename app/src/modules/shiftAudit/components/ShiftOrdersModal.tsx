@@ -21,7 +21,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useShiftOrders } from '../hooks/useShiftOrders';
 import EmptyState from '@/app/components/common/EmptyState';
 import type { Order } from '@/app/schemas/domain/order.schema';
-import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
+import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
 import {
   formatOrderTypeShort,
   getPaymentStatus,

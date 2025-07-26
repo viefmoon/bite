@@ -30,7 +30,7 @@ import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
+import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
 import {
   formatOrderTypeShort,
   getPaymentStatus,

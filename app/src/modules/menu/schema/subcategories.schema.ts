@@ -29,6 +29,7 @@ export const findAllSubcategoriesDtoSchema = baseListQuerySchema.extend({
   categoryId: z.string().optional(),
   isActive: z.boolean().optional(),
 });
+export type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 
 export type SubCategoryFormInputs = CreateSubCategoryDto;
 export type UpdateSubCategoryFormInputs = UpdateSubCategoryDto;

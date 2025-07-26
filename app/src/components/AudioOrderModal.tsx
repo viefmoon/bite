@@ -26,7 +26,7 @@ import type {
   ScheduledDeliveryData,
 } from '@/services/audioOrderService';
 import ProductCustomizationModal from '@/modules/orders/components/ProductCustomizationModal';
-import type { FullMenuProduct as Product } from '@/modules/orders/types/orders.types';
+import type { FullMenuProduct as Product } from '@/modules/orders/schema/orders.schema';
 import type {
   CartItem,
   CartItemModifier,
@@ -40,14 +40,12 @@ import {
 import {
   OrderTypeEnum,
   type OrderType,
-} from '@/modules/orders/types/orders.types';
+} from '@/modules/orders/schema/orders.schema';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
-import type {
-  Area,
-  Table,
-} from '@/modules/areasTables/types/areasTables.types';
+import type { Area } from '@/modules/areasTables/schema/area.schema';
+import type { Table } from '@/modules/areasTables/schema/table.schema';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import { Menu, Checkbox, HelperText } from 'react-native-paper';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';

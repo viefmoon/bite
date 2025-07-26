@@ -18,8 +18,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { Address } from '../types/customer.types';
-import { addressSchema, AddressFormInputs } from '../schema/customer.schema';
+import { Address, addressSchema, AddressFormInputs } from '../schema/customer.schema';
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
 import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';

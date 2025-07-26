@@ -4,8 +4,6 @@ import {
   Customer,
   FindAllCustomersQuery,
   ChatMessage,
-} from '../types/customer.types';
-import {
   CreateCustomerInput,
   UpdateCustomerInput,
 } from '../schema/customer.schema';

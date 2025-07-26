@@ -5,16 +5,12 @@ export { addressesService } from './services/addressesService';
 // Hooks
 export * from './hooks/useCustomersQueries';
 
-// Types
+// Types and Schema types
 export type {
   Customer,
   Address,
   ChatMessage,
   FindAllCustomersQuery,
-} from './types/customer.types';
-
-// Schema types
-export type {
   CreateCustomerInput,
   UpdateCustomerInput,
   AddressFormInputs,

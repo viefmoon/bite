@@ -18,8 +18,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import { Customer, Address } from '../types/customer.types';
 import {
+  Customer,
+  Address,
   CustomerFormInputs,
   customerFormSchema,
 } from '../schema/customer.schema';

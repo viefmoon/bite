@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adjustmentService } from '../services/adjustmentService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import type { OrderAdjustmentDto } from '../types/update-order.types';
+import type { OrderAdjustmentDto } from '../schema/update-order.schema';
 
 export const useCreateBulkAdjustmentsMutation = () => {
   const queryClient = useQueryClient();

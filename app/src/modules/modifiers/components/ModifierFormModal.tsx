@@ -8,7 +8,7 @@ import GenericFormModal, {
   FormFieldConfig,
 } from '@/app/components/crud/GenericFormModal';
 import { modifierService } from '../services/modifierService';
-import { ModifierFormInputs } from '../types/modifier.types';
+import { ModifierFormInputs } from '../schema/modifier.schema';
 import {
   Modifier,
   modifierFormValidationSchema, // Cambiado de modifierSchema

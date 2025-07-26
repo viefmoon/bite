@@ -13,7 +13,7 @@ import type { FindAllOrdersDto, OrderOpenList } from '../types/orders.types';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import type { UpdateOrderPayload } from '../types/update-order.types';
+import type { UpdateOrderPayload } from '../schema/update-order.schema';
 
 // Query Keys
 const orderKeys = {

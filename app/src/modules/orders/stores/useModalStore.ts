@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { OrderAdjustment } from '../types/adjustments.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { CartItem } from './useOrderStore';
 
 export type ModalType =

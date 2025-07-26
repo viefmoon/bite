@@ -25,7 +25,7 @@ import {
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum } from '../types/orders.types';
-import type { OrderAdjustment } from '../types/adjustments.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';

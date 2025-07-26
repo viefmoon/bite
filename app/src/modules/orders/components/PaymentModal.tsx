@@ -26,7 +26,7 @@ import {
   PaymentMethodEnum,
   PaymentStatusEnum,
   type PaymentMethod,
-} from '../types/payment.types';
+} from '../schema/payment.schema';
 import {
   useGetPaymentsByOrderIdQuery,
   useCreatePaymentMutation,

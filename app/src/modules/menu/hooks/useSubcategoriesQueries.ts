@@ -10,9 +10,8 @@ import {
   SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
-  findAllSubcategoriesDtoSchema,
+  FindAllSubcategoriesDto,
 } from '../schema/subcategories.schema';
-import { z } from 'zod';
 import { PaginatedResponse } from '../../../app/types/api.types';
 import { ApiError } from '../../../app/lib/errors';
 import {
@@ -21,7 +20,6 @@ import {
 } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
-type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 
 const subcategoryKeys = {
   all: ['subcategories'] as const,

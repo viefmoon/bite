@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// Pure TypeScript interfaces that can't be represented by Zod
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+}
+
 // Schema para dirección
 export const addressSchema = z.object({
   name: z.string().min(1, 'El nombre de la dirección es requerido').max(100),
@@ -52,3 +59,57 @@ export type AddressFormInputs = z.infer<typeof addressSchema>;
 export type CustomerFormInputs = z.infer<typeof customerFormSchema>;
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
+
+// Schema completo para Address
+export const addressEntitySchema = addressSchema.extend({
+  id: z.string().uuid(),
+  customerId: z.string().uuid(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  deletedAt: z.date().nullable().optional(),
+});
+
+export type Address = z.infer<typeof addressEntitySchema>;
+
+// Schema completo para Customer
+export const customerEntitySchema = z.object({
+  id: z.string().uuid(),
+  firstName: z.string(),
+  lastName: z.string(),
+  whatsappPhoneNumber: z.string(),
+  stripeCustomerId: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  birthDate: z.date().nullable().optional(),
+  fullChatHistory: z.array(z.custom<ChatMessage>()).nullable().optional(),
+  relevantChatHistory: z.array(z.custom<ChatMessage>()).nullable().optional(),
+  lastInteraction: z.date().nullable().optional(),
+  totalOrders: z.number().int().nonnegative(),
+  totalSpent: z.number().nonnegative(),
+  isActive: z.boolean(),
+  isBanned: z.boolean(),
+  bannedAt: z.date().nullable().optional(),
+  banReason: z.string().nullable().optional(),
+  whatsappMessageCount: z.number().int().nonnegative(),
+  lastWhatsappMessageTime: z.date().nullable().optional(),
+  addresses: z.array(addressEntitySchema),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  deletedAt: z.date().nullable().optional(),
+});
+
+export type Customer = z.infer<typeof customerEntitySchema>;
+
+// Schema para FindAllCustomersQuery
+export const findAllCustomersQuerySchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  whatsappPhoneNumber: z.string().optional(),
+  isActive: z.boolean().optional(),
+  isBanned: z.boolean().optional(),
+  lastInteractionAfter: z.date().optional(),
+  page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().optional(),
+});
+
+export type FindAllCustomersQuery = z.infer<typeof findAllCustomersQuerySchema>;

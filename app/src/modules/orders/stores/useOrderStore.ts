@@ -3,8 +3,8 @@ import type { Product } from '../types/orders.types';
 import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
 import { OrderTypeEnum, type OrderType } from '../types/orders.types';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
-import type { OrderAdjustment } from '../types/adjustments.types';
-import type { OrderItemDtoForBackend } from '../types/update-order.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
+import type { OrderItemDtoForBackend } from '../schema/update-order.schema';
 
 const generateId = () => {
   const timestamp = Date.now().toString();

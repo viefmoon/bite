@@ -14,7 +14,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import type {
   OrderAdjustment,
   AdjustmentFormData,
-} from '../types/adjustments.types';
+} from '../schema/adjustments.schema';
 
 interface AdjustmentFormModalProps {
   visible: boolean;

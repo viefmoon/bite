@@ -4,12 +4,9 @@ import {
   SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
-  findAllSubcategoriesDtoSchema,
+  FindAllSubcategoriesDto,
 } from '../schema/subcategories.schema';
-import { z } from 'zod';
 import { PaginatedResponse } from '../../../app/types/api.types';
-
-type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 
 const createSubcategory = async (
   data: CreateSubCategoryDto,

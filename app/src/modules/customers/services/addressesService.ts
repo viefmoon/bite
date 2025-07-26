@@ -1,7 +1,6 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { Address } from '../types/customer.types';
-import { AddressFormInputs } from '../schema/customer.schema';
+import { Address, AddressFormInputs } from '../schema/customer.schema';
 
 async function create(
   customerId: string,
