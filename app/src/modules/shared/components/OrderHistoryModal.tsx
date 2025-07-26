@@ -23,7 +23,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 interface ChangeDetail {
   anterior: unknown;
@@ -729,7 +729,7 @@ const HistoryItemComponent: React.FC<{
                                   </Text>{' '}
                                   {String(
                                     item.diff.order.deliveryInfo
-                                      .recipientName[1]
+                                      .recipientName[1],
                                   )}
                                 </Text>
                               )}
@@ -743,7 +743,7 @@ const HistoryItemComponent: React.FC<{
                                   </Text>{' '}
                                   {String(
                                     item.diff.order.deliveryInfo
-                                      .recipientPhone[1]
+                                      .recipientPhone[1],
                                   )}
                                 </Text>
                               )}
@@ -755,7 +755,9 @@ const HistoryItemComponent: React.FC<{
                                   <Text style={{ fontWeight: '600' }}>
                                     Dirección:
                                   </Text>{' '}
-                                  {String(item.diff.order.deliveryInfo.fullAddress[1])}
+                                  {String(
+                                    item.diff.order.deliveryInfo.fullAddress[1],
+                                  )}
                                 </Text>
                               )}
                             </>
@@ -803,30 +805,32 @@ const HistoryItemComponent: React.FC<{
                                       ? ` - ${addedItem.variantName}`
                                       : ''}
                                   </Text>
-                                  {addedItem.modifiers && addedItem.modifiers.length > 0 && (
-                                    <Text
-                                      variant="labelSmall"
-                                      style={{
-                                        marginTop: 2,
-                                        color: theme.colors.onSurfaceVariant,
-                                      }}
-                                    >
-                                      Modificadores:{' '}
-                                      {addedItem.modifiers.join(', ')}
-                                    </Text>
-                                  )}
-                                  {addedItem.customizations && addedItem.customizations.length > 0 && (
-                                    <Text
-                                      variant="labelSmall"
-                                      style={{
-                                        marginTop: 2,
-                                        color: theme.colors.onSurfaceVariant,
-                                      }}
-                                    >
-                                      Personalizaciones:{' '}
-                                      {addedItem.customizations.join(', ')}
-                                    </Text>
-                                  )}
+                                  {addedItem.modifiers &&
+                                    addedItem.modifiers.length > 0 && (
+                                      <Text
+                                        variant="labelSmall"
+                                        style={{
+                                          marginTop: 2,
+                                          color: theme.colors.onSurfaceVariant,
+                                        }}
+                                      >
+                                        Modificadores:{' '}
+                                        {addedItem.modifiers.join(', ')}
+                                      </Text>
+                                    )}
+                                  {addedItem.customizations &&
+                                    addedItem.customizations.length > 0 && (
+                                      <Text
+                                        variant="labelSmall"
+                                        style={{
+                                          marginTop: 2,
+                                          color: theme.colors.onSurfaceVariant,
+                                        }}
+                                      >
+                                        Personalizaciones:{' '}
+                                        {addedItem.customizations.join(', ')}
+                                      </Text>
+                                    )}
                                   {addedItem.notes && (
                                     <Text
                                       variant="labelSmall"
@@ -1354,49 +1358,49 @@ const HistoryItemComponent: React.FC<{
                       </Text>
 
                       {/* Items agregados */}
-                      {item.diff.items.added?.map(
-                        (addedItem, idx: number) => (
+                      {item.diff.items.added?.map((addedItem, idx: number) => (
+                        <View
+                          key={`added-${idx}`}
+                          style={{
+                            marginBottom: 8,
+                            paddingLeft: 8,
+                            borderLeftWidth: 2,
+                            borderLeftColor: theme.colors.success + '50',
+                          }}
+                        >
                           <View
-                            key={`added-${idx}`}
                             style={{
-                              marginBottom: 8,
-                              paddingLeft: 8,
-                              borderLeftWidth: 2,
-                              borderLeftColor: theme.colors.success + '50',
+                              flexDirection: 'row',
+                              alignItems: 'flex-start',
                             }}
                           >
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
-                              }}
-                            >
-                              <Icon
-                                name="plus-circle"
-                                size={14}
-                                color={theme.colors.success}
-                                style={{ marginRight: 6, marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.success,
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  Producto agregado
-                                </Text>
-                                <Text
-                                  variant="bodySmall"
-                                  style={{ marginTop: 2 }}
-                                >
-                                  {addedItem.productName}
-                                  {addedItem.variantName
-                                    ? ` - ${addedItem.variantName}`
-                                    : ''}
-                                </Text>
-                                {addedItem.modifiers && addedItem.modifiers.length > 0 && (
+                            <Icon
+                              name="plus-circle"
+                              size={14}
+                              color={theme.colors.success}
+                              style={{ marginRight: 6, marginTop: 2 }}
+                            />
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                variant="labelSmall"
+                                style={{
+                                  color: theme.colors.success,
+                                  fontWeight: '600',
+                                }}
+                              >
+                                Producto agregado
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={{ marginTop: 2 }}
+                              >
+                                {addedItem.productName}
+                                {addedItem.variantName
+                                  ? ` - ${addedItem.variantName}`
+                                  : ''}
+                              </Text>
+                              {addedItem.modifiers &&
+                                addedItem.modifiers.length > 0 && (
                                   <Text
                                     variant="labelSmall"
                                     style={{
@@ -1408,122 +1412,119 @@ const HistoryItemComponent: React.FC<{
                                     {addedItem.modifiers.join(', ')}
                                   </Text>
                                 )}
-                                {addedItem.price && (
-                                  <Text
-                                    variant="labelSmall"
-                                    style={{ marginTop: 2, fontWeight: '600' }}
-                                  >
-                                    Precio: ${addedItem.price}
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-                          </View>
-                        ),
-                      )}
-
-                      {/* Items modificados - Solo mostrar antes y después */}
-                      {item.diff.items.modified?.map(
-                        (modItem, idx: number) => (
-                          <View
-                            key={`mod-${idx}`}
-                            style={{
-                              marginBottom: 8,
-                              paddingLeft: 8,
-                              borderLeftWidth: 2,
-                              borderLeftColor: theme.colors.warning + '50',
-                            }}
-                          >
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
-                              }}
-                            >
-                              <Icon
-                                name="pencil"
-                                size={14}
-                                color={theme.colors.warning}
-                                style={{ marginRight: 6, marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
+                              {addedItem.price && (
                                 <Text
                                   variant="labelSmall"
-                                  style={{
-                                    color: theme.colors.warning,
-                                    fontWeight: '600',
-                                  }}
+                                  style={{ marginTop: 2, fontWeight: '600' }}
                                 >
-                                  Producto modificado
+                                  Precio: ${addedItem.price}
                                 </Text>
+                              )}
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+
+                      {/* Items modificados - Solo mostrar antes y después */}
+                      {item.diff.items.modified?.map((modItem, idx: number) => (
+                        <View
+                          key={`mod-${idx}`}
+                          style={{
+                            marginBottom: 8,
+                            paddingLeft: 8,
+                            borderLeftWidth: 2,
+                            borderLeftColor: theme.colors.warning + '50',
+                          }}
+                        >
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'flex-start',
+                            }}
+                          >
+                            <Icon
+                              name="pencil"
+                              size={14}
+                              color={theme.colors.warning}
+                              style={{ marginRight: 6, marginTop: 2 }}
+                            />
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                variant="labelSmall"
+                                style={{
+                                  color: theme.colors.warning,
+                                  fontWeight: '600',
+                                }}
+                              >
+                                Producto modificado
+                              </Text>
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap',
+                                  marginTop: 4,
+                                }}
+                              >
                                 <View
                                   style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    flexWrap: 'wrap',
+                                    backgroundColor:
+                                      theme.colors.errorContainer,
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 4,
+                                    borderRadius: 4,
+                                    marginRight: 6,
                                     marginTop: 4,
                                   }}
                                 >
-                                  <View
+                                  <Text
+                                    variant="bodySmall"
                                     style={{
-                                      backgroundColor:
-                                        theme.colors.errorContainer,
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 4,
-                                      borderRadius: 4,
-                                      marginRight: 6,
-                                      marginTop: 4,
+                                      color: theme.colors.onErrorContainer,
                                     }}
                                   >
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.onErrorContainer,
-                                      }}
-                                    >
-                                      {modItem.before.productName}
-                                      {modItem.before.variantName
-                                        ? ` - ${modItem.before.variantName}`
-                                        : ''}
-                                    </Text>
-                                  </View>
-                                  <Icon
-                                    name="arrow-right"
-                                    size={16}
-                                    color={theme.colors.onSurfaceVariant}
+                                    {modItem.before.productName}
+                                    {modItem.before.variantName
+                                      ? ` - ${modItem.before.variantName}`
+                                      : ''}
+                                  </Text>
+                                </View>
+                                <Icon
+                                  name="arrow-right"
+                                  size={16}
+                                  color={theme.colors.onSurfaceVariant}
+                                  style={{
+                                    marginHorizontal: 4,
+                                    marginTop: 4,
+                                  }}
+                                />
+                                <View
+                                  style={{
+                                    backgroundColor:
+                                      theme.colors.primaryContainer,
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 4,
+                                    borderRadius: 4,
+                                    marginTop: 4,
+                                  }}
+                                >
+                                  <Text
+                                    variant="bodySmall"
                                     style={{
-                                      marginHorizontal: 4,
-                                      marginTop: 4,
-                                    }}
-                                  />
-                                  <View
-                                    style={{
-                                      backgroundColor:
-                                        theme.colors.primaryContainer,
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 4,
-                                      borderRadius: 4,
-                                      marginTop: 4,
+                                      color: theme.colors.onPrimaryContainer,
                                     }}
                                   >
-                                    <Text
-                                      variant="bodySmall"
-                                      style={{
-                                        color: theme.colors.onPrimaryContainer,
-                                      }}
-                                    >
-                                      {modItem.after.productName}
-                                      {modItem.after.variantName
-                                        ? ` - ${modItem.after.variantName}`
-                                        : ''}
-                                    </Text>
-                                  </View>
+                                    {modItem.after.productName}
+                                    {modItem.after.variantName
+                                      ? ` - ${modItem.after.variantName}`
+                                      : ''}
+                                  </Text>
                                 </View>
                               </View>
                             </View>
                           </View>
-                        ),
-                      )}
+                        </View>
+                      ))}
 
                       {/* Items eliminados */}
                       {item.diff.items.removed?.map(
@@ -1802,13 +1803,15 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       const orderHistoryResponse = await apiClient.get(
         API_PATHS.ORDERS_HISTORY.replace(':orderId', orderId),
         {
-          page: 1,
-          limit: 100,
+          params: {
+            page: 1,
+            limit: 100,
+          },
         },
       );
 
       const orderHistory =
-        orderHistoryResponse.ok && orderHistoryResponse.data?.data
+        orderHistoryResponse.status === 200 && orderHistoryResponse.data?.data
           ? orderHistoryResponse.data.data.map((item: unknown) => ({
               ...(item as Record<string, unknown>),
               type: 'order' as const,

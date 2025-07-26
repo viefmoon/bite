@@ -3,7 +3,6 @@ import {
   Modal,
   View,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   FlatList,
 } from 'react-native';
@@ -11,23 +10,15 @@ import {
   Portal,
   Appbar,
   Searchbar,
-  Text,
   ActivityIndicator,
 } from 'react-native-paper';
 import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useShiftOrders } from '../hooks/useShiftOrders';
 import EmptyState from '@/app/components/common/EmptyState';
 import type { Order } from '@/app/schemas/domain/order.schema';
-import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
-import {
-  formatOrderTypeShort,
-  getPaymentStatus,
-} from '@/modules/orders/utils/formatters';
 import { receiptService } from '@/modules/receipts/services/receiptService';
-import type { Receipt } from '@/modules/receipts/types/receipt.types';
+import type { Receipt } from '@/modules/receipts/schema/receipt.schema';
 import { OrderDetailsView } from './OrderDetailsView';
 import { OrderHistoryView } from './OrderHistoryView';
 
@@ -88,13 +79,6 @@ export function ShiftOrdersModal({
 
       // Buscar en información de entrega
       if (order.deliveryInfo) {
-        // Campos principales
-        if (order.deliveryInfo.customerName?.toLowerCase().includes(search))
-          return true;
-        if (order.deliveryInfo.customerPhone?.includes(search)) return true;
-        if (order.deliveryInfo.address?.toLowerCase().includes(search))
-          return true;
-
         // Campos alternativos que pueden venir del backend
         if (order.deliveryInfo.recipientName?.toLowerCase().includes(search))
           return true;
@@ -114,25 +98,11 @@ export function ShiftOrdersModal({
       // Buscar en mesa/área para órdenes locales
       if (order.table) {
         if (order.table.name?.toLowerCase().includes(search)) return true;
-        if (order.table.number?.toString().includes(search)) return true;
         if (order.table.area?.name?.toLowerCase().includes(search)) return true;
       }
 
-      // Buscar en área directa
-      if (order.area?.name?.toLowerCase().includes(search)) return true;
-
       // Buscar en notas
       if (order.notes?.toLowerCase().includes(search)) return true;
-
-      // Buscar en nombre del usuario creador
-      if (order.createdBy) {
-        if (order.createdBy.firstName?.toLowerCase().includes(search))
-          return true;
-        if (order.createdBy.lastName?.toLowerCase().includes(search))
-          return true;
-        if (order.createdBy.username?.toLowerCase().includes(search))
-          return true;
-      }
 
       // Buscar en user (campo alternativo)
       if (order.user) {
@@ -172,14 +142,32 @@ export function ShiftOrdersModal({
   };
 
   // Renderizar item de recibo usando el componente compartido
-  const renderReceiptItem = ({ item }: { item: Order }) => (
-    <OrderSummaryCard
-      item={item}
-      onPress={() => handleReceiptPress(item)}
-      getStatusColor={getReceiptStatusColor}
-      getStatusLabel={getStatusLabel}
-    />
-  );
+  const renderReceiptItem = ({ item }: { item: Order }) => {
+    // Convertir Order a OrderItemType para compatibilidad
+    const orderItem = {
+      id: item.id,
+      shiftOrderNumber: item.shiftOrderNumber,
+      orderNumber: item.orderNumber,
+      orderType: item.orderType as any,
+      orderStatus: item.orderStatus as string,
+      createdAt: item.createdAt,
+      total: item.total,
+      table: item.table as any,
+      deliveryInfo: item.deliveryInfo as any,
+      notes: item.notes || undefined,
+      payments: item.payments as any,
+      isFromWhatsApp: item.isFromWhatsApp,
+    };
+
+    return (
+      <OrderSummaryCard
+        item={orderItem}
+        onPress={() => handleReceiptPress(item)}
+        getStatusColor={getReceiptStatusColor}
+        getStatusLabel={getStatusLabel}
+      />
+    );
+  };
 
   // Renderizar lista vacía
   const renderEmptyComponent = () => {
@@ -215,9 +203,15 @@ export function ShiftOrdersModal({
         <View style={styles.container}>
           {showOrderHistory && selectedReceipt ? (
             <OrderHistoryView
-              orderId={selectedReceipt.id}
+              orderId={String(selectedReceipt.id)}
               orderNumber={
-                selectedReceipt.shiftOrderNumber || selectedReceipt.orderNumber
+                Number(selectedReceipt.shiftOrderNumber) ||
+                (typeof selectedReceipt.orderNumber === 'string'
+                  ? parseInt(selectedReceipt.orderNumber, 10)
+                  : typeof selectedReceipt.orderNumber === 'number'
+                    ? selectedReceipt.orderNumber
+                    : 0) ||
+                0
               }
               onBack={() => {
                 setShowOrderHistory(false);

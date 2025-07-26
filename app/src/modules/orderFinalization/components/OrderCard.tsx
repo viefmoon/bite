@@ -8,7 +8,7 @@ import {
   IconButton,
   Icon,
 } from 'react-native-paper';
-import { OrderForFinalizationList } from '../types/orderFinalization.types';
+import { OrderForFinalizationList } from '../schema/orderFinalization.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { format } from 'date-fns';
@@ -374,26 +374,10 @@ const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
       fontSize: responsive.isTablet ? 13 : 16,
       fontWeight: '600',
     },
-    estimatedTime: {
-      fontSize: 14,
-      marginLeft: 4,
-    },
     timeAndPaymentRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 0,
-    },
-    paymentBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    paymentBadgeText: {
-      fontSize: 11,
-      fontWeight: '600',
-      lineHeight: 14,
     },
     checkboxContainer: {
       padding: 8,
@@ -432,30 +416,10 @@ const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
       fontWeight: 'bold',
       color: '#FFFFFF',
     },
-    miniPreparationBadge: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginLeft: 4,
-    },
-    miniPreparationText: {
-      fontSize: 10,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    moreIndicator: {
-      fontSize: 10,
-      marginLeft: 4,
-    },
     createdByText: {
       fontSize: 10,
       marginBottom: 4,
       textAlign: 'right',
-    },
-    rightTopRow: {
-      width: '100%',
     },
     printButton: {
       margin: -4,

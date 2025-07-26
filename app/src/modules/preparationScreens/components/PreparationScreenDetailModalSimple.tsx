@@ -8,7 +8,7 @@ import {
   IconButton,
   Divider,
 } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { PreparationScreen } from '../schema/preparationScreen.schema';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';

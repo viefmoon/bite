@@ -21,7 +21,7 @@ import {
   OrderFinalizationFilter,
   OrderSelectionState,
   OrderForFinalizationList,
-} from '../types/orderFinalization.types';
+} from '../schema/orderFinalization.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '@/app/styles/theme';
@@ -548,8 +548,8 @@ export const OrderFinalizationScreen: React.FC = () => {
 };
 
 const createStyles = (
-  theme: typeof useAppTheme,
-  responsive: typeof useResponsive,
+  theme: ReturnType<typeof useAppTheme>,
+  responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
     container: {

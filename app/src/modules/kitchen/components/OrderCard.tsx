@@ -6,19 +6,18 @@ import {
   Animated,
   Pressable,
   Vibration,
-  Platform,
 } from 'react-native';
-import { Card, Text, Divider, Surface, IconButton } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Text, Divider, Surface, IconButton } from 'react-native-paper';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   KitchenOrder,
-  OrderType,
+  OrderTypeEnum,
   PreparationStatus,
   PreparationScreenStatus,
-} from '../types/kitchen.types';
+} from '../schema/kitchen.schema';
 import { OrderItemRow } from './OrderItemRow';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -55,11 +54,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getOrderTypeColor = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return theme.colors.error;
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return '#00ACC1'; // Cyan/Turquesa
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return theme.colors.primary;
       default:
         return theme.colors.surface;
@@ -68,11 +67,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getOrderTypeLabel = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return 'DOMICILIO';
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return 'PARA LLEVAR';
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return 'MESA';
       default:
         return '';
@@ -81,11 +80,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getOrderTypeBackgroundColor = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return '#FFEBEE'; // Rojo muy claro
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return '#E0F2F1'; // Cyan/Turquesa muy claro
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return '#E3F2FD'; // Azul muy claro
       default:
         return theme.colors.surfaceVariant;
@@ -94,36 +93,25 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getOrderTypeTextColor = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
-        return '#C62828'; // Rojo oscuro
-      case OrderType.TAKE_AWAY:
-        return '#00838F'; // Cyan/Turquesa oscuro
-      case OrderType.DINE_IN:
-        return '#1565C0'; // Azul oscuro
+      case OrderTypeEnum.DELIVERY:
+        return '#C62828';
+      case OrderTypeEnum.TAKE_AWAY:
+        return '#00838F';
+      case OrderTypeEnum.DINE_IN:
+        return '#1565C0';
       default:
         return theme.colors.onSurfaceVariant;
     }
   };
 
-  const getScreenStatusColor = (status: PreparationScreenStatus) => {
-    switch (status) {
-      case PreparationScreenStatus.READY:
-        return theme.colors.success;
-      case PreparationScreenStatus.IN_PREPARATION:
-        return '#FF6B35';
-      default:
-        return '#9C27B0';
-    }
-  };
-
   const getOrderTypeIcon = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
-        return 'moped'; // O 'bike', 'motorbike'
-      case OrderType.TAKE_AWAY:
-        return 'shopping-outline'; // O 'bag-checked', 'package-variant'
-      case OrderType.DINE_IN:
-        return 'silverware-fork-knife'; // O 'food', 'table-chair'
+      case OrderTypeEnum.DELIVERY:
+        return 'moped';
+      case OrderTypeEnum.TAKE_AWAY:
+        return 'shopping-outline';
+      case OrderTypeEnum.DINE_IN:
+        return 'silverware-fork-knife';
       default:
         return 'help-circle-outline';
     }
@@ -156,7 +144,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       case PreparationScreenStatus.READY:
         return {
           label: 'Lista',
-          color: '#4CAF50', // Verde
+          color: '#4CAF50',
           textColor: '#FFFFFF',
           borderColor: null,
         };
@@ -164,7 +152,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       case PreparationScreenStatus.IN_PREPARATION:
         return {
           label: 'En preparación',
-          color: '#FF6B35', // Naranja
+          color: '#FF6B35',
           textColor: '#FFFFFF',
           borderColor: null,
         };
@@ -173,7 +161,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       default:
         return {
           label: 'Pendiente',
-          color: '#9C27B0', // Púrpura
+          color: '#9C27B0',
           textColor: '#FFFFFF',
           borderColor: null,
         };
@@ -182,11 +170,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const hasOrderDetails = () => {
     switch (order.orderType) {
-      case OrderType.DELIVERY:
+      case OrderTypeEnum.DELIVERY:
         return !!order.deliveryAddress;
-      case OrderType.TAKE_AWAY:
+      case OrderTypeEnum.TAKE_AWAY:
         return !!order.receiptName;
-      case OrderType.DINE_IN:
+      case OrderTypeEnum.DINE_IN:
         return !!(order.areaName || order.tableName);
       default:
         return false;
@@ -213,7 +201,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       if (order.myScreenStatus === PreparationScreenStatus.PENDING) {
         return {
           type: 'start',
-          color: '#FF6B35', // Naranja
+          color: '#FF6B35',
           textColor: '#FFFFFF',
           icon: 'chef-hat',
           text: 'En Preparación',
@@ -230,7 +218,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       ) {
         return {
           type: 'cancel',
-          color: '#9C27B0', // Púrpura
+          color: '#9C27B0',
           textColor: '#FFFFFF',
           icon: 'arrow-left',
           text: 'Regresar',
@@ -261,7 +249,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         ]}
       >
         <Icon
-          name={swipeActions.rightAction.icon}
+          name={swipeActions.rightAction.icon as any}
           size={24}
           color={swipeActions.rightAction.textColor}
         />
@@ -297,7 +285,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           {swipeActions.leftAction.text}
         </Text>
         <Icon
-          name={swipeActions.leftAction.icon}
+          name={swipeActions.leftAction.icon as any}
           size={24}
           color={swipeActions.leftAction.textColor}
         />
@@ -331,7 +319,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
     if (!canComplete && !canReturn) return;
 
-    // Limpiar cualquier timer o animación previa
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       if ((longPressTimer.current as any).interval) {
@@ -340,25 +327,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       longPressTimer.current = null;
     }
 
-    // Detener cualquier animación en curso y resetear
     animatedValue.stopAnimation();
     animatedValue.setValue(0);
 
-    // Vibración suave al iniciar
     Vibration.vibrate(10);
 
     setIsPressing(true);
-
-    // Iniciar animación
     Animated.timing(animatedValue, {
       toValue: 1,
       duration: 2000,
       useNativeDriver: false,
     }).start();
 
-    // Timer para completar después de 2 segundos
     longPressTimer.current = setTimeout(() => {
-      // Vibración de éxito
       Vibration.vibrate([0, 50, 100, 50]);
 
       if (canComplete && onCompletePreparation) {
@@ -385,14 +366,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
     setIsPressing(false);
 
-    // Detener cualquier animación en curso
     animatedValue.stopAnimation();
-
-    // Resetear el valor animado a 0
     animatedValue.setValue(0);
   };
 
-  // Limpiar timer al desmontar
   useEffect(() => {
     return () => {
       if (longPressTimer.current) {
@@ -411,7 +388,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         break;
     }
 
-    // Cerrar el swipeable después de ejecutar la acción
     swipeableRef.current?.close();
   };
 
@@ -423,7 +399,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       if (onCancelPreparation) onCancelPreparation(order.id);
     }
 
-    // Cerrar el swipeable después de ejecutar la acción
     swipeableRef.current?.close();
   };
 
@@ -433,14 +408,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       elevation={1}
     >
       <View style={styles.cardContent}>
-        {/* Header */}
         {isSwipeable ? (
           <Swipeable
             ref={swipeableRef}
             renderRightActions={renderRightActions}
             renderLeftActions={renderLeftActions}
-            onSwipeableWillOpen={() => onSwipeStart && onSwipeStart()}
-            onSwipeableWillClose={() => onSwipeEnd && onSwipeEnd()}
+            onSwipeableOpen={() => onSwipeStart && onSwipeStart()}
+            onSwipeableClose={() => onSwipeEnd && onSwipeEnd()}
             onSwipeableRightOpen={handleRightSwipeComplete}
             onSwipeableLeftOpen={handleLeftSwipeComplete}
             overshootRight={false}
@@ -448,7 +422,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             friction={1.2}
             rightThreshold={50}
             leftThreshold={50}
-            activationDistance={15}
           >
             <Pressable
               onPressIn={handlePressIn}
@@ -473,11 +446,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     >
                       {(() => {
                         switch (order.orderType) {
-                          case OrderType.DELIVERY:
+                          case OrderTypeEnum.DELIVERY:
                             return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                          case OrderType.TAKE_AWAY:
+                          case OrderTypeEnum.TAKE_AWAY:
                             return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                          case OrderType.DINE_IN:
+                          case OrderTypeEnum.DINE_IN:
                             return `🪑 ${order.areaName} - ${order.tableName}`;
                           default:
                             return '';
@@ -491,7 +464,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     <View style={styles.whatsappBadgeContainer}>
                       <View style={styles.whatsappBadge}>
                         <Icon
-                          source="whatsapp"
+                          name="whatsapp"
                           size={12}
                           color={theme.colors.surface}
                         />
@@ -542,7 +515,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   </Text>
                 </View>
               </View>
-              {/* Indicador de progreso del long press */}
               {isPressing && (canMarkAsReady() || canReturnToInProgress()) && (
                 <View style={styles.progressBarContainer}>
                   <Animated.View
@@ -582,11 +554,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 >
                   {(() => {
                     switch (order.orderType) {
-                      case OrderType.DELIVERY:
+                      case OrderTypeEnum.DELIVERY:
                         return `📍 ${order.deliveryAddress}${order.deliveryPhone ? `\n📱 ${order.deliveryPhone}` : ''}`;
-                      case OrderType.TAKE_AWAY:
+                      case OrderTypeEnum.TAKE_AWAY:
                         return `👤 ${order.receiptName}${order.customerPhone ? `\n📱 ${order.customerPhone}` : ''}`;
-                      case OrderType.DINE_IN:
+                      case OrderTypeEnum.DINE_IN:
                         return `🪑 ${order.areaName} - ${order.tableName}`;
                       default:
                         return '';
@@ -647,7 +619,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </View>
         )}
 
-        {/* Order Notes - Solo mostrar si hay notas */}
         {order.orderNotes && (
           <>
             <View
@@ -667,7 +638,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </>
         )}
 
-        {/* Screen Statuses - Mostrar el estado de otras pantallas */}
         {order.screenStatuses && order.screenStatuses.length > 1 && (
           <>
             <View
@@ -713,7 +683,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </>
         )}
 
-        {/* Items */}
         <View style={styles.itemsWrapper}>
           {order.items && order.items.length > 0 ? (
             <ScrollView
@@ -722,7 +691,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               nestedScrollEnabled={true}
             >
               {(() => {
-                // Separar items en grupos
                 const myScreenItems = order.items
                   .map((item, originalIndex) => ({ item, originalIndex }))
                   .filter(({ item }) => item.belongsToMyScreen);
@@ -731,27 +699,21 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   .map((item, originalIndex) => ({ item, originalIndex }))
                   .filter(({ item }) => !item.belongsToMyScreen);
 
-                // Ordenar items de mi pantalla
                 const sortedMyScreenItems = myScreenItems.sort((a, b) => {
-                  // Los items preparados mantienen su posición relativa
                   const aIsPrepared =
                     a.item.preparationStatus === PreparationStatus.READY;
                   const bIsPrepared =
                     b.item.preparationStatus === PreparationStatus.READY;
 
-                  // Si ambos están preparados o ambos no lo están, mantener orden original
                   if (aIsPrepared === bIsPrepared) {
                     return a.originalIndex - b.originalIndex;
                   }
 
-                  // Si uno está preparado y el otro no, mantener el orden original
                   return a.originalIndex - b.originalIndex;
                 });
 
-                // Mantener orden original para items de otras pantallas
                 const sortedOtherScreenItems = otherScreenItems;
 
-                // Combinar: primero los de mi pantalla, luego los de otras
                 return [...sortedMyScreenItems, ...sortedOtherScreenItems];
               })().map(({ item }, index) => (
                 <OrderItemRow
@@ -771,7 +733,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           )}
         </View>
 
-        {/* Botón flotante con posicionamiento fijo */}
         <View style={styles.floatingButtonContainer}>
           <IconButton
             icon="file-document-multiple-outline"
@@ -791,19 +752,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         </View>
       </View>
 
-      {/* Modal de historial */}
       <OrderHistoryModal
         visible={showHistory}
         onDismiss={() => setShowHistory(false)}
         orderId={order.id}
         orderNumber={order.shiftOrderNumber}
-        orderData={order}
       />
     </Surface>
   );
 };
 
-// Crear estilos responsive
 const createStyles = (responsive: any, theme: any) =>
   StyleSheet.create({
     card: {
@@ -812,7 +770,7 @@ const createStyles = (responsive: any, theme: any) =>
       maxHeight:
         responsive.height -
         responsive.dimensions.headerHeight -
-        responsive.spacing.s,
+        responsive.spacingPreset.s,
       borderRadius: theme.roundness / 2,
       borderWidth: 0.5,
       borderColor: 'rgba(0,0,0,0.05)',
@@ -828,11 +786,11 @@ const createStyles = (responsive: any, theme: any) =>
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       paddingHorizontal: responsive.isWeb
-        ? responsive.spacing.l
-        : responsive.spacing.m,
+        ? responsive.spacingPreset.l
+        : responsive.spacingPreset.m,
       paddingVertical: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.s,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.s,
       borderTopLeftRadius: theme.roundness,
       borderTopRightRadius: theme.roundness,
       minHeight: responsive.isWeb
@@ -842,24 +800,24 @@ const createStyles = (responsive: any, theme: any) =>
     headerLeft: {
       flex: 1,
       flexDirection: 'column',
-      gap: responsive.spacing.xxxs,
+      gap: responsive.spacingPreset.xxxs,
     },
     headerTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: responsive.spacing.xs,
+      gap: responsive.spacingPreset.xs,
     },
     headerDetails: {
       fontSize: responsive.isWeb ? 16 : responsive.isTablet ? 12 : 13,
       lineHeight: responsive.isWeb ? 22 : responsive.isTablet ? 16 : 18,
       opacity: 0.95,
-      marginTop: responsive.spacing.xxxs,
+      marginTop: responsive.spacingPreset.xxxs,
       fontWeight: '500',
     },
     headerRight: {
       alignItems: 'flex-end',
-      gap: responsive.spacing.xs,
-      marginLeft: responsive.spacing.xs,
+      gap: responsive.spacingPreset.xs,
+      marginLeft: responsive.spacingPreset.xs,
     },
     orderNumber: {
       fontWeight: 'bold',
@@ -868,8 +826,8 @@ const createStyles = (responsive: any, theme: any) =>
     },
     typeChip: {
       paddingHorizontal: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.s,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.s,
       paddingVertical: responsive.isWeb ? 6 : 4,
       minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
@@ -877,7 +835,7 @@ const createStyles = (responsive: any, theme: any) =>
       alignItems: 'center',
       justifyContent: 'center',
       alignSelf: 'flex-end',
-      marginBottom: responsive.spacing.xxxs,
+      marginBottom: responsive.spacingPreset.xxxs,
     },
     typeChipText: {
       fontSize: responsive.isWeb ? 14 : responsive.isTablet ? 11 : 12,
@@ -894,15 +852,15 @@ const createStyles = (responsive: any, theme: any) =>
     },
     statusChip: {
       paddingHorizontal: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.xs,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.xs,
       paddingVertical: responsive.isWeb ? 6 : 4,
       minHeight: responsive.isWeb ? 36 : 28,
       borderRadius: theme.roundness / 2,
       alignItems: 'center',
       justifyContent: 'center',
       alignSelf: 'flex-end',
-      marginBottom: responsive.spacing.xxxs,
+      marginBottom: responsive.spacingPreset.xxxs,
     },
     statusChipText: {
       fontSize: responsive.isWeb ? 15 : responsive.isTablet ? 12 : 13,
@@ -915,11 +873,11 @@ const createStyles = (responsive: any, theme: any) =>
     },
     details: {
       paddingHorizontal: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.s,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.s,
       paddingVertical: responsive.isWeb
-        ? responsive.spacing.s
-        : responsive.spacing.xs,
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
     },
     detailText: {
       marginBottom: 0,
@@ -927,8 +885,8 @@ const createStyles = (responsive: any, theme: any) =>
       lineHeight: responsive.isWeb ? 20 : responsive.isTablet ? 16 : 14,
     },
     notesContainer: {
-      marginTop: responsive.spacing.xxs,
-      padding: responsive.spacing.xxs,
+      marginTop: responsive.spacingPreset.xxs,
+      padding: responsive.spacingPreset.xxs,
       borderRadius: theme.roundness / 2,
     },
     notes: {
@@ -944,7 +902,7 @@ const createStyles = (responsive: any, theme: any) =>
       flex: 1,
     },
     emptyItemsContainer: {
-      padding: responsive.spacing.s,
+      padding: responsive.spacingPreset.s,
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: responsive.getResponsiveDimension(60, 80),
@@ -955,32 +913,32 @@ const createStyles = (responsive: any, theme: any) =>
       justifyContent: 'center',
       alignItems: 'center',
       flexDirection: 'row',
-      gap: responsive.spacing.xs,
-      paddingHorizontal: responsive.spacing.s,
+      gap: responsive.spacingPreset.xs,
+      paddingHorizontal: responsive.spacingPreset.s,
     },
     swipeText: {
       fontWeight: 'bold',
-      fontSize: responsive.fontSize.s,
+      fontSize: responsive.fontSizePreset.s,
     },
     screenStatusContainer: {
-      paddingVertical: responsive.spacing.s,
-      paddingHorizontal: responsive.spacing.s,
-      paddingRight: responsive.spacing.m,
+      paddingVertical: responsive.spacingPreset.s,
+      paddingHorizontal: responsive.spacingPreset.s,
+      paddingRight: responsive.spacingPreset.m,
     },
     screenStatusList: {
       flexDirection: 'row',
-      gap: responsive.spacing.s,
-      paddingHorizontal: responsive.spacing.xs,
+      gap: responsive.spacingPreset.s,
+      paddingHorizontal: responsive.spacingPreset.xs,
     },
     screenStatusItem: {
-      paddingHorizontal: responsive.spacing.s,
-      paddingVertical: responsive.spacing.xs,
+      paddingHorizontal: responsive.spacingPreset.s,
+      paddingVertical: responsive.spacingPreset.xs,
       borderRadius: theme.roundness / 2,
       minHeight: 24,
       justifyContent: 'center',
     },
     screenStatusText: {
-      fontSize: responsive.fontSize.xs,
+      fontSize: responsive.fontSizePreset.xs,
       fontWeight: '600',
       color: '#FFFFFF',
     },
@@ -1001,18 +959,17 @@ const createStyles = (responsive: any, theme: any) =>
       shadowRadius: 2,
       backgroundColor: '#25D366',
     },
-    // Estilos adicionales para eliminar inline styles
     headerText: {
       color: theme.colors.surface,
     },
     headerSwipeable: {
-      paddingHorizontal: responsive.spacing.s,
+      paddingHorizontal: responsive.spacingPreset.s,
     },
     headerRightSwipeable: {
-      marginLeft: responsive.spacing.xs,
+      marginLeft: responsive.spacingPreset.xs,
     },
     headerRightNormal: {
-      marginLeft: responsive.spacing.m,
+      marginLeft: responsive.spacingPreset.m,
     },
     typeChipSwipeable: {
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -1044,7 +1001,7 @@ const createStyles = (responsive: any, theme: any) =>
     progressBar: {
       height: '100%',
     },
-    notesContainer: {
+    notesContainerAlt: {
       backgroundColor: theme.colors.errorContainer,
     },
     notesText: {
@@ -1056,8 +1013,8 @@ const createStyles = (responsive: any, theme: any) =>
     },
     screenStatusContainerStyle: {
       backgroundColor: theme.colors.surfaceVariant,
-      paddingVertical: responsive.spacing.s,
-      paddingHorizontal: responsive.spacing.s,
+      paddingVertical: responsive.spacingPreset.s,
+      paddingHorizontal: responsive.spacingPreset.s,
     },
     emptyItemsText: {
       color: theme.colors.onSurfaceVariant,

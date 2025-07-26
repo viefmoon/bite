@@ -21,10 +21,13 @@ class SyncService {
       const status = await this.getSyncStatus();
       return status.enabled;
     } catch (error) {
-      console.error(
-        'Error verificando disponibilidad de sincronización:',
-        error,
-      );
+      // Log silencioso para no mostrar errores en producción
+      if (__DEV__) {
+        console.error(
+          'Error verificando disponibilidad de sincronización:',
+          error,
+        );
+      }
       return false;
     }
   }

@@ -2,24 +2,24 @@ import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   Animated,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { Portal, Modal, Surface, Text, Switch } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { useKitchenStore } from '../store/kitchenStore';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { OrderType } from '../types/kitchen.types';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { OrderTypeEnum } from '../schema/kitchen.schema';
 
 export const KitchenFilterButton: React.FC = () => {
+  const { height: screenHeight } = useWindowDimensions();
   const theme = useAppTheme();
   const [visible, setVisible] = useState(false);
   const { filters, setFilters } = useKitchenStore();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const styles = createStyles(screenHeight, theme);
 
   const activeFiltersCount = [
     filters.showPrepared,
@@ -108,9 +108,10 @@ export const KitchenFilterButton: React.FC = () => {
           ]}
         >
           <ScrollView
-            style={{
-              maxHeight: screenHeight < 400 ? screenHeight - 80 : undefined,
-            }}
+            style={[
+              styles.scrollView,
+              screenHeight < 400 && { maxHeight: screenHeight - 80 },
+            ]}
             showsVerticalScrollIndicator={false}
           >
             <Surface
@@ -159,10 +160,7 @@ export const KitchenFilterButton: React.FC = () => {
               <View style={styles.filtersList}>
                 {/* Tipo de orden */}
                 <View style={styles.sectionHeader}>
-                  <Text
-                    variant="titleMedium"
-                    style={{ color: theme.colors.onSurface, fontWeight: '600' }}
-                  >
+                  <Text variant="titleMedium" style={styles.sectionTitle}>
                     Tipo de orden
                   </Text>
                 </View>
@@ -170,19 +168,19 @@ export const KitchenFilterButton: React.FC = () => {
                   {[
                     { value: undefined, label: 'Todos', icon: 'check-all' },
                     {
-                      value: OrderType.DINE_IN,
+                      value: OrderTypeEnum.DINE_IN,
                       label: 'Mesa',
-                      icon: 'table-chair',
+                      icon: 'table',
                     },
                     {
-                      value: OrderType.TAKE_AWAY,
+                      value: OrderTypeEnum.TAKE_AWAY,
                       label: 'Llevar',
-                      icon: 'bag-checked',
+                      icon: 'bag-personal',
                     },
                     {
-                      value: OrderType.DELIVERY,
+                      value: OrderTypeEnum.DELIVERY,
                       label: 'Domicilio',
-                      icon: 'moped',
+                      icon: 'truck-delivery',
                     },
                   ].map((option) => {
                     const isSelected = filters.orderType === option.value;
@@ -206,7 +204,7 @@ export const KitchenFilterButton: React.FC = () => {
                         activeOpacity={0.8}
                       >
                         <Icon
-                          name={option.icon}
+                          name={option.icon as any}
                           size={20}
                           color={
                             isSelected
@@ -216,13 +214,15 @@ export const KitchenFilterButton: React.FC = () => {
                         />
                         <Text
                           variant="labelMedium"
-                          style={{
-                            color: isSelected
-                              ? theme.colors.onPrimaryContainer
-                              : theme.colors.onSurfaceVariant,
-                            fontWeight: isSelected ? '700' : '500',
-                            marginTop: 4,
-                          }}
+                          style={[
+                            styles.orderTypeLabel,
+                            {
+                              color: isSelected
+                                ? theme.colors.onPrimaryContainer
+                                : theme.colors.onSurfaceVariant,
+                              fontWeight: isSelected ? '700' : '500',
+                            },
+                          ]}
                         >
                           {option.label}
                         </Text>
@@ -240,10 +240,7 @@ export const KitchenFilterButton: React.FC = () => {
 
                 {/* Otros filtros */}
                 <View style={styles.sectionHeader}>
-                  <Text
-                    variant="titleMedium"
-                    style={{ color: theme.colors.onSurface, fontWeight: '600' }}
-                  >
+                  <Text variant="titleMedium" style={styles.sectionTitle}>
                     Opciones de visualización
                   </Text>
                 </View>
@@ -285,16 +282,13 @@ export const KitchenFilterButton: React.FC = () => {
                       <View style={styles.filterTextContent}>
                         <Text
                           variant="titleSmall"
-                          style={{
-                            color: theme.colors.onSurface,
-                            fontWeight: '600',
-                          }}
+                          style={styles.filterItemTitle}
                         >
                           Mostrar listas
                         </Text>
                         <Text
                           variant="bodySmall"
-                          style={{ color: theme.colors.onSurfaceVariant }}
+                          style={styles.filterItemDescription}
                         >
                           Muestra solo las órdenes listas
                         </Text>
@@ -346,16 +340,13 @@ export const KitchenFilterButton: React.FC = () => {
                       <View style={styles.filterTextContent}>
                         <Text
                           variant="titleSmall"
-                          style={{
-                            color: theme.colors.onSurface,
-                            fontWeight: '600',
-                          }}
+                          style={styles.filterItemTitle}
                         >
                           Ver todos los productos
                         </Text>
                         <Text
                           variant="bodySmall"
-                          style={{ color: theme.colors.onSurfaceVariant }}
+                          style={styles.filterItemDescription}
                         >
                           Muestra productos de todas las órdenes
                         </Text>
@@ -409,16 +400,13 @@ export const KitchenFilterButton: React.FC = () => {
                       <View style={styles.filterTextContent}>
                         <Text
                           variant="titleSmall"
-                          style={{
-                            color: theme.colors.onSurface,
-                            fontWeight: '600',
-                          }}
+                          style={styles.filterItemTitle}
                         >
                           Desagrupar productos
                         </Text>
                         <Text
                           variant="bodySmall"
-                          style={{ color: theme.colors.onSurfaceVariant }}
+                          style={styles.filterItemDescription}
                         >
                           Muestra cada producto individualmente
                         </Text>
@@ -442,132 +430,150 @@ export const KitchenFilterButton: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  buttonContainer: {
-    marginRight: 12,
-  },
-  filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (screenHeight: number, theme: any) =>
+  StyleSheet.create({
+    buttonContainer: {
+      marginRight: 12,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  modalContent: {
-    margin: screenHeight < 400 ? 10 : 20,
-    maxWidth: screenHeight < 400 ? screenWidth - 40 : 380,
-    maxHeight: screenHeight < 400 ? screenHeight - 60 : undefined,
-    alignSelf: 'center',
-    width: Math.min(screenWidth - (screenHeight < 400 ? 40 : 60), 380),
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  modalSurface: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    maxHeight: screenHeight < 400 ? screenHeight - 60 : undefined,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: screenHeight < 400 ? 12 : 16,
-    paddingBottom: screenHeight < 400 ? 8 : 12,
-    marginBottom: 4,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  headerTextContainer: {
-    marginLeft: 10,
-    flex: 1,
-  },
-  modalTitle: {
-    fontWeight: '700',
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  filtersList: {
-    padding: screenHeight < 400 ? 8 : 12,
-    paddingTop: screenHeight < 400 ? 4 : 8,
-    gap: screenHeight < 400 ? 6 : 10,
-  },
-  filterItem: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    overflow: 'hidden',
-  },
-  filterItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: screenHeight < 400 ? 8 : 12,
-    gap: screenHeight < 400 ? 8 : 10,
-  },
-  iconContainer: {
-    width: screenHeight < 400 ? 32 : 40,
-    height: screenHeight < 400 ? 32 : 40,
-    borderRadius: screenHeight < 400 ? 16 : 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterTextContent: {
-    flex: 1,
-    gap: 2,
-  },
-  sectionHeader: {
-    marginBottom: screenHeight < 400 ? 8 : 12,
-    paddingHorizontal: 4,
-  },
-  orderTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 8,
-  },
-  orderTypeButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: screenHeight < 400 ? 8 : 12,
-    paddingHorizontal: screenHeight < 400 ? 4 : 8,
-    borderRadius: 12,
-    borderWidth: 1.5,
-  },
-  divider: {
-    height: 1,
-    marginVertical: screenHeight < 400 ? 8 : 16,
-    marginHorizontal: screenHeight < 400 ? -8 : -12,
-  },
-});
+    filterButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    badge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 4,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontWeight: 'bold',
+    },
+    modalContent: {
+      margin: screenHeight < 400 ? 10 : 20,
+      maxWidth: screenHeight < 400 ? '90%' : 380,
+      maxHeight: screenHeight < 400 ? screenHeight - 60 : undefined,
+      alignSelf: 'center',
+      width: '90%',
+      borderRadius: 20,
+      overflow: 'hidden',
+    },
+    modalSurface: {
+      borderRadius: 20,
+      overflow: 'hidden',
+      maxHeight: screenHeight < 400 ? screenHeight - 60 : undefined,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: screenHeight < 400 ? 12 : 16,
+      paddingBottom: screenHeight < 400 ? 8 : 12,
+      marginBottom: 4,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    headerTextContainer: {
+      marginLeft: 10,
+      flex: 1,
+    },
+    modalTitle: {
+      fontWeight: '700',
+    },
+    closeButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 8,
+    },
+    filtersList: {
+      padding: screenHeight < 400 ? 8 : 12,
+      paddingTop: screenHeight < 400 ? 4 : 8,
+      gap: screenHeight < 400 ? 6 : 10,
+    },
+    filterItem: {
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      overflow: 'hidden',
+    },
+    filterItemContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: screenHeight < 400 ? 8 : 12,
+      gap: screenHeight < 400 ? 8 : 10,
+    },
+    iconContainer: {
+      width: screenHeight < 400 ? 32 : 40,
+      height: screenHeight < 400 ? 32 : 40,
+      borderRadius: screenHeight < 400 ? 16 : 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    filterTextContent: {
+      flex: 1,
+      gap: 2,
+    },
+    sectionHeader: {
+      marginBottom: screenHeight < 400 ? 8 : 12,
+      paddingHorizontal: 4,
+    },
+    orderTypeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+      gap: 8,
+    },
+    orderTypeButton: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: screenHeight < 400 ? 8 : 12,
+      paddingHorizontal: screenHeight < 400 ? 4 : 8,
+      borderRadius: 12,
+      borderWidth: 1.5,
+    },
+    divider: {
+      height: 1,
+      marginVertical: screenHeight < 400 ? 8 : 16,
+      marginHorizontal: screenHeight < 400 ? -8 : -12,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    sectionTitle: {
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
+    orderTypeLabel: {
+      marginTop: 4,
+    },
+    filterItemTitle: {
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
+    filterItemDescription: {
+      color: theme.colors.onSurfaceVariant,
+    },
+  });

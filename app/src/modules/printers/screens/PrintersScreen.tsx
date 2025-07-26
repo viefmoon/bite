@@ -17,10 +17,10 @@ import { useListState } from '../../../app/hooks/useListState';
 import {
   usePrintersQuery,
   useDeletePrinterMutation,
-  usePingPrinterMutation, // <-- Importar hook de ping
-  useTestPrintPrinter, // <-- Importar hook de test print
+  usePingPrinterMutation,
+  useTestPrintPrinter,
 } from '../hooks/usePrintersQueries';
-import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic'; // Importar hook CRUD
+import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
@@ -41,15 +41,13 @@ const PrintersScreen: React.FC = () => {
   const [testPrintingPrinterId, setTestPrintingPrinterId] = useState<
     string | null
   >(null);
-  const [fabOpen, setFabOpen] = useState(false); // Estado para el FAB.Group
+  const [fabOpen, setFabOpen] = useState(false);
 
-  // --- Lógica CRUD ---
   const queryParams = useMemo(
     () => ({
       isActive: undefined,
-      // Añadir otros filtros si son necesarios (ej. name, connectionType)
-      page: 1, // O manejar paginación si es necesario
-      limit: 50, // Ajustar límite según necesidad
+      page: 1,
+      limit: 50,
     }),
     [],
   );
@@ -63,10 +61,9 @@ const PrintersScreen: React.FC = () => {
   } = usePrintersQuery(queryParams);
 
   const { mutateAsync: deletePrinter } = useDeletePrinterMutation();
-  const pingPrinterMutation = usePingPrinterMutation(); // Instanciar la mutación de ping
-  const testPrintMutation = useTestPrintPrinter(); // Instanciar la mutación de test print
+  const pingPrinterMutation = usePingPrinterMutation();
+  const testPrintMutation = useTestPrintPrinter();
 
-  // Refrescar impresoras cuando la pantalla recibe foco
   useRefreshModuleOnFocus('thermalPrinters');
 
   const {
@@ -82,19 +79,28 @@ const PrintersScreen: React.FC = () => {
     deleteConfirmation,
   } = useCrudScreenLogic<ThermalPrinter>({
     entityName: 'Impresora',
-    queryKey: ['thermalPrinters', queryParams], // Usar queryKey consistente
+    queryKey: ['thermalPrinters', queryParams],
     deleteMutationFn: deletePrinter,
   });
-  // --- Fin Lógica CRUD ---
+  const handlePingPrinter = useCallback(
+    async (printerId: string) => {
+      setPingingPrinterId(printerId);
+      try {
+        await pingPrinterMutation.mutateAsync(printerId);
+      } catch (error) {
+      } finally {
+        setPingingPrinterId(null);
+      }
+    },
+    [pingPrinterMutation],
+  );
 
-  // Handler para imprimir ticket de prueba
   const handleTestPrint = useCallback(
     async (printerId: string) => {
       setTestPrintingPrinterId(printerId);
       try {
         await testPrintMutation.mutateAsync(printerId);
       } catch (error) {
-        // El error ya se maneja en el hook con un snackbar
       } finally {
         setTestPrintingPrinterId(null);
       }
@@ -103,8 +109,8 @@ const PrintersScreen: React.FC = () => {
   );
 
   const handleOpenAddModal = () => {
-    setDiscoveredPrinterData(null); // Limpiar datos de descubrimiento
-    handleOpenCreateModal(); // Abrir modal de formulario vacío
+    setDiscoveredPrinterData(null);
+    handleOpenCreateModal();
   };
 
   const handleOpenDiscoveryModal = () => {
@@ -116,19 +122,17 @@ const PrintersScreen: React.FC = () => {
   };
 
   const handlePrinterSelectedFromDiscovery = (printer: DiscoveredPrinter) => {
-    // Pre-rellenar datos para el formulario
     setDiscoveredPrinterData({
       name: printer.name || `Impresora ${printer.ip}`,
-      connectionType: 'NETWORK', // Asumir NETWORK
+      connectionType: 'NETWORK',
       ipAddress: printer.ip,
       port: printer.port,
       macAddress: printer.mac || undefined,
     });
-    setIsDiscoveryModalVisible(false); // Cerrar modal de descubrimiento
-    handleOpenCreateModal(); // Abrir modal de formulario con datos pre-rellenados
+    setIsDiscoveryModalVisible(false);
+    handleOpenCreateModal();
   };
 
-  // Función para renderizar cada impresora
   const renderPrinter = useCallback(
     ({ item }: { item: ThermalPrinter }) => {
       const isPingingThis = pingingPrinterId === item.id;
@@ -171,7 +175,6 @@ const PrintersScreen: React.FC = () => {
     ],
   );
 
-  // Filtrar datos según el estado seleccionado
   const filteredData = useMemo(() => {
     if (!printersResponse?.data) return [];
     return printersResponse.data;
@@ -191,26 +194,11 @@ const PrintersScreen: React.FC = () => {
       title: 'Error al cargar impresoras',
       message: 'No se pudieron cargar las impresoras. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetchList,
+      onAction: refetchList,
+      actionLabel: 'Reintentar',
     },
   });
 
-  // --- Funcionalidad de Ping ---
-  const handlePingPrinter = useCallback(
-    async (printerId: string) => {
-      setPingingPrinterId(printerId);
-      try {
-        await pingPrinterMutation.mutateAsync(printerId);
-      } catch (error) {
-        // El error ya se maneja en el hook con un snackbar
-      } finally {
-        setPingingPrinterId(null);
-      }
-    },
-    [pingPrinterMutation],
-  );
-
-  // Función para renderizar cuando no hay datos
   const renderEmptyList = () => {
     if (isLoadingList) {
       return (
@@ -225,8 +213,6 @@ const PrintersScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Eliminar la View de headerButtons */}
-
       <FlatList
         data={filteredData}
         renderItem={renderPrinter}
@@ -241,23 +227,19 @@ const PrintersScreen: React.FC = () => {
       />
 
       <Portal>
-        {/* Modal de Descubrimiento */}
         <PrinterDiscoveryModal
           visible={isDiscoveryModalVisible}
           onDismiss={handleDismissDiscoveryModal}
           onPrinterSelect={handlePrinterSelectedFromDiscovery}
         />
-        {/* Modal de Formulario */}
         <PrinterFormModal
           visible={isFormModalVisible}
           onDismiss={handleCloseModals}
           editingItem={editingItem}
-          // Pasar datos descubiertos al crear, usar undefined en lugar de null
           initialDataFromDiscovery={
             !editingItem ? (discoveredPrinterData ?? undefined) : undefined
           }
         />
-        {/* Modal de Detalle Personalizado */}
         <PrinterDetailModal
           visible={isDetailModalVisible}
           onDismiss={handleCloseModals}
@@ -268,7 +250,6 @@ const PrintersScreen: React.FC = () => {
           isDeleting={isDeleting}
           isTestPrinting={testPrintingPrinterId === selectedItem?.id}
         />
-        {/* Añadir FAB.Group dentro del Portal */}
         <FAB.Group
           open={fabOpen}
           visible={
@@ -276,14 +257,14 @@ const PrintersScreen: React.FC = () => {
             !isDetailModalVisible &&
             !isDiscoveryModalVisible &&
             !isDrawerOpen
-          } // Ocultar si hay modales abiertos o drawer
+          }
           icon={fabOpen ? 'close' : 'plus'}
           actions={[
             {
               icon: 'magnify-scan',
               label: 'Descubrir en Red',
               onPress: handleOpenDiscoveryModal,
-              style: { backgroundColor: theme.colors.tertiaryContainer }, // Color diferente
+              style: { backgroundColor: theme.colors.tertiaryContainer },
               color: theme.colors.onTertiaryContainer,
               labelTextColor: theme.colors.onTertiaryContainer,
               size: 'small',
@@ -292,7 +273,7 @@ const PrintersScreen: React.FC = () => {
               icon: 'plus',
               label: 'Añadir Manual',
               onPress: handleOpenAddModal,
-              style: { backgroundColor: theme.colors.secondaryContainer }, // Color diferente
+              style: { backgroundColor: theme.colors.secondaryContainer },
               color: theme.colors.onSecondaryContainer,
               labelTextColor: theme.colors.onSecondaryContainer,
               size: 'small',
@@ -301,11 +282,10 @@ const PrintersScreen: React.FC = () => {
           onStateChange={({ open }) => setFabOpen(open)}
           onPress={() => {
             if (fabOpen) {
-              // Acción opcional al cerrar el FAB principal
             }
           }}
-          fabStyle={{ backgroundColor: theme.colors.primary }} // Color principal para el FAB
-          color={theme.colors.onPrimary} // Color del icono principal
+          fabStyle={{ backgroundColor: theme.colors.primary }}
+          color={theme.colors.onPrimary}
         />
       </Portal>
     </SafeAreaView>
@@ -321,9 +301,8 @@ const createStyles = (
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    // Eliminar estilos de headerButtons
     listPadding: {
-      paddingBottom: 80, // Espacio para que el FAB no tape el último item
+      paddingBottom: 80,
       paddingTop: responsive.spacing(theme.spacing.s),
     },
     emptyListContainer: {
@@ -337,30 +316,27 @@ const createStyles = (
       padding: responsive.spacing(theme.spacing.xl),
     },
     itemActionsContainer: {
-      // Contenedor para los botones de acción de cada item
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
     },
     actionButton: {
-      // Estilo base para botones de acción en la lista
       margin: 0,
       padding: 0,
-      width: responsive.isTablet ? 44 : 52, // Más pequeño en tablet
-      height: responsive.isTablet ? 44 : 52, // Más pequeño en tablet
-      borderRadius: responsive.isTablet ? 22 : 26, // Redondeado perfecto
-      backgroundColor: theme.colors.surfaceVariant, // Fondo para hacerlo más atractivo
-      elevation: 2, // Sombra sutil para darle profundidad
+      width: responsive.isTablet ? 44 : 52,
+      height: responsive.isTablet ? 44 : 52,
+      borderRadius: responsive.isTablet ? 22 : 26,
+      backgroundColor: theme.colors.surfaceVariant,
+      elevation: 2,
     },
     pingIndicator: {
-      // Estilo para el indicador de carga del ping
-      width: responsive.isTablet ? 44 : 52, // Mismo ancho que el botón
-      height: responsive.isTablet ? 44 : 52, // Mismo alto
+      width: responsive.isTablet ? 44 : 52,
+      height: responsive.isTablet ? 44 : 52,
       justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: responsive.isTablet ? 22 : 26, // Redondeado perfecto
-      backgroundColor: theme.colors.primaryContainer, // Fondo de color primario
-      elevation: 2, // Sombra sutil
+      borderRadius: responsive.isTablet ? 22 : 26,
+      backgroundColor: theme.colors.primaryContainer,
+      elevation: 2,
     },
     errorText: {
       color: theme.colors.error,

@@ -57,11 +57,13 @@ export function ServerSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const [discoveryProgress, setDiscoveryProgress] = useState<DiscoveryProgress>({
-    current: 0,
-    total: 0,
-    message: '',
-  });
+  const [discoveryProgress, setDiscoveryProgress] = useState<DiscoveryProgress>(
+    {
+      current: 0,
+      total: 0,
+      message: '',
+    },
+  );
 
   useEffect(() => {
     loadSettings();
@@ -232,7 +234,10 @@ export function ServerSettingsScreen() {
         }
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al guardar la configuración';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Error al guardar la configuración';
       showSnackbar(message, 'error');
     } finally {
       setSaving(false);

@@ -12,15 +12,13 @@ import {
   RadioButton,
 } from 'react-native-paper';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import type {
-  PizzaCustomization,
-  PizzaConfiguration,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import type { PizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 import {
-  PizzaHalf,
-  CustomizationAction,
-  CustomizationType,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+  CustomizationTypeEnum,
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { useAppTheme } from '@/app/styles/theme';
 
 interface PizzaCustomizationSectionProps {
@@ -133,14 +131,16 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     // Separar sabores e ingredientes
     const flavors = useMemo(
       () =>
-        pizzaCustomizations.filter((c) => c.type === CustomizationType.FLAVOR),
+        pizzaCustomizations.filter(
+          (c) => c.type === CustomizationTypeEnum.FLAVOR,
+        ),
       [pizzaCustomizations],
     );
 
     const ingredients = useMemo(
       () =>
         pizzaCustomizations.filter(
-          (c) => c.type === CustomizationType.INGREDIENT,
+          (c) => c.type === CustomizationTypeEnum.INGREDIENT,
         ),
       [pizzaCustomizations],
     );
@@ -150,7 +150,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
       () =>
         selectedPizzaCustomizations.filter(
           (sc) =>
-            sc.action === CustomizationAction.ADD &&
+            sc.action === CustomizationActionEnum.ADD &&
             flavors.some((f) => f.id === sc.pizzaCustomizationId),
         ),
       [selectedPizzaCustomizations, flavors],
@@ -170,7 +170,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
         const isSelected = selectedPizzaCustomizations.some(
           (sc) =>
             sc.pizzaCustomizationId === flavorId &&
-            sc.action === CustomizationAction.ADD,
+            sc.action === CustomizationActionEnum.ADD,
         );
 
         if (isSelected) {
@@ -179,14 +179,14 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             (sc) =>
               !(
                 sc.pizzaCustomizationId === flavorId &&
-                sc.action === CustomizationAction.ADD
+                sc.action === CustomizationActionEnum.ADD
               ),
           );
 
           // Si queda solo un sabor después de deseleccionar, cambiar su half a FULL
           const remainingFlavors = remainingFlavorSelections.filter(
             (sc) =>
-              sc.action === CustomizationAction.ADD &&
+              sc.action === CustomizationActionEnum.ADD &&
               flavors.some((f) => f.id === sc.pizzaCustomizationId),
           );
 
@@ -195,15 +195,15 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             const nonFlavorSelections = remainingFlavorSelections.filter(
               (sc) =>
                 !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
-                sc.action !== CustomizationAction.ADD,
+                sc.action !== CustomizationActionEnum.ADD,
             );
 
             onCustomizationChange([
               ...nonFlavorSelections,
               {
                 pizzaCustomizationId: otherFlavorId,
-                half: PizzaHalf.FULL,
-                action: CustomizationAction.ADD,
+                half: PizzaHalfEnum.FULL,
+                action: CustomizationActionEnum.ADD,
               },
             ]);
           } else {
@@ -213,7 +213,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
           // Seleccionar
           const currentFlavors = selectedPizzaCustomizations.filter(
             (sc) =>
-              sc.action === CustomizationAction.ADD &&
+              sc.action === CustomizationActionEnum.ADD &&
               flavors.some((f) => f.id === sc.pizzaCustomizationId),
           );
 
@@ -224,7 +224,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
           const nonFlavorSelections = selectedPizzaCustomizations.filter(
             (sc) =>
               !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
-              sc.action !== CustomizationAction.ADD,
+              sc.action !== CustomizationActionEnum.ADD,
           );
 
           if (currentFlavors.length === 0) {
@@ -234,8 +234,8 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                 ...nonFlavorSelections,
                 {
                   pizzaCustomizationId: flavorId,
-                  half: PizzaHalf.HALF_1,
-                  action: CustomizationAction.ADD,
+                  half: PizzaHalfEnum.HALF_1,
+                  action: CustomizationActionEnum.ADD,
                 },
               ]);
             } else {
@@ -243,8 +243,8 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                 ...nonFlavorSelections,
                 {
                   pizzaCustomizationId: flavorId,
-                  half: PizzaHalf.FULL,
-                  action: CustomizationAction.ADD,
+                  half: PizzaHalfEnum.FULL,
+                  action: CustomizationActionEnum.ADD,
                 },
               ]);
             }
@@ -255,15 +255,15 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             // Cambiar el sabor existente a mitad 1
             nonFlavorSelections.push({
               pizzaCustomizationId: existingFlavor.pizzaCustomizationId,
-              half: PizzaHalf.HALF_1,
-              action: CustomizationAction.ADD,
+              half: PizzaHalfEnum.HALF_1,
+              action: CustomizationActionEnum.ADD,
             });
 
             // Agregar el nuevo sabor a mitad 2
             nonFlavorSelections.push({
               pizzaCustomizationId: flavorId,
-              half: PizzaHalf.HALF_2,
-              action: CustomizationAction.ADD,
+              half: PizzaHalfEnum.HALF_2,
+              action: CustomizationActionEnum.ADD,
             });
 
             onCustomizationChange(nonFlavorSelections);
@@ -279,7 +279,11 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     );
 
     const toggleIngredient = useCallback(
-      (ingredientId: string, half: PizzaHalf, action: CustomizationAction) => {
+      (
+        ingredientId: string,
+        half: PizzaHalfEnum,
+        action: CustomizationActionEnum,
+      ) => {
         const existingIndex = selectedPizzaCustomizations.findIndex(
           (sc) =>
             sc.pizzaCustomizationId === ingredientId &&
@@ -315,8 +319,8 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     const isIngredientSelected = useCallback(
       (
         ingredientId: string,
-        half: PizzaHalf,
-        action: CustomizationAction,
+        half: PizzaHalfEnum,
+        action: CustomizationActionEnum,
       ): boolean => {
         return selectedPizzaCustomizations.some(
           (sc) =>
@@ -349,14 +353,14 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
 
     // Renderizar sección de personalización
     const renderCustomizationSection = (
-      half: PizzaHalf,
+      half: PizzaHalfEnum,
       sectionTitle: string,
       flavorName?: string,
     ) => {
       const sectionKey =
-        half === PizzaHalf.FULL
+        half === PizzaHalfEnum.FULL
           ? 'full'
-          : half === PizzaHalf.HALF_1
+          : half === PizzaHalfEnum.HALF_1
             ? 'half1'
             : 'half2';
       const isExpanded = expandedIngredients[sectionKey];
@@ -372,7 +376,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
         // Agregar el sabor si existe
         if (flavorName) {
           parts.push(flavorName);
-        } else if (half !== PizzaHalf.FULL) {
+        } else if (half !== PizzaHalfEnum.FULL) {
           // Para mitades sin sabor
           parts.push('Sin sabor');
         }
@@ -386,7 +390,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             (c) => c.id === sc.pizzaCustomizationId,
           );
           if (customization) {
-            if (sc.action === CustomizationAction.ADD) {
+            if (sc.action === CustomizationActionEnum.ADD) {
               addedIngredients.push(customization.name);
             } else {
               removedIngredients.push(customization.name);
@@ -444,17 +448,17 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                     const isAddSelected = isIngredientSelected(
                       ingredient.id,
                       half,
-                      CustomizationAction.ADD,
+                      CustomizationActionEnum.ADD,
                     );
                     const isRemoveSelected = isIngredientSelected(
                       ingredient.id,
                       half,
-                      CustomizationAction.REMOVE,
+                      CustomizationActionEnum.REMOVE,
                     );
                     const isSelected = isAddSelected || isRemoveSelected;
                     const currentAction = isAddSelected
-                      ? CustomizationAction.ADD
-                      : CustomizationAction.REMOVE;
+                      ? CustomizationActionEnum.ADD
+                      : CustomizationActionEnum.REMOVE;
 
                     return (
                       <Surface
@@ -474,7 +478,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                               toggleIngredient(
                                 ingredient.id,
                                 half,
-                                CustomizationAction.ADD,
+                                CustomizationActionEnum.ADD,
                               );
                             }
                           }}
@@ -507,7 +511,8 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                                 <Text
                                   style={[
                                     styles.toggleLabel,
-                                    currentAction === CustomizationAction.ADD &&
+                                    currentAction ===
+                                      CustomizationActionEnum.ADD &&
                                       styles.activeLabel,
                                   ]}
                                 >
@@ -515,12 +520,13 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                                 </Text>
                                 <Switch
                                   value={
-                                    currentAction === CustomizationAction.REMOVE
+                                    currentAction ===
+                                    CustomizationActionEnum.REMOVE
                                   }
                                   onValueChange={(value) => {
                                     const newAction = value
-                                      ? CustomizationAction.REMOVE
-                                      : CustomizationAction.ADD;
+                                      ? CustomizationActionEnum.REMOVE
+                                      : CustomizationActionEnum.ADD;
                                     toggleIngredient(
                                       ingredient.id,
                                       half,
@@ -533,7 +539,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                                   style={[
                                     styles.toggleLabel,
                                     currentAction ===
-                                      CustomizationAction.REMOVE &&
+                                      CustomizationActionEnum.REMOVE &&
                                       styles.activeLabel,
                                   ]}
                                 >
@@ -555,7 +561,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                                   toggleIngredient(
                                     ingredient.id,
                                     half,
-                                    CustomizationAction.ADD,
+                                    CustomizationActionEnum.ADD,
                                   );
                                 }
                               }}
@@ -625,8 +631,8 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                         if (value && selectedFlavors.length <= 1) {
                           const updatedCustomizations =
                             selectedPizzaCustomizations.map((sc) => {
-                              if (sc.half === PizzaHalf.FULL) {
-                                return { ...sc, half: PizzaHalf.HALF_1 };
+                              if (sc.half === PizzaHalfEnum.FULL) {
+                                return { ...sc, half: PizzaHalfEnum.HALF_1 };
                               }
                               return sc;
                             });
@@ -637,10 +643,10 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                           const updatedCustomizations =
                             selectedPizzaCustomizations.map((sc) => {
                               if (
-                                sc.half === PizzaHalf.HALF_1 ||
-                                sc.half === PizzaHalf.HALF_2
+                                sc.half === PizzaHalfEnum.HALF_1 ||
+                                sc.half === PizzaHalfEnum.HALF_2
                               ) {
-                                return { ...sc, half: PizzaHalf.FULL };
+                                return { ...sc, half: PizzaHalfEnum.FULL };
                               }
                               return sc;
                             });
@@ -682,14 +688,14 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
           // Modo mitades (2 sabores o modo manual)
           <>
             {renderCustomizationSection(
-              PizzaHalf.HALF_1,
+              PizzaHalfEnum.HALF_1,
               'Mitad 1',
               selectedFlavors[0]
                 ? getFlavorName(selectedFlavors[0].pizzaCustomizationId)
                 : undefined,
             )}
             {renderCustomizationSection(
-              PizzaHalf.HALF_2,
+              PizzaHalfEnum.HALF_2,
               'Mitad 2',
               selectedFlavors[1]
                 ? getFlavorName(selectedFlavors[1].pizzaCustomizationId)
@@ -699,7 +705,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
         ) : (
           // Modo completo (sin sabores o 1 sabor)
           renderCustomizationSection(
-            PizzaHalf.FULL,
+            PizzaHalfEnum.FULL,
             'Pizza Completa',
             selectedFlavors[0]
               ? getFlavorName(selectedFlavors[0].pizzaCustomizationId)

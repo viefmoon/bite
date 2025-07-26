@@ -28,15 +28,13 @@ import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import type {
-  PizzaCustomization,
-  PizzaConfiguration,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+import type { PizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 import {
-  PizzaHalf,
-  CustomizationAction,
-  CustomizationType,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+  CustomizationTypeEnum,
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import PizzaCustomizationSection from './PizzaCustomizationSection';
 import { useProductValidation } from '../hooks/useProductValidation';
 
@@ -140,7 +138,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
 
       // Solo contar customizaciones con action = ADD
       const addedCustomizations = selectedPizzaCustomizations.filter(
-        (c) => c.action === CustomizationAction.ADD,
+        (c) => c.action === CustomizationActionEnum.ADD,
       );
 
       for (const selected of addedCustomizations) {
@@ -149,7 +147,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         );
         if (!customization) continue;
 
-        if (selected.half === PizzaHalf.FULL) {
+        if (selected.half === PizzaHalfEnum.FULL) {
           // Pizza completa suma el toppingValue completo
           totalToppingValue += customization.toppingValue;
         } else {
@@ -388,11 +386,11 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       if (product.isPizza && pizzaConfiguration) {
         const selectedFlavors = selectedPizzaCustomizations.filter(
           (sc) =>
-            sc.action === CustomizationAction.ADD &&
+            sc.action === CustomizationActionEnum.ADD &&
             pizzaCustomizations.some(
               (pc) =>
                 pc.id === sc.pizzaCustomizationId &&
-                pc.type === CustomizationType.FLAVOR,
+                pc.type === CustomizationTypeEnum.FLAVOR,
             ),
         );
 

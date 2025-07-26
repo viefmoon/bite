@@ -116,10 +116,8 @@ const testPrintDiscoveredPrinter = async (
 const testPrintPrinter = async (
   id: string,
 ): Promise<{ success: boolean; message?: string }> => {
-  // Primero obtener la información de la impresora
   const printer = await findOnePrinter(id);
 
-  // Preparar los datos según el tipo de conexión
   const printerInfo: any = {
     connectionType: printer.connectionType,
   };
@@ -128,7 +126,6 @@ const testPrintPrinter = async (
     printerInfo.ip = printer.ipAddress;
     printerInfo.port = printer.port;
   } else {
-    // Para otros tipos de conexión, usar la ruta
     printerInfo.path = printer.path;
   }
 

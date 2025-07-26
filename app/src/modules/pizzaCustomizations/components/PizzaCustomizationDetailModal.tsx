@@ -3,7 +3,7 @@ import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import {
   CustomizationType,
   PizzaCustomization,
-} from '../types/pizzaCustomization.types';
+} from '../schema/pizzaCustomization.schema';
 
 interface PizzaCustomizationDetailModalProps {
   visible: boolean;

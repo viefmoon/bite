@@ -13,14 +13,14 @@ import {
 import {
   OrderForFinalization,
   OrderItemForFinalization,
-} from '../types/orderFinalization.types';
+} from '../schema/orderFinalization.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import {
-  CustomizationType,
-  PizzaHalf,
-  CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+  CustomizationTypeEnum,
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -38,9 +38,9 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
   const groupedByHalf = customizations.reduce(
     (acc, curr) => {
       const half =
-        curr.half === PizzaHalf.HALF_1
+        curr.half === PizzaHalfEnum.HALF_1
           ? 'HALF_1'
-          : curr.half === PizzaHalf.HALF_2
+          : curr.half === PizzaHalfEnum.HALF_2
             ? 'HALF_2'
             : 'FULL';
 
@@ -55,13 +55,13 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
       const name = curr.pizzaCustomization?.name || curr.pizzaCustomizationId;
       const type = curr.pizzaCustomization?.type;
 
-      if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
+      if (type === 'FLAVOR' || type === CustomizationTypeEnum.FLAVOR) {
         acc[half].flavors.push(name);
       } else if (
         type === 'INGREDIENT' ||
-        type === CustomizationType.INGREDIENT
+        type === CustomizationTypeEnum.INGREDIENT
       ) {
-        if (curr.action === CustomizationAction.ADD) {
+        if (curr.action === CustomizationActionEnum.ADD) {
           acc[half].addedIngredients.push(name);
         } else {
           acc[half].removedIngredients.push(name);
@@ -436,7 +436,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         styles.headerStatusChip,
                         {
                           backgroundColor: order
-                            ? getStatusColor(order.orderStatus, theme)
+                            ? getStatusColor(order.orderStatus)
                             : theme.colors.surfaceVariant,
                         },
                       ]}

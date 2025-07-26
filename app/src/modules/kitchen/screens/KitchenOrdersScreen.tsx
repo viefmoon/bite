@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-  useCallback,
-} from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Animated, Platform } from 'react-native';
 import { Text, ActivityIndicator, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -17,10 +11,10 @@ import {
 import { useKitchenStore } from '../store/kitchenStore';
 import { OrderCard } from '../components/OrderCard';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useKitchenContext } from '../context/KitchenContext';
-import { OrderType } from '../types/kitchen.types';
+import { OrderTypeEnum } from '../schema/kitchen.schema';
 
 export default function KitchenOrdersScreen() {
   const theme = useAppTheme();
@@ -58,7 +52,7 @@ export default function KitchenOrdersScreen() {
     return responsive.isTablet
       ? responsive.getResponsiveDimension(280, 320)
       : responsive.getResponsiveDimension(240, 280);
-  }, [responsive.isTablet, responsive.isDesktop, responsive.isWeb]);
+  }, [responsive]);
 
   const handleStartPreparation = useCallback(
     (orderId: string) => {
@@ -122,9 +116,9 @@ export default function KitchenOrdersScreen() {
 
     if (filters.orderType) {
       const typeLabels = {
-        [OrderType.DINE_IN]: 'Para Mesa',
-        [OrderType.TAKE_AWAY]: 'Para Llevar',
-        [OrderType.DELIVERY]: 'Delivery',
+        [OrderTypeEnum.DINE_IN]: 'Para Mesa',
+        [OrderTypeEnum.TAKE_AWAY]: 'Para Llevar',
+        [OrderTypeEnum.DELIVERY]: 'Delivery',
       };
       activeFilters.push(`Tipo: ${typeLabels[filters.orderType]}`);
     }
@@ -183,7 +177,9 @@ export default function KitchenOrdersScreen() {
               styles.gridContainer,
           ]}
           snapToInterval={
-            responsive.isWeb ? undefined : cardWidth + responsive.spacing.m
+            responsive.isWeb
+              ? undefined
+              : cardWidth + responsive.spacingPreset.m
           }
           decelerationRate="fast"
           snapToAlignment={responsive.isWeb ? undefined : 'start'}
@@ -196,7 +192,9 @@ export default function KitchenOrdersScreen() {
                 {
                   width: cardWidth,
                   marginRight:
-                    index === orders.length - 1 ? 0 : responsive.spacing.xxs,
+                    index === orders.length - 1
+                      ? 0
+                      : responsive.spacingPreset.xxs,
                 },
                 responsive.isWeb &&
                   responsive.width >= 1200 &&
@@ -291,14 +289,14 @@ const createStyles = (theme: any, responsive: any) =>
     },
     horizontalListContainer: {
       paddingLeft: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.xxs,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.xxs,
       paddingRight: responsive.isWeb
-        ? responsive.spacing.m
-        : responsive.spacing.xs,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.xs,
       paddingVertical: responsive.isWeb
-        ? responsive.spacing.s
-        : responsive.spacing.xxs,
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xxs,
       minHeight: '100%',
       alignItems:
         responsive.isWeb && responsive.width >= 1200 ? 'flex-start' : 'center',
@@ -308,24 +306,24 @@ const createStyles = (theme: any, responsive: any) =>
       flexWrap: 'wrap',
       justifyContent: 'flex-start',
       alignItems: 'flex-start',
-      paddingHorizontal: responsive.spacing.l,
-      paddingVertical: responsive.spacing.m,
+      paddingHorizontal: responsive.spacingPreset.l,
+      paddingVertical: responsive.spacingPreset.m,
     },
     emptyStateContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: responsive.spacing.m,
-      paddingVertical: responsive.spacing.xs,
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingVertical: responsive.spacingPreset.xs,
       backgroundColor: theme.colors.background,
     },
     emptyCard: {
       paddingHorizontal: responsive.isWeb
-        ? responsive.spacing.xl
-        : responsive.spacing.m,
+        ? responsive.spacingPreset.xl
+        : responsive.spacingPreset.m,
       paddingVertical: responsive.isWeb
-        ? responsive.spacing.xl
-        : responsive.spacing.m,
+        ? responsive.spacingPreset.xl
+        : responsive.spacingPreset.m,
       borderRadius: theme.roundness * 2,
       alignItems: 'center',
       maxHeight: '70%',
@@ -343,17 +341,17 @@ const createStyles = (theme: any, responsive: any) =>
       elevation: 3,
     },
     emptyIconContainer: {
-      marginBottom: responsive.spacing.s,
-      padding: responsive.spacing.s,
+      marginBottom: responsive.spacingPreset.s,
+      padding: responsive.spacingPreset.s,
       backgroundColor: theme.colors.primaryContainer,
       borderRadius: theme.roundness,
     },
     emptyText: {
       textAlign: 'center',
-      marginBottom: responsive.spacing.xs,
+      marginBottom: responsive.spacingPreset.xs,
       fontWeight: '600',
-      fontSize: responsive.fontSize.s,
-      paddingHorizontal: responsive.spacing.xs,
+      fontSize: responsive.fontSizePreset.s,
+      paddingHorizontal: responsive.spacingPreset.xs,
       maxWidth: '100%',
       color: theme.colors.onSurface,
     },
@@ -361,9 +359,9 @@ const createStyles = (theme: any, responsive: any) =>
       textAlign: 'center',
       lineHeight: responsive.getResponsiveDimension(16, 18),
       opacity: 0.7,
-      marginBottom: responsive.spacing.s,
-      fontSize: responsive.fontSize.xs,
-      paddingHorizontal: responsive.spacing.xs,
+      marginBottom: responsive.spacingPreset.s,
+      fontSize: responsive.fontSizePreset.xs,
+      paddingHorizontal: responsive.spacingPreset.xs,
       maxWidth: '100%',
       fontWeight: '400',
       color: theme.colors.onSurfaceVariant,
@@ -372,13 +370,13 @@ const createStyles = (theme: any, responsive: any) =>
       textAlign: 'center',
       opacity: 0.5,
       fontStyle: 'italic',
-      fontSize: responsive.fontSize.xs - 1,
-      paddingHorizontal: responsive.spacing.xs,
+      fontSize: responsive.fontSizePreset.xs - 1,
+      paddingHorizontal: responsive.spacingPreset.xs,
       maxWidth: '100%',
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
-      paddingTop: responsive.spacing.s,
-      marginTop: responsive.spacing.xs,
+      paddingTop: responsive.spacingPreset.s,
+      marginTop: responsive.spacingPreset.xs,
       width: '80%',
       fontWeight: '400',
       color: theme.colors.onSurfaceVariant,
@@ -390,11 +388,11 @@ const createStyles = (theme: any, responsive: any) =>
     },
     cardContainer: {
       height: '100%',
-      paddingVertical: responsive.spacing.xxxs,
+      paddingVertical: responsive.spacingPreset.xxxs,
     },
     cardContainerWeb: {
-      marginRight: responsive.spacing.s,
-      marginBottom: responsive.spacing.s,
+      marginRight: responsive.spacingPreset.s,
+      marginBottom: responsive.spacingPreset.s,
       height: 'auto',
     },
   });

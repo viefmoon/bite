@@ -51,20 +51,20 @@ npx expo start --dev-client --tunnel  # Para Development Build
 
 ## Scripts Disponibles
 
-| Script | Descripción |
-|--------|-------------|
-| `scripts/install-java.sh` | Instala Java 17 |
-| `scripts/install-android-sdk.sh` | Instala Android SDK y configura el entorno |
-| `scripts/verify-android-setup.sh` | Verifica la configuración del entorno |
-| `scripts/fix-expo-packages.sh` | Actualiza y corrige versiones de paquetes Expo |
+| Script                            | Descripción                                    |
+| --------------------------------- | ---------------------------------------------- |
+| `scripts/install-java.sh`         | Instala Java 17                                |
+| `scripts/install-android-sdk.sh`  | Instala Android SDK y configura el entorno     |
+| `scripts/verify-android-setup.sh` | Verifica la configuración del entorno          |
+| `scripts/fix-expo-packages.sh`    | Actualiza y corrige versiones de paquetes Expo |
 
 ## Comandos de Build
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run build:android:sim` | Build para emulador Android |
-| `npm run build:android:dev` | Build para dispositivo Android (desarrollo) |
-| `npm run build:android:prod` | Build de producción Android |
+| Comando                      | Descripción                                 |
+| ---------------------------- | ------------------------------------------- |
+| `npm run build:android:sim`  | Build para emulador Android                 |
+| `npm run build:android:dev`  | Build para dispositivo Android (desarrollo) |
+| `npm run build:android:prod` | Build de producción Android                 |
 
 ## Requisitos del Sistema
 
@@ -83,6 +83,7 @@ npx expo start --dev-client --tunnel  # Para Development Build
 ## Troubleshooting
 
 ### Error: Cannot determine which native SDK version (expo module not installed)
+
 ```bash
 # Este error ocurre cuando el módulo expo no está instalado
 # Solución:
@@ -91,6 +92,7 @@ npx expo install --fix
 ```
 
 ### Error: could not determine executable to run (npx eas)
+
 ```bash
 # Este error ocurre cuando EAS CLI no está instalado
 # Solución:
@@ -99,12 +101,14 @@ eas login  # En lugar de npx eas login
 ```
 
 ### Java no encontrado
+
 ```bash
 ./scripts/install-java.sh
 source ~/.bashrc
 ```
 
 ### Android SDK no encontrado (Build local con EAS)
+
 ```bash
 # 1. Instalar Android SDK
 ./scripts/install-android-sdk.sh
@@ -126,6 +130,7 @@ eas build --platform android --profile development  # Sin --local
 ```
 
 ### Dispositivo no detectado
+
 ```bash
 # Verificar modo desarrollador y depuración USB
 adb devices
@@ -134,6 +139,7 @@ adb start-server
 ```
 
 ### Error: expo doctor failed
+
 ```bash
 # Este error puede ignorarse si el resto del build funciona
 # Es causado por tener carpetas android/ios en un proyecto Expo
@@ -145,6 +151,7 @@ adb start-server
 ## Build Exitosa
 
 Cuando la build sea exitosa verás:
+
 ```
 Build successful
 You can find the build artifacts in app/build-1748967974325.apk

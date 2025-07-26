@@ -21,7 +21,7 @@ import { PizzaCustomizationFormModal } from './PizzaCustomizationFormModal';
 import {
   CustomizationType,
   PizzaCustomization,
-} from '../types/pizzaCustomization.types';
+} from '../schema/pizzaCustomization.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 

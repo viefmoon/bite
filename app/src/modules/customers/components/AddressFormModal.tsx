@@ -34,7 +34,7 @@ interface AddressFormModalProps {
   onSubmit: (data: AddressFormInputs) => Promise<void>;
   editingItem: Address | null;
   isSubmitting: boolean;
-  customerId: string;
+  customerId?: string;
 }
 
 export default function AddressFormModal({
@@ -43,10 +43,11 @@ export default function AddressFormModal({
   onSubmit,
   editingItem,
   isSubmitting,
+  customerId,
 }: AddressFormModalProps) {
   const theme = useAppTheme();
   const styles = getStyles(theme);
-  const showSnackbar = useSnackbarStore((state) => state.show);
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const { config: mapsConfig, loading: isLoadingApiKey } =
     useGoogleMapsConfig();
   const apiKey = mapsConfig?.apiKey;
@@ -97,7 +98,6 @@ export default function AddressFormModal({
         zipCode: editingItem.zipCode,
         country: editingItem.country || 'México',
         deliveryInstructions: editingItem.deliveryInstructions || '',
-        // Convertir a número si existe, undefined si no
         latitude: editingItem.latitude
           ? Number(editingItem.latitude)
           : undefined,
@@ -123,7 +123,6 @@ export default function AddressFormModal({
     }
   }, [editingItem, reset]);
 
-  // HTML del mapa con Google Maps API - Memoizado para evitar recrearlo en cada render
   const mapHtml = React.useMemo(
     () =>
       apiKey
@@ -159,24 +158,20 @@ export default function AddressFormModal({
     let currentLocation = null;
 
     function initMap() {
-      // Inicializar el mapa
       const initialLocation = ${
         latitude && longitude
           ? `{ lat: ${latitude}, lng: ${longitude} }`
           : 'null'
       };
-      
-      // Configurar centro del mapa
       const mapCenter = initialLocation || { lat: ${GOOGLE_MAPS_CONFIG.defaultCenter.lat}, lng: ${GOOGLE_MAPS_CONFIG.defaultCenter.lng} };
       
       map = new google.maps.Map(document.getElementById('map'), {
         center: mapCenter,
         zoom: initialLocation ? ${GOOGLE_MAPS_CONFIG.locationZoom} : ${GOOGLE_MAPS_CONFIG.defaultZoom},
         ...${JSON.stringify(GOOGLE_MAPS_CONFIG.mapOptions)},
-        gestureHandling: ${isMapFullscreen ? "'greedy'" : "'cooperative'"}, // Greedy en pantalla completa, cooperative en el modal
+        gestureHandling: ${isMapFullscreen ? "'greedy'" : "'cooperative'"}
       });
 
-      // Solo crear marcador si hay ubicación inicial
       if (initialLocation) {
         marker = new google.maps.Marker({
           position: initialLocation,
@@ -188,7 +183,6 @@ export default function AddressFormModal({
         
         currentLocation = initialLocation;
         
-        // Actualizar ubicación cuando se arrastra el marcador
         marker.addListener('dragend', function() {
           currentLocation = {
             lat: marker.getPosition().lat(),
@@ -201,10 +195,8 @@ export default function AddressFormModal({
         });
       }
 
-      // Actualizar ubicación al hacer click en el mapa
       map.addListener('click', function(event) {
         if (!marker) {
-          // Crear marcador si no existe
           marker = new google.maps.Marker({
             position: event.latLng,
             map: map,
@@ -213,7 +205,6 @@ export default function AddressFormModal({
             title: "Ubicación de la dirección"
           });
           
-          // Agregar listener para arrastrar
           marker.addListener('dragend', function() {
             currentLocation = {
               lat: marker.getPosition().lat(),
@@ -225,7 +216,6 @@ export default function AddressFormModal({
             });
           });
         } else {
-          // Mover marcador existente
           marker.setPosition(event.latLng);
         }
         
@@ -239,10 +229,7 @@ export default function AddressFormModal({
         });
       });
 
-      // Escuchar mensajes desde React Native
       window.addEventListener('message', handleMessage);
-      
-      // Notificar que el mapa está listo
       sendMessage('mapReady', {});
     }
 
@@ -266,7 +253,6 @@ export default function AddressFormModal({
       const position = new google.maps.LatLng(lat, lng);
       
       if (!marker) {
-        // Crear marcador si no existe
         marker = new google.maps.Marker({
           position: position,
           map: map,
@@ -275,7 +261,6 @@ export default function AddressFormModal({
           title: "Ubicación de la dirección"
         });
         
-        // Agregar listener para arrastrar
         marker.addListener('dragend', function() {
           currentLocation = {
             lat: marker.getPosition().lat(),
@@ -323,7 +308,6 @@ export default function AddressFormModal({
     [latitude, longitude, isMapFullscreen, apiKey],
   );
 
-  // Manejar mensajes del WebView
   const handleWebViewMessage = React.useCallback(
     (event: any) => {
       try {
@@ -335,7 +319,6 @@ export default function AddressFormModal({
             setIsMapLoading(false);
             break;
           case 'locationUpdated':
-            // Convertir a número antes de guardar
             setValue('latitude', Number(data.latitude));
             setValue('longitude', Number(data.longitude));
             break;
@@ -345,7 +328,6 @@ export default function AddressFormModal({
     [setValue],
   );
 
-  // Enviar mensaje al WebView
   const sendMessageToWebView = React.useCallback((type: string, data: any) => {
     if (webViewRef.current) {
       const message = JSON.stringify({ type, ...data });
@@ -353,7 +335,6 @@ export default function AddressFormModal({
     }
   }, []);
 
-  // Actualizar la ubicación en el mapa cuando cambie
   useEffect(() => {
     if (mapReady && latitude !== undefined && longitude !== undefined) {
       sendMessageToWebView('setLocation', {
@@ -363,7 +344,6 @@ export default function AddressFormModal({
     }
   }, [latitude, longitude, mapReady]);
 
-  // Resetear estados cuando el componente se monta
   useEffect(() => {
     if (visible) {
       setIsMapLoading(true);
@@ -456,7 +436,6 @@ export default function AddressFormModal({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Switch de dirección predeterminada al inicio */}
               <Controller
                 control={control}
                 name="isDefault"
@@ -778,7 +757,6 @@ export default function AddressFormModal({
                   )}
                 />
 
-                {/* Sección de Ubicación con Mapa Integrado */}
                 <View style={styles.locationWrapper}>
                   <View style={styles.locationHeader}>
                     <Text style={styles.locationLabel} variant="bodyMedium">
@@ -790,7 +768,6 @@ export default function AddressFormModal({
                         onPress={() => {
                           setValue('latitude', undefined);
                           setValue('longitude', undefined);
-                          // Forzar la validación del formulario
                           trigger(['latitude', 'longitude']);
                         }}
                         icon="close"
@@ -849,7 +826,6 @@ export default function AddressFormModal({
                         />
                       )}
 
-                      {/* Indicador de carga */}
                       {isMapLoading && (
                         <View style={styles.mapLoadingContainer}>
                           <Surface style={styles.mapLoadingCard} elevation={3}>
@@ -864,10 +840,8 @@ export default function AddressFormModal({
                         </View>
                       )}
 
-                      {/* Botones flotantes */}
                       {mapReady && (
                         <>
-                          {/* Botón de expandir */}
                           <View style={styles.expandButtonContainer}>
                             <Button
                               mode="contained"
@@ -886,7 +860,6 @@ export default function AddressFormModal({
                             </Button>
                           </View>
 
-                          {/* Botón de centrar */}
                           {hasValidCoordinates && (
                             <View style={styles.centerButtonContainer}>
                               <IconButton
@@ -906,7 +879,6 @@ export default function AddressFormModal({
                       )}
                     </View>
 
-                    {/* Mostrar coordenadas */}
                     {hasValidCoordinates && (
                       <View style={styles.coordinatesContainer}>
                         <Text
@@ -928,7 +900,6 @@ export default function AddressFormModal({
                 </View>
               </View>
 
-              {/* Espacio adicional para el teclado */}
               <View style={{ height: 10 }} />
             </ScrollView>
 
@@ -967,7 +938,7 @@ export default function AddressFormModal({
 
                     if (errorMessages.length > 0) {
                       showSnackbar({
-                        message: errorMessages[0],
+                        message: errorMessages[0] || 'Error de validación',
                         type: 'error',
                       });
 
@@ -991,7 +962,6 @@ export default function AddressFormModal({
         </Modal>
       </Portal>
 
-      {/* Modal de mapa en pantalla completa */}
       <Portal>
         <Modal
           visible={isMapFullscreen}
@@ -1319,10 +1289,5 @@ const getStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
       gap: theme.spacing.s,
-    },
-    coordinatesText: {
-      fontFamily: 'monospace',
-      color: theme.colors.onSurface,
-      fontWeight: '500',
     },
   });

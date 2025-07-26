@@ -33,7 +33,7 @@ import {
   useCreatePizzaCustomization,
   useUpdatePizzaCustomization,
 } from '../hooks/usePizzaCustomizationsQueries';
-import { CustomizationType } from '../types/pizzaCustomization.types';
+import { CustomizationTypeEnum } from '../schema/pizzaCustomization.schema';
 
 interface PizzaCustomizationFormModalProps {
   visible: boolean;
@@ -188,7 +188,7 @@ export function PizzaCustomizationFormModal({
     resolver: zodResolver(pizzaCustomizationFormSchema),
     defaultValues: {
       name: '',
-      type: CustomizationType.INGREDIENT,
+      type: CustomizationTypeEnum.INGREDIENT,
       ingredients: '',
       toppingValue: 1,
       isActive: true,
@@ -211,7 +211,7 @@ export function PizzaCustomizationFormModal({
     } else if (!visible) {
       reset({
         name: '',
-        type: CustomizationType.INGREDIENT,
+        type: CustomizationTypeEnum.INGREDIENT,
         ingredients: '',
         toppingValue: 1,
         isActive: true,
@@ -222,7 +222,7 @@ export function PizzaCustomizationFormModal({
 
   // Limpiar ingredientes cuando se cambie de FLAVOR a INGREDIENT
   useEffect(() => {
-    if (watchType === CustomizationType.INGREDIENT) {
+    if (watchType === CustomizationTypeEnum.INGREDIENT) {
       setValue('ingredients', '');
     }
   }, [watchType, setValue]);
@@ -233,7 +233,9 @@ export function PizzaCustomizationFormModal({
       const submissionData = {
         ...data,
         ingredients:
-          data.type === CustomizationType.INGREDIENT ? '' : data.ingredients,
+          data.type === CustomizationTypeEnum.INGREDIENT
+            ? ''
+            : data.ingredients,
       };
 
       if (isEditMode && customizationId) {
@@ -347,23 +349,23 @@ export function PizzaCustomizationFormModal({
                       onValueChange={onChange}
                       buttons={[
                         {
-                          value: CustomizationType.FLAVOR,
+                          value: CustomizationTypeEnum.FLAVOR,
                           label: 'Sabor',
                           icon: 'pizza',
                           style: {
                             backgroundColor:
-                              value === CustomizationType.FLAVOR
+                              value === CustomizationTypeEnum.FLAVOR
                                 ? theme.colors.primaryContainer
                                 : 'transparent',
                           },
                         },
                         {
-                          value: CustomizationType.INGREDIENT,
+                          value: CustomizationTypeEnum.INGREDIENT,
                           label: 'Ingrediente',
                           icon: 'cheese',
                           style: {
                             backgroundColor:
-                              value === CustomizationType.INGREDIENT
+                              value === CustomizationTypeEnum.INGREDIENT
                                 ? theme.colors.primaryContainer
                                 : 'transparent',
                           },
@@ -375,7 +377,7 @@ export function PizzaCustomizationFormModal({
                 />
               </View>
 
-              {watchType === CustomizationType.FLAVOR && (
+              {watchType === CustomizationTypeEnum.FLAVOR && (
                 <View style={styles.formGroup}>
                   <Text style={styles.label}>Ingredientes del sabor</Text>
                   <Controller

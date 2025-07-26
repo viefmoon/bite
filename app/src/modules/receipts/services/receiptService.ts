@@ -6,6 +6,10 @@ import type {
   ReceiptsListResponse,
   ReceiptFilters,
 } from '../schema/receipt.schema';
+import {
+  receiptsListResponseSchema,
+  receiptSchema,
+} from '../schema/receipt.schema';
 import type { Order } from '@/modules/orders/schema/orders.schema';
 
 export const receiptService = {
@@ -26,20 +30,19 @@ export const receiptService = {
       queryParams.orderType = orderType;
     }
 
-    const response = await apiClient.get<ReceiptsListResponse>(
-      API_PATHS.ORDERS_RECEIPTS_LIST,
-      { params: queryParams },
-    );
+    const response = await apiClient.get(API_PATHS.ORDERS_RECEIPTS_LIST, {
+      params: queryParams,
+    });
 
-    return response.data;
+    return receiptsListResponseSchema.parse(response.data);
   },
 
   getReceiptById: async (id: string): Promise<Receipt> => {
-    const response = await apiClient.get<Receipt>(
+    const response = await apiClient.get(
       API_PATHS.ORDERS_RECEIPTS_BY_ID.replace(':id', id),
     );
 
-    return response.data;
+    return receiptSchema.parse(response.data);
   },
 
   recoverOrder: async (id: string): Promise<Order> => {

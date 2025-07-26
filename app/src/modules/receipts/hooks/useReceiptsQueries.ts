@@ -5,18 +5,19 @@ import {
 } from '../services/receiptService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
-export const useReceipts = (filters?: {
-  startDate?: string;
-  endDate?: string;
-  orderType?: string;
-}) => {
+import type {
+  ReceiptFilters,
+  ReceiptsListResponse,
+  Receipt,
+} from '../schema/receipt.schema';
+
+export const useReceipts = (filters?: ReceiptFilters) => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const query = useQuery({
+  const query = useQuery<ReceiptsListResponse, Error>({
     ...receiptQueryOptions.receipts(filters || {}),
   });
 
-  // Manejar errores
   if (query.error) {
     showSnackbar({
       message: query.error.message || 'Error al cargar los recibos',
@@ -30,11 +31,10 @@ export const useReceipts = (filters?: {
 export const useReceipt = (id: string) => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const query = useQuery({
+  const query = useQuery<Receipt, Error>({
     ...receiptQueryOptions.receipt(id),
   });
 
-  // Manejar errores
   if (query.error) {
     showSnackbar({
       message: query.error.message || 'Error al cargar el recibo',
@@ -52,7 +52,6 @@ export const useRecoverOrder = () => {
   return useMutation({
     mutationFn: (orderId: string) => receiptService.recoverOrder(orderId),
     onSuccess: () => {
-      // Invalidar todas las queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['receipts'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       showSnackbar({

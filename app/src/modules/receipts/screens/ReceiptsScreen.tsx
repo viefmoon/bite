@@ -21,7 +21,7 @@ import {
 import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useReceipts, useRecoverOrder } from '../hooks/useReceiptsQueries';
-import type { Receipt, ReceiptList } from '../types/receipt.types';
+import type { Receipt, ReceiptList } from '../schema/receipt.schema';
 import { receiptService } from '../services/receiptService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
@@ -30,11 +30,6 @@ import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
-import {
-  formatOrderTypeShort,
-  getPaymentStatus,
-} from '@/modules/orders/utils/formatters';
 
 type StatusFilter = 'all' | 'COMPLETED' | 'CANCELLED';
 
@@ -42,7 +37,6 @@ export const ReceiptsScreen: React.FC = () => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  // Estados para filtros
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -50,20 +44,19 @@ export const ReceiptsScreen: React.FC = () => {
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // Estado para el modal de detalle
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Estado para recuperación de orden
-  const [orderToRecover, setOrderToRecover] = useState<any>(null);
+  const [orderToRecover, setOrderToRecover] = useState<Receipt | null>(null);
   const [showRecoverConfirm, setShowRecoverConfirm] = useState(false);
 
-  // Mutation para recuperar orden
   const recoverOrderMutation = useRecoverOrder();
 
-  // Preparar filtros para la query
   const filters = useMemo(() => {
-    const baseFilters: any = {};
+    const baseFilters: {
+      startDate?: string;
+      endDate?: string;
+    } = {};
 
     if (startDate) {
       baseFilters.startDate = startDate.toISOString();
@@ -76,7 +69,6 @@ export const ReceiptsScreen: React.FC = () => {
     return baseFilters;
   }, [startDate, endDate]);
 
-  // Query para obtener recibos
   const {
     data: allReceipts,
     isLoading,
@@ -84,30 +76,24 @@ export const ReceiptsScreen: React.FC = () => {
     isRefetching,
   } = useReceipts(filters);
 
-  // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('receipts');
 
-  // Filtrar recibos localmente
   const receipts = useMemo(() => {
     if (!allReceipts) return [];
 
     let filtered = [...allReceipts];
 
-    // Filtro por estado
     if (statusFilter !== 'all') {
       filtered = filtered.filter(
         (receipt) => receipt.orderStatus === statusFilter,
       );
     }
 
-    // Filtro por búsqueda
     if (searchQuery.trim()) {
       const search = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((receipt) => {
-        // Buscar por número de orden
         if (receipt.shiftOrderNumber.toString().includes(search)) return true;
 
-        // Buscar en información de entrega
         if (receipt.deliveryInfo) {
           const { recipientName, recipientPhone, fullAddress } =
             receipt.deliveryInfo;
@@ -116,7 +102,6 @@ export const ReceiptsScreen: React.FC = () => {
           if (fullAddress?.toLowerCase().includes(search)) return true;
         }
 
-        // Buscar en notas
         if (receipt.notes?.toLowerCase().includes(search)) return true;
 
         return false;
@@ -126,7 +111,6 @@ export const ReceiptsScreen: React.FC = () => {
     return filtered;
   }, [allReceipts, statusFilter, searchQuery]);
 
-  // Handlers
   const handleReceiptPress = useCallback((receipt: ReceiptList) => {
     receiptService.getReceiptById(receipt.id).then((fullOrder) => {
       setSelectedReceipt(fullOrder);
@@ -143,7 +127,7 @@ export const ReceiptsScreen: React.FC = () => {
 
   const handleRecoverPress = useCallback((receipt: ReceiptList) => {
     receiptService.getReceiptById(receipt.id).then((fullOrder) => {
-      setOrderToRecover(fullOrder as any);
+      setOrderToRecover(fullOrder);
       setShowRecoverConfirm(true);
     });
   }, []);
@@ -155,12 +139,9 @@ export const ReceiptsScreen: React.FC = () => {
       await recoverOrderMutation.mutateAsync(orderToRecover.id);
       setShowRecoverConfirm(false);
       setOrderToRecover(null);
-    } catch (error) {
-      // Error ya manejado por el mutation hook
-    }
+    } catch (error) {}
   }, [orderToRecover, recoverOrderMutation]);
 
-  // Función específica para el color de estado en recibos
   const getReceiptStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
@@ -185,7 +166,6 @@ export const ReceiptsScreen: React.FC = () => {
 
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
-  // Renderizar botón de restaurar
   const renderRestoreAction = (item: ReceiptList) => (
     <TouchableOpacity
       style={styles.restoreContainer}
@@ -203,7 +183,6 @@ export const ReceiptsScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  // Renderizar item de recibo usando el componente compartido
   const renderReceiptItem = ({ item }: { item: ReceiptList }) => (
     <OrderSummaryCard
       item={item}
@@ -214,9 +193,6 @@ export const ReceiptsScreen: React.FC = () => {
     />
   );
 
-  // Renderizar lista vacía
-
-  // Renderizar lista vacía
   const renderEmptyComponent = () => {
     if (isLoading) {
       return (
@@ -243,7 +219,6 @@ export const ReceiptsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header con búsqueda y filtros */}
       <Surface style={styles.header} elevation={2}>
         <Surface style={styles.shiftIndicator} elevation={1}>
           <Icon source="cash-register" size={20} color={theme.colors.primary} />
@@ -330,7 +305,6 @@ export const ReceiptsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Chips de filtros activos */}
         {hasActiveFilters && (
           <View style={styles.activeFilters}>
             {statusFilter !== 'all' && (
@@ -367,7 +341,6 @@ export const ReceiptsScreen: React.FC = () => {
         )}
       </Surface>
 
-      {/* Lista de recibos */}
       <FlatList
         data={receipts}
         renderItem={renderReceiptItem}
@@ -383,7 +356,6 @@ export const ReceiptsScreen: React.FC = () => {
         ListEmptyComponent={renderEmptyComponent}
       />
 
-      {/* Modal de detalle */}
       <ReceiptDetailsModal
         visible={showDetailModal}
         onDismiss={() => {
@@ -393,7 +365,6 @@ export const ReceiptsScreen: React.FC = () => {
         receipt={selectedReceipt}
       />
 
-      {/* Modal de confirmación de recuperación */}
       <ConfirmationModal
         visible={showRecoverConfirm}
         title="Recuperar Orden"
@@ -407,7 +378,6 @@ export const ReceiptsScreen: React.FC = () => {
         cancelText="Cancelar"
       />
 
-      {/* Date range picker */}
       <DatePickerModal
         visible={showDateRangePicker}
         mode="range"

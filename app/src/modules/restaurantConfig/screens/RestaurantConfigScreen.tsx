@@ -1309,7 +1309,7 @@ const createStyles = (
     },
     sectionContent: {
       gap: responsive.spacing(theme.spacing.m),
-},
+    },
     // Input styles
     input: {
       backgroundColor: theme.colors.surface,
@@ -1370,7 +1370,7 @@ const createStyles = (
     },
     chipText: {
       fontSize: responsive.fontSize(12),
-},
+    },
     // Action styles
     actionContainer: {
       marginHorizontal: responsive.spacing(theme.spacing.m),

@@ -4,10 +4,10 @@ import { CartItemModifier } from '../stores/useOrderStore';
 import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {
   PizzaCustomization,
-  PizzaConfiguration,
   CustomizationType,
   CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+import { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 
 interface ValidationError {
   field: string;

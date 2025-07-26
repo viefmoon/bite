@@ -18,7 +18,6 @@ import { PaginatedResponse } from '../../../app/types/api.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
-// --- Query Keys ---
 const printerKeys = {
   all: ['thermalPrinters'] as const,
   lists: () => [...printerKeys.all, 'list'] as const,
@@ -26,31 +25,21 @@ const printerKeys = {
     [...printerKeys.lists(), filters] as const,
   details: () => [...printerKeys.all, 'detail'] as const,
   detail: (id: string) => [...printerKeys.details(), id] as const,
-  discover: ['discoverPrinters'] as const, // Clave para descubrimiento
+  discover: ['discoverPrinters'] as const,
 };
 
-/**
- * Hook para disparar el descubrimiento de impresoras.
- * Utiliza useMutation ya que es una acción iniciada por el usuario.
- */
 export const useDiscoverPrinters = (): UseMutationResult<
-  DiscoveredPrinter[], // Tipo de dato que devuelve la mutación en caso de éxito
-  ApiError, // Tipo de error esperado
-  number | undefined // Tipo del argumento que recibe la función mutate (duration o undefined)
+  DiscoveredPrinter[],
+  ApiError,
+  number | undefined
 > => {
-  // No necesita invalidar caché, es una acción puntual
   return useMutation<DiscoveredPrinter[], ApiError, number | undefined>({
     mutationFn: (duration: number | undefined) =>
       printerService.discoverPrinters(duration),
-    // Opcional: manejo de errores/éxito específico para descubrimiento si es necesario
   });
 };
 
-/**
- * Hook para obtener la lista paginada de impresoras registradas.
- */
 export const usePrintersQuery = (
-  // Proporcionar valores por defecto para page y limit si params está vacío
   params: FindAllThermalPrintersDto = { page: 1, limit: 10 },
   options?: { enabled?: boolean },
 ): UseQueryResult<PaginatedResponse<ThermalPrinter>, ApiError> => {
@@ -62,9 +51,6 @@ export const usePrintersQuery = (
   });
 };
 
-/**
- * Hook para obtener los detalles de una impresora registrada por ID.
- */
 export const usePrinterQuery = (
   id: string | undefined,
   options?: { enabled?: boolean },
@@ -77,9 +63,6 @@ export const usePrinterQuery = (
   });
 };
 
-/**
- * Hook para crear una nueva impresora registrada.
- */
 export const useCreatePrinterMutation = (): UseMutationResult<
   ThermalPrinter,
   ApiError,
@@ -106,9 +89,6 @@ export const useCreatePrinterMutation = (): UseMutationResult<
   });
 };
 
-/**
- * Hook para actualizar una impresora registrada existente.
- */
 export const useUpdatePrinterMutation = (): UseMutationResult<
   ThermalPrinter,
   ApiError,
@@ -124,13 +104,10 @@ export const useUpdatePrinterMutation = (): UseMutationResult<
   >({
     mutationFn: ({ id, data }) => printerService.updatePrinter(id, data),
     onSuccess: (updatedPrinter, variables) => {
-      // Invalidar lista y detalle específico
       queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: printerKeys.detail(variables.id),
       });
-      // Opcional: Actualizar caché directamente si se desea optimización
-      // queryClient.setQueryData(printerKeys.detail(variables.id), updatedPrinter);
       showSnackbar({
         message: `Impresora "${updatedPrinter.name}" actualizada`,
         type: 'success',
@@ -145,13 +122,10 @@ export const useUpdatePrinterMutation = (): UseMutationResult<
   });
 };
 
-/**
- * Hook para eliminar (soft delete) una impresora registrada.
- */
 export const useDeletePrinterMutation = (): UseMutationResult<
   void,
   ApiError,
-  string // ID de la impresora a eliminar
+  string
 > => {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
@@ -160,7 +134,6 @@ export const useDeletePrinterMutation = (): UseMutationResult<
     mutationFn: printerService.deletePrinter,
     onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
-      // Opcional: Remover de la caché de detalle
       queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
       showSnackbar({ message: 'Impresora eliminada', type: 'success' });
     },
@@ -173,13 +146,10 @@ export const useDeletePrinterMutation = (): UseMutationResult<
   });
 };
 
-/**
- * Hook para realizar un ping a una impresora.
- */
 export const usePingPrinterMutation = (): UseMutationResult<
-  { status: string }, // Tipo de dato que devuelve la mutación en caso de éxito
-  ApiError, // Tipo de error esperado
-  string // Tipo del argumento que recibe la función mutate (printer ID)
+  { status: string },
+  ApiError,
+  string
 > => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
@@ -198,14 +168,10 @@ export const usePingPrinterMutation = (): UseMutationResult<
         message: `Error al hacer ping a la impresora: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      // Error al hacer ping a la impresora
     },
   });
 };
 
-/**
- * Hook para imprimir un ticket de prueba en una impresora descubierta.
- */
 export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
   { success: boolean; message?: string },
   ApiError,
@@ -231,14 +197,10 @@ export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
         message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      // Error al imprimir ticket de prueba
     },
   });
 };
 
-/**
- * Hook para imprimir un ticket de prueba en una impresora configurada.
- */
 export const useTestPrintPrinter = (): UseMutationResult<
   { success: boolean; message?: string },
   ApiError,
@@ -260,7 +222,6 @@ export const useTestPrintPrinter = (): UseMutationResult<
         message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
         type: 'error',
       });
-      // Error al imprimir ticket de prueba
     },
   });
 };

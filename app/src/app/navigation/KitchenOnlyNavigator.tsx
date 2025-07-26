@@ -265,6 +265,7 @@ function KitchenOnlyNavigatorContent() {
 export function KitchenOnlyNavigator() {
   // Usar navegador web personalizado en plataforma web
   if (Platform.OS === 'web') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { KitchenWebNavigator } = require('./KitchenWebNavigator');
     return <KitchenWebNavigator />;
   }

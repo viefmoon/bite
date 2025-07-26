@@ -13,7 +13,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 
 interface OrderDetailModalProps {

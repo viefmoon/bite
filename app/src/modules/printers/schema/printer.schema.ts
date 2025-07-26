@@ -11,7 +11,6 @@ export type PrinterConnectionType = z.infer<typeof PrinterConnectionTypeSchema>;
 
 const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
 
-// Schema base para printer con campos comunes
 const printerBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
   connectionType: PrinterConnectionTypeSchema,
@@ -49,7 +48,6 @@ const printerBaseSchema = z.object({
     .default(3),
 });
 
-// Schema completo para entidad ThermalPrinter - derivado del base con campos adicionales
 export const thermalPrinterSchema = printerBaseSchema
   .omit({
     ipAddress: true,
@@ -74,7 +72,6 @@ export const thermalPrinterSchema = printerBaseSchema
 
 export type ThermalPrinter = z.infer<typeof thermalPrinterSchema>;
 
-// Función helper para validación de conexión (reutilizable)
 const refinePrinterDto = (
   data: Partial<z.infer<typeof printerBaseSchema>>,
   ctx: z.RefinementCtx,
@@ -129,7 +126,6 @@ const refinePrinterDto = (
   }
 };
 
-// Schema para creación - derivado del base con validación
 export const createThermalPrinterDtoSchema =
   printerBaseSchema.superRefine(refinePrinterDto);
 
@@ -137,7 +133,6 @@ export type CreateThermalPrinterDto = z.infer<
   typeof createThermalPrinterDtoSchema
 >;
 
-// Schema para actualización - derivado del base parcial con validación
 export const updateThermalPrinterDtoSchema = printerBaseSchema
   .partial()
   .superRefine(refinePrinterDto);
@@ -146,7 +141,6 @@ export type UpdateThermalPrinterDto = z.infer<
   typeof updateThermalPrinterDtoSchema
 >;
 
-// Schema para filtros de búsqueda - derivado del base con campos específicos
 export const findAllThermalPrintersFilterSchema = baseListQuerySchema.extend({
   name: z.string().optional(),
   connectionType: PrinterConnectionTypeSchema.optional(),
@@ -157,7 +151,6 @@ export type FindAllThermalPrintersDto = z.infer<
   typeof findAllThermalPrintersFilterSchema
 >;
 
-// Schema para formulario - alias del schema de creación
 export const printerFormSchema = createThermalPrinterDtoSchema;
 export type PrinterFormData = z.input<typeof printerFormSchema>;
 

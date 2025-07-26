@@ -7,7 +7,7 @@ const categoryBaseSchema = z.object({
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
   photoId: z.union([z.string().uuid(), z.null(), z.undefined()]).optional(),
-  sortOrder: z.number(),
+  sortOrder: z.number().default(0),
 });
 
 export const createCategoryDtoSchema = categoryBaseSchema.extend({
@@ -30,7 +30,11 @@ export const categoryFormSchema = categoryBaseSchema
       ])
       .optional(),
   })
-  .omit({ photoId: true });
+  .omit({ photoId: true })
+  .transform((data) => ({
+    ...data,
+    sortOrder: data.sortOrder ?? 0,
+  }));
 export type CreateCategoryDto = z.infer<typeof createCategoryDtoSchema>;
 export type UpdateCategoryDto = z.infer<typeof updateCategoryDtoSchema>;
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;

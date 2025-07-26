@@ -93,7 +93,7 @@ const CategoriesScreen: React.FC = () => {
       title: 'Error al cargar categorías',
       message: 'No se pudieron cargar las categorías. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetchCategories,
+      onAction: refetchCategories,
     },
   });
 
@@ -323,7 +323,10 @@ const CategoriesScreen: React.FC = () => {
         setIsUploadingImage(false);
       }
     },
-    determineFinalPhotoId: ImageUploadService.determinePhotoId,
+    determineFinalPhotoId: (formImageUri) => {
+      // Para mantener compatibilidad, retornamos la URI del formulario
+      return formImageUri;
+    },
     imagePickerSize: 150,
     placeholderIcon: 'folder-outline',
     placeholderText: 'Imagen de categoría',

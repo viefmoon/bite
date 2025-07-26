@@ -22,6 +22,7 @@ Esto mostrará información sobre el proyecto actual vinculado a EAS (si existe)
 ### Opción A: Limpiar completamente la configuración (recomendado)
 
 1. Eliminar el ID del proyecto del archivo `app.json`:
+
    ```json
    {
      "expo": {
@@ -36,6 +37,7 @@ Esto mostrará información sobre el proyecto actual vinculado a EAS (si existe)
    ```
 
 2. Eliminar la carpeta .expo si existe:
+
    ```bash
    rm -rf .expo
    ```
@@ -108,6 +110,7 @@ eas project:init
 ```
 
 Durante este proceso:
+
 1. EAS detectará el slug "bite-restaurant"
 2. Te preguntará si quieres crear un nuevo proyecto
 3. Selecciona "Yes" para crear el nuevo proyecto
@@ -189,17 +192,23 @@ eas build --platform ios --profile development
 ## Troubleshooting
 
 ### Error: "Project already exists"
+
 Si EAS dice que el proyecto ya existe con ese slug:
+
 1. Intenta con un slug diferente (ej: "bite-restaurant-app")
 2. O contacta al soporte de Expo para liberar el slug si es tuyo
 
 ### Error: "Invalid project ID"
+
 Si hay problemas con el project ID:
+
 1. Elimina completamente la sección `extra.eas` de app.json
 2. Ejecuta `eas init` nuevamente
 
 ### Error: "Authentication required"
+
 Si tienes problemas de autenticación:
+
 ```bash
 eas logout
 eas login

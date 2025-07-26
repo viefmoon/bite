@@ -35,7 +35,7 @@ const getStyles = (theme: AppTheme) =>
       alignItems: 'center',
       gap: theme.spacing.xs,
       flex: 1,
-      marginRight: 60, // Espacio reservado para el botón de ping (52px + margen)
+      marginRight: 60,
     },
     printerIcon: {
       backgroundColor: theme.colors.primaryContainer,
@@ -70,7 +70,7 @@ const getStyles = (theme: AppTheme) =>
       flexWrap: 'wrap',
       gap: theme.spacing.xs,
       marginTop: theme.spacing.xs,
-      marginRight: 60, // Espacio reservado para el botón de ping
+      marginRight: 60,
     },
     detailChip: {
       height: 24,
@@ -85,7 +85,7 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       gap: theme.spacing.xs,
       marginTop: theme.spacing.xs,
-      marginRight: 60, // Espacio reservado para el botón de ping
+      marginRight: 60,
     },
     featureChip: {
       height: 28,

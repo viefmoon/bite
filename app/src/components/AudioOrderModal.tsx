@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
   TouchableOpacity,
   Animated,
 } from 'react-native';
@@ -18,7 +17,7 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme } from '../app/styles/theme';
 import { useGetOrderMenu } from '@/modules/orders/hooks/useMenuQueries';
 import type {
   AIOrderItem,
@@ -33,17 +32,14 @@ import type {
 } from '@/modules/orders/stores/useOrderStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import {
-  Swipeable,
-  type Animated as GestureAnimated,
-} from 'react-native-gesture-handler';
+import { Swipeable } from 'react-native-gesture-handler';
 import {
   OrderTypeEnum,
   type OrderType,
 } from '@/modules/orders/schema/orders.schema';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
-import { useGetAreas } from '@/modules/areasTables/services/areaService';
-import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
+import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
+import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
 import type { Area } from '@/modules/areasTables/schema/area.schema';
 import type { Table } from '@/modules/areasTables/schema/table.schema';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
@@ -71,9 +67,6 @@ interface AudioOrderModalProps {
   };
   error?: string;
 }
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const modalWidth = Math.min(screenWidth * 0.95, 500);
 
 export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   visible,
@@ -144,7 +137,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     data: tablesData,
     isLoading: isLoadingTables,
     error: errorTables,
-  } = useGetTablesByArea(editableSelectedAreaId);
+  } = useGetTablesByAreaId(editableSelectedAreaId);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Nombres computed para área y mesa
@@ -206,10 +199,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       }
 
       // 3. Validar personalizaciones de pizza
-      if (
-        product.category?.name?.toLowerCase().includes('pizza') &&
-        item.pizzaCustomizations
-      ) {
+      if (product.isPizza && item.pizzaCustomizations) {
         // Las pizzas necesitan al menos una personalización válida
         const validCustomizations = item.pizzaCustomizations.filter(
           (custom) => custom.customizationId && custom.action,
@@ -230,7 +220,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     (productId: string): Product | undefined => {
       if (!menu) return undefined;
 
-      for (const category of menu) {
+      for (const category of (menu as any[]) || []) {
         for (const subcategory of category.subcategories || []) {
           for (const product of subcategory.products || []) {
             if (product.id === productId) {
@@ -268,9 +258,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     setItemsWithErrors(newItemsWithErrors);
     setItemValidationErrors(newValidationErrors);
   }, [editableItems, findProductInMenu, validateProductItem]);
-
-  // Función para abrir modal de personalización para un producto específico
-  // Se definirá después de handleEditItem para evitar problemas de dependencias
 
   // Verificar si hay productos con errores que bloqueen el guardado
   const hasValidationErrors = useMemo(() => {
@@ -362,7 +349,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
   // Función para actualizar la cantidad de un item
   const updateItemQuantity = useCallback(
-    (itemId: string, index: number, newQuantity: number) => {
+    (_itemId: string, index: number, newQuantity: number) => {
       if (newQuantity < 1) {
         return; // No permitir cantidad menor a 1 con los botones
       }
@@ -404,7 +391,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
       // Buscar el producto en el menú
       let foundProduct: Product | null = null;
-      outer: for (const category of menu) {
+      outer: for (const category of (menu as any[]) || []) {
         for (const subcategory of category.subcategories || []) {
           for (const product of subcategory.products || []) {
             if (product.id === item.productId) {
@@ -480,10 +467,10 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       itemId: string,
       quantity: number,
       modifiers: CartItemModifier[],
-      preparationNotes?: string,
+      _preparationNotes?: string,
       variantId?: string,
-      variantName?: string,
-      unitPrice?: number,
+      _variantName?: string,
+      _unitPrice?: number,
       selectedPizzaCustomizations?: SelectedPizzaCustomization[],
     ) => {
       const index = parseInt(itemId.split('-').pop() || '0');
@@ -545,12 +532,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         variantName: undefined,
       };
 
-    for (const category of menu) {
+    for (const category of (menu as any[]) || []) {
       for (const subcategory of category.subcategories || []) {
         for (const product of subcategory.products || []) {
           if (product.id === productId) {
             const variant = variantId
-              ? product.variants?.find((v) => v.id === variantId)
+              ? product.variants?.find((v: any) => v.id === variantId)
               : undefined;
             return {
               productName: product.name,
@@ -582,12 +569,12 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         let name = curr.customizationName;
         if (!name && menu) {
           // Buscar el nombre en el menú
-          outer: for (const category of menu) {
+          outer: for (const category of (menu as any[]) || []) {
             for (const subcategory of category.subcategories || []) {
               for (const product of subcategory.products || []) {
                 if (product.pizzaCustomizations) {
                   const customization = product.pizzaCustomizations.find(
-                    (pc) => pc.id === curr.customizationId,
+                    (pc: any) => pc.id === curr.customizationId,
                   );
                   if (customization) {
                     name = customization.name;
@@ -722,9 +709,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header con tiempo de procesamiento - REMOVIDO */}
-
-        {/* Tipo de Orden - Always visible at top */}
         <View style={styles.orderTypeSection}>
           <View style={styles.compactSectionHeader}>
             <MaterialIcons name="restaurant" size={20} color={colors.primary} />
@@ -852,7 +836,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </View>
         </View>
 
-        {/* Renderizado condicional según tipo de orden - EXACTAMENTE como OrderCartDetail */}
         {editableOrderType === OrderTypeEnum.DINE_IN && (
           <View style={styles.compactSectionContainer}>
             <View style={styles.compactSectionHeader}>
@@ -872,9 +855,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             </View>
 
             <View style={styles.compactDeliveryContainer}>
-              {/* Área y Mesa en la misma fila */}
               <View style={styles.dineInSelectorsRow}>
-                {/* Área */}
                 <View style={styles.dineInSelectorContainer}>
                   <Menu
                     visible={areaMenuVisible}
@@ -926,7 +907,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                   )}
                 </View>
 
-                {/* Mesa */}
                 <View style={styles.dineInSelectorContainer}>
                   <Menu
                     visible={tableMenuVisible}
@@ -997,7 +977,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 </View>
               </View>
 
-              {/* Opción de mesa temporal */}
               <TouchableOpacity
                 onPress={() => {
                   setEditableIsTemporaryTable(!editableIsTemporaryTable);
@@ -1026,7 +1005,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 <Text style={styles.checkboxLabel}>Crear mesa temporal</Text>
               </TouchableOpacity>
 
-              {/* Campo para nombre de mesa temporal */}
               {editableIsTemporaryTable && (
                 <View style={styles.temporaryTableInputContainer}>
                   <SpeechRecognitionInput
@@ -1042,7 +1020,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                     autoCorrect={false}
                     placeholder="Ej: Mesa Terraza 1"
                     style={styles.compactTextInput}
-                    dense
                   />
                   {tableError && editableIsTemporaryTable && (
                     <HelperText
@@ -1059,7 +1036,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </View>
         )}
 
-        {/* Para llevar - Solo nombre del cliente */}
         {editableOrderType === OrderTypeEnum.TAKE_AWAY && (
           <View style={styles.compactSectionContainer}>
             <View style={styles.compactSectionHeader}>
@@ -1090,7 +1066,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 autoCapitalize="words"
                 autoCorrect={false}
                 style={styles.compactTextInput}
-                dense
               />
               {recipientNameError && (
                 <HelperText
@@ -1116,7 +1091,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 speechLang="es-MX"
                 keyboardType="phone-pad"
                 style={styles.compactTextInput}
-                dense
               />
               {recipientPhoneError && (
                 <HelperText
@@ -1131,7 +1105,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </View>
         )}
 
-        {/* Domicilio - Solo dirección y teléfono */}
         {editableOrderType === OrderTypeEnum.DELIVERY && (
           <View style={styles.compactSectionContainer}>
             <View style={styles.compactSectionHeader}>
@@ -1166,7 +1139,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 multiline
                 numberOfLines={2}
                 style={styles.compactTextInput}
-                dense
               />
               {addressError && (
                 <HelperText
@@ -1192,7 +1164,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                 speechLang="es-MX"
                 keyboardType="phone-pad"
                 style={styles.compactTextInput}
-                dense
               />
               {recipientPhoneError && (
                 <HelperText
@@ -1207,7 +1178,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </View>
         )}
 
-        {/* Advertencias */}
         {warnings && (
           <Surface
             style={[
@@ -1227,7 +1197,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           </Surface>
         )}
 
-        {/* Items de la orden - Versión compacta */}
         <View
           style={[
             styles.compactSectionContainer,
@@ -1277,22 +1246,22 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
                 // Función para renderizar acciones de deslizar
                 const renderRightActions = (
-                  _progress: Animated.AnimatedAddition,
-                  dragX: Animated.AnimatedAddition,
+                  _progressAnimatedValue: any,
+                  dragAnimatedValue: any,
                 ) => {
-                  const translateX = dragX.interpolate({
+                  const translateX = dragAnimatedValue.interpolate({
                     inputRange: [-100, 0],
                     outputRange: [0, 100],
                     extrapolate: 'clamp',
                   });
 
-                  const scale = dragX.interpolate({
+                  const scale = dragAnimatedValue.interpolate({
                     inputRange: [-100, -50, 0],
                     outputRange: [1, 0.8, 0.5],
                     extrapolate: 'clamp',
                   });
 
-                  const opacity = dragX.interpolate({
+                  const opacity = dragAnimatedValue.interpolate({
                     inputRange: [-100, -20, 0],
                     outputRange: [1, 0.5, 0],
                     extrapolate: 'clamp',
@@ -1370,7 +1339,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                               {`${item.quantity}x ${variantName || productName}`}
                             </Text>
 
-                            {/* Mostrar errores de validación */}
                             {itemValidationErrors[index] && (
                               <View style={styles.validationErrorsContainer}>
                                 {itemValidationErrors[index].map(
@@ -1389,7 +1357,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                               </View>
                             )}
 
-                            {/* Renderizar personalizaciones de pizza */}
                             {pizzaCustomizationsText && (
                               <Text
                                 style={[
@@ -1401,7 +1368,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                               </Text>
                             )}
 
-                            {/* Renderizar modificadores */}
                             {item.modifiers &&
                               item.modifiers.length > 0 &&
                               item.modifiers.map((mod, idx) => (
@@ -1474,7 +1440,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
           )}
         </View>
 
-        {/* Hora programada - Versión compacta */}
         {scheduledDelivery?.time && (
           <View style={styles.compactSectionContainer}>
             <View style={styles.compactSectionHeader}>
@@ -1509,24 +1474,21 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             contentContainerStyle={[
               styles.modalContainer,
               {
-                width: modalWidth,
+                width: '95%',
+                maxWidth: 500,
                 backgroundColor: colors.surface,
-                maxHeight: screenHeight * 0.9,
-                height: screenHeight * 0.85,
-                // Borde grueso y muy visible
+                maxHeight: '90%',
+                height: '85%',
                 borderWidth: 6,
                 borderColor: colors.primary,
-                // Sombra pronunciada con color primario
                 shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.6,
                 shadowRadius: 16,
-                // Para Android - elevación alta
                 elevation: 20,
               },
             ]}
           >
-            {/* Header dinámico según el estado */}
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.onSurface }]}>
                 {isProcessing && '🎤 Procesando orden por voz...'}
@@ -1548,7 +1510,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
               />
             </View>
 
-            {/* Divider solo cuando no está procesando ni hay error */}
             {!isProcessing && !error && (
               <Divider style={{ backgroundColor: colors.outlineVariant }} />
             )}
@@ -1601,7 +1562,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             )}
           </Modal>
 
-          {/* Modal de personalización de producto */}
           {showCustomizationModal && editingProduct && editingItem && (
             <ProductCustomizationModal
               visible={showCustomizationModal}
@@ -1619,7 +1579,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         </Portal>
       )}
 
-      {/* Modal de confirmación de salida */}
       <ConfirmationModal
         visible={showExitConfirmationModal}
         title="¿Descartar datos?"
@@ -1773,67 +1732,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
   },
-  sectionCard: {
-    margin: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  itemRightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  expandedContent: {
-    paddingLeft: 16,
-    paddingRight: 16,
-    paddingBottom: 12,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  modifiersContainer: {
-    marginTop: 8,
-  },
-  modifierText: {
-    fontSize: 14,
-    marginLeft: 8,
-    marginVertical: 2,
-  },
-  pizzaContainer: {
-    marginTop: 8,
-  },
-  customizationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginVertical: 4,
-  },
-  customizationChip: {
-    height: 24,
-  },
-  halfText: {
-    fontSize: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginVertical: 6,
-  },
-  infoText: {
-    fontSize: 14,
-    flex: 1,
-  },
-  scheduledTime: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1842,75 +1740,6 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     flex: 1,
-  },
-  itemTextContainer: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  itemTitleText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  itemDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  listItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 0,
-  },
-  itemDivider: {
-    marginVertical: 8,
-  },
-  itemActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  quantityBadge: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 28,
-    alignItems: 'center',
-  },
-  quantityBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  expandButton: {
-    margin: 0,
-  },
-  deliveryInfoContainer: {
-    gap: 12,
-  },
-  textInput: {
-    backgroundColor: 'transparent',
-  },
-  quantityActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  quantityButton: {
-    margin: 0,
-  },
-  quantityTextContainer: {
-    minWidth: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantityText: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  editButton: {
-    margin: 0,
-    marginLeft: 8,
   },
   deleteActionContainer: {
     position: 'absolute',
@@ -1940,26 +1769,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 14,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    gap: 16,
-  },
-  emptyAddButton: {
-    marginTop: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  orderTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  orderTypeChip: {
-    paddingHorizontal: 16,
   },
   // Nuevos estilos compactos
   compactSectionContainer: {
@@ -2053,14 +1862,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 8,
   },
-  compactOrderTypeContainer: {
-    alignItems: 'flex-start',
-    paddingVertical: 4,
-  },
-  compactOrderTypeChip: {
-    paddingHorizontal: 12,
-    height: 28,
-  },
   // Estilos para el tipo de orden editable
   orderTypeSection: {
     margin: 16,
@@ -2087,14 +1888,6 @@ const styles = StyleSheet.create({
   orderTypeButtonText: {
     fontSize: 12,
     fontWeight: '500',
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  compactInputContainer: {
-    marginBottom: 8,
   },
   helperTextFix: {
     marginTop: 4,

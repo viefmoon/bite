@@ -11,7 +11,7 @@ import {
   RadioButton,
 } from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@/app/lib/zodResolver';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import {
@@ -164,7 +164,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
       cutPaper: true,
       feedLines: 3,
     };
-    // Aplicar valores iniciales si se está editando
     if (isEditing && editingItem) {
       return {
         name: editingItem.name,
@@ -183,7 +182,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
         feedLines: editingItem.feedLines ?? 3,
       };
     }
-    // Aplicar valores desde descubrimiento si se está creando y existen
     if (!isEditing && initialDataFromDiscovery) {
       return {
         ...baseDefaults,
@@ -262,7 +260,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            {/* Nombre */}
             <Controller
               name="name"
               control={control}
@@ -288,7 +285,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               </HelperText>
             )}
 
-            {/* Tipo de Conexión */}
             <View style={styles.radioGroupContainer}>
               <Text style={styles.radioGroupLabel}>Tipo de Conexión *</Text>
               <Controller
@@ -328,7 +324,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               )}
             </View>
 
-            {/* Campos Condicionales */}
             {connectionType === 'NETWORK' && (
               <>
                 <Controller
@@ -458,7 +453,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               </>
             )}
 
-            {/* Estado Activo */}
             <View style={styles.switchComponentContainer}>
               <Text variant="bodyLarge" style={styles.switchLabel}>
                 Activa
@@ -485,7 +479,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               </HelperText>
             )}
 
-            {/* Configuración de Impresión Automática */}
             <View style={styles.switchComponentContainer}>
               <Text variant="bodyLarge" style={styles.switchLabel}>
                 Impresora Predeterminada
@@ -537,7 +530,6 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               />
             </View>
 
-            {/* Configuración avanzada */}
             <PrinterAdvancedConfig
               control={control}
               errors={errors}

@@ -1,11 +1,8 @@
 import { useEffect } from 'react';
 import { Snackbar, Portal, Text } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
-import {
-  useSnackbarStore,
-  SnackbarType,
-} from '../../../app/store/snackbarStore';
-import { useAppTheme } from '../../../app/styles/theme';
+import { useSnackbarStore, SnackbarType } from '@/app/store/snackbarStore';
+import { useAppTheme } from '@/app/styles/theme';
 
 const GlobalSnackbar = () => {
   const { visible, message, type, duration, hideSnackbar } = useSnackbarStore();

@@ -16,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '@/modules/menu/services/productsService';
 import { pizzaCustomizationsService } from '../services/pizzaCustomizationsService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { CustomizationType } from '../types/pizzaCustomization.types';
+import { CustomizationType } from '../schema/pizzaCustomization.schema';
 import type { Product } from '@/modules/menu/schema/products.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 

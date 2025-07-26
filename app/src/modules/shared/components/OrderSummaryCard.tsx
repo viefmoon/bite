@@ -13,11 +13,11 @@ import {
 interface OrderItemType {
   id: string | number;
   shiftOrderNumber?: number;
-  orderNumber?: number;
-  orderType: OrderTypeEnum;
+  orderNumber?: string | number;
+  orderType: (typeof OrderTypeEnum)[keyof typeof OrderTypeEnum];
   orderStatus: string;
-  createdAt: string;
-  total: string | number;
+  createdAt: string | Date;
+  total?: string | number;
   table?: {
     name?: string;
     number?: number;
@@ -90,7 +90,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   }
 
   const totalAmount =
-    typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+    typeof item.total === 'string' ? parseFloat(item.total) : item.total || 0;
   const totalPaid =
     item.paymentsSummary?.totalPaid ||
     item.payments?.reduce((sum: number, p) => sum + (p.amount || 0), 0) ||
@@ -99,13 +99,17 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
 
   const paymentStatus = getPaymentStatus(item);
   const paymentColor =
-    paymentStatus === 'paid'
+    paymentStatus.status === 'paid'
       ? '#10B981'
-      : paymentStatus === 'partial'
+      : paymentStatus.status === 'partial'
         ? '#F59E0B'
         : '#EF4444';
   const paymentIcon =
-    paymentStatus === 'paid' ? '✓' : paymentStatus === 'partial' ? '½' : '•';
+    paymentStatus.status === 'paid'
+      ? '✓'
+      : paymentStatus.status === 'partial'
+        ? '½'
+        : '•';
 
   const defaultGetStatusColor = (status: string) => {
     switch (status) {
@@ -188,7 +192,13 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                 <Text
                   style={[styles.orderTime, { color: theme.colors.primary }]}
                 >
-                  {format(new Date(item.createdAt), 'p', { locale: es })}
+                  {format(
+                    typeof item.createdAt === 'string'
+                      ? new Date(item.createdAt)
+                      : item.createdAt,
+                    'p',
+                    { locale: es },
+                  )}
                 </Text>
 
                 <View
@@ -210,7 +220,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                       },
                     ]}
                   >
-                    <Icon name="whatsapp" size={12} color="#FFFFFF" />
+                    <Icon source="whatsapp" size={12} color="#FFFFFF" />
                   </View>
                 )}
 

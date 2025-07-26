@@ -5,10 +5,12 @@ Esta guía te ayudará a publicar tu app Bite en Google Play Store de forma auto
 ## Requisitos Previos
 
 1. **Cuenta de Google Play Console** ($25 único pago)
+
    - Crear cuenta en: https://play.google.com/console
    - Crear tu primera aplicación en la consola
 
 2. **Configuración inicial en Play Console**:
+
    - Crear aplicación nueva
    - Completar todas las secciones requeridas:
      - Detalles de la app
@@ -77,6 +79,7 @@ Esta guía te ayudará a publicar tu app Bite en Google Play Store de forma auto
 ### 3. Variables de entorno para producción
 
 Crear archivo `.env.production`:
+
 ```
 API_URL=https://tu-api-produccion.com
 ```
@@ -115,22 +118,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          
+
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build and Submit
         run: eas build --platform android --profile production --auto-submit --non-interactive
 ```
@@ -176,6 +179,7 @@ eas build --platform android --profile production --auto-submit --message "Versi
 - **production**: Producción
 
 Modificar en `eas.json`:
+
 ```json
 "track": "internal"  // cambiar según necesites
 ```
@@ -236,6 +240,7 @@ echo -e "${GREEN}✅ Release completado!${NC}"
 ```
 
 Hacer ejecutable:
+
 ```bash
 chmod +x scripts/release-to-playstore.sh
 ```

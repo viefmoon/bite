@@ -62,7 +62,6 @@ export default function CustomerFormModal({
   >(null);
   const { showSnackbar } = useSnackbarStore();
 
-  // Query para obtener direcciones del cliente
   const { data: addresses = [], refetch: refetchAddresses } =
     useGetAddressesByCustomer(editingItem?.id || '', {
       enabled: !!editingItem?.id,
@@ -139,7 +138,6 @@ export default function CustomerFormModal({
   };
 
   const handleFormSubmit = async (data: CustomerFormInputs) => {
-    // Limpiar campos vacíos antes de enviar
     const cleanedData = {
       ...data,
       email: data.email || undefined,
@@ -147,7 +145,6 @@ export default function CustomerFormModal({
       banReason: data.banReason || undefined,
     };
 
-    // El número ya viene completo desde nuestro componente
     await onSubmit(cleanedData);
   };
 
@@ -471,7 +468,6 @@ export default function CustomerFormModal({
                 )}
               </View>
 
-              {/* Sección de WhatsApp - Solo en modo edición */}
               {editingItem && (
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
@@ -536,7 +532,6 @@ export default function CustomerFormModal({
                 </View>
               )}
 
-              {/* Sección de Stripe - Solo en modo edición */}
               {editingItem?.stripeCustomerId && (
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
@@ -569,7 +564,6 @@ export default function CustomerFormModal({
                 </View>
               )}
 
-              {/* Sección de Direcciones - Solo en modo edición */}
               {editingItem && (
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
@@ -685,7 +679,6 @@ export default function CustomerFormModal({
                 </View>
               )}
 
-              {/* Espacio adicional para el teclado */}
               <View style={{ height: 10 }} />
             </ScrollView>
 
@@ -713,7 +706,6 @@ export default function CustomerFormModal({
         </Modal>
       </Portal>
 
-      {/* Modal de Dirección */}
       {editingItem && (
         <AddressFormModal
           visible={showAddressModal}
@@ -728,7 +720,6 @@ export default function CustomerFormModal({
         />
       )}
 
-      {/* Date Picker */}
       <DateTimePickerSafe
         visible={showDatePicker}
         mode="date"

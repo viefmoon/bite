@@ -12,12 +12,12 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { Receipt } from '@/modules/receipts/types/receipt.types';
+import type { Receipt } from '@/modules/receipts/schema/receipt.schema';
 import {
-  CustomizationType,
-  PizzaHalf,
-  CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+  CustomizationTypeEnum,
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 
 interface OrderDetailsViewProps {
   order: Receipt | null;
@@ -32,9 +32,9 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
   const groupedByHalf = customizations.reduce(
     (acc, curr) => {
       const half =
-        curr.half === PizzaHalf.HALF_1
+        curr.half === PizzaHalfEnum.HALF_1
           ? 'HALF_1'
-          : curr.half === PizzaHalf.HALF_2
+          : curr.half === PizzaHalfEnum.HALF_2
             ? 'HALF_2'
             : 'FULL';
 
@@ -49,13 +49,13 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
       const name = curr.pizzaCustomization?.name || curr.pizzaCustomizationId;
       const type = curr.pizzaCustomization?.type;
 
-      if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
+      if (type === 'FLAVOR' || type === CustomizationTypeEnum.FLAVOR) {
         acc[half].flavors.push(name);
       } else if (
         type === 'INGREDIENT' ||
-        type === CustomizationType.INGREDIENT
+        type === CustomizationTypeEnum.INGREDIENT
       ) {
-        if (curr.action === CustomizationAction.ADD) {
+        if (curr.action === CustomizationActionEnum.ADD) {
           acc[half].addedIngredients.push(name);
         } else {
           acc[half].removedIngredients.push(name);
@@ -175,7 +175,11 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   };
 
   const getPaymentStatus = () => {
-    if (order?.payments && order.payments.length > 0) {
+    if (
+      order?.payments &&
+      Array.isArray(order.payments) &&
+      order.payments.length > 0
+    ) {
       const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
       const totalAmount =
         typeof order.total === 'string'
@@ -393,7 +397,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           <View style={styles.headerTopRow}>
             <View style={styles.headerLeft}>
               <Text style={[styles.orderType, { color: theme.colors.primary }]}>
-                {order ? getOrderTypeLabel(order.orderType) : ''}
+                {order ? getOrderTypeLabel(order.orderType as string) : ''}
               </Text>
             </View>
           </View>
@@ -404,27 +408,33 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   styles.headerStatusChip,
                   {
                     backgroundColor: order
-                      ? getStatusColor(order.orderStatus)
+                      ? getStatusColor(order.orderStatus as string)
                       : theme.colors.surfaceVariant,
                   },
                 ]}
               >
                 <Text style={styles.headerStatusChipText}>
-                  {order ? getOrderStatusLabel(order.orderStatus) : ''}
+                  {order
+                    ? getOrderStatusLabel(order.orderStatus as string)
+                    : ''}
                 </Text>
               </View>
               {order?.preparationScreens &&
-                order.preparationScreens.map((screen, index) => (
-                  <Chip
-                    key={index}
-                    mode="outlined"
-                    compact
-                    style={styles.screenChip}
-                    textStyle={styles.screenChipText}
-                  >
-                    🍳 {screen}
-                  </Chip>
-                ))}
+              Array.isArray(order.preparationScreens)
+                ? (order.preparationScreens as any[]).map(
+                    (screen: any, index: number) => (
+                      <Chip
+                        key={index}
+                        mode="outlined"
+                        compact
+                        style={styles.screenChip}
+                        textStyle={styles.screenChipText}
+                      >
+                        🍳 {screen}
+                      </Chip>
+                    ),
+                  )
+                : null}
             </View>
           </View>
           <View style={styles.headerDatesRow}>
@@ -436,21 +446,29 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             >
               Creado:{' '}
               {order?.createdAt
-                ? format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm', {
-                    locale: es,
-                  })
+                ? format(
+                    new Date(order.createdAt as string),
+                    'dd/MM/yyyy HH:mm',
+                    {
+                      locale: es,
+                    },
+                  )
                 : ''}
             </Text>
-            {order?.finalizedAt && (
+            {order?.finalizedAt ? (
               <Text
                 style={[styles.headerDate, { color: theme.colors.primary }]}
               >
                 Finalizado:{' '}
-                {format(new Date(order.finalizedAt), 'dd/MM/yyyy HH:mm', {
-                  locale: es,
-                })}
+                {format(
+                  new Date(order.finalizedAt as string),
+                  'dd/MM/yyyy HH:mm',
+                  {
+                    locale: es,
+                  },
+                )}
               </Text>
-            )}
+            ) : null}
           </View>
         </View>
       </View>
@@ -461,52 +479,65 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.infoSection}>
-          {order?.deliveryInfo?.recipientName && (
+          {order?.deliveryInfo &&
+          typeof order.deliveryInfo === 'object' &&
+          'recipientName' in order.deliveryInfo &&
+          order.deliveryInfo.recipientName ? (
             <View style={styles.infoRow}>
               <Text
                 style={[styles.contactText, { color: theme.colors.onSurface }]}
               >
-                👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
+                👤 Nombre del Cliente:{' '}
+                {String(order.deliveryInfo.recipientName)}
               </Text>
             </View>
-          )}
+          ) : null}
 
-          {order?.deliveryInfo?.recipientPhone && (
+          {order?.deliveryInfo &&
+          typeof order.deliveryInfo === 'object' &&
+          'recipientPhone' in order.deliveryInfo &&
+          order.deliveryInfo.recipientPhone ? (
             <View style={styles.infoRow}>
               <Text
                 style={[styles.contactText, { color: theme.colors.onSurface }]}
               >
-                📞 Teléfono: {order.deliveryInfo.recipientPhone}
+                📞 Teléfono: {String(order.deliveryInfo.recipientPhone)}
               </Text>
             </View>
-          )}
+          ) : null}
 
           {order?.orderType === 'DELIVERY' &&
-            order?.deliveryInfo?.fullAddress && (
-              <View style={styles.infoRow}>
-                <Text
-                  style={[
-                    styles.addressText,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                >
-                  📦 Dirección de Entrega: {order.deliveryInfo.fullAddress}
-                </Text>
-              </View>
-            )}
+          order?.deliveryInfo &&
+          typeof order.deliveryInfo === 'object' &&
+          'fullAddress' in order.deliveryInfo &&
+          order.deliveryInfo.fullAddress ? (
+            <View style={styles.infoRow}>
+              <Text
+                style={[
+                  styles.addressText,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+              >
+                📦 Dirección de Entrega:{' '}
+                {String(order.deliveryInfo.fullAddress)}
+              </Text>
+            </View>
+          ) : null}
 
-          {order?.orderType === 'DINE_IN' && order?.table && (
+          {order?.orderType === 'DINE_IN' &&
+          order?.table &&
+          typeof order.table === 'object' ? (
             <View style={styles.infoRow}>
               <Text
                 style={[styles.tableText, { color: theme.colors.onSurface }]}
               >
-                🏛️ Mesa: {order.table.area?.name || 'Sin área'} -{' '}
-                {order.table.number}
+                🏛️ Mesa: {(order.table as any)?.area?.name || 'Sin área'} -{' '}
+                {(order.table as any)?.name}
               </Text>
             </View>
-          )}
+          ) : null}
 
-          {order?.scheduledAt && (
+          {order?.scheduledAt ? (
             <View style={styles.infoRow}>
               <Text
                 style={[
@@ -515,14 +546,16 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 ]}
               >
                 ⏰ Hora de Entrega Programada:{' '}
-                {format(new Date(order.scheduledAt), 'HH:mm', {
-                  locale: es,
-                })}
+                {order.scheduledAt
+                  ? format(new Date(order.scheduledAt as string), 'HH:mm', {
+                      locale: es,
+                    })
+                  : 'No especificada'}
               </Text>
             </View>
-          )}
+          ) : null}
 
-          {order?.user && (
+          {order?.user ? (
             <View style={styles.infoRow}>
               <Text
                 style={[
@@ -530,12 +563,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   { color: theme.colors.onSurfaceVariant },
                 ]}
               >
-                👨‍💼 Atendido por: {order.user.firstName} {order.user.lastName}
+                👨‍💼 Atendido por: {(order.user as any)?.firstName}{' '}
+                {(order.user as any)?.lastName}
               </Text>
             </View>
-          )}
+          ) : null}
 
-          {order?.notes && (
+          {order?.notes ? (
             <View style={styles.infoRow}>
               <Text
                 style={[
@@ -543,286 +577,321 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   { color: theme.colors.onSurfaceVariant },
                 ]}
               >
-                📋 Notas: {order.notes}
+                📋 Notas: {order.notes as string}
               </Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         <Divider style={styles.divider} />
 
         <View style={styles.itemsList}>
-          {order?.orderItems?.map((item) => renderItem(item)) || []}
+          {Array.isArray(order?.orderItems)
+            ? order.orderItems.map((item) => renderItem(item))
+            : []}
         </View>
 
         <Divider style={styles.divider} />
 
-        {order?.payments && order.payments.length > 0 && (
-          <>
-            <View style={styles.paymentsSection}>
-              <View style={styles.paymentSummaryCompact}>
-                <View style={styles.summaryCompactRow}>
-                  <Text
-                    style={[
-                      styles.summaryCompactLabel,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    Total: $
-                    {typeof order.total === 'string'
-                      ? parseFloat(order.total).toFixed(2)
-                      : (order.total || 0).toFixed(2)}
-                  </Text>
-                  <Text
-                    style={[styles.summaryCompactLabel, { color: '#10B981' }]}
-                  >
-                    Pagado: $
-                    {order.payments
-                      .reduce((sum, p) => sum + p.amount, 0)
-                      .toFixed(2)}
-                  </Text>
-                  {(() => {
-                    const totalAmount =
-                      typeof order.total === 'string'
-                        ? parseFloat(order.total)
-                        : order.total || 0;
-                    const totalPaid = order.payments.reduce(
-                      (sum, p) => sum + p.amount,
-                      0,
-                    );
-                    const remaining = totalAmount - totalPaid;
-                    if (remaining > 0) {
-                      return (
-                        <Text
-                          style={[
-                            styles.summaryCompactLabel,
-                            {
-                              color: theme.colors.error,
-                              fontWeight: '600',
-                            },
-                          ]}
-                        >
-                          Resta: ${remaining.toFixed(2)}
-                        </Text>
-                      );
-                    }
-                    return null;
-                  })()}
-                </View>
-              </View>
-
-              {order.payments.map((payment, index) => {
-                const getPaymentMethodLabel = (method: string) => {
-                  switch (method) {
-                    case 'CASH':
-                    case 'cash':
-                      return 'Efectivo';
-                    case 'CREDIT_CARD':
-                    case 'card':
-                      return 'Tarjeta de Crédito';
-                    case 'DEBIT_CARD':
-                      return 'Tarjeta de Débito';
-                    case 'TRANSFER':
-                    case 'transfer':
-                      return 'Transferencia';
-                    case 'OTHER':
-                      return 'Otro';
-                    default:
-                      return method;
-                  }
-                };
-
-                const getPaymentStatusColor = (status: string) => {
-                  switch (status) {
-                    case 'COMPLETED':
-                      return '#10B981';
-                    case 'PENDING':
-                      return '#F59E0B';
-                    case 'FAILED':
-                      return theme.colors.error;
-                    case 'REFUNDED':
-                      return '#6B7280';
-                    case 'CANCELLED':
-                      return theme.colors.error;
-                    default:
-                      return theme.colors.onSurfaceVariant;
-                  }
-                };
-
-                const getPaymentStatusLabel = (status: string) => {
-                  switch (status) {
-                    case 'COMPLETED':
-                      return 'Completado';
-                    case 'PENDING':
-                      return 'Pendiente';
-                    case 'FAILED':
-                      return 'Fallido';
-                    case 'REFUNDED':
-                      return 'Reembolsado';
-                    case 'CANCELLED':
-                      return 'Cancelado';
-                    default:
-                      return status;
-                  }
-                };
-
-                return (
-                  <View
-                    key={payment.id || index}
-                    style={styles.paymentRowCompact}
-                  >
+        {order?.payments &&
+          Array.isArray(order.payments) &&
+          order.payments.length > 0 && (
+            <>
+              <View style={styles.paymentsSection}>
+                <View style={styles.paymentSummaryCompact}>
+                  <View style={styles.summaryCompactRow}>
                     <Text
                       style={[
-                        styles.paymentMethodCompact,
-                        { color: theme.colors.onSurface },
-                      ]}
-                    >
-                      💳 {getPaymentMethodLabel(payment.paymentMethod)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.paymentDateCompact,
+                        styles.summaryCompactLabel,
                         { color: theme.colors.onSurfaceVariant },
                       ]}
                     >
-                      {format(new Date(payment.createdAt), 'HH:mm', {
-                        locale: es,
-                      })}
+                      Total: $
+                      {typeof order.total === 'string'
+                        ? parseFloat(order.total).toFixed(2)
+                        : typeof order.total === 'number'
+                          ? order.total.toFixed(2)
+                          : '0.00'}
                     </Text>
-                    <View
-                      style={[
-                        styles.paymentStatusBadgeCompact,
-                        {
-                          backgroundColor:
-                            getPaymentStatusColor(payment.paymentStatus) + '20',
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.paymentStatusTextCompact,
-                          {
-                            color: getPaymentStatusColor(payment.paymentStatus),
-                          },
-                        ]}
-                      >
-                        {getPaymentStatusLabel(payment.paymentStatus)}
-                      </Text>
-                    </View>
                     <Text
-                      style={[
-                        styles.paymentAmountCompact,
-                        { color: theme.colors.primary },
-                      ]}
+                      style={[styles.summaryCompactLabel, { color: '#10B981' }]}
                     >
-                      ${payment.amount.toFixed(2)}
+                      Pagado: $
+                      {Array.isArray(order.payments)
+                        ? order.payments
+                            .reduce(
+                              (sum, p) => sum + (Number(p.amount) || 0),
+                              0,
+                            )
+                            .toFixed(2)
+                        : '0.00'}
                     </Text>
-                  </View>
-                );
-              })}
-            </View>
-            <Divider style={styles.divider} />
-          </>
-        )}
-
-        {order?.ticketImpressions && order.ticketImpressions.length > 0 && (
-          <>
-            <View style={styles.ticketImpressionsSection}>
-              <TouchableOpacity
-                style={styles.collapsibleHeader}
-                onPress={() => setShowPrintHistory(!showPrintHistory)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
-                >
-                  🖨️ Historial de Impresiones ({order.ticketImpressions.length})
-                </Text>
-                <IconButton
-                  icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  style={styles.collapseIcon}
-                />
-              </TouchableOpacity>
-
-              {showPrintHistory && (
-                <View style={styles.collapsibleContent}>
-                  {order.ticketImpressions.map((impression, index) => {
-                    const getTicketTypeLabel = (type: string) => {
-                      switch (type) {
-                        case 'KITCHEN':
-                          return '🍳 Cocina';
-                        case 'BAR':
-                          return '🍺 Barra';
-                        case 'BILLING':
-                          return '💵 Cuenta';
-                        case 'CUSTOMER_COPY':
-                          return '📄 Copia Cliente';
-                        case 'GENERAL':
-                          return '📋 General';
-                        default:
-                          return type;
-                      }
-                    };
-
-                    return (
-                      <View
-                        key={impression.id || index}
-                        style={styles.impressionRow}
-                      >
-                        <View style={styles.impressionLeft}>
+                    {(() => {
+                      const totalAmount =
+                        typeof order.total === 'string'
+                          ? parseFloat(order.total)
+                          : typeof order.total === 'number'
+                            ? order.total
+                            : 0;
+                      const totalPaid = Array.isArray(order.payments)
+                        ? order.payments.reduce(
+                            (sum, p) => sum + (Number(p.amount) || 0),
+                            0,
+                          )
+                        : 0;
+                      const remaining = totalAmount - totalPaid;
+                      if (remaining > 0) {
+                        return (
                           <Text
                             style={[
-                              styles.impressionType,
+                              styles.summaryCompactLabel,
+                              {
+                                color: theme.colors.error,
+                                fontWeight: '600',
+                              },
+                            ]}
+                          >
+                            Resta: ${remaining.toFixed(2)}
+                          </Text>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </View>
+                </View>
+
+                {Array.isArray(order.payments)
+                  ? order.payments.map((payment, index) => {
+                      const getPaymentMethodLabel = (method: string) => {
+                        switch (method) {
+                          case 'CASH':
+                          case 'cash':
+                            return 'Efectivo';
+                          case 'CREDIT_CARD':
+                          case 'card':
+                            return 'Tarjeta de Crédito';
+                          case 'DEBIT_CARD':
+                            return 'Tarjeta de Débito';
+                          case 'TRANSFER':
+                          case 'transfer':
+                            return 'Transferencia';
+                          case 'OTHER':
+                            return 'Otro';
+                          default:
+                            return method;
+                        }
+                      };
+
+                      const getPaymentStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'COMPLETED':
+                            return '#10B981';
+                          case 'PENDING':
+                            return '#F59E0B';
+                          case 'FAILED':
+                            return theme.colors.error;
+                          case 'REFUNDED':
+                            return '#6B7280';
+                          case 'CANCELLED':
+                            return theme.colors.error;
+                          default:
+                            return theme.colors.onSurfaceVariant;
+                        }
+                      };
+
+                      const getPaymentStatusLabel = (status: string) => {
+                        switch (status) {
+                          case 'COMPLETED':
+                            return 'Completado';
+                          case 'PENDING':
+                            return 'Pendiente';
+                          case 'FAILED':
+                            return 'Fallido';
+                          case 'REFUNDED':
+                            return 'Reembolsado';
+                          case 'CANCELLED':
+                            return 'Cancelado';
+                          default:
+                            return status;
+                        }
+                      };
+
+                      return (
+                        <View
+                          key={payment.id || index}
+                          style={styles.paymentRowCompact}
+                        >
+                          <Text
+                            style={[
+                              styles.paymentMethodCompact,
                               { color: theme.colors.onSurface },
                             ]}
                           >
-                            {getTicketTypeLabel(impression.ticketType)}
+                            💳 {getPaymentMethodLabel(payment.paymentMethod)}
                           </Text>
-                          <View style={styles.impressionDetails}>
-                            {impression.user && (
-                              <Text
-                                style={[
-                                  styles.impressionUser,
-                                  { color: theme.colors.onSurfaceVariant },
-                                ]}
-                              >
-                                por {impression.user.firstName || ''}{' '}
-                                {impression.user.lastName || ''}
-                              </Text>
-                            )}
-                            {impression.printer && (
-                              <Text
-                                style={[
-                                  styles.impressionPrinter,
-                                  { color: theme.colors.onSurfaceVariant },
-                                ]}
-                              >
-                                🖨️ {impression.printer.name}
-                              </Text>
-                            )}
+                          <Text
+                            style={[
+                              styles.paymentDateCompact,
+                              { color: theme.colors.onSurfaceVariant },
+                            ]}
+                          >
+                            {format(new Date(payment.createdAt), 'HH:mm', {
+                              locale: es,
+                            })}
+                          </Text>
+                          <View
+                            style={[
+                              styles.paymentStatusBadgeCompact,
+                              {
+                                backgroundColor:
+                                  getPaymentStatusColor(payment.paymentStatus) +
+                                  '20',
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.paymentStatusTextCompact,
+                                {
+                                  color: getPaymentStatusColor(
+                                    payment.paymentStatus,
+                                  ),
+                                },
+                              ]}
+                            >
+                              {getPaymentStatusLabel(payment.paymentStatus)}
+                            </Text>
                           </View>
+                          <Text
+                            style={[
+                              styles.paymentAmountCompact,
+                              { color: theme.colors.primary },
+                            ]}
+                          >
+                            ${Number(payment.amount).toFixed(2)}
+                          </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.impressionTime,
-                            { color: theme.colors.onSurfaceVariant },
-                          ]}
-                        >
-                          {format(
-                            new Date(impression.impressionTime),
-                            'HH:mm:ss',
-                            { locale: es },
-                          )}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          </>
-        )}
+                      );
+                    })
+                  : null}
+              </View>
+              <Divider style={styles.divider} />
+            </>
+          )}
+
+        {order?.ticketImpressions &&
+          Array.isArray(order.ticketImpressions) &&
+          order.ticketImpressions.length > 0 && (
+            <>
+              <View style={styles.ticketImpressionsSection}>
+                <TouchableOpacity
+                  style={styles.collapsibleHeader}
+                  onPress={() => setShowPrintHistory(!showPrintHistory)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    🖨️ Historial de Impresiones (
+                    {Array.isArray(order.ticketImpressions)
+                      ? order.ticketImpressions.length
+                      : 0}
+                    )
+                  </Text>
+                  <IconButton
+                    icon={showPrintHistory ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    style={styles.collapseIcon}
+                  />
+                </TouchableOpacity>
+
+                {showPrintHistory && (
+                  <View style={styles.collapsibleContent}>
+                    {Array.isArray(order.ticketImpressions)
+                      ? order.ticketImpressions.map((impression, index) => {
+                          const getTicketTypeLabel = (type: string) => {
+                            switch (type) {
+                              case 'KITCHEN':
+                                return '🍳 Cocina';
+                              case 'BAR':
+                                return '🍺 Barra';
+                              case 'BILLING':
+                                return '💵 Cuenta';
+                              case 'CUSTOMER_COPY':
+                                return '📄 Copia Cliente';
+                              case 'GENERAL':
+                                return '📋 General';
+                              default:
+                                return type;
+                            }
+                          };
+
+                          return (
+                            <View
+                              key={impression.id || index}
+                              style={styles.impressionRow}
+                            >
+                              <View style={styles.impressionLeft}>
+                                <Text
+                                  style={[
+                                    styles.impressionType,
+                                    { color: theme.colors.onSurface },
+                                  ]}
+                                >
+                                  {getTicketTypeLabel(impression.ticketType)}
+                                </Text>
+                                <View style={styles.impressionDetails}>
+                                  {impression.user && (
+                                    <Text
+                                      style={[
+                                        styles.impressionUser,
+                                        {
+                                          color: theme.colors.onSurfaceVariant,
+                                        },
+                                      ]}
+                                    >
+                                      por {impression.user.firstName || ''}{' '}
+                                      {impression.user.lastName || ''}
+                                    </Text>
+                                  )}
+                                  {impression.printer && (
+                                    <Text
+                                      style={[
+                                        styles.impressionPrinter,
+                                        {
+                                          color: theme.colors.onSurfaceVariant,
+                                        },
+                                      ]}
+                                    >
+                                      🖨️ {impression.printer.name}
+                                    </Text>
+                                  )}
+                                </View>
+                              </View>
+                              <Text
+                                style={[
+                                  styles.impressionTime,
+                                  { color: theme.colors.onSurfaceVariant },
+                                ]}
+                              >
+                                {format(
+                                  new Date(impression.impressionTime),
+                                  'HH:mm:ss',
+                                  { locale: es },
+                                )}
+                              </Text>
+                            </View>
+                          );
+                        })
+                      : null}
+                  </View>
+                )}
+              </View>
+            </>
+          )}
       </ScrollView>
 
       <Divider style={styles.divider} />
@@ -842,7 +911,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             {order
               ? typeof order.total === 'string'
                 ? parseFloat(order.total).toFixed(2)
-                : (order.total || 0).toFixed(2)
+                : typeof order.total === 'number'
+                  ? order.total.toFixed(2)
+                  : '0.00'
               : '0.00'}
           </Text>
         </View>

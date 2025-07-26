@@ -19,7 +19,7 @@ eas build --platform android --profile production
 Una vez que el build termine (aproximadamente 15-20 minutos):
 
 1. Ve a https://expo.dev y busca tu build
-2. Descarga el archivo `.aab` 
+2. Descarga el archivo `.aab`
 3. O usa el comando: `eas build:download --platform android`
 
 ### 3. Subir a Play Store
@@ -36,6 +36,7 @@ Después de subir el AAB:
 
 1. **Nombre de la versión**: Se llenará automáticamente (ej: "1.0.0")
 2. **Notas de la versión**: Escribe algo como:
+
    ```
    - Versión inicial de Bite
    - Sistema de gestión de restaurante
@@ -65,6 +66,7 @@ Después de subir el AAB:
 Una vez que hayas subido el primer AAB:
 
 1. Completa todas las secciones requeridas en Play Console:
+
    - Descripción de la app
    - Capturas de pantalla
    - Categorización

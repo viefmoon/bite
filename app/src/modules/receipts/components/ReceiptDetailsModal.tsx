@@ -8,14 +8,14 @@ import {
   Chip,
   ActivityIndicator,
 } from 'react-native-paper';
-import { Receipt } from '../types/receipt.types';
+import { Receipt } from '../schema/receipt.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import {
-  CustomizationType,
-  PizzaHalf,
-  CustomizationAction,
-} from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
+  CustomizationTypeEnum,
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal';
@@ -31,15 +31,15 @@ interface ReceiptDetailsModalProps {
   isLoading?: boolean;
 }
 
-const formatPizzaCustomizations = (customizations: any[]): string => {
+const formatPizzaCustomizations = (customizations: unknown[]): string => {
   if (!customizations || customizations.length === 0) return '';
 
   const groupedByHalf = customizations.reduce(
     (acc, curr) => {
       const half =
-        curr.half === PizzaHalf.HALF_1
+        curr.half === PizzaHalfEnum.HALF_1
           ? 'HALF_1'
-          : curr.half === PizzaHalf.HALF_2
+          : curr.half === PizzaHalfEnum.HALF_2
             ? 'HALF_2'
             : 'FULL';
 
@@ -54,13 +54,13 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
       const name = curr.pizzaCustomization?.name || curr.pizzaCustomizationId;
       const type = curr.pizzaCustomization?.type;
 
-      if (type === 'FLAVOR' || type === CustomizationType.FLAVOR) {
+      if (type === 'FLAVOR' || type === CustomizationTypeEnum.FLAVOR) {
         acc[half].flavors.push(name);
       } else if (
         type === 'INGREDIENT' ||
-        type === CustomizationType.INGREDIENT
+        type === CustomizationTypeEnum.INGREDIENT
       ) {
-        if (curr.action === CustomizationAction.ADD) {
+        if (curr.action === CustomizationActionEnum.ADD) {
           acc[half].addedIngredients.push(name);
         } else {
           acc[half].removedIngredients.push(name);
@@ -221,9 +221,12 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
     </View>
   );
 
-  const renderItem = (item: any) => {
+  const renderItem = (item: Receipt['orderItems'][0]) => {
     const quantity = item.quantity || 1;
-    const unitPrice = parseFloat(item.finalPrice);
+    const unitPrice =
+      typeof item.finalPrice === 'string'
+        ? parseFloat(item.finalPrice)
+        : item.finalPrice;
     const totalPrice = unitPrice * quantity;
     const statusColor = PreparationStatusInfo.getColor(
       item.preparationStatus,
@@ -284,7 +287,7 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
 
             {item.productModifiers && item.productModifiers.length > 0 && (
               <View style={styles.modifiersContainer}>
-                {item.productModifiers.map((modifier: any) => (
+                {item.productModifiers.map((modifier) => (
                   <View key={modifier.id} style={styles.modifierRow}>
                     <Text
                       style={[
@@ -374,7 +377,6 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         footer={footerContent}
         footerStyle={{ paddingTop: 0 }}
       >
-        {/* Header info con status y fechas */}
         <View style={styles.headerInfo}>
           <View style={styles.chipsRow}>
             <View
@@ -432,7 +434,6 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
           </View>
         </View>
 
-        {/* Información del recibo */}
         <View style={styles.infoSection}>
           {receipt.deliveryInfo?.recipientName && (
             <View style={styles.infoRow}>
@@ -525,14 +526,12 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
 
         <Divider style={styles.divider} />
 
-        {/* Lista de productos */}
         <View style={styles.itemsList}>
           {receipt.orderItems?.map((item) => renderItem(item)) || []}
         </View>
 
         <Divider style={styles.divider} />
 
-        {/* Pagos */}
         {receipt.payments && receipt.payments.length > 0 && (
           <>
             <View style={styles.paymentsSection}>
@@ -701,7 +700,6 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
           </>
         )}
 
-        {/* Historial de impresiones */}
         {receipt.ticketImpressions && receipt.ticketImpressions.length > 0 && (
           <>
             <View style={styles.ticketImpressionsSection}>
@@ -809,7 +807,6 @@ export const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         )}
       </ResponsiveModal>
 
-      {/* Modal de historial */}
       {receipt && (
         <OrderHistoryModal
           visible={showOrderHistory}
@@ -1098,7 +1095,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // ResponsiveModal maneja padding y border
   },
   footerLeft: {
     flexDirection: 'row',

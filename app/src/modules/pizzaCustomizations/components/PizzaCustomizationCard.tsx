@@ -3,9 +3,9 @@ import { View, StyleSheet } from 'react-native';
 import { Card, Text, Chip } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import {
-  CustomizationType,
+  CustomizationTypeEnum,
   type PizzaCustomization,
-} from '../types/pizzaCustomization.types';
+} from '../schema/pizzaCustomization.schema';
 
 interface PizzaCustomizationCardProps {
   customization: PizzaCustomization;
@@ -62,12 +62,12 @@ export function PizzaCustomizationCard({
     },
   });
 
-  const getTypeLabel = (type: CustomizationType) => {
-    return type === CustomizationType.FLAVOR ? 'Sabor' : 'Ingrediente';
+  const getTypeLabel = (type: any) => {
+    return type === CustomizationTypeEnum.FLAVOR ? 'Sabor' : 'Ingrediente';
   };
 
-  const getTypeIcon = (type: CustomizationType) => {
-    return type === CustomizationType.FLAVOR ? 'pizza' : 'food-variant';
+  const getTypeIcon = (type: any) => {
+    return type === CustomizationTypeEnum.FLAVOR ? 'pizza' : 'food-variant';
   };
 
   return (
