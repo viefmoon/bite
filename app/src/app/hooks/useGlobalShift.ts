@@ -6,7 +6,7 @@ export const useGlobalShift = () => {
     queryKey: ['global', 'shift', 'current'],
     queryFn: () => shiftsService.getCurrentShift(),
     staleTime: 60 * 1000, // Los datos se consideran obsoletos después de 60 segundos
-    cacheTime: 5 * 60 * 1000, // Mantener en caché por 5 minutos
+    gcTime: 5 * 60 * 1000, // Mantener en caché por 5 minutos
     refetchInterval: 2 * 60 * 1000, // Actualizar cada 2 minutos automáticamente
     refetchOnWindowFocus: false, // No actualizar automáticamente al volver al foco
     refetchOnMount: 'always', // Actualizar siempre al montar el componente
