@@ -57,7 +57,6 @@ interface PaymentModalProps {
   onPrepaymentDeleted?: () => void; // Callback para eliminar pre-pago
 }
 
-
 // Métodos de pago deshabilitados temporalmente
 const DISABLED_METHODS: PaymentMethod[] = ['CARD', 'TRANSFER'];
 

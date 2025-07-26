@@ -67,7 +67,10 @@ export const getPreparationStatusLabel = (status: string): string => {
 /**
  * Obtiene el color para el estado de preparación
  */
-export const getPreparationStatusColor = (status: string, theme: any): string => {
+export const getPreparationStatusColor = (
+  status: string,
+  theme: any,
+): string => {
   const colorMap: Record<string, string> = {
     PENDING: theme.colors.onSurfaceVariant,
     IN_PROGRESS: theme.colors.primary,
@@ -157,7 +160,9 @@ export const getPaymentMethodIcon = (method: string): string => {
 /**
  * Obtiene el estado de pago basado en la información de la orden
  */
-export const getPaymentStatus = (order: any): { status: 'paid' | 'partial' | 'unpaid'; label: string } => {
+export const getPaymentStatus = (
+  order: any,
+): { status: 'paid' | 'partial' | 'unpaid'; label: string } => {
   const total = order.total || 0;
   const paidAmount = order.totalPaidAmount || 0;
 
@@ -173,7 +178,10 @@ export const getPaymentStatus = (order: any): { status: 'paid' | 'partial' | 'un
 /**
  * Obtiene el color para el estado del pago
  */
-export const getStatusColor = (status: 'paid' | 'partial' | 'unpaid', theme: any): string => {
+export const getStatusColor = (
+  status: 'paid' | 'partial' | 'unpaid',
+  theme: any,
+): string => {
   switch (status) {
     case 'paid':
       return '#4CAF50';

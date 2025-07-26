@@ -390,9 +390,9 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
           (sc) =>
             sc.action === CustomizationAction.ADD &&
             pizzaCustomizations.some(
-              (pc) => 
-                pc.id === sc.pizzaCustomizationId && 
-                pc.type === CustomizationType.FLAVOR
+              (pc) =>
+                pc.id === sc.pizzaCustomizationId &&
+                pc.type === CustomizationType.FLAVOR,
             ),
         );
 
@@ -1042,7 +1042,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                 onPress={handleAddToCart}
                 style={[
                   styles.confirmButton,
-                  !isValid && styles.confirmButtonDisabled
+                  !isValid && styles.confirmButtonDisabled,
                 ]}
                 disabled={!isValid}
                 icon={editingItem ? 'cart-check' : 'cart-plus'}

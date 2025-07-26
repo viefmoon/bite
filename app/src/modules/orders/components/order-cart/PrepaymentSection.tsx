@@ -30,7 +30,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  
+
   const parsedPaymentAmount = parseFloat(paymentAmount || '0');
   const exceedsTotal = parsedPaymentAmount > total;
   const remainingAmount = Math.max(0, total - parsedPaymentAmount);
@@ -46,15 +46,14 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
           </Text>
         </View>
         <View style={styles.totalsContainer}>
-          <Text style={[styles.totalsText, styles.boldText]}>
-            Restante:
-          </Text>
+          <Text style={[styles.totalsText, styles.boldText]}>Restante:</Text>
           <Text
             style={[
               styles.totalsValue,
               styles.boldText,
               {
-                color: (pendingAmount || 0) > 0 ? theme.colors.error : '#4CAF50',
+                color:
+                  (pendingAmount || 0) > 0 ? theme.colors.error : '#4CAF50',
               },
             ]}
           >
@@ -104,15 +103,14 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
                 style={styles.iconButtonNoMargin}
               />
               <Text style={styles.prepaymentWarningText}>
-                El prepago excede el total de la orden. Edite el pago antes de continuar.
+                El prepago excede el total de la orden. Edite el pago antes de
+                continuar.
               </Text>
             </View>
           )}
         </View>
         <View style={styles.totalsContainer}>
-          <Text style={[styles.totalsText, styles.boldText]}>
-            Restante:
-          </Text>
+          <Text style={[styles.totalsText, styles.boldText]}>Restante:</Text>
           <Text
             style={[
               styles.totalsValue,

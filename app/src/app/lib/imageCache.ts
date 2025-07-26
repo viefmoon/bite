@@ -9,7 +9,6 @@ const MAX_CACHE_AGE_DAYS = 7;
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY = 1000; // 1 segundo
 
-
 // Función para realizar descargas con retry y backoff exponencial
 async function downloadWithRetry(
   remoteUrl: string,
@@ -167,7 +166,6 @@ async function cleanCache() {
         }
       }
     }
-
   } catch (error) {
     // Silently ignore cache clean errors
   }
@@ -238,7 +236,6 @@ export async function removeImageFromCache(remoteUrl: string) {
     const filename = await getCacheFilename(remoteUrl);
     const localUri = `${CACHE_DIR}${filename}`;
     await FileSystem.deleteAsync(localUri, { idempotent: true });
-
   } catch (error) {
     // Silently ignore removal errors
   }
@@ -248,7 +245,6 @@ export async function clearImageCache() {
   try {
     await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
     await ensureCacheDirExists();
-
   } catch (error) {
     // Silently ignore clear errors
   }

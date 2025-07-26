@@ -15,7 +15,12 @@ import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderStatusEnum } from '../types/orders.types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { formatOrderStatus, getOrderStatusColor, getPreparationStatusLabel, getPreparationStatusColor } from '../utils/formatters';
+import {
+  formatOrderStatus,
+  getOrderStatusColor,
+  getPreparationStatusLabel,
+  getPreparationStatusColor,
+} from '../utils/formatters';
 
 interface OrderDetailModalProps {
   visible: boolean;
@@ -24,7 +29,6 @@ interface OrderDetailModalProps {
   orderNumber?: number;
   orderData?: any; // Datos de la orden pasados como prop
 }
-
 
 // Componente interno para mostrar el contenido de detalles
 export const OrderDetailContent: React.FC<{

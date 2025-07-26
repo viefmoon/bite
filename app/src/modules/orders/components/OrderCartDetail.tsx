@@ -1,4 +1,10 @@
-import React, { useMemo, useEffect, useCallback, useState, useRef } from 'react';
+import React, {
+  useMemo,
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+} from 'react';
 import { Portal } from 'react-native-paper';
 import {
   View,
@@ -8,9 +14,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Text,
   Divider,
@@ -22,7 +26,11 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { OrderTypeEnum } from '../types/orders.types';
 import type { OrderAdjustment } from '../types/adjustments.types';
-import { formatOrderStatus, getOrderStatusColor, getPreparationStatusLabel } from '../utils/formatters';
+import {
+  formatOrderStatus,
+  getOrderStatusColor,
+  getPreparationStatusLabel,
+} from '../utils/formatters';
 import OrderHeader from './OrderHeader';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
@@ -42,8 +50,8 @@ import { FAB } from 'react-native-paper';
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
-import { 
-  OrderTypeSelector, 
+import {
+  OrderTypeSelector,
   DineInForm,
   DineInFormRef,
   TakeAwayForm,
@@ -53,8 +61,9 @@ import {
   OrderItemsList,
   OrderAdjustments,
   PrepaymentSection,
-  ModalsContainer
+  ModalsContainer,
 } from './order-cart';
+import { modalHelpers } from '../stores/useModalStore';
 
 interface OrderCartDetailProps {
   visible: boolean;
@@ -85,7 +94,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  
+
   // Referencias a los formularios
   const dineInFormRef = useRef<DineInFormRef>(null);
   const takeAwayFormRef = useRef<TakeAwayFormRef>(null);
@@ -141,21 +150,21 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const totalItemsCount = useOrderItemsCount();
   const isCartEmpty = useIsOrderEmpty();
 
-  const { data: orderData, isLoading: isLoadingOrder, isError: isErrorOrder } = useGetOrderByIdQuery(orderId, {
+  const {
+    data: orderData,
+    isLoading: isLoadingOrder,
+    isError: isErrorOrder,
+  } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
-
 
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
     enabled: isEditMode && !!orderId && visible,
   });
 
-
-
-
   const validateOrder = () => {
     let isValid = true;
-    
+
     switch (orderType) {
       case OrderTypeEnum.DINE_IN:
         if (dineInFormRef.current) {
@@ -163,14 +172,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           isValid = isValid && dineInValid;
         }
         break;
-        
+
       case OrderTypeEnum.TAKE_AWAY:
         if (takeAwayFormRef.current) {
           const takeAwayValid = takeAwayFormRef.current.validate();
           isValid = isValid && takeAwayValid;
         }
         break;
-        
+
       case OrderTypeEnum.DELIVERY:
         if (deliveryFormRef.current) {
           const deliveryValid = deliveryFormRef.current.validate();
@@ -178,63 +187,73 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }
         break;
     }
-    
+
     return isValid;
   };
 
-  const [editingItemFromList, setEditingItemFromList] = useState<CartItem | null>(null);
+  const [editingItemFromList, setEditingItemFromList] =
+    useState<CartItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
-  const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] = useState(false);
-  const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
-  const [isTimeAlertVisible, setIsTimeAlertVisible] = useState(false);
-  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [showModifyInProgressConfirmation, setShowModifyInProgressConfirmation] = useState(false);
-  const [modifyingItemName, setModifyingItemName] = useState<string>('');
-  const [pendingModifyAction, setPendingModifyAction] = useState<(() => void) | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [adjustmentToEdit, setAdjustmentToEdit] = useState<any>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [isModalReady, setIsModalReady] = useState(false);
-  
+
   // Calcular totales
   const totalAdjustments = useMemo(() => {
     return adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
   }, [adjustments]);
-  
+
   const totalPaid = useMemo(() => {
     if (!isEditMode || !payments) return 0;
-    return payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    return payments.reduce(
+      (sum, payment) => sum + parseFloat(payment.amount),
+      0,
+    );
   }, [payments, isEditMode]);
-  
+
   const pendingAmount = useMemo(() => {
     return total - totalPaid;
   }, [total, totalPaid]);
-  
-  const showTimePicker = () => setIsTimePickerVisible(true);
-  const hideTimePicker = () => setIsTimePickerVisible(false);
-  
+
+  const showTimePicker = () => {
+    modalHelpers.showTimePicker({
+      scheduledTime,
+      orderType,
+      onTimeConfirm: handleTimeConfirm,
+      hideTimePicker: modalHelpers.hideModal,
+    });
+  };
+
   const handleEditCartItem = (item: CartItem) => {
     setEditingItemFromList(item);
-    onEditItem?.(item);
+    if (onEditItem) {
+      onEditItem(item);
+    } else {
+      // Si no hay onEditItem, mostrar modal de personalización directamente
+      modalHelpers.showProductCustomization({
+        editingProduct: editingProduct,
+        editingItemFromList: item,
+        clearEditingState,
+        handleUpdateEditedItem,
+      });
+    }
   };
-  
+
   const clearEditingState = () => {
     setEditingItemFromList(null);
     setEditingProduct(null);
   };
 
-  const handlePrepaymentCreated = useCallback((id: string, amount: string, method: 'CASH' | 'CARD' | 'TRANSFER') => {
-    if (!isEditMode) {
-      setPrepaymentId(id);
-      setPrepaymentAmount(amount);
-      setPrepaymentMethod(method);
-    }
-  }, [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod]);
+  const handlePrepaymentCreated = useCallback(
+    (id: string, amount: string, method: 'CASH' | 'CARD' | 'TRANSFER') => {
+      if (!isEditMode) {
+        setPrepaymentId(id);
+        setPrepaymentAmount(amount);
+        setPrepaymentMethod(method);
+      }
+    },
+    [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod],
+  );
 
   const handlePrepaymentDeleted = useCallback(() => {
     if (!isEditMode) {
@@ -243,14 +262,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       setPrepaymentMethod(null);
     }
   }, [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod]);
-  
+
   const handleDeletePrepayment = () => {
-    setShowDeletePrepaymentConfirm(true);
-  };
-  
-  const confirmDeletePrepayment = () => {
-    handlePrepaymentDeleted();
-    setShowDeletePrepaymentConfirm(false);
+    modalHelpers.showDeletePrepaymentConfirm({
+      confirmDeletePrepayment: async () => {
+        handlePrepaymentDeleted();
+      },
+    });
   };
 
   const { user } = useAuthStore();
@@ -274,11 +292,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         }
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-          setModifyingItemName(item.productName);
-          setPendingModifyAction(() => () => {
-            removeCartItem(itemId);
+          modalHelpers.showModifyInProgressConfirmation({
+            modifyingItemName: item.productName,
+            pendingModifyAction: () => removeCartItem(itemId),
+            setPendingModifyAction: () => {},
+            setModifyingItemName: () => {},
           });
-          setShowModifyInProgressConfirmation(true);
         } else {
           removeCartItem(itemId);
         }
@@ -286,7 +305,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         removeCartItem(itemId);
       }
     },
-    [isEditMode, items, showSnackbar, removeCartItem, setModifyingItemName, setPendingModifyAction, setShowModifyInProgressConfirmation],
+    [isEditMode, items, showSnackbar, removeCartItem],
   );
 
   const updateItemQuantity = useCallback(
@@ -316,9 +335,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         };
 
         if (item.preparationStatus === 'IN_PROGRESS') {
-          setModifyingItemName(item.productName);
-          setPendingModifyAction(() => updateQuantity);
-          setShowModifyInProgressConfirmation(true);
+          modalHelpers.showModifyInProgressConfirmation({
+            modifyingItemName: item.productName,
+            pendingModifyAction: updateQuantity,
+            setPendingModifyAction: () => {},
+            setModifyingItemName: () => {},
+          });
         } else {
           updateQuantity();
         }
@@ -326,16 +348,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         updateCartItemQuantity(itemId, quantity);
       }
     },
-    [isEditMode, items, removeItem, showSnackbar, updateCartItemQuantity, setModifyingItemName, setPendingModifyAction, setShowModifyInProgressConfirmation],
+    [isEditMode, items, removeItem, showSnackbar, updateCartItemQuantity],
   );
-
-
 
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
-
-
 
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
@@ -384,8 +402,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     return result;
   }, []);
-
-
 
   useEffect(() => {
     if (!visible && isEditMode) {
@@ -444,7 +460,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
     try {
       await confirmOrder(user.id, onConfirmOrder);
-      
+
       if (isEditMode) {
         showSnackbar({
           message: 'Cambios guardados exitosamente',
@@ -454,26 +470,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       }
     } catch (error) {
       showSnackbar({
-        message: error instanceof Error ? error.message : 'Error al procesar la orden',
+        message:
+          error instanceof Error ? error.message : 'Error al procesar la orden',
         type: 'error',
       });
     }
   };
-
 
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
     now.setSeconds(0, 0);
 
     if (date < now) {
-      hideTimePicker();
-      setTimeAlertVisible(true);
+      modalHelpers.hideModal();
+      modalHelpers.showTimeAlert();
     } else {
       setScheduledTime(date);
-      hideTimePicker();
+      modalHelpers.hideModal();
     }
   };
-
 
   const handleUpdateEditedItem = useCallback(
     (
@@ -498,7 +513,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         variantName,
         unitPrice,
         selectedPizzaCustomizations,
-        pizzaExtraCost
+        pizzaExtraCost,
       );
 
       clearEditingState();
@@ -614,7 +629,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         visible={visible}
         onDismiss={() => {
           if (isEditMode && hasUnsavedChanges) {
-            setShowExitConfirmation(true);
+            modalHelpers.showExitConfirmation({
+              onClose,
+            });
           } else {
             onClose?.();
           }
@@ -636,7 +653,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     size={24}
                     onPress={() => {
                       if (hasUnsavedChanges) {
-                        setShowExitConfirmation(true);
+                        modalHelpers.showExitConfirmation({
+                          onClose,
+                        });
                       } else {
                         onClose?.();
                       }
@@ -686,7 +705,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowDetailModal(true);
+                        modalHelpers.showOrderDetail({
+                          orderId,
+                          orderNumber,
+                          orderData,
+                        });
                       }}
                       title="Ver Detalles"
                       leadingIcon="file-document-outline"
@@ -694,7 +717,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowHistoryModal(true);
+                        modalHelpers.showOrderHistory({
+                          orderId,
+                          orderNumber,
+                        });
                       }}
                       title="Ver Historial"
                       leadingIcon="history"
@@ -702,7 +728,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowCancelConfirmation(true);
+                        modalHelpers.showCancelConfirmation({
+                          orderNumber,
+                          onCancelOrder,
+                        });
                       }}
                       title="Cancelar Orden"
                       leadingIcon="cancel"
@@ -714,7 +743,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   title={
                     orderNumber ? `Orden #${orderNumber}` : 'Resumen de Orden'
                   }
-                  onBackPress={() => onClose?.()}
+                  onBackPress={() => {
+                    if (!isEditMode && hasUnsavedChanges) {
+                      modalHelpers.showExitConfirmation({
+                        onClose,
+                      });
+                    } else {
+                      onClose?.();
+                    }
+                  }}
                   itemCount={totalItemsCount}
                   onCartPress={() => {}}
                   isCartVisible={isCartVisible}
@@ -746,7 +783,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               onUpdateQuantity={updateItemQuantity}
             />
 
-
             {isEditMode && (
               <Button
                 onPress={() => {
@@ -771,13 +807,17 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
                           newProductsWithStatus.forEach((item) => {
                             addItem(
-                              { id: item.productId, name: item.productName, price: item.unitPrice } as any,
+                              {
+                                id: item.productId,
+                                name: item.productName,
+                                price: item.unitPrice,
+                              } as any,
                               item.quantity,
                               item.variantId,
                               item.modifiers,
                               item.preparationNotes,
                               item.selectedPizzaCustomizations,
-                              item.pizzaExtraCost
+                              item.pizzaExtraCost,
                             );
                           });
 
@@ -787,8 +827,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                           });
                         },
                       });
-                    } catch (error) {
-                    }
+                    } catch (error) {}
                   }
                 }}
                 mode="outlined"
@@ -806,10 +845,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <OrderAdjustments
                 adjustments={adjustments}
                 subtotal={subtotal}
-                onAddAdjustment={() => setShowAdjustmentModal(true)}
+                onAddAdjustment={() =>
+                  modalHelpers.showAdjustment({
+                    adjustmentToEdit: null,
+                    setAdjustmentToEdit,
+                    handleAddAdjustment,
+                    handleUpdateAdjustment,
+                    subtotal,
+                  })
+                }
                 onEditAdjustment={(adjustment) => {
                   setAdjustmentToEdit(adjustment);
-                  setShowAdjustmentModal(true);
+                  modalHelpers.showAdjustment({
+                    adjustmentToEdit: adjustment,
+                    setAdjustmentToEdit,
+                    handleAddAdjustment,
+                    handleUpdateAdjustment,
+                    subtotal,
+                  });
                 }}
                 onRemoveAdjustment={handleRemoveAdjustment}
                 disabled={false}
@@ -847,7 +900,14 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               totalPaid={totalPaid}
               pendingAmount={pendingAmount}
               canRegisterPayments={canRegisterPayments}
-              onShowPrepaymentModal={() => setShowPrepaymentModal(true)}
+              onShowPrepaymentModal={() =>
+                modalHelpers.showPrepayment({
+                  orderTotal: total,
+                  prepaymentId,
+                  handlePrepaymentCreated,
+                  handlePrepaymentDeleted,
+                })
+              }
               onDeletePrepayment={handleDeletePrepayment}
             />
           </ScrollView>
@@ -904,84 +964,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     type: 'warning',
                   });
                 } else {
-                  setShowPaymentModal(true);
+                  modalHelpers.showPayment({
+                    orderId,
+                    orderTotal: total,
+                    orderNumber,
+                    orderStatus: orderData?.orderStatus,
+                    onOrderCompleted: () => {
+                      onClose?.();
+                    },
+                  });
                 }
               }}
               visible={true}
             />
           )}
 
-          <ModalsContainer
-            // DateTimePicker props
-            isTimePickerVisible={isTimePickerVisible}
-            scheduledTime={scheduledTime}
-            orderType={orderType}
-            onTimeConfirm={handleTimeConfirm}
-            hideTimePicker={hideTimePicker}
-            
-            // Alert modals props
-            isTimeAlertVisible={isTimeAlertVisible}
-            setTimeAlertVisible={setTimeAlertVisible}
-            showExitConfirmation={showExitConfirmation}
-            setShowExitConfirmation={setShowExitConfirmation}
-            showCancelConfirmation={showCancelConfirmation}
-            setShowCancelConfirmation={setShowCancelConfirmation}
-            showModifyInProgressConfirmation={showModifyInProgressConfirmation}
-            setShowModifyInProgressConfirmation={setShowModifyInProgressConfirmation}
-            showDeletePrepaymentConfirm={showDeletePrepaymentConfirm}
-            setShowDeletePrepaymentConfirm={setShowDeletePrepaymentConfirm}
-            
-            // Modal data props
-            orderNumber={orderNumber}
-            modifyingItemName={modifyingItemName}
-            pendingModifyAction={pendingModifyAction}
-            setPendingModifyAction={setPendingModifyAction}
-            setModifyingItemName={setModifyingItemName}
-            
-            // Callbacks
-            onClose={onClose}
-            onCancelOrder={onCancelOrder}
-            confirmDeletePrepayment={confirmDeletePrepayment}
-            
-            // Edit mode specific modals
-            isEditMode={isEditMode}
-            editingProduct={editingProduct}
-            editingItemFromList={editingItemFromList}
-            clearEditingState={clearEditingState}
-            handleUpdateEditedItem={handleUpdateEditedItem}
-            
-            // Order detail modal
-            showDetailModal={showDetailModal}
-            setShowDetailModal={setShowDetailModal}
-            orderId={orderId}
-            orderData={orderData}
-            
-            // Order history modal  
-            showHistoryModal={showHistoryModal}
-            setShowHistoryModal={setShowHistoryModal}
-            
-            // Payment modal
-            showPaymentModal={showPaymentModal}
-            setShowPaymentModal={setShowPaymentModal}
-            orderTotal={total}
-            orderStatus={orderData?.orderStatus}
-            
-            // Adjustment modal
-            showAdjustmentModal={showAdjustmentModal}
-            setShowAdjustmentModal={setShowAdjustmentModal}
-            adjustmentToEdit={adjustmentToEdit}
-            setAdjustmentToEdit={setAdjustmentToEdit}
-            handleAddAdjustment={handleAddAdjustment}
-            handleUpdateAdjustment={handleUpdateAdjustment}
-            subtotal={subtotal}
-            
-            // Prepayment modal
-            showPrepaymentModal={showPrepaymentModal}
-            setShowPrepaymentModal={setShowPrepaymentModal}
-            prepaymentId={prepaymentId}
-            handlePrepaymentCreated={handlePrepaymentCreated}
-            handlePrepaymentDeleted={handlePrepaymentDeleted}
-          />
+          <ModalsContainer />
         </GestureHandlerRootView>
       </Modal>
     </Portal>

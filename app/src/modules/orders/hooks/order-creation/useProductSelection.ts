@@ -38,8 +38,10 @@ export const useProductSelection = ({
   updateItem,
 }: UseProductSelectionProps) => {
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
-  const [selectedProductForDescription, setSelectedProductForDescription] = useState<Product | null>(null);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [selectedProductForDescription, setSelectedProductForDescription] =
+    useState<Product | null>(null);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 
@@ -82,7 +84,10 @@ export const useProductSelection = ({
   );
 
   const handleProductSelect = useCallback(
-    (product: Product, setSelectedProduct: (product: Product | null) => void) => {
+    (
+      product: Product,
+      setSelectedProduct: (product: Product | null) => void,
+    ) => {
       if (productNeedsCustomization(product)) {
         setSelectedProduct(product);
       } else {
@@ -107,7 +112,8 @@ export const useProductSelection = ({
     (item: CartItem, setSelectedProduct: (product: Product | null) => void) => {
       if (!menu || !Array.isArray(menu)) {
         showSnackbar({
-          message: 'El menú aún se está cargando. Por favor, intenta nuevamente.',
+          message:
+            'El menú aún se está cargando. Por favor, intenta nuevamente.',
           type: 'info',
         });
         return;
@@ -135,7 +141,8 @@ export const useProductSelection = ({
         hideCart();
       } else {
         showSnackbar({
-          message: 'No se pudo encontrar el producto. Por favor, recarga la pantalla.',
+          message:
+            'No se pudo encontrar el producto. Por favor, recarga la pantalla.',
           type: 'error',
         });
       }

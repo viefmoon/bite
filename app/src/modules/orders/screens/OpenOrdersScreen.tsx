@@ -137,7 +137,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
   }, []);
 
   const { loadOrderForEditing } = useOrderStore();
-  
+
   const handleOrderItemPress = async (order: OrderOpenList) => {
     // Cargar la orden en el store antes de abrir el modal
     setEditingOrderId(order.id);
@@ -459,7 +459,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       ),
     });
   }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
-
 
   // Función para manejar la impresión del ticket
   const handlePrint = useCallback(

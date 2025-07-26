@@ -263,7 +263,10 @@ export const OrderCard = React.memo<OrderCardProps>(
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getOrderStatusColor(order.orderStatus, theme),
+                      backgroundColor: getOrderStatusColor(
+                        order.orderStatus,
+                        theme,
+                      ),
                     },
                   ]}
                   textStyle={styles.statusChipText}

@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { Product, FullMenuModifierGroup } from '../types/orders.types';
 import { CartItemModifier } from '../stores/useOrderStore';
 import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import { 
-  PizzaCustomization, 
+import {
+  PizzaCustomization,
   PizzaConfiguration,
   CustomizationType,
-  CustomizationAction
+  CustomizationAction,
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 interface ValidationError {
@@ -35,8 +35,9 @@ export const useProductValidation = ({
     const errors: ValidationError[] = [];
 
     // Validar variantes requeridas
-    const hasVariants = product?.variants && 
-      Array.isArray(product.variants) && 
+    const hasVariants =
+      product?.variants &&
+      Array.isArray(product.variants) &&
       product.variants.length > 0;
 
     if (hasVariants && !selectedVariantId) {
@@ -54,7 +55,7 @@ export const useProductValidation = ({
           pizzaCustomizations.some(
             (pc) =>
               pc.id === sc.pizzaCustomizationId &&
-              pc.type === CustomizationType.FLAVOR
+              pc.type === CustomizationType.FLAVOR,
           ),
       );
 
@@ -74,17 +75,21 @@ export const useProductValidation = ({
         const selectedCount = selectedInGroup.length;
 
         // Validar grupos requeridos y mínimo de selecciones
-        if (group.isRequired || (group.minSelections && group.minSelections > 0)) {
+        if (
+          group.isRequired ||
+          (group.minSelections && group.minSelections > 0)
+        ) {
           const minRequired = Math.max(
             group.minSelections || 0,
             group.isRequired ? 1 : 0,
           );
 
           if (selectedCount < minRequired) {
-            const message = minRequired === 1
-              ? `Selecciona una opción`
-              : `Selecciona al menos ${minRequired} opciones`;
-            
+            const message =
+              minRequired === 1
+                ? `Selecciona una opción`
+                : `Selecciona al menos ${minRequired} opciones`;
+
             errors.push({
               field: `modifier_${group.id}`,
               message,

@@ -127,7 +127,7 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
       0,
     );
     const unitPriceWithModifiers = basePrice + modifiersPrice;
-    const itemTotal = item.totalPrice || (unitPriceWithModifiers * item.quantity);
+    const itemTotal = item.totalPrice || unitPriceWithModifiers * item.quantity;
 
     const canDelete =
       !isEditMode ||
@@ -151,95 +151,101 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
             </View>
           )}
           description={() => (
-          <View>
-            {item.modifiers.length > 0 && (
-              <Text style={styles.modifiersText}>
-                {item.modifiers.map((m) => m.name).join(', ')}
-              </Text>
-            )}
-            {item.selectedPizzaCustomizations &&
-              item.selectedPizzaCustomizations.length > 0 && (
-                <Text style={styles.customizationText}>
-                  {item.selectedPizzaCustomizations.length} personalizaciones
+            <View>
+              {item.modifiers.length > 0 && (
+                <Text style={styles.modifiersText}>
+                  {item.modifiers.map((m) => m.name).join(', ')}
                 </Text>
               )}
-            {item.preparationNotes && (
-              <Text style={styles.notesText}>
-                Nota: {item.preparationNotes}
-              </Text>
-            )}
-            {isEditMode && item.preparationStatus && (
-              <View style={styles.statusContainer}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: getPreparationStatusColor(item.preparationStatus) + '20',
-                    },
-                  ]}
-                >
+              {item.selectedPizzaCustomizations &&
+                item.selectedPizzaCustomizations.length > 0 && (
+                  <Text style={styles.customizationText}>
+                    {item.selectedPizzaCustomizations.length} personalizaciones
+                  </Text>
+                )}
+              {item.preparationNotes && (
+                <Text style={styles.notesText}>
+                  Nota: {item.preparationNotes}
+                </Text>
+              )}
+              {isEditMode && item.preparationStatus && (
+                <View style={styles.statusContainer}>
                   <View
                     style={[
-                      styles.statusDot,
+                      styles.statusBadge,
                       {
-                        backgroundColor: getPreparationStatusColor(item.preparationStatus),
-                      },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color: getPreparationStatusColor(item.preparationStatus),
+                        backgroundColor:
+                          getPreparationStatusColor(item.preparationStatus) +
+                          '20',
                       },
                     ]}
                   >
-                    {getPreparationStatusText(item.preparationStatus)}
-                  </Text>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor: getPreparationStatusColor(
+                            item.preparationStatus,
+                          ),
+                        },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.statusText,
+                        {
+                          color: getPreparationStatusColor(
+                            item.preparationStatus,
+                          ),
+                        },
+                      ]}
+                    >
+                      {getPreparationStatusText(item.preparationStatus)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
-          </View>
-        )}
-        right={() => (
-          <View style={styles.itemActionsContainer}>
-            <View style={styles.quantityActions}>
-              <IconButton
-                icon="minus-circle-outline"
-                size={24}
-                onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                disabled={
-                  disabled ||
-                  (isEditMode &&
-                    (item.preparationStatus === 'READY' ||
-                      item.preparationStatus === 'DELIVERED'))
-                }
-                style={styles.quantityButton}
-              />
-              <Text style={styles.quantityText}>{item.quantity}</Text>
-              <IconButton
-                icon="plus-circle-outline"
-                size={24}
-                onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                disabled={
-                  disabled ||
-                  (isEditMode &&
-                    (item.preparationStatus === 'READY' ||
-                      item.preparationStatus === 'DELIVERED'))
-                }
-                style={styles.quantityButton}
-              />
-            </View>
-            <View style={styles.priceContainer}>
-              <Text style={styles.itemPrice}>${itemTotal.toFixed(2)}</Text>
-              {item.quantity > 1 && (
-                <Text style={styles.unitPriceText}>
-                  (${unitPriceWithModifiers.toFixed(2)} c/u)
-                </Text>
               )}
             </View>
-          </View>
-        )}
+          )}
+          right={() => (
+            <View style={styles.itemActionsContainer}>
+              <View style={styles.quantityActions}>
+                <IconButton
+                  icon="minus-circle-outline"
+                  size={24}
+                  onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                  disabled={
+                    disabled ||
+                    (isEditMode &&
+                      (item.preparationStatus === 'READY' ||
+                        item.preparationStatus === 'DELIVERED'))
+                  }
+                  style={styles.quantityButton}
+                />
+                <Text style={styles.quantityText}>{item.quantity}</Text>
+                <IconButton
+                  icon="plus-circle-outline"
+                  size={24}
+                  onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                  disabled={
+                    disabled ||
+                    (isEditMode &&
+                      (item.preparationStatus === 'READY' ||
+                        item.preparationStatus === 'DELIVERED'))
+                  }
+                  style={styles.quantityButton}
+                />
+              </View>
+              <View style={styles.priceContainer}>
+                <Text style={styles.itemPrice}>${itemTotal.toFixed(2)}</Text>
+                {item.quantity > 1 && (
+                  <Text style={styles.unitPriceText}>
+                    (${unitPriceWithModifiers.toFixed(2)} c/u)
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
           style={styles.listItem}
         />
       </TouchableOpacity>

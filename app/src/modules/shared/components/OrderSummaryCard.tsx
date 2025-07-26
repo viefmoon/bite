@@ -5,7 +5,10 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
-import { formatOrderTypeShort, getPaymentStatus } from '@/modules/orders/utils/formatters';
+import {
+  formatOrderTypeShort,
+  getPaymentStatus,
+} from '@/modules/orders/utils/formatters';
 
 interface OrderSummaryCardProps {
   item: any; // Union type for ReceiptList | Order

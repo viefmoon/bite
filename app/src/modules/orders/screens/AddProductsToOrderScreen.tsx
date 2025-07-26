@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 import { StyleSheet } from 'react-native';
 import { Portal } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -18,7 +24,11 @@ import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrdersStackScreenProps } from '@/app/navigation/types';
-import { CartItem, CartItemModifier, useOrderStore } from '../stores/useOrderStore';
+import {
+  CartItem,
+  CartItemModifier,
+  useOrderStore,
+} from '../stores/useOrderStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 type AddProductsRouteProps = {
@@ -30,25 +40,24 @@ type AddProductsRouteProps = {
 const AddProductsToOrderScreen = () => {
   const theme = useAppTheme();
   const navigation = useNavigation();
-  const route = useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
+  const route =
+    useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 
-  const {
-    orderId,
-    orderNumber,
-    onProductsAdded,
-  } = route.params as AddProductsRouteProps;
+  const { orderId, orderNumber, onProductsAdded } =
+    route.params as AddProductsRouteProps;
 
   // Conectar directamente al store
   const { items: storeItems, addItem: addItemToStore } = useOrderStore();
-  
+
   // Estado local para productos siendo añadidos en esta sesión
   const [selectedProducts, setSelectedProducts] = useState<CartItem[]>([]);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [selectedProductForDescription, setSelectedProductForDescription] =
     useState<Product | null>(null);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
 
   const {
     navigationLevel,
@@ -77,120 +86,126 @@ const AddProductsToOrderScreen = () => {
     return hasVariants || hasModifiers;
   }, []);
 
-  const addItemToSelection = useCallback((
-    product: Product,
-    quantity: number,
-    selectedVariantId?: string,
-    selectedModifiers?: CartItemModifier[],
-    preparationNotes?: string,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost?: number,
-  ) => {
-    const selectedVariant = product.variants?.find(
-      (v) => v.id === selectedVariantId,
-    );
-    const variantPrice = selectedVariant?.price || product.price;
-    const modifiersPrice =
-      selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
-    const pizzaCost = pizzaExtraCost || 0;
-    const unitPrice = variantPrice + modifiersPrice + pizzaCost;
+  const addItemToSelection = useCallback(
+    (
+      product: Product,
+      quantity: number,
+      selectedVariantId?: string,
+      selectedModifiers?: CartItemModifier[],
+      preparationNotes?: string,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
+    ) => {
+      const selectedVariant = product.variants?.find(
+        (v) => v.id === selectedVariantId,
+      );
+      const variantPrice = selectedVariant?.price || product.price;
+      const modifiersPrice =
+        selectedModifiers?.reduce((sum, mod) => sum + (mod.price || 0), 0) || 0;
+      const pizzaCost = pizzaExtraCost || 0;
+      const unitPrice = variantPrice + modifiersPrice + pizzaCost;
 
-    const existingIndex = selectedProducts.findIndex((item) => {
-      if (item.productId !== product.id) return false;
-      if (item.variantId !== selectedVariantId) return false;
-      if (item.preparationNotes !== preparationNotes) return false;
+      const existingIndex = selectedProducts.findIndex((item) => {
+        if (item.productId !== product.id) return false;
+        if (item.variantId !== selectedVariantId) return false;
+        if (item.preparationNotes !== preparationNotes) return false;
 
-      const itemModifierIds = item.modifiers
-        .map((m) => m.id)
-        .sort()
-        .join(',');
-      const newModifierIds = (selectedModifiers || [])
-        .map((m) => m.id)
-        .sort()
-        .join(',');
+        const itemModifierIds = item.modifiers
+          .map((m) => m.id)
+          .sort()
+          .join(',');
+        const newModifierIds = (selectedModifiers || [])
+          .map((m) => m.id)
+          .sort()
+          .join(',');
 
-      if (itemModifierIds !== newModifierIds) return false;
+        if (itemModifierIds !== newModifierIds) return false;
 
-      const existingCustomizations = item.selectedPizzaCustomizations || [];
-      const newCustomizations = selectedPizzaCustomizations || [];
+        const existingCustomizations = item.selectedPizzaCustomizations || [];
+        const newCustomizations = selectedPizzaCustomizations || [];
 
-      if (existingCustomizations.length !== newCustomizations.length) return false;
+        if (existingCustomizations.length !== newCustomizations.length)
+          return false;
 
-      const sortedExistingCustomizations = [...existingCustomizations].sort(
-        (a, b) =>
+        const sortedExistingCustomizations = [...existingCustomizations].sort(
+          (a, b) =>
+            `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+              `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+            ),
+        );
+        const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
           `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
             `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
           ),
-      );
-      const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
-        `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-          `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
-        ),
-      );
+        );
 
-      for (let i = 0; i < sortedExistingCustomizations.length; i++) {
-        if (
-          sortedExistingCustomizations[i].pizzaCustomizationId !==
-            sortedNewCustomizations[i].pizzaCustomizationId ||
-          sortedExistingCustomizations[i].half !==
-            sortedNewCustomizations[i].half ||
-          sortedExistingCustomizations[i].action !==
-            sortedNewCustomizations[i].action
-        ) {
-          return false;
+        for (let i = 0; i < sortedExistingCustomizations.length; i++) {
+          if (
+            sortedExistingCustomizations[i].pizzaCustomizationId !==
+              sortedNewCustomizations[i].pizzaCustomizationId ||
+            sortedExistingCustomizations[i].half !==
+              sortedNewCustomizations[i].half ||
+            sortedExistingCustomizations[i].action !==
+              sortedNewCustomizations[i].action
+          ) {
+            return false;
+          }
         }
+
+        return true;
+      });
+
+      if (existingIndex !== -1) {
+        setSelectedProducts((prev) => {
+          const updated = [...prev];
+          const existingItem = updated[existingIndex];
+          const newQuantity = existingItem.quantity + quantity;
+
+          const modifiersTotal = existingItem.modifiers.reduce(
+            (sum, mod) => sum + Number(mod.price || 0),
+            0,
+          );
+          const pizzaCostTotal = existingItem.pizzaExtraCost || 0;
+          const unitPriceWithModifiers =
+            Number(existingItem.unitPrice || 0) +
+            modifiersTotal +
+            pizzaCostTotal;
+
+          updated[existingIndex] = {
+            ...existingItem,
+            quantity: newQuantity,
+            totalPrice: unitPriceWithModifiers * newQuantity,
+          };
+          return updated;
+        });
+      } else {
+        const newItem: CartItem = {
+          id: `temp-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          productId: product.id,
+          productName: product.name,
+          quantity,
+          unitPrice: variantPrice,
+          totalPrice: unitPrice * quantity,
+          modifiers: selectedModifiers || [],
+          variantId: selectedVariantId,
+          variantName: selectedVariant?.name,
+          preparationNotes,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
+        };
+
+        setSelectedProducts((prev) => [...prev, newItem]);
       }
 
-      return true;
-    });
+      cartButtonRef.current?.animate();
 
-    if (existingIndex !== -1) {
-      setSelectedProducts((prev) => {
-        const updated = [...prev];
-        const existingItem = updated[existingIndex];
-        const newQuantity = existingItem.quantity + quantity;
-
-        const modifiersTotal = existingItem.modifiers.reduce(
-          (sum, mod) => sum + Number(mod.price || 0),
-          0,
-        );
-        const pizzaCostTotal = existingItem.pizzaExtraCost || 0;
-        const unitPriceWithModifiers =
-          Number(existingItem.unitPrice || 0) + modifiersTotal + pizzaCostTotal;
-
-        updated[existingIndex] = {
-          ...existingItem,
-          quantity: newQuantity,
-          totalPrice: unitPriceWithModifiers * newQuantity,
-        };
-        return updated;
+      showSnackbar({
+        message: `${product.name} añadido`,
+        type: 'success',
       });
-    } else {
-      const newItem: CartItem = {
-        id: `temp-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-        productId: product.id,
-        productName: product.name,
-        quantity,
-        unitPrice: variantPrice,
-        totalPrice: unitPrice * quantity,
-        modifiers: selectedModifiers || [],
-        variantId: selectedVariantId,
-        variantName: selectedVariant?.name,
-        preparationNotes,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      };
-
-      setSelectedProducts((prev) => [...prev, newItem]);
-    }
-
-    cartButtonRef.current?.animate();
-
-    showSnackbar({
-      message: `${product.name} añadido`,
-      type: 'success',
-    });
-  }, [selectedProducts, showSnackbar]);
+    },
+    [selectedProducts, showSnackbar],
+  );
 
   const {
     showAudioModal,
@@ -210,7 +225,12 @@ const AddProductsToOrderScreen = () => {
   });
 
   const handleConfirmAudioOrder = useCallback(
-    async (items: any[], deliveryInfo?: any, scheduledDelivery?: any, orderType?: any) => {
+    async (
+      items: any[],
+      deliveryInfo?: any,
+      scheduledDelivery?: any,
+      orderType?: any,
+    ) => {
       await handleConfirmAudioOrderBase(items);
     },
     [handleConfirmAudioOrderBase],
@@ -227,7 +247,6 @@ const AddProductsToOrderScreen = () => {
     );
     return storeItemsCount + newItemsCount;
   }, [storeItems, selectedProducts]);
-
 
   const handleProductSelect = useCallback(
     (product: Product) => {
@@ -248,7 +267,11 @@ const AddProductsToOrderScreen = () => {
   const handleConfirmSelection = () => {
     // Agregar todos los productos seleccionados al store
     selectedProducts.forEach((item) => {
-      const product = { id: item.productId, name: item.productName, price: item.unitPrice };
+      const product = {
+        id: item.productId,
+        name: item.productName,
+        price: item.unitPrice,
+      };
       addItemToStore(
         product as any,
         item.quantity,
@@ -256,10 +279,10 @@ const AddProductsToOrderScreen = () => {
         item.modifiers,
         item.preparationNotes,
         item.selectedPizzaCustomizations,
-        item.pizzaExtraCost
+        item.pizzaExtraCost,
       );
     });
-    
+
     // Notificar que se completó
     if (onProductsAdded) {
       onProductsAdded();
@@ -285,19 +308,21 @@ const AddProductsToOrderScreen = () => {
     }
   };
 
-  const selectedCategory = useMemo(() =>
-    menu && Array.isArray(menu)
-      ? menu.find((cat: Category) => cat.id === selectedCategoryId)
-      : null,
+  const selectedCategory = useMemo(
+    () =>
+      menu && Array.isArray(menu)
+        ? menu.find((cat: Category) => cat.id === selectedCategoryId)
+        : null,
     [menu, selectedCategoryId],
   );
 
-  const selectedSubCategory = useMemo(() =>
-    selectedCategory && Array.isArray(selectedCategory.subcategories)
-      ? selectedCategory.subcategories.find(
-          (sub: SubCategory) => sub.id === selectedSubcategoryId,
-        )
-      : null,
+  const selectedSubCategory = useMemo(
+    () =>
+      selectedCategory && Array.isArray(selectedCategory.subcategories)
+        ? selectedCategory.subcategories.find(
+            (sub: SubCategory) => sub.id === selectedSubcategoryId,
+          )
+        : null,
     [selectedCategory, selectedSubcategoryId],
   );
 
@@ -328,17 +353,31 @@ const AddProductsToOrderScreen = () => {
       default:
         return 'Categorías';
     }
-  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct, orderNumber]);
+  }, [
+    navigationLevel,
+    selectedCategory,
+    selectedSubCategory,
+    selectedProduct,
+    orderNumber,
+  ]);
 
-  const handleItemSelect = useCallback((item: Category | SubCategory | Product) => {
-    if (navigationLevel === 'categories') {
-      handleCategorySelect(item.id);
-    } else if (navigationLevel === 'subcategories') {
-      handleSubCategorySelect(item.id);
-    } else if ('price' in item) {
-      handleProductSelect(item as Product);
-    }
-  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect]);
+  const handleItemSelect = useCallback(
+    (item: Category | SubCategory | Product) => {
+      if (navigationLevel === 'categories') {
+        handleCategorySelect(item.id);
+      } else if (navigationLevel === 'subcategories') {
+        handleSubCategorySelect(item.id);
+      } else if ('price' in item) {
+        handleProductSelect(item as Product);
+      }
+    },
+    [
+      navigationLevel,
+      handleCategorySelect,
+      handleSubCategorySelect,
+      handleProductSelect,
+    ],
+  );
 
   const handleShowProductDescription = useCallback((product: Product) => {
     setSelectedProductForDescription(product);
@@ -350,86 +389,103 @@ const AddProductsToOrderScreen = () => {
     setSelectedProductForDescription(null);
   }, []);
 
-  const updateItemInSelection = useCallback((
-    itemId: string,
-    quantity: number,
-    modifiers: CartItemModifier[],
-    preparationNotes?: string,
-    variantId?: string,
-    variantName?: string,
-    unitPrice?: number,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost?: number,
-  ) => {
-    setSelectedProducts((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const modifiersPrice = modifiers.reduce(
-            (sum, mod) => sum + Number(mod.price || 0),
-            0,
-          );
-          const pizzaCost = pizzaExtraCost || 0;
-          const finalUnitPrice = unitPrice !== undefined ? unitPrice : item.unitPrice;
-          const newTotalPrice = (finalUnitPrice + modifiersPrice + pizzaCost) * quantity;
+  const updateItemInSelection = useCallback(
+    (
+      itemId: string,
+      quantity: number,
+      modifiers: CartItemModifier[],
+      preparationNotes?: string,
+      variantId?: string,
+      variantName?: string,
+      unitPrice?: number,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
+    ) => {
+      setSelectedProducts((prev) =>
+        prev.map((item) => {
+          if (item.id === itemId) {
+            const modifiersPrice = modifiers.reduce(
+              (sum, mod) => sum + Number(mod.price || 0),
+              0,
+            );
+            const pizzaCost = pizzaExtraCost || 0;
+            const finalUnitPrice =
+              unitPrice !== undefined ? unitPrice : item.unitPrice;
+            const newTotalPrice =
+              (finalUnitPrice + modifiersPrice + pizzaCost) * quantity;
 
-          return {
-            ...item,
-            quantity,
-            modifiers,
-            preparationNotes: preparationNotes !== undefined ? preparationNotes : item.preparationNotes,
-            variantId: variantId !== undefined ? variantId : item.variantId,
-            variantName: variantName !== undefined ? variantName : item.variantName,
-            unitPrice: finalUnitPrice,
-            totalPrice: newTotalPrice,
-            selectedPizzaCustomizations:
-              selectedPizzaCustomizations !== undefined
-                ? selectedPizzaCustomizations
-                : item.selectedPizzaCustomizations,
-            pizzaExtraCost,
-          };
-        }
-        return item;
-      }),
-    );
-  }, []);
+            return {
+              ...item,
+              quantity,
+              modifiers,
+              preparationNotes:
+                preparationNotes !== undefined
+                  ? preparationNotes
+                  : item.preparationNotes,
+              variantId: variantId !== undefined ? variantId : item.variantId,
+              variantName:
+                variantName !== undefined ? variantName : item.variantName,
+              unitPrice: finalUnitPrice,
+              totalPrice: newTotalPrice,
+              selectedPizzaCustomizations:
+                selectedPizzaCustomizations !== undefined
+                  ? selectedPizzaCustomizations
+                  : item.selectedPizzaCustomizations,
+              pizzaExtraCost,
+            };
+          }
+          return item;
+        }),
+      );
+    },
+    [],
+  );
 
-  const handleAddToCart = useCallback((
-    product: Product,
-    quantity: number,
-    selectedVariantId?: string,
-    selectedModifiers?: CartItemModifier[],
-    preparationNotes?: string,
-    selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-    pizzaExtraCost?: number,
-  ) => {
-    if (editingItem) {
-      updateItemInSelection(
-        editingItem.id,
-        quantity,
-        selectedModifiers || [],
-        preparationNotes,
-        selectedVariantId,
-        product.variants?.find((v) => v.id === selectedVariantId)?.name,
-        selectedVariantId
-          ? product.variants?.find((v) => v.id === selectedVariantId)?.price
-          : product.price,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      );
-      setEditingItem(null);
-    } else {
-      addItemToSelection(
-        product,
-        quantity,
-        selectedVariantId,
-        selectedModifiers,
-        preparationNotes,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      );
-    }
-    setSelectedProduct(null);
-  }, [editingItem, addItemToSelection, updateItemInSelection, setSelectedProduct]);
+  const handleAddToCart = useCallback(
+    (
+      product: Product,
+      quantity: number,
+      selectedVariantId?: string,
+      selectedModifiers?: CartItemModifier[],
+      preparationNotes?: string,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
+    ) => {
+      if (editingItem) {
+        updateItemInSelection(
+          editingItem.id,
+          quantity,
+          selectedModifiers || [],
+          preparationNotes,
+          selectedVariantId,
+          product.variants?.find((v) => v.id === selectedVariantId)?.name,
+          selectedVariantId
+            ? product.variants?.find((v) => v.id === selectedVariantId)?.price
+            : product.price,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
+        );
+        setEditingItem(null);
+      } else {
+        addItemToSelection(
+          product,
+          quantity,
+          selectedVariantId,
+          selectedModifiers,
+          preparationNotes,
+          selectedPizzaCustomizations,
+          pizzaExtraCost,
+        );
+      }
+      setSelectedProduct(null);
+    },
+    [
+      editingItem,
+      addItemToSelection,
+      updateItemInSelection,
+      setSelectedProduct,
+    ],
+  );
 
   const styles = useMemo(
     () =>

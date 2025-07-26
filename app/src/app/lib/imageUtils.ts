@@ -63,4 +63,3 @@ export const getImageUrlSync = (
 
   return buildImageUrl(imagePath, apiUrl);
 };
-

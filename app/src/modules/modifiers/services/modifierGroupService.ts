@@ -9,7 +9,6 @@ import {
 import { z } from 'zod';
 import { PaginatedResponse } from '@/app/types/api.types';
 
-
 const paginatedModifierGroupsSchema = z.object({
   items: z.array(modifierGroupApiSchema),
   total: z.number(),
