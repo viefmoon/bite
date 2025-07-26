@@ -18,7 +18,6 @@ export interface FileObject {
   type: string;
 }
 
-// Verificar conectividad antes de intentar subir
 const checkNetworkConnection = async (): Promise<boolean> => {
   const state = await NetInfo.fetch();
   return state.isConnected === true && state.isInternetReachable !== false;
@@ -28,7 +27,6 @@ export const uploadFile = async (
   fileToUpload: FileObject,
   maxRetries: number = 3,
 ): Promise<FileUploadResponse> => {
-  // Verificar conexión antes de intentar
   const isConnected = await checkNetworkConnection();
   if (!isConnected) {
     throw new ApiError(
@@ -58,11 +56,9 @@ export const uploadFile = async (
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            // Agregar header para evitar problemas de caché
             'Cache-Control': 'no-cache',
           },
-          timeout: 120000, // Aumentar timeout a 2 minutos para uploads
-          // Configuración adicional para mejorar la estabilidad
+          timeout: 120000,
           maxContentLength: Infinity,
           maxBodyLength: Infinity,
         },
@@ -72,7 +68,6 @@ export const uploadFile = async (
     } catch (error) {
       lastError = error;
 
-      // Si es un error de cliente (4xx), no reintentar
       if (
         error instanceof ApiError &&
         error.status >= 400 &&
@@ -81,7 +76,6 @@ export const uploadFile = async (
         throw error;
       }
 
-      // Si es el último intento, lanzar el error
       if (attempt === maxRetries) {
         if (error instanceof ApiError) throw error;
         throw new ApiError(
@@ -91,13 +85,11 @@ export const uploadFile = async (
         );
       }
 
-      // Esperar antes de reintentar (backoff exponencial)
       const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
-  // Por si acaso llegamos aquí
   throw (
     lastError ||
     new ApiError('UPLOAD_FAILED', 'Error desconocido al subir archivo', 500)

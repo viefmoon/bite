@@ -45,8 +45,8 @@ function ProductsScreen(): React.ReactElement {
   >('all');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const debouncedSetSearch = useCallback(
-    debounce((query: string) => setDebouncedSearchQuery(query), 300),
+  const debouncedSetSearch = useMemo(
+    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
     [],
   );
 
@@ -81,8 +81,6 @@ function ProductsScreen(): React.ReactElement {
     refetch,
     isFetching,
   } = useProductsQuery(queryFilters, {});
-
-  // Refrescar productos cuando la pantalla recibe foco
 
   useRefreshModuleOnFocus('products');
 
@@ -141,7 +139,6 @@ function ProductsScreen(): React.ReactElement {
           productResult = await createMutation.mutateAsync(mutationData);
         }
 
-        // Éxito
         const message = isEditing
           ? 'Producto actualizado con éxito'
           : 'Producto creado con éxito';
@@ -214,7 +211,7 @@ function ProductsScreen(): React.ReactElement {
       title: 'Error al cargar productos',
       message: 'No se pudieron cargar los productos. Verifica tu conexión.',
       icon: 'alert-circle-outline',
-      onRetry: refetch,
+      onAction: refetch,
     },
   });
 

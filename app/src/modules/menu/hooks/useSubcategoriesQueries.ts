@@ -115,9 +115,8 @@ export const useUpdateSubcategory = (): UseMutationResult<
       if (previousDetail) {
         queryClient.setQueryData<SubCategory>(
           detailQueryKey,
-          (
-            old: SubCategory | undefined, // Añadido tipo explícito
-          ) => (old ? { ...old, ...data } : undefined),
+          (old: SubCategory | undefined) =>
+            old ? { ...old, ...data } : undefined,
         );
       }
 

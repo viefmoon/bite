@@ -1,24 +1,14 @@
 import { z } from 'zod';
 import { baseListQuerySchema } from '../../../app/types/query.types';
-// Importar tipos de dominio centralizados
-import {
-  photoSchema,
-  type Photo,
-} from '../../../app/schemas/domain/photo.schema';
+import { type Photo } from '../../../app/schemas/domain/photo.schema';
 import {
   productVariantSchema,
   type ProductVariant,
 } from '../../../app/schemas/domain/product-variant.schema';
-import { modifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
-// Importar el schema y tipo Product centralizado del dominio
 import {
   productSchema as domainProductSchema,
   type Product,
 } from '../../../app/schemas/domain/product.schema';
-
-// --- Schemas Zod ---
-
-// Schema para variantes en el formulario - derivado del dominio sin ID requerido
 const productVariantFormSchema = productVariantSchema
   .omit({ id: true })
   .extend({
@@ -26,7 +16,6 @@ const productVariantFormSchema = productVariantSchema
     sortOrder: z.number().optional().default(0),
   });
 
-// Schema base para productos con campos comunes del formulario
 const productFormBaseSchema = domainProductSchema
   .omit({
     id: true,
@@ -52,15 +41,12 @@ const productFormBaseSchema = domainProductSchema
     modifierGroupIds: z.array(z.string()).optional(), // IDs para asignar/actualizar
   });
 
-// Schema de creación/formulario - derivado del base con validación condicional
 export const productSchema = productFormBaseSchema.superRefine((data, ctx) =>
   addVariantValidation(data, ctx, false),
 );
 
-// Tipo inferido para los inputs del formulario
 export type ProductFormInputs = z.infer<typeof productSchema>;
 
-// Función helper para validación de variantes (reutilizable)
 const addVariantValidation = (
   data: any,
   ctx: z.RefinementCtx,
@@ -103,25 +89,19 @@ const addVariantValidation = (
   }
 };
 
-// Schema para actualización - derivado del base parcial con validación reutilizada
 export const updateProductSchema = productFormBaseSchema
   .partial()
   .superRefine((data, ctx) => addVariantValidation(data, ctx, true));
 
 export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 
-// Esquema para la respuesta de la API - usa directamente el schema de dominio
-// Este schema representa la estructura que devuelve el backend.
 export const productResponseSchema = domainProductSchema;
-
-// Esquema para la respuesta de lista paginada (si aplica)
 export const productsListResponseSchema = z.tuple([
   z.array(productResponseSchema), // Usa el schema de respuesta definido arriba
   z.number(), // Count
 ]);
 export type ProductsListResponse = z.infer<typeof productsListResponseSchema>;
 
-// Esquema para los parámetros de query de búsqueda
 export const findAllProductsQuerySchema = baseListQuerySchema.extend({
   subcategoryId: z.string().optional(),
   hasVariants: z.boolean().optional(),
@@ -130,7 +110,6 @@ export const findAllProductsQuerySchema = baseListQuerySchema.extend({
 });
 export type FindAllProductsQuery = z.infer<typeof findAllProductsQuerySchema>;
 
-// Esquema para asignar/desasignar grupos de modificadores
 export const assignModifierGroupsSchema = z.object({
   modifierGroupIds: z
     .array(z.string())
@@ -140,5 +119,4 @@ export type AssignModifierGroupsInput = z.infer<
   typeof assignModifierGroupsSchema
 >;
 
-// Re-exportar los tipos de dominio centralizados
-export type { Photo, ProductVariant, Product }; // Añadir Product
+export type { Photo, ProductVariant, Product };

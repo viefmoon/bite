@@ -75,8 +75,6 @@ const CategoriesScreen: React.FC = () => {
       }),
   });
 
-  // Refrescar categorías cuando la pantalla recibe foco
-
   useRefreshModuleOnFocus('categories');
 
   const { ListEmptyComponent } = useListState({
@@ -182,7 +180,6 @@ const CategoriesScreen: React.FC = () => {
       ...dataToSubmit,
     };
 
-    // Solo incluir photoId si tiene un valor definido (string o null)
     if (photoId !== undefined) {
       finalData.photoId = photoId;
     }
@@ -218,6 +215,7 @@ const CategoriesScreen: React.FC = () => {
     () =>
       StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
+        iconButton: { margin: 0 },
       }),
     [theme],
   );
@@ -351,7 +349,7 @@ const CategoriesScreen: React.FC = () => {
                 categoryName: item.name,
               })
             }
-            style={{ margin: 0 }}
+            style={styles.iconButton}
           />
         )}
         renderConfig={listRenderConfig}
@@ -364,7 +362,7 @@ const CategoriesScreen: React.FC = () => {
         isModalOpen={modalVisible || detailModalVisible}
         showImagePlaceholder={true}
         placeholderIcon="folder-outline"
-        isDrawerOpen={isDrawerOpen} // Pasar estado del drawer
+        isDrawerOpen={isDrawerOpen}
       />
 
       <Portal>

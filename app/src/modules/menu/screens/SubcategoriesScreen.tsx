@@ -62,7 +62,6 @@ const SubcategoriesScreen: React.FC = () => {
 
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
 
-  // Estado para manejar los valores iniciales del formulario
   const [formInitialValues, setFormInitialValues] = useState<
     SubCategoryFormInputs | UpdateSubCategoryFormInputs
   >({
@@ -119,7 +118,6 @@ const SubcategoriesScreen: React.FC = () => {
     refetchList();
   }, [refetchList]);
 
-  // Efecto para cargar valores iniciales incluyendo la imagen
   useEffect(() => {
     const loadFormData = async () => {
       if (editingItem) {
@@ -294,7 +292,7 @@ const SubcategoriesScreen: React.FC = () => {
           subCategoryName: item.name,
         })
       }
-      style={{ margin: 0 }}
+      style={styles.iconButton}
     />
   );
 
@@ -403,6 +401,9 @@ const createStyles = (theme: AppTheme) =>
     },
     listContentContainer: {
       paddingBottom: 80,
+    },
+    iconButton: {
+      margin: 0,
     },
   });
 

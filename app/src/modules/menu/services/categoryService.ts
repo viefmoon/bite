@@ -21,7 +21,6 @@ export const getCategories = async (params?: {
     hasPrevPage: boolean;
   }>(API_PATHS.CATEGORIES, { params });
 
-  // Transforma la respuesta del backend a PaginatedResponse
   return {
     data: response.data.items,
     total: response.data.total,
@@ -60,7 +59,6 @@ export const deleteCategory = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.CATEGORIES_BY_ID.replace(':id', id));
 };
 
-// Menú para pantallas de creación de órdenes
 export async function getOrderMenu(): Promise<Category[]> {
   const response = await apiClient.get<Category[]>(
     API_PATHS.CATEGORIES_ORDER_MENU,

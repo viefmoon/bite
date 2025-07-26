@@ -80,7 +80,7 @@ async function removeModifierGroups(
 ): Promise<Product> {
   const response = await apiClient.delete<Product>(
     API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
-    data,
+    { data },
   );
   return response.data;
 }

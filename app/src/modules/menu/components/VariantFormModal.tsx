@@ -16,7 +16,6 @@ import { ProductVariant } from '../schema/products.schema';
 import { z } from 'zod';
 import { useAppTheme } from '@/app/styles/theme';
 
-// Schema local para el formulario de variantes
 const variantFormSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'El nombre es requerido'),

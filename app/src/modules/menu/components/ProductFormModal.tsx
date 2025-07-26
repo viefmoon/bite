@@ -149,13 +149,12 @@ function ProductFormModal({
               ? parseFloat(String(initialPrice))
               : null;
 
-          // Procesar la URL de la imagen si existe
           let imageUrl = null;
           if (initialData.photo?.path) {
             try {
               imageUrl = await getImageUrl(initialData.photo.path);
             } catch (error) {
-              imageUrl = initialData.photo.path; // Fallback al path original
+              imageUrl = initialData.photo.path;
             }
           }
 
@@ -208,7 +207,10 @@ function ProductFormModal({
   );
   const preparationScreens = preparationScreensResponse?.data || [];
 
-  const allModifierGroups = modifierGroupsResponse?.data || [];
+  const allModifierGroups = useMemo(
+    () => modifierGroupsResponse?.data || [],
+    [modifierGroupsResponse?.data],
+  );
 
   useEffect(() => {
     const loadModifiers = async () => {
@@ -316,15 +318,12 @@ function ProductFormModal({
     if (editingVariantIndex !== null) {
       const originalVariantId =
         initialData?.variants?.[editingVariantIndex]?.id;
-
       const priceAsNumber = Number(variantData.price);
-
       const dataToUpdate = {
         ...variantData,
         price: isNaN(priceAsNumber) ? 0 : priceAsNumber,
         ...(originalVariantId && { id: originalVariantId }),
       };
-
       const finalDataToUpdate =
         !originalVariantId && 'id' in dataToUpdate
           ? (({ id, ...rest }) => rest)(dataToUpdate)
@@ -576,7 +575,6 @@ function ProductFormModal({
                       </View>
                     </Card>
                   ))}
-                  {/* Mostrar error si hasVariants es true pero no hay variantes */}
                   {errors.variants?.message && (
                     <HelperText
                       type="error"
@@ -585,7 +583,6 @@ function ProductFormModal({
                       {errors.variants.message as string}
                     </HelperText>
                   )}
-                  {/* También podría estar en root para errores de array */}
                   {errors.variants?.root?.message && (
                     <HelperText
                       type="error"
@@ -625,7 +622,6 @@ function ProductFormModal({
                 </HelperText>
               )}
 
-              {/* Campo de Pantalla de Preparación */}
               <Controller
                 control={control}
                 name="preparationScreenId"

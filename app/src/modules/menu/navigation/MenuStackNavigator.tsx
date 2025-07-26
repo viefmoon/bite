@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppTheme } from '../../../app/styles/theme';
 import { getStackHeaderOptions } from '../../../app/navigation/options';
-import type { MenuStackParamList } from './types.ts';
+import type { MenuStackParamList } from './types';
 
 import CategoriesScreen from '../screens/CategoriesScreen';
 import SubcategoriesScreen from '../screens/SubcategoriesScreen';

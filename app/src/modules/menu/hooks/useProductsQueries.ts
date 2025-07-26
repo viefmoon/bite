@@ -96,7 +96,6 @@ export function useUpdateProductMutation(): UseMutationResult<
         queryClient.setQueryData<Product>(
           detailQueryKey,
           (old: Product | undefined) => {
-            // Añadido tipo explícito
             if (!old) return undefined;
             const { variants, modifierGroupIds, ...restOfData } = data;
             return { ...old, ...restOfData };
@@ -139,7 +138,7 @@ export function useDeleteProductMutation(): UseMutationResult<
   { previousDetail?: Product }
 > {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar); // Añadir Snackbar
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type DeleteProductContext = { previousDetail?: Product };
 
