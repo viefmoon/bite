@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Switch, Divider } from 'react-native-paper';
-import { PizzaCustomizationGroupAvailability } from '../types/availability.types';
+import { PizzaCustomizationGroupAvailability } from '../schema/availability.schema';
 import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useAppTheme } from '@/app/styles/theme';
 import { AvailabilityListItem } from './AvailabilityListItem';
@@ -28,7 +28,6 @@ export function PizzaCustomizationAvailabilityItem({
   const activeCount = group.items.filter((item) => item.isActive).length;
   const totalCount = group.items.length;
   const allActive = activeCount === totalCount;
-  const someActive = activeCount > 0 && activeCount < totalCount;
 
   const getTypeIcon = () => {
     return group.type === 'FLAVOR' ? 'pizza' : 'cheese';
@@ -40,7 +39,7 @@ export function PizzaCustomizationAvailabilityItem({
 
   const getSubtitle = () => {
     if (allActive) return 'Todos disponibles';
-    if (!allActive && !someActive) return 'Ninguno disponible';
+    if (activeCount === 0) return 'Ninguno disponible';
     return `${activeCount} de ${totalCount} disponibles`;
   };
 
@@ -50,7 +49,6 @@ export function PizzaCustomizationAvailabilityItem({
       subtitle={getSubtitle()}
       icon={getTypeIcon()}
       isActive={allActive}
-      onToggle={() => {}} // No toggle para el grupo completo en este caso
       isExpanded={expanded}
       onToggleExpand={() => setExpanded(!expanded)}
     >

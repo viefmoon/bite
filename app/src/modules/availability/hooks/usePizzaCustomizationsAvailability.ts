@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { PizzaCustomizationGroupAvailability } from '../types/availability.types';
+import { PizzaCustomizationGroupAvailability } from '../schema/availability.schema';
 
 export function usePizzaCustomizationsAvailability(search?: string) {
   return useQuery({

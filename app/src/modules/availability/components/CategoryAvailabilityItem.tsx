@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Switch, Divider, IconButton } from 'react-native-paper';
-import { CategoryAvailability } from '../types/availability.types';
+import { CategoryAvailability } from '../schema/availability.schema';
 import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useAppTheme } from '@/app/styles/theme';
 import { AvailabilityListItem } from './AvailabilityListItem';
 
 interface CategoryAvailabilityItemProps {
   category: CategoryAvailability;
-  onRefresh?: () => void;
 }
 
 export const CategoryAvailabilityItem: React.FC<
   CategoryAvailabilityItemProps
-> = ({ category, onRefresh: _onRefresh }) => {
+> = ({ category }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();

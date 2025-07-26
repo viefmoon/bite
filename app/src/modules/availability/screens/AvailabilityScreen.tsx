@@ -2,13 +2,11 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, RefreshControl, FlatList } from 'react-native';
 import {
   Searchbar,
-  SegmentedButtons as _SegmentedButtons,
   ActivityIndicator,
   Surface,
   Text,
   Menu,
   IconButton,
-  Badge as _Badge,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryAvailabilityItem } from '../components/CategoryAvailabilityItem';
@@ -58,7 +56,6 @@ export const AvailabilityScreen: React.FC = () => {
     refetch: refetchPizzaCustomizations,
   } = usePizzaCustomizationsAvailability(searchQuery);
 
-  // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('availability');
 
   const handleRefresh = useCallback(() => {
@@ -265,10 +262,7 @@ export const AvailabilityScreen: React.FC = () => {
             data={filteredMenuData}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <CategoryAvailabilityItem
-                category={item}
-                onRefresh={handleRefresh}
-              />
+              <CategoryAvailabilityItem category={item} />
             )}
             refreshControl={
               <RefreshControl
@@ -288,10 +282,7 @@ export const AvailabilityScreen: React.FC = () => {
             data={filteredModifiersData}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <ModifierGroupAvailabilityItem
-                modifierGroup={item}
-                onRefresh={handleRefresh}
-              />
+              <ModifierGroupAvailabilityItem modifierGroup={item} />
             )}
             refreshControl={
               <RefreshControl

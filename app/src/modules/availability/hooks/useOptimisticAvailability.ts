@@ -3,13 +3,10 @@ import { availabilityService } from '../services/availabilityService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import {
   CategoryAvailability,
-  SubcategoryAvailability as _SubcategoryAvailability,
-  ProductAvailability as _ProductAvailability,
   ModifierGroupAvailability,
-  ModifierAvailability as _ModifierAvailability,
   PizzaCustomizationGroupAvailability,
   AvailabilityUpdatePayload,
-} from '../types/availability.types';
+} from '../schema/availability.schema';
 
 export const useOptimisticAvailability = () => {
   const queryClient = useQueryClient();
@@ -25,7 +22,6 @@ export const useOptimisticAvailability = () => {
     const modifierQueryKey = ['availability', 'modifierGroups'];
     const pizzaQueryKey = ['availability', 'pizzaCustomizations'];
 
-    // Función para actualizar categorías optimisticamente
     const updateMenuOptimistically = (oldData: CategoryAvailability[]) => {
       if (!oldData) return oldData;
 
@@ -81,7 +77,6 @@ export const useOptimisticAvailability = () => {
       });
     };
 
-    // Función para actualizar grupos de modificadores optimisticamente
     const updateModifierGroupsOptimistically = (
       oldData: ModifierGroupAvailability[],
     ) => {
@@ -110,7 +105,6 @@ export const useOptimisticAvailability = () => {
       });
     };
 
-    // Función para actualizar pizza customizations optimisticamente
     const updatePizzaCustomizationsOptimistically = (
       oldData: PizzaCustomizationGroupAvailability[],
     ) => {
@@ -124,7 +118,6 @@ export const useOptimisticAvailability = () => {
       }));
     };
 
-    // Actualizar el cache optimisticamente
     if (type === 'category' || type === 'subcategory' || type === 'product') {
       queryClient.setQueryData(menuQueryKey, updateMenuOptimistically);
     } else if (type === 'modifierGroup' || type === 'modifier') {
@@ -143,10 +136,8 @@ export const useOptimisticAvailability = () => {
   const mutation = useMutation({
     mutationFn: availabilityService.updateAvailability,
     onMutate: async (variables: AvailabilityUpdatePayload) => {
-      // Cancelar cualquier refetch pendiente
       await queryClient.cancelQueries({ queryKey: ['availability'] });
 
-      // Guardar estado previo para rollback
       const previousMenuData = queryClient.getQueryData([
         'availability',
         'menu',
@@ -160,7 +151,6 @@ export const useOptimisticAvailability = () => {
         'pizzaCustomizations',
       ]);
 
-      // Actualizar optimisticamente
       updateOptimistically(
         variables.type,
         variables.id,
@@ -168,7 +158,6 @@ export const useOptimisticAvailability = () => {
         variables.cascade,
       );
 
-      // Retornar contexto para rollback
       return {
         previousMenuData,
         previousModifierData,
@@ -180,7 +169,6 @@ export const useOptimisticAvailability = () => {
       showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
     },
     onError: (error, variables, context) => {
-      // Revertir cambios optimistas
       if (context?.previousMenuData) {
         queryClient.setQueryData(
           ['availability', 'menu'],
@@ -206,7 +194,6 @@ export const useOptimisticAvailability = () => {
       });
     },
     onSettled: () => {
-      // Invalidar y refetch para asegurar sincronización
       queryClient.invalidateQueries({ queryKey: ['availability'] });
     },
   });

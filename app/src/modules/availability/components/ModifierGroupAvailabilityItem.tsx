@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Switch } from 'react-native-paper';
-import { ModifierGroupAvailability } from '../types/availability.types';
+import { ModifierGroupAvailability } from '../schema/availability.schema';
 import { useOptimisticAvailability } from '../hooks/useOptimisticAvailability';
 import { useAppTheme } from '@/app/styles/theme';
 import { AvailabilityListItem } from './AvailabilityListItem';
 
 interface ModifierGroupAvailabilityItemProps {
   modifierGroup: ModifierGroupAvailability;
-  onRefresh?: () => void;
 }
 
 export const ModifierGroupAvailabilityItem: React.FC<
   ModifierGroupAvailabilityItemProps
-> = ({ modifierGroup, onRefresh: _onRefresh }) => {
+> = ({ modifierGroup }) => {
   const theme = useAppTheme();
   const [expanded, setExpanded] = useState(false);
   const updateAvailability = useOptimisticAvailability();

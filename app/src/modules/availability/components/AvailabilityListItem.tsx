@@ -9,7 +9,7 @@ interface AvailabilityListItemProps {
   subtitle: string;
   icon: string;
   isActive: boolean;
-  onToggle: (value: boolean) => void;
+  onToggle?: (value: boolean) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   children?: React.ReactNode;
@@ -37,7 +37,6 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
       style={[styles.container, { backgroundColor: theme.colors.surface }]}
       elevation={1}
     >
-      {/* Header */}
       <TouchableOpacity
         style={[
           styles.header,
@@ -87,12 +86,14 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
         </View>
 
         <View style={styles.right}>
-          <Switch
-            value={isActive}
-            onValueChange={onToggle}
-            color={theme.colors.primary}
-            style={styles.switch}
-          />
+          {onToggle && (
+            <Switch
+              value={isActive}
+              onValueChange={onToggle}
+              color={theme.colors.primary}
+              style={styles.switch}
+            />
+          )}
           {onToggleExpand && (
             <IconButton
               icon={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -104,7 +105,6 @@ export const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
         </View>
       </TouchableOpacity>
 
-      {/* Contenido expandible */}
       {isExpanded && children && (
         <View
           style={[
