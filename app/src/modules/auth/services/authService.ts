@@ -1,10 +1,9 @@
-import apiClient from '../../../app/services/apiClient';
-import { API_PATHS } from '../../../app/constants/apiPaths';
+import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   AuthEmailLoginDto,
   LoginResponseDto,
   LoginFormInputs,
-  RegisterFormInputs,
 } from '../schema/auth.schema';
 
 async function login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
@@ -25,7 +24,18 @@ async function login(loginData: LoginFormInputs): Promise<LoginResponseDto> {
   return response.data;
 }
 
-async function register(data: RegisterFormInputs): Promise<void> {
+interface RegisterData {
+  username: string;
+  email?: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  role: { id: number };
+  isActive: boolean;
+}
+
+async function register(data: RegisterData): Promise<void> {
   await apiClient.post<{ message?: string }>(
     API_PATHS.AUTH_EMAIL_REGISTER,
     data,

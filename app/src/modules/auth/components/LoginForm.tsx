@@ -186,7 +186,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.8}
-            disabled={isLoading}
           >
             Recordarme
           </Text>

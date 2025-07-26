@@ -12,21 +12,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, IconButton, Surface, TouchableRipple } from 'react-native-paper';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import EncryptedStorage from '@/app/services/secureStorageService';
-import { STORAGE_KEYS } from '../../../app/constants/storageKeys';
-import { useAppTheme } from '../../../app/styles/theme';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
-import { useThemeStore } from '../../../app/store/themeStore';
-import { useAuthStore } from '../../../app/store/authStore';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
+import { useAppTheme } from '@/app/styles/theme';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { useThemeStore } from '@/app/store/themeStore';
+import { useAuthStore } from '@/app/store/authStore';
 import { LoginFormInputs, LoginResponseDto } from '../schema/auth.schema';
 import { authService } from '../services/authService';
 import LoginForm from '../components/LoginForm';
-import { ConnectionIndicator } from '../../../app/components/ConnectionIndicator';
-import { useResponsive } from '../../../app/hooks/useResponsive';
-import { ConnectionErrorModal } from '../../../app/components/ConnectionErrorModal';
-import { useServerConnection } from '../../../app/hooks/useServerConnection';
+import { ConnectionIndicator } from '@/app/components/ConnectionIndicator';
+import { useResponsive } from '@/app/hooks/useResponsive';
+import { ConnectionErrorModal } from '@/app/components/ConnectionErrorModal';
 import { RegisterModal } from '../components/RegisterForm';
-import { OrientationTransition } from '../../../app/components/OrientationTransition';
+import { OrientationTransition } from '@/app/components/OrientationTransition';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const LoginScreen = () => {
@@ -36,7 +35,6 @@ const LoginScreen = () => {
   const { showSnackbar } = useSnackbarStore();
   const { setThemePreference } = useThemeStore();
   const setTokens = useAuthStore((state) => state.setTokens);
-  const { isConnected, serverUrl } = useServerConnection();
 
   const [initialEmailOrUsername, setInitialEmailOrUsername] = useState<
     string | undefined
@@ -99,8 +97,10 @@ const LoginScreen = () => {
           type: 'success',
         });
         queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-      } catch (error: any) {
-        if (error.message === 'Usuario inactivo') {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Error desconocido';
+        if (errorMessage === 'Usuario inactivo') {
           showSnackbar({
             message: 'Tu cuenta está inactiva. Contacta al administrador.',
             type: 'error',
@@ -120,14 +120,16 @@ const LoginScreen = () => {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = getApiErrorMessage(error);
 
       if (
         errorMessage.includes('credenciales') ||
         errorMessage.includes('contraseña') ||
         errorMessage.includes('usuario') ||
-        error.response?.status === 401
+        (error instanceof Error &&
+          'response' in error &&
+          (error as any).response?.status === 401)
       ) {
         showSnackbar({
           message: errorMessage,
@@ -198,11 +200,8 @@ const LoginScreen = () => {
   };
 
   const isWeb = Platform.OS === 'web';
-  const isDesktop = isWeb && responsive.dimensions.width >= 1024;
-  const isTablet =
-    isWeb &&
-    responsive.dimensions.width >= 768 &&
-    responsive.dimensions.width < 1024;
+  const isDesktop = isWeb && responsive.width >= 1024;
+  const isTablet = isWeb && responsive.width >= 768 && responsive.width < 1024;
 
   const styles = React.useMemo(
     () =>
@@ -217,7 +216,7 @@ const LoginScreen = () => {
         webContainer: {
           flex: 1,
           flexDirection: isDesktop ? 'row' : 'column',
-          minHeight: '100vh',
+          minHeight: '100%',
           width: '100%',
         },
         webLeftPanel: {
@@ -238,7 +237,7 @@ const LoginScreen = () => {
           alignItems: 'center',
           padding: responsive.spacingPreset.xl,
           backgroundColor: theme.colors.background,
-          minHeight: isDesktop ? '100vh' : undefined,
+          minHeight: isDesktop ? '100%' : undefined,
           width: '100%',
         },
         webBrandingContainer: {
@@ -295,7 +294,6 @@ const LoginScreen = () => {
           marginBottom: 16,
           borderRadius: 80,
           backgroundColor: 'transparent',
-          overflow: 'hidden',
         },
         title: {
           fontSize: 32,
@@ -358,7 +356,17 @@ const LoginScreen = () => {
           zIndex: 10,
         },
       }),
-    [theme, isDesktop, isTablet],
+    [
+      theme,
+      isDesktop,
+      isTablet,
+      isWeb,
+      responsive.spacingPreset.xl,
+      responsive.spacingPreset.xxl,
+      responsive.spacingPreset.m,
+      responsive.spacingPreset.l,
+      responsive.fontSizePreset.m,
+    ],
   );
 
   if (isLoadingCredentials) {
@@ -378,17 +386,10 @@ const LoginScreen = () => {
     <View
       style={{
         flex: 1,
-        height: '100vh',
+        minHeight: '100%',
         backgroundColor: theme.colors.background,
       }}
     >
-      <ConnectionErrorModal />
-      <RegisterModal
-        visible={showRegisterModal}
-        onDismiss={() => setShowRegisterModal(false)}
-        onRegisterSuccess={handleRegisterSuccess}
-      />
-
       {/* Theme toggle button */}
       <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
         <IconButton
@@ -513,12 +514,6 @@ const LoginScreen = () => {
 
   const mobileContent = (
     <SafeAreaView style={styles.safeArea}>
-      <ConnectionErrorModal />
-      <RegisterModal
-        visible={showRegisterModal}
-        onDismiss={() => setShowRegisterModal(false)}
-        onRegisterSuccess={handleRegisterSuccess}
-      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -532,8 +527,8 @@ const LoginScreen = () => {
               <View
                 style={{
                   position: 'absolute',
-                  top: -responsive.spacing.s,
-                  right: -responsive.spacing.s,
+                  top: -responsive.spacingPreset.s,
+                  right: -responsive.spacingPreset.s,
                   zIndex: 1,
                 }}
               >
@@ -586,14 +581,24 @@ const LoginScreen = () => {
 
   const content = isWeb ? webContent : mobileContent;
 
-  return Platform.OS === 'web' ? (
-    content
-  ) : (
-    <OrientationTransition
-      targetOrientation={ScreenOrientation.OrientationLock.PORTRAIT_UP}
-    >
-      {content}
-    </OrientationTransition>
+  return (
+    <>
+      <ConnectionErrorModal />
+      <RegisterModal
+        visible={showRegisterModal}
+        onDismiss={() => setShowRegisterModal(false)}
+        onRegisterSuccess={handleRegisterSuccess}
+      />
+      {Platform.OS === 'web' ? (
+        content
+      ) : (
+        <OrientationTransition
+          targetOrientation={ScreenOrientation.OrientationLock.PORTRAIT_UP}
+        >
+          {content}
+        </OrientationTransition>
+      )}
+    </>
   );
 };
 

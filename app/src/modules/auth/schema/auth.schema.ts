@@ -9,26 +9,6 @@ export const loginSchema = z.object({
 
 export type LoginFormInputs = z.infer<typeof loginSchema>;
 
-// Schema base para información de usuario
-const userInfoBaseSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  username: z.string(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-});
-
-// Schema para respuesta de autenticación - derivado del base
-export const authResponseSchema = z.object({
-  token: z.string(),
-  user: userInfoBaseSchema.extend({
-    role: z.enum(['admin', 'staff']),
-    avatar: z.string().url().optional(),
-  }),
-});
-
-export type AuthResponse = z.infer<typeof authResponseSchema>;
-
 export const authEmailLoginDtoSchema = z.object({
   email: z.string().email().optional(),
   username: z.string().optional(),
@@ -37,7 +17,7 @@ export const authEmailLoginDtoSchema = z.object({
 export type AuthEmailLoginDto = z.infer<typeof authEmailLoginDtoSchema>;
 
 export const userSchema = z.object({
-  id: z.string().uuid('El ID de usuario debe ser un UUID válido'), // Cambiado a string().uuid()
+  id: z.string().uuid('El ID de usuario debe ser un UUID válido'),
   email: z.string().email().nullable(),
   username: z.string().nullable(),
   firstName: z.string().nullable(),
@@ -69,38 +49,29 @@ export const loginResponseDtoSchema = z.object({
 });
 export type LoginResponseDto = z.infer<typeof loginResponseDtoSchema>;
 
-// Schema para registro - derivado con validaciones específicas
-export const registerSchema = userInfoBaseSchema
-  .pick({ email: true, username: true })
-  .extend({
-    email: z.string().email('Correo electrónico inválido'),
-    username: z
-      .string()
-      .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        'Solo se permiten letras, números y guiones bajos',
-      ),
-    password: z
-      .string()
-      .min(8, 'La contraseña debe tener al menos 8 caracteres'),
-    firstName: z.string().min(1, 'El nombre es requerido'),
-    lastName: z.string().min(1, 'El apellido es requerido'),
-  });
+export const registerSchema = z.object({
+  email: z.string().email('Correo electrónico inválido').optional(),
+  username: z
+    .string()
+    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
+    .max(20, 'El nombre de usuario no puede exceder 20 caracteres')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guión bajo'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  firstName: z
+    .string()
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(50, 'El nombre no puede exceder 50 caracteres'),
+  lastName: z
+    .string()
+    .min(2, 'El apellido debe tener al menos 2 caracteres')
+    .max(50, 'El apellido no puede exceder 50 caracteres'),
+  phoneNumber: z
+    .union([
+      z.string().regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido'),
+      z.literal(''),
+    ])
+    .optional(),
+  role: z.number(),
+});
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
-
-// Pure TypeScript interfaces/types that cannot be represented by Zod
-export interface AuthState {
-  token: string | null;
-  user: AuthResponse['user'] | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (credentials: LoginFormInputs) => Promise<void>;
-  logout: () => void;
-  clearError: () => void;
-}
-
-export interface RegisterResponseDto {
-  message: string;
-}

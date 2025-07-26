@@ -16,40 +16,13 @@ import {
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
-import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
-
-const registerFormSchema = z.object({
-  username: z
-    .string()
-    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-    .max(20, 'El nombre de usuario no puede exceder 20 caracteres')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guión bajo'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  firstName: z
-    .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  lastName: z
-    .string()
-    .min(2, 'El apellido debe tener al menos 2 caracteres')
-    .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phoneNumber: z
-    .union([
-      z.string().regex(/^\+?[0-9\s-]+$/, 'Número de teléfono inválido'),
-      z.literal(''),
-    ])
-    .optional(),
-  role: z.number(),
-});
-
-type RegisterFormInputs = z.infer<typeof registerFormSchema>;
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { registerSchema, RegisterFormInputs } from '../schema/auth.schema';
 
 interface RegisterModalProps {
   visible: boolean;
@@ -74,7 +47,7 @@ export function RegisterModal({
     formState: { errors },
     reset,
   } = useForm<RegisterFormInputs>({
-    resolver: zodResolver(registerFormSchema),
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
       email: '',
@@ -98,7 +71,7 @@ export function RegisterModal({
         role: { id: data.role },
         isActive: true,
       };
-      return authService.register(registerData as any);
+      return authService.register(registerData);
     },
     onSuccess: (_, variables) => {
       showSnackbar({
@@ -491,7 +464,7 @@ export function RegisterModal({
               onPress={handleSubmit(onSubmit)}
               disabled={isPending}
               loading={isPending}
-              style={[styles.button, styles.confirmButton]}
+              style={styles.button}
               buttonColor={theme.colors.primary}
             >
               Registrarse
@@ -527,8 +500,8 @@ const getStyles = (
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+      paddingHorizontal: responsive.spacingPreset.m,
+      paddingVertical: responsive.spacingPreset.s,
       borderTopLeftRadius: theme.roundness * 3,
       borderTopRightRadius: theme.roundness * 3,
     },
@@ -538,7 +511,7 @@ const getStyles = (
       flex: 1,
     },
     headerIcon: {
-      marginRight: theme.spacing.s,
+      marginRight: responsive.spacingPreset.s,
     },
     headerTextContainer: {
       flex: 1,
@@ -549,23 +522,23 @@ const getStyles = (
     formContainer: {
       flex: 1,
       paddingHorizontal: responsive.isTablet
-        ? responsive.spacing.m
-        : responsive.spacing.s,
+        ? responsive.spacingPreset.m
+        : responsive.spacingPreset.s,
       paddingTop: responsive.isTablet
-        ? responsive.spacing.s
-        : responsive.spacing.xs,
-      paddingBottom: responsive.spacing.xs,
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
+      paddingBottom: responsive.spacingPreset.xs,
     },
     sectionContainer: {
       marginBottom: responsive.isTablet
-        ? theme.spacing.s
-        : responsive.spacing.xs,
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: responsive.isTablet ? theme.spacing.xs : 6,
-      gap: responsive.isTablet ? theme.spacing.xs : 6,
+      marginBottom: responsive.isTablet ? responsive.spacingPreset.xs : 6,
+      gap: responsive.isTablet ? responsive.spacingPreset.xs : 6,
     },
     sectionTitle: {
       fontWeight: '600',
@@ -584,7 +557,7 @@ const getStyles = (
       fontWeight: '600',
     },
     inputContainer: {
-      marginBottom: responsive.isTablet ? theme.spacing.xs : 6,
+      marginBottom: responsive.isTablet ? responsive.spacingPreset.xs : 6,
     },
     inputOutline: {
       borderRadius: theme.roundness * 2,
@@ -603,17 +576,23 @@ const getStyles = (
     fieldLabelContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: responsive.isTablet ? theme.spacing.xs : 6,
-      marginBottom: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      gap: responsive.isTablet ? responsive.spacingPreset.xs : 6,
+      marginBottom: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
     },
     rolesContainer: {
       flexDirection: 'row',
-      gap: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      gap: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
       justifyContent: 'center',
     },
     roleCard: {
       borderRadius: theme.roundness * 2,
-      padding: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      padding: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
       backgroundColor: theme.colors.surface,
       minWidth: responsive.isTablet ? 140 : 125,
       borderWidth: 1.5,
@@ -630,7 +609,7 @@ const getStyles = (
     },
     roleLabel: {
       color: theme.colors.onSurfaceVariant,
-      marginTop: responsive.isTablet ? theme.spacing.xs : 4,
+      marginTop: responsive.isTablet ? responsive.spacingPreset.xs : 4,
       fontWeight: '500',
       fontSize: responsive.isTablet ? 14 : 13,
     },
@@ -645,18 +624,24 @@ const getStyles = (
       textAlign: 'center',
     },
     divider: {
-      marginVertical: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      marginVertical: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
       marginHorizontal: responsive.isTablet
-        ? -theme.spacing.m
-        : -theme.spacing.s,
+        ? -responsive.spacingPreset.m
+        : -responsive.spacingPreset.s,
     },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      padding: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      padding: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
-      gap: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
+      gap: responsive.isTablet
+        ? responsive.spacingPreset.s
+        : responsive.spacingPreset.xs,
     },
     button: {
       flex: 1,
@@ -665,5 +650,4 @@ const getStyles = (
     cancelButton: {
       backgroundColor: theme.colors.secondaryContainer,
     },
-    confirmButton: {},
   });
