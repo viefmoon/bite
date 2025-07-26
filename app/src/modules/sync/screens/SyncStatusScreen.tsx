@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  RefreshControl,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native';
 import {
   Card,
   List,
@@ -21,28 +16,22 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { syncService } from '../services/syncService';
 import {
-  SyncActivity,
-  SyncStatus,
   SyncActivityType,
+  SyncActivityTypeEnum,
   SYNC_TYPE_LABELS,
   SYNC_DIRECTION_LABELS,
-} from '../types/sync.types';
+} from '../schema/sync.schema';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { StyleSheet } from 'react-native';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
 export function SyncStatusScreen() {
   const theme = useAppTheme();
-  const { width: screenWidth } = useWindowDimensions();
-  const { isTablet, deviceType } = useResponsive();
+  const { isTablet } = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Ajustar padding según el dispositivo
   const contentPadding = isTablet ? theme.spacing.l : theme.spacing.m;
-
-  // Query para el estado del servicio
   const {
     data: syncStatus,
     isLoading: isLoadingStatus,
@@ -51,10 +40,8 @@ export function SyncStatusScreen() {
   } = useQuery({
     queryKey: ['sync-status'],
     queryFn: () => syncService.getSyncStatus(),
-    refetchInterval: 30000, // Actualizar cada 30 segundos
+    refetchInterval: 30000,
   });
-
-  // Query para la actividad reciente
   const {
     data: syncActivity,
     isLoading: isLoadingActivity,
@@ -71,7 +58,10 @@ export function SyncStatusScreen() {
     try {
       await Promise.all([refetchStatus(), refetchActivity()]);
     } catch (error) {
-      showSnackbar('Error al actualizar información', 'error');
+      showSnackbar({
+        message: 'Error al actualizar información',
+        type: 'error',
+      });
     } finally {
       setRefreshing(false);
     }
@@ -90,11 +80,11 @@ export function SyncStatusScreen() {
 
   const getActivityIcon = (type: SyncActivityType) => {
     switch (type) {
-      case SyncActivityType.PULL_CHANGES:
+      case SyncActivityTypeEnum.PULL_CHANGES:
         return 'cloud-download';
-      case SyncActivityType.RESTAURANT_DATA:
+      case SyncActivityTypeEnum.RESTAURANT_DATA:
         return 'store';
-      case SyncActivityType.ORDER_STATUS:
+      case SyncActivityTypeEnum.ORDER_STATUS:
         return 'check-circle';
       default:
         return 'sync';
@@ -105,7 +95,6 @@ export function SyncStatusScreen() {
     return success ? theme.colors.success : theme.colors.error;
   };
 
-  // Crear estilos dinámicos con el tema
   const styles = React.useMemo(
     () => createStyles(theme, isTablet),
     [theme, isTablet],
@@ -152,7 +141,6 @@ export function SyncStatusScreen() {
           isTablet && styles.scrollContentTablet,
         ]}
       >
-        {/* Estado del Servicio */}
         <Card style={styles.card} mode="elevated">
           <Card.Title
             title="Estado del Servicio"
@@ -232,7 +220,6 @@ export function SyncStatusScreen() {
           </Card.Content>
         </Card>
 
-        {/* Actividad Reciente */}
         <Card style={styles.card} mode="elevated">
           <Card.Title
             title="Actividad Reciente"
@@ -323,7 +310,6 @@ export function SyncStatusScreen() {
           </Card.Content>
         </Card>
 
-        {/* Información adicional */}
         <Card style={[styles.card, styles.infoCard]} mode="contained">
           <Card.Content>
             <View style={styles.infoRow}>
