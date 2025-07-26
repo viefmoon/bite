@@ -65,19 +65,19 @@ const userBaseSchema = z.object({
 
 // Esquema para crear usuario
 export const createUserDtoSchema = z.object({
-  email: z.string().email().optional(),
+  email: z.string().email().nullable().optional(),
   username: z.string().min(1, 'El nombre de usuario es requerido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   firstName: z.string().min(1, 'El nombre es requerido'),
   lastName: z.string().min(1, 'El apellido es requerido'),
-  birthDate: z.string().optional(),
-  gender: z.nativeEnum(GenderEnum).optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  zipCode: z.string().optional(),
+  birthDate: z.string().nullable().optional(),
+  gender: z.nativeEnum(GenderEnum).nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  zipCode: z.string().nullable().optional(),
   emergencyContact: emergencyContactSchema,
   role: z.object({
     id: z.number(),

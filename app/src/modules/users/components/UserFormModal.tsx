@@ -104,7 +104,7 @@ export function UserFormModal({
       firstName: '',
       lastName: '',
       phoneNumber: '',
-      gender: undefined,
+      gender: null,
       address: '',
       city: '',
       state: '',
@@ -124,7 +124,7 @@ export function UserFormModal({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         phoneNumber: user.phoneNumber || '',
-        gender: user.gender || undefined, // Convert null to undefined
+        gender: user.gender || null,
         address: user.address || '',
         city: user.city || '',
         state: user.state || '',
@@ -141,7 +141,7 @@ export function UserFormModal({
         firstName: '',
         lastName: '',
         phoneNumber: '',
-        gender: undefined,
+        gender: null,
         address: '',
         city: '',
         state: '',
@@ -153,7 +153,9 @@ export function UserFormModal({
     }
   }, [user, reset]);
 
-  const onSubmit = async (data: UserFormInputs) => {
+  const onSubmit = async (
+    data: CreateUserFormInputs | UpdateUserFormInputs,
+  ) => {
     try {
       // Clean empty strings to undefined
       const cleanData = {
@@ -163,7 +165,7 @@ export function UserFormModal({
         firstName: data.firstName,
         lastName: data.lastName,
         phoneNumber: data.phoneNumber || undefined,
-        gender: data.gender || undefined,
+        gender: data.gender || null,
         address: data.address || undefined,
         city: data.city || undefined,
         state: data.state || undefined,

@@ -190,7 +190,7 @@ export function UserDetailModal({
               style={styles.contentContainer}
               showsVerticalScrollIndicator={false}
             >
-                <View style={styles.infoSection}>
+              <View style={styles.infoSection}>
                 <View style={styles.sectionHeader}>
                   <Icon
                     source="contacts"

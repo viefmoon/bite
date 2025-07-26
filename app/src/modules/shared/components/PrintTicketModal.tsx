@@ -19,10 +19,9 @@ import {
 import { useAppTheme } from '@/app/styles/theme';
 import { usePrintersQuery } from '@/modules/printers/hooks/usePrintersQueries';
 
-// Interfaz mínima que requiere el componente
 interface OrderBasicInfo {
   shiftOrderNumber: number;
-  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN' | 'TAKEOUT';
+  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
 }
 
 interface PrintTicketModalProps {
@@ -50,22 +49,17 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>('');
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Extraer impresoras del response paginado y filtrar solo las activas
   const printers = printersResponse?.data || [];
-  const activePrinters = printers.filter((printer) => printer.isActive);
+  const activePrinters = printers.filter((printer: any) => printer.isActive);
 
-  // Seleccionar la primera impresora activa por defecto
   useEffect(() => {
     if (activePrinters.length > 0 && !selectedPrinterId) {
       setSelectedPrinterId(activePrinters[0].id);
     }
   }, [activePrinters, selectedPrinterId]);
 
-  // Seleccionar tipo de ticket según el tipo de orden
   useEffect(() => {
     if (order) {
-      // Para órdenes DINE_IN, usar BILLING (ticket de cuenta)
-      // Para TAKE_AWAY, TAKEOUT, DELIVERY, usar GENERAL
       if (order.orderType === 'DINE_IN') {
         setSelectedTicketType('BILLING');
       } else {
@@ -82,7 +76,6 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
       await onPrint(selectedPrinterId, selectedTicketType);
       onDismiss();
     } catch (error) {
-      // Error al imprimir ticket
     } finally {
       setIsPrinting(false);
     }
@@ -115,7 +108,6 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
         <Divider />
 
         <ScrollView style={styles.content}>
-          {/* Tipo de Ticket */}
           <View style={styles.section}>
             <Text
               style={[styles.sectionTitle, { color: theme.colors.primary }]}
@@ -211,7 +203,6 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
             </RadioButton.Group>
           </View>
 
-          {/* Selección de Impresora */}
           <View style={styles.section}>
             <Text
               style={[styles.sectionTitle, { color: theme.colors.primary }]}
@@ -231,7 +222,7 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
                 onValueChange={(value) => setSelectedPrinterId(value)}
                 value={selectedPrinterId}
               >
-                {activePrinters.map((printer) => (
+                {activePrinters.map((printer: any) => (
                   <TouchableOpacity
                     key={printer.id}
                     activeOpacity={0.7}
