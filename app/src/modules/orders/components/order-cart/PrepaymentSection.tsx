@@ -30,7 +30,11 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const parsedPaymentAmount = parseFloat(paymentAmount || '0');
   const exceedsTotal = parsedPaymentAmount > total;
   const remainingAmount = Math.max(0, total - parsedPaymentAmount);
@@ -46,15 +50,24 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
           </Text>
         </View>
         <View style={styles.totalsContainer}>
+<<<<<<< HEAD
           <Text style={[styles.totalsText, styles.boldText]}>
             Restante:
           </Text>
+=======
+          <Text style={[styles.totalsText, styles.boldText]}>Restante:</Text>
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           <Text
             style={[
               styles.totalsValue,
               styles.boldText,
               {
+<<<<<<< HEAD
                 color: (pendingAmount || 0) > 0 ? theme.colors.error : '#4CAF50',
+=======
+                color:
+                  (pendingAmount || 0) > 0 ? theme.colors.error : '#4CAF50',
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
               },
             ]}
           >
@@ -104,15 +117,24 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
                 style={styles.iconButtonNoMargin}
               />
               <Text style={styles.prepaymentWarningText}>
+<<<<<<< HEAD
                 El prepago excede el total de la orden. Edite el pago antes de continuar.
+=======
+                El prepago excede el total de la orden. Edite el pago antes de
+                continuar.
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
               </Text>
             </View>
           )}
         </View>
         <View style={styles.totalsContainer}>
+<<<<<<< HEAD
           <Text style={[styles.totalsText, styles.boldText]}>
             Restante:
           </Text>
+=======
+          <Text style={[styles.totalsText, styles.boldText]}>Restante:</Text>
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           <Text
             style={[
               styles.totalsValue,
@@ -219,4 +241,8 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     iconButtonNoMargin: {
       margin: 0,
     },
+<<<<<<< HEAD
   });
+=======
+  });
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b

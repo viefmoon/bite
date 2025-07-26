@@ -6,7 +6,7 @@ import type {
   ReceiptsListResponse,
   ReceiptFilters,
 } from '../types/receipt.types';
-import type { Order } from '@/modules/orders/types/orders.types';
+import type { Order } from '@/modules/orders/schema/orders.schema';
 
 export const receiptService = {
   getReceiptsList: async (

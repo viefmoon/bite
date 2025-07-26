@@ -45,15 +45,16 @@ import { es } from 'date-fns/locale';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
+import type { OrderDetailsForBackend } from '../stores/useOrderStore';
 import { useListState } from '../../../app/hooks/useListState';
-import { CartItem } from '../stores/useOrderCreationStore';
+import { useOrderStore } from '../stores/useOrderStore';
 import {
-  formatOrderStatus,
-  formatOrderType,
+  OrderStatusInfo,
   formatOrderTypeShort,
   getPaymentStatus,
   getStatusColor,
-} from '../../../app/utils/orderFormatters';
+  formatOrderType,
+} from '../utils/formatters';
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
@@ -78,15 +79,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [pendingProductsToAdd, setPendingProductsToAdd] = useState<CartItem[]>(
-    [],
-  );
-  const [temporaryProducts, setTemporaryProducts] = useState<{
-    [orderId: string]: CartItem[];
-  }>({});
-  const [existingItemsCount, setExistingItemsCount] = useState<{
-    [orderId: string]: number;
-  }>({});
 
   const [selectedOrderType, setSelectedOrderType] = useState<
     OrderType | 'ALL' | 'WHATSAPP'
@@ -144,8 +136,10 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
     setIsPrintModalVisible(true);
   }, []);
 
-  const handleOrderItemPress = (order: OrderOpenList) => {
-    // Guardar solo el ID y abrir el modal
+  const { loadOrderForEditing } = useOrderStore();
+
+  const handleOrderItemPress = async (order: OrderOpenList) => {
+    // Cargar la orden en el store antes de abrir el modal
     setEditingOrderId(order.id);
     setIsEditModalVisible(true);
   };
@@ -360,7 +354,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                     ]}
                     textStyle={styles.statusChipText}
                   >
-                    {formatOrderStatus(order.orderStatus)}
+                    {OrderStatusInfo.getLabel(order.orderStatus)}
                   </Chip>
                   <View style={styles.actionsContainer}>
                     {selectedOrderType === 'WHATSAPP' &&
@@ -465,17 +459,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
       ),
     });
   }, [navigation, handleRefresh, isFetching, theme.colors.onPrimary]); // Añadir dependencias
-
-  // Efecto para sincronizar productos temporales con pendientes
-  useEffect(() => {
-    if (
-      isEditModalVisible &&
-      editingOrderId &&
-      temporaryProducts[editingOrderId]
-    ) {
-      setPendingProductsToAdd(temporaryProducts[editingOrderId]);
-    }
-  }, [isEditModalVisible, editingOrderId, temporaryProducts]);
 
   // Función para manejar la impresión del ticket
   const handlePrint = useCallback(
@@ -986,28 +969,12 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 : undefined
             }
             navigation={navigation}
-            pendingProductsToAdd={
-              editingOrderId && temporaryProducts[editingOrderId]
-                ? temporaryProducts[editingOrderId]
-                : pendingProductsToAdd
-            }
-            onItemsCountChanged={(count) => {
-              // Actualizar el conteo de items existentes para esta orden
-              setExistingItemsCount((prev) => ({
-                ...prev,
-                [editingOrderId]: count,
-              }));
-            }}
             onClose={() => {
               setIsEditModalVisible(false);
               setEditingOrderId(null);
-              setPendingProductsToAdd([]);
-              // NO limpiar temporaryProducts aquí para mantener los productos
-              // NO llamar refetch() aquí porque ya se maneja con invalidateQueries
-              // y el refetchInterval automático
             }}
             onAddProducts={() => {
-              // Cerrar el modal temporalmente para navegar
+              // El store ya tiene la orden cargada, simplemente navegar
               setIsEditModalVisible(false);
 
               const orderNumber = ordersData?.find(
@@ -1016,29 +983,17 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
               // Navegar a añadir productos
               setTimeout(() => {
-                const existingProducts =
-                  temporaryProducts[editingOrderId!] || [];
                 navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
                   orderId: editingOrderId!,
                   orderNumber: orderNumber!,
-                  // Pasar productos temporales existentes si los hay
-                  existingTempProducts: existingProducts,
-                  existingOrderItemsCount:
-                    existingItemsCount[editingOrderId!] || 0, // Usar el conteo rastreado
-                  onProductsAdded: (newProducts) => {
-                    // Actualizar productos temporales para esta orden
-                    setTemporaryProducts((prev) => ({
-                      ...prev,
-                      [editingOrderId!]: newProducts,
-                    }));
-                    // NO establecer pendingProductsToAdd aquí, se hará en el useEffect
+                  onProductsAdded: () => {
                     // Reabrir el modal cuando regresemos
                     setIsEditModalVisible(true);
                   },
                 });
               }, 100);
             }}
-            onConfirmOrder={async (details: OrderDetailsForBackend) => {
+            onConfirmOrder={async (details) => {
               // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
               const payload = {
                 orderType: details.orderType,
@@ -1080,22 +1035,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                   payload,
                 });
 
-                // Limpiar estados después de actualización exitosa
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
-                // Limpiar productos temporales y conteo para esta orden
-                if (editingOrderId) {
-                  setTemporaryProducts((prev) => {
-                    const newState = { ...prev };
-                    delete newState[editingOrderId];
-                    return newState;
-                  });
-                  setExistingItemsCount((prev) => {
-                    const newState = { ...prev };
-                    delete newState[editingOrderId];
-                    return newState;
-                  });
-                }
               } catch (error) {
                 // No cerrar el modal en caso de error para que el usuario pueda reintentar
               }

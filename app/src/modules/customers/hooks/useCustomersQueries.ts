@@ -1,14 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/app/services/apiClient';
+import { API_PATHS } from '@/app/constants/apiPaths';
+
 import { customersService } from '../services/customersService';
 import {
-  CreateCustomerDto,
-  UpdateCustomerDto,
   FindAllCustomersQuery,
   ChatMessage,
   Address,
-} from '../types/customer.types';
-import apiClient from '@/app/services/apiClient';
-import { API_PATHS } from '@/app/constants/apiPaths';
+  CreateCustomerInput,
+  UpdateCustomerInput,
+} from '../schema/customer.schema';
 
 // Keys para React Query
 export const customerKeys = {
@@ -46,7 +47,7 @@ export function useCreateCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCustomerDto) => customersService.create(data),
+    mutationFn: (data: CreateCustomerInput) => customersService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
     },
@@ -58,7 +59,7 @@ export function useUpdateCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerDto }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerInput }) =>
       customersService.update(id, data),
     onSuccess: (updatedCustomer) => {
       queryClient.setQueryData(

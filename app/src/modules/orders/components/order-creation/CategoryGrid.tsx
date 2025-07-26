@@ -1,13 +1,20 @@
 import React, { useMemo, useCallback, useRef } from 'react';
 import { View, StyleSheet, FlatList, Animated, Pressable } from 'react-native';
-import { Card, Title, Text, IconButton, ActivityIndicator, Appbar } from 'react-native-paper';
+import {
+  Card,
+  Title,
+  Text,
+  IconButton,
+  ActivityIndicator,
+  Appbar,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Category, SubCategory, Product } from '../../types/orders.types';
 import CartButton from '../CartButton';
-import { useOrderCreationStore, CartItem } from '../../stores/useOrderCreationStore';
+import { useOrderStore, CartItem } from '../../stores/useOrderStore';
 import { CategoryQuickAccess } from './CategoryQuickAccess';
 
 interface CategoryGridProps {
@@ -147,13 +154,16 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   const theme = useAppTheme();
   const responsive = useResponsive();
   const { colors, fonts } = theme;
-  const storeCartItems = useOrderCreationStore((state) => state.items);
+  const storeCartItems = useOrderStore((state) => state.items);
   const activeCartItems = cartItems || storeCartItems;
-  const getProductCount = useCallback((productId: string) => {
-    return activeCartItems
-      .filter(item => item.productId === productId)
-      .reduce((sum, item) => sum + item.quantity, 0);
-  }, [activeCartItems]);
+  const getProductCount = useCallback(
+    (productId: string) => {
+      return activeCartItems
+        .filter((item) => item.productId === productId)
+        .reduce((sum, item) => sum + item.quantity, 0);
+    },
+    [activeCartItems],
+  );
 
   const numColumns = useMemo(() => {
     if (responsive.width >= 600) {
@@ -244,7 +254,8 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         cardTitle: {
           fontSize: responsive.fontSize(responsive.width >= 600 ? 16 : 15),
           fontWeight: '600',
-          lineHeight: responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
+          lineHeight:
+            responsive.fontSize(responsive.width >= 600 ? 16 : 15) * 1.2,
           marginBottom: responsive.spacing(2),
         },
         cardHeader: {
@@ -314,7 +325,8 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     [colors, fonts, theme, responsive, itemWidth],
   );
 
-  const blurhash = '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
+  const blurhash =
+    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   const renderItem = useCallback(
     ({ item }: { item: Category | SubCategory | Product }) => {
@@ -324,9 +336,10 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         navigationLevel === 'products' &&
         'preparationScreenId' in item &&
         !item.preparationScreenId;
-      const productCount = navigationLevel === 'products' && 'price' in item 
-        ? getProductCount(item.id) 
-        : 0;
+      const productCount =
+        navigationLevel === 'products' && 'price' in item
+          ? getProductCount(item.id)
+          : 0;
 
       const handlePress = () => {
         if (!isActive || isProductWithoutScreen) return;
@@ -334,9 +347,17 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
       };
 
       const renderPrice = () => {
-        if (navigationLevel === 'products' && 'price' in item && 'hasVariants' in item) {
+        if (
+          navigationLevel === 'products' &&
+          'price' in item &&
+          'hasVariants' in item
+        ) {
           const productItem = item as Product;
-          if (!productItem.hasVariants && productItem.price !== null && productItem.price !== undefined) {
+          if (
+            !productItem.hasVariants &&
+            productItem.price !== null &&
+            productItem.price !== undefined
+          ) {
             return (
               <Text style={styles.priceText}>
                 ${Number(productItem.price).toFixed(2)}
@@ -387,7 +408,10 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               </View>
             )}
             <View style={styles.cardContent}>
-              {navigationLevel === 'products' && 'price' in item && (item as Product).description && onProductInfo ? (
+              {navigationLevel === 'products' &&
+              'price' in item &&
+              (item as Product).description &&
+              onProductInfo ? (
                 <View style={styles.cardHeader}>
                   <Title
                     style={[styles.cardTitle, { flex: 1 }]}
@@ -418,7 +442,14 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         </AnimatedItem>
       );
     },
-    [navigationLevel, onItemSelect, onProductInfo, styles, blurhash, getProductCount],
+    [
+      navigationLevel,
+      onItemSelect,
+      onProductInfo,
+      styles,
+      blurhash,
+      getProductCount,
+    ],
   );
 
   return (
@@ -441,16 +472,16 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         )}
       </Appbar.Header>
 
-      {navigationLevel !== 'categories' && 
-       categories && 
-       selectedCategoryId && 
-       onCategoryQuickSelect && (
-        <CategoryQuickAccess
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onCategorySelect={onCategoryQuickSelect}
-        />
-      )}
+      {navigationLevel !== 'categories' &&
+        categories &&
+        selectedCategoryId &&
+        onCategoryQuickSelect && (
+          <CategoryQuickAccess
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onCategorySelect={onCategoryQuickSelect}
+          />
+        )}
 
       <View style={styles.content}>
         {isLoading ? (

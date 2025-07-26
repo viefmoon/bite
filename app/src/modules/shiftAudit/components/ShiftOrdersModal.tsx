@@ -21,11 +21,11 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useShiftOrders } from '../hooks/useShiftOrders';
 import EmptyState from '@/app/components/common/EmptyState';
 import type { Order } from '@/app/schemas/domain/order.schema';
-import { OrderTypeEnum } from '@/modules/orders/types/orders.types';
+import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
 import {
   formatOrderTypeShort,
   getPaymentStatus,
-} from '@/app/utils/orderFormatters';
+} from '@/modules/orders/utils/formatters';
 import { receiptService } from '@/modules/receipts/services/receiptService';
 import type { Receipt } from '@/modules/receipts/types/receipt.types';
 import { OrderDetailsView } from './OrderDetailsView';

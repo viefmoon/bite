@@ -1,4 +1,3 @@
-// src/orders/infrastructure/persistence/relational/entities/order-history.entity.ts
 import {
   Column,
   CreateDateColumn,
@@ -9,7 +8,7 @@ import {
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
 @Entity({ name: 'order_history' })
-@Index(['orderId', 'changedAt']) // Índice para consultas comunes
+@Index(['orderId', 'changedAt'])
 export class OrderHistoryEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn()
   id: number;
@@ -17,18 +16,18 @@ export class OrderHistoryEntity extends EntityRelationalHelper {
   @Column('uuid', { name: 'order_id' })
   orderId: string;
 
-  @Column({ length: 10 }) // INSERT, UPDATE, DELETE
+  @Column({ length: 10 })
   operation: string;
 
   @Column('uuid', { name: 'changed_by' })
-  changedBy: string; // Asume que el ID del usuario es UUID
+  changedBy: string;
 
   @CreateDateColumn({ name: 'changed_at', type: 'timestamptz' })
   changedAt: Date;
 
-  @Column({ type: 'jsonb', nullable: true }) // Diff puede ser nulo para INSERT/DELETE
+  @Column({ type: 'jsonb', nullable: true })
   diff: Record<string, any> | null;
 
   @Column({ type: 'jsonb' })
-  snapshot: Record<string, any>; // Almacena el estado de la entidad
+  snapshot: Record<string, any>;
 }

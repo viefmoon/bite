@@ -14,14 +14,14 @@ import AreasTablesStackNavigator from '../../modules/areasTables/navigation/Area
 import OrdersStackNavigator from './OrdersStackNavigator';
 import PrintersStackNavigator from '../../modules/printers/navigation/PrintersStackNavigator';
 import { ReceiptsStackNavigator } from '../../modules/receipts/navigation/ReceiptsStackNavigator';
-import { AvailabilityStackNavigator } from '../../modules/availability/navigation/AvailabilityStackNavigator';
+import { AvailabilityScreen } from '../../modules/availability/screens/AvailabilityScreen';
 import { OrderFinalizationStackNavigator } from '../../modules/orderFinalization/navigation/OrderFinalizationStackNavigator';
 import { RestaurantConfigStackNavigator } from '../../modules/restaurantConfig/navigation/RestaurantConfigStackNavigator';
 import { CustomersStackNavigator } from '../../modules/customers/navigation/CustomersStackNavigator';
 import { PizzaCustomizationsStackNavigator } from '../../modules/pizzaCustomizations/navigation/PizzaCustomizationsStackNavigator';
 import { SyncStackNavigator } from '../../modules/sync/navigation/SyncStackNavigator';
-import { UsersStackNavigator } from '../../modules/users/navigation/UsersStackNavigator';
-import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
+import { UsersListScreen } from '../../modules/users/screens/UsersListScreen';
+import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';
 import { ShiftAuditStackNavigator } from '../../modules/shiftAudit/navigation/ShiftAuditStackNavigator';
 import { SettingsStackNavigator } from '../../modules/settings/navigation/SettingsStackNavigator';
 import { ServerSettingsScreen } from '../../modules/settings/screens/ServerSettingsScreen';
@@ -161,7 +161,7 @@ export function AppDrawerNavigator() {
               case 'ReceiptsStack':
                 title = 'Recibos';
                 break;
-              case 'AvailabilityStack':
+              case 'AvailabilityScreen':
                 title = 'Disponibilidad';
                 break;
               case 'OrderFinalizationStack':
@@ -179,10 +179,10 @@ export function AppDrawerNavigator() {
               case 'SyncStack':
                 title = 'Sincronización';
                 break;
-              case 'UsersStack':
+              case 'UsersScreen':
                 title = 'Usuarios';
                 break;
-              case 'KitchenStack':
+              case 'KitchenScreen':
                 title =
                   kitchenScreenName +
                   (filters.orderType ? getFilterText() : '');
@@ -282,8 +282,8 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="AvailabilityStack"
-          component={AvailabilityStackNavigator}
+          name="AvailabilityScreen"
+          component={AvailabilityScreen}
           options={{
             title: 'Disponibilidad',
             drawerIcon: ({ color }) => (
@@ -409,8 +409,8 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="UsersStack"
-          component={UsersStackNavigator}
+          name="UsersScreen"
+          component={UsersListScreen}
           options={{
             title: 'Usuarios',
             drawerIcon: ({ color }) => (
@@ -437,8 +437,8 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="KitchenStack"
-          component={KitchenNavigator}
+          name="KitchenScreen"
+          component={KitchenOrdersScreen}
           options={{
             title: kitchenScreenName,
             drawerIcon: ({ color }) => (

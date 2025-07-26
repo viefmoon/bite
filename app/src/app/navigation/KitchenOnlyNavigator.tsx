@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import KitchenNavigator from '../../modules/kitchen/navigation/KitchenNavigator';
+import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';
 import { CustomDrawerContent } from './components/CustomDrawerContent';
 import { ServerSettingsScreen } from '../../modules/settings/screens/ServerSettingsScreen';
 import { useAppTheme } from '../styles/theme';
@@ -240,7 +240,7 @@ function KitchenOnlyNavigatorContent() {
             ),
           }}
         >
-          {() => <KitchenNavigator />}
+          {() => <KitchenOrdersScreen />}
         </Drawer.Screen>
 
         <Drawer.Screen

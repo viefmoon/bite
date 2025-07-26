@@ -10,7 +10,7 @@ import {
   FindAllTablesDto,
 } from '../schema/table.schema';
 
-export const getTables = async (
+const getTables = async (
   filterOptions: FindAllTablesDto = {},
   paginationOptions: BaseListQuery = { page: 1, limit: 10 },
 ): Promise<Table[]> => {
@@ -32,7 +32,7 @@ export const getTables = async (
   return response.data.items;
 };
 
-export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
+const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
   const response = await apiClient.get<{
     items: Table[];
     total: number;
@@ -45,7 +45,7 @@ export const getTablesByAreaId = async (areaId: string): Promise<Table[]> => {
   return response.data.items;
 };
 
-export const getTableById = async (id: string): Promise<Table> => {
+const getTableById = async (id: string): Promise<Table> => {
   const response = await apiClient.get<Table>(
     API_PATHS.TABLES_BY_ID.replace(':id', id),
   );
@@ -53,13 +53,13 @@ export const getTableById = async (id: string): Promise<Table> => {
   return response.data;
 };
 
-export const createTable = async (data: CreateTableDto): Promise<Table> => {
+const createTable = async (data: CreateTableDto): Promise<Table> => {
   const response = await apiClient.post<Table>(API_PATHS.TABLES, data);
 
   return response.data;
 };
 
-export const updateTable = async (
+const updateTable = async (
   id: string,
   data: UpdateTableDto,
 ): Promise<Table> => {
@@ -71,13 +71,21 @@ export const updateTable = async (
   return response.data;
 };
 
-export const deleteTable = async (id: string): Promise<void> => {
+const deleteTable = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.TABLES_BY_ID.replace(':id', id));
 };
 
-// Claves de Query para tablas relacionadas con áreas
+export const tableService = {
+  getTables,
+  getTablesByAreaId,
+  getTableById,
+  createTable,
+  updateTable,
+  deleteTable,
+};
+
 const tableQueryKeys = {
-  base: ['tables'] as const, // Clave base para todas las tablas
+  base: ['tables'] as const,
   byArea: (areaId: string | null | undefined) =>
     [...tableQueryKeys.base, 'area', areaId] as const,
 };
@@ -89,9 +97,8 @@ export function useGetTablesByArea(areaId: string | null | undefined) {
       if (!areaId) {
         return Promise.resolve([]);
       }
-      return getTablesByAreaId(areaId);
+      return tableService.getTablesByAreaId(areaId);
     },
     enabled: !!areaId,
-    // Sin staleTime, se usará la configuración global (0)
   });
 }

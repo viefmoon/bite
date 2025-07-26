@@ -2,10 +2,10 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-} from '@nestjs/common'; // Añadir InternalServerErrorException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderEntity } from '../entities/order.entity'; // Importar OrderEntity
+import { OrderEntity } from '../entities/order.entity';
 
 import { OrderItem } from '../../../../domain/order-item';
 import { OrderItemRepository } from '../../order-item.repository';
@@ -17,9 +17,9 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
   constructor(
     @InjectRepository(OrderItemEntity)
     private readonly orderItemRepository: Repository<OrderItemEntity>,
-    @InjectRepository(OrderEntity) // Inyectar OrderRepository
+    @InjectRepository(OrderEntity)
     private readonly orderRepository: Repository<OrderEntity>,
-    private readonly orderItemMapper: OrderItemMapper, // Inyectar el mapper
+    private readonly orderItemMapper: OrderItemMapper,
   ) {}
 
   async findById(id: string): Promise<OrderItem | null> {
@@ -32,7 +32,7 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
       return null;
     }
 
-    return this.orderItemMapper.toDomain(orderItemEntity); // Usar instancia
+    return this.orderItemMapper.toDomain(orderItemEntity);
   }
 
   async findByOrderId(orderId: string): Promise<OrderItem[]> {
@@ -41,14 +41,12 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
       relations: ['order', 'productModifiers', 'selectedPizzaCustomizations'],
     });
 
-    // Usar instancia y filtrar nulos
     return orderItemEntities
       .map((entity) => this.orderItemMapper.toDomain(entity))
       .filter((item): item is OrderItem => item !== null);
   }
 
   async save(orderItem: OrderItem): Promise<OrderItem> {
-    // Buscar la OrderEntity correspondiente
     const orderEntity = await this.orderRepository.findOneBy({
       id: orderItem.orderId,
     });
@@ -58,18 +56,15 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
       );
     }
 
-    const orderItemEntity = this.orderItemMapper.toEntity(orderItem); // Usar instancia
+    const orderItemEntity = this.orderItemMapper.toEntity(orderItem);
     if (!orderItemEntity) {
       throw new InternalServerErrorException(
         'Error mapping OrderItem domain to entity for save',
       );
     }
-    // No es necesario asignar orderEntity manually si el mapper lo hace correctamente
-    // orderItemEntity.order = orderEntity;
 
     const savedEntity = await this.orderItemRepository.save(orderItemEntity);
 
-    // Recargar para asegurar que las relaciones estén presentes en la respuesta
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: savedEntity.id },
       relations: [
@@ -78,16 +73,16 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
         'product',
         'productVariant',
         'selectedPizzaCustomizations',
-      ], // Cargar relaciones necesarias
+      ],
     });
 
     if (!reloadedEntity) {
-      throw new InternalServerErrorException( // Usar InternalServerErrorException
+      throw new InternalServerErrorException(
         `OrderItem with ID ${savedEntity.id} not found after saving.`,
       );
     }
 
-    const domainResult = this.orderItemMapper.toDomain(reloadedEntity); // Usar instancia
+    const domainResult = this.orderItemMapper.toDomain(reloadedEntity);
     if (!domainResult) {
       throw new InternalServerErrorException(
         'Error mapping reloaded OrderItem entity to domain',
@@ -104,7 +99,6 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
       );
     }
 
-    // Verificar si la entidad existe antes de intentar guardarla
     const exists = await this.orderItemRepository.existsBy({
       id: entityToUpdate.id,
     });
@@ -114,10 +108,8 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
       );
     }
 
-    // Guardar la entidad mapeada (save actualizará si el ID existe)
     const updatedEntity = await this.orderItemRepository.save(entityToUpdate);
 
-    // Recargar para obtener el estado final con relaciones
     const reloadedEntity = await this.orderItemRepository.findOne({
       where: { id: updatedEntity.id },
       relations: [
@@ -126,16 +118,16 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
         'product',
         'productVariant',
         'selectedPizzaCustomizations',
-      ], // Cargar relaciones necesarias
+      ],
     });
 
     if (!reloadedEntity) {
-      throw new InternalServerErrorException( // Usar InternalServerErrorException
+      throw new InternalServerErrorException(
         `OrderItem with ID ${updatedEntity.id} not found after updating.`,
       );
     }
 
-    const domainResult = this.orderItemMapper.toDomain(reloadedEntity); // Usar instancia
+    const domainResult = this.orderItemMapper.toDomain(reloadedEntity);
     if (!domainResult) {
       throw new InternalServerErrorException(
         'Error mapping reloaded OrderItem entity to domain after update',

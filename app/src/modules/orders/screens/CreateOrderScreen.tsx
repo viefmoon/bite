@@ -7,10 +7,10 @@ import { useNavigation } from '@react-navigation/native';
 import { useGetOrderMenu } from '../hooks/useMenuQueries';
 import { useGlobalShift } from '@/app/hooks/useGlobalShift';
 import {
-  useOrderCreationStore,
-  useIsOrderCreationEmpty,
-  useOrderCreationItemsCount,
-} from '../stores/useOrderCreationStore';
+  useOrderStore,
+  useIsOrderEmpty,
+  useOrderItemsCount,
+} from '../stores/useOrderStore';
 import { useAuthStore } from '@/app/store/authStore';
 
 import { Product, Category, SubCategory } from '../types/orders.types';
@@ -35,7 +35,7 @@ import { useAppTheme } from '@/app/styles/theme';
 const CreateOrderScreen = () => {
   const theme = useAppTheme();
   const navigation = useNavigation();
-  
+
   const {
     addItem: originalAddItem,
     updateItem,
@@ -45,10 +45,10 @@ const CreateOrderScreen = () => {
     setOrderType,
     setDeliveryInfo,
     resetOrder,
-  } = useOrderCreationStore();
+  } = useOrderStore();
 
-  const isCartEmpty = useIsOrderCreationEmpty();
-  const totalItemsCount = useOrderCreationItemsCount();
+  const isCartEmpty = useIsOrderEmpty();
+  const totalItemsCount = useOrderItemsCount();
 
   const user = useAuthStore((state) => state.user);
   const { data: shift, isLoading: shiftLoading } = useGlobalShift();
@@ -145,20 +145,22 @@ const CreateOrderScreen = () => {
     hideCart();
   }, [hideCart]);
 
-  const selectedCategory = useMemo(() => 
-    menu && Array.isArray(menu)
-      ? menu.find((cat: Category) => cat.id === selectedCategoryId)
-      : null,
-    [menu, selectedCategoryId]
+  const selectedCategory = useMemo(
+    () =>
+      menu && Array.isArray(menu)
+        ? menu.find((cat: Category) => cat.id === selectedCategoryId)
+        : null,
+    [menu, selectedCategoryId],
   );
 
-  const selectedSubCategory = useMemo(() =>
-    selectedCategory && Array.isArray(selectedCategory.subcategories)
-      ? selectedCategory.subcategories.find(
-          (sub: SubCategory) => sub.id === selectedSubcategoryId,
-        )
-      : null,
-    [selectedCategory, selectedSubcategoryId]
+  const selectedSubCategory = useMemo(
+    () =>
+      selectedCategory && Array.isArray(selectedCategory.subcategories)
+        ? selectedCategory.subcategories.find(
+            (sub: SubCategory) => sub.id === selectedSubcategoryId,
+          )
+        : null,
+    [selectedCategory, selectedSubcategoryId],
   );
 
   const getItemsToDisplay = useCallback(() => {
@@ -194,23 +196,39 @@ const CreateOrderScreen = () => {
     }
   }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct]);
 
-  const handleItemSelect = useCallback((item: Category | SubCategory | Product) => {
-    if (navigationLevel === 'categories') {
-      handleCategorySelect(item.id);
-    } else if (navigationLevel === 'subcategories') {
-      handleSubCategorySelect(item.id);
-    } else if ('price' in item) {
-      handleProductSelect(item as Product);
-    }
-  }, [navigationLevel, handleCategorySelect, handleSubCategorySelect, handleProductSelect]);
+  const handleItemSelect = useCallback(
+    (item: Category | SubCategory | Product) => {
+      if (navigationLevel === 'categories') {
+        handleCategorySelect(item.id);
+      } else if (navigationLevel === 'subcategories') {
+        handleSubCategorySelect(item.id);
+      } else if ('price' in item) {
+        handleProductSelect(item as Product);
+      }
+    },
+    [
+      navigationLevel,
+      handleCategorySelect,
+      handleSubCategorySelect,
+      handleProductSelect,
+    ],
+  );
 
-  const backAction = useMemo(() =>
-    selectedProduct
-      ? handleCloseProductModal
-      : navigationLevel === 'categories'
-        ? () => handleAttemptExit(() => navigation.goBack())
-        : handleGoBackInternal,
-    [selectedProduct, navigationLevel, handleCloseProductModal, handleAttemptExit, handleGoBackInternal, navigation]
+  const backAction = useMemo(
+    () =>
+      selectedProduct
+        ? handleCloseProductModal
+        : navigationLevel === 'categories'
+          ? () => handleAttemptExit(() => navigation.goBack())
+          : handleGoBackInternal,
+    [
+      selectedProduct,
+      navigationLevel,
+      handleCloseProductModal,
+      handleAttemptExit,
+      handleGoBackInternal,
+      navigation,
+    ],
   );
 
   const styles = useMemo(
@@ -319,7 +337,7 @@ const CreateOrderScreen = () => {
           product={selectedProductForDescription}
           onDismiss={handleCloseDescriptionModal}
         />
-        
+
         <AudioOrderModal
           visible={showAudioModal}
           onDismiss={() => {

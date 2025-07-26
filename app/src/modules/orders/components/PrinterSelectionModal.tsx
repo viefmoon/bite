@@ -3,7 +3,7 @@ import { StyleSheet, FlatList, ListRenderItemInfo } from 'react-native';
 import { Modal, Portal, List, Divider, Appbar } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { usePrintersQuery } from '../../printers/hooks/usePrintersQueries';
-import type { ThermalPrinter } from '../../printers/types/printer.types';
+import type { ThermalPrinter } from '../../printers/schema/printer.schema';
 import { useListState } from '../../../app/hooks/useListState';
 
 interface PrinterSelectionModalProps {

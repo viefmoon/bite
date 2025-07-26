@@ -5,7 +5,7 @@ export type DrawerSection =
   | 'ReceiptsStack'
   | 'OrderFinalizationStack'
   | 'MenuStack'
-  | 'AvailabilityStack'
+  | 'AvailabilityScreen'
   | 'ModifiersStack'
   | 'PizzaCustomizationsStack'
   | 'PreparationScreensStack'
@@ -14,8 +14,8 @@ export type DrawerSection =
   | 'RestaurantConfigStack'
   | 'CustomersStack'
   | 'SyncStack'
-  | 'UsersStack'
-  | 'KitchenStack'
+  | 'UsersScreen'
+  | 'KitchenScreen'
   | 'ShiftAuditStack';
 
 // Definir permisos por rol
@@ -26,7 +26,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'OrderFinalizationStack',
     'ReceiptsStack',
     'MenuStack',
-    'AvailabilityStack',
+    'AvailabilityScreen',
     'ModifiersStack',
     'PizzaCustomizationsStack',
     'PreparationScreensStack',
@@ -45,7 +45,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'OrderFinalizationStack',
     'ReceiptsStack',
     'MenuStack',
-    'AvailabilityStack',
+    'AvailabilityScreen',
     'ModifiersStack',
     'PizzaCustomizationsStack',
     'PreparationScreensStack',
@@ -63,7 +63,7 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
     'OrderFinalizationStack',
     'ReceiptsStack',
     'MenuStack',
-    'AvailabilityStack',
+    'AvailabilityScreen',
     'AreasTablesStack',
     'CustomersStack',
   ],
@@ -72,14 +72,14 @@ export const ROLE_PERMISSIONS: Record<RoleEnum, DrawerSection[]> = {
   [RoleEnum.WAITER]: [
     'OrdersStack',
     'MenuStack',
-    'AvailabilityStack',
+    'AvailabilityScreen',
     'AreasTablesStack',
     'CustomersStack',
   ],
 
   // Kitchen - Solo acceso a pantalla de preparación
-  // Los usuarios con pantalla asignada van directo a KitchenStack
-  [RoleEnum.KITCHEN]: ['KitchenStack'],
+  // Los usuarios con pantalla asignada van directo a KitchenScreen
+  [RoleEnum.KITCHEN]: ['KitchenScreen'],
 
   // Delivery - Órdenes, clientes y áreas
   [RoleEnum.DELIVERY]: [
@@ -124,7 +124,7 @@ export const DRAWER_SECTIONS = {
     items: [
       { route: 'MenuStack', label: 'Menú', icon: 'menu' },
       {
-        route: 'AvailabilityStack',
+        route: 'AvailabilityScreen',
         label: 'Disponibilidad',
         icon: 'eye-off-outline',
       },

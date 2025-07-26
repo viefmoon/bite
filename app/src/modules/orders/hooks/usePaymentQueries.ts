@@ -6,7 +6,7 @@ import type {
   UpdatePaymentDto,
   PaymentMethod,
   PaymentStatus,
-} from '../types/payment.types';
+} from '../schema/payment.schema';
 
 // Query Keys
 export const paymentKeys = {

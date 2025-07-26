@@ -6,14 +6,11 @@ import type { PreparationScreensStackParamList } from '../../modules/preparation
 import type { AreasTablesStackParamList } from '../../modules/areasTables/navigation/types';
 import type { PrintersStackParamList } from '../../modules/printers/navigation/types'; // Importar tipos de impresoras
 import type { ReceiptsStackParamList } from '../../modules/receipts/navigation/types'; // Importar tipos de recibos
-import type { AvailabilityStackParamList } from '../../modules/availability/navigation/types';
 import type { OrderFinalizationStackParamList } from '../../modules/orderFinalization/navigation/types';
 import type { RestaurantConfigStackParamList } from '../../modules/restaurantConfig/navigation/types';
 import type { CustomersStackParamList } from '../../modules/customers/navigation/CustomersStackNavigator';
 import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCustomizations/navigation/types';
 import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStackNavigator';
-import type { UsersStackParamList } from '../../modules/users/navigation/UsersStackNavigator';
-import type { KitchenStackParamList } from '../../modules/kitchen/navigation/KitchenNavigator';
 import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigation/types';
 import type { SettingsStackParamList } from '../../modules/settings/navigation/types';
 
@@ -29,9 +26,9 @@ export type OrdersStackParamList = {
     orderId: string; // ID de la orden a la que se están agregando productos
     orderNumber: number; // Número de la orden
     existingOrderItemsCount?: number; // Número de items que ya están en la orden
-    existingTempProducts?: import('../../modules/orders/stores/useOrderCreationStore').CartItem[]; // Productos temporales existentes
+    existingTempProducts?: import('../../modules/orders/stores/useOrderStore').CartItem[]; // Productos temporales existentes
     onProductsAdded?: (
-      products: import('../../modules/orders/stores/useOrderCreationStore').CartItem[],
+      products: import('../../modules/orders/stores/useOrderStore').CartItem[],
     ) => void; // Callback cuando se añaden productos
   }; // Pantalla para añadir productos a una orden existente
 };
@@ -59,14 +56,14 @@ export type AppDrawerParamList = {
   OrdersStack: NavigatorScreenParams<OrdersStackParamList>; // Añadir el stack de órdenes al Drawer
   PrintersStack: NavigatorScreenParams<PrintersStackParamList>; // Añadir el stack de impresoras DENTRO del bloque
   ReceiptsStack: NavigatorScreenParams<ReceiptsStackParamList>; // Añadir el stack de recibos
-  AvailabilityStack: NavigatorScreenParams<AvailabilityStackParamList>; // Stack de disponibilidad
+  AvailabilityScreen: undefined; // Pantalla directa de disponibilidad
   OrderFinalizationStack: NavigatorScreenParams<OrderFinalizationStackParamList>; // Stack de finalización de órdenes
   RestaurantConfigStack: NavigatorScreenParams<RestaurantConfigStackParamList>; // Stack de configuración del restaurante
   PizzaCustomizationsStack: NavigatorScreenParams<PizzaCustomizationsStackParamList>; // Stack de personalización de pizzas
   CustomersStack: NavigatorScreenParams<CustomersStackParamList>; // Stack de clientes
   SyncStack: NavigatorScreenParams<SyncStackParamList>; // Stack de sincronización
-  UsersStack: NavigatorScreenParams<UsersStackParamList>; // Stack de usuarios
-  KitchenStack: NavigatorScreenParams<KitchenStackParamList>; // Stack de cocina
+  UsersScreen: undefined; // Pantalla directa de usuarios
+  KitchenScreen: undefined; // Pantalla directa de cocina
   ShiftAuditStack: NavigatorScreenParams<ShiftAuditStackParamList>; // Stack de auditoría de turnos
   SettingsStack: NavigatorScreenParams<SettingsStackParamList>; // Stack de configuración
   ServerSettings: undefined; // Pantalla directa de configuración del servidor
@@ -82,20 +79,17 @@ declare global {
     interface RootParamList
       extends AuthStackParamList,
         AppDrawerParamList,
-        KitchenStackParamList,
         ModifiersStackParamList,
         PreparationScreensStackParamList,
         AreasTablesStackParamList,
         OrdersStackParamList,
         PrintersStackParamList,
         ReceiptsStackParamList,
-        AvailabilityStackParamList,
         OrderFinalizationStackParamList,
         RestaurantConfigStackParamList,
         PizzaCustomizationsStackParamList,
         CustomersStackParamList,
         SyncStackParamList,
-        UsersStackParamList,
         ShiftAuditStackParamList,
         SettingsStackParamList {}
   }

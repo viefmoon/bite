@@ -18,8 +18,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { Address, CreateAddressDto } from '../types/customer.types';
-import { addressSchema, AddressFormInputs } from '../schema/customer.schema';
+import { Address, addressSchema, AddressFormInputs } from '../schema/customer.schema';
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
 import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
@@ -28,7 +27,7 @@ import { useSnackbarStore } from '@/app/store/snackbarStore';
 interface AddressFormModalProps {
   visible: boolean;
   onDismiss: () => void;
-  onSubmit: (data: CreateAddressDto) => Promise<void>;
+  onSubmit: (data: AddressFormInputs) => Promise<void>;
   editingItem: Address | null;
   isSubmitting: boolean;
   customerId: string;
@@ -370,7 +369,7 @@ export default function AddressFormModal({
 
   const handleFormSubmit = React.useCallback(
     async (data: AddressFormInputs) => {
-      const formattedData: CreateAddressDto = {
+      const formattedData: AddressFormInputs = {
         name: data.name,
         street: data.street,
         number: data.number,

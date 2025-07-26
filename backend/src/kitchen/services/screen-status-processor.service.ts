@@ -19,9 +19,12 @@ export class ScreenStatusProcessorService {
   processScreenStatusesFromOrders(
     orders: OrderEntity[],
   ): Map<string, Map<string, OrderPreparationScreenStatus>> {
-    const statusMap = new Map<string, Map<string, OrderPreparationScreenStatus>>();
+    const statusMap = new Map<
+      string,
+      Map<string, OrderPreparationScreenStatus>
+    >();
 
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const orderStatusMap = this.processOrderScreenStatuses(order);
       statusMap.set(order.id, orderStatusMap);
     });
@@ -38,7 +41,7 @@ export class ScreenStatusProcessorService {
     const orderStatusMap = new Map<string, OrderPreparationScreenStatus>();
 
     if (order.preparationScreenStatuses?.length) {
-      order.preparationScreenStatuses.forEach(statusEntity => {
+      order.preparationScreenStatuses.forEach((statusEntity) => {
         const domainStatus = this.screenStatusMapper.toDomain(statusEntity);
         if (domainStatus) {
           orderStatusMap.set(statusEntity.preparationScreenId, domainStatus);
@@ -62,7 +65,7 @@ export class ScreenStatusProcessorService {
       return orders;
     }
 
-    return orders.filter(order => {
+    return orders.filter((order) => {
       const screenStatus = screenStatuses.get(order.id)?.get(userScreenId);
       return this.shouldIncludeOrder(screenStatus, filters.showPrepared);
     });
@@ -80,7 +83,9 @@ export class ScreenStatusProcessorService {
       return screenStatus?.status === PreparationScreenStatus.READY;
     } else {
       // Mostrar si no existe estado o no está READY
-      return !screenStatus || screenStatus.status !== PreparationScreenStatus.READY;
+      return (
+        !screenStatus || screenStatus.status !== PreparationScreenStatus.READY
+      );
     }
   }
 
@@ -132,8 +137,8 @@ export class ScreenStatusProcessorService {
    */
   getUniqueScreenIds(order: OrderEntity): Set<string> {
     const screenIds = new Set<string>();
-    
-    order.orderItems?.forEach(item => {
+
+    order.orderItems?.forEach((item) => {
       if (item.product?.preparationScreenId) {
         screenIds.add(item.product.preparationScreenId);
       }

@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
-import { audioOrderService, type AIOrderItem } from '@/services/audioOrderService';
+import {
+  audioOrderService,
+  type AIOrderItem,
+} from '@/services/audioOrderService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { Product } from '../../types/orders.types';
-import { CartItemModifier } from '../../stores/useOrderCreationStore';
+import { CartItemModifier } from '../../stores/useOrderStore';
 
 interface UseAudioOrderProps {
   menu: any;
@@ -157,7 +160,11 @@ export const useAudioOrder = ({
         });
       }
 
-      if (deliveryInfo && Object.keys(deliveryInfo).length > 0 && setDeliveryInfo) {
+      if (
+        deliveryInfo &&
+        Object.keys(deliveryInfo).length > 0 &&
+        setDeliveryInfo
+      ) {
         setDeliveryInfo(deliveryInfo);
       }
 

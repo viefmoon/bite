@@ -23,7 +23,7 @@ import {
   Modifier,
   FullMenuModifierGroup,
 } from '../types/orders.types';
-import { CartItemModifier, CartItem } from '../stores/useOrderCreationStore';
+import { CartItemModifier, CartItem } from '../stores/useOrderStore';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
@@ -390,9 +390,15 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
           (sc) =>
             sc.action === CustomizationAction.ADD &&
             pizzaCustomizations.some(
+<<<<<<< HEAD
               (pc) => 
                 pc.id === sc.pizzaCustomizationId && 
                 pc.type === CustomizationType.FLAVOR
+=======
+              (pc) =>
+                pc.id === sc.pizzaCustomizationId &&
+                pc.type === CustomizationType.FLAVOR,
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
             ),
         );
 
@@ -1042,7 +1048,11 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                 onPress={handleAddToCart}
                 style={[
                   styles.confirmButton,
+<<<<<<< HEAD
                   !isValid && styles.confirmButtonDisabled
+=======
+                  !isValid && styles.confirmButtonDisabled,
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                 ]}
                 disabled={!isValid}
                 icon={editingItem ? 'cart-check' : 'cart-plus'}

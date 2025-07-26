@@ -55,7 +55,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
       this.productModifierMapper.toDomain(mod),
     );
 
-    // Mapear selectedPizzaCustomizations
     if (entity.selectedPizzaCustomizations) {
       domain.selectedPizzaCustomizations =
         entity.selectedPizzaCustomizations.map((customization) => {
@@ -70,7 +69,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
           domainCustomization.updatedAt = customization.updatedAt;
           domainCustomization.deletedAt = customization.deletedAt;
 
-          // Incluir información de pizzaCustomization si está disponible
           if (customization.pizzaCustomization) {
             domainCustomization.pizzaCustomization = {
               id: customization.pizzaCustomization.id,
@@ -98,7 +96,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     const entity = new OrderItemEntity();
     if (domain.id) entity.id = domain.id;
 
-    // Set the foreign key relations using objects with IDs
     if (domain.orderId) {
       entity.order = { id: domain.orderId } as OrderEntity;
     }
@@ -119,14 +116,11 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
     entity.preparedAt = domain.preparedAt || null;
     entity.preparedById = domain.preparedById || null;
 
-    // Mapear productModifiers
     if (domain.productModifiers) {
       entity.productModifiers = domain.productModifiers.map((modifier) => {
-        // Si el modifier es un objeto con id, usarlo directamente
         if (typeof modifier === 'object' && 'id' in modifier) {
           return { id: modifier.id } as any;
         }
-        // Si es un string (ID), crear objeto con id
         if (typeof modifier === 'string') {
           return { id: modifier } as any;
         }
@@ -134,7 +128,6 @@ export class OrderItemMapper extends BaseMapper<OrderItemEntity, OrderItem> {
       });
     }
 
-    // Mapear selectedPizzaCustomizations
     if (domain.selectedPizzaCustomizations) {
       entity.selectedPizzaCustomizations =
         domain.selectedPizzaCustomizations.map((customization) => {

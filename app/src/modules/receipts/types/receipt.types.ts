@@ -1,7 +1,7 @@
 import type {
   OrderType,
   OrderStatus,
-} from '@/modules/orders/types/orders.types';
+} from '@/modules/orders/schema/orders.schema';
 
 // Tipo para la lista optimizada de recibos
 export interface ReceiptList {

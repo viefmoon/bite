@@ -28,10 +28,7 @@ export class TicketImpressionMapper extends BaseMapper<
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-    // No mapear la orden completa para evitar dependencia circular
-    // Solo mantener el orderId que ya tenemos
     domain.user = entity.user ? this.userMapper.toDomain(entity.user) : null;
-    // Mapear la impresora de forma simple sin usar mapper
     domain.printer = entity.printer
       ? {
           id: entity.printer.id,

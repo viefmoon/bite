@@ -1,4 +1,14 @@
+<<<<<<< HEAD
 import React, { useMemo, useEffect, useCallback } from 'react';
+=======
+import React, {
+  useMemo,
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+} from 'react';
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import { Portal } from 'react-native-paper';
 import {
   View,
@@ -8,9 +18,13 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+<<<<<<< HEAD
 import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+=======
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import {
   Text,
   Divider,
@@ -20,6 +34,7 @@ import {
   Modal,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+<<<<<<< HEAD
 import { OrderTypeEnum, type OrderType } from '../types/orders.types';
 import { useGetAreas } from '@/modules/areasTables/services/areaService';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
@@ -27,11 +42,18 @@ import OrderHeader from './OrderHeader';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useGetTablesByArea } from '@/modules/areasTables/services/tableService';
+=======
+import { OrderTypeEnum } from '../types/orders.types';
+import type { OrderAdjustment } from '../schema/adjustments.schema';
+import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
+import OrderHeader from './OrderHeader';
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
-  useOrderCreationStore,
+  useOrderStore,
   CartItem,
   CartItemModifier,
+<<<<<<< HEAD
 } from '../stores/useOrderCreationStore';
 import { useAuthStore } from '@/app/store/authStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
@@ -133,6 +155,35 @@ const getPreparationStatusText = (status: string | undefined): string => {
       return '';
   }
 };
+=======
+  useOrderSubtotal,
+  useOrderTotal,
+  useOrderItemsCount,
+  useIsOrderEmpty,
+  OrderDetailsForBackend,
+} from '../stores/useOrderStore';
+import { useAuthStore } from '@/app/store/authStore';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
+import { FAB } from 'react-native-paper';
+import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
+import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+
+import {
+  OrderTypeSelector,
+  DineInForm,
+  DineInFormRef,
+  TakeAwayForm,
+  TakeAwayFormRef,
+  DeliveryForm,
+  DeliveryFormRef,
+  OrderItemsList,
+  OrderAdjustments,
+  PrepaymentSection,
+  ModalsContainer,
+} from './order-cart';
+import { modalHelpers } from '../stores/useModalStore';
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
 interface OrderCartDetailProps {
   visible: boolean;
@@ -146,6 +197,7 @@ interface OrderCartDetailProps {
   onCancelOrder?: () => void;
   navigation?: any;
   onAddProducts?: () => void;
+<<<<<<< HEAD
   pendingProductsToAdd?: CartItem[];
   onItemsCountChanged?: (count: number) => void;
 }
@@ -171,6 +223,10 @@ const getOrderStatusColor = (status: string, theme: any) => {
   }
 };
 
+=======
+}
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   visible,
   onConfirmOrder,
@@ -183,12 +239,68 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   onCancelOrder,
   navigation,
   onAddProducts,
-  pendingProductsToAdd = [],
-  onItemsCountChanged,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+<<<<<<< HEAD
+=======
+  // Referencias a los formularios
+  const dineInFormRef = useRef<DineInFormRef>(null);
+  const takeAwayFormRef = useRef<TakeAwayFormRef>(null);
+  const deliveryFormRef = useRef<DeliveryFormRef>(null);
+
+  const {
+    items,
+    orderType,
+    selectedAreaId,
+    selectedTableId,
+    isTemporaryTable,
+    temporaryTableName,
+    scheduledTime,
+    deliveryInfo,
+    orderNotes,
+    adjustments,
+    prepaymentId,
+    prepaymentAmount: paymentAmount,
+    prepaymentMethod: paymentMethod,
+    isCartVisible,
+    hasUnsavedChanges,
+    isLoading: storeIsLoading,
+    isConfirming,
+    orderDataLoaded,
+    setOrderType,
+    setSelectedAreaId,
+    setSelectedTableId,
+    setIsTemporaryTable,
+    setTemporaryTableName,
+    setScheduledTime,
+    setDeliveryInfo,
+    setOrderNotes,
+    setAdjustments,
+    setPrepaymentId,
+    setPrepaymentAmount,
+    setPrepaymentMethod,
+    removeItem: removeCartItem,
+    updateItemQuantity: updateCartItemQuantity,
+    updateItem: updateCartItem,
+    addItem,
+    loadOrderForEditing,
+    resetOrder,
+    setIsConfirming,
+    checkForUnsavedChanges,
+    addAdjustment,
+    updateAdjustment,
+    removeAdjustment,
+    confirmOrder,
+  } = useOrderStore();
+
+  const subtotal = useOrderSubtotal();
+  const total = useOrderTotal();
+  const totalItemsCount = useOrderItemsCount();
+  const isCartEmpty = useIsOrderEmpty();
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const {
     data: orderData,
     isLoading: isLoadingOrder,
@@ -197,12 +309,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     enabled: isEditMode && !!orderId && visible,
   });
 
+<<<<<<< HEAD
   const { data: menu } = useGetOrderMenu();
 
+=======
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
     enabled: isEditMode && !!orderId && visible,
   });
 
+<<<<<<< HEAD
   // Consolidate all states using useOrderState hook
   const {
     // States
@@ -359,6 +475,119 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     ? setEditDeliveryInfo
     : setCartDeliveryInfo;
   const setOrderNotes = isEditMode ? setEditOrderNotes : setCartOrderNotes;
+=======
+  const validateOrder = () => {
+    let isValid = true;
+
+    switch (orderType) {
+      case OrderTypeEnum.DINE_IN:
+        if (dineInFormRef.current) {
+          const dineInValid = dineInFormRef.current.validate();
+          isValid = isValid && dineInValid;
+        }
+        break;
+
+      case OrderTypeEnum.TAKE_AWAY:
+        if (takeAwayFormRef.current) {
+          const takeAwayValid = takeAwayFormRef.current.validate();
+          isValid = isValid && takeAwayValid;
+        }
+        break;
+
+      case OrderTypeEnum.DELIVERY:
+        if (deliveryFormRef.current) {
+          const deliveryValid = deliveryFormRef.current.validate();
+          isValid = isValid && deliveryValid;
+        }
+        break;
+    }
+
+    return isValid;
+  };
+
+  const [editingItemFromList, setEditingItemFromList] =
+    useState<CartItem | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [adjustmentToEdit, setAdjustmentToEdit] = useState<any>(null);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [isModalReady, setIsModalReady] = useState(false);
+
+  // Calcular totales
+  const totalAdjustments = useMemo(() => {
+    return adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
+  }, [adjustments]);
+
+  const totalPaid = useMemo(() => {
+    if (!isEditMode || !payments) return 0;
+    return payments.reduce(
+      (sum, payment) => sum + parseFloat(payment.amount),
+      0,
+    );
+  }, [payments, isEditMode]);
+
+  const pendingAmount = useMemo(() => {
+    return total - totalPaid;
+  }, [total, totalPaid]);
+
+  const showTimePicker = () => {
+    modalHelpers.showTimePicker({
+      scheduledTime,
+      orderType,
+      onTimeConfirm: handleTimeConfirm,
+      hideTimePicker: modalHelpers.hideModal,
+    });
+  };
+
+  const handleEditCartItem = (item: CartItem) => {
+    setEditingItemFromList(item);
+    if (onEditItem) {
+      onEditItem(item);
+    } else {
+      // Si no hay onEditItem, mostrar modal de personalización directamente
+      modalHelpers.showProductCustomization({
+        editingProduct: editingProduct,
+        editingItemFromList: item,
+        clearEditingState,
+        handleUpdateEditedItem,
+      });
+    }
+  };
+
+  const clearEditingState = () => {
+    setEditingItemFromList(null);
+    setEditingProduct(null);
+  };
+
+  const handlePrepaymentCreated = useCallback(
+    (id: string, amount: string, method: 'CASH' | 'CARD' | 'TRANSFER') => {
+      if (!isEditMode) {
+        setPrepaymentId(id);
+        setPrepaymentAmount(amount);
+        setPrepaymentMethod(method);
+      }
+    },
+    [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod],
+  );
+
+  const handlePrepaymentDeleted = useCallback(() => {
+    if (!isEditMode) {
+      setPrepaymentId(null);
+      setPrepaymentAmount('');
+      setPrepaymentMethod(null);
+    }
+  }, [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod]);
+
+  const handleDeletePrepayment = () => {
+    modalHelpers.showDeletePrepaymentConfirm({
+      confirmDeletePrepayment: async () => {
+        handlePrepaymentDeleted();
+      },
+    });
+  };
+
+  const { user } = useAuthStore();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
   const { cleanOrderDataForType } = useOrderType({
     isEditMode,
@@ -436,7 +665,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const removeItem = useCallback(
     (itemId: string) => {
       if (isEditMode) {
-        const item = editItems.find((i) => i.id === itemId);
+        const item = items.find((i) => i.id === itemId);
         if (!item) return;
 
         if (
@@ -444,26 +673,37 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           item.preparationStatus === 'DELIVERED'
         ) {
           showSnackbar({
-            message: `No se puede eliminar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+            message: `No se puede eliminar un producto ${PreparationStatusInfo.getLabel(item.preparationStatus || '').toLowerCase()}`,
             type: 'error',
           });
           return;
         }
 
         if (item.preparationStatus === 'IN_PROGRESS') {
+<<<<<<< HEAD
           setModifyingItemName(item.productName);
           setPendingModifyAction(() => () => {
             setEditItems((prev) => prev.filter((i) => i.id !== itemId));
+=======
+          modalHelpers.showModifyInProgressConfirmation({
+            modifyingItemName: item.productName,
+            pendingModifyAction: () => removeCartItem(itemId),
+            setPendingModifyAction: () => {},
+            setModifyingItemName: () => {},
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           });
-          setShowModifyInProgressConfirmation(true);
         } else {
+<<<<<<< HEAD
           setEditItems((prev) => prev.filter((i) => i.id !== itemId));
+=======
+          removeCartItem(itemId);
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         }
       } else {
         removeCartItem(itemId);
       }
     },
-    [isEditMode, editItems, showSnackbar, removeCartItem],
+    [isEditMode, items, showSnackbar, removeCartItem],
   );
 
   const updateItemQuantity = useCallback(
@@ -474,7 +714,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           return;
         }
 
-        const item = editItems.find((i) => i.id === itemId);
+        const item = items.find((i) => i.id === itemId);
         if (!item) return;
 
         if (
@@ -482,37 +722,29 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           item.preparationStatus === 'DELIVERED'
         ) {
           showSnackbar({
-            message: `No se puede modificar un producto ${getPreparationStatusText(item.preparationStatus).toLowerCase()}`,
+            message: `No se puede modificar un producto ${PreparationStatusInfo.getLabel(item.preparationStatus || '').toLowerCase()}`,
             type: 'error',
           });
           return;
         }
 
         const updateQuantity = () => {
-          setEditItems((prev) =>
-            prev.map((item) => {
-              if (item.id === itemId) {
-                const modifiersPrice = item.modifiers.reduce(
-                  (sum, mod) => sum + Number(mod.price || 0),
-                  0,
-                );
-                const newTotalPrice =
-                  (item.unitPrice + modifiersPrice) * quantity;
-                return {
-                  ...item,
-                  quantity,
-                  totalPrice: newTotalPrice,
-                };
-              }
-              return item;
-            }),
-          );
+          updateCartItemQuantity(itemId, quantity);
         };
 
         if (item.preparationStatus === 'IN_PROGRESS') {
+<<<<<<< HEAD
           setModifyingItemName(item.productName);
           setPendingModifyAction(() => updateQuantity);
           setShowModifyInProgressConfirmation(true);
+=======
+          modalHelpers.showModifyInProgressConfirmation({
+            modifyingItemName: item.productName,
+            pendingModifyAction: updateQuantity,
+            setPendingModifyAction: () => {},
+            setModifyingItemName: () => {},
+          });
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         } else {
           updateQuantity();
         }
@@ -520,9 +752,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         updateCartItemQuantity(itemId, quantity);
       }
     },
-    [isEditMode, editItems, removeItem, showSnackbar, updateCartItemQuantity],
+    [isEditMode, items, removeItem, showSnackbar, updateCartItemQuantity],
   );
 
+<<<<<<< HEAD
   const totalItemsCount = useMemo(() => {
     return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
@@ -550,10 +783,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     onItemsCountChanged,
   ]);
 
+=======
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
 
+<<<<<<< HEAD
   const {
     data: areasData,
     isLoading: isLoadingAreas,
@@ -585,6 +821,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     setHasUnsavedChanges,
   });
 
+=======
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const groupIdenticalItems = useCallback((items: CartItem[]): CartItem[] => {
     const groupedMap = new Map<string, CartItem>();
 
@@ -633,6 +871,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     return result;
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (
       pendingProductsToAdd.length > 0 &&
@@ -728,6 +967,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       clearEditingState();
     }
   }, [visible, isEditMode, resetEditModeStates, clearEditingState]);
+=======
+  useEffect(() => {
+    if (!visible && isEditMode) {
+      clearEditingState();
+    }
+  }, [visible, isEditMode, clearEditingState]);
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
   useEffect(() => {
     if (visible && !isModalReady) {
@@ -741,6 +987,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const handleAddAdjustment = useCallback(
     (adjustment: OrderAdjustment) => {
       if (isEditMode) {
+<<<<<<< HEAD
         const newAdjustment = {
           ...adjustment,
           id:
@@ -749,30 +996,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
           isNew: true,
         };
         setEditAdjustments((prev) => [...prev, newAdjustment]);
+=======
+        addAdjustment(adjustment);
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       }
     },
-    [isEditMode],
+    [isEditMode, addAdjustment],
   );
 
   const handleUpdateAdjustment = useCallback(
     (id: string, updatedAdjustment: OrderAdjustment) => {
       if (isEditMode) {
-        setEditAdjustments((prev) =>
-          prev.map((adj) =>
-            adj.id === id ? { ...adj, ...updatedAdjustment, id } : adj,
-          ),
-        );
+        updateAdjustment(id, updatedAdjustment);
       }
     },
-    [isEditMode],
+    [isEditMode, updateAdjustment],
   );
 
   const handleRemoveAdjustment = useCallback(
     (id: string) => {
       if (isEditMode) {
-        setEditAdjustments((prev) => prev.filter((adj) => adj.id !== id));
+        removeAdjustment(id);
       }
     },
+<<<<<<< HEAD
     [isEditMode],
   );
 
@@ -783,11 +1030,21 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     if (items.length === 0) {
       showSnackbar({
         message: 'No hay productos en el carrito',
+=======
+    [isEditMode, removeAdjustment],
+  );
+
+  const handleConfirm = async () => {
+    if (!user?.id) {
+      showSnackbar({
+        message: 'Error: No se pudo identificar el usuario',
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         type: 'error',
       });
       return;
     }
 
+<<<<<<< HEAD
     // Validar prepago si existe
     if (!isEditMode && prepaymentId && parseFloat(paymentAmount || '0') > total) {
       showSnackbar({
@@ -920,32 +1177,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       orderDetails.prepaymentId = prepaymentId;
     }
 
+=======
+    if (!validateOrder()) {
+      return;
+    }
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
     try {
-      await onConfirmOrder(orderDetails);
-      setIsConfirming(false);
+      await confirmOrder(user.id, onConfirmOrder);
 
       if (isEditMode) {
-        setOriginalOrderState({
-          items: [...editItems],
-          orderType: editOrderType,
-          tableId: editSelectedTableId,
-          isTemporaryTable: editIsTemporaryTable,
-          temporaryTableName: editTemporaryTableName,
-          deliveryInfo: editDeliveryInfo,
-          notes: editOrderNotes,
-          scheduledAt: editScheduledTime,
-          adjustments: editAdjustments,
-        });
-        setHasUnsavedChanges(false);
-
         showSnackbar({
           message: 'Cambios guardados exitosamente',
           type: 'success',
         });
-
         onClose?.();
       }
     } catch (error) {
+<<<<<<< HEAD
       setIsConfirming(false);
     }
   };
@@ -960,23 +1209,30 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   // showTimePicker and hideTimePicker are now provided by useOrderState hook
 
+=======
+      showSnackbar({
+        message:
+          error instanceof Error ? error.message : 'Error al procesar la orden',
+        type: 'error',
+      });
+    }
+  };
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const handleTimeConfirm = (date: Date) => {
     const now = new Date();
     now.setSeconds(0, 0);
 
     if (date < now) {
-      hideTimePicker();
-      setTimeAlertVisible(true);
+      modalHelpers.hideModal();
+      modalHelpers.showTimeAlert();
     } else {
-      if (isEditMode) {
-        setEditScheduledTime(date);
-      } else {
-        setScheduledTime(date);
-      }
-      hideTimePicker();
+      setScheduledTime(date);
+      modalHelpers.hideModal();
     }
   };
 
+<<<<<<< HEAD
   const formattedScheduledTime = useMemo(() => {
     if (!scheduledTime) return null;
     try {
@@ -986,6 +1242,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   }, [scheduledTime]);
 
+=======
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   const handleUpdateEditedItem = useCallback(
     (
       itemId: string,
@@ -1000,45 +1258,25 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     ) => {
       if (!isEditMode) return;
 
-      setEditItems((prev) =>
-        prev.map((item) => {
-          if (item.id === itemId) {
-            const modifiersPrice = modifiers.reduce(
-              (sum, mod) => sum + Number(mod.price || 0),
-              0,
-            );
-            const finalUnitPrice =
-              unitPrice !== undefined ? unitPrice : item.unitPrice;
-            const extraCost = pizzaExtraCost || 0;
-            const newTotalPrice =
-              (finalUnitPrice + modifiersPrice + extraCost) * quantity;
-
-            return {
-              ...item,
-              quantity,
-              modifiers,
-              preparationNotes:
-                preparationNotes !== undefined
-                  ? preparationNotes
-                  : item.preparationNotes,
-              variantId: variantId !== undefined ? variantId : item.variantId,
-              variantName:
-                variantName !== undefined ? variantName : item.variantName,
-              unitPrice: finalUnitPrice,
-              totalPrice: newTotalPrice,
-              selectedPizzaCustomizations:
-                selectedPizzaCustomizations !== undefined
-                  ? selectedPizzaCustomizations
-                  : item.selectedPizzaCustomizations,
-            };
-          }
-          return item;
-        }),
+      updateCartItem(
+        itemId,
+        quantity,
+        modifiers,
+        preparationNotes,
+        variantId,
+        variantName,
+        unitPrice,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
       );
 
       clearEditingState();
     },
+<<<<<<< HEAD
     [isEditMode, clearEditingState],
+=======
+    [isEditMode, updateCartItem, clearEditingState],
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
   );
 
   const renderFields = () => {
@@ -1046,6 +1284,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
       case OrderTypeEnum.DINE_IN:
         return (
           <DineInForm
+<<<<<<< HEAD
             selectedAreaId={selectedAreaId}
             selectedAreaName={selectedAreaName}
             selectedTableId={selectedTableId}
@@ -1076,11 +1315,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onScheduleTimeClear={() => setScheduledTime(null)}
             setAreaError={setAreaError}
             setTableError={setTableError}
+=======
+            ref={dineInFormRef}
+            onScheduleTimePress={showTimePicker}
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       case OrderTypeEnum.TAKE_AWAY:
         return (
           <TakeAwayForm
+<<<<<<< HEAD
             deliveryInfo={deliveryInfo}
             orderNotes={orderNotes}
             formattedScheduledTime={formattedScheduledTime}
@@ -1092,11 +1336,16 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onScheduleTimeClear={() => setScheduledTime(null)}
             setRecipientNameError={setRecipientNameError}
             setRecipientPhoneError={setRecipientPhoneError}
+=======
+            ref={takeAwayFormRef}
+            onScheduleTimePress={showTimePicker}
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       case OrderTypeEnum.DELIVERY:
         return (
           <DeliveryForm
+<<<<<<< HEAD
             deliveryInfo={deliveryInfo}
             orderNotes={orderNotes}
             formattedScheduledTime={formattedScheduledTime}
@@ -1108,6 +1357,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onScheduleTimeClear={() => setScheduledTime(null)}
             setAddressError={setAddressError}
             setRecipientPhoneError={setRecipientPhoneError}
+=======
+            ref={deliveryFormRef}
+            onScheduleTimePress={showTimePicker}
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           />
         );
       default:
@@ -1195,7 +1448,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         visible={visible}
         onDismiss={() => {
           if (isEditMode && hasUnsavedChanges) {
-            setShowExitConfirmation(true);
+            modalHelpers.showExitConfirmation({
+              onClose,
+            });
           } else {
             onClose?.();
           }
@@ -1217,7 +1472,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     size={24}
                     onPress={() => {
                       if (hasUnsavedChanges) {
-                        setShowExitConfirmation(true);
+                        modalHelpers.showExitConfirmation({
+                          onClose,
+                        });
                       } else {
                         onClose?.();
                       }
@@ -1238,7 +1495,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         style={[
                           styles.orderStatusBadge,
                           {
-                            backgroundColor: getOrderStatusColor(
+                            backgroundColor: OrderStatusInfo.getColor(
                               orderData.orderStatus,
                               theme,
                             ),
@@ -1246,7 +1503,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                         ]}
                       >
                         <Text style={styles.orderStatusText}>
-                          {formatOrderStatus(orderData.orderStatus)}
+                          {OrderStatusInfo.getLabel(orderData.orderStatus)}
                         </Text>
                       </View>
                     )}
@@ -1267,7 +1524,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowDetailModal(true);
+                        modalHelpers.showOrderDetail({
+                          orderId,
+                          orderNumber,
+                          orderData,
+                        });
                       }}
                       title="Ver Detalles"
                       leadingIcon="file-document-outline"
@@ -1275,7 +1536,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowHistoryModal(true);
+                        modalHelpers.showOrderHistory({
+                          orderId,
+                          orderNumber,
+                        });
                       }}
                       title="Ver Historial"
                       leadingIcon="history"
@@ -1283,7 +1547,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     <Menu.Item
                       onPress={() => {
                         setShowOptionsMenu(false);
-                        setShowCancelConfirmation(true);
+                        modalHelpers.showCancelConfirmation({
+                          orderNumber,
+                          onCancelOrder,
+                        });
                       }}
                       title="Cancelar Orden"
                       leadingIcon="cancel"
@@ -1295,7 +1562,15 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                   title={
                     orderNumber ? `Orden #${orderNumber}` : 'Resumen de Orden'
                   }
-                  onBackPress={() => onClose?.()}
+                  onBackPress={() => {
+                    if (!isEditMode && hasUnsavedChanges) {
+                      modalHelpers.showExitConfirmation({
+                        onClose,
+                      });
+                    } else {
+                      onClose?.();
+                    }
+                  }}
                   itemCount={totalItemsCount}
                   onCartPress={() => {}}
                   isCartVisible={isCartVisible}
@@ -1327,7 +1602,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               onUpdateQuantity={updateItemQuantity}
             />
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
             {isEditMode && (
               <Button
                 onPress={() => {
@@ -1338,7 +1616,11 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                       navigation.navigate('AddProductsToOrder', {
                         orderId,
                         orderNumber,
+<<<<<<< HEAD
                         existingOrderItemsCount: editItems
+=======
+                        existingOrderItemsCount: items
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                           .filter((item) => !item.id.startsWith('new-'))
                           .reduce((sum, item) => sum + item.quantity, 0),
                         onProductsAdded: (newProducts: CartItem[]) => {
@@ -1350,21 +1632,42 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                             }),
                           );
 
+<<<<<<< HEAD
                           const allItems = [
                             ...editItems,
                             ...newProductsWithStatus,
                           ];
                           const groupedItems = groupIdenticalItems(allItems);
+=======
+                          newProductsWithStatus.forEach((item) => {
+                            addItem(
+                              {
+                                id: item.productId,
+                                name: item.productName,
+                                price: item.unitPrice,
+                              } as any,
+                              item.quantity,
+                              item.variantId,
+                              item.modifiers,
+                              item.preparationNotes,
+                              item.selectedPizzaCustomizations,
+                              item.pizzaExtraCost,
+                            );
+                          });
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
-                          setEditItems(groupedItems);
                           showSnackbar({
                             message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
                             type: 'success',
                           });
                         },
                       });
+<<<<<<< HEAD
                     } catch (error) {
                     }
+=======
+                    } catch (error) {}
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                   }
                 }}
                 mode="outlined"
@@ -1382,10 +1685,31 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               <OrderAdjustments
                 adjustments={adjustments}
                 subtotal={subtotal}
+<<<<<<< HEAD
                 onAddAdjustment={() => setShowAdjustmentModal(true)}
                 onEditAdjustment={(adjustment) => {
                   setAdjustmentToEdit(adjustment);
                   setShowAdjustmentModal(true);
+=======
+                onAddAdjustment={() =>
+                  modalHelpers.showAdjustment({
+                    adjustmentToEdit: null,
+                    setAdjustmentToEdit,
+                    handleAddAdjustment,
+                    handleUpdateAdjustment,
+                    subtotal,
+                  })
+                }
+                onEditAdjustment={(adjustment) => {
+                  setAdjustmentToEdit(adjustment);
+                  modalHelpers.showAdjustment({
+                    adjustmentToEdit: adjustment,
+                    setAdjustmentToEdit,
+                    handleAddAdjustment,
+                    handleUpdateAdjustment,
+                    subtotal,
+                  });
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
                 }}
                 onRemoveAdjustment={handleRemoveAdjustment}
                 disabled={false}
@@ -1423,7 +1747,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
               totalPaid={totalPaid}
               pendingAmount={pendingAmount}
               canRegisterPayments={canRegisterPayments}
+<<<<<<< HEAD
               onShowPrepaymentModal={() => setShowPrepaymentModal(true)}
+=======
+              onShowPrepaymentModal={() =>
+                modalHelpers.showPrepayment({
+                  orderTotal: total,
+                  prepaymentId,
+                  handlePrepaymentCreated,
+                  handlePrepaymentDeleted,
+                })
+              }
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
               onDeletePrepayment={handleDeletePrepayment}
             />
           </ScrollView>
@@ -1480,13 +1815,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
                     type: 'warning',
                   });
                 } else {
-                  setShowPaymentModal(true);
+                  modalHelpers.showPayment({
+                    orderId,
+                    orderTotal: total,
+                    orderNumber,
+                    orderStatus: orderData?.orderStatus,
+                    onOrderCompleted: () => {
+                      onClose?.();
+                    },
+                  });
                 }
               }}
               visible={true}
             />
           )}
 
+<<<<<<< HEAD
           <ModalsContainer
             // DateTimePicker props
             isTimePickerVisible={isTimePickerVisible}
@@ -1558,6 +1902,9 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             handlePrepaymentCreated={handlePrepaymentCreated}
             handlePrepaymentDeleted={handlePrepaymentDeleted}
           />
+=======
+          <ModalsContainer />
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
         </GestureHandlerRootView>
       </Modal>
     </Portal>
@@ -1831,11 +2178,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginTop: 2,
       paddingHorizontal: 12,
       minHeight: 20,
-    },
-    recipientPhoneError: {
-      flex: 1,
-      marginBottom: 0,
-      marginTop: 0,
     },
     digitCounter: {
       fontSize: 10,

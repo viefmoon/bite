@@ -79,7 +79,6 @@ export class OrderPreparationScreenStatusRelationalRepository
       throw new Error('OrderPreparationScreenStatus not found');
     }
 
-    // Solo actualizar campos específicos para evitar problemas de tipos
     Object.assign(entity, data);
     const updatedEntity = await this.repository.save(entity);
 
@@ -104,11 +103,9 @@ export class OrderPreparationScreenStatusRelationalRepository
     });
 
     if (entity) {
-      // Update existing
       Object.assign(entity, data);
       entity = await this.repository.save(entity);
     } else {
-      // Create new
       const newData = {
         ...data,
         orderId,
@@ -123,7 +120,6 @@ export class OrderPreparationScreenStatusRelationalRepository
       entity = await this.repository.save(this.repository.create(newEntity));
     }
 
-    // Load with relations
     const completeEntity = await this.repository.findOne({
       where: { id: entity!.id },
       relations: ['preparationScreen', 'startedBy', 'completedBy'],

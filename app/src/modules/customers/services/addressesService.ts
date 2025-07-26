@@ -1,14 +1,10 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import {
-  Address,
-  CreateAddressDto,
-  UpdateAddressDto,
-} from '../types/customer.types';
+import { Address, AddressFormInputs } from '../schema/customer.schema';
 
 async function create(
   customerId: string,
-  data: CreateAddressDto,
+  data: AddressFormInputs,
 ): Promise<Address> {
   const response = await apiClient.post<Address>(
     API_PATHS.ADDRESSES_BY_CUSTOMER.replace(':customerId', customerId),
@@ -19,7 +15,7 @@ async function create(
 
 async function update(
   addressId: string,
-  data: UpdateAddressDto,
+  data: Partial<AddressFormInputs>,
 ): Promise<Address> {
   const response = await apiClient.patch<Address>(
     API_PATHS.ADDRESSES_BY_ID.replace(':id', addressId),

@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, IconButton, List } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+<<<<<<< HEAD
 import type { OrderAdjustment } from '../../types/adjustments.types';
+=======
+import type { OrderAdjustment } from '../../schema/adjustments.schema';
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 
 interface OrderAdjustmentsProps {
   adjustments: OrderAdjustment[];

@@ -36,9 +36,8 @@ import {
   updateSubCategoryDtoSchema,
   SubCategoryFormInputs,
   UpdateSubCategoryFormInputs,
-  findAllSubcategoriesDtoSchema,
+  FindAllSubcategoriesDto,
 } from '../schema/subcategories.schema';
-import { z } from 'zod';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 
 type SubcategoriesScreenRouteProp = RouteProp<
@@ -51,7 +50,6 @@ type SubcategoriesScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 type StatusFilter = 'all' | 'active' | 'inactive';
-type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
 
 const SubcategoriesScreen: React.FC = () => {
   const theme = useAppTheme();

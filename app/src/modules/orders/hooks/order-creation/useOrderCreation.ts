@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useCreateOrderMutation } from '../../hooks/useOrdersQueries';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import type { OrderDetailsForBackend } from '../../components/OrderCartDetail';
+import type { OrderDetailsForBackend } from '../../stores/useOrderStore';
 
 interface UseOrderCreationProps {
   hideCart: () => void;
@@ -19,10 +19,13 @@ export const useOrderCreation = ({
   const navigation = useNavigation();
   const createOrderMutation = useCreateOrderMutation();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  
+
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
-  const [showExitConfirmationModal, setShowExitConfirmationModal] = useState(false);
-  const [pendingNavigationAction, setPendingNavigationAction] = useState<(() => void) | null>(null);
+  const [showExitConfirmationModal, setShowExitConfirmationModal] =
+    useState(false);
+  const [pendingNavigationAction, setPendingNavigationAction] = useState<
+    (() => void) | null
+  >(null);
   const isProcessingOrderRef = useRef(false);
 
   const handleConfirmOrder = async (details: OrderDetailsForBackend) => {
@@ -66,7 +69,8 @@ export const useOrderCreation = ({
 
   const handleConfirmExit = () => {
     setShowExitConfirmationModal(false);
-    const navigationAction = pendingNavigationAction || (() => navigation.goBack());
+    const navigationAction =
+      pendingNavigationAction || (() => navigation.goBack());
     setPendingNavigationAction(null);
     navigationAction();
     setTimeout(() => {
@@ -86,7 +90,9 @@ export const useOrderCreation = ({
       }
 
       e.preventDefault();
-      setPendingNavigationAction(() => () => navigation.dispatch(e.data.action));
+      setPendingNavigationAction(
+        () => () => navigation.dispatch(e.data.action),
+      );
       setShowExitConfirmationModal(true);
     });
 

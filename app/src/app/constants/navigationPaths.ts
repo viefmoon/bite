@@ -22,9 +22,7 @@ export const NAVIGATION_PATHS = {
   MODIFIER_GROUPS: 'ModifierGroupsScreen',
   MODIFIERS: 'ModifiersScreen',
 
-  KITCHEN_STACK: 'KitchenStack',
-  KITCHEN_ORDERS: 'KitchenOrders',
-  KITCHEN: 'Kitchen',
+  KITCHEN_SCREEN: 'KitchenScreen',
 
   RECEIPTS_STACK: 'ReceiptsStack',
   RECEIPTS_LIST: 'ReceiptsList',
@@ -32,8 +30,7 @@ export const NAVIGATION_PATHS = {
   ORDER_FINALIZATION_STACK: 'OrderFinalizationStack',
   ORDER_FINALIZATION: 'OrderFinalizationScreen',
 
-  AVAILABILITY_STACK: 'AvailabilityStack',
-  AVAILABILITY: 'AvailabilityScreen',
+  AVAILABILITY_SCREEN: 'AvailabilityScreen',
 
   RESTAURANT_CONFIG_STACK: 'RestaurantConfigStack',
   RESTAURANT_CONFIG: 'RestaurantConfig',
@@ -47,8 +44,7 @@ export const NAVIGATION_PATHS = {
   SYNC_STACK: 'SyncStack',
   SYNC_STATUS: 'SyncStatus',
 
-  USERS_STACK: 'UsersStack',
-  USERS_LIST: 'UsersList',
+  USERS_SCREEN: 'UsersScreen',
 
   SHIFT_AUDIT_STACK: 'ShiftAuditStack',
   SHIFTS_LIST: 'ShiftsList',
@@ -106,6 +102,4 @@ export type ModifiersStackParamList = {
   };
 };
 
-export type KitchenStackParamList = {
-  [NAVIGATION_PATHS.KITCHEN_ORDERS]: undefined;
-};
+// KitchenScreen ahora es una pantalla directa, no requiere ParamList

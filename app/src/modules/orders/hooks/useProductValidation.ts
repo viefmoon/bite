@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Product, FullMenuModifierGroup } from '../types/orders.types';
+<<<<<<< HEAD
 import { CartItemModifier } from '../stores/useOrderCreationStore';
 import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import { 
@@ -7,6 +8,15 @@ import {
   PizzaConfiguration,
   CustomizationType,
   CustomizationAction
+=======
+import { CartItemModifier } from '../stores/useOrderStore';
+import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import {
+  PizzaCustomization,
+  PizzaConfiguration,
+  CustomizationType,
+  CustomizationAction,
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
 } from '@/modules/pizzaCustomizations/types/pizzaCustomization.types';
 
 interface ValidationError {
@@ -35,8 +45,14 @@ export const useProductValidation = ({
     const errors: ValidationError[] = [];
 
     // Validar variantes requeridas
+<<<<<<< HEAD
     const hasVariants = product?.variants && 
       Array.isArray(product.variants) && 
+=======
+    const hasVariants =
+      product?.variants &&
+      Array.isArray(product.variants) &&
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
       product.variants.length > 0;
 
     if (hasVariants && !selectedVariantId) {
@@ -54,7 +70,11 @@ export const useProductValidation = ({
           pizzaCustomizations.some(
             (pc) =>
               pc.id === sc.pizzaCustomizationId &&
+<<<<<<< HEAD
               pc.type === CustomizationType.FLAVOR
+=======
+              pc.type === CustomizationType.FLAVOR,
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           ),
       );
 
@@ -74,17 +94,32 @@ export const useProductValidation = ({
         const selectedCount = selectedInGroup.length;
 
         // Validar grupos requeridos y mínimo de selecciones
+<<<<<<< HEAD
         if (group.isRequired || (group.minSelections && group.minSelections > 0)) {
+=======
+        if (
+          group.isRequired ||
+          (group.minSelections && group.minSelections > 0)
+        ) {
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
           const minRequired = Math.max(
             group.minSelections || 0,
             group.isRequired ? 1 : 0,
           );
 
           if (selectedCount < minRequired) {
+<<<<<<< HEAD
             const message = minRequired === 1
               ? `Selecciona una opción`
               : `Selecciona al menos ${minRequired} opciones`;
             
+=======
+            const message =
+              minRequired === 1
+                ? `Selecciona una opción`
+                : `Selecciona al menos ${minRequired} opciones`;
+
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b
             errors.push({
               field: `modifier_${group.id}`,
               message,
@@ -129,4 +164,8 @@ export const useProductValidation = ({
     getFieldError,
     getGroupError,
   };
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b

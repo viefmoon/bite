@@ -4,9 +4,14 @@ import { Product } from '../../types/orders.types';
 export type NavigationLevel = 'categories' | 'subcategories' | 'products';
 
 export const useOrderNavigation = () => {
-  const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>('categories');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
+  const [navigationLevel, setNavigationLevel] =
+    useState<NavigationLevel>('categories');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
+    string | null
+  >(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleCategorySelect = useCallback((categoryId: string) => {

@@ -79,4 +79,8 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       textAlign: 'center',
       marginLeft: 4,
     },
+<<<<<<< HEAD
   });
+=======
+  });
+>>>>>>> 5c79eb0af123293a14dc286c7854e3d77055395b

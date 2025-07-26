@@ -12,8 +12,7 @@ import {
   useUpdateCustomer,
   useDeleteCustomer,
 } from '../hooks/useCustomersQueries';
-import { Customer } from '../types/customer.types';
-import { CustomerFormInputs } from '../schema/customer.schema';
+import { Customer, CustomerFormInputs } from '../schema/customer.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 // Importar desde el servicio de categorías
 import { getOrderMenu } from '@/modules/menu/services/categoryService';
 // Importar el tipo de menú completo con relaciones anidadas
-import type { FullMenuCategory } from '@/modules/orders/types/orders.types';
+import type { FullMenuCategory } from '@/modules/orders/schema/orders.schema';
 import { ApiError } from '@/app/lib/errors';
 import { prefetchMenuImages } from '@/app/lib/imageCache';
 

@@ -1,27 +1,24 @@
-// src/orders/order-change-log.service.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { OrderHistoryRepository } from './infrastructure/persistence/order-history.repository';
-import { UsersService } from '../users/users.service'; // Importar UsersService
-import { ORDER_HISTORY_REPOSITORY } from '../common/tokens'; // Importar el token
+import { UsersService } from '../users/users.service';
+import { ORDER_HISTORY_REPOSITORY } from '../common/tokens';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderHistoryEntity } from './infrastructure/persistence/relational/entities/order-history.entity';
-import { User } from '../users/domain/user'; // Importar User domain
-
-// DTO para la respuesta enriquecida (opcional, pero bueno para claridad)
+import { User } from '../users/domain/user';
 export class EnrichedOrderHistoryDto extends OrderHistoryEntity {
   changedByUser?: Pick<
     User,
     'id' | 'firstName' | 'lastName' | 'username'
-  > | null; // Datos básicos del usuario
-  formattedChanges?: Record<string, any>; // Cambios formateados para mostrar
+  > | null;
+  formattedChanges?: Record<string, any>;
 }
 
 @Injectable()
 export class OrderChangeLogService {
   constructor(
-    @Inject(ORDER_HISTORY_REPOSITORY) // Usar el token Symbol
+    @Inject(ORDER_HISTORY_REPOSITORY)
     private readonly historyRepository: OrderHistoryRepository,
-    private readonly usersService: UsersService, // Inyectar UsersService
+    private readonly usersService: UsersService,
   ) {}
 
   async findByOrderId(
@@ -37,12 +34,10 @@ export class OrderChangeLogService {
       return [[], totalCount];
     }
 
-    // Extraer IDs de usuario únicos, asegurándose de que no sean null o undefined
     const userIds = [...new Set(logs.map((log) => log.changedBy))].filter(
-      (id): id is string => !!id, // Filtrar valores nulos/undefined y asegurar que son string
+      (id): id is string => !!id,
     );
 
-    // Obtener datos de los usuarios solo si hay IDs válidos
     let userMap = new Map<
       string,
       Pick<User, 'id' | 'firstName' | 'lastName' | 'username'>
@@ -61,31 +56,20 @@ export class OrderChangeLogService {
             },
           ]),
         );
-      } catch {
-        // Manejar el caso donde UsersService podría fallar o no encontrar usuarios
-        // Continuar sin enriquecimiento de usuario
-      }
+      } catch {}
     }
 
-    // Enriquecer los logs con los datos del usuario
-    // Corregir la creación del objeto enriquecido
     const enrichedLogs = logs.map((log) => {
       const user = log.changedBy ? userMap.get(log.changedBy) : null;
-      // Crear una instancia de EnrichedOrderHistoryDto
       const enrichedLog = new EnrichedOrderHistoryDto();
-      // Copiar las propiedades de la entidad base 'log' a la nueva instancia
       Object.assign(enrichedLog, log);
-      // Asignar la propiedad adicional
       enrichedLog.changedByUser = user || null;
 
-      // Formatear los cambios para mostrarlos de manera más clara
       if (log.diff) {
-        // Si es el nuevo formato consolidado, pasarlo tal cual para que la app lo maneje
         if (log.diff.order || log.diff.items || log.diff.summary) {
           enrichedLog.diff = log.diff;
           enrichedLog.formattedChanges = this.formatChanges(log.diff);
         } else if (log.operation === 'UPDATE') {
-          // Formato legacy
           enrichedLog.formattedChanges = this.formatChanges(log.diff);
         }
       }
@@ -99,14 +83,11 @@ export class OrderChangeLogService {
   private formatChanges(diff: any): Record<string, any> {
     const formatted: Record<string, any> = {};
 
-    // Nuevo formato consolidado
     if (diff && (diff.order || diff.items || diff.summary)) {
-      // Incluir resumen si existe
       if (diff.summary) {
         formatted['Resumen'] = diff.summary;
       }
 
-      // Formatear cambios de la orden
       if (diff.order) {
         if (diff.order.fields) {
           formatted['Cambios en la orden'] = this.formatOrderFields(
@@ -120,7 +101,6 @@ export class OrderChangeLogService {
         }
       }
 
-      // Formatear cambios en los items
       if (diff.items) {
         formatted['Cambios en productos'] = this.formatConsolidatedItemChanges(
           diff.items,
@@ -130,14 +110,12 @@ export class OrderChangeLogService {
       return formatted;
     }
 
-    // Formato legacy (compatibilidad hacia atrás)
     return this.formatOrderChanges(diff);
   }
 
   private formatOrderChanges(diff: any): Record<string, any> {
     const formatted: Record<string, any> = {};
 
-    // Mapeo de nombres de campos a etiquetas en español
     const fieldLabels: Record<string, string> = {
       orderStatus: 'Estado de la orden',
       orderType: 'Tipo de orden',
@@ -152,7 +130,6 @@ export class OrderChangeLogService {
       isFromWhatsApp: 'Origen WhatsApp',
     };
 
-    // Mapeo de valores para hacerlos más legibles
     const valueFormatters: Record<string, (value: any) => string> = {
       orderStatus: (value) => {
         const statusMap: Record<string, string> = {
@@ -196,7 +173,6 @@ export class OrderChangeLogService {
         const formatter = valueFormatters[field];
 
         if (Array.isArray(change) && change.length >= 2) {
-          // Es un cambio simple: [valorAnterior, valorNuevo]
           const [oldValue, newValue] = change;
           formatted[label] = {
             anterior: formatter ? formatter(oldValue) : oldValue,

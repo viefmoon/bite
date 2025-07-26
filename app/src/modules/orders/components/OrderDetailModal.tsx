@@ -13,8 +13,8 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
-import { OrderStatusEnum } from '../types/orders.types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 
 interface OrderDetailModalProps {
   visible: boolean;
@@ -23,68 +23,6 @@ interface OrderDetailModalProps {
   orderNumber?: number;
   orderData?: any; // Datos de la orden pasados como prop
 }
-
-const getStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case OrderStatusEnum.PENDING:
-      return '#FFA000';
-    case OrderStatusEnum.IN_PROGRESS:
-      return theme.colors.primary;
-    case OrderStatusEnum.IN_PREPARATION:
-      return '#FF6B35';
-    case OrderStatusEnum.READY:
-      return '#4CAF50';
-    case OrderStatusEnum.DELIVERED:
-      return theme.colors.tertiary;
-    case OrderStatusEnum.COMPLETED:
-      return '#9E9E9E';
-    case OrderStatusEnum.CANCELLED:
-      return theme.colors.error;
-    default:
-      return theme.colors.onSurfaceVariant;
-  }
-};
-
-const getStatusLabel = (status: string) => {
-  const statusMap: Record<string, string> = {
-    [OrderStatusEnum.PENDING]: 'Pendiente',
-    [OrderStatusEnum.IN_PROGRESS]: 'En Progreso',
-    [OrderStatusEnum.IN_PREPARATION]: 'En Preparación',
-    [OrderStatusEnum.READY]: 'Lista',
-    [OrderStatusEnum.DELIVERED]: 'Entregada',
-    [OrderStatusEnum.COMPLETED]: 'Completada',
-    [OrderStatusEnum.CANCELLED]: 'Cancelada',
-  };
-  return statusMap[status] || status;
-};
-
-const getPreparationStatusLabel = (status: string) => {
-  const statusMap: Record<string, string> = {
-    PENDING: 'Pendiente',
-    IN_PROGRESS: 'En Preparación',
-    READY: 'Listo',
-    DELIVERED: 'Entregado',
-    CANCELLED: 'Cancelado',
-  };
-  return statusMap[status] || status;
-};
-
-const getPreparationStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case 'PENDING':
-      return theme.colors.error;
-    case 'IN_PROGRESS':
-      return '#FFA000';
-    case 'READY':
-      return '#4CAF50';
-    case 'DELIVERED':
-      return theme.colors.tertiary;
-    case 'CANCELLED':
-      return theme.colors.onSurfaceDisabled;
-    default:
-      return theme.colors.onSurfaceVariant;
-  }
-};
 
 // Componente interno para mostrar el contenido de detalles
 export const OrderDetailContent: React.FC<{
@@ -144,7 +82,7 @@ export const OrderDetailContent: React.FC<{
                             styles.preparationChip,
                             {
                               backgroundColor:
-                                getPreparationStatusColor(
+                                PreparationStatusInfo.getColor(
                                   item.preparationStatus,
                                   theme,
                                 ) + '20',
@@ -153,14 +91,16 @@ export const OrderDetailContent: React.FC<{
                           textStyle={[
                             styles.preparationChipText,
                             {
-                              color: getPreparationStatusColor(
+                              color: PreparationStatusInfo.getColor(
                                 item.preparationStatus,
                                 theme,
                               ),
                             },
                           ]}
                         >
-                          {getPreparationStatusLabel(item.preparationStatus)}
+                          {PreparationStatusInfo.getLabel(
+                            item.preparationStatus,
+                          )}
                         </Chip>
                       </View>
                       {item.preparationNotes && (
@@ -220,7 +160,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getStatusColor(
+                      backgroundColor: OrderStatusInfo.getColor(
                         orderData.orderStatus,
                         theme,
                       ),
@@ -228,7 +168,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   ]}
                   textStyle={styles.statusChipText}
                 >
-                  {getStatusLabel(orderData.orderStatus)}
+                  {OrderStatusInfo.getLabel(orderData.orderStatus)}
                 </Chip>
               )}
             </View>
@@ -247,7 +187,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <OrderDetailContent
             orderId={orderId}
             orderNumber={orderNumber}
-            orderData={order}
+            orderData={orderData}
           />
         </Surface>
       </Modal>

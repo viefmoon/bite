@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as areaService from '../services/areaService';
+import { areaService } from '../services/areaService';
 import {
   Area,
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,
-} from '../schema/area.schema'; // Corregida ruta de importación
+} from '../schema/area.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';

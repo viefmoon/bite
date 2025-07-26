@@ -4,14 +4,11 @@ import {
   SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
-  findAllSubcategoriesDtoSchema,
+  FindAllSubcategoriesDto,
 } from '../schema/subcategories.schema';
-import { z } from 'zod';
 import { PaginatedResponse } from '../../../app/types/api.types';
 
-type FindAllSubcategoriesDto = z.infer<typeof findAllSubcategoriesDtoSchema>;
-
-export const createSubcategory = async (
+const createSubcategory = async (
   data: CreateSubCategoryDto,
 ): Promise<SubCategory> => {
   const response = await apiClient.post<SubCategory>(
@@ -21,7 +18,7 @@ export const createSubcategory = async (
   return response.data;
 };
 
-export const findAllSubcategories = async (
+const findAllSubcategories = async (
   params: FindAllSubcategoriesDto,
 ): Promise<PaginatedResponse<SubCategory>> => {
   const queryParams = Object.entries(params).reduce(
@@ -43,7 +40,6 @@ export const findAllSubcategories = async (
     hasPrevPage: boolean;
   }>(API_PATHS.SUBCATEGORIES, { params: queryParams });
 
-  // Transforma la respuesta del backend a PaginatedResponse
   return {
     data: response.data.items,
     total: response.data.total,
@@ -53,14 +49,14 @@ export const findAllSubcategories = async (
   };
 };
 
-export const findOneSubcategory = async (id: string): Promise<SubCategory> => {
+const findOneSubcategory = async (id: string): Promise<SubCategory> => {
   const response = await apiClient.get<SubCategory>(
     API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id),
   );
   return response.data;
 };
 
-export const updateSubcategory = async (
+const updateSubcategory = async (
   id: string,
   data: UpdateSubCategoryDto,
 ): Promise<SubCategory> => {
@@ -71,6 +67,14 @@ export const updateSubcategory = async (
   return response.data;
 };
 
-export const removeSubcategory = async (id: string): Promise<void> => {
+const removeSubcategory = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.SUBCATEGORIES_BY_ID.replace(':id', id));
+};
+
+export const subcategoriesService = {
+  createSubcategory,
+  findAllSubcategories,
+  findOneSubcategory,
+  updateSubcategory,
+  removeSubcategory,
 };

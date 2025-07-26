@@ -12,11 +12,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CreateSelectedPizzaCustomizationDto } from '../../selected-pizza-customizations/dto/create-selected-pizza-customization.dto';
 import { ProductModifierDto } from './product-modifier.dto';
 
-/**
- * DTO for order items when creating a new order.
- * Does not include orderId since the order doesn't exist yet.
- * Now uses productModifierIds instead of full modifier objects.
- */
 export class OrderItemInputDto {
   @ApiProperty({
     type: String,

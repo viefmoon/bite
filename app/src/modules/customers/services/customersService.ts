@@ -2,11 +2,11 @@ import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   Customer,
-  CreateCustomerDto,
-  UpdateCustomerDto,
   FindAllCustomersQuery,
   ChatMessage,
-} from '../types/customer.types';
+  CreateCustomerInput,
+  UpdateCustomerInput,
+} from '../schema/customer.schema';
 
 async function findAll(params?: FindAllCustomersQuery): Promise<Customer[]> {
   const response = await apiClient.get<Customer[]>(API_PATHS.CUSTOMERS, {
@@ -22,12 +22,12 @@ async function findOne(id: string): Promise<Customer> {
   return response.data;
 }
 
-async function create(data: CreateCustomerDto): Promise<Customer> {
+async function create(data: CreateCustomerInput): Promise<Customer> {
   const response = await apiClient.post<Customer>(API_PATHS.CUSTOMERS, data);
   return response.data;
 }
 
-async function update(id: string, data: UpdateCustomerDto): Promise<Customer> {
+async function update(id: string, data: UpdateCustomerInput): Promise<Customer> {
   const response = await apiClient.patch<Customer>(
     API_PATHS.CUSTOMERS_BY_ID.replace(':id', id),
     data,

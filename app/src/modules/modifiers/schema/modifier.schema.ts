@@ -53,3 +53,13 @@ export const modifierApiSchema = domainModifierSchema.extend({
 
 // Re-exportar el tipo de dominio centralizado
 export type { Modifier };
+
+// Type para el formulario
+export type ModifierFormInputs = {
+  name: string;
+  description?: string | null;
+  price?: number | null;
+  sortOrder?: number;
+  isDefault?: boolean;
+  isActive?: boolean;
+};

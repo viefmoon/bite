@@ -15,10 +15,9 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   formatOrderTypeShort,
-  formatOrderStatus,
-  getStatusColor,
+  OrderStatusInfo,
   getPaymentStatus,
-} from '@/app/utils/orderFormatters';
+} from '@/modules/orders/utils/formatters';
 
 interface OrderCardProps {
   order: OrderForFinalizationList;
@@ -263,12 +262,15 @@ export const OrderCard = React.memo<OrderCardProps>(
                   style={[
                     styles.statusChip,
                     {
-                      backgroundColor: getStatusColor(order.orderStatus, theme),
+                      backgroundColor: OrderStatusInfo.getColor(
+                        order.orderStatus,
+                        theme,
+                      ),
                     },
                   ]}
                   textStyle={styles.statusChipText}
                 >
-                  {formatOrderStatus(order.orderStatus)}
+                  {OrderStatusInfo.getLabel(order.orderStatus)}
                 </Chip>
                 <View style={styles.actionsContainer}>
                   {onPrintPress && (

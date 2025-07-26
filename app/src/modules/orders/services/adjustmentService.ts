@@ -1,7 +1,7 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { Adjustment } from '@/app/schemas/domain/adjustment.schema';
-import type { OrderAdjustmentDto } from '../types/update-order.types';
+import type { OrderAdjustmentDto } from '../schema/update-order.schema';
 
 export const adjustmentService = {
   /**

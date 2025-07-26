@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as tableService from '../services/tableService';
+import { tableService } from '../services/tableService';
 import {
   Table,
   CreateTableDto,

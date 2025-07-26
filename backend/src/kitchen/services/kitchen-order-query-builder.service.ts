@@ -9,15 +9,23 @@ export class KitchenOrderQueryBuilderService {
   /**
    * Construye el query base para órdenes de cocina con todas las relaciones necesarias
    */
-  buildBaseQuery(orderRepository: Repository<OrderEntity>): SelectQueryBuilder<OrderEntity> {
+  buildBaseQuery(
+    orderRepository: Repository<OrderEntity>,
+  ): SelectQueryBuilder<OrderEntity> {
     return orderRepository
       .createQueryBuilder('o')
       .leftJoinAndSelect('o.orderItems', 'orderItem')
       .leftJoinAndSelect('orderItem.product', 'product')
       .leftJoinAndSelect('orderItem.productVariant', 'variant')
       .leftJoinAndSelect('orderItem.productModifiers', 'modifiers')
-      .leftJoinAndSelect('orderItem.selectedPizzaCustomizations', 'pizzaCustomizations')
-      .leftJoinAndSelect('pizzaCustomizations.pizzaCustomization', 'customization')
+      .leftJoinAndSelect(
+        'orderItem.selectedPizzaCustomizations',
+        'pizzaCustomizations',
+      )
+      .leftJoinAndSelect(
+        'pizzaCustomizations.pizzaCustomization',
+        'customization',
+      )
       .leftJoinAndSelect('orderItem.preparedBy', 'preparedBy')
       .leftJoinAndSelect('o.table', 'table')
       .leftJoinAndSelect('table.area', 'area')
@@ -67,7 +75,7 @@ export class KitchenOrderQueryBuilderService {
     userScreenId: string,
   ): void {
     queryBuilder.andWhere(
-      qb => {
+      (qb) => {
         const subQuery = qb
           .subQuery()
           .select('oi.order_id')
@@ -84,7 +92,9 @@ export class KitchenOrderQueryBuilderService {
   /**
    * Aplica filtro de estados excluidos
    */
-  private applyStatusFilter(queryBuilder: SelectQueryBuilder<OrderEntity>): void {
+  private applyStatusFilter(
+    queryBuilder: SelectQueryBuilder<OrderEntity>,
+  ): void {
     queryBuilder.andWhere('o.orderStatus NOT IN (:...excludedStatuses)', {
       excludedStatuses: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
     });
