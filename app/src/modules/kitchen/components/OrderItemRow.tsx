@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Text, useTheme, Chip } from 'react-native-paper';
-import { KitchenOrderItem, PreparationStatus } from '../types/kitchen.types';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { KitchenOrderItem, PreparationStatus } from '../schema/kitchen.schema';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface OrderItemRowProps {
@@ -20,7 +20,6 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
     const isInProgress =
       item.preparationStatus === PreparationStatus.IN_PROGRESS;
     const isDisabled = !item.belongsToMyScreen;
-    // Permitir toggle si la orden está en preparación, el item pertenece a esta pantalla y está IN_PROGRESS o READY
     const canToggle =
       isOrderInPreparation &&
       (isInProgress || isPrepared) &&
@@ -28,8 +27,6 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       onTogglePrepared;
 
     const buildItemName = () => {
-      // Si tiene variante, solo mostrar la variante
-      // Si no tiene variante, mostrar el nombre del producto
       const displayName = item.variantName || item.productName;
       return `${item.quantity}x ${displayName}`;
     };
@@ -37,7 +34,6 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
     const buildItemDetails = () => {
       const details: string[] = [];
 
-      // Combinar mods y customizations en una línea si es posible
       const allCustoms: string[] = [];
 
       if (item.modifiers.length > 0) {
@@ -68,11 +64,11 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
     const styles = StyleSheet.create({
       container: {
         paddingHorizontal: responsive.isWeb
-          ? responsive.spacing.m
-          : responsive.spacing.s,
+          ? responsive.spacingPreset.m
+          : responsive.spacingPreset.s,
         paddingVertical: responsive.isWeb
-          ? responsive.spacing.s
-          : responsive.spacing.xs,
+          ? responsive.spacingPreset.s
+          : responsive.spacingPreset.xs,
         minHeight: responsive.isWeb ? 52 : responsive.isTablet ? 40 : 36,
         display: 'flex',
         justifyContent: 'center',
@@ -117,6 +113,11 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       disabledText: {
         color: theme.colors.onSurfaceDisabled || '#999',
       },
+      itemNameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: responsive.spacingPreset.xs,
+      },
     });
 
     const handlePress = () => {
@@ -140,13 +141,7 @@ export const OrderItemRow = React.memo<OrderItemRowProps>(
       >
         <View style={styles.row}>
           <View style={styles.content}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: responsive.spacing.xs,
-              }}
-            >
+            <View style={styles.itemNameContainer}>
               <Text
                 variant="bodyMedium"
                 style={[

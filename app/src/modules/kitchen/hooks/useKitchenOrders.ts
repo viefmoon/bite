@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { kitchenService } from '../services/kitchenService';
-import { KitchenFilters } from '../types/kitchen.types';
+import { KitchenFilters } from '../schema/kitchen.schema';
 import { useKitchenSnackbar } from './useKitchenSnackbar';
 
 export const KITCHEN_ORDERS_KEY = 'kitchen-orders';
@@ -19,7 +19,7 @@ export function useKitchenOrders(filters: Partial<KitchenFilters> = {}) {
     refetchOnMount: true,
     staleTime: 25000, // Datos frescos por 25 segundos
     gcTime: 5 * 60 * 1000, // Cache por 5 minutos
-    keepPreviousData: true, // Evitar parpadeos durante refetch
+    placeholderData: (previousData) => previousData, // Evitar parpadeos durante refetch
     notifyOnChangeProps: ['data', 'error'],
   });
 }
@@ -88,7 +88,7 @@ export function useUpdateKitchenItem() {
       return { previousData };
     },
 
-    onError: (error: any, variables, context) => {
+    onError: (error: any, _variables, context) => {
       if (context?.previousData) {
         rollbackAllQueries(context.previousData);
       }
@@ -182,8 +182,6 @@ export function useUpdateKitchenOrderStatus() {
     // Función genérica para actualizar status
     updateStatus: useMutation({
       mutationFn: ({
-        orderId,
-        status,
         serverAction,
       }: {
         orderId: string;
@@ -197,7 +195,7 @@ export function useUpdateKitchenOrderStatus() {
         return { previousData };
       },
 
-      onError: (error: any, variables, context) => {
+      onError: (error: any, _variables, context) => {
         if (context?.previousData) {
           rollbackAllQueries(context.previousData);
         }

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { serverConnectionService } from '@/services/serverConnectionService';
-import { useAuthStore } from '@/app/store/authStore';
+import { serverConnectionService } from './serverConnectionService';
+import { useAuthStore } from '../app/store/authStore';
 import NetInfo from '@react-native-community/netinfo';
-import { API_PATHS } from '@/app/constants/apiPaths';
+import { API_PATHS } from '../app/constants/apiPaths';
 
 export interface AudioServiceHealthStatus {
   isAvailable: boolean;
@@ -23,15 +23,12 @@ class AudioServiceHealthChecker {
   private listeners: ((status: AudioServiceHealthStatus) => void)[] = [];
   private checkInterval: NodeJS.Timeout | null = null;
   private lastCheckTime: number = 0;
-  private readonly CHECK_INTERVAL = 30000; // 30 segundos
-  private readonly MIN_CHECK_INTERVAL = 5000; // 5 segundos mínimo entre checks
+  private readonly CHECK_INTERVAL = 30000;
+  private readonly MIN_CHECK_INTERVAL = 5000;
   private isActive: boolean = false;
   private networkListener: (() => void) | null = null;
 
-  private constructor() {
-    // NO iniciar verificación automática
-    // Solo escuchar cambios de conectividad cuando el servicio esté activo
-  }
+  private constructor() {}
 
   static getInstance(): AudioServiceHealthChecker {
     if (!AudioServiceHealthChecker.instance) {
@@ -43,7 +40,6 @@ class AudioServiceHealthChecker {
   async checkHealth(force: boolean = false): Promise<AudioServiceHealthStatus> {
     const now = Date.now();
 
-    // Evitar checks muy frecuentes
     if (!force && now - this.lastCheckTime < this.MIN_CHECK_INTERVAL) {
       return this.healthStatus;
     }
@@ -51,7 +47,6 @@ class AudioServiceHealthChecker {
     this.lastCheckTime = now;
 
     try {
-      // Primero verificar conexión a internet
       const netInfo = await NetInfo.fetch();
       const hasInternet =
         netInfo.isConnected && netInfo.isInternetReachable !== false;
@@ -67,7 +62,6 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      // Luego verificar el servicio
       const accessToken = useAuthStore.getState().accessToken;
       if (!accessToken) {
         this.updateStatus({
@@ -80,7 +74,6 @@ class AudioServiceHealthChecker {
         return this.healthStatus;
       }
 
-      // Obtener la URL del servicio de conexión sin provocar discovery
       const connectionState = serverConnectionService.getState();
       if (!connectionState.currentUrl || !connectionState.isConnected) {
         this.updateStatus({
@@ -116,8 +109,6 @@ class AudioServiceHealthChecker {
         lastChecked: new Date(),
       });
     } catch (error) {
-      // Error al verificar servicio de audio en modo desarrollo
-
       let errorMessage = 'Servicio de voz no disponible';
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNABORTED') {
@@ -153,10 +144,8 @@ class AudioServiceHealthChecker {
   subscribe(listener: (status: AudioServiceHealthStatus) => void): () => void {
     this.listeners.push(listener);
 
-    // Notificar inmediatamente con el estado actual
     listener(this.healthStatus);
 
-    // Retornar función para desuscribirse
     return () => {
       const index = this.listeners.indexOf(listener);
       if (index > -1) {
@@ -170,10 +159,8 @@ class AudioServiceHealthChecker {
       return;
     }
 
-    // Activar el servicio
     this.isActive = true;
 
-    // Configurar listener de red si no existe
     if (!this.networkListener) {
       this.networkListener = NetInfo.addEventListener((state) => {
         if (
@@ -185,10 +172,8 @@ class AudioServiceHealthChecker {
       });
     }
 
-    // Hacer verificación inicial
     this.checkHealth();
 
-    // Configurar verificaciones periódicas
     this.checkInterval = setInterval(() => {
       if (this.isActive) {
         this.checkHealth();
@@ -197,22 +182,18 @@ class AudioServiceHealthChecker {
   }
 
   stopPeriodicCheck() {
-    // Desactivar el servicio
     this.isActive = false;
 
-    // Limpiar intervalo
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
 
-    // Limpiar listener de red
     if (this.networkListener) {
       this.networkListener();
       this.networkListener = null;
     }
 
-    // Resetear estado
     this.updateStatus({
       isAvailable: false,
       hasInternet: false,

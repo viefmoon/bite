@@ -1,10 +1,10 @@
-import { discoveryService } from '@/app/services/discoveryService';
-import { healthMonitoringService } from '@/services/healthMonitoringService';
-import { autoReconnectService } from '@/services/autoReconnectService';
-import EncryptedStorage from '@/app/services/secureStorageService';
+import { discoveryService } from '../app/services/discoveryService';
+import { healthMonitoringService } from './healthMonitoringService';
+import { autoReconnectService } from './autoReconnectService';
+import EncryptedStorage from '../app/services/secureStorageService';
 import NetInfo from '@react-native-community/netinfo';
 
-export type ConnectionMode = 'auto' | 'manual';
+export type ConnectionMode = 'auto' | 'manual' | 'remote';
 
 interface ConnectionState {
   isConnected: boolean;
@@ -67,7 +67,6 @@ class ServerConnectionService {
 
       const previousHasWifi = this.state.hasWifi;
 
-      // Si perdemos el WiFi, también perdemos la conexión
       if (!hasWifi && previousHasWifi) {
         this.updateState({
           hasWifi: false,
@@ -75,13 +74,10 @@ class ServerConnectionService {
           isHealthy: false,
           error: 'Sin conexión WiFi',
         });
-        // Detener el monitoreo de salud cuando no hay WiFi
         healthMonitoringService.stopMonitoring();
       }
-      // Si recuperamos el WiFi y no estamos conectados, intentar reconectar
       else if (hasWifi && !previousHasWifi) {
         this.updateState({ hasWifi });
-        // Intentar reconectar automáticamente
         setTimeout(() => {
           if (!this.state.isConnected && !this.state.isConnecting) {
             this.connect().catch(() => {});
@@ -93,7 +89,7 @@ class ServerConnectionService {
     });
 
     this.healthUnsubscribe = healthMonitoringService.subscribe(
-      (healthState) => {
+      (healthState: any) => {
         const previousHealthy = this.state.isHealthy;
         this.updateState({
           isHealthy: healthState.isAvailable,
@@ -112,7 +108,7 @@ class ServerConnectionService {
     );
 
     this.reconnectUnsubscribe = autoReconnectService.subscribe(
-      (reconnectState) => {
+      (reconnectState: any) => {
         this.updateState({
           isSearching: reconnectState.isReconnecting,
           error: reconnectState.lastError || this.state.error,
@@ -123,11 +119,10 @@ class ServerConnectionService {
     autoReconnectService.on('reconnected', async () => {
       const apiUrl = await discoveryService.getApiUrl();
 
-      // Reinicializar el API client con la nueva URL
       const { reinitializeApiClient } = await import(
-        '@/app/services/apiClient'
+        '../app/services/apiClient'
       );
-      await reinitializeApiClient(apiUrl);
+      await reinitializeApiClient(apiUrl || undefined);
 
       this.updateState({
         isConnected: true,
@@ -144,11 +139,10 @@ class ServerConnectionService {
     healthMonitoringService.on('recovered', async () => {
       const apiUrl = await discoveryService.getApiUrl();
 
-      // Reinicializar el API client con la nueva URL
       const { reinitializeApiClient } = await import(
-        '@/app/services/apiClient'
+        '../app/services/apiClient'
       );
-      await reinitializeApiClient(apiUrl);
+      await reinitializeApiClient(apiUrl || undefined);
 
       this.updateState({
         isConnected: true,
@@ -171,7 +165,6 @@ class ServerConnectionService {
         (state.type === 'wifi' || state.type === 'ethernet');
       this.updateState({ hasWifi });
 
-      // Si tenemos WiFi pero no estamos conectados, intentar conectar
       if (hasWifi && !this.state.isConnected && !this.state.isConnecting) {
         setTimeout(() => {
           this.connect().catch(() => {});
@@ -183,7 +176,6 @@ class ServerConnectionService {
   async setConnectionMode(mode: ConnectionMode) {
     this.state.mode = mode;
 
-    // Si cambiamos a manual, actualizar la URL actual inmediatamente
     if (mode === 'manual') {
       const url = await discoveryService.getApiUrl();
       if (url) {
@@ -199,7 +191,6 @@ class ServerConnectionService {
   }
 
   async connect(): Promise<void> {
-    // Si ya hay una conexión en progreso, esperarla
     if (this.connectionPromise) {
       return this.connectionPromise;
     }
@@ -219,29 +210,31 @@ class ServerConnectionService {
     try {
       let apiUrl: string | null = null;
 
-      // Intentar conectar según el modo
       switch (this.state.mode) {
         case 'auto':
-          // Primero intentar con la última URL conocida
           apiUrl = await discoveryService.getLastKnownUrl();
           if (apiUrl) {
             const isHealthy =
               await healthMonitoringService.checkHealthWithUrl(apiUrl);
             if (!isHealthy) {
-              // Si falla, intentar descubrimiento
-              apiUrl = await discoveryService.discoverServer();
+                apiUrl = await discoveryService.discoverServer();
             }
           } else {
-            // No hay URL conocida, hacer descubrimiento
             apiUrl = await discoveryService.discoverServer();
           }
           break;
 
         case 'manual':
-          // Usar la URL configurada manualmente
           apiUrl = await discoveryService.getApiUrl();
           if (!apiUrl) {
             throw new Error('No se ha configurado una URL manual');
+          }
+          break;
+
+        case 'remote':
+          apiUrl = await discoveryService.getApiUrl();
+          if (!apiUrl) {
+            throw new Error('No se ha configurado una URL remota');
           }
           break;
       }
@@ -250,27 +243,22 @@ class ServerConnectionService {
         throw new Error('No se pudo establecer conexión con el servidor');
       }
 
-      // No sobrescribir la URL si ya está configurada manualmente
-      // Solo actualizar si es modo auto
       if (this.state.mode === 'auto') {
         await discoveryService.setServerUrl(apiUrl, false);
       }
 
-      // Verificar que el servidor esté respondiendo
       const isHealthy =
         await healthMonitoringService.checkHealthWithUrl(apiUrl);
       if (!isHealthy) {
         throw new Error('El servidor no está respondiendo correctamente');
       }
 
-      // Iniciar monitoreo de salud
       healthMonitoringService.startMonitoring();
 
-      // Reinicializar el API client con la nueva URL
       const { reinitializeApiClient } = await import(
-        '@/app/services/apiClient'
+        '../app/services/apiClient'
       );
-      await reinitializeApiClient(apiUrl);
+      await reinitializeApiClient(apiUrl || undefined);
 
       this.updateState({
         isConnected: true,
@@ -298,11 +286,9 @@ class ServerConnectionService {
   }
 
   retry(): void {
-    // Si no está conectado y hay WiFi, iniciar reconexión automática
     if (!this.state.isConnected && this.state.hasWifi) {
       autoReconnectService.startAutoReconnect();
     } else if (!this.state.hasWifi) {
-      // Si no hay WiFi, actualizar el estado de error
       this.updateState({
         error: 'Sin conexión WiFi',
         lastError: 'Sin conexión WiFi',
@@ -310,7 +296,7 @@ class ServerConnectionService {
     }
   }
 
-  async disconnect(): void {
+  async disconnect(): Promise<void> {
     healthMonitoringService.stopMonitoring();
     autoReconnectService.stopAutoReconnect();
     this.updateState({
@@ -331,17 +317,14 @@ class ServerConnectionService {
     if (this.netInfoUnsubscribe) {
       this.netInfoUnsubscribe();
     }
-    // Limpiar los listeners de eventos
     autoReconnectService.off('reconnected');
     healthMonitoringService.off('recovered');
   }
 
   subscribe(listener: (state: ConnectionState) => void): () => void {
     this.listeners.push(listener);
-    // Notificar inmediatamente el estado actual
     listener(this.state);
 
-    // Retornar función para desuscribirse
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
     };

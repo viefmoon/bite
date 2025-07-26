@@ -15,7 +15,17 @@ export const useShiftOrders = (shiftId: string | undefined) => {
 export const useShiftSummary = (shiftId: string | undefined) => {
   const shiftQuery = useQuery<Shift, Error>({
     queryKey: ['shifts', shiftId],
-    queryFn: () => shiftsService.getById(shiftId!),
+    queryFn: async () => {
+      const data = await shiftsService.getById(shiftId!);
+      return {
+        ...data,
+        status: data.status === 'OPEN' ? 'open' as const : 'closed' as const,
+        openedBy: data.openedBy || { id: '', firstName: '', lastName: '', email: '' },
+        closedBy: data.closedBy,
+        createdAt: data.openedAt,
+        updatedAt: data.closedAt || data.openedAt,
+      };
+    },
     enabled: !!shiftId,
   });
 
@@ -27,7 +37,14 @@ export const useShiftSummary = (shiftId: string | undefined) => {
 
   const summary: ShiftSummary | undefined =
     shiftQuery.data && ordersQuery.data
-      ? shiftsService.calculateShiftSummary(shiftQuery.data, ordersQuery.data)
+      ? shiftsService.calculateShiftSummary(
+          // Convertir de vuelta al tipo del servicio para calculateShiftSummary
+          {
+            ...shiftQuery.data,
+            status: shiftQuery.data.status === 'open' ? 'OPEN' : 'CLOSED',
+          } as any,
+          ordersQuery.data
+        )
       : undefined;
 
   return {

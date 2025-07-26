@@ -11,7 +11,6 @@ import {
   UpdateCustomerInput,
 } from '../schema/customer.schema';
 
-// Keys para React Query
 export const customerKeys = {
   all: ['customers'] as const,
   lists: () => [...customerKeys.all, 'list'] as const,
@@ -25,7 +24,6 @@ export const customerKeys = {
     [...customerKeys.all, 'addresses', customerId] as const,
 };
 
-// Hook para obtener todos los clientes
 export function useCustomers(filters?: FindAllCustomersQuery) {
   return useQuery({
     queryKey: customerKeys.list(filters),
@@ -33,7 +31,6 @@ export function useCustomers(filters?: FindAllCustomersQuery) {
   });
 }
 
-// Hook para obtener un cliente específico
 export function useCustomer(id: string, enabled = true) {
   return useQuery({
     queryKey: customerKeys.detail(id),
@@ -42,7 +39,6 @@ export function useCustomer(id: string, enabled = true) {
   });
 }
 
-// Hook para crear un cliente
 export function useCreateCustomer() {
   const queryClient = useQueryClient();
 
@@ -54,7 +50,6 @@ export function useCreateCustomer() {
   });
 }
 
-// Hook para actualizar un cliente
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
 
@@ -71,7 +66,6 @@ export function useUpdateCustomer() {
   });
 }
 
-// Hook para eliminar un cliente
 export function useDeleteCustomer() {
   const queryClient = useQueryClient();
 
@@ -83,7 +77,6 @@ export function useDeleteCustomer() {
   });
 }
 
-// Hook para agregar mensaje al chat
 export function useAppendChatMessage() {
   const queryClient = useQueryClient();
 
@@ -104,7 +97,6 @@ export function useAppendChatMessage() {
   });
 }
 
-// Hook para actualizar historial relevante
 export function useUpdateRelevantChatHistory() {
   const queryClient = useQueryClient();
 
@@ -126,7 +118,6 @@ export function useUpdateRelevantChatHistory() {
   });
 }
 
-// Hook para actualizar estadísticas
 export function useUpdateCustomerStats() {
   const queryClient = useQueryClient();
 
@@ -148,7 +139,6 @@ export function useUpdateCustomerStats() {
   });
 }
 
-// Hook para obtener clientes activos con interacción reciente
 export function useActiveCustomersWithRecentInteraction(daysAgo = 30) {
   return useQuery({
     queryKey: customerKeys.activeRecent(daysAgo),
@@ -156,7 +146,6 @@ export function useActiveCustomersWithRecentInteraction(daysAgo = 30) {
   });
 }
 
-// Hook para obtener direcciones de un cliente
 export function useGetAddressesByCustomer(
   customerId: string,
   options?: { enabled?: boolean },
@@ -170,7 +159,6 @@ export function useGetAddressesByCustomer(
         );
         return response.data;
       } catch (error) {
-        // Si hay error al obtener direcciones, retornar array vacío
         return [];
       }
     },

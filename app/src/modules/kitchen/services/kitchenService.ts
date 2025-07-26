@@ -1,11 +1,6 @@
 import apiClient from '@/app/services/apiClient';
-import { KitchenOrder, KitchenFilters } from '../types/kitchen.types';
+import { KitchenOrder, KitchenFilters } from '../schema/kitchen.schema';
 import { API_PATHS } from '@/app/constants/apiPaths';
-
-interface _PaginationResponse<T> {
-  data: T[];
-  hasNextPage: boolean;
-}
 
 class KitchenService {
   async getKitchenOrders(

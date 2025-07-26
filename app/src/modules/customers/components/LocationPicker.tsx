@@ -192,7 +192,6 @@ export default function LocationPicker({
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
     content: {
-      // ResponsiveModal maneja el padding
     },
     helperText: {
       color: theme.colors.onSurfaceVariant,
@@ -228,7 +227,6 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       justifyContent: 'flex-end',
       gap: theme.spacing.s,
-      // ResponsiveModal maneja padding, border
     },
     button: {
       minWidth: 100,

@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
-import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import {
   audioServiceHealth,
   type AudioServiceHealthStatus,
-} from '@/services/audioServiceHealth';
-import { serverConnectionService } from '@/services/serverConnectionService';
+} from '../services/audioServiceHealth';
+import { serverConnectionService } from '../services/serverConnectionService';
 
 interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;
@@ -39,18 +39,15 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     error,
   } = useAudioRecorder();
 
-  // Estado para el tiempo de grabación
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Estado de disponibilidad del servicio
   const [serviceHealth, setServiceHealth] = useState<AudioServiceHealthStatus>(
     audioServiceHealth.getStatus(),
   );
   const [isServiceAvailable, setIsServiceAvailable] = useState(false);
   const [isServerReady, setIsServerReady] = useState(false);
 
-  // Animaciones
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -60,7 +57,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Verificar estado del servidor primero
   useEffect(() => {
     const checkServerConnection = () => {
       const connectionState = serverConnectionService.getState();
@@ -68,10 +64,8 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       setIsServerReady(ready);
     };
 
-    // Verificación inicial
     checkServerConnection();
 
-    // Suscribirse a cambios en el estado del servidor
     const unsubscribeServer = serverConnectionService.subscribe(
       checkServerConnection,
     );
@@ -79,7 +73,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     return unsubscribeServer;
   }, []);
 
-  // Suscribirse a cambios en el estado del servicio solo cuando el servidor esté listo
   useEffect(() => {
     if (!isServerReady) return;
 
@@ -88,17 +81,14 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       setIsServiceAvailable(status.isAvailable);
     });
 
-    // Iniciar verificación periódica solo cuando el servidor esté conectado
     audioServiceHealth.startPeriodicCheck();
 
     return () => {
       unsubscribe();
-      // IMPORTANTE: Detener verificaciones periódicas cuando el componente se desmonte
       audioServiceHealth.stopPeriodicCheck();
     };
   }, [isServerReady]);
 
-  // Animación de entrada del widget (siempre visible)
   useEffect(() => {
     Animated.spring(bounceAnim, {
       toValue: 1,
@@ -108,15 +98,12 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     }).start();
   }, []);
 
-  // Animación de ondas cuando está grabando
   useEffect(() => {
     if (isRecording) {
-      // Iniciar contador de tiempo
       recordingInterval.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
 
-      // Animaciones de onda
       const wave1 = Animated.loop(
         Animated.sequence([
           Animated.timing(waveAnim1, {
@@ -168,7 +155,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         ]),
       );
 
-      // Animación de brillo
       const glow = Animated.loop(
         Animated.sequence([
           Animated.timing(glowAnim, {
@@ -191,7 +177,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       wave3.start();
       glow.start();
 
-      // Fade in de las ondas
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 300,
@@ -209,7 +194,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         setRecordingTime(0);
       };
     } else {
-      // Fade out de las ondas
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
@@ -222,7 +206,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     }
   }, [isRecording]);
 
-  // Animación de procesamiento
   useEffect(() => {
     if (isProcessing || isPreparing) {
       const spin = Animated.loop(
@@ -241,10 +224,8 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     }
   }, [isProcessing, isPreparing]);
 
-  // Estado para evitar llamadas duplicadas
   const hasCompletedRef = useRef(false);
 
-  // Efecto cuando se completa la grabación
   useEffect(() => {
     if (
       audioUri &&
@@ -254,13 +235,10 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     ) {
       hasCompletedRef.current = true;
 
-      // Reset primero para evitar loops
       resetRecording();
 
-      // Luego llamar a onRecordingComplete
       onRecordingComplete(audioUri, transcription);
 
-      // Resetear el flag después de un tiempo
       setTimeout(() => {
         hasCompletedRef.current = false;
       }, 1000);
@@ -273,7 +251,6 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     resetRecording,
   ]);
 
-  // Efecto para manejar errores
   useEffect(() => {
     if (error) {
       onError(error);
@@ -281,9 +258,7 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   }, [error, onError]);
 
   const handlePress = async () => {
-    // Verificar disponibilidad del servicio
     if (!isServiceAvailable) {
-      // Animación de "shake" para indicar que no está disponible
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.1,
@@ -311,12 +286,10 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
       return;
     }
 
-    // Prevenir múltiples clics mientras procesa
     if (isProcessing || isPreparing) {
       return;
     }
 
-    // Animación de presión más suave
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 0.85,
@@ -360,9 +333,9 @@ export const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
   };
 
   const getBackgroundColor = () => {
-    if (!isServiceAvailable) return '#B0B0B0'; // Gris más suave
+    if (!isServiceAvailable) return '#B0B0B0';
     if (isProcessing || isPreparing) return theme.colors.secondary;
-    if (isRecording) return '#FF3B30'; // Rojo vibrante
+    if (isRecording) return '#FF3B30';
     return theme.colors.primary;
   };
 

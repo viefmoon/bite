@@ -13,18 +13,17 @@ export const addressBaseSchema = z.object({
   street: z.string().min(1, 'La calle es requerida'),
   number: z.string().min(1, 'El número es requerido'),
   interiorNumber: z.string().optional(),
-  neighborhood: z.string().min(1, 'La colonia es requerida'),
-  city: z.string().min(1, 'La ciudad es requerida'),
-  state: z.string().min(1, 'El estado es requerido'),
-  zipCode: z.string().regex(/^\d{5}$/, 'El código postal debe tener 5 dígitos'),
-  country: z.string().min(1, 'El país es requerido').default('México'),
+  neighborhood: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  country: z.string().optional().default('México'),
   deliveryInstructions: z.string().optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   isDefault: z.boolean().optional(),
 });
 
-// Schema para dirección (alias para compatibilidad)
 export const addressSchema = addressBaseSchema;
 
 // Schema base para cliente con campos comunes
@@ -36,12 +35,14 @@ export const customerBaseSchema = z.object({
     .string()
     .email('El correo electrónico no es válido')
     .optional()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val),
   birthDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
     .optional()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val),
 });
 
 // Schema para crear cliente - derivado del base
@@ -84,7 +85,7 @@ export type Address = z.infer<typeof addressEntitySchema>;
 
 // Schema completo para Customer - derivado del base con campos adicionales
 export const customerEntitySchema = customerBaseSchema
-  .omit({ email: true, birthDate: true }) // Omitir para redefinir con tipos diferentes
+  .omit({ email: true, birthDate: true })
   .extend({
     id: z.string().uuid(),
     email: z.string().email().nullable().optional(),

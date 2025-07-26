@@ -1,4 +1,4 @@
-import { useSnackbarStore, SnackbarType } from '@/app/store/snackbarStore';
+import { useSnackbarStore, SnackbarType } from '../app/store/snackbarStore';
 
 export function useSnackbar() {
   const { showSnackbar: show, hideSnackbar } = useSnackbarStore();

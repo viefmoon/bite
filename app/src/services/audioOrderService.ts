@@ -1,6 +1,6 @@
 import apiClient from '../app/services/apiClient';
 import * as FileSystem from 'expo-file-system';
-import { API_PATHS } from '@/app/constants/apiPaths';
+import { API_PATHS } from '../app/constants/apiPaths';
 
 export interface AIOrderItem {
   productId: string;
@@ -47,37 +47,31 @@ export interface AudioOrderResponse {
 }
 
 class AudioOrderService {
-  constructor() {
-    // API URL se maneja en apiClient
-  }
+  constructor() {}
 
   async processAudioOrder(
     audioUri: string,
     transcription: string,
   ): Promise<AudioOrderResponse> {
     try {
-      // Convertir audio a base64
       const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Preparar payload para el backend
       const payload = {
         audioData: audioBase64,
         transcription: transcription,
         audioFormat: 'audio/mp4',
       };
 
-      // Enviar al backend con timeout extendido para procesamiento de audio
       const response = await apiClient.post(
         API_PATHS.AUDIO_ORDERS_PROCESS,
         payload,
-        { timeout: 60000 }, // 60 segundos para permitir procesamiento de audio
+        { timeout: 60000 }
       );
 
       const responseData = response.data as any;
 
-      // Adaptar la respuesta del backend al formato esperado
       if (responseData.success) {
         return {
           success: true,
@@ -85,7 +79,7 @@ class AudioOrderService {
             orderItems: [],
             deliveryInfo: {},
             scheduledDelivery: {},
-            orderType: 'DELIVERY', // Valor por defecto si no hay datos
+            orderType: 'DELIVERY',
             warnings: undefined,
             processingTime: 0,
           },
@@ -132,19 +126,16 @@ class AudioOrderService {
     return error.message || 'Error al procesar la orden por voz';
   }
 
-  // Método para validar antes de enviar
   validateBeforeSending(
     audioFileSize: number,
     transcription: string,
   ): string[] {
     const errors: string[] = [];
 
-    // Validar tamaño (50MB máximo para audio de hasta 5 minutos)
     if (audioFileSize > 50 * 1024 * 1024) {
       errors.push('El archivo de audio es muy grande (máximo 50MB)');
     }
 
-    // Validar transcripción
     if (!transcription || transcription.trim().length < 5) {
       errors.push('La transcripción está vacía o es muy corta');
     }

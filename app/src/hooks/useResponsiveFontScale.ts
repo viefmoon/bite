@@ -14,23 +14,17 @@ export const useResponsiveFontScale = (config: ResponsiveFontConfig = {}) => {
   const { width, height } = useWindowDimensions();
   const { minScale = 0.8, maxScale = 1.2 } = config;
 
-  // Obtener la densidad de píxeles del dispositivo
   const pixelRatio = PixelRatio.get();
   const fontScale = PixelRatio.getFontScale();
 
-  // Calcular el tamaño base de la pantalla
   const screenSize = Math.min(width, height);
 
-  // Referencia: 360 es un ancho típico de móvil
   const baseScreenSize = 360;
 
-  // Calcular el factor de escala basado en el tamaño de pantalla
   let scale = screenSize / baseScreenSize;
 
-  // Limitar el factor de escala
   scale = Math.max(minScale, Math.min(maxScale, scale));
 
-  // Ajustar por la configuración de fuente del sistema
   scale = scale * fontScale;
 
   // En tablets, reducir ligeramente el escala para evitar fuentes muy grandes
@@ -59,10 +53,8 @@ export const getResponsiveFontSize = (
 ): number => {
   const fontScale = PixelRatio.getFontScale();
 
-  // Si no se proporciona screenWidth, usar un valor por defecto
   const width = screenWidth || 360;
 
-  // Referencia: 360 es un ancho típico de móvil
   const baseScreenWidth = 360;
   const scale = Math.min(1.2, Math.max(0.8, width / baseScreenWidth));
 

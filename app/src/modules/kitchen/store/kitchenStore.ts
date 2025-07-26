@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from '@/app/services/secureStorageService';
-import { KitchenFilters } from '../types/kitchen.types';
+import { KitchenFilters } from '../schema/kitchen.schema';
 
 const KITCHEN_FILTERS_STORAGE_KEY = 'kitchen_filters_preferences';
 
@@ -32,14 +32,11 @@ export const useKitchenStore = create<KitchenStore>()(
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
-            // Error al rehidratar filtros de cocina
             return;
           }
           if (!state) {
-            // Estado no disponible durante la rehidratación de filtros de cocina
             return;
           }
-          // Filtros de cocina restaurados
         };
       },
     },

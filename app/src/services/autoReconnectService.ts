@@ -1,8 +1,8 @@
 import EventEmitter from 'eventemitter3';
 import { healthMonitoringService } from './healthMonitoringService';
-import { discoveryService } from '@/app/services/discoveryService';
+import { discoveryService } from '../app/services/discoveryService';
 import NetInfo from '@react-native-community/netinfo';
-import { NETWORK_CONFIG } from '@/app/constants/network';
+import { NETWORK_CONFIG } from '../app/constants/network';
 
 export type ReconnectStatus =
   | 'idle'
@@ -38,31 +38,25 @@ class AutoReconnectService extends EventEmitter {
     super();
   }
 
-  // Obtener estado actual
   getState(): ReconnectState {
     return { ...this.state };
   }
 
-  // Agregar log con timestamp
   private addLog(message: string, type: 'info' | 'error' | 'success' = 'info') {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
 
-    // Crear nueva array para asegurar actualización
     const newLogs = [logEntry, ...this.state.logs].slice(0, this.MAX_LOGS);
     this.state.logs = newLogs;
 
-    // Emitir cambio completo del estado
     this.emit('stateChange', { ...this.state, logs: [...newLogs] });
   }
 
-  // Actualizar estado y notificar
   private updateState(updates: Partial<ReconnectState>) {
     this.state = { ...this.state, ...updates };
     this.emit('stateChange', this.state);
   }
 
-  // Iniciar proceso de reconexión automática
   async startAutoReconnect() {
     if (this.isRunning) {
       return;
@@ -72,20 +66,18 @@ class AutoReconnectService extends EventEmitter {
     this.updateState({
       isReconnecting: true,
       attempts: 0,
-      logs: [], // Limpiar logs anteriores
+      logs: [],
       lastError: null,
-      status: 'idle', // Resetear estado
+      status: 'idle',
     });
 
     this.addLog('Iniciando proceso de reconexión automática', 'info');
 
-    // Pequeño delay para asegurar que el estado se propague
     await this.delay(100);
 
     await this.reconnectCycle();
   }
 
-  // Detener reconexión
   stopAutoReconnect() {
     if (!this.isRunning) return;
 
@@ -103,7 +95,6 @@ class AutoReconnectService extends EventEmitter {
     });
   }
 
-  // Ciclo principal de reconexión
   private async reconnectCycle() {
     while (this.isRunning) {
       this.updateState({ attempts: this.state.attempts + 1 });
@@ -117,7 +108,6 @@ class AutoReconnectService extends EventEmitter {
           lastError: 'No hay conexión WiFi activa',
         });
 
-        // Esperar antes de reintentar
         await this.delay(NETWORK_CONFIG.RECONNECT_CYCLE_DELAY);
         continue;
       }
@@ -135,8 +125,6 @@ class AutoReconnectService extends EventEmitter {
         });
         this.isRunning = false;
 
-        // Asegurar que el servicio de conexión actualice su estado
-        // Pequeño delay para asegurar que el estado se propague correctamente
         setTimeout(() => {
           this.emit('reconnected');
         }, 100);
@@ -151,9 +139,8 @@ class AutoReconnectService extends EventEmitter {
       const discoveryOk = await this.tryDiscovery();
 
       if (discoveryOk) {
-        // Verificar con health check después del discovery
         this.addLog('📍 Servidor encontrado. Verificando...', 'info');
-        const postDiscoveryHealth = await this.tryHealthChecks(1); // Solo 1 intento
+        const postDiscoveryHealth = await this.tryHealthChecks();
 
         if (postDiscoveryHealth) {
           this.addLog('🎉 ¡RECONEXIÓN EXITOSA!', 'success');
@@ -164,8 +151,6 @@ class AutoReconnectService extends EventEmitter {
           });
           this.isRunning = false;
 
-          // Asegurar que el servicio de conexión actualice su estado
-          // Pequeño delay para asegurar que el estado se propague correctamente
           setTimeout(() => {
             this.emit('reconnected');
           }, 100);
@@ -189,7 +174,6 @@ class AutoReconnectService extends EventEmitter {
     }
   }
 
-  // Verificar estado de red
   private async checkNetwork(): Promise<boolean> {
     this.updateState({ status: 'checking-network' });
 
@@ -206,9 +190,8 @@ class AutoReconnectService extends EventEmitter {
     }
   }
 
-  // Intentar health checks múltiples veces
   private async tryHealthChecks(
-    maxAttempts = NETWORK_CONFIG.HEALTH_CHECK_ATTEMPTS,
+    maxAttempts: number = NETWORK_CONFIG.HEALTH_CHECK_ATTEMPTS,
   ): Promise<boolean> {
     this.updateState({ status: 'checking-health' });
 
@@ -228,7 +211,6 @@ class AutoReconnectService extends EventEmitter {
         this.addLog('  ✗ Health check falló', 'error');
       }
 
-      // Esperar antes del siguiente intento (excepto el último)
       if (i < maxAttempts) {
         this.addLog(`  ⏳ Esperando 2s...`, 'info');
         await this.delay(2000);
@@ -239,7 +221,6 @@ class AutoReconnectService extends EventEmitter {
     return false;
   }
 
-  // Intentar discovery
   private async tryDiscovery(): Promise<boolean> {
     this.updateState({ status: 'running-discovery' });
 
@@ -270,26 +251,21 @@ class AutoReconnectService extends EventEmitter {
     }
   }
 
-  // Utilidad para delay
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => {
       this.reconnectTimer = setTimeout(resolve, ms);
     });
   }
 
-  // Suscribirse a cambios
   subscribe(callback: (state: ReconnectState) => void): () => void {
     this.on('stateChange', callback);
 
-    // Llamar inmediatamente con el estado actual
     callback(this.state);
 
-    // Retornar función para desuscribirse
     return () => {
       this.off('stateChange', callback);
     };
   }
 }
 
-// Singleton
 export const autoReconnectService = new AutoReconnectService();

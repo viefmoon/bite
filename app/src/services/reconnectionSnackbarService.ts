@@ -1,6 +1,6 @@
 import { autoReconnectService } from './autoReconnectService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { useAuthStore } from '@/app/store/authStore';
+import { useSnackbarStore } from '../app/store/snackbarStore';
+import { useAuthStore } from '../app/store/authStore';
 
 class ReconnectionSnackbarService {
   private unsubscribe: (() => void) | null = null;
@@ -9,28 +9,22 @@ class ReconnectionSnackbarService {
   private snackbarTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
   start() {
-    // Detener si ya está corriendo
     this.stop();
 
-    // Suscribirse a los cambios del servicio de reconexión
-    this.unsubscribe = autoReconnectService.subscribe((state) => {
-      // Solo mostrar snackbars si el usuario está logueado
+    this.unsubscribe = autoReconnectService.subscribe((state: any) => {
       const isLoggedIn = !!useAuthStore.getState().user;
       if (!isLoggedIn) return;
 
-      // Si no está reconectando, limpiar y salir
       if (!state.isReconnecting && state.status !== 'connected') {
         this.clearAllSnackbars();
         return;
       }
 
-      // Detectar cambios de estado importantes
       if (state.status !== this.lastStatus) {
         this.lastStatus = state.status;
         this.showStatusSnackbar(state.status, state.attempts);
       }
 
-      // Mostrar nuevos logs importantes
       if (state.logs.length > this.lastLogCount) {
         const newLogs = state.logs.slice(
           0,
@@ -56,7 +50,6 @@ class ReconnectionSnackbarService {
   private showStatusSnackbar(status: string, attempts: number) {
     const { showSnackbar } = useSnackbarStore.getState();
 
-    // Limpiar snackbar anterior del mismo tipo
     this.clearSnackbar('status');
 
     let message = '';
@@ -96,7 +89,6 @@ class ReconnectionSnackbarService {
     if (message) {
       showSnackbar({ message, type, duration });
 
-      // Programar limpieza
       const timeout = setTimeout(() => {
         this.snackbarTimeouts.delete('status');
       }, duration);
@@ -108,9 +100,7 @@ class ReconnectionSnackbarService {
   private processNewLogs(logs: string[]) {
     const { showSnackbar } = useSnackbarStore.getState();
 
-    // Solo procesar los logs más importantes
     logs.forEach((log) => {
-      // Filtrar logs que ya se muestran en el estado
       if (
         log.includes('CICLO DE RECONEXIÓN') ||
         log.includes('════════') ||
@@ -121,7 +111,6 @@ class ReconnectionSnackbarService {
         return;
       }
 
-      // Mostrar logs de error importantes
       if (
         log.includes('ERROR:') &&
         (log.includes('Health check falló') ||
@@ -135,7 +124,6 @@ class ReconnectionSnackbarService {
         });
       }
 
-      // Mostrar logs de éxito
       else if (
         log.includes('SUCCESS:') &&
         (log.includes('WiFi conectado') ||
@@ -153,7 +141,6 @@ class ReconnectionSnackbarService {
   }
 
   private cleanLogMessage(log: string): string {
-    // Remover timestamp y tipo de log
     return log
       .replace(/\[[^\]]+\]\s*(INFO|ERROR|SUCCESS):\s*/, '')
       .replace(/\s*→\s*/, ' ')
@@ -174,5 +161,4 @@ class ReconnectionSnackbarService {
   }
 }
 
-// Singleton
 export const reconnectionSnackbarService = new ReconnectionSnackbarService();

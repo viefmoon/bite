@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -159,7 +159,7 @@ export function ShiftsListScreen() {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
       if (datePickerMode === 'start') {
@@ -617,7 +617,7 @@ export function ShiftsListScreen() {
       <Text style={styles.errorMessage}>
         {error?.message || 'No se pudieron cargar los turnos'}
       </Text>
-      <Button mode="contained" onPress={refetch} style={styles.retryButton}>
+      <Button mode="contained" onPress={() => refetch()} style={styles.retryButton}>
         Reintentar
       </Button>
     </View>
@@ -1009,7 +1009,7 @@ export function ShiftsListScreen() {
           renderEmpty()
         ) : (
           <FlashList
-            data={filteredShifts}
+            data={filteredShifts as Shift[]}
             renderItem={renderShiftItem}
             keyExtractor={(item) => item.id}
             estimatedItemSize={200}

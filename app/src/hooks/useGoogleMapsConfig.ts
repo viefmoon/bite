@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { appConfigService } from '@/services/appConfig';
-import { GOOGLE_MAPS_CONFIG } from '@/modules/customers/constants/maps.config';
+import { appConfigService } from '../services/appConfig';
+import { GOOGLE_MAPS_CONFIG } from '../modules/customers/constants/maps.config';
 
 export interface GoogleMapsConfigWithApiKey {
   apiKey: string;

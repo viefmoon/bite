@@ -1,5 +1,5 @@
-import apiClient from '@/app/services/apiClient';
-import { API_PATHS } from '@/app/constants/apiPaths';
+import apiClient from '../app/services/apiClient';
+import { API_PATHS } from '../app/constants/apiPaths';
 
 export interface AppConfig {
   maps: {
@@ -35,7 +35,6 @@ class AppConfigService {
     return config.maps.apiKey;
   }
 
-  // Limpiar caché si es necesario
   clearCache() {
     this.config = null;
   }
