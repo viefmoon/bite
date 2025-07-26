@@ -11,7 +11,7 @@ import { modifierService } from '../services/modifierService';
 import { ModifierFormInputs } from '../schema/modifier.schema';
 import {
   Modifier,
-  modifierFormValidationSchema, // Cambiado de modifierSchema
+  modifierFormValidationSchema,
   CreateModifierInput,
   UpdateModifierInput,
 } from '../schema/modifier.schema';
@@ -95,13 +95,12 @@ const ModifierFormModal: React.FC<Props> = ({
     onError: (error) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      // Error al guardar modificador
     },
   });
 
   const handleFormSubmit = useCallback(
     async (formData: ModifierFormInputs) => {
-      const dataToSend: CreateModifierInput | UpdateModifierInput = {
+      const baseData = {
         ...formData,
         price:
           formData.price === undefined || isNaN(Number(formData.price))
@@ -112,24 +111,19 @@ const ModifierFormModal: React.FC<Props> = ({
         sortOrder: formData.sortOrder ?? 0,
         isDefault: formData.isDefault ?? false,
         isActive: formData.isActive ?? true,
-        modifierGroupId: groupId,
       };
+
+      const dataToSend: CreateModifierInput | UpdateModifierInput = isEditing
+        ? baseData
+        : { ...baseData, modifierGroupId: groupId };
 
       try {
         await mutation.mutateAsync(dataToSend);
       } catch (error) {
-        // Fallo en la mutación al enviar el formulario
+        // Error manejado por onError de mutation
       }
     },
-    [
-      mutation,
-      groupId,
-      isEditing,
-      initialData?.id,
-      onSaveSuccess,
-      queryClient,
-      showSnackbar,
-    ],
+    [mutation, groupId, isEditing],
   );
 
   return (

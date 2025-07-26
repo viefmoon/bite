@@ -14,7 +14,7 @@ import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 
-import ModifierFormModal from '@/modules/modifiers/components/ModifierFormModal';
+import ModifierFormModal from '../components/ModifierFormModal';
 import GenericList, {
   RenderItemConfig,
   FilterOption,
@@ -89,7 +89,6 @@ const ModifiersScreen = () => {
     data: modifiers = [],
     isLoading,
     isError,
-    error: _error,
     refetch,
     isRefetching,
   } = useQuery<Modifier[], Error>({
@@ -98,7 +97,6 @@ const ModifiersScreen = () => {
     enabled: !!groupId,
   });
 
-  // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('modifiers');
 
   const {
@@ -126,8 +124,12 @@ const ModifiersScreen = () => {
     handleOpenEditModal(modifier);
   };
 
-  const handleFilterChange = (value: StatusFilter) => {
-    setStatusFilter(value);
+  const handleFilterChange = (value: string | number) => {
+    if (value === 'all' || value === 'active' || value === 'inactive') {
+      setStatusFilter(value as StatusFilter);
+    } else {
+      setStatusFilter('all');
+    }
   };
 
   const styles = React.useMemo(() => createStyles(theme), [theme]);

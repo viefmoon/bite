@@ -82,7 +82,6 @@ export const modifierService = {
 
     const validationResult = modifiersListSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos para modificadores del grupo
       throw new Error(
         `Received invalid data format for modifiers of group ${modifierGroupId}.`,
       );
@@ -95,7 +94,6 @@ export const modifierService = {
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos después de crear modificador
       throw new Error('Received invalid data format after creating modifier.');
     }
     return validationResult.data;
@@ -109,7 +107,6 @@ export const modifierService = {
 
     const validationResult = modifierApiSchema.safeParse(response.data);
     if (!validationResult.success) {
-      // Datos inválidos recibidos después de actualizar modificador
       throw new Error(
         `Received invalid data format after updating modifier ${id}.`,
       );

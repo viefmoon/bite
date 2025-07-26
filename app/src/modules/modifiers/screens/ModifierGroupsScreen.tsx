@@ -66,7 +66,6 @@ const ModifierGroupsScreen = () => {
     data: paginatedData,
     isLoading,
     isError,
-    error: _error,
     refetch,
     isRefetching,
   } = useQuery<PaginatedResponse<ModifierGroup>, Error>({
@@ -74,7 +73,6 @@ const ModifierGroupsScreen = () => {
     queryFn: () => modifierGroupService.findAll(queryParams),
   });
 
-  // Refrescar todos los modificadores cuando la pantalla recibe foco
   useRefreshModuleOnFocus('modifierGroups');
 
   const modifierGroups = paginatedData?.data || [];
@@ -105,11 +103,9 @@ const ModifierGroupsScreen = () => {
   };
 
   const handleFilterChange = (value: string | number) => {
-    // Validar que el valor sea uno de los StatusFilter esperados
     if (value === 'all' || value === 'active' || value === 'inactive') {
       setStatusFilter(value as StatusFilter);
     } else {
-      // Opcional: manejar valor inesperado, por ahora default a 'all'
       setStatusFilter('all');
     }
   };
@@ -131,18 +127,13 @@ const ModifierGroupsScreen = () => {
     renderDescription: (item) => {
       const parts = [];
 
-      // Agregar orden de visualización
       if (item.sortOrder !== undefined && item.sortOrder !== null) {
         parts.push(`Orden: ${item.sortOrder}`);
       }
 
-      // Agregar si es requerido
       parts.push(`Requerido: ${item.isRequired ? 'Sí' : 'No'}`);
-
-      // Agregar si permite múltiples
       parts.push(`Múltiples: ${item.allowMultipleSelections ? 'Sí' : 'No'}`);
 
-      // Agregar descripción si existe
       if (item.description) {
         parts.push(item.description);
       }
@@ -220,7 +211,7 @@ const ModifierGroupsScreen = () => {
         onRefresh={handleRefresh}
         isRefreshing={isRefetching}
         ListEmptyComponent={ListEmptyComponent}
-        isLoading={isLoading} // Pasar directamente el estado de carga principal
+        isLoading={isLoading}
         enableSearch={true}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}

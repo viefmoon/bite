@@ -144,7 +144,6 @@ const ModifierGroupFormModal: React.FC<Props> = ({
     reset,
     watch,
     formState: { errors, isSubmitting },
-    // setValue, // No se usa actualmente
   } = useForm<ModifierGroupFormInputs>({
     resolver: zodResolver(modifierGroupSchema),
     defaultValues: {
@@ -220,7 +219,6 @@ const ModifierGroupFormModal: React.FC<Props> = ({
     onError: (error) => {
       const message = getApiErrorMessage(error);
       showSnackbar({ message, type: 'error' });
-      // Error al guardar grupo de modificadores
     },
   });
 
