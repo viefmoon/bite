@@ -171,27 +171,25 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
         >
           {/* Línea de fondo para crear efecto de muesca en el borde */}
           <Animated.View
-            style={{
-              position: 'absolute',
-              top: -1, // Sobre el borde superior
-              left: 10,
-              height: 2, // Mismo grosor que el borde
-              backgroundColor: theme.colors.background,
-              zIndex: 5,
-              opacity: animation.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [0, 0.8, 1],
-              }),
-              transform: [
-                {
-                  scaleX: animation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ],
-              width: Math.min(label.length * 6.5 + 16, 200), // Ancho fijo basado en el texto con límite máximo
-            }}
+            style={[
+              styles.backgroundLine,
+              {
+                backgroundColor: theme.colors.background,
+                opacity: animation.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0, 0.8, 1],
+                }),
+                transform: [
+                  {
+                    scaleX: animation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1],
+                    }),
+                  },
+                ],
+                width: Math.min(label.length * 6.5 + 16, 200), // Ancho fijo basado en el texto con límite máximo
+              },
+            ]}
           />
           <Animated.Text
             style={[
@@ -205,7 +203,7 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
           >
             {label}
           </Animated.Text>
-          <View style={[styles.inputContainer, { pointerEvents: 'box-none' }]}>
+          <View style={[styles.inputContainer, styles.inputBoxNone]}>
             <TextInput
               ref={finalRef}
               value={value}
@@ -273,6 +271,16 @@ const createStyles = (
       borderWidth: 0,
       backgroundColor: 'transparent',
       textAlignVertical: props.multiline ? 'top' : 'center',
+    },
+    backgroundLine: {
+      position: 'absolute',
+      top: -1, // Sobre el borde superior
+      left: 10,
+      height: 2, // Mismo grosor que el borde
+      zIndex: 5,
+    },
+    inputBoxNone: {
+      pointerEvents: 'box-none',
     },
   });
 

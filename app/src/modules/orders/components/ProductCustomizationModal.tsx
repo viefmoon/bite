@@ -1028,7 +1028,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                     icon="alert-circle"
                     size={20}
                     iconColor={theme.colors.error}
-                    style={{ margin: 0 }}
+                    style={styles.warningIcon}
                   />
                   <Text style={styles.validationWarningText}>
                     Completa los campos requeridos
@@ -1453,6 +1453,9 @@ const createStyles = (theme: AppTheme) =>
       // Estilo de Divider si se usa
       marginVertical: theme.spacing.s,
       backgroundColor: theme.colors.outlineVariant,
+    },
+    warningIcon: {
+      margin: 0,
     },
   });
 

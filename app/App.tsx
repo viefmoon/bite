@@ -41,12 +41,10 @@ function AppContent() {
   if (isInitializingAuth) {
     return (
       <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: activeTheme.colors.background,
-        }}
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: activeTheme.colors.background },
+        ]}
       >
         <ActivityIndicator size="large" color={activeTheme.colors.primary} />
       </View>
@@ -66,7 +64,7 @@ export default function App() {
   const activeTheme = useThemeStore((state) => state.activeTheme);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.rootContainer}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <PaperProvider theme={activeTheme}>
@@ -77,3 +75,14 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

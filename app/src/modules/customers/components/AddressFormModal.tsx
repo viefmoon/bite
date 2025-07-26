@@ -900,7 +900,7 @@ export default function AddressFormModal({
                 </View>
               </View>
 
-              <View style={{ height: 10 }} />
+              <View style={styles.scrollSpacer} />
             </ScrollView>
 
             <Surface style={styles.buttonContainer} elevation={2}>
@@ -1289,5 +1289,8 @@ const getStyles = (theme: AppTheme) =>
       borderRadius: theme.roundness * 2,
       backgroundColor: theme.colors.surface,
       gap: theme.spacing.s,
+    },
+    scrollSpacer: {
+      height: 10,
     },
   });

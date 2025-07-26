@@ -1,5 +1,11 @@
 import React, { ReactNode, useMemo, Children } from 'react';
-import { View, ViewStyle, StyleProp, DimensionValue } from 'react-native';
+import {
+  View,
+  ViewStyle,
+  StyleProp,
+  DimensionValue,
+  StyleSheet,
+} from 'react-native';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface ResponsiveGridProps {
@@ -153,7 +159,7 @@ export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
         // Agregar elementos vacíos para completar la fila
         while (row.length < calculateColumns) {
           row.push(
-            <View key={`empty-${i}-${row.length}`} style={{ flex: 1 }} />,
+            <View key={`empty-${i}-${row.length}`} style={styles.emptySlot} />,
           );
         }
       }
@@ -236,6 +242,12 @@ export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  emptySlot: {
+    flex: 1,
+  },
+});
 
 // Componente alternativo usando flexWrap para grids más simples
 export const ResponsiveFlexGrid: React.FC<ResponsiveGridProps> = ({

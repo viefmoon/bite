@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { IconButton, Surface, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
 import { useServerConnection } from '../hooks/useServerConnection';
@@ -158,15 +158,6 @@ export function ConnectionIndicator() {
     }
   };
 
-  const containerStyle = useMemo(
-    () => ({
-      marginRight: 8,
-      borderRadius: 20,
-      overflow: 'hidden' as const,
-    }),
-    [],
-  );
-
   const surfaceStyle = useMemo(
     () => ({
       borderRadius: 20,
@@ -175,19 +166,12 @@ export function ConnectionIndicator() {
     [status.backgroundColor],
   );
 
-  const iconButtonStyle = useMemo(
-    () => ({
-      margin: 0,
-    }),
-    [],
-  );
-
   const showBackground =
     !hasWifi || !isConnected || isSearching || !isHealthy || isChecking;
 
   if (showBackground) {
     return (
-      <View style={containerStyle}>
+      <View style={styles.container}>
         <Surface style={surfaceStyle} elevation={0}>
           <IconButton
             icon={status.icon}
@@ -195,18 +179,18 @@ export function ConnectionIndicator() {
             size={24}
             animated={isSearching || isChecking}
             onPress={handlePress}
-            style={iconButtonStyle}
+            style={styles.iconButton}
           />
         </Surface>
         {isReconnecting && !isSearching && (
           <Badge
             size={8}
-            style={{
-              position: 'absolute',
-              top: 4,
-              right: 4,
-              backgroundColor: theme.colors.warning || theme.colors.tertiary,
-            }}
+            style={[
+              styles.reconnectingBadge,
+              {
+                backgroundColor: theme.colors.warning || theme.colors.tertiary,
+              },
+            ]}
           />
         )}
       </View>
@@ -214,7 +198,7 @@ export function ConnectionIndicator() {
   }
 
   return (
-    <View style={{ marginRight: 8, position: 'relative' }}>
+    <View style={styles.simpleContainer}>
       <IconButton
         icon={status.icon}
         iconColor={theme.colors.onPrimary}
@@ -224,14 +208,39 @@ export function ConnectionIndicator() {
       {isReconnecting && (
         <Badge
           size={8}
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            backgroundColor: theme.colors.warning || theme.colors.tertiary,
-          }}
+          style={[
+            styles.simpleBadge,
+            {
+              backgroundColor: theme.colors.warning || theme.colors.tertiary,
+            },
+          ]}
         />
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginRight: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  iconButton: {
+    margin: 0,
+  },
+  reconnectingBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+  },
+  simpleContainer: {
+    marginRight: 8,
+    position: 'relative',
+  },
+  simpleBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+});

@@ -260,6 +260,24 @@ export function ConnectionErrorModal() {
     actionButton: {
       marginTop: 8,
     },
+    iconContainer: {
+      marginBottom: 16,
+    },
+    progressBar: {
+      height: 4,
+      borderRadius: 2,
+    },
+    logsHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    pauseButton: {
+      margin: -4,
+    },
+    logsSpacer: {
+      height: 10,
+    },
   });
 
   if (!visible) return null;
@@ -303,7 +321,7 @@ export function ConnectionErrorModal() {
           <View style={styles.statusSection}>
             {Platform.OS === 'web' ? (
               <>
-                <View style={{ marginBottom: 16 }}>
+                <View style={styles.iconContainer}>
                   <Icon
                     source="server-network"
                     size={64}
@@ -346,7 +364,7 @@ export function ConnectionErrorModal() {
                 <ProgressBar
                   indeterminate
                   color={statusInfo.color}
-                  style={{ height: 4, borderRadius: 2 }}
+                  style={styles.progressBar}
                 />
               </View>
             )}
@@ -354,13 +372,7 @@ export function ConnectionErrorModal() {
           {reconnectState.logs.length > 0 && Platform.OS !== 'web' && (
             <View style={styles.logsContainer}>
               <View style={styles.logsHeader}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
+                <View style={styles.logsHeaderRow}>
                   <Text style={styles.logsTitle}>
                     DETALLES DEL PROCESO {isPaused ? '(PAUSADO)' : ''}
                   </Text>
@@ -369,7 +381,7 @@ export function ConnectionErrorModal() {
                     size={32}
                     onPress={() => setIsPaused(!isPaused)}
                     iconColor={theme.colors.primary}
-                    style={{ margin: -4 }}
+                    style={styles.pauseButton}
                   />
                 </View>
               </View>
@@ -405,7 +417,7 @@ export function ConnectionErrorModal() {
                     );
                   },
                 )}
-                <View style={{ height: 10 }} />
+                <View style={styles.logsSpacer} />
               </ScrollView>
             </View>
           )}

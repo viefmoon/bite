@@ -91,6 +91,11 @@ export const AdaptiveModal = ({
           padding: responsive.spacing(3),
           backgroundColor: theme.colors.surface,
         },
+        modalContentContainer: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 1,
+        },
       }),
     [theme, responsive, minHeight, maxHeightPixels, maxWidth, footer],
   );
@@ -132,11 +137,7 @@ export const AdaptiveModal = ({
         onDismiss={onDismiss}
         dismissable={dismissable}
         dismissableBackButton={dismissableBackButton}
-        contentContainerStyle={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          flex: 1,
-        }}
+        contentContainerStyle={styles.modalContentContainer}
       >
         {Platform.OS === 'ios' ? (
           <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={20}>

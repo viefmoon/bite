@@ -59,33 +59,20 @@ export const ShiftIndicator = () => {
       <TouchableOpacity
         style={[
           styles.container,
-          {
-            backgroundColor: loading
-              ? 'rgba(255, 255, 255, 0.2)'
-              : isShiftOpen
-                ? '#2E7D32' // Verde oscuro sólido
-                : '#F57C00', // Naranja oscuro sólido
-            borderWidth: 2,
-            borderColor: loading
-              ? 'rgba(255, 255, 255, 0.3)'
-              : isShiftOpen
-                ? '#4CAF50' // Verde más claro para el borde
-                : '#FF9800', // Naranja más claro para el borde
-          },
+          loading && styles.loadingContainer,
+          isShiftOpen && !loading && styles.openContainer,
+          !isShiftOpen && !loading && styles.closedContainer,
         ]}
         onPress={handlePress}
         disabled={loading}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        hitSlop={styles.hitSlop}
       >
         <Icon source={getIconName()} size={22} color={getIconColor()} />
         <Text style={[styles.statusText, { color: getIconColor() }]}>
           {loading ? 'Cargando' : isShiftOpen ? 'ABIERTO' : 'CERRADO'}
         </Text>
         {!isShiftOpen && !loading && (
-          <Badge
-            style={[styles.badge, { backgroundColor: '#FF1744' }]}
-            size={8}
-          />
+          <Badge style={[styles.badge, styles.alertBadge]} size={8} />
         )}
       </TouchableOpacity>
 
@@ -140,6 +127,19 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    borderWidth: 2,
+  },
+  loadingContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  openContainer: {
+    backgroundColor: '#2E7D32', // Verde oscuro sólido
+    borderColor: '#4CAF50', // Verde más claro para el borde
+  },
+  closedContainer: {
+    backgroundColor: '#F57C00', // Naranja oscuro sólido
+    borderColor: '#FF9800', // Naranja más claro para el borde
   },
   statusText: {
     fontSize: 14,
@@ -150,5 +150,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
+  },
+  alertBadge: {
+    backgroundColor: '#FF1744',
+  },
+  hitSlop: {
+    top: 10,
+    bottom: 10,
+    left: 10,
+    right: 10,
   },
 });

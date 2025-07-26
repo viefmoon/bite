@@ -60,6 +60,24 @@ export function PizzaCustomizationCard({
       color: theme.colors.onSurfaceVariant,
       marginTop: -2,
     },
+    cardContent: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    typeChip: {
+      marginLeft: theme.spacing.s,
+    },
+    inactiveChip: {
+      marginLeft: theme.spacing.xs,
+    },
+    chipText: {
+      fontSize: 11,
+    },
   });
 
   const getTypeLabel = (type: any) => {
@@ -72,32 +90,26 @@ export function PizzaCustomizationCard({
 
   return (
     <Card style={styles.card} onPress={onPress} mode="contained">
-      <Card.Content style={{ paddingVertical: 12, paddingHorizontal: 16 }}>
+      <Card.Content style={styles.cardContent}>
         <View style={styles.content}>
           <View style={styles.info}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 4,
-              }}
-            >
+            <View style={styles.nameRow}>
               <Text style={styles.name}>{customization.name}</Text>
               <Chip
                 icon={getTypeIcon(customization.type)}
-                style={[styles.chip, { marginLeft: theme.spacing.s }]}
+                style={[styles.chip, styles.typeChip]}
                 compact
-                textStyle={{ fontSize: 11 }}
+                textStyle={styles.chipText}
               >
                 {getTypeLabel(customization.type)}
               </Chip>
               {!customization.isActive && (
                 <Chip
                   icon="eye-off"
-                  style={[styles.chip, { marginLeft: theme.spacing.xs }]}
+                  style={[styles.chip, styles.inactiveChip]}
                   compact
                   mode="outlined"
-                  textStyle={{ fontSize: 11 }}
+                  textStyle={styles.chipText}
                 >
                   Inactivo
                 </Chip>
