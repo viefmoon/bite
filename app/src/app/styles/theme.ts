@@ -21,6 +21,8 @@ declare global {
 }
 
 const spacing = {
+  xxxs: 1,
+  xxs: 2,
   xs: 4,
   s: 8,
   m: 16,
