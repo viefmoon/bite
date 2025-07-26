@@ -94,7 +94,7 @@ export class AuthController {
     type: User,
   })
   @HttpCode(HttpStatus.OK)
-  public me(@Request() request): Promise<NullableType<User>> {
+  public me(@Request() request: any): Promise<NullableType<User>> {
     return this.service.me(request.user);
   }
 
@@ -108,7 +108,7 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  public refresh(@Request() request): Promise<RefreshResponseDto> {
+  public refresh(@Request() request: any): Promise<RefreshResponseDto> {
     return this.service.refreshToken({
       sessionId: request.user.sessionId,
       hash: request.user.hash,
@@ -119,7 +119,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Request() request): Promise<void> {
+  public async logout(@Request() request: any): Promise<void> {
     await this.service.logout({
       sessionId: request.user.sessionId,
     });
@@ -136,7 +136,7 @@ export class AuthController {
     type: User,
   })
   public update(
-    @Request() request,
+    @Request() request: any,
     @Body() userDto: AuthUpdateDto,
   ): Promise<NullableType<User>> {
     return this.service.update(request.user, userDto);
@@ -146,7 +146,7 @@ export class AuthController {
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(@Request() request): Promise<void> {
+  public async delete(@Request() request: any): Promise<void> {
     return this.service.softDelete(request.user);
   }
 }

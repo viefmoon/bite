@@ -3,7 +3,7 @@ import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   RestaurantConfig,
   UpdateRestaurantConfigDto,
-} from '../types/restaurantConfig.types';
+} from '../schema/restaurantConfig.schema';
 
 export const restaurantConfigService = {
   getConfig: async (): Promise<RestaurantConfig> => {

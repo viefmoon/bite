@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { restaurantConfigService } from '../services/restaurantConfigService';
-import { UpdateRestaurantConfigDto } from '../types/restaurantConfig.types';
+import { UpdateRestaurantConfigDto } from '../schema/restaurantConfig.schema';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 const QUERY_KEYS = {

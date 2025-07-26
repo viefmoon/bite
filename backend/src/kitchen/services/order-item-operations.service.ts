@@ -8,7 +8,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { OrderItemEntity } from '../../orders/infrastructure/persistence/relational/entities/order-item.entity';
-import { OrderEntity } from '../../orders/infrastructure/persistence/relational/entities/order.entity';
 import { UserEntity } from '../../users/infrastructure/persistence/relational/entities/user.entity';
 import { PreparationStatus } from '../../orders/domain/order-item';
 import { PreparationScreenStatus } from '../../orders/domain/order-preparation-screen-status';

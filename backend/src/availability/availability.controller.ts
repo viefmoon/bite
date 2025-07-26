@@ -43,9 +43,7 @@ export class AvailabilityController {
     description: 'Modifier groups availability retrieved successfully',
     type: [ModifierGroupAvailabilityDto],
   })
-  async getModifierGroupsAvailability(): Promise<
-    ModifierGroupAvailabilityDto[]
-  > {
+  async getModifierGroupsAvailability(): Promise<ModifierGroupAvailabilityDto[]> {
     return this.availabilityService.getModifierGroupsAvailability();
   }
 
@@ -56,7 +54,7 @@ export class AvailabilityController {
     status: 200,
     description: 'Pizza customizations availability retrieved successfully',
   })
-  async getPizzaCustomizationsAvailability(): Promise<any[]> {
+  async getPizzaCustomizationsAvailability(): Promise<{ type: string; items: any[] }[]> {
     return this.availabilityService.getPizzaCustomizationsAvailability();
   }
 

@@ -481,11 +481,11 @@ export class AuthService {
     await this.usersService.remove(user.id);
   }
 
-  async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>) {
+  async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>): Promise<void> {
     if (!data.sessionId) {
       return;
     }
-    return this.sessionService.deleteById(data.sessionId);
+    await this.sessionService.deleteById(data.sessionId);
   }
 
   private async getTokensData(data: {
@@ -501,7 +501,7 @@ export class AuthService {
     const tokenExpires = Date.now() + ms(tokenExpiresIn);
 
     const [token, refreshToken] = await Promise.all([
-      await this.jwtService.signAsync(
+      this.jwtService.signAsync(
         {
           id: data.id,
           role: data.role,
@@ -512,7 +512,7 @@ export class AuthService {
           expiresIn: tokenExpiresIn,
         },
       ),
-      await this.jwtService.signAsync(
+      this.jwtService.signAsync(
         {
           sessionId: data.sessionId,
           hash: data.hash,

@@ -1,1 +1,1 @@
-export * from './user.types';
+export * from '../schema/user.schema';

@@ -8,7 +8,7 @@ export class AnonymousStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  public validate(payload: unknown, request: unknown): unknown {
+  public validate(_payload: any, request: any): any {
     return request;
   }
 }

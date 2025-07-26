@@ -1,6 +1,6 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
-import { SyncStatus, SyncActivity } from '../types/sync.types';
+import { SyncStatus, SyncActivity } from '../schema/sync.schema';
 
 class SyncService {
   /**

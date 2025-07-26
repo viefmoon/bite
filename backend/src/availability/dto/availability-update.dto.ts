@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum AvailabilityType {
   CATEGORY = 'category',
@@ -44,5 +45,8 @@ export class BulkAvailabilityUpdateDto {
     description: 'Array of availability updates',
     type: [AvailabilityUpdateDto],
   })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AvailabilityUpdateDto)
   updates: AvailabilityUpdateDto[];
 }

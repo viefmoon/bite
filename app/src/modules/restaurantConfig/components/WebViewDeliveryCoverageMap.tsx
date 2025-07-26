@@ -8,7 +8,7 @@ import {
   Text,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { DeliveryCoveragePoint } from '../types/restaurantConfig.types';
+import { DeliveryCoveragePoint } from '../schema/restaurantConfig.schema';
 import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
 
 interface DeliveryCoverageMapProps {
