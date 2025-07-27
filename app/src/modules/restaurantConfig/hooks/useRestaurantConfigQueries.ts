@@ -1,16 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { restaurantConfigService } from '../services/restaurantConfigService';
 import { UpdateRestaurantConfigDto } from '../schema/restaurantConfig.schema';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 
 const QUERY_KEYS = {
   config: ['restaurantConfig'],
 };
 
 export const useRestaurantConfigQueries = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
   const useGetConfig = () => {
     return useQuery({
       queryKey: QUERY_KEYS.config,
@@ -19,26 +16,15 @@ export const useRestaurantConfigQueries = () => {
   };
 
   const useUpdateConfig = (options?: { successMessage?: string }) => {
-    return useMutation({
-      mutationFn: (data: UpdateRestaurantConfigDto) =>
+    return useApiMutation(
+      (data: UpdateRestaurantConfigDto) =>
         restaurantConfigService.updateConfig(data),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.config });
-        showSnackbar({
-          message:
-            options?.successMessage || 'Configuración actualizada exitosamente',
-          type: 'success',
-        });
+      {
+        successMessage:
+          options?.successMessage || 'Configuración actualizada exitosamente',
+        invalidateQueryKeys: [QUERY_KEYS.config],
       },
-      onError: (error: any) => {
-        showSnackbar({
-          message:
-            error.response?.data?.message ||
-            'Error al actualizar la configuración',
-          type: 'error',
-        });
-      },
-    });
+    );
   };
 
   return {

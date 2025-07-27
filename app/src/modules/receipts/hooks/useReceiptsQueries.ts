@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   receiptService,
   receiptQueryOptions,
 } from '../services/receiptService';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 import type {
@@ -46,24 +47,11 @@ export const useReceipt = (id: string) => {
 };
 
 export const useRecoverOrder = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: (orderId: string) => receiptService.recoverOrder(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['receipts'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      showSnackbar({
-        message: 'Orden recuperada exitosamente',
-        type: 'success',
-      });
+  return useApiMutation(
+    (orderId: string) => receiptService.recoverOrder(orderId),
+    {
+      successMessage: 'Orden recuperada exitosamente',
+      invalidateQueryKeys: [['receipts'], ['orders']],
     },
-    onError: (error: Error) => {
-      showSnackbar({
-        message: error.message || 'Error al recuperar la orden',
-        type: 'error',
-      });
-    },
-  });
+  );
 };

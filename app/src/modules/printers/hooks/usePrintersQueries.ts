@@ -15,8 +15,8 @@ import {
 } from '../types/printer.types';
 import { ApiError } from '../../../app/lib/errors';
 import { PaginatedResponse } from '../../../app/types/api.types';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
 const printerKeys = {
   all: ['thermalPrinters'] as const,
@@ -63,165 +63,111 @@ export const usePrinterQuery = (
   });
 };
 
-export const useCreatePrinterMutation = (): UseMutationResult<
-  ThermalPrinter,
-  ApiError,
-  CreateThermalPrinterDto
-> => {
+export const useCreatePrinterMutation = () => {
+  return useApiMutation(
+    printerService.createPrinter,
+    {
+      invalidateQueryKeys: [printerKeys.lists()],
+      suppressSuccessMessage: true,
+      onSuccess: (newPrinter) => {
+        const { showSnackbar } = useSnackbarStore.getState();
+        showSnackbar({
+          message: `Impresora "${newPrinter.name}" creada con éxito`,
+          type: 'success',
+        });
+      },
+    },
+  );
+};
+
+export const useUpdatePrinterMutation = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<ThermalPrinter, ApiError, CreateThermalPrinterDto>({
-    mutationFn: printerService.createPrinter,
-    onSuccess: (newPrinter) => {
-      queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
-      showSnackbar({
-        message: `Impresora "${newPrinter.name}" creada con éxito`,
-        type: 'success',
-      });
+  
+  return useApiMutation(
+    ({ id, data }: { id: string; data: UpdateThermalPrinterDto }) => 
+      printerService.updatePrinter(id, data),
+    {
+      suppressSuccessMessage: true,
+      onSuccess: (updatedPrinter, variables) => {
+        const { showSnackbar } = useSnackbarStore.getState();
+        showSnackbar({
+          message: `Impresora "${updatedPrinter.name}" actualizada`,
+          type: 'success',
+        });
+      },
+      invalidateQueryKeys: [printerKeys.lists()],
+      onSettled: (_, __, variables) => {
+        // Invalidar también el detalle específico
+        queryClient.invalidateQueries({
+          queryKey: printerKeys.detail(variables.id),
+        });
+      },
     },
-    onError: (error) => {
-      showSnackbar({
-        message: getApiErrorMessage(error),
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
-export const useUpdatePrinterMutation = (): UseMutationResult<
-  ThermalPrinter,
-  ApiError,
-  { id: string; data: UpdateThermalPrinterDto }
-> => {
+export const useDeletePrinterMutation = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<
-    ThermalPrinter,
-    ApiError,
-    { id: string; data: UpdateThermalPrinterDto }
-  >({
-    mutationFn: ({ id, data }) => printerService.updatePrinter(id, data),
-    onSuccess: (updatedPrinter, variables) => {
-      queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: printerKeys.detail(variables.id),
-      });
-      showSnackbar({
-        message: `Impresora "${updatedPrinter.name}" actualizada`,
-        type: 'success',
-      });
+  
+  return useApiMutation(
+    printerService.deletePrinter,
+    {
+      successMessage: 'Impresora eliminada',
+      invalidateQueryKeys: [printerKeys.lists()],
+      onSuccess: (_, deletedId) => {
+        queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
+      },
     },
-    onError: (error, _variables) => {
-      showSnackbar({
-        message: getApiErrorMessage(error),
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
-export const useDeletePrinterMutation = (): UseMutationResult<
-  void,
-  ApiError,
-  string
-> => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<void, ApiError, string>({
-    mutationFn: printerService.deletePrinter,
-    onSuccess: (_, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: printerKeys.lists() });
-      queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
-      showSnackbar({ message: 'Impresora eliminada', type: 'success' });
+export const usePingPrinterMutation = () => {
+  return useApiMutation(
+    (printerId: string) => printerService.pingPrinter(printerId),
+    {
+      suppressSuccessMessage: true,
+      onSuccess: (data) => {
+        const { showSnackbar } = useSnackbarStore.getState();
+        const message =
+          data.status === 'online'
+            ? `Impresora conectada (ping exitoso).`
+            : `Impresora desconectada (ping fallido).`;
+        const type = data.status === 'online' ? 'success' : 'warning';
+        showSnackbar({ message, type });
+      },
     },
-    onError: (error) => {
-      showSnackbar({
-        message: `Error al eliminar impresora: ${getApiErrorMessage(error)}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
-export const usePingPrinterMutation = (): UseMutationResult<
-  { status: string },
-  ApiError,
-  string
-> => {
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<{ status: string }, ApiError, string>({
-    mutationFn: (printerId: string) => printerService.pingPrinter(printerId),
-    onSuccess: (data, _printerId) => {
-      const message =
-        data.status === 'online'
-          ? `Impresora conectada (ping exitoso).`
-          : `Impresora desconectada (ping fallido).`;
-      const type = data.status === 'online' ? 'success' : 'warning';
-      showSnackbar({ message, type });
-    },
-    onError: (error, _printerId) => {
-      showSnackbar({
-        message: `Error al hacer ping a la impresora: ${getApiErrorMessage(error)}`,
-        type: 'error',
-      });
-    },
-  });
-};
-
-export const useTestPrintDiscoveredPrinter = (): UseMutationResult<
-  { success: boolean; message?: string },
-  ApiError,
-  DiscoveredPrinter
-> => {
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<
-    { success: boolean; message?: string },
-    ApiError,
-    DiscoveredPrinter
-  >({
-    mutationFn: (printer: DiscoveredPrinter) =>
+export const useTestPrintDiscoveredPrinter = () => {
+  return useApiMutation(
+    (printer: DiscoveredPrinter) =>
       printerService.testPrintDiscoveredPrinter(printer),
-    onSuccess: (data) => {
-      showSnackbar({
-        message: data.message || 'Ticket de prueba impreso correctamente',
-        type: 'success',
-      });
+    {
+      suppressSuccessMessage: true,
+      onSuccess: (data) => {
+        const { showSnackbar } = useSnackbarStore.getState();
+        showSnackbar({
+          message: data.message || 'Ticket de prueba impreso correctamente',
+          type: 'success',
+        });
+      },
     },
-    onError: (error) => {
-      showSnackbar({
-        message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
-export const useTestPrintPrinter = (): UseMutationResult<
-  { success: boolean; message?: string },
-  ApiError,
-  string
-> => {
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<{ success: boolean; message?: string }, ApiError, string>({
-    mutationFn: (printerId: string) =>
-      printerService.testPrintPrinter(printerId),
-    onSuccess: (data) => {
-      showSnackbar({
-        message: data.message || 'Ticket de prueba impreso correctamente',
-        type: 'success',
-      });
+export const useTestPrintPrinter = () => {
+  return useApiMutation(
+    (printerId: string) => printerService.testPrintPrinter(printerId),
+    {
+      suppressSuccessMessage: true,
+      onSuccess: (data) => {
+        const { showSnackbar } = useSnackbarStore.getState();
+        showSnackbar({
+          message: data.message || 'Ticket de prueba impreso correctamente',
+          type: 'success',
+        });
+      },
     },
-    onError: (error) => {
-      showSnackbar({
-        message: `Error al imprimir ticket de prueba: ${getApiErrorMessage(error)}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };

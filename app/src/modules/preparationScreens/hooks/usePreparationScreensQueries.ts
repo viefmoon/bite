@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as preparationScreenService from '../services/preparationScreenService';
 import {
   PreparationScreen,
@@ -8,8 +8,8 @@ import {
 } from '../schema/preparationScreen.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { PaginatedResponse } from '../../../app/types/api.types';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 
 // --- Query Keys ---
 const preparationScreensQueryKeys = {
@@ -69,26 +69,13 @@ export const useGetPreparationScreenById = (
  * Hook for creating a new preparation screen.
  */
 export const useCreatePreparationScreen = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<PreparationScreen, Error, CreatePreparationScreenDto>({
-    mutationFn: preparationScreenService.createPreparationScreen,
-    onSuccess: () => {
-      // Invalidate list queries to refetch
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.lists(),
-      });
-      showSnackbar({
-        message: 'Pantalla de preparación creada con éxito',
-        type: 'success',
-      });
+  return useApiMutation(
+    preparationScreenService.createPreparationScreen,
+    {
+      successMessage: 'Pantalla de preparación creada con éxito',
+      invalidateQueryKeys: [preparationScreensQueryKeys.lists()],
     },
-    onError: (error) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-    },
-  });
+  );
 };
 
 /**
@@ -96,77 +83,75 @@ export const useCreatePreparationScreen = () => {
  */
 export const useUpdatePreparationScreen = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Contexto para actualización optimista
   type UpdatePreparationScreenContext = { previousDetail?: PreparationScreen };
 
-  return useMutation<
+  return useApiMutation<
     PreparationScreen,
     Error,
     { id: string; data: UpdatePreparationScreenDto },
     UpdatePreparationScreenContext
-  >({
-    mutationFn: ({ id, data }) =>
+  >(
+    ({ id, data }) =>
       preparationScreenService.updatePreparationScreen(id, data),
+    {
+      suppressSuccessMessage: true,
+      // --- Inicio Actualización Optimista ---
+      onMutate: async (variables) => {
+        const { id, data } = variables;
+        const detailQueryKey = preparationScreensQueryKeys.detail(id);
 
-    // --- Inicio Actualización Optimista ---
-    onMutate: async (variables) => {
-      const { id, data } = variables;
-      const detailQueryKey = preparationScreensQueryKeys.detail(id);
+        // 1. Cancelar query de detalle
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-      // 1. Cancelar query de detalle
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        // 2. Guardar estado anterior del detalle
+        const previousDetail =
+          queryClient.getQueryData<PreparationScreen>(detailQueryKey);
 
-      // 2. Guardar estado anterior del detalle
-      const previousDetail =
-        queryClient.getQueryData<PreparationScreen>(detailQueryKey);
+        // 3. Actualizar caché de detalle optimistamente
+        if (previousDetail) {
+          // Fusionar datos antiguos y nuevos. Asumiendo que UpdatePreparationScreenDto no tiene estructuras anidadas problemáticas.
+          queryClient.setQueryData<PreparationScreen>(detailQueryKey, (old) =>
+            old ? { ...old, ...data } : undefined,
+          );
+        }
 
-      // 3. Actualizar caché de detalle optimistamente
-      if (previousDetail) {
-        // Fusionar datos antiguos y nuevos. Asumiendo que UpdatePreparationScreenDto no tiene estructuras anidadas problemáticas.
-        queryClient.setQueryData<PreparationScreen>(detailQueryKey, (old) =>
-          old ? { ...old, ...data } : undefined,
-        );
-      }
+        // 4. Retornar contexto
+        return { previousDetail };
+      },
+      // --- Fin Actualización Optimista ---
 
-      // 4. Retornar contexto
-      return { previousDetail };
-    },
-    // --- Fin Actualización Optimista ---
+      onError: (error, variables, context) => {
+        // Revertir caché de detalle
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            preparationScreensQueryKeys.detail(variables.id),
+            context.previousDetail,
+          );
+        }
+      },
 
-    onError: (error, variables, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-      // Error al actualizar pantalla de preparación
-
-      // Revertir caché de detalle
-      if (context?.previousDetail) {
-        queryClient.setQueryData(
-          preparationScreensQueryKeys.detail(variables.id),
-          context.previousDetail,
-        );
-      }
-    },
-
-    onSettled: (data, error, variables) => {
-      // Invalidar listas y detalle para consistencia final
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.detail(variables.id),
-      });
-
-      // Mostrar snackbar de éxito solo si no hubo error
-      if (!error && data) {
-        showSnackbar({
-          message: 'Pantalla de preparación actualizada con éxito',
-          type: 'success',
+      onSettled: (data, error, variables) => {
+        // Invalidar listas y detalle para consistencia final
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.lists(),
         });
-      }
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.detail(variables.id),
+        });
+
+        // Mostrar snackbar de éxito solo si no hubo error
+        if (!error && data) {
+          const { showSnackbar } = useSnackbarStore.getState();
+          showSnackbar({
+            message: 'Pantalla de preparación actualizada con éxito',
+            type: 'success',
+          });
+        }
+      },
     },
-  });
+  );
 };
 
 /**
@@ -174,64 +159,63 @@ export const useUpdatePreparationScreen = () => {
  */
 export const useDeletePreparationScreen = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   // Contexto para guardar el detalle eliminado
   type DeletePreparationScreenContext = { previousDetail?: PreparationScreen };
 
-  return useMutation<void, Error, string, DeletePreparationScreenContext>({
-    mutationFn: preparationScreenService.deletePreparationScreen,
+  return useApiMutation<void, Error, string, DeletePreparationScreenContext>(
+    preparationScreenService.deletePreparationScreen,
+    {
+      suppressSuccessMessage: true,
+      // --- Inicio Actualización Optimista ---
+      onMutate: async (deletedId) => {
+        const detailQueryKey = preparationScreensQueryKeys.detail(deletedId);
 
-    // --- Inicio Actualización Optimista ---
-    onMutate: async (deletedId) => {
-      const detailQueryKey = preparationScreensQueryKeys.detail(deletedId);
+        // 1. Cancelar query de detalle
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-      // 1. Cancelar query de detalle
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        // 2. Guardar estado anterior del detalle
+        const previousDetail =
+          queryClient.getQueryData<PreparationScreen>(detailQueryKey);
 
-      // 2. Guardar estado anterior del detalle
-      const previousDetail =
-        queryClient.getQueryData<PreparationScreen>(detailQueryKey);
+        // 3. Eliminar optimistamente de la caché de detalle
+        queryClient.removeQueries({ queryKey: detailQueryKey });
 
-      // 3. Eliminar optimistamente de la caché de detalle
-      queryClient.removeQueries({ queryKey: detailQueryKey });
+        // 4. Retornar contexto
+        return { previousDetail };
+      },
+      // --- Fin Actualización Optimista ---
 
-      // 4. Retornar contexto
-      return { previousDetail };
-    },
-    // --- Fin Actualización Optimista ---
+      onError: (error, deletedId, context) => {
+        // Revertir caché de detalle si hubo error
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            preparationScreensQueryKeys.detail(deletedId),
+            context.previousDetail,
+          );
+        }
+      },
 
-    onError: (error, deletedId, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-
-      // Revertir caché de detalle si hubo error
-      if (context?.previousDetail) {
-        queryClient.setQueryData(
-          preparationScreensQueryKeys.detail(deletedId),
-          context.previousDetail,
-        );
-      }
-    },
-
-    onSettled: (_, error, deletedId) => {
-      // Invalidar listas para asegurar consistencia final
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.lists(),
-      });
-
-      // Asegurar remoción en éxito y mostrar snackbar
-      if (!error) {
-        queryClient.removeQueries({
-          queryKey: preparationScreensQueryKeys.detail(deletedId),
+      onSettled: (_, error, deletedId) => {
+        // Invalidar listas para asegurar consistencia final
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.lists(),
         });
-        showSnackbar({
-          message: 'Pantalla de preparación eliminada con éxito',
-          type: 'success',
-        });
-      }
+
+        // Asegurar remoción en éxito y mostrar snackbar
+        if (!error) {
+          queryClient.removeQueries({
+            queryKey: preparationScreensQueryKeys.detail(deletedId),
+          });
+          const { showSnackbar } = useSnackbarStore.getState();
+          showSnackbar({
+            message: 'Pantalla de preparación eliminada con éxito',
+            type: 'success',
+          });
+        }
+      },
     },
-  });
+  );
 };
 
 /**
@@ -269,40 +253,29 @@ export const useGetMenuWithAssociations = (
  */
 export const useAssociateProducts = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation<
-    PreparationScreen,
-    Error,
-    { id: string; productIds: string[] }
-  >({
-    mutationFn: ({ id, productIds }) =>
+  return useApiMutation(
+    ({ id, productIds }: { id: string; productIds: string[] }) =>
       preparationScreenService.associateProducts(id, productIds),
-    onSuccess: (_, variables) => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.detail(variables.id),
-      });
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.products(variables.id),
-      });
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.menuWithAssociations(
-          variables.id,
-        ),
-      });
-      queryClient.invalidateQueries({
-        queryKey: preparationScreensQueryKeys.lists(),
-      });
-
-      showSnackbar({
-        message: 'Productos asociados con éxito',
-        type: 'success',
-      });
+    {
+      successMessage: 'Productos asociados con éxito',
+      onSuccess: (_, variables) => {
+        // Invalidate related queries
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.products(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.menuWithAssociations(
+            variables.id,
+          ),
+        });
+        queryClient.invalidateQueries({
+          queryKey: preparationScreensQueryKeys.lists(),
+        });
+      },
     },
-    onError: (error) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-    },
-  });
+  );
 };
