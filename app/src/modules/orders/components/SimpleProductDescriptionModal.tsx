@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { Portal, Modal, Text, Title } from 'react-native-paper';
 import type { Product } from '@/app/schemas/domain/product.schema';
@@ -15,7 +15,7 @@ const SimpleProductDescriptionModal: React.FC<
 > = ({ visible, product, onDismiss }) => {
   const theme = useAppTheme();
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     modal: {
       backgroundColor: theme.colors.background,
       margin: 20,
@@ -34,7 +34,7 @@ const SimpleProductDescriptionModal: React.FC<
       lineHeight: 24,
       color: theme.colors.onSurfaceVariant,
     },
-  });
+  }), [theme]);
 
   if (!product || !product.description) return null;
 
