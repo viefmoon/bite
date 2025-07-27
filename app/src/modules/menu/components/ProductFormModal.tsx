@@ -60,40 +60,36 @@ interface ProductFormModalProps {
   subcategoryId: string;
 }
 
-function ProductFormModal({
-  visible,
-  onDismiss,
-  onSubmit,
+interface UseProductFormLogicProps {
+  initialData?: Product | null;
+  subcategoryId: string;
+  visible: boolean;
+  onFormSubmit: (
+    data: ProductFormInputs,
+    photoId: string | null | undefined,
+    file?: FileObject | null,
+  ) => Promise<void>;
+}
+
+const useProductFormLogic = ({
   initialData,
-  isSubmitting,
-  productId,
   subcategoryId,
-}: ProductFormModalProps): React.ReactElement {
-  const theme = useAppTheme();
-  const responsive = useResponsive();
-  const styles = useMemo(
-    () => createStyles(theme, responsive),
-    [theme, responsive],
-  );
+  visible,
+  onFormSubmit,
+}: UseProductFormLogicProps) => {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const isEditing = !!productId && !!initialData;
+  const isEditing = !!initialData;
 
+  // Estados locales para UI
   const [isVariantModalVisible, setIsVariantModalVisible] = useState(false);
-  const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(
-    null,
-  );
-  const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(
-    null,
-  );
-  const [isInternalImageUploading, setIsInternalImageUploading] =
-    useState(false);
-  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>(
-    {},
-  );
+  const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(null);
+  const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(null);
+  const [isInternalImageUploading, setIsInternalImageUploading] = useState(false);
+  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>({});
   const [priceInputValue, setPriceInputValue] = useState<string>('');
-  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] =
-    useState(false);
+  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] = useState(false);
 
+  // Valores por defecto del formulario
   const defaultValues = useMemo(
     (): ProductFormInputs => ({
       name: '',
@@ -115,18 +111,15 @@ function ProductFormModal({
     [subcategoryId],
   );
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<ProductFormInputs>({
+  // Configuración del formulario con react-hook-form
+  const form = useForm<ProductFormInputs>({
     resolver: zodResolver(initialData ? updateProductSchema : productSchema),
     defaultValues: defaultValues,
   });
 
+  const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = form;
+
+  // useFieldArray para manejar variantes
   const {
     fields: variantFields,
     append: appendVariant,
@@ -137,6 +130,36 @@ function ProductFormModal({
     name: 'variants',
   });
 
+  // Queries para datos asíncronos
+  const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
+    useModifierGroupsQuery({ isActive: true });
+
+  const { data: preparationScreensResponse } = useGetPreparationScreens(
+    {},
+    { page: 1, limit: 50 },
+  );
+
+  const preparationScreens = preparationScreensResponse?.data || [];
+  const allModifierGroups = useMemo(
+    () => modifierGroupsResponse?.data || [],
+    [modifierGroupsResponse?.data],
+  );
+
+  // Watchers del formulario
+  const hasVariants = watch('hasVariants');
+  const currentImageUri = watch('imageUri');
+  const priceValue = watch('price');
+
+  // Efecto para actualizar el input de precio
+  useEffect(() => {
+    setPriceInputValue(
+      priceValue !== null && priceValue !== undefined
+        ? priceValue.toString()
+        : '',
+    );
+  }, [priceValue]);
+
+  // Efecto para cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
       if (visible) {
@@ -186,32 +209,7 @@ function ProductFormModal({
     loadInitialData();
   }, [visible, isEditing, initialData, reset, defaultValues, subcategoryId]);
 
-  const hasVariants = watch('hasVariants');
-  const currentImageUri = watch('imageUri');
-  const priceValue = watch('price');
-
-  useEffect(() => {
-    setPriceInputValue(
-      priceValue !== null && priceValue !== undefined
-        ? priceValue.toString()
-        : '',
-    );
-  }, [priceValue]);
-
-  const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
-    useModifierGroupsQuery({ isActive: true });
-
-  const { data: preparationScreensResponse } = useGetPreparationScreens(
-    {},
-    { page: 1, limit: 50 },
-  );
-  const preparationScreens = preparationScreensResponse?.data || [];
-
-  const allModifierGroups = useMemo(
-    () => modifierGroupsResponse?.data || [],
-    [modifierGroupsResponse?.data],
-  );
-
+  // Efecto para cargar modificadores por grupo
   useEffect(() => {
     const loadModifiers = async () => {
       const modifiersMap: Record<string, any[]> = {};
@@ -233,6 +231,7 @@ function ProductFormModal({
     }
   }, [allModifierGroups]);
 
+  // Efecto para establecer los grupos de modificadores iniciales
   useEffect(() => {
     if (visible) {
       if (isEditing && initialData?.modifierGroups) {
@@ -252,6 +251,7 @@ function ProductFormModal({
     }
   }, [visible, isEditing, initialData, setValue, reset, defaultValues]);
 
+  // Handlers para imágenes
   const handleImageSelected = useCallback(
     (uri: string, file: FileObject) => {
       setValue('imageUri', uri, { shouldValidate: true, shouldDirty: true });
@@ -265,8 +265,9 @@ function ProductFormModal({
     setLocalSelectedFile(null);
   }, [setValue]);
 
+  // Handler para envío del formulario
   const processSubmit: SubmitHandler<ProductFormInputs> = async (formData) => {
-    if (isSubmitting || isInternalImageUploading) return;
+    if (isInternalImageUploading) return;
 
     let finalPhotoId: string | null | undefined = undefined;
 
@@ -294,7 +295,7 @@ function ProductFormModal({
       }
     } else {
       finalPhotoId = await ImageUploadService.determinePhotoId(
-        currentImageUri,
+        currentImageUri ?? null,
         initialData ?? undefined,
       );
     }
@@ -305,10 +306,11 @@ function ProductFormModal({
       variants: hasVariants ? formData.variants : [],
     };
 
-    await onSubmit(finalData, finalPhotoId, localSelectedFile);
+    await onFormSubmit(finalData, finalPhotoId ?? null, localSelectedFile);
     setLocalSelectedFile(null);
   };
 
+  // Handlers para variantes
   const showVariantModal = (index: number | null = null) => {
     setEditingVariantIndex(index);
     setIsVariantModalVisible(true);
@@ -352,10 +354,108 @@ function ProductFormModal({
     removeVariant(index);
   };
 
+  // Datos derivados
   const variantInitialData =
     editingVariantIndex !== null
       ? (variantFields[editingVariantIndex] as ProductVariant)
       : undefined;
+
+  return {
+    // Form
+    form,
+    control,
+    errors,
+    handleSubmit: handleSubmit(processSubmit),
+    
+    // Variantes
+    variantFields,
+    showVariantModal,
+    handleVariantSubmit,
+    handleRemoveVariant,
+    variantInitialData,
+    
+    // Estados UI
+    isVariantModalVisible,
+    setIsVariantModalVisible,
+    editingVariantIndex,
+    localSelectedFile,
+    isInternalImageUploading,
+    priceInputValue,
+    setPriceInputValue,
+    preparationScreenMenuVisible,
+    setPreparationScreenMenuVisible,
+    
+    // Datos
+    allModifierGroups,
+    groupModifiers,
+    preparationScreens,
+    isLoadingGroups,
+    
+    // Watchers
+    hasVariants,
+    currentImageUri,
+    priceValue,
+    
+    // Handlers
+    handleImageSelected,
+    handleImageRemoved,
+    setValue,
+    watch,
+    
+    // Estado
+    isEditing,
+  };
+};
+
+function ProductFormModal({
+  visible,
+  onDismiss,
+  onSubmit,
+  initialData,
+  isSubmitting,
+  // productId, // No se usa en el hook
+  subcategoryId,
+}: ProductFormModalProps): React.ReactElement {
+  const theme = useAppTheme();
+  const responsive = useResponsive();
+  const styles = useMemo(
+    () => createStyles(theme, responsive),
+    [theme, responsive],
+  );
+
+  // Uso del custom hook para toda la lógica
+  const {
+    control,
+    errors,
+    handleSubmit,
+    variantFields,
+    showVariantModal,
+    handleVariantSubmit,
+    handleRemoveVariant,
+    variantInitialData,
+    isVariantModalVisible,
+    setIsVariantModalVisible,
+    isInternalImageUploading,
+    priceInputValue,
+    setPriceInputValue,
+    preparationScreenMenuVisible,
+    setPreparationScreenMenuVisible,
+    allModifierGroups,
+    groupModifiers,
+    preparationScreens,
+    isLoadingGroups,
+    hasVariants,
+    currentImageUri,
+    handleImageSelected,
+    handleImageRemoved,
+    setValue,
+    isEditing,
+  } = useProductFormLogic({
+    initialData,
+    subcategoryId,
+    visible,
+    onFormSubmit: onSubmit,
+  });
 
   return (
     <Portal>
@@ -858,7 +958,7 @@ function ProductFormModal({
           </Button>
           <Button
             mode="contained"
-            onPress={handleSubmit(processSubmit)}
+            onPress={handleSubmit}
             loading={isSubmitting || isInternalImageUploading}
             disabled={isSubmitting || isInternalImageUploading}
             style={styles.formButton}
