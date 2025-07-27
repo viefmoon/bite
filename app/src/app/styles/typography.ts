@@ -175,17 +175,3 @@ export const typography = {
     letterSpacing: 0.4,
   },
 };
-
-export const iosFontFamily = {
-  regular: 'System',
-  medium: 'System',
-  light: 'System',
-  thin: 'System',
-};
-
-export const androidFontFamily = {
-  regular: 'sans-serif',
-  medium: 'sans-serif-medium',
-  light: 'sans-serif-light',
-  thin: 'sans-serif-thin',
-};
