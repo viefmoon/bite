@@ -55,12 +55,6 @@ export const availabilityUpdatePayloadSchema = z.object({
   cascade: z.boolean().optional(),
 });
 
-export const availabilityFilterSchema = z.object({
-  search: z.string().optional(),
-  showOnlyUnavailable: z.boolean().optional(),
-  categoryId: z.string().uuid().optional(),
-  subcategoryId: z.string().uuid().optional(),
-});
 
 export type CategoryAvailability = z.infer<typeof categoryAvailabilitySchema>;
 export type SubcategoryAvailability = z.infer<
@@ -80,4 +74,3 @@ export type PizzaCustomizationGroupAvailability = z.infer<
 export type AvailabilityUpdatePayload = z.infer<
   typeof availabilityUpdatePayloadSchema
 >;
-export type AvailabilityFilter = z.infer<typeof availabilityFilterSchema>;

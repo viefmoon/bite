@@ -23,24 +23,6 @@ export const paymentKeys = {
 };
 
 // Queries
-export const useGetPaymentsQuery = (filters?: {
-  orderId?: string;
-  paymentMethod?: PaymentMethod;
-  paymentStatus?: PaymentStatus;
-}) => {
-  return useQuery({
-    queryKey: paymentKeys.list(filters),
-    queryFn: () => paymentService.getPayments(filters),
-  });
-};
-
-export const useGetPaymentByIdQuery = (id: string) => {
-  return useQuery({
-    queryKey: paymentKeys.detail(id),
-    queryFn: () => paymentService.getPaymentById(id),
-    enabled: !!id,
-  });
-};
 
 export const useGetPaymentsByOrderIdQuery = (
   orderId: string,
@@ -84,36 +66,6 @@ export const useCreatePaymentMutation = () => {
   });
 };
 
-export const useUpdatePaymentMutation = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: ({ id, dto }: { id: string; dto: UpdatePaymentDto }) =>
-      paymentService.updatePayment(id, dto),
-    onSuccess: (data) => {
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: paymentKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: paymentKeys.detail(data.id) });
-      queryClient.invalidateQueries({
-        queryKey: paymentKeys.byOrder(data.orderId),
-      });
-      // Invalidar también las queries de órdenes para que se actualice el estado de pago
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-
-      showSnackbar({
-        message: 'Pago actualizado exitosamente',
-        type: 'success',
-      });
-    },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al actualizar el pago',
-        type: 'error',
-      });
-    },
-  });
-};
 
 export const useDeletePaymentMutation = () => {
   const queryClient = useQueryClient();

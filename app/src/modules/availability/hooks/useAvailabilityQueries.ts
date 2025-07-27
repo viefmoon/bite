@@ -35,21 +35,3 @@ export const useUpdateAvailability = () => {
   });
 };
 
-export const useBulkUpdateAvailability = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: availabilityService.bulkUpdateAvailability,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['availability'] });
-      showSnackbar({ message: 'Disponibilidad actualizada', type: 'success' });
-    },
-    onError: () => {
-      showSnackbar({
-        message: 'Error al actualizar disponibilidad',
-        type: 'error',
-      });
-    },
-  });
-};

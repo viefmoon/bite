@@ -64,6 +64,3 @@ export const createAdjustmentSchema = createAdjustmentBaseSchema
 
 export type CreateAdjustment = z.infer<typeof createAdjustmentSchema>;
 
-// Schema para actualizar un ajuste (usando el schema base sin validaciones)
-export const updateAdjustmentSchema = createAdjustmentBaseSchema.partial();
-export type UpdateAdjustment = z.infer<typeof updateAdjustmentSchema>;

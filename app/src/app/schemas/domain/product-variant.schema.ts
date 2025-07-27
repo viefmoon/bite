@@ -19,14 +19,3 @@ export const productVariantSchema = z.object({
 // Tipo TypeScript inferido y exportado centralmente
 export type ProductVariant = z.infer<typeof productVariantSchema>;
 
-// Schema opcional para Input (definido manualmente, sin ID)
-export const productVariantInputSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  price: z.coerce.number({
-    invalid_type_error: 'El precio debe ser un número',
-    required_error: 'El precio es requerido',
-  }),
-  isActive: z.boolean(),
-  sortOrder: z.number(),
-});
-export type ProductVariantInput = z.infer<typeof productVariantInputSchema>;
