@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
+import { FlashList } from '@shopify/flash-list';
 import { useAppTheme } from '@/app/styles/theme';
 import {
   useKitchenOrders,
@@ -11,6 +12,7 @@ import {
 import { useKitchenStore } from '../store/kitchenStore';
 import { OrderCard } from '../components/OrderCard';
 import { KitchenEmptyState } from '../components/KitchenEmptyState';
+import { KitchenOrder } from '../schema/kitchen.schema';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useKitchenContext } from '../context/KitchenContext';
@@ -93,6 +95,47 @@ export default function KitchenOrdersScreen() {
     setTimeout(() => setIsSwipingCard(false), 100);
   }, []);
 
+  const renderOrderCard = useCallback(
+    ({ item, index }: { item: KitchenOrder; index: number }) => (
+      <View
+        style={[
+          styles.cardContainer,
+          { width: cardWidth },
+          index === (orders?.length ?? 0) - 1
+            ? styles.lastCardContainer
+            : styles.cardContainerWithMargin,
+          responsive.isWeb &&
+            responsive.width >= 1200 &&
+            styles.cardContainerWeb,
+        ]}
+      >
+        <OrderCard
+          order={item}
+          onStartPreparation={handleStartPreparation}
+          onCancelPreparation={handleCancelPreparation}
+          onCompletePreparation={handleCompletePreparation}
+          onSwipeStart={handleSwipeStart}
+          onSwipeEnd={handleSwipeEnd}
+        />
+      </View>
+    ),
+    [
+      cardWidth,
+      orders?.length,
+      responsive.isWeb,
+      responsive.width,
+      handleStartPreparation,
+      handleCancelPreparation,
+      handleCompletePreparation,
+      handleSwipeStart,
+      handleSwipeEnd,
+      styles.cardContainer,
+      styles.lastCardContainer,
+      styles.cardContainerWithMargin,
+      styles.cardContainerWeb,
+    ],
+  );
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -107,17 +150,17 @@ export default function KitchenOrdersScreen() {
   return (
     <View style={styles.container}>
       {hasOrders ? (
-        <ScrollView
+        <FlashList
+          data={orders || []}
+          renderItem={renderOrderCard}
           horizontal={!responsive.isWeb || responsive.width < 1200}
           scrollEnabled={!isSwipingCard}
           showsHorizontalScrollIndicator={false}
-          pagingEnabled={false}
-          contentContainerStyle={[
-            styles.horizontalListContainer,
-            responsive.isWeb &&
-              responsive.width >= 1200 &&
-              styles.gridContainer,
-          ]}
+          contentContainerStyle={
+            responsive.isWeb && responsive.width >= 1200
+              ? styles.gridContainer
+              : styles.horizontalListContainer
+          }
           snapToInterval={
             responsive.isWeb
               ? undefined
@@ -125,32 +168,9 @@ export default function KitchenOrdersScreen() {
           }
           decelerationRate="fast"
           snapToAlignment={responsive.isWeb ? undefined : 'start'}
-        >
-          {orders.map((item, index) => (
-            <View
-              key={item.id}
-              style={[
-                styles.cardContainer,
-                { width: cardWidth },
-                index === orders.length - 1
-                  ? styles.lastCardContainer
-                  : styles.cardContainerWithMargin,
-                responsive.isWeb &&
-                  responsive.width >= 1200 &&
-                  styles.cardContainerWeb,
-              ]}
-            >
-              <OrderCard
-                order={item}
-                onStartPreparation={handleStartPreparation}
-                onCancelPreparation={handleCancelPreparation}
-                onCompletePreparation={handleCompletePreparation}
-                onSwipeStart={handleSwipeStart}
-                onSwipeEnd={handleSwipeEnd}
-              />
-            </View>
-          ))}
-        </ScrollView>
+          estimatedItemSize={cardWidth}
+          keyExtractor={(item) => item.id}
+        />
       ) : (
         <KitchenEmptyState filters={filters} />
       )}

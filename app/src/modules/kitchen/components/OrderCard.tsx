@@ -164,6 +164,6 @@ const createStyles = (responsive: any, theme: any) =>
       backgroundColor: theme.colors.success,
     },
     progressBarInProgress: {
-      backgroundColor: '#FF6B35',
+      backgroundColor: theme.colors.warning || '#FF6B35',
     },
   });
