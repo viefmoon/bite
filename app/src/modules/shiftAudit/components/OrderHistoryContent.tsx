@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Text, Button } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { useAppTheme } from '@/app/styles/theme';
@@ -169,11 +170,12 @@ export const OrderHistoryContent: React.FC<OrderHistoryContentProps> = ({
   return (
     <View style={styles.container}>
       {renderHeaderInfo()}
-      <FlatList
+      <FlashList
         data={historyData || []}
         renderItem={renderHistoryItem}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={[styles.listContent, contentContainerStyle]}
+        estimatedItemSize={120}
+        contentContainerStyle={contentContainerStyle}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
       />

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import {
   Text,
   Portal,
@@ -189,10 +190,11 @@ const TimeZoneSelector: React.FC<TimeZoneSelectorProps> = ({
               clearIcon="close"
             />
 
-            <FlatList
+            <FlashList
               data={filteredTimeZones}
               renderItem={renderTimeZoneItem}
               keyExtractor={(item) => item.value}
+              estimatedItemSize={65}
               style={styles.list}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={true}
