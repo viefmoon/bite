@@ -241,7 +241,7 @@ const useOrderCart = ({
         });
       }
     },
-    [onEditItem, editingProduct],
+    [onEditItem, editingProduct, clearEditingState, handleUpdateEditedItem],
   );
 
   const handleUpdateEditedItem = useCallback(
