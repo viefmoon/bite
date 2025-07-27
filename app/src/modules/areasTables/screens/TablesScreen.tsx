@@ -25,7 +25,7 @@ import {
   useDeleteTable,
 } from '../hooks/useTablesQueries';
 import type { Table } from '@/app/schemas/domain/table.schema';
-import { CreateTableDto, UpdateTableDto } from '../schema/table.schema';
+import { CreateTableDto, UpdateTableDto } from '../schema/table-form.schema';
 import { TablesListScreenProps } from '../navigation/types';
 
 const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {

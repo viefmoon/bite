@@ -8,7 +8,7 @@ import {
   UpdateTableDto,
   CreateTableSchema,
   UpdateTableSchema,
-} from '../schema/table.schema';
+} from '../schema/table-form.schema';
 import { z } from 'zod';
 
 const tableFormFields: FormFieldConfig<CreateTableDto | UpdateTableDto>[] = [

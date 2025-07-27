@@ -1,11 +1,11 @@
 import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
+import { SubCategory } from '@/app/schemas/domain/subcategory.schema';
 import {
-  SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
   FindAllSubcategoriesDto,
-} from '../schema/subcategories.schema';
+} from '../schema/subcategory-form.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
 
 const createSubcategory = async (

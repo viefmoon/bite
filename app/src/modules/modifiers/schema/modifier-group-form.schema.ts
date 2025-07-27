@@ -1,17 +1,25 @@
 import { z } from 'zod';
-import { modifierGroupSchema as domainModifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
+import { modifierGroupSchema } from '@/app/schemas/domain/modifier-group.schema';
 
-export const modifierGroupBaseSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  description: z.string().nullable().optional(),
-  minSelections: z.number().int().min(0).optional(),
-  maxSelections: z.number().int().min(1).optional(),
-  isRequired: z.boolean().optional(),
-  allowMultipleSelections: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  sortOrder: z.number().optional().default(0),
-});
+// Esquema base para formularios
+export const modifierGroupBaseSchema = modifierGroupSchema
+  .pick({
+    name: true,
+    description: true,
+    minSelections: true,
+    maxSelections: true,
+    isRequired: true,
+    allowMultipleSelections: true,
+    isActive: true,
+    sortOrder: true,
+  })
+  .extend({
+    // Validaciones específicas del formulario
+    name: z.string().min(1, 'El nombre es requerido'),
+    sortOrder: z.number().optional().default(0),
+  });
 
+// Esquema con validaciones complejas para formularios
 export const modifierGroupFormValidationSchema =
   modifierGroupBaseSchema.superRefine((data, ctx) => {
     if (data.allowMultipleSelections) {
@@ -55,6 +63,7 @@ export type ModifierGroupFormInputs = z.infer<
   typeof modifierGroupFormValidationSchema
 >;
 
+// Esquema para creación con valores por defecto
 export const createModifierGroupSchema = modifierGroupBaseSchema.transform(
   (data) => ({
     ...data,
@@ -71,13 +80,14 @@ export type CreateModifierGroupInput = z.infer<
   typeof createModifierGroupSchema
 >;
 
+// Esquema para actualización
 export const updateModifierGroupSchema = modifierGroupBaseSchema.partial();
-
 export type UpdateModifierGroupInput = z.infer<
   typeof updateModifierGroupSchema
 >;
 
-export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
+// Esquema para respuestas de API
+export const modifierGroupApiSchema = modifierGroupSchema.extend({
   id: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -86,4 +96,5 @@ export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
   products: z.array(z.any()).optional(),
 });
 
-export const modifierGroupSchema = modifierGroupFormValidationSchema;
+// Exportar el esquema de formulario con un nombre específico
+export { modifierGroupFormValidationSchema as modifierGroupFormSchema };

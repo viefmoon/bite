@@ -34,8 +34,8 @@ export const OrderFinalizationScreen: React.FC = () => {
   const responsive = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const styles = useMemo(
-    () => createStyles(theme, responsive),
-    [theme, responsive],
+    () => createStyles(responsive),
+    [responsive],
   );
   const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
@@ -548,7 +548,6 @@ export const OrderFinalizationScreen: React.FC = () => {
 };
 
 const createStyles = (
-  theme: ReturnType<typeof useAppTheme>,
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({

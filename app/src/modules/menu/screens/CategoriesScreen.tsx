@@ -29,7 +29,7 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
   categoryFormSchema,
-} from '../schema/category.schema';
+} from '../schema/category-form.schema';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 type RootStackParamList = {

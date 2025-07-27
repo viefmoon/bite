@@ -18,14 +18,14 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { modifierGroupService } from '../services/modifierGroupService';
+import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import {
-  ModifierGroup,
   ModifierGroupFormInputs,
-  modifierGroupSchema,
+  modifierGroupFormValidationSchema,
   createModifierGroupSchema,
   CreateModifierGroupInput,
   UpdateModifierGroupInput,
-} from '../schema/modifierGroup.schema';
+} from '../schema/modifier-group-form.schema';
 
 interface Props {
   visible: boolean;
@@ -148,7 +148,7 @@ const ModifierGroupFormModal: React.FC<Props> = ({
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ModifierGroupFormInputs>({
-    resolver: zodResolver(modifierGroupSchema),
+    resolver: zodResolver(modifierGroupFormValidationSchema),
     defaultValues: {
       name: '',
       description: null,

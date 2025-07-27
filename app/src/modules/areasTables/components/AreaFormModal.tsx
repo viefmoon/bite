@@ -8,7 +8,7 @@ import {
   UpdateAreaDto,
   CreateAreaSchema,
   UpdateAreaSchema,
-} from '../schema/area.schema';
+} from '../schema/area-form.schema';
 import { z } from 'zod';
 
 const areaFormFields: FormFieldConfig<CreateAreaDto | UpdateAreaDto>[] = [

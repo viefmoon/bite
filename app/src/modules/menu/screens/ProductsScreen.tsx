@@ -13,7 +13,8 @@ import {
   useUpdateProductMutation,
   useDeleteProductMutation,
 } from '../hooks/useProductsQueries';
-import { Product, ProductFormInputs } from '../schema/products.schema';
+import { ProductFormInputs } from '../schema/products.schema';
+import { Product } from '@/app/schemas/domain/product.schema';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const DeliveryInfoSchema = z.object({
+export const deliveryInfoSchema = z.object({
   id: z.string().optional(),
   orderId: z.string().optional(),
   fullAddress: z.string().optional(),
@@ -21,4 +21,7 @@ export const DeliveryInfoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-export type DeliveryInfo = z.infer<typeof DeliveryInfoSchema>;
+export type DeliveryInfo = z.infer<typeof deliveryInfoSchema>;
+
+// Alias para compatibilidad
+export const DeliveryInfoSchema = deliveryInfoSchema;

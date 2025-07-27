@@ -12,7 +12,7 @@ export function useInitializeAuth() {
         // Verificar el token después de inicializar el store
         await verifyStoredToken();
       } catch (error) {
-        // Error al inicializar auth store
+        // Silently ignore initialization error
       } finally {
         setIsInitializing(false);
       }

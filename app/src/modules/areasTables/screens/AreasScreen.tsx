@@ -26,7 +26,7 @@ import {
   useDeleteArea,
 } from '../hooks/useAreasQueries';
 import type { Area } from '@/app/schemas/domain/area.schema';
-import { CreateAreaDto, UpdateAreaDto } from '../schema/area.schema';
+import { CreateAreaDto, UpdateAreaDto } from '../schema/area-form.schema';
 import { AreasListScreenProps } from '../navigation/types';
 
 const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {

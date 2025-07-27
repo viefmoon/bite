@@ -5,7 +5,7 @@ import {
   CreateTableDto,
   UpdateTableDto,
   FindAllTablesDto,
-} from '../schema/table.schema';
+} from '../schema/table-form.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';

@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
-// Enums
+// Enums - CORREGIDOS según backend
 export enum GenderEnum {
   MALE = 'male',
   FEMALE = 'female',
   OTHER = 'other',
+  PREFER_NOT_TO_SAY = 'prefer_not_to_say', // FALTANTE en frontend
 }
 
 export enum RoleEnum {
@@ -47,6 +48,7 @@ export const userSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().nullable().optional(),
   username: z.string().min(1, 'El nombre de usuario es requerido'),
+  password: z.string().optional(), // Campo del backend
   firstName: z.string().nullable().optional(),
   lastName: z.string().nullable().optional(),
   birthDate: z.string().nullable().optional(),
@@ -61,8 +63,9 @@ export const userSchema = z.object({
   isActive: z.boolean(),
   role: roleSchema.optional(),
   preparationScreen: userPreparationScreenSchema,
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+  updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
+  deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
 });
 
 // Tipos TypeScript inferidos y exportados centralmente

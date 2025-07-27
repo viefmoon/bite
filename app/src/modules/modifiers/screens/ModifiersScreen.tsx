@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 
 import { modifierService } from '../services/modifierService';
-import { Modifier } from '../schema/modifier.schema';
+import { Modifier } from '@/app/schemas/domain/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
 import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';

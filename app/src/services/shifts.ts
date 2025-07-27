@@ -9,6 +9,9 @@ import type {
   ShiftOrder,
 } from '../app/schemas/domain/shift.schema';
 
+// Re-export types for external modules
+export type { Shift, OpenShiftDto, CloseShiftDto, ShiftSummary, ShiftOrder };
+
 class ShiftsService {
   async getCurrentShift(): Promise<Shift | null> {
     try {

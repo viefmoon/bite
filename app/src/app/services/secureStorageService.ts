@@ -35,7 +35,6 @@ class SecureStorageService {
     try {
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      // Error retrieving secure item
       return null;
     }
   }
@@ -72,7 +71,7 @@ class SecureStorageService {
       try {
         await this.removeItem(key);
       } catch (error) {
-        // Error removing key
+        // Silently ignore removal errors
       }
     }
   }

@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       set({ accessToken, isAuthenticated: true });
     } catch (error) {
-      // Error al guardar access token
+      // Silently ignore storage error
     }
   },
 
@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       set({ refreshToken });
     } catch (error) {
-      // Error al guardar refresh token
+      // Silently ignore storage error
     }
   },
 
@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user });
     } catch (error) {
-      // Error al guardar información del usuario
+      // Silently ignore storage error
     }
   },
 

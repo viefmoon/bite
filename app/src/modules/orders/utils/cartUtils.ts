@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import type { Product } from '../schema/orders.schema';
 import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
 
@@ -35,11 +36,8 @@ export interface CartItem {
   originalItemIds?: string[]; // IDs de los ítems originales en la BD
 }
 
-const generateId = () => {
-  const timestamp = Date.now().toString();
-  const random1 = Math.floor(Math.random() * 1000000).toString();
-  const random2 = Math.floor(Math.random() * 1000000).toString();
-  return `${timestamp}-${random1}-${random2}`;
+const generateId = (): string => {
+  return Crypto.randomUUID();
 };
 
 const calculateTotalPrice = (

@@ -1,10 +1,10 @@
 import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
+import { Category } from '@/app/schemas/domain/category.schema';
 import type {
-  Category,
   CreateCategoryDto,
   UpdateCategoryDto,
-} from '../schema/category.schema';
+} from '../schema/category-form.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
 
 export const getCategories = async (params?: {

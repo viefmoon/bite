@@ -8,13 +8,13 @@ import GenericFormModal, {
   FormFieldConfig,
 } from '@/app/components/crud/GenericFormModal';
 import { modifierService } from '../services/modifierService';
-import { ModifierFormInputs } from '../schema/modifier.schema';
+import { Modifier } from '@/app/schemas/domain/modifier.schema';
 import {
-  Modifier,
+  ModifierFormInputs,
   modifierFormValidationSchema,
   CreateModifierInput,
   UpdateModifierInput,
-} from '../schema/modifier.schema';
+} from '../schema/modifier-form.schema';
 
 interface Props {
   visible: boolean;

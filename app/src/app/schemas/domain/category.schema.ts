@@ -18,8 +18,14 @@ export const categorySchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(),
   isActive: z.boolean(),
-  sortOrder: z.number(),
+  sortOrder: z.number().default(0),
   photo: categoryPhotoSchema.nullable().optional(),
+  photoId: z.string().nullable().optional(), // Campo directo del backend
+  createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+  updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
+  deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
+  // Relaciones del backend
+  subcategories: z.array(z.any()).optional(), // SubcategoryEntity[]
 });
 
 // Tipos TypeScript inferidos y exportados centralmente

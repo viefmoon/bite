@@ -19,8 +19,9 @@ export const tableSchema = z.object({
       name: z.string(),
     })
     .optional(), // El área puede venir incluida opcionalmente
-  createdAt: z.union([z.string().datetime(), z.date()]).optional(), // Permitir string o Date
-  updatedAt: z.union([z.string().datetime(), z.date()]).optional(), // Permitir string o Date
+  createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+  updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
+  deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
 });
 
 // Tipo TypeScript inferido y exportado centralmente

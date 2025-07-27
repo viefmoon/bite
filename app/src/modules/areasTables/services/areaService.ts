@@ -6,7 +6,7 @@ import {
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,
-} from '../schema/area.schema';
+} from '../schema/area-form.schema';
 
 const getAreas = async (
   filterOptions: FindAllAreasDto = {},

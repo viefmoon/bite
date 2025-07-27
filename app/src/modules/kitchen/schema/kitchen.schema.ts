@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { orderStatusSchema } from '@/app/schemas/domain/order.schema';
 
 // Enums
 export const orderTypeSchema = z.enum(['DINE_IN', 'TAKE_AWAY', 'DELIVERY']);
@@ -76,7 +77,7 @@ export const kitchenOrderSchema = z.object({
   id: z.string(),
   shiftOrderNumber: z.number(),
   orderType: orderTypeSchema,
-  orderStatus: z.string(), // Estado real de la orden
+  orderStatus: orderStatusSchema, // Estado real de la orden
   createdAt: z.string(),
   orderNotes: z.string().optional(),
   // Campos específicos según tipo

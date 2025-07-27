@@ -11,7 +11,7 @@ import {
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
   FindAllSubcategoriesDto,
-} from '../schema/subcategories.schema';
+} from '../schema/subcategory-form.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
 import { ApiError } from '../../../app/lib/errors';
 import {

@@ -1,11 +1,11 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
+import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import {
-  ModifierGroup,
   CreateModifierGroupInput,
   UpdateModifierGroupInput,
   modifierGroupApiSchema,
-} from '../schema/modifierGroup.schema';
+} from '../schema/modifier-group-form.schema';
 import { z } from 'zod';
 import { PaginatedResponse } from '@/app/types/api.types';
 

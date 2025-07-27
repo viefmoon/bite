@@ -30,14 +30,14 @@ import {
   useUpdateSubcategory,
   useRemoveSubcategory,
 } from '../hooks/useSubcategoriesQueries';
+import { SubCategory } from '@/app/schemas/domain/subcategory.schema';
 import {
-  SubCategory,
   createSubCategoryDtoSchema,
   updateSubCategoryDtoSchema,
   SubCategoryFormInputs,
   UpdateSubCategoryFormInputs,
   FindAllSubcategoriesDto,
-} from '../schema/subcategories.schema';
+} from '../schema/subcategory-form.schema';
 import { MenuStackParamList } from '@/modules/menu/navigation/types';
 
 type SubcategoriesScreenRouteProp = RouteProp<

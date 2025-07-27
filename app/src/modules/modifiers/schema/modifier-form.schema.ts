@@ -1,26 +1,36 @@
 import { z } from 'zod';
-import { modifierSchema as domainModifierSchema } from '../../../app/schemas/domain/modifier.schema';
+import { modifierSchema } from '@/app/schemas/domain/modifier.schema';
 
-const modifierBaseSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(100),
-  description: z.string().max(255).nullable().optional(),
-  price: z.coerce.number().nullable().optional(),
-  sortOrder: z.number().int(),
-  isDefault: z.boolean(),
-  isActive: z.boolean(),
-});
+// Esquema para el formulario de CREACIÓN
+export const createModifierSchema = modifierSchema
+  .pick({
+    modifierGroupId: true,
+    name: true,
+    description: true,
+    price: true,
+    sortOrder: true,
+    isDefault: true,
+    isActive: true,
+  })
+  .extend({
+    // Validaciones específicas del formulario
+    name: z.string().min(1, 'El nombre es requerido').max(100),
+    modifierGroupId: z.string().min(1, 'El ID del grupo no es válido'),
+    sortOrder: z.number().int().default(0),
+    isDefault: z.boolean().default(false),
+    isActive: z.boolean().default(true),
+  });
 
-export const createModifierSchema = modifierBaseSchema.extend({
-  modifierGroupId: z.string().min(1, 'El ID del grupo no es válido'),
-  sortOrder: z.number().int().default(0),
-  isDefault: z.boolean().default(false),
-  isActive: z.boolean().default(true),
-});
 export type CreateModifierInput = z.infer<typeof createModifierSchema>;
 
-export const updateModifierSchema = modifierBaseSchema.partial();
+// Esquema para el formulario de ACTUALIZACIÓN
+export const updateModifierSchema = createModifierSchema
+  .omit({ modifierGroupId: true })
+  .partial();
+
 export type UpdateModifierInput = z.infer<typeof updateModifierSchema>;
 
+// Esquema específico para validación de formularios con preprocessing
 export const modifierFormValidationSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
@@ -36,12 +46,14 @@ export const modifierFormValidationSchema = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
-export const modifierApiSchema = domainModifierSchema.extend({
+// Esquema para respuestas de API
+export const modifierApiSchema = modifierSchema.extend({
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
 });
 
+// Tipo específico para formularios
 export type ModifierFormInputs = {
   name: string;
   description?: string | null;

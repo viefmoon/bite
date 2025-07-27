@@ -58,12 +58,7 @@ export const useThemeStore = create<ThemeState>()(
       partialize: (state) => ({ themePreference: state.themePreference }),
       onRehydrateStorage: () => {
         return (state, error) => {
-          if (error) {
-            // Error rehydrating theme store
-            return;
-          }
-          if (!state) {
-            // State not available during theme rehydration callback
+          if (error || !state) {
             return;
           }
 

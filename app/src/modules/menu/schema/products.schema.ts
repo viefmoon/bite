@@ -19,6 +19,10 @@ const productFormBaseSchema = domainProductSchema
     pizzaConfiguration: true,
     createdAt: true,
     updatedAt: true,
+    deletedAt: true,
+    subcategory: true,
+    orderItems: true,
+    preparationScreen: true,
   })
   .extend({
     id: z.string().optional(), // ID opcional para creación/formulario

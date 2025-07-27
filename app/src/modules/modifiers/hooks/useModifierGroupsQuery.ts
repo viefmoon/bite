@@ -4,7 +4,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 import { modifierGroupService } from '../services/modifierGroupService';
-import { ModifierGroup } from '../schema/modifierGroup.schema';
+import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import { ApiError } from '@/app/lib/errors';
 import { PaginatedResponse } from '@/app/types/api.types';
 

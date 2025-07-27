@@ -6,7 +6,7 @@ import {
   CreateTableDto,
   UpdateTableDto,
   FindAllTablesDto,
-} from '../schema/table.schema';
+} from '../schema/table-form.schema';
 
 const getTablesByAreaId = async (
   areaId: string,

@@ -1,7 +1,7 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
+import { Product } from '@/app/schemas/domain/product.schema';
 import {
-  Product,
   ProductFormInputs,
   FindAllProductsQuery,
   AssignModifierGroupsInput,

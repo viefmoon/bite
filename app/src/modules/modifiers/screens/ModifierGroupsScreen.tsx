@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 
 import { modifierGroupService } from '../services/modifierGroupService';
-import { ModifierGroup } from '../schema/modifierGroup.schema';
+import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import debounce from 'lodash.debounce';
 import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
