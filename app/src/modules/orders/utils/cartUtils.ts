@@ -1,0 +1,283 @@
+import type { Product } from '../schema/orders.schema';
+import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
+
+export interface CartItemModifier {
+  id: string;
+  modifierGroupId: string;
+  name: string;
+  price: number;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  modifiers: CartItemModifier[];
+  variantId?: string;
+  variantName?: string;
+  preparationNotes?: string;
+  notes?: string;
+  preparationStatus?:
+    | 'NEW'
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'READY'
+    | 'DELIVERED'
+    | 'CANCELLED';
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
+  pizzaExtraCost?: number;
+}
+
+const generateId = () => {
+  const timestamp = Date.now().toString();
+  const random1 = Math.floor(Math.random() * 1000000).toString();
+  const random2 = Math.floor(Math.random() * 1000000).toString();
+  return `${timestamp}-${random1}-${random2}`;
+};
+
+const calculateTotalPrice = (
+  unitPrice: number,
+  modifiers: CartItemModifier[],
+  pizzaExtraCost: number,
+  quantity: number,
+) => {
+  const modifiersPrice = modifiers.reduce(
+    (sum, mod) => sum + (mod.price || 0),
+    0,
+  );
+  return (unitPrice + modifiersPrice + pizzaExtraCost) * quantity;
+};
+
+const areModifiersEqual = (
+  modifiers1: CartItemModifier[],
+  modifiers2: CartItemModifier[],
+): boolean => {
+  if (modifiers1.length !== modifiers2.length) return false;
+
+  const sorted1 = [...modifiers1].sort((a, b) => a.id.localeCompare(b.id));
+  const sorted2 = [...modifiers2].sort((a, b) => a.id.localeCompare(b.id));
+
+  for (let i = 0; i < sorted1.length; i++) {
+    if (sorted1[i].id !== sorted2[i].id) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const arePizzaCustomizationsEqual = (
+  customizations1: SelectedPizzaCustomization[] = [],
+  customizations2: SelectedPizzaCustomization[] = [],
+): boolean => {
+  if (customizations1.length !== customizations2.length) return false;
+
+  const sorted1 = [...customizations1].sort((a, b) =>
+    `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+      `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+    ),
+  );
+  const sorted2 = [...customizations2].sort((a, b) =>
+    `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+      `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+    ),
+  );
+
+  for (let i = 0; i < sorted1.length; i++) {
+    if (
+      sorted1[i].pizzaCustomizationId !== sorted2[i].pizzaCustomizationId ||
+      sorted1[i].half !== sorted2[i].half ||
+      sorted1[i].action !== sorted2[i].action
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const addItemToCart = (
+  currentItems: CartItem[],
+  product: Product,
+  quantity: number = 1,
+  variantId?: string,
+  modifiers: CartItemModifier[] = [],
+  preparationNotes?: string,
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+  pizzaExtraCost: number = 0,
+  isEditMode: boolean = false,
+): CartItem[] => {
+  const variantToAdd = variantId
+    ? product.variants?.find((v) => v.id === variantId)
+    : undefined;
+
+  const unitPrice = variantToAdd
+    ? Number(variantToAdd.price)
+    : Number(product.price);
+
+  if (isEditMode) {
+    const newItem: CartItem = {
+      id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      productId: product.id,
+      productName: product.name,
+      quantity,
+      unitPrice,
+      totalPrice: calculateTotalPrice(
+        unitPrice,
+        modifiers,
+        pizzaExtraCost,
+        quantity,
+      ),
+      modifiers,
+      variantId,
+      variantName: variantToAdd?.name,
+      preparationNotes,
+      selectedPizzaCustomizations,
+      pizzaExtraCost,
+      preparationStatus: 'NEW' as const,
+    };
+
+    return [...currentItems, newItem];
+  }
+
+  // Buscar si ya existe un item idéntico
+  const existingItemIndex = currentItems.findIndex((item) => {
+    if (item.productId !== product.id) return false;
+    if (item.variantId !== variantId) return false;
+    if (item.preparationNotes !== preparationNotes) return false;
+    if (!areModifiersEqual(item.modifiers, modifiers)) return false;
+    if (
+      !arePizzaCustomizationsEqual(
+        item.selectedPizzaCustomizations,
+        selectedPizzaCustomizations,
+      )
+    )
+      return false;
+
+    return true;
+  });
+
+  if (existingItemIndex !== -1) {
+    // Actualizar item existente
+    const updatedItems = [...currentItems];
+    const existingItem = updatedItems[existingItemIndex];
+    const newQuantity = existingItem.quantity + quantity;
+
+    updatedItems[existingItemIndex] = {
+      ...existingItem,
+      quantity: newQuantity,
+      totalPrice: calculateTotalPrice(
+        existingItem.unitPrice,
+        modifiers,
+        pizzaExtraCost,
+        newQuantity,
+      ),
+      pizzaExtraCost,
+    };
+
+    return updatedItems;
+  } else {
+    // Crear nuevo item
+    const newItem: CartItem = {
+      id: generateId(),
+      productId: product.id,
+      productName: product.name,
+      quantity,
+      unitPrice,
+      totalPrice: calculateTotalPrice(
+        unitPrice,
+        modifiers,
+        pizzaExtraCost,
+        quantity,
+      ),
+      modifiers,
+      variantId,
+      variantName: variantToAdd?.name,
+      preparationNotes,
+      selectedPizzaCustomizations,
+      pizzaExtraCost,
+    };
+
+    return [...currentItems, newItem];
+  }
+};
+
+export const updateItemInCart = (
+  currentItems: CartItem[],
+  itemId: string,
+  quantity: number,
+  modifiers: CartItemModifier[],
+  preparationNotes?: string,
+  variantId?: string,
+  variantName?: string,
+  unitPrice?: number,
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+  pizzaExtraCost: number = 0,
+): CartItem[] => {
+  return currentItems.map((item) => {
+    if (item.id === itemId) {
+      const finalUnitPrice =
+        unitPrice !== undefined ? unitPrice : item.unitPrice;
+      return {
+        ...item,
+        quantity,
+        modifiers,
+        preparationNotes:
+          preparationNotes !== undefined
+            ? preparationNotes
+            : item.preparationNotes,
+        variantId: variantId !== undefined ? variantId : item.variantId,
+        variantName: variantName !== undefined ? variantName : item.variantName,
+        unitPrice: finalUnitPrice,
+        totalPrice: calculateTotalPrice(
+          finalUnitPrice,
+          modifiers,
+          pizzaExtraCost,
+          quantity,
+        ),
+        selectedPizzaCustomizations:
+          selectedPizzaCustomizations !== undefined
+            ? selectedPizzaCustomizations
+            : item.selectedPizzaCustomizations,
+        pizzaExtraCost,
+      };
+    }
+    return item;
+  });
+};
+
+export const updateItemQuantityInCart = (
+  currentItems: CartItem[],
+  itemId: string,
+  quantity: number,
+): CartItem[] => {
+  if (quantity <= 0) {
+    return currentItems.filter((item) => item.id !== itemId);
+  }
+
+  return currentItems.map((item) => {
+    if (item.id === itemId) {
+      return {
+        ...item,
+        quantity,
+        totalPrice: calculateTotalPrice(
+          item.unitPrice,
+          item.modifiers,
+          item.pizzaExtraCost || 0,
+          quantity,
+        ),
+      };
+    }
+    return item;
+  });
+};
+
+export const removeItemFromCart = (
+  currentItems: CartItem[],
+  itemId: string,
+): CartItem[] => {
+  return currentItems.filter((item) => item.id !== itemId);
+};

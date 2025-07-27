@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
-import type { CartItem } from '../stores/useOrderStore';
+import type { CartItem } from '../utils/cartUtils';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 
 interface OrderState {

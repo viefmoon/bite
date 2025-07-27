@@ -15,11 +15,8 @@ import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { OrdersStackScreenProps } from '../navigation/types';
-import {
-  CartItem,
-  CartItemModifier,
-  useOrderStore,
-} from '../stores/useOrderStore';
+import { CartItem, CartItemModifier } from '../utils/cartUtils';
+import { useOrderStore } from '../stores/useOrderStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 type AddProductsRouteProps = {

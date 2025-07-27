@@ -9,7 +9,7 @@ import { Text, HelperText } from 'react-native-paper';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useAppTheme } from '@/app/styles/theme';
-import { useOrderStore } from '../../stores/useOrderStore';
+import { useOrderFormStore } from '../../stores/useOrderFormStore';
 import { format } from 'date-fns';
 
 interface TakeAwayFormProps {
@@ -29,7 +29,7 @@ export const TakeAwayForm = forwardRef<TakeAwayFormRef, TakeAwayFormProps>(
       setDeliveryInfo,
       setOrderNotes,
       setScheduledTime,
-    } = useOrderStore();
+    } = useOrderFormStore();
 
     const formattedScheduledTime = scheduledTime
       ? format(scheduledTime, 'h:mm a').toLowerCase()

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
-import type { CartItem } from './useOrderStore';
+import type { CartItem } from '../utils/cartUtils';
 
 export type ModalType =
   | 'timePicker'

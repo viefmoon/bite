@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useCreateOrderMutation } from '../../hooks/useOrdersQueries';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import type { OrderDetailsForBackend } from '../../stores/useOrderStore';
+import type { OrderDetailsForBackend } from '../../utils/orderUtils';
 
 interface UseOrderCreationProps {
   hideCart: () => void;

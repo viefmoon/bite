@@ -29,7 +29,7 @@ import type { FullMenuProduct as Product } from '@/modules/orders/schema/orders.
 import type {
   CartItem,
   CartItemModifier,
-} from '@/modules/orders/stores/useOrderStore';
+} from '@/modules/orders/utils/cartUtils';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import { Swipeable } from 'react-native-gesture-handler';

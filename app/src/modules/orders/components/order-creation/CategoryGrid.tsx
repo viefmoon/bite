@@ -19,7 +19,8 @@ import {
   FullMenuCategory,
 } from '../../schema/orders.schema';
 import CartButton from '../CartButton';
-import { useOrderStore, CartItem } from '../../stores/useOrderStore';
+import { useCartStore } from '../../stores/useCartStore';
+import type { CartItem } from '../../utils/cartUtils';
 import { CategoryQuickAccess } from './CategoryQuickAccess';
 
 interface CategoryGridProps {
@@ -159,7 +160,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   const theme = useAppTheme();
   const responsive = useResponsive();
   const { colors, fonts } = theme;
-  const storeCartItems = useOrderStore((state) => state.items);
+  const storeCartItems = useCartStore((state) => state.items);
   const activeCartItems = cartItems || storeCartItems;
   const getProductCount = useCallback(
     (productId: string) => {

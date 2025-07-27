@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import type { CartItem } from '../stores/useOrderStore';
+import type { CartItem } from '../utils/cartUtils';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import type { OrderType } from '../schema/orders.schema';

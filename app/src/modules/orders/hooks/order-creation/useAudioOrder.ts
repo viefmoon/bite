@@ -5,7 +5,7 @@ import {
 } from '@/services/audioOrderService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { Product, FullMenuModifierGroup } from '../../schema/orders.schema';
-import { CartItemModifier } from '../../stores/useOrderStore';
+import { CartItemModifier } from '../../utils/cartUtils';
 
 interface UseAudioOrderProps {
   menu: any;
@@ -20,6 +20,7 @@ interface UseAudioOrderProps {
   ) => void;
   setDeliveryInfo?: (info: any) => void;
   setOrderType?: (type: 'DELIVERY' | 'TAKE_AWAY' | 'DINE_IN') => void;
+  setScheduledTime?: (time: Date | null) => void;
   cartButtonRef: React.RefObject<{ animate: () => void } | null>;
 }
 
@@ -28,6 +29,7 @@ export const useAudioOrder = ({
   handleAddItem,
   setDeliveryInfo,
   setOrderType,
+  setScheduledTime,
   cartButtonRef,
 }: UseAudioOrderProps) => {
   const [showAudioModal, setShowAudioModal] = useState(false);
@@ -170,6 +172,15 @@ export const useAudioOrder = ({
 
       if (orderType && setOrderType) {
         setOrderType(orderType);
+      }
+
+      if (scheduledDelivery && setScheduledTime) {
+        // Convertir la fecha de scheduledDelivery a Date object si es necesario
+        const scheduledDate =
+          scheduledDelivery.date && scheduledDelivery.time
+            ? new Date(`${scheduledDelivery.date}T${scheduledDelivery.time}`)
+            : null;
+        setScheduledTime(scheduledDate);
       }
 
       setShowAudioModal(false);

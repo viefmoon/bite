@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-query';
 import { orderService } from '../services/orderService';
 import type { Order } from '../../../app/schemas/domain/order.schema';
-import type { OrderDetailsForBackend } from '../stores/useOrderStore';
+import type { OrderDetailsForBackend } from '../utils/orderUtils';
 import type { FindAllOrdersDto, OrderOpenList } from '../schema/orders.schema';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';

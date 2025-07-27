@@ -8,9 +8,9 @@ export type OrdersStackParamList = {
     orderId: string;
     orderNumber: number;
     existingOrderItemsCount?: number;
-    existingTempProducts?: import('../stores/useOrderStore').CartItem[];
+    existingTempProducts?: import('../utils/cartUtils').CartItem[];
     onProductsAdded?: (
-      products: import('../stores/useOrderStore').CartItem[],
+      products: import('../utils/cartUtils').CartItem[],
     ) => void;
   };
 };

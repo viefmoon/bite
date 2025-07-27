@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { CartItem } from '../stores/useOrderStore';
+import type { CartItem } from '../utils/cartUtils';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { Payment } from '../schema/payment.schema';
 import { PaymentStatusEnum } from '../schema/payment.schema';

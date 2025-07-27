@@ -436,7 +436,15 @@ const useOrderCart = ({
         type: 'error',
       });
     }
-  }, [user?.id, validateOrder, confirmOrder, onConfirmOrder, isEditMode, showSnackbar, onClose]);
+  }, [
+    user?.id,
+    validateOrder,
+    confirmOrder,
+    onConfirmOrder,
+    isEditMode,
+    showSnackbar,
+    onClose,
+  ]);
 
   // Effects
   useEffect(() => {
@@ -858,13 +866,11 @@ const OrderContent: React.FC<{
                     .filter((item) => !item.id.startsWith('new-'))
                     .reduce((sum, item) => sum + item.quantity, 0),
                   onProductsAdded: (newProducts: CartItem[]) => {
-                    const newProductsWithStatus = newProducts.map(
-                      (item) => ({
-                        ...item,
-                        preparationStatus: 'NEW' as const,
-                        id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-                      }),
-                    );
+                    const newProductsWithStatus = newProducts.map((item) => ({
+                      ...item,
+                      preparationStatus: 'NEW' as const,
+                      id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+                    }));
 
                     newProductsWithStatus.forEach((item) => {
                       addItem(
@@ -1304,115 +1310,116 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) => StyleSheet.create({
-  modalContent: {
-    backgroundColor: theme.colors.background,
-    width: '100%',
-    height: '100%',
-    margin: 0,
-    padding: 0,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  footer: {
-    padding: theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outlineVariant,
-    backgroundColor: theme.colors.surface,
-  },
-  confirmButton: {
-    paddingVertical: theme.spacing.xs,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.m,
-    color: theme.colors.onBackground,
-  },
-  errorModalContent: {
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.m,
-  },
-  errorModalContainer: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.roundness * 3,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    width: '90%',
-    maxWidth: 400,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    modalContent: {
+      backgroundColor: theme.colors.background,
+      width: '100%',
+      height: '100%',
+      margin: 0,
+      padding: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  errorIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  errorModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: theme.spacing.s,
-    textAlign: 'center',
-  },
-  errorModalMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: theme.spacing.l,
-    lineHeight: 22,
-  },
-  errorModalButton: {
-    marginTop: theme.spacing.m,
-    minWidth: 120,
-  },
-  errorModalButtonContent: {
-    paddingHorizontal: theme.spacing.l,
-  },
-  errorModalButtonLabel: {
-    fontSize: 16,
-  },
-  iconButtonNoMargin: {
-    margin: 0,
-  },
-  cancelButton: {
-    backgroundColor: '#FF6B35',
-  },
-  paymentFab: {
-    position: 'absolute',
-    margin: theme.spacing.m,
-    right: 0,
-    bottom: 140,
-    zIndex: 1000,
-    elevation: 6,
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  paymentFabUnsaved: {
-    backgroundColor: '#9CA3AF',
-  },
-  paymentFabCompleted: {
-    backgroundColor: '#4CAF50',
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    footer: {
+      padding: theme.spacing.m,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+      backgroundColor: theme.colors.surface,
+    },
+    confirmButton: {
+      paddingVertical: theme.spacing.xs,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: theme.spacing.m,
+      color: theme.colors.onBackground,
+    },
+    errorModalContent: {
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.m,
+    },
+    errorModalContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.roundness * 3,
+      padding: theme.spacing.xl,
+      alignItems: 'center',
+      width: '90%',
+      maxWidth: 400,
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    errorIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: theme.spacing.m,
+    },
+    errorModalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: theme.spacing.s,
+      textAlign: 'center',
+    },
+    errorModalMessage: {
+      fontSize: 16,
+      textAlign: 'center',
+      marginBottom: theme.spacing.l,
+      lineHeight: 22,
+    },
+    errorModalButton: {
+      marginTop: theme.spacing.m,
+      minWidth: 120,
+    },
+    errorModalButtonContent: {
+      paddingHorizontal: theme.spacing.l,
+    },
+    errorModalButtonLabel: {
+      fontSize: 16,
+    },
+    iconButtonNoMargin: {
+      margin: 0,
+    },
+    cancelButton: {
+      backgroundColor: '#FF6B35',
+    },
+    paymentFab: {
+      position: 'absolute',
+      margin: theme.spacing.m,
+      right: 0,
+      bottom: 140,
+      zIndex: 1000,
+      elevation: 6,
+      width: 56,
+      height: 56,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    paymentFabUnsaved: {
+      backgroundColor: '#9CA3AF',
+    },
+    paymentFabCompleted: {
+      backgroundColor: '#4CAF50',
+    },
+  });
 
 export default OrderCartDetail;

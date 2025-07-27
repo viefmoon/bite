@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Text, IconButton, List } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
-import type { CartItem } from '../../stores/useOrderStore';
+import type { CartItem } from '../../utils/cartUtils';
 import { PreparationStatusInfo } from '../../utils/formatters';
 
 interface OrderItemsListProps {

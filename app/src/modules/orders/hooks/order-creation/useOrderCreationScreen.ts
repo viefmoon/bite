@@ -36,6 +36,7 @@ export const useOrderCreationScreen = () => {
     hideCart,
     setOrderType,
     setDeliveryInfo,
+    setScheduledTime,
     resetOrder,
   } = useOrderStore();
 
@@ -73,6 +74,7 @@ export const useOrderCreationScreen = () => {
     handleAddItem: productSelection.handleAddItem,
     setDeliveryInfo,
     setOrderType,
+    setScheduledTime,
     cartButtonRef: productSelection.cartButtonRef,
   });
 
