@@ -8,27 +8,6 @@ import {
   FindAllTablesDto,
 } from '../schema/table.schema';
 
-const getTables = async (
-  filterOptions: FindAllTablesDto = {},
-  paginationOptions: BaseListQuery = { page: 1, limit: 10 },
-): Promise<Table[]> => {
-  const response = await apiClient.get<{
-    items: Table[];
-    total: number;
-    page: number;
-    limit: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>(API_PATHS.TABLES, {
-    params: {
-      ...filterOptions,
-      page: paginationOptions.page,
-      limit: paginationOptions.limit,
-    },
-  });
-
-  return response.data.items;
-};
 
 const getTablesByAreaId = async (
   areaId: string,
@@ -84,7 +63,6 @@ const deleteTable = async (id: string): Promise<void> => {
 };
 
 export const tableService = {
-  getTables,
   getTablesByAreaId,
   getTableById,
   createTable,

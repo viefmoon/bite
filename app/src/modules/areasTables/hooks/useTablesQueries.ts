@@ -21,16 +21,6 @@ const tablesQueryKeys = {
   detail: (id: string) => [...tablesQueryKeys.details(), id] as const,
 };
 
-export const useGetTables = (
-  filters: FindAllTablesDto = {},
-  pagination: BaseListQuery = { page: 1, limit: 10 },
-) => {
-  const queryKey = tablesQueryKeys.list({ ...filters, ...pagination });
-  return useQuery<Table[], Error>({
-    queryKey,
-    queryFn: () => tableService.getTables(filters, pagination),
-  });
-};
 
 export const useGetTablesByAreaId = (
   areaId: string | null,
