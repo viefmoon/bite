@@ -29,11 +29,6 @@
         "NODE_ENV": "production"
       }
     },
-    "release": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
     "production-apk": {
       "autoIncrement": true,
       "android": {
