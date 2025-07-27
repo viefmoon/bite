@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export interface BackendErrorResponse {
   statusCode: number;
   code: string;

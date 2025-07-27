@@ -20,7 +20,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
   isEditMode,
   prepaymentId,
   paymentAmount,
-  paymentMethod,
+  paymentMethod: _paymentMethod,
   total,
   totalPaid,
   pendingAmount,

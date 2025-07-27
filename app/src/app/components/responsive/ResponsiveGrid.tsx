@@ -1,11 +1,5 @@
 import React, { ReactNode, useMemo, Children } from 'react';
-import {
-  View,
-  ViewStyle,
-  StyleProp,
-  DimensionValue,
-  StyleSheet,
-} from 'react-native';
+import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface ResponsiveGridProps {

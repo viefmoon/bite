@@ -3,7 +3,6 @@ import { paymentService } from '../services/paymentService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type {
   CreatePaymentDto,
-  UpdatePaymentDto,
   PaymentMethod,
   PaymentStatus,
 } from '../schema/payment.schema';

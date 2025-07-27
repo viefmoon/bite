@@ -27,7 +27,7 @@ export const useProductValidation = ({
   selectedVariantId,
   selectedModifiersByGroup,
   selectedPizzaCustomizations,
-  pizzaCustomizations,
+  pizzaCustomizations: _pizzaCustomizations,
   pizzaConfiguration,
 }: UseProductValidationProps) => {
   const validationErrors = useMemo(() => {
@@ -142,7 +142,6 @@ export const useProductValidation = ({
     selectedVariantId,
     selectedModifiersByGroup,
     selectedPizzaCustomizations,
-    pizzaCustomizations,
     pizzaConfiguration,
   ]);
 

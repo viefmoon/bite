@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Platform } from 'react-native';
+import { View, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { Modal, Text, Divider } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -25,6 +25,15 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const platformStyles = StyleSheet.create({
+    modalContainerIOS: {
+      marginVertical: 60,
+    },
+    modalContainerAndroid: {
+      marginVertical: 40,
+    },
+  });
+
   // Query para obtener el conteo de elementos del historial para el header
   const { data: historyData } = useQuery({
     queryKey: ['combinedHistory', orderId],
@@ -49,8 +58,8 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       onDismiss={onDismiss}
       contentContainerStyle={[
         styles.modalContainer,
-        Platform.OS === 'ios' && { marginVertical: 60 },
-        Platform.OS === 'android' && { marginVertical: 40 },
+        Platform.OS === 'ios' && platformStyles.modalContainerIOS,
+        Platform.OS === 'android' && platformStyles.modalContainerAndroid,
       ]}
       dismissable={true}
       dismissableBackButton={false}

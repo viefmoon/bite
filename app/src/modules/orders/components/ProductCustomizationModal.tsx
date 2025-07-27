@@ -33,7 +33,6 @@ import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pi
 import {
   PizzaHalfEnum,
   CustomizationActionEnum,
-  CustomizationTypeEnum,
 } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import PizzaCustomizationSection from './PizzaCustomizationSection';
 import { useProductValidation } from '../hooks/useProductValidation';

@@ -183,15 +183,16 @@ export const formatValue = (
   if (value === null || value === undefined) return '-';
 
   switch (field) {
-    case 'orderType':
+    case 'orderType': {
       const typeMap: Record<string, string> = {
         DINE_IN: 'Comer en el local',
         TAKEAWAY: 'Para llevar',
         DELIVERY: 'Delivery',
       };
       return typeMap[String(value)] || String(value);
+    }
 
-    case 'orderStatus':
+    case 'orderStatus': {
       const statusMap: Record<string, string> = {
         PENDING: 'Pendiente',
         CONFIRMED: 'Confirmada',
@@ -201,8 +202,9 @@ export const formatValue = (
         CANCELLED: 'Cancelada',
       };
       return statusMap[String(value)] || String(value);
+    }
 
-    case 'preparationStatus':
+    case 'preparationStatus': {
       const prepStatusMap: Record<string, string> = {
         PENDING: 'Pendiente',
         IN_PROGRESS: 'En preparación',
@@ -210,6 +212,7 @@ export const formatValue = (
         CANCELLED: 'Cancelado',
       };
       return prepStatusMap[String(value)] || String(value);
+    }
 
     case 'tableId':
     case 'table':
@@ -227,9 +230,10 @@ export const formatValue = (
     case 'total':
     case 'subtotal':
     case 'unitPrice':
-    case 'totalPrice':
+    case 'totalPrice': {
       const num = Number(value);
       return isNaN(num) ? String(value) : `$${num.toFixed(2)}`;
+    }
 
     case 'scheduledAt':
       try {

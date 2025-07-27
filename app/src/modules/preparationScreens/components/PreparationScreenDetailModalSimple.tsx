@@ -153,7 +153,7 @@ const PreparationScreenDetailModal: React.FC<
   onDelete,
   onManageProducts,
   isDeleting = false,
-  deleteConfirmation,
+  deleteConfirmation: _deleteConfirmation,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);

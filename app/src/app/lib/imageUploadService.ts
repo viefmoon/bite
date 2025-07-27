@@ -3,7 +3,6 @@ import {
   FileUploadResponse,
 } from '../../modules/menu/services/fileService';
 import { ApiError } from './errors';
-import { getImageUrl } from './imageUtils';
 
 export interface ImageUploadResult {
   success: boolean;

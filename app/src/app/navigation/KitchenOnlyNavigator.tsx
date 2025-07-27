@@ -8,7 +8,6 @@ import { useAppTheme } from '../styles/theme';
 import { Icon } from 'react-native-paper';
 import { useResponsive } from '../hooks/useResponsive';
 import { KitchenProvider } from '../../modules/kitchen/context/KitchenContext';
-import { useKitchenHeader } from './components/KitchenHeader';
 
 const Drawer = createDrawerNavigator();
 
@@ -73,53 +72,39 @@ function KitchenOnlyNavigatorContent() {
         initialRouteName="Kitchen"
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         defaultStatus="closed"
-        screenOptions={({ navigation }) => {
-          const kitchenHeader = useKitchenHeader({
-            onMenuPress: () => navigation.openDrawer(),
-          });
-
-          return {
-            headerStyle: styles.headerStyle,
-            headerTintColor: theme.colors.onPrimary,
-            headerTitleStyle: styles.headerTitleStyle,
-            drawerStyle: styles.drawerStyle,
-            drawerActiveTintColor: theme.colors.primary,
-            drawerInactiveTintColor: theme.colors.onSurfaceVariant,
-            drawerLabelStyle: {
-              ...theme.fonts.labelLarge,
-              fontSize: responsive.fontSizePreset.m,
-            },
-            drawerItemStyle: {
-              marginVertical: responsive.spacingPreset.xxs,
-              borderRadius: theme.roundness * 2,
-              paddingVertical: responsive.spacingPreset.xxs,
-              paddingHorizontal: responsive.spacingPreset.xs,
-            },
-            headerShown: true,
-            drawerType: 'slide',
-            drawerPosition: 'left',
-            headerShadowVisible: false,
-            swipeEdgeWidth: 0,
-            swipeEnabled: false,
-            drawerHideStatusBarOnOpen: false,
-            headerLeft: kitchenHeader.MenuButton,
-            headerTitle: kitchenHeader.Title,
-            headerRight: kitchenHeader.RightActions,
-          };
-        }}
+        screenOptions={() => ({
+          headerStyle: styles.headerStyle,
+          headerTintColor: theme.colors.onPrimary,
+          headerTitleStyle: styles.headerTitleStyle,
+          drawerStyle: styles.drawerStyle,
+          drawerActiveTintColor: theme.colors.primary,
+          drawerInactiveTintColor: theme.colors.onSurfaceVariant,
+          drawerLabelStyle: {
+            ...theme.fonts.labelLarge,
+            fontSize: responsive.fontSizePreset.m,
+          },
+          drawerItemStyle: {
+            marginVertical: responsive.spacingPreset.xxs,
+            borderRadius: theme.roundness * 2,
+            paddingVertical: responsive.spacingPreset.xxs,
+            paddingHorizontal: responsive.spacingPreset.xs,
+          },
+          headerShown: true,
+          drawerType: 'slide',
+          drawerPosition: 'left',
+          headerShadowVisible: false,
+          swipeEdgeWidth: 0,
+          swipeEnabled: false,
+          drawerHideStatusBarOnOpen: false,
+        })}
       >
         <Drawer.Screen
           name="Kitchen"
-          options={({ navigation }) => {
-            const kitchenHeader = useKitchenHeader({
-              onMenuPress: () => navigation.openDrawer(),
-            });
-            return {
-              title: kitchenHeader.screenName,
-              drawerIcon: ({ color, size }) => (
-                <Icon source="chef-hat" color={color} size={size} />
-              ),
-            };
+          options={{
+            title: 'Cocina',
+            drawerIcon: ({ color, size }) => (
+              <Icon source="chef-hat" color={color} size={size} />
+            ),
           }}
         >
           {() => <KitchenOrdersScreen />}
