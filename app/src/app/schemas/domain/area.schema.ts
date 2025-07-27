@@ -9,8 +9,29 @@ export const areaSchema = z.object({
   createdAt: z.union([z.string().datetime(), z.date()]).optional(),
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
   deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  // Relaciones opcionales (usando type para evitar dependencias circulares)
-  tables: z.array(z.any()).optional(), // Table[] - se define por separado para evitar ciclos
+  // Relaciones opcionales (usando z.lazy para evitar dependencias circulares)
+  tables: z
+    .array(
+      z.lazy(() =>
+        z.object({
+          id: z.string().uuid(),
+          name: z.string(),
+          areaId: z.string().uuid(),
+          capacity: z.number().int().nullable().optional(),
+          isActive: z.boolean(),
+          isAvailable: z.boolean(),
+          isTemporary: z.boolean(),
+          temporaryIdentifier: z.string().nullable().optional(),
+          createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+          updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
+          deletedAt: z
+            .union([z.string().datetime(), z.date()])
+            .nullable()
+            .optional(),
+        }),
+      ),
+    )
+    .optional(),
 });
 
 // Tipo TypeScript inferido y exportado centralmente

@@ -2,15 +2,21 @@ import { useState, useRef, useEffect, forwardRef, useMemo } from 'react';
 import {
   View,
   TextInput,
-  Animated,
   StyleSheet,
   TextInputProps,
   StyleProp,
   ViewStyle,
   TextStyle,
   TouchableWithoutFeedback,
-  Easing,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  interpolate,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 
@@ -55,7 +61,7 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
     const theme = useAppTheme();
     const responsive = useResponsive();
     const [isFocused, setIsFocused] = useState(false);
-    const animation = useRef(new Animated.Value(value ? 1 : 0)).current;
+    const animation = useSharedValue(value ? 1 : 0);
 
     const isActive = isFocused || (value != null && value !== '');
 
@@ -67,12 +73,10 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
     const finalErrorColor = customErrorColor || theme.colors.error;
 
     useEffect(() => {
-      Animated.timing(animation, {
-        toValue: isActive ? 1 : 0,
+      animation.value = withTiming(isActive ? 1 : 0, {
         duration: 150,
-        useNativeDriver: false,
-        easing: Easing.bezier(0.4, 0.0, 0.2, 1), // Material Design easing
-      }).start();
+        easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      });
     }, [isActive, animation]);
 
     const handleFocus = (e: any) => {
@@ -88,16 +92,6 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
     // Usar ref externa o crear una nueva
     const inputRef = useRef<TextInput>(null);
     const finalRef = ref || inputRef;
-
-    const labelScale = animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [1, 0.8], // Escala más sutil
-    });
-
-    const labelColor = animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [finalInactiveLabelColor, finalActiveLabelColor],
-    });
 
     const currentBorderColor = error
       ? finalErrorColor
@@ -115,30 +109,23 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
       [theme, responsive, multiline, disabled, finalInactiveLabelColor],
     );
 
-    const animatedTranslateY = animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, -28],
-    });
+    const animatedLabelStyle = useAnimatedStyle(() => {
+      const translateY = interpolate(animation.value, [0, 1], [0, -28]);
+      const translateX = interpolate(animation.value, [0, 1], [0, -4]);
+      const scale = interpolate(animation.value, [0, 1], [1, 0.8]);
+      const color = interpolateColor(
+        animation.value,
+        [0, 1],
+        [finalInactiveLabelColor, finalActiveLabelColor],
+      );
 
-    const animatedTranslateX = animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, -4],
+      return {
+        transform: [{ translateX }, { translateY }, { scale }],
+        color,
+        backgroundColor: theme.colors.background,
+        maxWidth: isActive ? '85%' : '90%',
+      };
     });
-
-    const animatedLabelStyle = {
-      position: 'absolute' as const,
-      top: 20,
-      left: 12,
-      zIndex: 10, // Aumentar z-index para mejor visibilidad
-      transform: [
-        { translateX: animatedTranslateX },
-        { translateY: animatedTranslateY },
-        { scale: labelScale },
-      ],
-      color: labelColor,
-      backgroundColor: theme.colors.background,
-      maxWidth: isActive ? ('85%' as `${number}%`) : ('90%' as `${number}%`),
-    };
 
     // Estilos estáticos que no deben ser animados
     const staticLabelStyle = {
@@ -175,20 +162,14 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
               styles.backgroundLine,
               {
                 backgroundColor: theme.colors.background,
-                opacity: animation.interpolate({
-                  inputRange: [0, 0.5, 1],
-                  outputRange: [0, 0.8, 1],
-                }),
-                transform: [
-                  {
-                    scaleX: animation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 1],
-                    }),
-                  },
-                ],
-                width: Math.min(label.length * 6.5 + 16, 200), // Ancho fijo basado en el texto con límite máximo
+                width: Math.min(label.length * 6.5 + 16, 200),
               },
+              useAnimatedStyle(() => ({
+                opacity: interpolate(animation.value, [0, 0.5, 1], [0, 0.8, 1]),
+                transform: [
+                  { scaleX: interpolate(animation.value, [0, 1], [0, 1]) },
+                ],
+              })),
             ]}
           />
           <Animated.Text
@@ -196,6 +177,12 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
               styles.label,
               staticLabelStyle,
               labelStyle,
+              {
+                position: 'absolute',
+                top: 20,
+                left: 12,
+                zIndex: 10,
+              },
               animatedLabelStyle,
             ]}
             numberOfLines={1}

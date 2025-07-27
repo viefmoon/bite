@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { selectedPizzaCustomizationSchema } from '@/app/schemas/domain/order.schema';
 
 const deliveryInfoSchema = z.object({
   recipientName: z.string().optional(),
@@ -100,7 +101,7 @@ export const orderItemForFinalizationSchema = z.object({
     .nullable()
     .optional(),
   modifiers: z.array(orderItemModifierForFinalizationSchema),
-  selectedPizzaCustomizations: z.array(z.any()).optional(),
+  selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
 });
 
 export type OrderItemForFinalization = z.infer<

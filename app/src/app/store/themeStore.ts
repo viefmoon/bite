@@ -4,11 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import { useColorScheme, Appearance } from 'react-native';
 
-import {
-  ThemePreference,
-  THEME_PREFERENCE_STORAGE_KEY,
-  THEME_MODE,
-} from '../types/theme.types';
+import { ThemePreference, THEME_MODE } from '../types/theme.types';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 import { lightTheme, darkTheme } from '../styles/theme';
 
 interface ThemeState {
@@ -53,7 +50,7 @@ export const useThemeStore = create<ThemeState>()(
     }),
 
     {
-      name: THEME_PREFERENCE_STORAGE_KEY,
+      name: STORAGE_KEYS.THEME_PREFERENCE,
       storage: createJSONStorage(() => EncryptedStorage),
       partialize: (state) => ({ themePreference: state.themePreference }),
       onRehydrateStorage: () => {

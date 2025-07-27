@@ -15,26 +15,30 @@ const SimpleProductDescriptionModal: React.FC<
 > = ({ visible, product, onDismiss }) => {
   const theme = useAppTheme();
 
-  const styles = useMemo(() => StyleSheet.create({
-    modal: {
-      backgroundColor: theme.colors.background,
-      margin: 20,
-      padding: 20,
-      borderRadius: 8,
-      maxHeight: '60%',
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 16,
-      color: theme.colors.onBackground,
-    },
-    description: {
-      fontSize: 16,
-      lineHeight: 24,
-      color: theme.colors.onSurfaceVariant,
-    },
-  }), [theme]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        modal: {
+          backgroundColor: theme.colors.background,
+          margin: 20,
+          padding: 20,
+          borderRadius: 8,
+          maxHeight: '60%',
+        },
+        title: {
+          fontSize: 20,
+          fontWeight: 'bold',
+          marginBottom: 16,
+          color: theme.colors.onBackground,
+        },
+        description: {
+          fontSize: 16,
+          lineHeight: 24,
+          color: theme.colors.onSurfaceVariant,
+        },
+      }),
+    [theme],
+  );
 
   if (!product || !product.description) return null;
 

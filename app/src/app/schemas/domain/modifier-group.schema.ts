@@ -17,9 +17,38 @@ export const modifierGroupSchema = z.object({
   createdAt: z.union([z.string().datetime(), z.date()]).optional(),
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
   deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  // Relaciones del backend
-  productModifiers: z.array(z.any()).optional(), // ProductModifierEntity[]
-  products: z.array(z.any()).optional(), // ProductEntity[]
+  // Relaciones del backend (usando z.lazy para evitar dependencias circulares)
+  productModifiers: z
+    .array(
+      z.lazy(() =>
+        z.object({
+          id: z.string(),
+          modifierGroupId: z.string(),
+          name: z.string(),
+          price: z.number(),
+          isActive: z.boolean(),
+          sortOrder: z.number(),
+        }),
+      ),
+    )
+    .optional(),
+  products: z
+    .array(
+      z.lazy(() =>
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          price: z.number().nullable().optional(),
+          hasVariants: z.boolean(),
+          isActive: z.boolean(),
+          isPizza: z.boolean(),
+          subcategoryId: z.string(),
+          sortOrder: z.number(),
+          estimatedPrepTime: z.number(),
+        }),
+      ),
+    )
+    .optional(),
 });
 
 // Tipo TypeScript inferido y exportado centralmente

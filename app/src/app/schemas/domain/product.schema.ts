@@ -37,9 +37,36 @@ export const productSchema = z.object({
   createdAt: z.union([z.string().datetime(), z.date()]).optional(),
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
   deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  // Relaciones adicionales del backend
-  subcategory: z.any().optional(), // SubcategoryEntity
-  orderItems: z.array(z.any()).optional(), // OrderItemEntity[]
+  // Relaciones adicionales del backend (usando z.lazy para evitar dependencias circulares)
+  subcategory: z
+    .lazy(() =>
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().nullable().optional(),
+        isActive: z.boolean(),
+        categoryId: z.string(),
+        sortOrder: z.number(),
+      }),
+    )
+    .optional(),
+  orderItems: z
+    .array(
+      z.lazy(() =>
+        z.object({
+          id: z.string(),
+          productId: z.string().uuid(),
+          productName: z.string(),
+          quantity: z.number().int().positive(),
+          unitPrice: z.number(),
+          totalPrice: z.number(),
+          variantId: z.string().uuid().nullable().optional(),
+          variantName: z.string().nullable().optional(),
+          notes: z.string().nullable().optional(),
+        }),
+      ),
+    )
+    .optional(),
 });
 
 export type Product = z.infer<typeof productSchema>;

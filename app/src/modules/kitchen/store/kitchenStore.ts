@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import EncryptedStorage from '@/app/services/secureStorageService';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import { KitchenFilters } from '../schema/kitchen.schema';
-
-const KITCHEN_FILTERS_STORAGE_KEY = 'kitchen_filters_preferences';
 
 interface KitchenStore {
   filters: KitchenFilters;
@@ -26,7 +25,7 @@ export const useKitchenStore = create<KitchenStore>()(
       resetFilters: () => set({ filters: defaultFilters }),
     }),
     {
-      name: KITCHEN_FILTERS_STORAGE_KEY,
+      name: STORAGE_KEYS.KITCHEN_FILTERS_PREFERENCES,
       storage: createJSONStorage(() => EncryptedStorage),
       partialize: (state) => ({ filters: state.filters }),
       onRehydrateStorage: () => {

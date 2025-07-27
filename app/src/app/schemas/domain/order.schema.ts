@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
 import { DeliveryInfoSchema } from './delivery-info.schema';
 import { tableSchema } from './table.schema';
+import { paymentSchema } from '@/modules/orders/schema/payment.schema';
+import { userSchema } from './user.schema';
 
 // Definir enums localmente para evitar dependencias circulares
 enum PizzaHalf {
@@ -83,7 +85,7 @@ export const orderSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.string().optional(),
   shiftOrderNumber: z.number().int().positive(),
-  orderItems: z.array(z.any()).optional(),
+  orderItems: z.array(orderItemSchema).optional(),
   total: z.union([z.string(), z.number()]).optional(),
   orderStatus: orderStatusSchema,
   orderType: orderTypeSchema,
@@ -95,9 +97,9 @@ export const orderSchema = z.object({
   notes: z.string().nullable().optional(),
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   deliveryInfo: DeliveryInfoSchema,
-  user: z.any().optional(),
+  user: userSchema.optional(),
   table: tableSchema.optional(),
-  payments: z.array(z.any()).optional(),
+  payments: z.array(paymentSchema).optional(),
   deletedAt: z.string().nullable().optional(),
   adjustments: z.array(adjustmentSchema).optional(),
   subtotal: z.union([z.string(), z.number()]).optional(),

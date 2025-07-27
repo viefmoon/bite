@@ -9,6 +9,7 @@ import type { Category } from '@/app/schemas/domain/category.schema';
 import {
   orderStatusSchema,
   orderTypeSchema,
+  orderItemSchema,
 } from '@/app/schemas/domain/order.schema';
 import type {
   OrderItemModifier,
@@ -17,6 +18,9 @@ import type {
   OrderType,
   Order,
 } from '@/app/schemas/domain/order.schema';
+import { paymentSchema } from './payment.schema';
+import { adjustmentSchema } from '@/app/schemas/domain/adjustment.schema';
+import { DeliveryInfoSchema } from '@/app/schemas/domain/delivery-info.schema';
 
 // Re-exportar tipos de dominio
 export type {
@@ -163,12 +167,12 @@ export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
 // Schema para crear orden
 export const createOrderSchema = z.object({
   type: orderTypeSchema,
-  orderItems: z.array(z.any()), // Definir más específicamente si es necesario
-  payments: z.array(z.any()).optional(),
-  adjustments: z.array(z.any()).optional(),
+  orderItems: z.array(orderItemSchema),
+  payments: z.array(paymentSchema).optional(),
+  adjustments: z.array(adjustmentSchema).optional(),
   tableId: z.string().uuid().optional(),
   customerId: z.string().uuid().optional(),
-  deliveryInfo: z.any().optional(), // Definir más específicamente si es necesario
+  deliveryInfo: DeliveryInfoSchema.optional(),
 });
 
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;

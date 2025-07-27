@@ -1,11 +1,8 @@
 import { create } from 'zustand';
 import EncryptedStorage from '@/app/services/secureStorageService';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 import type { User } from '../schemas/domain/user.schema';
 import * as ScreenOrientation from 'expo-screen-orientation';
-
-const AUTH_TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_INFO_KEY = 'user_info';
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -39,12 +36,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw new Error('Usuario inactivo');
     }
 
-    await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
-    await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    await EncryptedStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, accessToken);
+    await EncryptedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
     if (user) {
-      await EncryptedStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+      await EncryptedStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
     } else {
-      await EncryptedStorage.removeItem(USER_INFO_KEY);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
     }
     set({
       accessToken,
@@ -56,7 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setAccessToken: async (accessToken: string) => {
     try {
-      await EncryptedStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+      await EncryptedStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, accessToken);
       set({ accessToken, isAuthenticated: true });
     } catch (error) {
       // Silently ignore storage error
@@ -65,7 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setRefreshToken: async (refreshToken: string) => {
     try {
-      await EncryptedStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      await EncryptedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
       set({ refreshToken });
     } catch (error) {
       // Silently ignore storage error
@@ -80,9 +77,9 @@ export const useAuthStore = create<AuthState>((set) => ({
           await useAuthStore.getState().logout();
           return;
         }
-        await EncryptedStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+        await EncryptedStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
       } else {
-        await EncryptedStorage.removeItem(USER_INFO_KEY);
+        await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
       }
       set({ user });
     } catch (error) {
@@ -97,9 +94,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     };
 
     const clearAuthData = async () => {
-      await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
-      await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
-      await EncryptedStorage.removeItem(USER_INFO_KEY);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
       set({
         accessToken: null,
         refreshToken: null,
@@ -132,24 +129,24 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 export const initializeAuthStore = async () => {
   try {
-    const accessToken = await EncryptedStorage.getItem(AUTH_TOKEN_KEY);
-    const refreshToken = await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
-    const userInfoString = await EncryptedStorage.getItem(USER_INFO_KEY);
+    const accessToken = await EncryptedStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const refreshToken = await EncryptedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    const userInfoString = await EncryptedStorage.getItem(STORAGE_KEYS.USER_INFO);
     let user: User | null = null;
     if (userInfoString) {
       try {
         user = JSON.parse(userInfoString);
       } catch (parseError) {
-        await EncryptedStorage.removeItem(USER_INFO_KEY);
+        await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
       }
     }
 
     if (accessToken && refreshToken) {
       // Verificar si el usuario está activo antes de restaurar la sesión
       if (user && 'isActive' in user && !user.isActive) {
-        await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
-        await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
-        await EncryptedStorage.removeItem(USER_INFO_KEY);
+        await EncryptedStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        await EncryptedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
         useAuthStore.setState({
           accessToken: null,
           refreshToken: null,

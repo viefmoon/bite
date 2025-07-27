@@ -17,6 +17,7 @@ import {
   ProgressBar,
 } from 'react-native-paper';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import {
   serverConnectionService,
   ConnectionMode,
@@ -26,11 +27,6 @@ import EncryptedStorage from '@/app/services/secureStorageService';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive, ResponsiveInfo } from '@/app/hooks/useResponsive';
 import { useServerConnection } from '@/app/hooks/useServerConnection';
-
-const STORAGE_KEYS = {
-  CONNECTION_MODE: 'connection_mode',
-  MANUAL_URL: 'manual_server_url',
-} as const;
 
 interface DiscoveryProgress {
   current: number;

@@ -20,15 +20,11 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import { ConnectionMode } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import axios from 'axios';
-
-const STORAGE_KEYS = {
-  CONNECTION_MODE: 'connection_mode',
-  MANUAL_URL: 'manual_server_url',
-};
 
 interface ServerConfigModalProps {
   visible: boolean;

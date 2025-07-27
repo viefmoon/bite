@@ -4,6 +4,7 @@ import axios, {
   type AxiosResponse,
 } from 'axios';
 import EncryptedStorage from '@/app/services/secureStorageService';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 import { useAuthStore } from '../store/authStore';
 import { ApiError } from '../lib/errors';
 import axiosRetry from 'axios-retry';
@@ -11,8 +12,6 @@ import { discoveryService } from './discoveryService';
 import { useSnackbarStore } from '../store/snackbarStore';
 import { API_PATHS } from '../constants/apiPaths';
 import { certificateValidator } from './certificateValidator';
-
-const REFRESH_TOKEN_KEY = 'refresh_token';
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -34,7 +33,7 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 async function refreshToken(baseURL: string): Promise<string> {
   try {
     const currentRefreshToken =
-      await EncryptedStorage.getItem(REFRESH_TOKEN_KEY);
+      await EncryptedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
     if (!currentRefreshToken) {
       throw new Error('No refresh token available.');
     }

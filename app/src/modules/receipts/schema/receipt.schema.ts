@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   orderTypeSchema,
   orderStatusSchema,
+  selectedPizzaCustomizationSchema,
 } from '@/app/schemas/domain/order.schema';
 
 export type OrderType = z.infer<typeof orderTypeSchema>;
@@ -160,7 +161,7 @@ export const receiptSchema = z.object({
           }),
         )
         .optional(),
-      selectedPizzaCustomizations: z.array(z.any()).optional(),
+      selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
     }),
   ),
   payments: z

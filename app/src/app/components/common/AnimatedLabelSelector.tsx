@@ -1,8 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
-  Animated,
   StyleSheet,
   Text,
   StyleProp,
@@ -10,6 +9,13 @@ import {
   TextStyle,
   ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Icon, IconButton } from 'react-native-paper';
@@ -54,7 +60,7 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
   const responsive = useResponsive();
 
   const isActive = value != null && value !== '';
-  const animation = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+  const animation = useSharedValue(isActive ? 1 : 0);
 
   const finalActiveLabelColor = activeLabelColor || theme.colors.primary;
   const finalInactiveLabelColor =
@@ -72,27 +78,10 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
         : finalBorderColor;
 
   useEffect(() => {
-    Animated.timing(animation, {
-      toValue: isActive ? 1 : 0,
+    animation.value = withTiming(isActive ? 1 : 0, {
       duration: 200,
-      useNativeDriver: false,
-    }).start();
+    });
   }, [isActive, animation]);
-
-  const labelTranslateY = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -26],
-  });
-
-  const labelScale = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0.8],
-  });
-
-  const labelColor = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [finalInactiveLabelColor, finalActiveLabelColor],
-  });
 
   const styles = React.useMemo(
     () =>
@@ -103,14 +92,26 @@ const AnimatedLabelSelector: React.FC<AnimatedLabelSelectorProps> = ({
     [theme, responsive, disabled, finalInactiveLabelColor],
   );
 
-  const animatedLabelStyle = {
-    transform: [{ translateY: labelTranslateY }, { scale: labelScale }],
-    color: labelColor,
-    backgroundColor: animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['transparent', theme.colors.background],
-    }),
-  };
+  const animatedLabelStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(animation.value, [0, 1], [0, -26]);
+    const scale = interpolate(animation.value, [0, 1], [1, 0.8]);
+    const color = interpolateColor(
+      animation.value,
+      [0, 1],
+      [finalInactiveLabelColor, finalActiveLabelColor],
+    );
+    const backgroundColor = interpolateColor(
+      animation.value,
+      [0, 1],
+      ['transparent', theme.colors.background],
+    );
+
+    return {
+      transform: [{ translateY }, { scale }],
+      color,
+      backgroundColor,
+    };
+  });
 
   // Estilos estáticos que no deben ser animados
   const staticLabelStyle = {

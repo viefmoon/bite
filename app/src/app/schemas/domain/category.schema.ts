@@ -25,7 +25,22 @@ export const categorySchema = z.object({
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
   deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   // Relaciones del backend
-  subcategories: z.array(z.any()).optional(), // SubcategoryEntity[]
+  subcategories: z
+    .array(
+      z.lazy(() =>
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          description: z.string().nullable().optional(),
+          isActive: z.boolean(),
+          categoryId: z.string(),
+          sortOrder: z.number(),
+          createdAt: z.union([z.string().datetime(), z.date()]).optional(),
+          updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
+        }),
+      ),
+    )
+    .optional(),
 });
 
 // Tipos TypeScript inferidos y exportados centralmente

@@ -33,10 +33,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
   const responsive = useResponsive();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-  const styles = useMemo(
-    () => createStyles(responsive),
-    [responsive],
-  );
+  const styles = useMemo(() => createStyles(responsive), [responsive]);
   const [filter, setFilter] = useState<OrderFinalizationFilter>('delivery');
   const [selectionState, setSelectionState] = useState<OrderSelectionState>({
     selectedOrders: new Set(),
@@ -547,9 +544,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   );
 };
 
-const createStyles = (
-  responsive: ReturnType<typeof useResponsive>,
-) =>
+const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
   StyleSheet.create({
     container: {
       flex: 1,

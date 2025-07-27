@@ -1,10 +1,7 @@
 import { authService } from '@/modules/auth/services/authService';
 import { useAuthStore } from '@/app/store/authStore';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import EncryptedStorage from '@/app/services/secureStorageService';
-
-const AUTH_TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_INFO_KEY = 'user_info';
 
 /**
  * Verifica si el token almacenado es válido con el backend
@@ -22,9 +19,9 @@ export async function verifyStoredToken(): Promise<boolean> {
 
     if (!isTokenValid) {
       // Si el token no es válido, limpiamos todo
-      await EncryptedStorage.removeItem(AUTH_TOKEN_KEY);
-      await EncryptedStorage.removeItem(REFRESH_TOKEN_KEY);
-      await EncryptedStorage.removeItem(USER_INFO_KEY);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
 
       useAuthStore.setState({
         accessToken: null,

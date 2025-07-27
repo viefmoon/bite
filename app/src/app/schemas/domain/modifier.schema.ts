@@ -16,8 +16,22 @@ export const modifierSchema = z.object({
   createdAt: z.union([z.string().datetime(), z.date()]).optional(),
   updatedAt: z.union([z.string().datetime(), z.date()]).optional(),
   deletedAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  // Relación del backend
-  modifierGroup: z.any().optional(), // ModifierGroupEntity
+  // Relación del backend (usando z.lazy para evitar dependencias circulares)
+  modifierGroup: z
+    .lazy(() =>
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().nullable().optional(),
+        minSelections: z.number().int().min(0),
+        maxSelections: z.number().int().min(1),
+        isRequired: z.boolean(),
+        allowMultipleSelections: z.boolean(),
+        isActive: z.boolean(),
+        sortOrder: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 // Tipo TypeScript inferido y exportado centralmente

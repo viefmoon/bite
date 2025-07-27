@@ -14,10 +14,54 @@ export const adjustmentSchema = z.object({
   updatedAt: z.string(),
   deletedAt: z.string().nullable().optional(),
 
-  // Relaciones opcionales
-  order: z.any().optional(),
-  orderItem: z.any().optional(),
-  appliedBy: z.any().optional(),
+  // Relaciones opcionales (usando z.lazy para evitar dependencias circulares)
+  order: z
+    .lazy(() =>
+      z.object({
+        id: z.string().uuid(),
+        orderNumber: z.string().optional(),
+        shiftOrderNumber: z.number().int().positive(),
+        total: z.union([z.string(), z.number()]).optional(),
+        orderStatus: z.enum([
+          'PENDING',
+          'IN_PROGRESS',
+          'IN_PREPARATION',
+          'READY',
+          'DELIVERED',
+          'COMPLETED',
+          'CANCELLED',
+        ]),
+        orderType: z.enum(['DINE_IN', 'TAKE_AWAY', 'DELIVERY']),
+      }),
+    )
+    .optional(),
+  orderItem: z
+    .lazy(() =>
+      z.object({
+        id: z.string(),
+        productId: z.string().uuid(),
+        productName: z.string(),
+        quantity: z.number().int().positive(),
+        unitPrice: z.number(),
+        totalPrice: z.number(),
+        variantId: z.string().uuid().nullable().optional(),
+        variantName: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
+      }),
+    )
+    .optional(),
+  appliedBy: z
+    .lazy(() =>
+      z.object({
+        id: z.string().uuid(),
+        username: z.string(),
+        firstName: z.string().nullable().optional(),
+        lastName: z.string().nullable().optional(),
+        email: z.string().email().nullable().optional(),
+        isActive: z.boolean(),
+      }),
+    )
+    .optional(),
 });
 
 export type Adjustment = z.infer<typeof adjustmentSchema>;

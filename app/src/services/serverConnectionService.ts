@@ -1,6 +1,7 @@
 import { discoveryService } from '../app/services/discoveryService';
 import { healthMonitoringService } from './healthMonitoringService';
 import { autoReconnectService } from './autoReconnectService';
+import { STORAGE_KEYS } from '../app/constants/storageKeys';
 import EncryptedStorage from '../app/services/secureStorageService';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -51,7 +52,7 @@ class ServerConnectionService {
   private async loadConnectionMode() {
     try {
       const savedMode = (await EncryptedStorage.getItem(
-        'connection_mode',
+        STORAGE_KEYS.CONNECTION_MODE,
       )) as ConnectionMode;
       if (savedMode) {
         this.state.mode = savedMode;

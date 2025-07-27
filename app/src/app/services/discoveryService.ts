@@ -1,11 +1,11 @@
 import NetInfo from '@react-native-community/netinfo';
 import EncryptedStorage from '@/app/services/secureStorageService';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 import { NETWORK_CONFIG } from '../constants/network';
 import { API_PATHS } from '../constants/apiPaths';
 import { Platform } from 'react-native';
 
 const DISCOVERY_ENDPOINT = API_PATHS.DISCOVERY.substring(1); // Quitar / inicial
-const STORAGE_KEY = 'last_known_api_url';
 
 interface DiscoveryResponse {
   type: string;
@@ -87,7 +87,7 @@ export class DiscoveryService {
     // En web, intentar recuperar URL manual guardada
     if (Platform.OS === 'web') {
       try {
-        const savedUrl = await EncryptedStorage.getItem('manual_server_url');
+        const savedUrl = await EncryptedStorage.getItem(STORAGE_KEYS.MANUAL_URL);
         if (savedUrl) {
           this.manualUrl = savedUrl;
           return savedUrl;
@@ -104,7 +104,7 @@ export class DiscoveryService {
 
     // Intentar con la última URL conocida almacenada
     try {
-      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEY);
+      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEYS.LAST_KNOWN_API_URL);
       if (lastKnown) {
         this.cachedUrl = lastKnown;
         return lastKnown;
@@ -148,7 +148,7 @@ export class DiscoveryService {
   async clearCache(): Promise<void> {
     this.cachedUrl = null;
     try {
-      await EncryptedStorage.removeItem(STORAGE_KEY);
+      await EncryptedStorage.removeItem(STORAGE_KEYS.LAST_KNOWN_API_URL);
     } catch {}
   }
 
@@ -161,7 +161,7 @@ export class DiscoveryService {
     }
 
     try {
-      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEY);
+      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEYS.LAST_KNOWN_API_URL);
       return lastKnown;
     } catch {
       return null;
@@ -369,7 +369,7 @@ export class DiscoveryService {
    */
   private async saveUrl(url: string): Promise<void> {
     try {
-      await EncryptedStorage.setItem(STORAGE_KEY, url);
+      await EncryptedStorage.setItem(STORAGE_KEYS.LAST_KNOWN_API_URL, url);
     } catch {}
   }
 
