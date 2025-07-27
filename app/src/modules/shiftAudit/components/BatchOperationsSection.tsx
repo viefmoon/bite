@@ -12,7 +12,7 @@ import { ChangeDetailRenderer } from './ChangeDetailRenderer';
 
 interface BatchOperationsSectionProps {
   batchOperations: BatchOperation[];
-  styles: any;
+  styles: Record<string, any>;
 }
 
 export const BatchOperationsSection: React.FC<BatchOperationsSectionProps> = ({

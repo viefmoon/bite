@@ -12,7 +12,7 @@ interface ProductItemRendererProps {
   item: Record<string, unknown>;
   index: number;
   type: 'added' | 'removed' | 'modified';
-  styles: any;
+  styles: Record<string, any>;
 }
 
 export const ProductItemRenderer: React.FC<ProductItemRendererProps> = ({

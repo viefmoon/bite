@@ -10,7 +10,7 @@ import {
 interface ChangeDetailRendererProps {
   change: unknown;
   fieldName?: string;
-  styles: any;
+  styles: Record<string, any>;
 }
 
 export const ChangeDetailRenderer: React.FC<ChangeDetailRendererProps> = ({

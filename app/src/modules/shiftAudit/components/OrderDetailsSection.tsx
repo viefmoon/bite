@@ -8,7 +8,7 @@ import { getDiffValue, formatValue, safeGetNestedProperty } from '../utils/order
 interface OrderDetailsSectionProps {
   orderDiff: DiffOrder;
   snapshot?: Record<string, unknown>;
-  styles: any;
+  styles: Record<string, any>;
 }
 
 export const OrderDetailsSection: React.FC<OrderDetailsSectionProps> = ({
