@@ -26,21 +26,6 @@ export class ApiError extends Error {
     }
   }
 
-  /**
-   * Creates an ApiError instance from an apisauce ApiResponse (legacy or direct use).
-   * Kept for potential compatibility, but prefer fromAxiosError.
-   */
-  static fromApiResponse(
-    responseData: BackendErrorResponse | any,
-    responseStatus?: number,
-  ): ApiError {
-    const status = responseStatus ?? responseData?.statusCode ?? 500;
-    const code = responseData?.code ?? ERROR_CODES.UNKNOWN_API_ERROR;
-    const message = responseData?.message ?? 'Error desconocido de la API.';
-    const details = responseData?.details;
-    // Uses the main constructor signature: code, message, status, details
-    return new ApiError(code, message, status, details);
-  }
 
   /**
    * Creates an ApiError instance from an AxiosError.

@@ -1,53 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-
-/**
- * Hook que refresca las queries especificadas cuando la pantalla recibe el foco
- * @param queryKeys - Array de query keys a invalidar cuando la pantalla reciba foco
- * @param options - Opciones adicionales
- */
-export function useRefreshOnFocus(
-  queryKeys: (string | readonly unknown[])[],
-  options?: {
-    enabled?: boolean;
-    refetchOnMount?: boolean;
-  },
-) {
-  const queryClient = useQueryClient();
-  const { enabled = true, refetchOnMount = true } = options || {};
-  const isInitialMount = useRef(true);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!enabled) return;
-
-      const isFirstRun = isInitialMount.current;
-      isInitialMount.current = false;
-
-      // No refrescar en el primer montaje si refetchOnMount es falso
-      if (isFirstRun && !refetchOnMount) {
-        return;
-      }
-
-      queryKeys.forEach((queryKey) => {
-        queryClient.invalidateQueries({
-          queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-        });
-      });
-    }, [enabled, refetchOnMount, queryKeys, queryClient]),
-  );
-
-  return {
-    refetch: () => {
-      queryKeys.forEach((queryKey) => {
-        queryClient.invalidateQueries({
-          queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-        });
-      });
-    },
-  };
-}
 
 /**
  * Hook que refresca todas las queries de un módulo cuando la pantalla recibe foco

@@ -7,7 +7,5 @@ export {
 export { ResponsiveGrid, ResponsiveFlexGrid, GridItem } from './ResponsiveGrid';
 export {
   ResponsiveImage,
-  ResponsiveAvatar,
-  ResponsiveThumbnail,
 } from './ResponsiveImage';
 export { ResponsiveModal, ResponsiveConfirmModal } from './ResponsiveModal';

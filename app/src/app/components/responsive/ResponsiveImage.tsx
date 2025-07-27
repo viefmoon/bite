@@ -276,32 +276,3 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   return <Image {...optimizedImageProps} />;
 };
 
-// Componente helper para avatares responsive
-export const ResponsiveAvatar: React.FC<
-  ResponsiveImageProps & { rounded?: boolean }
-> = ({ rounded = true, ...props }) => {
-  const style: ImageStyle = rounded ? { borderRadius: 9999 } : {};
-
-  return (
-    <ResponsiveImage
-      {...props}
-      style={[style, props.style]}
-      contentFit="cover"
-      maintainAspectRatio={true}
-      aspectRatio={1}
-    />
-  );
-};
-
-// Componente helper para thumbnails responsive
-export const ResponsiveThumbnail: React.FC<ResponsiveImageProps> = (props) => {
-  return (
-    <ResponsiveImage
-      size="medium"
-      sizeTablet="large"
-      contentFit="cover"
-      enableDPIScaling={true}
-      {...props}
-    />
-  );
-};

@@ -3,10 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ReceiptsScreen } from '../screens/ReceiptsScreen';
 import { getStackHeaderOptions } from '@/app/navigation/options';
 import { useAppTheme } from '@/app/styles/theme';
-
-export type ReceiptsStackParamList = {
-  ReceiptsList: undefined;
-};
+import { ReceiptsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<ReceiptsStackParamList>();
 

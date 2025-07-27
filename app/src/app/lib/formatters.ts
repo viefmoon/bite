@@ -26,21 +26,3 @@ export function formatCurrency(
   }).format(amount);
 }
 
-/**
- * Formatea un número de teléfono
- * @param phoneNumber - Número de teléfono
- * @returns String formateado
- */
-export function formatPhoneNumber(phoneNumber: string): string {
-  // Remover todo excepto números
-  const cleaned = phoneNumber.replace(/\D/g, '');
-
-  // Formato mexicano: +52 55 1234 5678
-  if (cleaned.length === 10) {
-    return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 6)} ${cleaned.slice(6)}`;
-  } else if (cleaned.length === 12 && cleaned.startsWith('52')) {
-    return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 4)} ${cleaned.slice(4, 8)} ${cleaned.slice(8)}`;
-  }
-
-  return phoneNumber;
-}

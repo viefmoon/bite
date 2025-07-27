@@ -36,7 +36,7 @@ import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverag
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRefreshOnFocus } from '@/app/hooks/useRefreshOnFocus';
+import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 type TabType = 'basic' | 'operation' | 'schedule';
 
@@ -72,7 +72,7 @@ const RestaurantConfigScreen: React.FC = () => {
     useState(false);
 
   // Refrescar configuración cuando la pantalla recibe foco
-  useRefreshOnFocus([['restaurantConfig']]);
+  useRefreshModuleOnFocus('restaurantConfig');
 
   // Función para validar conflictos de horarios
   const hasScheduleConflicts = React.useCallback(() => {
