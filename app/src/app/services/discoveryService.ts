@@ -87,7 +87,9 @@ export class DiscoveryService {
     // En web, intentar recuperar URL manual guardada
     if (Platform.OS === 'web') {
       try {
-        const savedUrl = await EncryptedStorage.getItem(STORAGE_KEYS.MANUAL_URL);
+        const savedUrl = await EncryptedStorage.getItem(
+          STORAGE_KEYS.MANUAL_URL,
+        );
         if (savedUrl) {
           this.manualUrl = savedUrl;
           return savedUrl;
@@ -104,7 +106,9 @@ export class DiscoveryService {
 
     // Intentar con la última URL conocida almacenada
     try {
-      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEYS.LAST_KNOWN_API_URL);
+      const lastKnown = await EncryptedStorage.getItem(
+        STORAGE_KEYS.LAST_KNOWN_API_URL,
+      );
       if (lastKnown) {
         this.cachedUrl = lastKnown;
         return lastKnown;
@@ -161,7 +165,9 @@ export class DiscoveryService {
     }
 
     try {
-      const lastKnown = await EncryptedStorage.getItem(STORAGE_KEYS.LAST_KNOWN_API_URL);
+      const lastKnown = await EncryptedStorage.getItem(
+        STORAGE_KEYS.LAST_KNOWN_API_URL,
+      );
       return lastKnown;
     } catch {
       return null;

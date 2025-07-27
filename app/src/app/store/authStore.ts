@@ -39,7 +39,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     await EncryptedStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, accessToken);
     await EncryptedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
     if (user) {
-      await EncryptedStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+      await EncryptedStorage.setItem(
+        STORAGE_KEYS.USER_INFO,
+        JSON.stringify(user),
+      );
     } else {
       await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
     }
@@ -77,7 +80,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           await useAuthStore.getState().logout();
           return;
         }
-        await EncryptedStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+        await EncryptedStorage.setItem(
+          STORAGE_KEYS.USER_INFO,
+          JSON.stringify(user),
+        );
       } else {
         await EncryptedStorage.removeItem(STORAGE_KEYS.USER_INFO);
       }
@@ -130,8 +136,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 export const initializeAuthStore = async () => {
   try {
     const accessToken = await EncryptedStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    const refreshToken = await EncryptedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-    const userInfoString = await EncryptedStorage.getItem(STORAGE_KEYS.USER_INFO);
+    const refreshToken = await EncryptedStorage.getItem(
+      STORAGE_KEYS.REFRESH_TOKEN,
+    );
+    const userInfoString = await EncryptedStorage.getItem(
+      STORAGE_KEYS.USER_INFO,
+    );
     let user: User | null = null;
     if (userInfoString) {
       try {

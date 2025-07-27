@@ -161,7 +161,9 @@ export const receiptSchema = z.object({
           }),
         )
         .optional(),
-      selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
+      selectedPizzaCustomizations: z
+        .array(selectedPizzaCustomizationSchema)
+        .optional(),
     }),
   ),
   payments: z
