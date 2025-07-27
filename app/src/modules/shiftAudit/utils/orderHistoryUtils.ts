@@ -24,14 +24,18 @@ export const isBatchOperation = (value: unknown): value is BatchOperation => {
 export const safeStringify = (value: unknown): string => {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return String(value);
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 };
 
 // Utility function para obtener el segundo elemento de un array diff de forma segura
-export const getDiffValue = (diffArray: [unknown, unknown] | undefined): string => {
-  if (!diffArray || !Array.isArray(diffArray) || diffArray.length < 2) return '';
+export const getDiffValue = (
+  diffArray: [unknown, unknown] | undefined,
+): string => {
+  if (!diffArray || !Array.isArray(diffArray) || diffArray.length < 2)
+    return '';
   return safeStringify(diffArray[1]);
 };
 
@@ -60,16 +64,19 @@ export const safeJoinArray = (obj: unknown, key: string): string => {
 };
 
 // Utility function para obtener propiedades anidadas de forma segura
-export const safeGetNestedProperty = (obj: unknown, ...keys: string[]): string => {
+export const safeGetNestedProperty = (
+  obj: unknown,
+  ...keys: string[]
+): string => {
   if (!obj || typeof obj !== 'object') return '';
-  
+
   let current: unknown = obj;
   for (const key of keys) {
     if (!current || typeof current !== 'object') return '';
     const typedCurrent = current as Record<string, unknown>;
     current = typedCurrent[key];
   }
-  
+
   return safeStringify(current);
 };
 

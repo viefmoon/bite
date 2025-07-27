@@ -9,7 +9,6 @@ export interface BackendErrorResponse {
   path?: string;
 }
 
-
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

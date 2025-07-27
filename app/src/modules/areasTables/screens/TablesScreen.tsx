@@ -169,7 +169,6 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     refetchTables();
   }, [refetchTables]);
 
-
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingTables,
     isError: isErrorTables,

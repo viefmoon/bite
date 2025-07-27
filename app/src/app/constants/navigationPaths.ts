@@ -61,45 +61,4 @@ export type RootStackParamList = {
   [NAVIGATION_PATHS.MAIN_DRAWER]: undefined;
 };
 
-export type OrdersStackParamList = {
-  [NAVIGATION_PATHS.ORDERS]: undefined;
-  [NAVIGATION_PATHS.CREATE_ORDER]: undefined;
-  [NAVIGATION_PATHS.OPEN_ORDERS]: undefined;
-  [NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER]: {
-    orderId: number;
-    orderNumber: string;
-    existingOrderItemsCount: number;
-    existingTempProducts?: any[];
-    onProductsAdded?: () => void;
-  };
-};
-
-export type MenuStackParamList = {
-  [NAVIGATION_PATHS.CATEGORIES]: undefined;
-  [NAVIGATION_PATHS.SUBCATEGORIES]: {
-    categoryId: number;
-    categoryName: string;
-  };
-  [NAVIGATION_PATHS.PRODUCTS]: {
-    subcategoryId: number;
-    subCategoryName: string;
-  };
-};
-
-export type AreasTablesStackParamList = {
-  [NAVIGATION_PATHS.AREAS_LIST]: undefined;
-  [NAVIGATION_PATHS.TABLES_LIST]: {
-    areaId: number;
-    areaName: string;
-  };
-};
-
-export type ModifiersStackParamList = {
-  [NAVIGATION_PATHS.MODIFIER_GROUPS]: undefined;
-  [NAVIGATION_PATHS.MODIFIERS]: {
-    groupId: number;
-    groupName: string;
-  };
-};
-
 // KitchenScreen ahora es una pantalla directa, no requiere ParamList

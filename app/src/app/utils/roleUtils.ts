@@ -15,7 +15,6 @@ export const hasAnyRole = (user: User | null, roleIds: RoleEnum[]): boolean => {
   return roleIds.includes(user.role.id);
 };
 
-
 /**
  * Permisos específicos de funcionalidad
  */
@@ -26,5 +25,3 @@ export const canOpenShift = (user: User | null): boolean => {
 export const canRegisterPayments = (user: User | null): boolean => {
   return hasAnyRole(user, [RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.CASHIER]);
 };
-
-

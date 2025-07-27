@@ -3,10 +3,10 @@ import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { BatchOperation } from '../types/orderHistory';
-import { 
-  isBatchOperation, 
+import {
+  isBatchOperation,
   getOperationLabel,
-  formatFieldName 
+  formatFieldName,
 } from '../utils/orderHistoryUtils';
 import { ChangeDetailRenderer } from './ChangeDetailRenderer';
 
@@ -30,101 +30,93 @@ export const BatchOperationsSection: React.FC<BatchOperationsSectionProps> = ({
         Cambios realizados en una sola edición:
       </Text>
 
-      {batchOperations
-        .filter(isBatchOperation)
-        .map((op, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.batchOperationContainer,
-              idx < batchOperations.length - 1
-                ? styles.batchOperationMarginBottom
-                : styles.batchOperationNoMargin,
-              {
-                borderLeftColor: theme.colors.primary + '30',
-              },
-            ]}
-          >
-            <View style={styles.batchOperationRow}>
+      {batchOperations.filter(isBatchOperation).map((op, idx) => (
+        <View
+          key={idx}
+          style={[
+            styles.batchOperationContainer,
+            idx < batchOperations.length - 1
+              ? styles.batchOperationMarginBottom
+              : styles.batchOperationNoMargin,
+            {
+              borderLeftColor: theme.colors.primary + '30',
+            },
+          ]}
+        >
+          <View style={styles.batchOperationRow}>
+            <Text
+              style={[styles.batchBulletText, { color: theme.colors.primary }]}
+            >
+              •
+            </Text>
+            <View style={styles.batchOperationContent}>
               <Text
+                variant="labelSmall"
                 style={[
-                  styles.batchBulletText,
+                  styles.batchOperationLabel,
                   { color: theme.colors.primary },
                 ]}
               >
-                •
+                {getOperationLabel(op.operation)}
               </Text>
-              <View style={styles.batchOperationContent}>
+
+              {/* Mostrar descripción del item */}
+              {(op.itemDescription || op.snapshot?.itemDescription) && (
                 <Text
-                  variant="labelSmall"
+                  variant="bodySmall"
                   style={[
-                    styles.batchOperationLabel,
-                    { color: theme.colors.primary },
+                    styles.batchOperationDescription,
+                    {
+                      color: theme.colors.onSurface,
+                      backgroundColor: theme.colors.surface,
+                    },
                   ]}
                 >
-                  {getOperationLabel(op.operation)}
+                  {op.itemDescription || op.snapshot?.itemDescription}
                 </Text>
+              )}
 
-                {/* Mostrar descripción del item */}
-                {(op.itemDescription || op.snapshot?.itemDescription) && (
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.batchOperationDescription,
-                      {
-                        color: theme.colors.onSurface,
-                        backgroundColor: theme.colors.surface,
-                      },
-                    ]}
-                  >
-                    {op.itemDescription || op.snapshot?.itemDescription}
-                  </Text>
-                )}
-
-                {/* Para UPDATE, mostrar el cambio */}
-                {op.operation === 'UPDATE' && op.formattedChanges && (
-                  <View style={styles.batchUpdateMargin}>
-                    {Object.entries(op.formattedChanges)
-                      .filter(([fieldName]) => {
-                        // Solo mostrar campos relevantes (no precios)
-                        const allowedFields = [
-                          'quantity',
-                          'notes',
-                          'specialInstructions',
-                          'preparationNotes',
-                          'status',
-                        ];
-                        return allowedFields.some((allowed) =>
-                          fieldName.includes(allowed),
-                        );
-                      })
-                      .map(([field, change]) => (
-                        <View
-                          key={field}
-                          style={styles.batchFieldContainer}
+              {/* Para UPDATE, mostrar el cambio */}
+              {op.operation === 'UPDATE' && op.formattedChanges && (
+                <View style={styles.batchUpdateMargin}>
+                  {Object.entries(op.formattedChanges)
+                    .filter(([fieldName]) => {
+                      // Solo mostrar campos relevantes (no precios)
+                      const allowedFields = [
+                        'quantity',
+                        'notes',
+                        'specialInstructions',
+                        'preparationNotes',
+                        'status',
+                      ];
+                      return allowedFields.some((allowed) =>
+                        fieldName.includes(allowed),
+                      );
+                    })
+                    .map(([field, change]) => (
+                      <View key={field} style={styles.batchFieldContainer}>
+                        <Text
+                          variant="labelSmall"
+                          style={[
+                            styles.batchFieldLabel,
+                            { color: theme.colors.onSurfaceVariant },
+                          ]}
                         >
-                          <Text
-                            variant="labelSmall"
-                            style={[
-                              styles.batchFieldLabel,
-                              { color: theme.colors.onSurfaceVariant },
-                            ]}
-                          >
-                            {formatFieldName(field)}:
-                          </Text>
-                          <ChangeDetailRenderer
-                            change={change}
-                            fieldName={field}
-                            styles={styles}
-                          />
-                        </View>
-                      ))}
-                  </View>
-                )}
-              </View>
+                          {formatFieldName(field)}:
+                        </Text>
+                        <ChangeDetailRenderer
+                          change={change}
+                          fieldName={field}
+                          styles={styles}
+                        />
+                      </View>
+                    ))}
+                </View>
+              )}
             </View>
           </View>
-        ))}
+        </View>
+      ))}
     </View>
   );
 };

@@ -177,10 +177,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
 
   const totalPaid = useMemo(() => {
     if (!isEditMode || !payments) return 0;
-    return payments.reduce(
-      (sum, payment) => sum + payment.amount,
-      0,
-    );
+    return payments.reduce((sum, payment) => sum + payment.amount, 0);
   }, [payments, isEditMode]);
 
   const pendingAmount = useMemo(() => {
@@ -324,7 +321,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
-
 
   useEffect(() => {
     if (!visible && isEditMode) {

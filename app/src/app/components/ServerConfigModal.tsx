@@ -19,7 +19,7 @@ import {
   IconButton,
   useTheme,
 } from 'react-native-paper';
-import { useSnackbar } from '@/hooks/useSnackbar';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { ConnectionMode } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
@@ -42,7 +42,7 @@ export function ServerConfigModal({
   onSuccess,
 }: ServerConfigModalProps) {
   const theme = useTheme();
-  const { showSnackbar } = useSnackbar();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const [mode, setMode] = useState<ConnectionMode>('auto');
   const [manualUrl, setManualUrl] = useState('');
@@ -122,7 +122,10 @@ export function ServerConfigModal({
 
   const testConnection = async () => {
     if (mode === 'manual' && !validateUrl(manualUrl)) {
-      showSnackbar('Por favor ingresa una URL válida', 'error');
+      showSnackbar({
+        message: 'Por favor ingresa una URL válida',
+        type: 'error',
+      });
       return;
     }
 
@@ -152,13 +155,13 @@ export function ServerConfigModal({
         throw new Error('El servidor no es compatible');
       }
 
-      showSnackbar('Conexión exitosa', 'success');
+      showSnackbar({ message: 'Conexión exitosa', type: 'success' });
       setCurrentUrl(urlToTest);
     } catch (error: any) {
-      showSnackbar(
-        error.message || 'Error al conectar con el servidor',
-        'error',
-      );
+      showSnackbar({
+        message: error.message || 'Error al conectar con el servidor',
+        type: 'error',
+      });
     } finally {
       setTesting(false);
     }
@@ -172,7 +175,10 @@ export function ServerConfigModal({
       // Guardar URL manual si aplica
       if (mode === 'manual') {
         if (!validateUrl(manualUrl)) {
-          showSnackbar('Por favor ingresa una URL válida', 'error');
+          showSnackbar({
+            message: 'Por favor ingresa una URL válida',
+            type: 'error',
+          });
           return;
         }
         const normalizedUrl = normalizeUrl(manualUrl);
@@ -204,14 +210,14 @@ export function ServerConfigModal({
 
       // La reconexión se manejará en el onSuccess callback
 
-      showSnackbar('Configuración guardada', 'success');
+      showSnackbar({ message: 'Configuración guardada', type: 'success' });
       onSuccess?.();
       onDismiss();
     } catch (error: any) {
-      showSnackbar(
-        error.message || 'Error al guardar la configuración',
-        'error',
-      );
+      showSnackbar({
+        message: error.message || 'Error al guardar la configuración',
+        type: 'error',
+      });
     }
   };
 

@@ -5,7 +5,5 @@ export {
   ResponsiveColumn,
 } from './ResponsiveView';
 export { ResponsiveGrid, GridItem } from './ResponsiveGrid';
-export {
-  ResponsiveImage,
-} from './ResponsiveImage';
+export { ResponsiveImage } from './ResponsiveImage';
 export { ResponsiveModal, ResponsiveConfirmModal } from './ResponsiveModal';

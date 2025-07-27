@@ -5,7 +5,7 @@ import { Button, ActivityIndicator, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme } from '@/app/styles/theme';
-import type { OrdersStackParamList } from '@/app/navigation/types';
+import type { OrdersStackParamList } from '../navigation/types';
 import { useGlobalShift } from '@/app/hooks/useGlobalShift';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 

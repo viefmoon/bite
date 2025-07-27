@@ -26,7 +26,6 @@ export class ApiError extends Error {
     }
   }
 
-
   /**
    * Creates an ApiError instance from an AxiosError.
    * Extracts relevant information from the Axios error response.

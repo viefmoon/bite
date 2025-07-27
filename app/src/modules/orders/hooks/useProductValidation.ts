@@ -49,20 +49,20 @@ export const useProductValidation = ({
     // Validar pizzas - deben tener al menos un sabor o ingrediente
     if (product.isPizza && pizzaConfiguration) {
       const addedCustomizations = selectedPizzaCustomizations.filter(
-        (sc) => sc.action === CustomizationActionEnum.ADD
+        (sc) => sc.action === CustomizationActionEnum.ADD,
       );
 
       // Verificar elementos en cada mitad (lógica igual que en handleAddToCart)
       const fullPizzaElements = addedCustomizations.filter(
-        (sc) => sc.half === 'FULL'
+        (sc) => sc.half === 'FULL',
       );
-      
+
       const half1Elements = addedCustomizations.filter(
-        (sc) => sc.half === 'HALF_1'
+        (sc) => sc.half === 'HALF_1',
       );
-      
+
       const half2Elements = addedCustomizations.filter(
-        (sc) => sc.half === 'HALF_2'
+        (sc) => sc.half === 'HALF_2',
       );
 
       // Si hay elementos en pizza completa, es válido
@@ -81,14 +81,16 @@ export const useProductValidation = ({
           if (half1Elements.length === 0) {
             errors.push({
               field: 'pizza',
-              message: 'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
+              message:
+                'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
             });
           }
-          
+
           if (half2Elements.length === 0) {
             errors.push({
               field: 'pizza',
-              message: 'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
+              message:
+                'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
             });
           }
         }

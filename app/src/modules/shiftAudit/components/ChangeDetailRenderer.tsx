@@ -2,10 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { 
-  isChangeDetail, 
-  safeStringify,
-} from '../utils/orderHistoryUtils';
+import { isChangeDetail, safeStringify } from '../utils/orderHistoryUtils';
 
 interface ChangeDetailRendererProps {
   change: unknown;
@@ -151,10 +148,7 @@ export const ChangeDetailRenderer: React.FC<ChangeDetailRendererProps> = ({
         </Text>
       </View>
       <Text
-        style={[
-          styles.marginHorizontal4,
-          { color: theme.colors.onSurface },
-        ]}
+        style={[styles.marginHorizontal4, { color: theme.colors.onSurface }]}
       >
         →
       </Text>

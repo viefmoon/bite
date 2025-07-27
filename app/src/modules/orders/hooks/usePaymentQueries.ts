@@ -66,7 +66,6 @@ export const useCreatePaymentMutation = () => {
   });
 };
 
-
 export const useDeletePaymentMutation = () => {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);

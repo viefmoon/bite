@@ -119,7 +119,9 @@ export function PizzaCustomizationsTab() {
                 mode="flat"
                 compact
                 icon={
-                  item.type === CustomizationTypeEnum.FLAVOR ? 'pizza' : 'cheese'
+                  item.type === CustomizationTypeEnum.FLAVOR
+                    ? 'pizza'
+                    : 'cheese'
                 }
                 style={[
                   styles.typeChip,

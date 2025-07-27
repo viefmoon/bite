@@ -8,7 +8,6 @@ import {
   FindAllTablesDto,
 } from '../schema/table.schema';
 
-
 const getTablesByAreaId = async (
   areaId: string,
   filterOptions: Omit<FindAllTablesDto, 'areaId'> = {},

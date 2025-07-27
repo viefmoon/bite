@@ -67,7 +67,6 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     setSelectedItem(null);
   }, []);
 
-
   // Alternative deletion methods for use with ConfirmationModal
   const [deleteConfirmationState, setDeleteConfirmationState] = useState<{
     visible: boolean;

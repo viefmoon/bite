@@ -1,11 +1,11 @@
-import { useSnackbar } from '@/hooks/useSnackbar';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 export function useKitchenSnackbar() {
-  const { showSnackbar } = useSnackbar();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const showError = (message: string) => {
     // Mostrar errores de forma más discreta con duración más corta
-    showSnackbar(message, 'error', 2000); // 2 segundos en lugar del default
+    showSnackbar({ message, type: 'error', duration: 2000 }); // 2 segundos en lugar del default
   };
 
   return {

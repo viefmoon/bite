@@ -16,7 +16,7 @@ import {
   TouchableRipple,
   ProgressBar,
 } from 'react-native-paper';
-import { useSnackbar } from '@/hooks/useSnackbar';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 import {
   serverConnectionService,
   ConnectionMode,
@@ -39,7 +39,7 @@ interface DiscoveryProgress {
 }
 
 export function ServerSettingsScreen() {
-  const { showSnackbar } = useSnackbar();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const theme = useAppTheme();
   const responsive = useResponsive();
   const { isConnected, isHealthy, serverUrl, isSearching } =
@@ -139,7 +139,10 @@ export function ServerSettingsScreen() {
     try {
       if (mode === 'manual') {
         if (!validateUrl(manualUrl)) {
-          showSnackbar('Por favor ingresa una URL válida', 'error');
+          showSnackbar({
+            message: 'Por favor ingresa una URL válida',
+            type: 'error',
+          });
           setSaving(false);
           return;
         }
@@ -163,7 +166,10 @@ export function ServerSettingsScreen() {
 
       if (mode === 'auto') {
         setIsDiscovering(true);
-        showSnackbar('Iniciando búsqueda de servidor...', 'info');
+        showSnackbar({
+          message: 'Iniciando búsqueda de servidor...',
+          type: 'info',
+        });
 
         try {
           await discoveryService.setServerUrl(null, true);
@@ -175,30 +181,36 @@ export function ServerSettingsScreen() {
           const discoveredUrl = await discoveryService.discoverServer();
 
           if (discoveredUrl) {
-            showSnackbar('Servidor encontrado ✓', 'success');
+            showSnackbar({ message: 'Servidor encontrado ✓', type: 'success' });
             const { healthMonitoringService } = await import(
               '@/services/healthMonitoringService'
             );
             healthMonitoringService.startMonitoring();
           } else {
-            showSnackbar('No se encontró servidor en la red', 'error');
+            showSnackbar({
+              message: 'No se encontró servidor en la red',
+              type: 'error',
+            });
           }
         } catch (error: unknown) {
-          showSnackbar('Error al buscar servidor', 'error');
+          showSnackbar({ message: 'Error al buscar servidor', type: 'error' });
         } finally {
           setIsDiscovering(false);
           discoveryService.setProgressCallback(null);
           setDiscoveryProgress({ current: 0, total: 0, message: '' });
         }
       } else {
-        showSnackbar('Aplicando configuración...', 'info');
+        showSnackbar({ message: 'Aplicando configuración...', type: 'info' });
 
         try {
           await serverConnectionService.reconnect();
 
-          showSnackbar('Configuración guardada - Conectado ✓', 'success');
+          showSnackbar({
+            message: 'Configuración guardada - Conectado ✓',
+            type: 'success',
+          });
         } catch (error: unknown) {
-          showSnackbar('Verificando conexión...', 'info');
+          showSnackbar({ message: 'Verificando conexión...', type: 'info' });
 
           const { healthMonitoringService } = await import(
             '@/services/healthMonitoringService'
@@ -208,22 +220,22 @@ export function ServerSettingsScreen() {
             const isHealthy = await healthMonitoringService.forceCheck();
 
             if (isHealthy) {
-              showSnackbar(
-                'Configuración guardada - Servidor accesible ✓',
-                'success',
-              );
+              showSnackbar({
+                message: 'Configuración guardada - Servidor accesible ✓',
+                type: 'success',
+              });
               healthMonitoringService.startMonitoring();
             } else {
-              showSnackbar(
-                'Configuración guardada - El servidor no responde ✗',
-                'warning',
-              );
+              showSnackbar({
+                message: 'Configuración guardada - El servidor no responde ✗',
+                type: 'warning',
+              });
             }
           } catch (error: unknown) {
-            showSnackbar(
-              'Configuración guardada - Error al verificar servidor',
-              'warning',
-            );
+            showSnackbar({
+              message: 'Configuración guardada - Error al verificar servidor',
+              type: 'warning',
+            });
           }
         }
       }
@@ -232,7 +244,7 @@ export function ServerSettingsScreen() {
         error instanceof Error
           ? error.message
           : 'Error al guardar la configuración';
-      showSnackbar(message, 'error');
+      showSnackbar({ message, type: 'error' });
     } finally {
       setSaving(false);
     }

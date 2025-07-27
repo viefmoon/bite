@@ -95,12 +95,18 @@ export const OrderHistoryContent: React.FC<OrderHistoryContentProps> = ({
         </Text>
       </View>
     ),
-    [styles.emptyContainer, styles.emptyIcon, styles.emptyText, emptyContainerStyle, theme],
+    [
+      styles.emptyContainer,
+      styles.emptyIcon,
+      styles.emptyText,
+      emptyContainerStyle,
+      theme,
+    ],
   );
 
   const renderHeaderInfo = () => {
     if (!showHeaderInfo) return null;
-    
+
     return (
       <View style={styles.headerInfoContainer}>
         <Text

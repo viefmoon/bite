@@ -280,11 +280,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     );
 
     const toggleIngredient = useCallback(
-      (
-        ingredientId: string,
-        half: PizzaHalf,
-        action: CustomizationAction,
-      ) => {
+      (ingredientId: string, half: PizzaHalf, action: CustomizationAction) => {
         const existingIndex = selectedPizzaCustomizations.findIndex(
           (sc) =>
             sc.pizzaCustomizationId === ingredientId &&

@@ -1,12 +1,12 @@
 import apiClient from '../app/services/apiClient';
 import { API_PATHS } from '../app/constants/apiPaths';
 import type { Order } from '../app/schemas/domain/order.schema';
-import type { 
-  Shift, 
-  OpenShiftDto, 
-  CloseShiftDto, 
-  ShiftSummary, 
-  ShiftOrder 
+import type {
+  Shift,
+  OpenShiftDto,
+  CloseShiftDto,
+  ShiftSummary,
+  ShiftOrder,
 } from '../app/schemas/domain/shift.schema';
 
 class ShiftsService {

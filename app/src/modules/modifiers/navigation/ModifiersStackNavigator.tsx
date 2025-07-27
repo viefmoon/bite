@@ -2,7 +2,7 @@ import {
   createNativeStackNavigator,
   NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
-import { ModifiersStackParamList } from '@/app/navigation/types';
+import { ModifiersStackParamList } from './types';
 import ModifierGroupsScreen from '../screens/ModifierGroupsScreen';
 import ModifiersScreen from '../screens/ModifiersScreen';
 import { useAppTheme } from '@/app/styles/theme';

@@ -79,7 +79,9 @@ export const OrderAdjustments: React.FC<OrderAdjustmentsProps> = ({
                         <IconButton
                           icon="delete"
                           size={16}
-                          onPress={() => adjustment.id && onRemoveAdjustment?.(adjustment.id)}
+                          onPress={() =>
+                            adjustment.id && onRemoveAdjustment?.(adjustment.id)
+                          }
                         />
                       </View>
                     )}

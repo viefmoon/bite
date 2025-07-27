@@ -54,7 +54,8 @@ export function PizzaCustomizationDetailModal({
           {
             field: 'ingredients' as keyof PizzaCustomization,
             label: 'Ingredientes',
-            render: (ingredients: string | null) => ingredients || 'Sin ingredientes',
+            render: (ingredients: string | null) =>
+              ingredients || 'Sin ingredientes',
           },
         ]
       : []),

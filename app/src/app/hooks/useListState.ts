@@ -46,7 +46,10 @@ export const useListState = ({
             errorConfig?.message ||
             'Ocurrió un error al cargar la información. Por favor, intenta de nuevo.',
           actionLabel: errorConfig?.actionLabel || 'Reintentar',
-          onAction: errorConfig?.onAction || errorConfig?.onRetry || emptyConfig.onAction,
+          onAction:
+            errorConfig?.onAction ||
+            errorConfig?.onRetry ||
+            emptyConfig.onAction,
         });
       }
 

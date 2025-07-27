@@ -1,10 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import {
-  BackHandler,
-  StatusBar,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { BackHandler, StatusBar, StyleSheet, Platform } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';
 import { CustomDrawerContent } from './components/CustomDrawerContent';

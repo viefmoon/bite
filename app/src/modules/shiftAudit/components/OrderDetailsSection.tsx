@@ -3,7 +3,11 @@ import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { DiffOrder } from '../types/orderHistory';
-import { getDiffValue, formatValue, safeGetNestedProperty } from '../utils/orderHistoryUtils';
+import {
+  getDiffValue,
+  formatValue,
+  safeGetNestedProperty,
+} from '../utils/orderHistoryUtils';
 
 interface OrderDetailsSectionProps {
   orderDiff: DiffOrder;
@@ -27,10 +31,7 @@ export const OrderDetailsSection: React.FC<OrderDetailsSectionProps> = ({
     >
       <Text
         variant="labelSmall"
-        style={[
-          styles.orderDetailsTitle,
-          { color: theme.colors.primary },
-        ]}
+        style={[styles.orderDetailsTitle, { color: theme.colors.primary }]}
       >
         Detalles de la orden:
       </Text>

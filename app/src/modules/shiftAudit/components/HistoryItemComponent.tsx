@@ -5,13 +5,13 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { HistoryItem } from '../types/orderHistory';
-import { 
-  getOperationIcon, 
-  getOperationLabel, 
+import {
+  getOperationIcon,
+  getOperationLabel,
   getPreparationStatusColor,
   formatValue,
   safeStringify,
-  formatFieldName
+  formatFieldName,
 } from '../utils/orderHistoryUtils';
 import { ChangeDetailRenderer } from './ChangeDetailRenderer';
 import { ProductItemRenderer } from './ProductItemRenderer';
@@ -24,9 +24,9 @@ interface HistoryItemComponentProps {
   theme: ReturnType<typeof useAppTheme>;
 }
 
-export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({ 
-  item, 
-  theme 
+export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
+  item,
+  theme,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -157,7 +157,7 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
       {expanded && (
         <View style={styles.expandedContent}>
           <Divider style={styles.dividerMargin} />
-          
+
           {/* Contenido para órdenes */}
           {item.type === 'order' && (
             <View style={styles.changesContainer}>
@@ -238,34 +238,33 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
                   >
                     Cambios realizados en la orden:
                   </Text>
-                  {Object.entries(item.formattedChanges).map(([field, change]) => (
-                    <View key={field} style={styles.changeRow}>
-                      <Text
-                        variant="labelSmall"
-                        style={[
-                          styles.fieldLabel,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        {formatFieldName(field)}:
-                      </Text>
-                      <ChangeDetailRenderer
-                        change={change}
-                        fieldName={field}
-                        styles={styles}
-                      />
-                    </View>
-                  ))}
+                  {Object.entries(item.formattedChanges).map(
+                    ([field, change]) => (
+                      <View key={field} style={styles.changeRow}>
+                        <Text
+                          variant="labelSmall"
+                          style={[
+                            styles.fieldLabel,
+                            { color: theme.colors.onSurfaceVariant },
+                          ]}
+                        >
+                          {formatFieldName(field)}:
+                        </Text>
+                        <ChangeDetailRenderer
+                          change={change}
+                          fieldName={field}
+                          styles={styles}
+                        />
+                      </View>
+                    ),
+                  )}
                 </>
               )}
 
               {item.operation === 'DELETE' && (
                 <Text
                   variant="bodySmall"
-                  style={[
-                    styles.summaryText,
-                    { color: theme.colors.error },
-                  ]}
+                  style={[styles.summaryText, { color: theme.colors.error }]}
                 >
                   Orden eliminada
                 </Text>
@@ -287,24 +286,26 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
                   >
                     Cambios en el item:
                   </Text>
-                  {Object.entries(item.formattedChanges).map(([field, change]) => (
-                    <View key={field} style={styles.changeRow}>
-                      <Text
-                        variant="labelSmall"
-                        style={[
-                          styles.fieldLabel,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        {formatFieldName(field)}:
-                      </Text>
-                      <ChangeDetailRenderer
-                        change={change}
-                        fieldName={field}
-                        styles={styles}
-                      />
-                    </View>
-                  ))}
+                  {Object.entries(item.formattedChanges).map(
+                    ([field, change]) => (
+                      <View key={field} style={styles.changeRow}>
+                        <Text
+                          variant="labelSmall"
+                          style={[
+                            styles.fieldLabel,
+                            { color: theme.colors.onSurfaceVariant },
+                          ]}
+                        >
+                          {formatFieldName(field)}:
+                        </Text>
+                        <ChangeDetailRenderer
+                          change={change}
+                          fieldName={field}
+                          styles={styles}
+                        />
+                      </View>
+                    ),
+                  )}
                 </>
               )}
 

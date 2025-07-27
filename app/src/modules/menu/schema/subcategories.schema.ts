@@ -27,17 +27,19 @@ export const createSubCategoryDtoSchema = subCategoryBaseSchema.extend({
 });
 export type CreateSubCategoryDto = z.infer<typeof createSubCategoryDtoSchema>;
 
-export const updateSubCategoryDtoSchema = subCategoryBaseSchema.partial().extend({
-  imageUri: z
-    .union([
-      z.string().url(),
-      z.string().startsWith('file://'),
-      z.string().startsWith('http://'),
-      z.string().startsWith('https://'),
-      z.null(),
-    ])
-    .optional(),
-});
+export const updateSubCategoryDtoSchema = subCategoryBaseSchema
+  .partial()
+  .extend({
+    imageUri: z
+      .union([
+        z.string().url(),
+        z.string().startsWith('file://'),
+        z.string().startsWith('http://'),
+        z.string().startsWith('https://'),
+        z.null(),
+      ])
+      .optional(),
+  });
 export type UpdateSubCategoryDto = z.infer<typeof updateSubCategoryDtoSchema>;
 
 export const findAllSubcategoriesDtoSchema = baseListQuerySchema.extend({

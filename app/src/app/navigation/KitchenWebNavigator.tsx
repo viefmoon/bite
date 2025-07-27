@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  StatusBar,
-} from 'react-native';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import { WebDrawer } from './components/WebDrawer';
 import { WebDrawerContent } from './components/WebDrawerContent';
 import KitchenOrdersScreen from '../../modules/kitchen/screens/KitchenOrdersScreen';

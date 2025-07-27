@@ -55,7 +55,6 @@ export const availabilityUpdatePayloadSchema = z.object({
   cascade: z.boolean().optional(),
 });
 
-
 export type CategoryAvailability = z.infer<typeof categoryAvailabilitySchema>;
 export type SubcategoryAvailability = z.infer<
   typeof subcategoryAvailabilitySchema

@@ -72,11 +72,11 @@ export function PizzaProductsTab() {
   }, [data, searchQuery, filter]);
 
   // Componente para renderizar cada producto
-  const ProductItem = ({ 
-    item, 
-    onConfigure, 
-    onManageIngredients 
-  }: { 
+  const ProductItem = ({
+    item,
+    onConfigure,
+    onManageIngredients,
+  }: {
     item: Product;
     onConfigure: (product: Product) => void;
     onManageIngredients: (product: Product) => void;
@@ -182,8 +182,8 @@ export function PizzaProductsTab() {
   };
 
   const renderProductItem = ({ item }: { item: Product }) => (
-    <ProductItem 
-      item={item} 
+    <ProductItem
+      item={item}
       onConfigure={(product) => {
         setSelectedProduct(product);
         setConfigModalVisible(true);

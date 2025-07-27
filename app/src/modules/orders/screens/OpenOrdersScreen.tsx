@@ -17,7 +17,7 @@ import {
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useResponsive } from '../../../app/hooks/useResponsive';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { OrdersStackParamList } from '../../../app/navigation/types';
+import type { OrdersStackParamList } from '../navigation/types';
 import { useAuthStore } from '../../../app/store/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';

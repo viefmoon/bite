@@ -31,4 +31,3 @@ export const useShifts = (params?: {
     refetchOnMount: true,
   });
 };
-

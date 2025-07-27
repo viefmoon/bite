@@ -392,11 +392,11 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         const fullPizzaElements = addedCustomizations.filter(
           (sc) => sc.half === PizzaHalfEnum.FULL,
         );
-        
+
         const half1Elements = addedCustomizations.filter(
           (sc) => sc.half === PizzaHalfEnum.HALF_1,
         );
-        
+
         const half2Elements = addedCustomizations.filter(
           (sc) => sc.half === PizzaHalfEnum.HALF_2,
         );
@@ -408,15 +408,17 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
           // Si no hay elementos en pizza completa, verificar que ambas mitades tengan al menos un elemento
           if (half1Elements.length === 0) {
             showSnackbar({
-              message: 'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
+              message:
+                'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
               type: 'error',
             });
             return;
           }
-          
+
           if (half2Elements.length === 0) {
             showSnackbar({
-              message: 'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
+              message:
+                'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
               type: 'error',
             });
             return;

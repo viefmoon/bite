@@ -2,10 +2,10 @@ import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { 
-  safeGetProperty, 
-  hasArrayItems, 
-  safeJoinArray 
+import {
+  safeGetProperty,
+  hasArrayItems,
+  safeJoinArray,
 } from '../utils/orderHistoryUtils';
 
 interface ProductItemRendererProps {
@@ -50,10 +50,7 @@ export const ProductItemRenderer: React.FC<ProductItemRendererProps> = ({
   return (
     <View
       key={`${type}-${index}`}
-      style={[
-        styles.productItemBorder,
-        getContainerStyle(),
-      ]}
+      style={[styles.productItemBorder, getContainerStyle()]}
     >
       <Text variant="bodySmall" style={styles.productNameText}>
         {safeGetProperty(item, 'productName')}
@@ -101,10 +98,7 @@ export const ProductItemRenderer: React.FC<ProductItemRendererProps> = ({
       {safeGetProperty(item, 'quantity') && (
         <Text
           variant="labelSmall"
-          style={[
-            styles.quantityText,
-            { color: theme.colors.primary },
-          ]}
+          style={[styles.quantityText, { color: theme.colors.primary }]}
         >
           Cantidad: {safeGetProperty(item, 'quantity')}
         </Text>
@@ -113,10 +107,7 @@ export const ProductItemRenderer: React.FC<ProductItemRendererProps> = ({
       {safeGetProperty(item, 'price') && (
         <Text
           variant="labelSmall"
-          style={[
-            styles.priceText,
-            { color: theme.colors.onSurface },
-          ]}
+          style={[styles.priceText, { color: theme.colors.onSurface }]}
         >
           Precio: ${safeGetProperty(item, 'price')}
         </Text>

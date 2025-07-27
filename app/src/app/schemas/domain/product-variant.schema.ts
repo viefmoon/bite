@@ -18,4 +18,3 @@ export const productVariantSchema = z.object({
 
 // Tipo TypeScript inferido y exportado centralmente
 export type ProductVariant = z.infer<typeof productVariantSchema>;
-

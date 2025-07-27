@@ -275,4 +275,3 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
 
   return <Image {...optimizedImageProps} />;
 };
-

@@ -105,9 +105,9 @@ export const useAudioOrder = ({
           if (item.modifiers && item.modifiers.length > 0) {
             for (const modName of item.modifiers) {
               for (const modGroup of foundProduct.modifierGroups || []) {
-                const modifier = (modGroup as FullMenuModifierGroup).productModifiers?.find(
-                  (m) => m.name === modName,
-                );
+                const modifier = (
+                  modGroup as FullMenuModifierGroup
+                ).productModifiers?.find((m) => m.name === modName);
                 if (modifier) {
                   selectedModifiers.push({
                     id: modifier.id,

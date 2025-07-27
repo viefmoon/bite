@@ -63,4 +63,3 @@ export const createAdjustmentSchema = createAdjustmentBaseSchema
   );
 
 export type CreateAdjustment = z.infer<typeof createAdjustmentSchema>;
-

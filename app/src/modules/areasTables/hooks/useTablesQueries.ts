@@ -21,7 +21,6 @@ const tablesQueryKeys = {
   detail: (id: string) => [...tablesQueryKeys.details(), id] as const,
 };
 
-
 export const useGetTablesByAreaId = (
   areaId: string | null,
   filters: Omit<FindAllTablesDto, 'areaId'> = {},

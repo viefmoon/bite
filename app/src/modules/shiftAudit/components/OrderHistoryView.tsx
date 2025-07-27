@@ -23,10 +23,7 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
     <View style={styles.container}>
       <Appbar.Header style={styles.header}>
         <Appbar.BackAction onPress={onBack} />
-        <Appbar.Content
-          title={titleText}
-          subtitle="Ver historial de cambios"
-        />
+        <Appbar.Content title={titleText} subtitle="Ver historial de cambios" />
       </Appbar.Header>
 
       <View style={styles.content}>

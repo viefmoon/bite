@@ -4,7 +4,7 @@ import CreateOrderScreen from '../../modules/orders/screens/CreateOrderScreen';
 import OpenOrdersScreen from '../../modules/orders/screens/OpenOrdersScreen';
 import AddProductsToOrderScreen from '../../modules/orders/screens/AddProductsToOrderScreen';
 
-import type { OrdersStackParamList } from './types';
+import type { OrdersStackParamList } from '../../modules/orders/navigation/types';
 import { useAppTheme } from '../styles/theme';
 import { getStackHeaderOptions } from './options';
 

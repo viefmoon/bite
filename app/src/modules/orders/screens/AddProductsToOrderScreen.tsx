@@ -14,7 +14,7 @@ import { CategoryGrid } from '../components/order-creation';
 import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import type { OrdersStackScreenProps } from '@/app/navigation/types';
+import type { OrdersStackScreenProps } from '../navigation/types';
 import {
   CartItem,
   CartItemModifier,
@@ -450,8 +450,9 @@ const AddProductsToOrderScreen = () => {
           selectedVariantId,
           product.variants?.find((v) => v.id === selectedVariantId)?.name,
           selectedVariantId
-            ? product.variants?.find((v) => v.id === selectedVariantId)?.price ?? 0
-            : product.price ?? 0,
+            ? (product.variants?.find((v) => v.id === selectedVariantId)
+                ?.price ?? 0)
+            : (product.price ?? 0),
           selectedPizzaCustomizations,
           pizzaExtraCost,
         );

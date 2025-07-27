@@ -84,7 +84,7 @@ export class ImageUploadService {
     if (!currentImageUri && editingItem?.photo) {
       return null;
     }
-    
+
     return undefined;
   }
 }
