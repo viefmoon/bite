@@ -16,7 +16,7 @@ import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type { OrdersStackScreenProps } from '../navigation/types';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
-import { useOrderStore } from '../stores/useOrderStore';
+import { useOrderManagement } from '../stores/useOrderManagement';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 
 type AddProductsRouteProps = {
@@ -36,7 +36,7 @@ const AddProductsToOrderScreen = () => {
     route.params as AddProductsRouteProps;
 
   // Conectar directamente al store
-  const { items: storeItems, addItem: addItemToStore } = useOrderStore();
+  const { items: storeItems, addItem: addItemToStore } = useOrderManagement();
 
   // Estado local para productos siendo añadidos en esta sesión
   const [selectedProducts, setSelectedProducts] = useState<CartItem[]>([]);

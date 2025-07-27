@@ -3,10 +3,10 @@ import { useNavigation } from '@react-navigation/native';
 import { useGetOrderMenu } from '../../hooks/useMenuQueries';
 import { useGlobalShift } from '@/app/hooks/useGlobalShift';
 import {
-  useOrderStore,
+  useOrderManagement,
   useIsOrderEmpty,
   useOrderItemsCount,
-} from '../../stores/useOrderStore';
+} from '../../stores/useOrderManagement';
 import { useAuthStore } from '@/app/store/authStore';
 import { Product, Category, SubCategory } from '../../schema/orders.schema';
 import { canOpenShift } from '@/app/utils/roleUtils';
@@ -38,7 +38,7 @@ export const useOrderCreationScreen = () => {
     setDeliveryInfo,
     setScheduledTime,
     resetOrder,
-  } = useOrderStore();
+  } = useOrderManagement();
 
   const isCartEmpty = useIsOrderEmpty();
   const totalItemsCount = useOrderItemsCount();

@@ -31,14 +31,13 @@ import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
 import { canRegisterPayments as checkCanRegisterPayments } from '@/app/utils/roleUtils';
 import {
-  useOrderStore,
-  CartItem,
-  CartItemModifier,
+  useOrderManagement,
   useOrderSubtotal,
   useOrderTotal,
   useOrderItemsCount,
-  OrderDetailsForBackend,
-} from '../stores/useOrderStore';
+} from '../stores/useOrderManagement';
+import { CartItem, CartItemModifier } from '../utils/cartUtils';
+import { OrderDetailsForBackend } from '../utils/orderUtils';
 import { useAuthStore } from '@/app/store/authStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
@@ -130,7 +129,7 @@ const useOrderCart = ({
     updateAdjustment,
     removeAdjustment,
     confirmOrder,
-  } = useOrderStore();
+  } = useOrderManagement();
 
   // Cálculos
   const subtotal = useOrderSubtotal();
@@ -863,13 +862,14 @@ const OrderContent: React.FC<{
                   orderId,
                   orderNumber,
                   existingOrderItemsCount: items
-                    .filter((item) => !item.id.startsWith('new-'))
+                    .filter((item) => !item.isNew)
                     .reduce((sum, item) => sum + item.quantity, 0),
                   onProductsAdded: (newProducts: CartItem[]) => {
                     const newProductsWithStatus = newProducts.map((item) => ({
                       ...item,
                       preparationStatus: 'NEW' as const,
-                      id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+                      isNew: true,
+                      isModified: false,
                     }));
 
                     newProductsWithStatus.forEach((item) => {
