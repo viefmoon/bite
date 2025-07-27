@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { shiftsService, type Shift } from '@/services/shifts';
+import { shiftsService } from '@/services/shifts';
+import type { Shift } from '@/app/schemas/domain/shift.schema';
 
 export const useGlobalShift = () => {
   return useQuery<Shift | null, Error>({

@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { canOpenShift } from '../utils/roleUtils';
 import { ShiftActionModal } from '@/modules/orders/components/ShiftActionModal';
 import { ShiftStatusModal } from '@/modules/orders/components/ShiftStatusModal';
-import type { Shift } from '@/services/shifts';
+import type { Shift } from '@/app/schemas/domain/shift.schema';
 import { useGlobalShift } from '../hooks/useGlobalShift';
 import { useQueryClient } from '@tanstack/react-query';
 

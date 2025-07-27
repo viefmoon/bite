@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   StyleSheet,
@@ -11,19 +11,17 @@ import {
   Portal,
   Text,
   Button,
-  TextInput,
-  HelperText,
   Surface,
   Divider,
-  Card,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
-import { shiftsService, type Shift } from '@/services/shifts';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import type { Shift } from '@/app/schemas/domain/shift.schema';
+import { useShiftAction } from '../hooks/useShiftAction';
+import { ShiftSummaryCard } from './ShiftSummaryCard';
+import { ShiftActionForm } from './ShiftActionForm';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 
 type ShiftActionMode = 'open' | 'close';
 
@@ -46,120 +44,46 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  const [cashAmount, setCashAmount] = useState('');
-  const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const {
+    // Estado
+    cashAmount,
+    notes,
+    loading,
+    error,
+    isOpenMode,
 
-  const isOpenMode = mode === 'open';
+    // Funciones
+    handleCashAmountChange,
+    handleSubmit,
+    resetForm,
+    calculateDifference,
+    formatCurrency,
+    formatTime,
+    handleNotesChange,
+  } = useShiftAction({
+    mode,
+    shift,
+  });
 
-  const handleCashAmountChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9.]/g, '');
-    const parts = cleaned.split('.');
-    if (parts.length > 2) return;
-
-    if (parts[1] && parts[1].length > 2) {
-      setCashAmount(parts[0] + '.' + parts[1].substring(0, 2));
-    } else {
-      setCashAmount(cleaned);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!cashAmount) {
-      setError(
-        isOpenMode
-          ? 'El monto inicial es requerido'
-          : 'El efectivo final es requerido',
-      );
-      return;
-    }
-
-    const amount = parseFloat(cashAmount);
-    if (isNaN(amount) || amount < 0) {
-      setError('Ingresa un monto válido');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
+  const handleShiftAction = async () => {
+    const success = await handleSubmit();
+    if (success) {
       if (isOpenMode) {
-        await shiftsService.openShift({
-          initialCash: amount,
-          notes: notes || undefined,
-        });
-        showSnackbar({
-          message: 'Turno abierto exitosamente',
-          type: 'success',
-        });
         onShiftOpened?.();
       } else {
-        await shiftsService.closeShift({
-          finalCash: amount,
-          closeNotes: notes || undefined,
-        });
-        showSnackbar({
-          message: 'Turno cerrado exitosamente',
-          type: 'success',
-        });
         onShiftClosed?.();
       }
-
-      setCashAmount('');
-      setNotes('');
       onDismiss();
-    } catch (error: any) {
-      let errorMessage = isOpenMode
-        ? 'Error al abrir el turno'
-        : 'Error al cerrar el turno';
-
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      setError(errorMessage);
-      showSnackbar({ message: errorMessage, type: 'error' });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDismiss = () => {
     if (!loading) {
-      setCashAmount('');
-      setNotes('');
-      setError('');
+      resetForm();
       onDismiss();
     }
   };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
-
-  const formatTime = (dateString: string) => {
-    return format(new Date(dateString), 'HH:mm', { locale: es });
-  };
-
-  const calculateDifference = () => {
-    if (isOpenMode || !cashAmount || !shift?.expectedCash) return null;
-    const cash = parseFloat(cashAmount);
-    if (isNaN(cash)) return null;
-    return cash - shift.expectedCash;
-  };
-
-  const difference = calculateDifference();
   const today = new Date();
   const todayFormatted = format(today, "EEEE, d 'de' MMMM 'de' yyyy", {
     locale: es,
@@ -173,11 +97,6 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
       buttonText: 'Abrir Turno',
       buttonIcon: 'play-circle',
       buttonColor: theme.colors.primary,
-      cashLabel: 'Monto inicial en caja',
-      notesLabel: 'Notas adicionales (opcional)',
-      notesPlaceholder: 'Ej: Estado de la caja, observaciones...',
-      infoText:
-        'Registra el monto inicial para comenzar las operaciones del turno.',
     },
     close: {
       title: 'Cierre de Turno',
@@ -186,9 +105,6 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
       buttonText: 'Cerrar Turno',
       buttonIcon: 'stop-circle',
       buttonColor: '#FF5722',
-      cashLabel: 'Efectivo final en caja',
-      notesLabel: 'Notas de cierre (opcional)',
-      notesPlaceholder: 'Ej: Observaciones del turno, incidencias...',
     },
   }[mode];
 
@@ -234,150 +150,26 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
               <Divider style={styles.divider} />
 
               <View style={styles.content}>
-                {isOpenMode && (
-                  <View style={styles.infoCard}>
-                    <MaterialCommunityIcons
-                      name="information"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                    <Text variant="bodyMedium" style={styles.infoText}>
-                      {config.infoText}
-                    </Text>
-                  </View>
-                )}
-
                 {!isOpenMode && shift && (
-                  <Card style={styles.summaryCard}>
-                    <Card.Content>
-                      <Text variant="titleMedium" style={styles.sectionTitle}>
-                        Resumen del Turno #{shift.globalShiftNumber}
-                      </Text>
-
-                      <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium" style={styles.label}>
-                          Abierto a las:
-                        </Text>
-                        <Text variant="bodyMedium" style={styles.value}>
-                          {formatTime(shift.openedAt)}
-                        </Text>
-                      </View>
-
-                      <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium" style={styles.label}>
-                          Efectivo inicial:
-                        </Text>
-                        <Text variant="bodyMedium" style={styles.value}>
-                          {formatCurrency(shift.initialCash)}
-                        </Text>
-                      </View>
-
-                      {shift.totalSales !== null && (
-                        <View style={styles.summaryRow}>
-                          <Text variant="bodyMedium" style={styles.label}>
-                            Ventas del turno:
-                          </Text>
-                          <Text
-                            variant="bodyMedium"
-                            style={[styles.value, styles.highlight]}
-                          >
-                            {formatCurrency(shift.totalSales)}
-                          </Text>
-                        </View>
-                      )}
-
-                      {shift.expectedCash !== null && (
-                        <View style={styles.summaryRow}>
-                          <Text variant="bodyMedium" style={styles.label}>
-                            Efectivo esperado:
-                          </Text>
-                          <Text
-                            variant="bodyMedium"
-                            style={[styles.value, styles.highlight]}
-                          >
-                            {formatCurrency(shift.expectedCash)}
-                          </Text>
-                        </View>
-                      )}
-                    </Card.Content>
-                  </Card>
+                  <ShiftSummaryCard
+                    shift={shift}
+                    formatTime={formatTime}
+                    formatCurrency={formatCurrency}
+                  />
                 )}
 
-                <View style={styles.inputSection}>
-                  <Text variant="titleMedium" style={styles.sectionTitle}>
-                    {isOpenMode
-                      ? 'Información de Apertura'
-                      : 'Información de Cierre'}
-                  </Text>
-
-                  <TextInput
-                    label={config.cashLabel}
-                    value={cashAmount}
-                    onChangeText={handleCashAmountChange}
-                    keyboardType="decimal-pad"
-                    mode="outlined"
-                    left={<TextInput.Affix text="$" />}
-                    style={styles.input}
-                    disabled={loading}
-                    error={!!error}
-                    placeholder="0.00"
-                    outlineColor={
-                      error ? theme.colors.error : theme.colors.outline
-                    }
-                    activeOutlineColor={
-                      error ? theme.colors.error : theme.colors.primary
-                    }
-                  />
-
-                  {!isOpenMode && difference !== null && (
-                    <View
-                      style={[
-                        styles.differenceContainer,
-                        difference < 0
-                          ? styles.negativeDifference
-                          : styles.positiveDifference,
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name={difference >= 0 ? 'trending-up' : 'trending-down'}
-                        size={20}
-                        color={difference >= 0 ? '#4CAF50' : '#FF5722'}
-                      />
-                      <Text
-                        style={[
-                          styles.differenceText,
-                          difference >= 0
-                            ? styles.positiveText
-                            : styles.negativeText,
-                        ]}
-                      >
-                        {difference >= 0 ? 'Sobrante: ' : 'Faltante: '}
-                        {formatCurrency(Math.abs(difference))}
-                      </Text>
-                    </View>
-                  )}
-
-                  <HelperText
-                    type="error"
-                    visible={!!error}
-                    style={styles.errorText}
-                  >
-                    {error}
-                  </HelperText>
-
-                  <SpeechRecognitionInput
-                    key={`${mode}-notes-input`}
-                    label={config.notesLabel}
-                    value={notes}
-                    onChangeText={setNotes}
-                    multiline
-                    speechLang="es-MX"
-                    placeholder={config.notesPlaceholder}
-                    autoCapitalize="sentences"
-                    autoCorrect={false}
-                    disabled={loading}
-                  />
-                </View>
+                <ShiftActionForm
+                  mode={mode}
+                  cashAmount={cashAmount}
+                  onCashAmountChange={handleCashAmountChange}
+                  notes={notes}
+                  onNotesChange={handleNotesChange}
+                  error={error}
+                  loading={loading}
+                  shift={shift}
+                  calculateDifference={calculateDifference}
+                  formatCurrency={formatCurrency}
+                />
               </View>
 
               <View style={styles.footer}>
@@ -392,7 +184,7 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
                 </Button>
                 <Button
                   mode="contained"
-                  onPress={handleSubmit}
+                  onPress={handleShiftAction}
                   style={[
                     styles.button,
                     styles.confirmButton,
