@@ -269,34 +269,32 @@ export const getScreenDimensions = () => {
   return Dimensions.get('window');
 };
 
-// Multiplicador de densidad para tablets (más compacto)
+// Constantes para multiplicadores de tablet
 export const TABLET_DENSITY_MULTIPLIER = 0.75;
+export const TABLET_FONT_MULTIPLIER = 0.85;
+export const TABLET_SPACING_MULTIPLIER = 0.65;
 
-// Helper para obtener tamaño compacto en tablets
+// Función genérica para obtener valores responsive
+export const getResponsiveValue = (
+  mobileValue: number,
+  tabletMultiplier: number,
+  width: number = screenWidth,
+): number => {
+  return isTablet(width) ? Math.round(mobileValue * tabletMultiplier) : mobileValue;
+};
+
+// Funciones de conveniencia usando la función genérica
 export const getCompactSize = (
-  mobileSize: number,
+  size: number,
   width: number = screenWidth,
-  compactRatio: number = TABLET_DENSITY_MULTIPLIER,
-): number => {
-  return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
-};
+): number => getResponsiveValue(size, TABLET_DENSITY_MULTIPLIER, width);
 
-// Helper para obtener tamaño de fuente compacto
 export const getCompactFontSize = (
-  mobileSize: number,
+  size: number,
   width: number = screenWidth,
-  compactRatio: number = 0.85,
-): number => {
-  return isTablet(width) ? Math.round(mobileSize * compactRatio) : mobileSize;
-};
+): number => getResponsiveValue(size, TABLET_FONT_MULTIPLIER, width);
 
-// Helper para obtener spacing compacto
 export const getCompactSpacing = (
-  mobileSpacing: number,
+  spacing: number,
   width: number = screenWidth,
-  compactRatio: number = 0.65,
-): number => {
-  return isTablet(width)
-    ? Math.round(mobileSpacing * compactRatio)
-    : mobileSpacing;
-};
+): number => getResponsiveValue(spacing, TABLET_SPACING_MULTIPLIER, width);
