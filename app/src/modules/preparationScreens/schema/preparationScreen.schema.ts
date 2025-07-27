@@ -83,8 +83,6 @@ export type UpdatePreparationScreenDto = z.infer<
   typeof UpdatePreparationScreenSchema
 >;
 
-// Re-exportar tipo de dominio para conveniencia
-export type { DomainPreparationScreen };
 
 // Esquema para los filtros de búsqueda/listado
 export const FindAllPreparationScreensSchema = z.object({

@@ -40,8 +40,8 @@ import {
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
 import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
-import type { Area } from '@/modules/areasTables/schema/area.schema';
-import type { Table } from '@/modules/areasTables/schema/table.schema';
+import type { Area } from '@/app/schemas/domain/area.schema';
+import type { Table } from '@/app/schemas/domain/table.schema';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import { Menu, Checkbox, HelperText } from 'react-native-paper';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';

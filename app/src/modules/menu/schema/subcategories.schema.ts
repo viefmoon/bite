@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { baseListQuerySchema } from '../../../app/types/query.types';
-import { type Photo } from '../../../app/schemas/domain/photo.schema';
-import type { SubCategory } from '../../../app/schemas/domain/subcategory.schema';
 
 const subCategoryBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -53,4 +51,3 @@ export type FindAllSubcategoriesDto = z.infer<
 export type SubCategoryFormInputs = CreateSubCategoryDto;
 export type UpdateSubCategoryFormInputs = UpdateSubCategoryDto;
 
-export type { Photo, SubCategory };

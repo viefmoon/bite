@@ -4,12 +4,8 @@ import {
   emergencyContactSchema,
   GenderEnum,
   RoleEnum,
-  type User,
-  type Role,
 } from '@/app/schemas/domain/user.schema';
 
-// Re-exportar tipos de dominio
-export type { User, Role };
 export { GenderEnum, RoleEnum };
 
 // Esquema para crear usuario

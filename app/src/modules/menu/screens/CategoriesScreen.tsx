@@ -23,8 +23,8 @@ import {
   FileObject,
 } from '../../../app/lib/imageUploadService';
 import categoryService from '../services/categoryService';
+import type { Category } from '@/app/schemas/domain/category.schema';
 import {
-  Category,
   CategoryFormData,
   CreateCategoryDto,
   UpdateCategoryDto,

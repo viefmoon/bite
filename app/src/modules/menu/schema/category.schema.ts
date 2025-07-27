@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { Category } from '../../../app/schemas/domain/category.schema';
-import { type Photo } from '../../../app/schemas/domain/photo.schema';
 
 const categoryBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -39,4 +37,3 @@ export type CreateCategoryDto = z.infer<typeof createCategoryDtoSchema>;
 export type UpdateCategoryDto = z.infer<typeof updateCategoryDtoSchema>;
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;
 
-export type { Category, Photo };

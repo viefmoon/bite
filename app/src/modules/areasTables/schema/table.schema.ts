@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Table } from '../../../app/schemas/domain/table.schema';
 const tableBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   capacity: z.preprocess(
@@ -39,4 +38,3 @@ export const FindAllTablesSchema = z.object({
 });
 export type FindAllTablesDto = z.infer<typeof FindAllTablesSchema>;
 
-export type { Table };

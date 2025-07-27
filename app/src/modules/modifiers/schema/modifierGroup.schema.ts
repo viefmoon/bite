@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { modifierGroupSchema as domainModifierGroupSchema } from '../../../app/schemas/domain/modifier-group.schema';
-import type { ModifierGroup } from '../../../app/schemas/domain/modifier-group.schema';
 
 export const modifierGroupBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -87,6 +86,5 @@ export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
   products: z.array(z.any()).optional(),
 });
 
-export type { ModifierGroup };
 
 export const modifierGroupSchema = modifierGroupFormValidationSchema;

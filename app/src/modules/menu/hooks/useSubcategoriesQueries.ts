@@ -6,8 +6,8 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query';
 import { subcategoriesService } from '../services/subcategoriesService';
+import type { SubCategory } from '@/app/schemas/domain/subcategory.schema';
 import {
-  SubCategory,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
   FindAllSubcategoriesDto,

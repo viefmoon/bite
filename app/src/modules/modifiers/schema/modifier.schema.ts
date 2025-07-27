@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { modifierSchema as domainModifierSchema } from '../../../app/schemas/domain/modifier.schema';
-import type { Modifier } from '../../../app/schemas/domain/modifier.schema';
 
 const modifierBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
@@ -43,7 +42,6 @@ export const modifierApiSchema = domainModifierSchema.extend({
   deletedAt: z.string().datetime().nullable().optional(),
 });
 
-export type { Modifier };
 
 export type ModifierFormInputs = {
   name: string;

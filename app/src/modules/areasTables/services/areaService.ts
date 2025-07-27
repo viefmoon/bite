@@ -1,8 +1,8 @@
 import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BaseListQuery } from '../../../app/types/query.types';
+import type { Area } from '@/app/schemas/domain/area.schema';
 import {
-  Area,
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,

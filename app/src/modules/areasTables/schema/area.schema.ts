@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Area } from '../../../app/schemas/domain/area.schema';
 const areaBaseSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional(),
@@ -21,4 +20,3 @@ export const FindAllAreasSchema = areaBaseSchema
 
 export type FindAllAreasDto = z.infer<typeof FindAllAreasSchema>;
 
-export type { Area };

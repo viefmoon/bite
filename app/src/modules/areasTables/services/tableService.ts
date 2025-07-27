@@ -1,8 +1,8 @@
 import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
 import { BaseListQuery } from '../../../app/types/query.types';
+import type { Table } from '@/app/schemas/domain/table.schema';
 import {
-  Table,
   CreateTableDto,
   UpdateTableDto,
   FindAllTablesDto,

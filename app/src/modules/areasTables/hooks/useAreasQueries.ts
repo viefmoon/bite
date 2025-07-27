@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { areaService } from '../services/areaService';
+import type { Area } from '@/app/schemas/domain/area.schema';
 import {
-  Area,
   CreateAreaDto,
   UpdateAreaDto,
   FindAllAreasDto,

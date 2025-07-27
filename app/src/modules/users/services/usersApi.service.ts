@@ -1,7 +1,7 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
+import type { User } from '@/app/schemas/domain/user.schema';
 import type {
-  User,
   CreateUserDto,
   UpdateUserDto,
   UsersQuery,

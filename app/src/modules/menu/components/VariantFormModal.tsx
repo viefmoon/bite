@@ -12,7 +12,7 @@ import {
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
-import { ProductVariant } from '../schema/products.schema';
+import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema';
 import { z } from 'zod';
 import { useAppTheme } from '@/app/styles/theme';
 

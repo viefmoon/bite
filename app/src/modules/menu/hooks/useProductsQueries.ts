@@ -6,8 +6,8 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { productsService } from '../services/productsService';
+import type { Product } from '@/app/schemas/domain/product.schema';
 import {
-  Product,
   ProductFormInputs,
   FindAllProductsQuery,
   AssignModifierGroupsInput,

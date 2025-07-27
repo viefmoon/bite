@@ -2,8 +2,8 @@ import React from 'react';
 import GenericFormModal, {
   FormFieldConfig,
 } from '../../../app/components/crud/GenericFormModal';
+import type { Area } from '@/app/schemas/domain/area.schema';
 import {
-  Area,
   CreateAreaDto,
   UpdateAreaDto,
   CreateAreaSchema,

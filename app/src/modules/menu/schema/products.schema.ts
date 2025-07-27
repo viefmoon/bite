@@ -1,13 +1,10 @@
 import { z } from 'zod';
 import { baseListQuerySchema } from '../../../app/types/query.types';
-import { type Photo } from '../../../app/schemas/domain/photo.schema';
 import {
   productVariantSchema,
-  type ProductVariant,
 } from '../../../app/schemas/domain/product-variant.schema';
 import {
   productSchema as domainProductSchema,
-  type Product,
 } from '../../../app/schemas/domain/product.schema';
 const productVariantFormSchema = productVariantSchema
   .omit({ id: true })
@@ -119,4 +116,3 @@ export type AssignModifierGroupsInput = z.infer<
   typeof assignModifierGroupsSchema
 >;
 
-export type { Photo, ProductVariant, Product };

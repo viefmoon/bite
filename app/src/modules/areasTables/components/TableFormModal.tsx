@@ -2,8 +2,8 @@ import React from 'react';
 import GenericFormModal, {
   FormFieldConfig,
 } from '../../../app/components/crud/GenericFormModal';
+import type { Table } from '@/app/schemas/domain/table.schema';
 import {
-  Table,
   CreateTableDto,
   UpdateTableDto,
   CreateTableSchema,
