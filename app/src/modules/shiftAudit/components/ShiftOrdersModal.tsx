@@ -20,7 +20,7 @@ import type { Order } from '@/app/schemas/domain/order.schema';
 import { receiptService } from '@/modules/receipts/services/receiptService';
 import type { Receipt } from '@/modules/receipts/schema/receipt.schema';
 import { OrderDetailsView } from './OrderDetailsView';
-import { OrderHistoryView } from './OrderHistoryView';
+import { OrderHistoryContent } from './OrderHistoryContent';
 
 interface ShiftOrdersModalProps {
   visible: boolean;
@@ -202,14 +202,20 @@ export function ShiftOrdersModal({
       >
         <View style={styles.container}>
           {showOrderHistory && selectedReceipt ? (
-            <OrderHistoryView
-              orderId={String(selectedReceipt.id)}
-              orderNumber={Number(selectedReceipt.shiftOrderNumber) || 0}
-              onBack={() => {
-                setShowOrderHistory(false);
-                setShowReceiptDetails(true);
-              }}
-            />
+            <>
+              <Appbar.Header style={styles.header}>
+                <Appbar.BackAction onPress={() => {
+                  setShowOrderHistory(false);
+                  setShowReceiptDetails(true);
+                }} />
+                <Appbar.Content title={`Historial - Orden #${selectedReceipt.shiftOrderNumber || ''}`} />
+              </Appbar.Header>
+              <OrderHistoryContent
+                orderId={String(selectedReceipt.id)}
+                orderNumber={Number(selectedReceipt.shiftOrderNumber) || 0}
+                showHeaderInfo={false}
+              />
+            </>
           ) : showReceiptDetails && selectedReceipt ? (
             <OrderDetailsView
               order={selectedReceipt}
