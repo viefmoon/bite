@@ -101,7 +101,9 @@ export const orderItemForFinalizationSchema = z.object({
     .nullable()
     .optional(),
   modifiers: z.array(orderItemModifierForFinalizationSchema),
-  selectedPizzaCustomizations: z.array(selectedPizzaCustomizationSchema).optional(),
+  selectedPizzaCustomizations: z
+    .array(selectedPizzaCustomizationSchema)
+    .optional(),
 });
 
 export type OrderItemForFinalization = z.infer<
