@@ -39,7 +39,6 @@ export default {
           },
         },
       ],
-      './plugins/withCustomIcons',
     ],
     android: {
       permissions: [

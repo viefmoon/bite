@@ -16,30 +16,9 @@ export const authEmailLoginDtoSchema = z.object({
 });
 export type AuthEmailLoginDto = z.infer<typeof authEmailLoginDtoSchema>;
 
-export const userSchema = z.object({
-  id: z.string().uuid('El ID de usuario debe ser un UUID válido'),
-  email: z.string().email().nullable(),
-  username: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  role: z
-    .object({
-      id: z.number(),
-      name: z.string(),
-    })
-    .optional(),
-  isActive: z.boolean().optional(),
-  preparationScreen: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      description: z.string().nullable(),
-      isActive: z.boolean(),
-    })
-    .nullable()
-    .optional(),
-});
-export type User = z.infer<typeof userSchema>;
+import { userSchema } from '../../../app/schemas/domain/user.schema';
+export type { User } from '../../../app/schemas/domain/user.schema';
+export { userSchema };
 
 export const loginResponseDtoSchema = z.object({
   token: z.string(),

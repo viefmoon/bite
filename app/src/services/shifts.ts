@@ -1,51 +1,13 @@
 import apiClient from '../app/services/apiClient';
 import { API_PATHS } from '../app/constants/apiPaths';
-import type { ShiftSummary, ShiftOrder } from '../modules/shiftAudit/types';
 import type { Order } from '../app/schemas/domain/order.schema';
-
-export interface ShiftStatus {
-  OPEN: 'OPEN';
-  CLOSED: 'CLOSED';
-}
-
-export interface Shift {
-  id: string;
-  date: string;
-  globalShiftNumber: number;
-  shiftNumber: number;
-  status: 'OPEN' | 'CLOSED';
-  openedAt: string;
-  closedAt: string | null;
-  openedBy: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-  closedBy: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  } | null;
-  initialCash: number;
-  finalCash: number | null;
-  totalSales: number | null;
-  totalOrders: number | null;
-  cashDifference: number | null;
-  expectedCash?: number | null;
-  notes: string | null;
-  closeNotes: string | null;
-}
-
-export interface OpenShiftDto {
-  initialCash: number;
-  notes?: string;
-  date?: string;
-}
-
-export interface CloseShiftDto {
-  finalCash: number;
-  closeNotes?: string;
-}
+import type { 
+  Shift, 
+  OpenShiftDto, 
+  CloseShiftDto, 
+  ShiftSummary, 
+  ShiftOrder 
+} from '../app/schemas/domain/shift.schema';
 
 class ShiftsService {
   async getCurrentShift(): Promise<Shift | null> {
@@ -111,12 +73,6 @@ class ShiftsService {
   }
 
   calculateShiftSummary(shift: Shift, orders: Order[]): ShiftSummary {
-    const normalizedShift: import('../modules/shiftAudit/types').Shift = {
-      ...shift,
-      status: shift.status === 'OPEN' ? ('open' as const) : ('closed' as const),
-      openedBy: shift.openedBy || { id: '', firstName: '', lastName: '' },
-      closedBy: shift.closedBy,
-    };
     const paymentMethodsSummary = new Map<
       string,
       { count: number; total: number }
@@ -128,7 +84,7 @@ class ShiftsService {
 
     if (!Array.isArray(orders)) {
       return {
-        shift: normalizedShift,
+        shift,
         ordersCount: 0,
         totalSales: 0,
         paymentMethodsSummary: [],
@@ -184,7 +140,7 @@ class ShiftsService {
     }, 0);
 
     return {
-      shift: normalizedShift,
+      shift,
       ordersCount: orders.length,
       totalSales: totalSales,
       paymentMethodsSummary: Array.from(paymentMethodsSummary.entries()).map(

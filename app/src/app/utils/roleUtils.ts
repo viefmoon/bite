@@ -1,4 +1,4 @@
-import type { User } from '@/modules/auth/schema/auth.schema';
+import type { User } from '@/app/schemas/domain/user.schema';
 
 /**
  * Enum de roles basado en los IDs del backend

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import EncryptedStorage from '@/app/services/secureStorageService';
-import type { User } from '../../modules/auth/schema/auth.schema'; // Corregida ruta de importación
+import type { User } from '../schemas/domain/user.schema';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const AUTH_TOKEN_KEY = 'auth_token';
