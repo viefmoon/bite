@@ -22,9 +22,10 @@ import {
   Menu,
   IconButton,
   Modal,
+  FAB,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { OrderTypeEnum } from '../schema/orders.schema';
+import { OrderTypeEnum, OrderType } from '../schema/orders.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
 import OrderHeader from './OrderHeader';
@@ -41,10 +42,8 @@ import {
 import { useAuthStore } from '@/app/store/authStore';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
-import { FAB } from 'react-native-paper';
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-
 import {
   OrderTypeSelector,
   DineInForm,
@@ -74,27 +73,39 @@ interface OrderCartDetailProps {
   onAddProducts?: () => void;
 }
 
-const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
-  visible,
-  onConfirmOrder,
-  onClose,
-  onEditItem,
+interface UseOrderCartProps {
+  isEditMode?: boolean;
+  orderId?: string | null;
+  visible: boolean;
+  onConfirmOrder: (details: OrderDetailsForBackend) => Promise<void>;
+  onEditItem?: (item: CartItem) => void;
+  onClose?: () => void;
+}
+
+// Custom hook useOrderCart DENTRO del archivo
+const useOrderCart = ({
   isEditMode = false,
   orderId,
-  orderNumber,
-  orderDate,
-  onCancelOrder,
-  navigation,
-  onAddProducts,
-}) => {
+  visible,
+  onConfirmOrder,
+  onEditItem,
+  onClose,
+}: UseOrderCartProps) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  const user = useAuthStore((state) => state.user);
 
   // Referencias a los formularios
-  const dineInFormRef = useRef<DineInFormRef>(null);
-  const takeAwayFormRef = useRef<TakeAwayFormRef>(null);
-  const deliveryFormRef = useRef<DeliveryFormRef>(null);
+  const dineInFormRef = useRef<DineInFormRef | null>(null);
+  const takeAwayFormRef = useRef<TakeAwayFormRef | null>(null);
+  const deliveryFormRef = useRef<DeliveryFormRef | null>(null);
 
+  // Estados locales
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [isModalReady, setIsModalReady] = useState(false);
+
+  // Conexión con el store de Zustand
   const {
     items,
     orderType,
@@ -121,10 +132,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     confirmOrder,
   } = useOrderStore();
 
+  // Cálculos
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
 
+  // Queries
   const {
     data: orderData,
     isLoading: isLoadingOrder,
@@ -137,7 +150,26 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     enabled: isEditMode && !!orderId && visible,
   });
 
-  const validateOrder = () => {
+  // Cálculos derivados
+  const totalAdjustments = useMemo(() => {
+    return adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
+  }, [adjustments]);
+
+  const totalPaid = useMemo(() => {
+    if (!isEditMode || !payments) return 0;
+    return payments.reduce((sum, payment) => sum + payment.amount, 0);
+  }, [payments, isEditMode]);
+
+  const pendingAmount = useMemo(() => {
+    return total - totalPaid;
+  }, [total, totalPaid]);
+
+  const canRegisterPayments = useMemo(() => {
+    return checkCanRegisterPayments(user);
+  }, [user]);
+
+  // Validación centralizada
+  const validateOrder = useCallback(() => {
     let isValid = true;
 
     switch (orderType) {
@@ -164,52 +196,84 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
 
     return isValid;
-  };
+  }, [orderType]);
 
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-  const [isModalReady, setIsModalReady] = useState(false);
+  // Handlers
+  const handleTimeConfirm = useCallback(
+    (date: Date) => {
+      const now = new Date();
+      now.setSeconds(0, 0);
 
-  // Calcular totales
-  const totalAdjustments = useMemo(() => {
-    return adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
-  }, [adjustments]);
+      if (date < now) {
+        modalHelpers.hideModal();
+        modalHelpers.showTimeAlert();
+      } else {
+        setScheduledTime(date);
+        modalHelpers.hideModal();
+      }
+    },
+    [setScheduledTime],
+  );
 
-  const totalPaid = useMemo(() => {
-    if (!isEditMode || !payments) return 0;
-    return payments.reduce((sum, payment) => sum + payment.amount, 0);
-  }, [payments, isEditMode]);
-
-  const pendingAmount = useMemo(() => {
-    return total - totalPaid;
-  }, [total, totalPaid]);
-
-  const showTimePicker = () => {
+  const showTimePicker = useCallback(() => {
     modalHelpers.showTimePicker({
       scheduledTime,
       orderType,
       onTimeConfirm: handleTimeConfirm,
       hideTimePicker: modalHelpers.hideModal,
     });
-  };
-
-  const handleEditCartItem = (item: CartItem) => {
-    if (onEditItem) {
-      onEditItem(item);
-    } else {
-      // Si no hay onEditItem, mostrar modal de personalización directamente
-      modalHelpers.showProductCustomization({
-        editingProduct: editingProduct,
-        editingItemFromList: item,
-        clearEditingState,
-        handleUpdateEditedItem,
-      });
-    }
-  };
+  }, [scheduledTime, orderType, handleTimeConfirm]);
 
   const clearEditingState = useCallback(() => {
     setEditingProduct(null);
   }, []);
+
+  const handleEditCartItem = useCallback(
+    (item: CartItem) => {
+      if (onEditItem) {
+        onEditItem(item);
+      } else {
+        modalHelpers.showProductCustomization({
+          editingProduct: editingProduct,
+          editingItemFromList: item,
+          clearEditingState,
+          handleUpdateEditedItem,
+        });
+      }
+    },
+    [onEditItem, editingProduct],
+  );
+
+  const handleUpdateEditedItem = useCallback(
+    (
+      itemId: string,
+      quantity: number,
+      modifiers: CartItemModifier[],
+      preparationNotes?: string,
+      variantId?: string,
+      variantName?: string,
+      unitPrice?: number,
+      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
+      pizzaExtraCost?: number,
+    ) => {
+      if (!isEditMode) return;
+
+      updateCartItem(
+        itemId,
+        quantity,
+        modifiers,
+        preparationNotes,
+        variantId,
+        variantName,
+        unitPrice,
+        selectedPizzaCustomizations,
+        pizzaExtraCost,
+      );
+
+      clearEditingState();
+    },
+    [isEditMode, updateCartItem, clearEditingState],
+  );
 
   const handlePrepaymentCreated = useCallback(
     (id: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => {
@@ -230,16 +294,13 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     }
   }, [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod]);
 
-  const handleDeletePrepayment = () => {
+  const handleDeletePrepayment = useCallback(() => {
     modalHelpers.showDeletePrepaymentConfirm({
       confirmDeletePrepayment: async () => {
         handlePrepaymentDeleted();
       },
     });
-  };
-
-  const { user } = useAuthStore();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  }, [handlePrepaymentDeleted]);
 
   const removeItem = useCallback(
     (itemId: string) => {
@@ -318,25 +379,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode, items, removeItem, showSnackbar, updateCartItemQuantity],
   );
 
-  const canRegisterPayments = useMemo(() => {
-    return checkCanRegisterPayments(user);
-  }, [user]);
-
-  useEffect(() => {
-    if (!visible && isEditMode) {
-      clearEditingState();
-    }
-  }, [visible, isEditMode, clearEditingState]);
-
-  useEffect(() => {
-    if (visible && !isModalReady) {
-      const timer = setTimeout(() => {
-        setIsModalReady(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, isModalReady]);
-
   const handleAddAdjustment = useCallback(
     (adjustment: OrderAdjustment) => {
       if (isEditMode) {
@@ -364,7 +406,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
     [isEditMode, removeAdjustment],
   );
 
-  const handleConfirm = async () => {
+  const handleConfirmOrder = useCallback(async () => {
     if (!user?.id) {
       showSnackbar({
         message: 'Error: No se pudo identificar el usuario',
@@ -394,79 +436,636 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
         type: 'error',
       });
     }
-  };
+  }, [user?.id, validateOrder, confirmOrder, onConfirmOrder, isEditMode, showSnackbar, onClose]);
 
-  const handleTimeConfirm = (date: Date) => {
-    const now = new Date();
-    now.setSeconds(0, 0);
-
-    if (date < now) {
-      modalHelpers.hideModal();
-      modalHelpers.showTimeAlert();
-    } else {
-      setScheduledTime(date);
-      modalHelpers.hideModal();
-    }
-  };
-
-  const handleUpdateEditedItem = useCallback(
-    (
-      itemId: string,
-      quantity: number,
-      modifiers: CartItemModifier[],
-      preparationNotes?: string,
-      variantId?: string,
-      variantName?: string,
-      unitPrice?: number,
-      selectedPizzaCustomizations?: SelectedPizzaCustomization[],
-      pizzaExtraCost?: number,
-    ) => {
-      if (!isEditMode) return;
-
-      updateCartItem(
-        itemId,
-        quantity,
-        modifiers,
-        preparationNotes,
-        variantId,
-        variantName,
-        unitPrice,
-        selectedPizzaCustomizations,
-        pizzaExtraCost,
-      );
-
+  // Effects
+  useEffect(() => {
+    if (!visible && isEditMode) {
       clearEditingState();
-    },
-    [isEditMode, updateCartItem, clearEditingState],
-  );
-
-  const renderFields = () => {
-    switch (orderType) {
-      case OrderTypeEnum.DINE_IN:
-        return (
-          <DineInForm
-            ref={dineInFormRef}
-            onScheduleTimePress={showTimePicker}
-          />
-        );
-      case OrderTypeEnum.TAKE_AWAY:
-        return (
-          <TakeAwayForm
-            ref={takeAwayFormRef}
-            onScheduleTimePress={showTimePicker}
-          />
-        );
-      case OrderTypeEnum.DELIVERY:
-        return (
-          <DeliveryForm
-            ref={deliveryFormRef}
-            onScheduleTimePress={showTimePicker}
-          />
-        );
-      default:
-        return null;
     }
+  }, [visible, isEditMode, clearEditingState]);
+
+  useEffect(() => {
+    if (visible && !isModalReady) {
+      const timer = setTimeout(() => {
+        setIsModalReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, isModalReady]);
+
+  // API expuesta
+  return {
+    // Estados y datos
+    items,
+    orderType,
+    scheduledTime,
+    adjustments,
+    prepaymentId,
+    paymentAmount,
+    paymentMethod,
+    isCartVisible,
+    hasUnsavedChanges,
+    isConfirming,
+    editingProduct,
+    showOptionsMenu,
+    isModalReady,
+    orderData,
+    isLoadingOrder,
+    isErrorOrder,
+    payments,
+    canRegisterPayments,
+
+    // Cálculos
+    subtotal,
+    total,
+    totalItemsCount,
+    totalAdjustments,
+    totalPaid,
+    pendingAmount,
+
+    // Referencias
+    dineInFormRef,
+    takeAwayFormRef,
+    deliveryFormRef,
+
+    // Setters
+    setOrderType,
+    setScheduledTime,
+    setPrepaymentId,
+    setPrepaymentAmount,
+    setPrepaymentMethod,
+    setEditingProduct,
+    setShowOptionsMenu,
+    setIsModalReady,
+
+    // Handlers
+    showTimePicker,
+    handleTimeConfirm,
+    clearEditingState,
+    handleEditCartItem,
+    handleUpdateEditedItem,
+    handleConfirmOrder,
+    validateOrder,
+    handlePrepaymentCreated,
+    handlePrepaymentDeleted,
+    handleDeletePrepayment,
+    removeItem,
+    updateItemQuantity,
+    handleAddAdjustment,
+    handleUpdateAdjustment,
+    handleRemoveAdjustment,
+
+    // Store actions
+    removeCartItem,
+    updateCartItemQuantity,
+    updateCartItem,
+    addItem,
+    addAdjustment,
+    updateAdjustment,
+    removeAdjustment,
+    confirmOrder,
+
+    // Theme
+    theme,
   };
+};
+
+// Sub-componente para el formulario según el tipo de orden
+const OrderFormSection: React.FC<{
+  orderType: OrderType;
+  dineInFormRef: React.RefObject<DineInFormRef | null>;
+  takeAwayFormRef: React.RefObject<TakeAwayFormRef | null>;
+  deliveryFormRef: React.RefObject<DeliveryFormRef | null>;
+  onScheduleTimePress: () => void;
+}> = ({
+  orderType,
+  dineInFormRef,
+  takeAwayFormRef,
+  deliveryFormRef,
+  onScheduleTimePress,
+}) => {
+  switch (orderType) {
+    case OrderTypeEnum.DINE_IN:
+      return (
+        <DineInForm
+          ref={dineInFormRef}
+          onScheduleTimePress={onScheduleTimePress}
+        />
+      );
+    case OrderTypeEnum.TAKE_AWAY:
+      return (
+        <TakeAwayForm
+          ref={takeAwayFormRef}
+          onScheduleTimePress={onScheduleTimePress}
+        />
+      );
+    case OrderTypeEnum.DELIVERY:
+      return (
+        <DeliveryForm
+          ref={deliveryFormRef}
+          onScheduleTimePress={onScheduleTimePress}
+        />
+      );
+    default:
+      return null;
+  }
+};
+
+// Sub-componente para el header de la orden
+const OrderCartHeader: React.FC<{
+  isEditMode: boolean;
+  orderData: any;
+  orderNumber?: number;
+  orderDate?: Date;
+  showOptionsMenu: boolean;
+  setShowOptionsMenu: (show: boolean) => void;
+  hasUnsavedChanges: boolean;
+  totalItemsCount: number;
+  isCartVisible: boolean;
+  onClose?: () => void;
+  onCancelOrder?: () => void;
+  orderId?: string | null;
+  theme: any;
+}> = ({
+  isEditMode,
+  orderData,
+  orderNumber,
+  orderDate,
+  showOptionsMenu,
+  setShowOptionsMenu,
+  hasUnsavedChanges,
+  totalItemsCount,
+  isCartVisible,
+  onClose,
+  onCancelOrder,
+  orderId,
+  theme,
+}) => {
+  const styles = StyleSheet.create({
+    customHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+      paddingVertical: 8,
+      backgroundColor: theme.colors.elevation.level2,
+    },
+    headerTitleContainer: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+    },
+    headerTitle: {
+      ...theme.fonts.titleMedium,
+      color: theme.colors.onSurface,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    orderStatusBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    orderStatusText: {
+      ...theme.fonts.labelSmall,
+      color: 'white',
+      fontWeight: '600',
+      fontSize: 11,
+    },
+  });
+
+  if (isEditMode) {
+    return (
+      <View style={styles.customHeader}>
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          onPress={() => {
+            if (hasUnsavedChanges) {
+              modalHelpers.showExitConfirmation({
+                onClose,
+              });
+            } else {
+              onClose?.();
+            }
+          }}
+          iconColor={theme.colors.onSurface}
+        />
+
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>
+            {orderNumber && orderDate
+              ? `Editar Orden #${orderNumber}`
+              : orderNumber
+                ? `Editando Orden #${orderNumber}`
+                : 'Editar Orden'}
+          </Text>
+          {orderData?.orderStatus && (
+            <View
+              style={[
+                styles.orderStatusBadge,
+                {
+                  backgroundColor: OrderStatusInfo.getColor(
+                    orderData.orderStatus,
+                    theme,
+                  ),
+                },
+              ]}
+            >
+              <Text style={styles.orderStatusText}>
+                {OrderStatusInfo.getLabel(orderData.orderStatus)}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <Menu
+          visible={showOptionsMenu}
+          onDismiss={() => setShowOptionsMenu(false)}
+          anchor={
+            <IconButton
+              icon="dots-vertical"
+              size={24}
+              onPress={() => setShowOptionsMenu(true)}
+              iconColor={theme.colors.onSurface}
+            />
+          }
+        >
+          <Menu.Item
+            onPress={() => {
+              setShowOptionsMenu(false);
+              modalHelpers.showOrderDetail({
+                orderId,
+                orderNumber,
+                orderData,
+              });
+            }}
+            title="Ver Detalles"
+            leadingIcon="file-document-outline"
+          />
+          <Menu.Item
+            onPress={() => {
+              setShowOptionsMenu(false);
+              modalHelpers.showOrderHistory({
+                orderId,
+                orderNumber,
+              });
+            }}
+            title="Ver Historial"
+            leadingIcon="history"
+          />
+          <Menu.Item
+            onPress={() => {
+              setShowOptionsMenu(false);
+              modalHelpers.showCancelConfirmation({
+                orderNumber,
+                onCancelOrder,
+              });
+            }}
+            title="Cancelar Orden"
+            leadingIcon="cancel"
+          />
+        </Menu>
+      </View>
+    );
+  }
+
+  return (
+    <OrderHeader
+      title={orderNumber ? `Orden #${orderNumber}` : 'Resumen de Orden'}
+      onBackPress={() => {
+        if (!isEditMode && hasUnsavedChanges) {
+          modalHelpers.showExitConfirmation({
+            onClose,
+          });
+        } else {
+          onClose?.();
+        }
+      }}
+      itemCount={totalItemsCount}
+      onCartPress={() => {}}
+      isCartVisible={isCartVisible}
+    />
+  );
+};
+
+// Sub-componente para el contenido principal del scroll
+const OrderContent: React.FC<{
+  orderType: OrderType;
+  setOrderType: (type: OrderType) => void;
+  dineInFormRef: React.RefObject<DineInFormRef | null>;
+  takeAwayFormRef: React.RefObject<TakeAwayFormRef | null>;
+  deliveryFormRef: React.RefObject<DeliveryFormRef | null>;
+  onScheduleTimePress: () => void;
+  items: CartItem[];
+  isEditMode: boolean;
+  onEditCartItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateItemQuantity: (id: string, quantity: number) => void;
+  onAddProducts?: () => void;
+  navigation?: any;
+  orderId?: string | null;
+  orderNumber?: number;
+  addItem: any;
+  adjustments: any[];
+  subtotal: number;
+  handleAddAdjustment: (adjustment: OrderAdjustment) => void;
+  handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
+  handleRemoveAdjustment: (id: string) => void;
+  showSnackbar: any;
+  theme: any;
+}> = ({
+  orderType,
+  setOrderType,
+  dineInFormRef,
+  takeAwayFormRef,
+  deliveryFormRef,
+  onScheduleTimePress,
+  items,
+  isEditMode,
+  onEditCartItem,
+  removeItem,
+  updateItemQuantity,
+  onAddProducts,
+  navigation,
+  orderId,
+  orderNumber,
+  addItem,
+  adjustments,
+  subtotal,
+  handleAddAdjustment,
+  handleUpdateAdjustment,
+  handleRemoveAdjustment,
+  showSnackbar,
+  theme,
+}) => {
+  const styles = StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.s,
+    },
+    divider: {
+      marginVertical: theme.spacing.s,
+    },
+    addProductsButton: {
+      marginTop: theme.spacing.m,
+      marginBottom: theme.spacing.m,
+    },
+  });
+
+  return (
+    <ScrollView
+      style={styles.scrollView}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
+      <OrderTypeSelector
+        value={orderType}
+        onValueChange={setOrderType}
+        disabled={false}
+      />
+
+      <OrderFormSection
+        orderType={orderType}
+        dineInFormRef={dineInFormRef}
+        takeAwayFormRef={takeAwayFormRef}
+        deliveryFormRef={deliveryFormRef}
+        onScheduleTimePress={onScheduleTimePress}
+      />
+
+      <Divider style={styles.divider} />
+
+      <OrderItemsList
+        items={items}
+        isEditMode={isEditMode}
+        onEditItem={onEditCartItem}
+        onRemoveItem={removeItem}
+        onUpdateQuantity={updateItemQuantity}
+      />
+
+      {isEditMode && (
+        <Button
+          onPress={() => {
+            if (onAddProducts) {
+              onAddProducts();
+            } else if (navigation && orderId && orderNumber) {
+              try {
+                navigation.navigate('AddProductsToOrder', {
+                  orderId,
+                  orderNumber,
+                  existingOrderItemsCount: items
+                    .filter((item) => !item.id.startsWith('new-'))
+                    .reduce((sum, item) => sum + item.quantity, 0),
+                  onProductsAdded: (newProducts: CartItem[]) => {
+                    const newProductsWithStatus = newProducts.map(
+                      (item) => ({
+                        ...item,
+                        preparationStatus: 'NEW' as const,
+                        id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+                      }),
+                    );
+
+                    newProductsWithStatus.forEach((item) => {
+                      addItem(
+                        {
+                          id: item.productId,
+                          name: item.productName,
+                          price: item.unitPrice,
+                        } as any,
+                        item.quantity,
+                        item.variantId,
+                        item.modifiers,
+                        item.preparationNotes,
+                        item.selectedPizzaCustomizations,
+                        item.pizzaExtraCost,
+                      );
+                    });
+
+                    showSnackbar({
+                      message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
+                      type: 'success',
+                    });
+                  },
+                });
+              } catch (error) {}
+            }
+          }}
+          mode="outlined"
+          style={styles.addProductsButton}
+          icon="plus-circle-outline"
+        >
+          Añadir Productos
+        </Button>
+      )}
+
+      <Divider style={styles.divider} />
+
+      {isEditMode && (
+        <OrderAdjustments
+          adjustments={adjustments}
+          subtotal={subtotal}
+          onAddAdjustment={() =>
+            modalHelpers.showAdjustment({
+              adjustmentToEdit: null,
+              setAdjustmentToEdit: () => {},
+              handleAddAdjustment,
+              handleUpdateAdjustment,
+              subtotal,
+            })
+          }
+          onEditAdjustment={(adjustment) => {
+            modalHelpers.showAdjustment({
+              adjustmentToEdit: adjustment,
+              setAdjustmentToEdit: () => {},
+              handleAddAdjustment,
+              handleUpdateAdjustment,
+              subtotal,
+            });
+          }}
+          onRemoveAdjustment={handleRemoveAdjustment}
+          disabled={false}
+          canManageAdjustments={true}
+        />
+      )}
+    </ScrollView>
+  );
+};
+
+// Sub-componente para el resumen de totales
+const OrderSummarySection: React.FC<{
+  subtotal: number;
+  totalAdjustments: number;
+  total: number;
+  theme: any;
+}> = ({ subtotal, totalAdjustments, total, theme }) => {
+  const styles = StyleSheet.create({
+    totalsSection: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+    },
+    totalsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
+    },
+    totalsText: {
+      fontSize: 16,
+    },
+    totalsValue: {
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    totalLabel: {
+      fontWeight: 'bold',
+      fontSize: 18,
+    },
+    totalValue: {
+      fontSize: 18,
+      color: theme.colors.primary,
+    },
+    discountText: {
+      color: theme.colors.primary,
+    },
+    totalDivider: {
+      marginVertical: theme.spacing.s,
+    },
+  });
+
+  return (
+    <View style={styles.totalsSection}>
+      <View style={styles.totalsContainer}>
+        <Text style={styles.totalsText}>Subtotal:</Text>
+        <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
+      </View>
+      {totalAdjustments > 0 && (
+        <View style={styles.totalsContainer}>
+          <Text style={styles.totalsText}>Descuentos:</Text>
+          <Text style={[styles.totalsValue, styles.discountText]}>
+            -${totalAdjustments.toFixed(2)}
+          </Text>
+        </View>
+      )}
+      <Divider style={styles.totalDivider} />
+      <View style={styles.totalsContainer}>
+        <Text style={styles.totalLabel}>Total:</Text>
+        <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+      </View>
+    </View>
+  );
+};
+
+// Componente principal refactorizado
+const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
+  const {
+    visible,
+    onClose,
+    isEditMode = false,
+    orderId,
+    orderNumber,
+    orderDate,
+    onCancelOrder,
+    navigation,
+    onAddProducts,
+  } = props;
+
+  const {
+    // Estados y datos
+    items,
+    orderType,
+    adjustments,
+    showOptionsMenu,
+    orderData,
+    isLoadingOrder,
+    isErrorOrder,
+    canRegisterPayments,
+    hasUnsavedChanges,
+    isConfirming,
+    prepaymentId,
+    paymentAmount,
+    paymentMethod,
+    isCartVisible,
+
+    // Cálculos
+    subtotal,
+    total,
+    totalItemsCount,
+    totalAdjustments,
+    totalPaid,
+    pendingAmount,
+
+    // Referencias
+    dineInFormRef,
+    takeAwayFormRef,
+    deliveryFormRef,
+
+    // Setters
+    setOrderType,
+    setShowOptionsMenu,
+
+    // Handlers
+    showTimePicker,
+    handleEditCartItem,
+    handleConfirmOrder,
+    handlePrepaymentCreated,
+    handlePrepaymentDeleted,
+    handleDeletePrepayment,
+    removeItem,
+    updateItemQuantity,
+    handleAddAdjustment,
+    handleUpdateAdjustment,
+    handleRemoveAdjustment,
+
+    // Store actions
+    addItem,
+
+    // Theme
+    theme,
+  } = useOrderCart(props);
+
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (isEditMode && isLoadingOrder) {
     return (
@@ -564,805 +1163,256 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = ({
             onPress={Keyboard.dismiss}
             accessible={false}
           >
-            <View>
-              {isEditMode ? (
-                <View style={styles.customHeader}>
-                  <IconButton
-                    icon="arrow-left"
-                    size={24}
-                    onPress={() => {
-                      if (hasUnsavedChanges) {
-                        modalHelpers.showExitConfirmation({
-                          onClose,
-                        });
-                      } else {
-                        onClose?.();
-                      }
-                    }}
-                    iconColor={theme.colors.onSurface}
-                  />
+            <View style={styles.container}>
+              <OrderCartHeader
+                isEditMode={isEditMode}
+                orderData={orderData}
+                orderNumber={orderNumber}
+                orderDate={orderDate}
+                showOptionsMenu={showOptionsMenu}
+                setShowOptionsMenu={setShowOptionsMenu}
+                hasUnsavedChanges={hasUnsavedChanges}
+                totalItemsCount={totalItemsCount}
+                isCartVisible={isCartVisible}
+                onClose={onClose}
+                onCancelOrder={onCancelOrder}
+                orderId={orderId}
+                theme={theme}
+              />
 
-                  <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>
-                      {orderNumber && orderDate
-                        ? `Editar Orden #${orderNumber}`
-                        : orderNumber
-                          ? `Editando Orden #${orderNumber}`
-                          : 'Editar Orden'}
-                    </Text>
-                    {orderData?.orderStatus && (
-                      <View
-                        style={[
-                          styles.orderStatusBadge,
-                          {
-                            backgroundColor: OrderStatusInfo.getColor(
-                              orderData.orderStatus,
-                              theme,
-                            ),
-                          },
-                        ]}
-                      >
-                        <Text style={styles.orderStatusText}>
-                          {OrderStatusInfo.getLabel(orderData.orderStatus)}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <Menu
-                    visible={showOptionsMenu}
-                    onDismiss={() => setShowOptionsMenu(false)}
-                    anchor={
-                      <IconButton
-                        icon="dots-vertical"
-                        size={24}
-                        onPress={() => setShowOptionsMenu(true)}
-                        iconColor={theme.colors.onSurface}
-                      />
-                    }
-                  >
-                    <Menu.Item
-                      onPress={() => {
-                        setShowOptionsMenu(false);
-                        modalHelpers.showOrderDetail({
-                          orderId,
-                          orderNumber,
-                          orderData,
-                        });
-                      }}
-                      title="Ver Detalles"
-                      leadingIcon="file-document-outline"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setShowOptionsMenu(false);
-                        modalHelpers.showOrderHistory({
-                          orderId,
-                          orderNumber,
-                        });
-                      }}
-                      title="Ver Historial"
-                      leadingIcon="history"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setShowOptionsMenu(false);
-                        modalHelpers.showCancelConfirmation({
-                          orderNumber,
-                          onCancelOrder,
-                        });
-                      }}
-                      title="Cancelar Orden"
-                      leadingIcon="cancel"
-                    />
-                  </Menu>
-                </View>
-              ) : (
-                <OrderHeader
-                  title={
-                    orderNumber ? `Orden #${orderNumber}` : 'Resumen de Orden'
-                  }
-                  onBackPress={() => {
-                    if (!isEditMode && hasUnsavedChanges) {
-                      modalHelpers.showExitConfirmation({
-                        onClose,
-                      });
-                    } else {
-                      onClose?.();
-                    }
-                  }}
-                  itemCount={totalItemsCount}
-                  onCartPress={() => {}}
-                  isCartVisible={isCartVisible}
-                />
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-
-          <ScrollView
-            style={styles.scrollView}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-            <OrderTypeSelector
-              value={orderType}
-              onValueChange={setOrderType}
-              disabled={false}
-            />
-
-            {renderFields()}
-
-            <Divider style={styles.divider} />
-
-            <OrderItemsList
-              items={items}
-              isEditMode={isEditMode}
-              onEditItem={handleEditCartItem}
-              onRemoveItem={removeItem}
-              onUpdateQuantity={updateItemQuantity}
-            />
-
-            {isEditMode && (
-              <Button
-                onPress={() => {
-                  if (onAddProducts) {
-                    onAddProducts();
-                  } else if (navigation && orderId && orderNumber) {
-                    try {
-                      navigation.navigate('AddProductsToOrder', {
-                        orderId,
-                        orderNumber,
-                        existingOrderItemsCount: items
-                          .filter((item) => !item.id.startsWith('new-'))
-                          .reduce((sum, item) => sum + item.quantity, 0),
-                        onProductsAdded: (newProducts: CartItem[]) => {
-                          const newProductsWithStatus = newProducts.map(
-                            (item) => ({
-                              ...item,
-                              preparationStatus: 'NEW' as const,
-                              id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-                            }),
-                          );
-
-                          newProductsWithStatus.forEach((item) => {
-                            addItem(
-                              {
-                                id: item.productId,
-                                name: item.productName,
-                                price: item.unitPrice,
-                              } as any,
-                              item.quantity,
-                              item.variantId,
-                              item.modifiers,
-                              item.preparationNotes,
-                              item.selectedPizzaCustomizations,
-                              item.pizzaExtraCost,
-                            );
-                          });
-
-                          showSnackbar({
-                            message: `${newProducts.length} producto${newProducts.length > 1 ? 's' : ''} añadido${newProducts.length > 1 ? 's' : ''}`,
-                            type: 'success',
-                          });
-                        },
-                      });
-                    } catch (error) {}
-                  }
-                }}
-                mode="outlined"
-                style={styles.addProductsButton}
-                icon="plus-circle-outline"
-              >
-                Añadir Productos
-              </Button>
-            )}
-
-            <Divider style={styles.divider} />
-
-            {/* Sección de ajustes */}
-            {isEditMode && (
-              <OrderAdjustments
+              <OrderContent
+                orderType={orderType}
+                setOrderType={setOrderType}
+                dineInFormRef={dineInFormRef}
+                takeAwayFormRef={takeAwayFormRef}
+                deliveryFormRef={deliveryFormRef}
+                onScheduleTimePress={showTimePicker}
+                items={items}
+                isEditMode={isEditMode}
+                onEditCartItem={handleEditCartItem}
+                removeItem={removeItem}
+                updateItemQuantity={updateItemQuantity}
+                onAddProducts={onAddProducts}
+                navigation={navigation}
+                orderId={orderId}
+                orderNumber={orderNumber}
+                addItem={addItem}
                 adjustments={adjustments}
                 subtotal={subtotal}
-                onAddAdjustment={() =>
-                  modalHelpers.showAdjustment({
-                    adjustmentToEdit: null,
-                    setAdjustmentToEdit: () => {},
-                    handleAddAdjustment,
-                    handleUpdateAdjustment,
-                    subtotal,
+                handleAddAdjustment={handleAddAdjustment}
+                handleUpdateAdjustment={handleUpdateAdjustment}
+                handleRemoveAdjustment={handleRemoveAdjustment}
+                showSnackbar={showSnackbar}
+                theme={theme}
+              />
+
+              <OrderSummarySection
+                subtotal={subtotal}
+                totalAdjustments={totalAdjustments}
+                total={total}
+                theme={theme}
+              />
+
+              <PrepaymentSection
+                isEditMode={isEditMode}
+                prepaymentId={prepaymentId}
+                paymentAmount={paymentAmount}
+                paymentMethod={paymentMethod}
+                total={total}
+                totalPaid={totalPaid}
+                pendingAmount={pendingAmount}
+                canRegisterPayments={canRegisterPayments}
+                onShowPrepaymentModal={() =>
+                  modalHelpers.showPrepayment({
+                    orderTotal: total,
+                    prepaymentId,
+                    handlePrepaymentCreated,
+                    handlePrepaymentDeleted,
                   })
                 }
-                onEditAdjustment={(adjustment) => {
-                  modalHelpers.showAdjustment({
-                    adjustmentToEdit: adjustment,
-                    setAdjustmentToEdit: () => {},
-                    handleAddAdjustment,
-                    handleUpdateAdjustment,
-                    subtotal,
-                  });
-                }}
-                onRemoveAdjustment={handleRemoveAdjustment}
-                disabled={false}
-                canManageAdjustments={true}
+                onDeletePrepayment={handleDeletePrepayment}
               />
-            )}
 
-            {/* Resumen de totales */}
-            <View style={styles.totalsSection}>
-              <View style={styles.totalsContainer}>
-                <Text style={styles.totalsText}>Subtotal:</Text>
-                <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
+              <View style={styles.footer}>
+                <Button
+                  mode="contained"
+                  onPress={handleConfirmOrder}
+                  disabled={
+                    isConfirming ||
+                    items.length === 0 ||
+                    (isEditMode && !hasUnsavedChanges)
+                  }
+                  style={[
+                    styles.confirmButton,
+                    isEditMode && hasUnsavedChanges && styles.cancelButton,
+                  ]}
+                  loading={isConfirming}
+                >
+                  {isConfirming
+                    ? isEditMode
+                      ? 'Guardando...'
+                      : 'Enviando...'
+                    : isEditMode
+                      ? hasUnsavedChanges
+                        ? '⚠️ Guardar Cambios'
+                        : 'Guardar Cambios'
+                      : 'Enviar Orden'}
+                </Button>
               </View>
-              {totalAdjustments > 0 && (
-                <View style={styles.totalsContainer}>
-                  <Text style={styles.totalsText}>Descuentos:</Text>
-                  <Text style={[styles.totalsValue, styles.discountText]}>
-                    -${totalAdjustments.toFixed(2)}
-                  </Text>
-                </View>
+
+              {isEditMode && orderId && visible && (
+                <FAB
+                  icon="cash-multiple"
+                  style={[
+                    styles.paymentFab,
+                    hasUnsavedChanges
+                      ? styles.paymentFabUnsaved
+                      : pendingAmount <= 0
+                        ? styles.paymentFabCompleted
+                        : { backgroundColor: theme.colors.primary },
+                  ]}
+                  color="white"
+                  onPress={() => {
+                    if (hasUnsavedChanges) {
+                      showSnackbar({
+                        message:
+                          'Debes guardar los cambios antes de registrar pagos',
+                        type: 'warning',
+                      });
+                    } else {
+                      modalHelpers.showPayment({
+                        orderId,
+                        orderTotal: total,
+                        orderNumber,
+                        orderStatus: orderData?.orderStatus,
+                        onOrderCompleted: () => {
+                          onClose?.();
+                        },
+                      });
+                    }
+                  }}
+                  visible={true}
+                />
               )}
-              <Divider style={styles.totalDivider} />
-              <View style={styles.totalsContainer}>
-                <Text style={styles.totalLabel}>Total:</Text>
-                <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-              </View>
+
+              <ModalsContainer />
             </View>
-
-            <PrepaymentSection
-              isEditMode={isEditMode}
-              prepaymentId={prepaymentId}
-              paymentAmount={paymentAmount}
-              paymentMethod={paymentMethod}
-              total={total}
-              totalPaid={totalPaid}
-              pendingAmount={pendingAmount}
-              canRegisterPayments={canRegisterPayments}
-              onShowPrepaymentModal={() =>
-                modalHelpers.showPrepayment({
-                  orderTotal: total,
-                  prepaymentId,
-                  handlePrepaymentCreated,
-                  handlePrepaymentDeleted,
-                })
-              }
-              onDeletePrepayment={handleDeletePrepayment}
-            />
-          </ScrollView>
-
-          <View style={styles.footer}>
-            <Button
-              mode="contained"
-              onPress={handleConfirm}
-              disabled={
-                isConfirming ||
-                items.length === 0 ||
-                (isEditMode && !hasUnsavedChanges)
-              }
-              style={[
-                styles.confirmButton,
-                isEditMode && hasUnsavedChanges && styles.cancelButton,
-              ]}
-              loading={isConfirming}
-            >
-              {isConfirming
-                ? isEditMode
-                  ? 'Guardando...'
-                  : 'Enviando...'
-                : isEditMode
-                  ? hasUnsavedChanges
-                    ? '⚠️ Guardar Cambios'
-                    : 'Guardar Cambios'
-                  : 'Enviar Orden'}
-            </Button>
-          </View>
-
-          {isEditMode && orderId && visible && (
-            <FAB
-              icon="cash-multiple"
-              style={[
-                styles.paymentFab,
-                hasUnsavedChanges
-                  ? styles.paymentFabUnsaved
-                  : pendingAmount <= 0
-                    ? styles.paymentFabCompleted
-                    : { backgroundColor: theme.colors.primary },
-              ]}
-              color="white"
-              onPress={() => {
-                if (hasUnsavedChanges) {
-                  showSnackbar({
-                    message:
-                      'Debes guardar los cambios antes de registrar pagos',
-                    type: 'warning',
-                  });
-                } else {
-                  modalHelpers.showPayment({
-                    orderId,
-                    orderTotal: total,
-                    orderNumber,
-                    orderStatus: orderData?.orderStatus,
-                    onOrderCompleted: () => {
-                      onClose?.();
-                    },
-                  });
-                }
-              }}
-              visible={true}
-            />
-          )}
-
-          <ModalsContainer />
+          </TouchableWithoutFeedback>
         </GestureHandlerRootView>
       </Modal>
     </Portal>
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
-  StyleSheet.create({
-    modalContent: {
-      backgroundColor: theme.colors.background,
-      width: '100%',
-      height: '100%',
-      margin: 0,
-      padding: 0,
-      position: 'absolute',
-      top: 0,
-      left: 0,
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => StyleSheet.create({
+  modalContent: {
+    backgroundColor: theme.colors.background,
+    width: '100%',
+    height: '100%',
+    margin: 0,
+    padding: 0,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  footer: {
+    padding: theme.spacing.m,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.outlineVariant,
+    backgroundColor: theme.colors.surface,
+  },
+  confirmButton: {
+    paddingVertical: theme.spacing.xs,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: theme.spacing.m,
+    color: theme.colors.onBackground,
+  },
+  errorModalContent: {
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.m,
+  },
+  errorModalContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.roundness * 3,
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+    width: '90%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollView: {
-      flex: 1,
-      paddingHorizontal: theme.spacing.s,
-    },
-    divider: {
-      marginVertical: theme.spacing.s,
-    },
-    listItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: theme.spacing.s,
-      paddingHorizontal: theme.spacing.s,
-      backgroundColor: theme.colors.surface,
-      minHeight: 80,
-    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  errorIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.m,
+  },
+  errorModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: theme.spacing.s,
+    textAlign: 'center',
+  },
+  errorModalMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: theme.spacing.l,
+    lineHeight: 22,
+  },
+  errorModalButton: {
+    marginTop: theme.spacing.m,
+    minWidth: 120,
+  },
+  errorModalButtonContent: {
+    paddingHorizontal: theme.spacing.l,
+  },
+  errorModalButtonLabel: {
+    fontSize: 16,
+  },
+  iconButtonNoMargin: {
+    margin: 0,
+  },
+  cancelButton: {
+    backgroundColor: '#FF6B35',
+  },
+  paymentFab: {
+    position: 'absolute',
+    margin: theme.spacing.m,
+    right: 0,
+    bottom: 140,
+    zIndex: 1000,
+    elevation: 6,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentFabUnsaved: {
+    backgroundColor: '#9CA3AF',
+  },
+  paymentFabCompleted: {
+    backgroundColor: '#4CAF50',
+  },
+});
 
-    itemTextContainer: {
-      flex: 3,
-      marginRight: theme.spacing.xs,
-      justifyContent: 'center',
-    },
-    itemTitleText: {
-      fontSize: 15,
-      fontWeight: '500',
-      color: theme.colors.onSurface,
-      flexWrap: 'wrap',
-      lineHeight: 20,
-    },
-    itemDescription: {
-      fontSize: 13,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: 2,
-      flexWrap: 'wrap',
-      lineHeight: 18,
-    },
-    itemActionsContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      flexShrink: 0,
-    },
-    quantityActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    quantityButton: {
-      marginHorizontal: -4,
-      padding: 0,
-    },
-    quantityText: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      minWidth: 20,
-      textAlign: 'center',
-      marginHorizontal: 2,
-    },
-    itemPrice: {
-      alignSelf: 'center',
-      marginRight: theme.spacing.xs,
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      fontWeight: 'bold',
-      minWidth: 55,
-      textAlign: 'right',
-    },
-    priceContainer: {
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-      marginRight: theme.spacing.xs,
-    },
-    unitPriceText: {
-      fontSize: 12,
-      color: theme.colors.onSurfaceVariant,
-      fontStyle: 'italic',
-    },
-    deleteActionContainer: {
-      width: 120,
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'flex-end',
-      paddingRight: theme.spacing.m,
-    },
-    deleteAction: {
-      backgroundColor: theme.colors.error,
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: 90,
-      height: '90%',
-      borderRadius: theme.roundness * 2,
-      flexDirection: 'column',
-      shadowColor: theme.colors.error,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    deleteIconContainer: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    deleteIcon: {
-      margin: 0,
-      padding: 0,
-    },
-    deleteActionText: {
-      color: 'white',
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-    },
-    totalsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    totalsText: {
-      fontSize: 16,
-    },
-    totalsValue: {
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    totalLabel: {
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-    totalValue: {
-      fontSize: 18,
-      color: theme.colors.primary,
-    },
-    totalsSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
-    },
-    discountText: {
-      color: theme.colors.primary,
-    },
-    totalDivider: {
-      marginVertical: theme.spacing.s,
-    },
-    section: {
-      marginBottom: theme.spacing.m,
-      marginTop: theme.spacing.s,
-    },
-    sectionCompact: {
-      marginBottom: 0,
-      paddingBottom: 0,
-    },
-    dineInSelectorsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 0,
-      gap: theme.spacing.s,
-      marginTop: theme.spacing.s,
-    },
-    dineInSelectorContainer: {
-      flex: 1,
-    },
-    selectorLoader: {},
-    sectionTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      marginBottom: theme.spacing.xs,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: theme.spacing.xs,
-    },
-    sectionTitleOptional: {
-      ...theme.fonts.bodySmall,
-      color: theme.colors.onSurfaceVariant,
-      marginLeft: theme.spacing.xs,
-    },
-    radioGroupHorizontal: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      width: '100%',
-      paddingVertical: theme.spacing.xs,
-    },
-    radioLabel: {
-      marginLeft: 0,
-      fontSize: 11,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-    },
-    radioButtonItem: {
-      paddingHorizontal: 0,
-      paddingVertical: 4,
-      flexShrink: 1,
-      flex: 1,
-      marginHorizontal: 2,
-    },
-    dropdownAnchor: {},
-    dropdownContent: {},
-    dropdownLabel: {},
-    helperTextFix: {
-      marginTop: -6,
-      marginBottom: 0,
-      paddingHorizontal: 12,
-    },
-    footer: {
-      padding: theme.spacing.m,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      backgroundColor: theme.colors.surface,
-    },
-    confirmButton: {
-      paddingVertical: theme.spacing.xs,
-    },
-    input: {},
-    fieldContainer: {
-      marginTop: theme.spacing.s,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      marginTop: theme.spacing.m,
-      color: theme.colors.onSurfaceVariant,
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    errorText: {
-      color: theme.colors.error,
-      marginBottom: theme.spacing.m,
-    },
-    phoneHelperContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginTop: 2,
-      paddingHorizontal: 12,
-      minHeight: 20,
-    },
-    digitCounter: {
-      fontSize: 10,
-      color: theme.colors.onSurfaceVariant,
-      opacity: 0.6,
-      marginLeft: theme.spacing.xs,
-      marginTop: 2,
-    },
-    phoneInputWrapper: {
-      position: 'relative',
-    },
-    digitCounterAbsolute: {
-      position: 'absolute',
-      right: 50,
-      top: 10,
-      fontSize: 10,
-      color: theme.colors.onSurfaceVariant,
-      opacity: 0.7,
-      backgroundColor: theme.colors.background,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 12,
-      zIndex: 1,
-    },
-    notesText: {
-      fontStyle: 'italic',
-      marginTop: 4,
-      paddingTop: 4,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-    },
-    customHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 4,
-      paddingVertical: 8,
-      backgroundColor: theme.colors.elevation.level2,
-    },
-    headerTitleContainer: {
-      flex: 1,
-      alignItems: 'center',
-      gap: 4,
-    },
-    headerTitle: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.onSurface,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    orderStatusBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    orderStatusText: {
-      ...theme.fonts.labelSmall,
-      color: 'white',
-      fontWeight: '600',
-      fontSize: 11,
-    },
-    statusContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 2,
-      justifyContent: 'flex-start',
-    },
-    statusBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: theme.spacing.s,
-      paddingVertical: 2,
-      borderRadius: 12,
-      gap: 4,
-    },
-    statusDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    statusText: {
-      fontSize: 11,
-      fontWeight: '600',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    paymentFab: {
-      position: 'absolute',
-      margin: 16,
-      right: 0,
-      bottom: 140,
-      zIndex: 1000,
-      elevation: 6,
-      width: 56,
-      height: 56,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    paymentConfigButton: {
-      marginTop: theme.spacing.s,
-    },
-    paymentValueContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    editPaymentButton: {
-      margin: 0,
-      marginLeft: theme.spacing.xs,
-      width: 28,
-      height: 28,
-    },
-    checkboxContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
-    },
-    checkboxLabel: {
-      fontSize: 16,
-      marginLeft: theme.spacing.xs,
-      color: theme.colors.onSurface,
-    },
-    temporaryTableInputContainer: {
-      marginTop: theme.spacing.xs,
-      marginBottom: theme.spacing.s,
-    },
-    errorModalContent: {
-      backgroundColor: 'transparent',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.m,
-    },
-    errorModalContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.roundness * 3,
-      padding: theme.spacing.xl,
-      alignItems: 'center',
-      width: '90%',
-      maxWidth: 400,
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-    },
-    errorIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: theme.spacing.m,
-    },
-    errorModalTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: theme.spacing.s,
-      textAlign: 'center',
-    },
-    errorModalMessage: {
-      fontSize: 16,
-      textAlign: 'center',
-      marginBottom: theme.spacing.l,
-      lineHeight: 22,
-    },
-    errorModalButton: {
-      marginTop: theme.spacing.m,
-      minWidth: 120,
-    },
-    errorModalButtonContent: {
-      paddingHorizontal: theme.spacing.l,
-    },
-    errorModalButtonLabel: {
-      fontSize: 16,
-    },
-    adjustmentButton: {
-      marginTop: theme.spacing.m,
-      marginBottom: theme.spacing.s,
-    },
-    addProductsButton: {
-      marginTop: theme.spacing.m,
-      marginBottom: theme.spacing.m,
-    },
-    iconButtonNoMargin: {
-      margin: 0,
-    },
-    cancelButton: {
-      backgroundColor: '#FF6B35',
-    },
-    paymentFabUnsaved: {
-      backgroundColor: '#9CA3AF',
-    },
-    paymentFabCompleted: {
-      backgroundColor: '#4CAF50',
-    },
-  });
 export default OrderCartDetail;
