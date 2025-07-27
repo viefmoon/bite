@@ -1,6 +1,4 @@
 import {
-  useMutation,
-  UseMutationResult,
   useQuery,
   UseQueryResult,
   useQueryClient,
@@ -9,7 +7,6 @@ import { printerService } from '../services/printerService';
 import {
   DiscoveredPrinter,
   ThermalPrinter,
-  CreateThermalPrinterDto,
   UpdateThermalPrinterDto,
   FindAllThermalPrintersDto,
 } from '../types/printer.types';
@@ -28,15 +25,13 @@ const printerKeys = {
   discover: ['discoverPrinters'] as const,
 };
 
-export const useDiscoverPrinters = (): UseMutationResult<
-  DiscoveredPrinter[],
-  ApiError,
-  number | undefined
-> => {
-  return useMutation<DiscoveredPrinter[], ApiError, number | undefined>({
-    mutationFn: (duration: number | undefined) =>
-      printerService.discoverPrinters(duration),
-  });
+export const useDiscoverPrinters = () => {
+  return useApiMutation(
+    (duration: number | undefined) => printerService.discoverPrinters(duration),
+    {
+      suppressSuccessMessage: true,
+    },
+  );
 };
 
 export const usePrintersQuery = (
@@ -64,31 +59,28 @@ export const usePrinterQuery = (
 };
 
 export const useCreatePrinterMutation = () => {
-  return useApiMutation(
-    printerService.createPrinter,
-    {
-      invalidateQueryKeys: [printerKeys.lists()],
-      suppressSuccessMessage: true,
-      onSuccess: (newPrinter) => {
-        const { showSnackbar } = useSnackbarStore.getState();
-        showSnackbar({
-          message: `Impresora "${newPrinter.name}" creada con éxito`,
-          type: 'success',
-        });
-      },
+  return useApiMutation(printerService.createPrinter, {
+    invalidateQueryKeys: [printerKeys.lists()],
+    suppressSuccessMessage: true,
+    onSuccess: (newPrinter) => {
+      const { showSnackbar } = useSnackbarStore.getState();
+      showSnackbar({
+        message: `Impresora "${newPrinter.name}" creada con éxito`,
+        type: 'success',
+      });
     },
-  );
+  });
 };
 
 export const useUpdatePrinterMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useApiMutation(
-    ({ id, data }: { id: string; data: UpdateThermalPrinterDto }) => 
+    ({ id, data }: { id: string; data: UpdateThermalPrinterDto }) =>
       printerService.updatePrinter(id, data),
     {
       suppressSuccessMessage: true,
-      onSuccess: (updatedPrinter, variables) => {
+      onSuccess: (updatedPrinter, _variables) => {
         const { showSnackbar } = useSnackbarStore.getState();
         showSnackbar({
           message: `Impresora "${updatedPrinter.name}" actualizada`,
@@ -108,17 +100,14 @@ export const useUpdatePrinterMutation = () => {
 
 export const useDeletePrinterMutation = () => {
   const queryClient = useQueryClient();
-  
-  return useApiMutation(
-    printerService.deletePrinter,
-    {
-      successMessage: 'Impresora eliminada',
-      invalidateQueryKeys: [printerKeys.lists()],
-      onSuccess: (_, deletedId) => {
-        queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
-      },
+
+  return useApiMutation(printerService.deletePrinter, {
+    successMessage: 'Impresora eliminada',
+    invalidateQueryKeys: [printerKeys.lists()],
+    onSuccess: (_, deletedId) => {
+      queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
     },
-  );
+  });
 };
 
 export const usePingPrinterMutation = () => {

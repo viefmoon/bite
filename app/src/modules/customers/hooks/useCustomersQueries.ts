@@ -1,6 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 
 import { customersService } from '../services/customersService';
 import {
@@ -40,68 +41,69 @@ export function useCustomer(id: string, enabled = true) {
 }
 
 export function useCreateCustomer() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateCustomerInput) => customersService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+  return useApiMutation(
+    (data: CreateCustomerInput) => customersService.create(data),
+    {
+      successMessage: 'Cliente creado exitosamente',
+      invalidateQueryKeys: [customerKeys.lists()],
     },
-  });
+  );
 }
 
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerInput }) =>
+  return useApiMutation(
+    ({ id, data }: { id: string; data: UpdateCustomerInput }) =>
       customersService.update(id, data),
-    onSuccess: (updatedCustomer) => {
-      queryClient.setQueryData(
-        customerKeys.detail(updatedCustomer.id),
-        updatedCustomer,
-      );
-      queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+    {
+      successMessage: 'Cliente actualizado exitosamente',
+      invalidateQueryKeys: [customerKeys.lists()],
+      onSuccess: (updatedCustomer) => {
+        queryClient.setQueryData(
+          customerKeys.detail(updatedCustomer.id),
+          updatedCustomer,
+        );
+      },
     },
-  });
+  );
 }
 
 export function useDeleteCustomer() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => customersService.remove(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
-    },
+  return useApiMutation((id: string) => customersService.remove(id), {
+    successMessage: 'Cliente eliminado exitosamente',
+    invalidateQueryKeys: [customerKeys.lists()],
   });
 }
 
 export function useAppendChatMessage() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
+  return useApiMutation(
+    ({
       customerId,
       message,
     }: {
       customerId: string;
       message: Omit<ChatMessage, 'timestamp'>;
     }) => customersService.appendChatMessage(customerId, message),
-    onSuccess: (updatedCustomer) => {
-      queryClient.setQueryData(
-        customerKeys.detail(updatedCustomer.id),
-        updatedCustomer,
-      );
+    {
+      successMessage: 'Mensaje agregado al historial',
+      onSuccess: (updatedCustomer) => {
+        queryClient.setQueryData(
+          customerKeys.detail(updatedCustomer.id),
+          updatedCustomer,
+        );
+      },
     },
-  });
+  );
 }
 
 export function useUpdateRelevantChatHistory() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
+  return useApiMutation(
+    ({
       customerId,
       relevantHistory,
     }: {
@@ -109,34 +111,40 @@ export function useUpdateRelevantChatHistory() {
       relevantHistory: ChatMessage[];
     }) =>
       customersService.updateRelevantChatHistory(customerId, relevantHistory),
-    onSuccess: (updatedCustomer) => {
-      queryClient.setQueryData(
-        customerKeys.detail(updatedCustomer.id),
-        updatedCustomer,
-      );
+    {
+      suppressSuccessMessage: true,
+      onSuccess: (updatedCustomer) => {
+        queryClient.setQueryData(
+          customerKeys.detail(updatedCustomer.id),
+          updatedCustomer,
+        );
+      },
     },
-  });
+  );
 }
 
 export function useUpdateCustomerStats() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
+  return useApiMutation(
+    ({
       customerId,
       stats,
     }: {
       customerId: string;
       stats: { totalOrders?: number; totalSpent?: number };
     }) => customersService.updateCustomerStats(customerId, stats),
-    onSuccess: (updatedCustomer) => {
-      queryClient.setQueryData(
-        customerKeys.detail(updatedCustomer.id),
-        updatedCustomer,
-      );
-      queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+    {
+      suppressSuccessMessage: true,
+      invalidateQueryKeys: [customerKeys.lists()],
+      onSuccess: (updatedCustomer) => {
+        queryClient.setQueryData(
+          customerKeys.detail(updatedCustomer.id),
+          updatedCustomer,
+        );
+      },
     },
-  });
+  );
 }
 
 export function useActiveCustomersWithRecentInteraction(daysAgo = 30) {

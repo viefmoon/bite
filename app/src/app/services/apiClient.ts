@@ -32,8 +32,9 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 async function refreshToken(baseURL: string): Promise<string> {
   try {
-    const currentRefreshToken =
-      await EncryptedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    const currentRefreshToken = await EncryptedStorage.getItem(
+      STORAGE_KEYS.REFRESH_TOKEN,
+    );
     if (!currentRefreshToken) {
       throw new Error('No refresh token available.');
     }

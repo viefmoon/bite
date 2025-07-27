@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { paymentService } from '../services/paymentService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import type {
   CreatePaymentDto,
   PaymentMethod,
@@ -38,55 +38,24 @@ export const useGetPaymentsByOrderIdQuery = (
 // Mutations
 export const useCreatePaymentMutation = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation({
-    mutationFn: (dto: CreatePaymentDto) => paymentService.createPayment(dto),
-    onSuccess: (data) => {
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: paymentKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: paymentKeys.byOrder(data.orderId),
-      });
-      // Invalidar también las queries de órdenes para que se actualice el estado de pago
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-
-      showSnackbar({
-        message: 'Pago registrado exitosamente',
-        type: 'success',
-      });
+  return useApiMutation(
+    (dto: CreatePaymentDto) => paymentService.createPayment(dto),
+    {
+      successMessage: 'Pago registrado exitosamente',
+      invalidateQueryKeys: [paymentKeys.lists(), ['orders']],
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: paymentKeys.byOrder(data.orderId),
+        });
+      },
     },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al registrar el pago',
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
 export const useDeletePaymentMutation = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: (id: string) => paymentService.deletePayment(id),
-    onSuccess: () => {
-      // Invalidar todas las queries de pagos
-      queryClient.invalidateQueries({ queryKey: paymentKeys.all });
-      // Invalidar también las queries de órdenes para que se actualice el estado de pago
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-
-      showSnackbar({
-        message: 'Pago eliminado exitosamente',
-        type: 'success',
-      });
-    },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al eliminar el pago',
-        type: 'error',
-      });
-    },
+  return useApiMutation((id: string) => paymentService.deletePayment(id), {
+    successMessage: 'Pago eliminado exitosamente',
+    invalidateQueryKeys: [paymentKeys.all, ['orders']],
   });
 };

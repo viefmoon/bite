@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersApiService } from '../services';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import type {
   CreateUserDto,
@@ -27,121 +28,73 @@ export function useGetUser(id?: string) {
 }
 
 export function useCreateUser() {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: (data: CreateUserDto) => usersApiService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      showSnackbar({
-        message: 'Usuario creado exitosamente',
-        type: 'success',
-      });
-    },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al crear usuario',
-        type: 'error',
-      });
-    },
+  return useApiMutation((data: CreateUserDto) => usersApiService.create(data), {
+    successMessage: 'Usuario creado exitosamente',
+    invalidateQueryKeys: [[USERS_QUERY_KEY]],
   });
 }
 
 export function useUpdateUser() {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
+  return useApiMutation(
+    ({ id, data }: { id: string; data: UpdateUserDto }) =>
       usersApiService.update(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
-      showSnackbar({
-        message: 'Usuario actualizado exitosamente',
-        type: 'success',
-      });
+    {
+      successMessage: 'Usuario actualizado exitosamente',
+      invalidateQueryKeys: [[USERS_QUERY_KEY]],
+      onSuccess: (_, { id }) => {
+        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
+      },
     },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al actualizar usuario',
-        type: 'error',
-      });
-    },
-  });
+  );
 }
 
 export function useDeleteUser() {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: async (id: string) => {
+  return useApiMutation(
+    async (id: string) => {
       await usersApiService.remove(id);
       return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      showSnackbar({
-        message: 'Usuario eliminado exitosamente',
-        type: 'success',
-      });
+    {
+      successMessage: 'Usuario eliminado exitosamente',
+      invalidateQueryKeys: [[USERS_QUERY_KEY]],
     },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al eliminar usuario',
-        type: 'error',
-      });
-    },
-  });
+  );
 }
 
 export function useResetPassword() {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation({
-    mutationFn: ({ id, password }: { id: string; password: string }) =>
+  return useApiMutation(
+    ({ id, password }: { id: string; password: string }) =>
       usersApiService.resetPassword(id, password),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
-      showSnackbar({
-        message: 'Contraseña actualizada exitosamente',
-        type: 'success',
-      });
+    {
+      successMessage: 'Contraseña actualizada exitosamente',
+      onSuccess: (_, { id }) => {
+        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
+      },
     },
-    onError: (error: any) => {
-      showSnackbar({
-        message: error.response?.data?.message || 'Error al cambiar contraseña',
-        type: 'error',
-      });
-    },
-  });
+  );
 }
 
 export function useToggleUserActive() {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+  return useApiMutation(
+    ({ id, isActive }: { id: string; isActive: boolean }) =>
       usersApiService.toggleActive(id, isActive),
-    onSuccess: (_, { id, isActive }) => {
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
-      showSnackbar({
-        message: `Usuario ${isActive ? 'activado' : 'desactivado'} exitosamente`,
-        type: 'success',
-      });
+    {
+      suppressSuccessMessage: true,
+      invalidateQueryKeys: [[USERS_QUERY_KEY]],
+      onSuccess: (_, { id, isActive }) => {
+        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
+        const showSnackbar = useSnackbarStore.getState().showSnackbar;
+        showSnackbar({
+          message: `Usuario ${isActive ? 'activado' : 'desactivado'} exitosamente`,
+          type: 'success',
+        });
+      },
     },
-    onError: (error: any) => {
-      showSnackbar({
-        message:
-          error.response?.data?.message ||
-          'Error al cambiar estado del usuario',
-        type: 'error',
-      });
-    },
-  });
+  );
 }

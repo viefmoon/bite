@@ -141,11 +141,29 @@ export const AutoImage = ({
   );
 
   const iconSize = useMemo(() => {
-    if (typeof width === 'number' && typeof height === 'number') {
-      return Math.min(width, height) * 0.4;
+    const flatStyle = StyleSheet.flatten(style);
+    const styleWidth = flatStyle?.width;
+    const styleHeight = flatStyle?.height;
+
+    // Priorizar dimensiones numéricas del estilo
+    if (typeof styleWidth === 'number' && typeof styleHeight === 'number') {
+      return Math.min(styleWidth, styleHeight) * 0.6; // 60% del menor de los lados
     }
-    return 48; // Default size
-  }, [width, height]);
+    if (typeof styleWidth === 'number') {
+      return styleWidth * 0.6;
+    }
+    if (typeof styleHeight === 'number') {
+      return styleHeight * 0.6;
+    }
+
+    // Fallback a las props originales si el estilo no define un tamaño numérico
+    if (typeof width === 'number' && typeof height === 'number') {
+      return Math.min(width, height) * 0.6;
+    }
+
+    // Fallback final a un tamaño por defecto más pequeño
+    return 32;
+  }, [width, height, style]);
 
   return (
     <View style={containerStyle}>

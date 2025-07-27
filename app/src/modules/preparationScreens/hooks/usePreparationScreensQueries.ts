@@ -2,7 +2,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as preparationScreenService from '../services/preparationScreenService';
 import {
   PreparationScreen,
-  CreatePreparationScreenDto,
   UpdatePreparationScreenDto,
   FindAllPreparationScreensDto,
 } from '../schema/preparationScreen.schema';
@@ -69,13 +68,10 @@ export const useGetPreparationScreenById = (
  * Hook for creating a new preparation screen.
  */
 export const useCreatePreparationScreen = () => {
-  return useApiMutation(
-    preparationScreenService.createPreparationScreen,
-    {
-      successMessage: 'Pantalla de preparación creada con éxito',
-      invalidateQueryKeys: [preparationScreensQueryKeys.lists()],
-    },
-  );
+  return useApiMutation(preparationScreenService.createPreparationScreen, {
+    successMessage: 'Pantalla de preparación creada con éxito',
+    invalidateQueryKeys: [preparationScreensQueryKeys.lists()],
+  });
 };
 
 /**

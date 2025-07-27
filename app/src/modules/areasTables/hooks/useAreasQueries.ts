@@ -1,14 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { areaService } from '../services/areaService';
 import type { Area } from '@/app/schemas/domain/area.schema';
-import {
-  CreateAreaDto,
-  UpdateAreaDto,
-  FindAllAreasDto,
-} from '../schema/area-form.schema';
+import { UpdateAreaDto, FindAllAreasDto } from '../schema/area-form.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 const areasQueryKeys = {
   all: ['areas'] as const,
@@ -43,36 +39,25 @@ export const useGetAreaById = (
 };
 
 export const useCreateArea = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<Area, Error, CreateAreaDto>({
-    mutationFn: areaService.createArea,
-    onSuccess: (_newArea) => {
-      queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
-      showSnackbar({ message: 'Área creada con éxito', type: 'success' });
-    },
-    onError: (error) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-    },
+  return useApiMutation(areaService.createArea, {
+    successMessage: 'Área creada con éxito',
+    invalidateQueryKeys: [areasQueryKeys.lists()],
   });
 };
 
 export const useUpdateArea = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type UpdateAreaContext = { previousAreas?: Area[]; previousDetail?: Area };
 
-  return useMutation<
+  return useApiMutation<
     Area,
     Error,
     { id: string; data: UpdateAreaDto },
     UpdateAreaContext
-  >({
-    mutationFn: ({ id, data }) => areaService.updateArea(id, data),
-
+  >(({ id, data }) => areaService.updateArea(id, data), {
+    suppressSuccessMessage: true, // Manejamos el éxito en onSettled
+    invalidateQueryKeys: [areasQueryKeys.lists()],
     onMutate: async (variables) => {
       const { id, data } = variables;
       const listQueryKey = areasQueryKeys.lists();
@@ -103,11 +88,7 @@ export const useUpdateArea = () => {
 
       return { previousAreas, previousDetail };
     },
-
-    onError: (error, variables, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-
+    onError: (_error, variables, context) => {
       if (context?.previousAreas) {
         queryClient.setQueryData(areasQueryKeys.lists(), context.previousAreas);
       }
@@ -118,14 +99,13 @@ export const useUpdateArea = () => {
         );
       }
     },
-
-    onSettled: (data, error, variables, _context) => {
-      queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({
         queryKey: areasQueryKeys.detail(variables.id),
       });
 
       if (!error && data) {
+        const showSnackbar = useSnackbarStore.getState().showSnackbar;
         showSnackbar({
           message: 'Área actualizada con éxito',
           type: 'success',
@@ -137,45 +117,36 @@ export const useUpdateArea = () => {
 
 export const useDeleteArea = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type DeleteAreaContext = { previousDetail?: Area };
 
-  return useMutation<void, Error, string, DeleteAreaContext>({
-    mutationFn: areaService.deleteArea,
-
-    onMutate: async (deletedId) => {
-      const detailQueryKey = areasQueryKeys.detail(deletedId);
-
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
-
-      const previousDetail = queryClient.getQueryData<Area>(detailQueryKey);
-
-      queryClient.removeQueries({ queryKey: detailQueryKey });
-
-      return { previousDetail };
+  return useApiMutation<void, Error, string, DeleteAreaContext>(
+    areaService.deleteArea,
+    {
+      successMessage: 'Área eliminada con éxito',
+      invalidateQueryKeys: [areasQueryKeys.lists()],
+      onMutate: async (deletedId) => {
+        const detailQueryKey = areasQueryKeys.detail(deletedId);
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousDetail = queryClient.getQueryData<Area>(detailQueryKey);
+        queryClient.removeQueries({ queryKey: detailQueryKey });
+        return { previousDetail };
+      },
+      onError: (_error, deletedId, context) => {
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            areasQueryKeys.detail(deletedId),
+            context.previousDetail,
+          );
+        }
+      },
+      onSettled: (_data, error, deletedId) => {
+        if (!error) {
+          queryClient.removeQueries({
+            queryKey: areasQueryKeys.detail(deletedId),
+          });
+        }
+      },
     },
-
-    onError: (error, deletedId, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-
-      if (context?.previousDetail) {
-        queryClient.setQueryData(
-          areasQueryKeys.detail(deletedId),
-          context.previousDetail,
-        );
-      }
-    },
-
-    onSettled: (_data, error, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: areasQueryKeys.lists() });
-      if (!error) {
-        queryClient.removeQueries({
-          queryKey: areasQueryKeys.detail(deletedId),
-        });
-        showSnackbar({ message: 'Área eliminada con éxito', type: 'success' });
-      }
-    },
-  });
+  );
 };

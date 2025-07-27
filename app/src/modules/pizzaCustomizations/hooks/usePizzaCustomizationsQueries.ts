@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { pizzaCustomizationsService } from '../services/pizzaCustomizationsService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 import type { FindAllPizzaCustomizationsQuery } from '../schema/pizzaCustomization.schema';
 
 const PIZZA_CUSTOMIZATIONS_QUERY_KEYS = {
@@ -31,91 +31,39 @@ export function usePizzaCustomization(id: string) {
 }
 
 export function useCreatePizzaCustomization() {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: pizzaCustomizationsService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(),
-      });
-      showSnackbar({
-        message: 'Personalización creada exitosamente',
-        type: 'success',
-      });
-    },
-    onError: (error) => {
-      showSnackbar({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al crear personalización',
-        type: 'error',
-      });
-    },
+  return useApiMutation(pizzaCustomizationsService.create, {
+    successMessage: 'Personalización creada exitosamente',
+    invalidateQueryKeys: [PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists()],
   });
 }
 
 export function useUpdatePizzaCustomization() {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation({
-    mutationFn: ({
+  return useApiMutation(
+    ({
       id,
       data,
     }: {
       id: string;
       data: Parameters<typeof pizzaCustomizationsService.update>[1];
     }) => pizzaCustomizationsService.update(id, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.detail(variables.id),
-      });
-      showSnackbar({
-        message: 'Personalización actualizada exitosamente',
-        type: 'success',
-      });
+    {
+      successMessage: 'Personalización actualizada exitosamente',
+      invalidateQueryKeys: [PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists()],
+      onSuccess: (data, variables) => {
+        // Invalidación específica del detalle
+        queryClient.invalidateQueries({
+          queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.detail(variables.id),
+        });
+      },
     },
-    onError: (error) => {
-      showSnackbar({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al actualizar personalización',
-        type: 'error',
-      });
-    },
-  });
+  );
 }
 
 export function useDeletePizzaCustomization() {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation({
-    mutationFn: pizzaCustomizationsService.remove,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists(),
-      });
-      showSnackbar({
-        message: 'Personalización eliminada exitosamente',
-        type: 'success',
-      });
-    },
-    onError: (error) => {
-      showSnackbar({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al eliminar personalización',
-        type: 'error',
-      });
-    },
+  return useApiMutation(pizzaCustomizationsService.remove, {
+    successMessage: 'Personalización eliminada exitosamente',
+    invalidateQueryKeys: [PIZZA_CUSTOMIZATIONS_QUERY_KEYS.lists()],
   });
 }

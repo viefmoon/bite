@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import {
-  useMutation,
   useQuery,
   useQueryClient,
   UseQueryResult,
@@ -14,6 +13,7 @@ import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import type { UpdateOrderPayload } from '../schema/update-order.schema';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 
 // Query Keys
 const orderKeys = {
@@ -29,21 +29,14 @@ const orderKeys = {
  * Hook para crear una nueva orden.
  */
 export const useCreateOrderMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<Order, ApiError, OrderDetailsForBackend>({
-    mutationFn: orderService.createOrder,
-    onSuccess: () => {
-      // Invalidar queries relevantes si es necesario (ej. lista de órdenes)
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      // Invalidar queries de mesas para reflejar cambios de disponibilidad
-      queryClient.invalidateQueries({ queryKey: ['tables'] });
-      // El mensaje de éxito se maneja en el componente que llama a la mutación
+  return useApiMutation<Order, ApiError, OrderDetailsForBackend>(
+    orderService.createOrder,
+    {
+      invalidateQueryKeys: [orderKeys.lists(), ['tables']],
+      suppressSuccessMessage: true, // El mensaje de éxito se maneja en el componente que llama a la mutación
+      suppressErrorMessage: true, // El mensaje de error se maneja en el componente que llama a la mutación
     },
-    onError: (_error) => {
-      // El mensaje de error se maneja en el componente que llama a la mutación
-    },
-  });
+  );
 };
 
 /**
@@ -56,33 +49,36 @@ export const useUpdateOrderMutation = () => {
   // Definir el tipo de las variables de la mutación
   type UpdateVariables = { orderId: string; payload: UpdateOrderPayload };
 
-  return useMutation<Order, ApiError, UpdateVariables>({
-    mutationFn: ({ orderId, payload }) =>
-      orderService.updateOrder(orderId, payload),
-    onSuccess: (updatedOrder, variables) => {
-      // Invalidar queries relevantes para refrescar datos
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
-      queryClient.invalidateQueries({
-        queryKey: [...orderKeys.details(), variables.orderId],
-      });
+  return useApiMutation<Order, ApiError, UpdateVariables>(
+    ({ orderId, payload }) => orderService.updateOrder(orderId, payload),
+    {
+      invalidateQueryKeys: [
+        orderKeys.lists(),
+        orderKeys.openOrdersList(),
+        ['tables'],
+      ],
+      suppressSuccessMessage: true, // Manejamos mensaje personalizado en onSuccess
+      suppressErrorMessage: true, // Manejamos mensaje personalizado en onError
+      onSuccess: (updatedOrder, variables) => {
+        // Invalidar query específica del detalle de la orden
+        queryClient.invalidateQueries({
+          queryKey: [...orderKeys.details(), variables.orderId],
+        });
 
-      // Invalidar queries de mesas para reflejar cambios de disponibilidad
-      queryClient.invalidateQueries({ queryKey: ['tables'] });
-
-      showSnackbar({
-        message: `Orden #${updatedOrder.shiftOrderNumber} actualizada`,
-        type: 'success',
-      });
+        showSnackbar({
+          message: `Orden #${updatedOrder.shiftOrderNumber} actualizada`,
+          type: 'success',
+        });
+      },
+      onError: (error, variables) => {
+        const message = getApiErrorMessage(error);
+        showSnackbar({
+          message: `Error al actualizar orden #${variables.orderId}: ${message}`,
+          type: 'error',
+        });
+      },
     },
-    onError: (error, variables) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({
-        message: `Error al actualizar orden #${variables.orderId}: ${message}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
 /**
@@ -92,31 +88,36 @@ export const useCancelOrderMutation = () => {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation<Order, ApiError, string>({
-    mutationFn: (orderId) => orderService.cancelOrder(orderId),
-    onSuccess: (cancelledOrder, orderId) => {
-      // Invalidar queries relevantes
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
-      queryClient.invalidateQueries({
-        queryKey: [...orderKeys.details(), orderId],
-      });
-      // Invalidar queries de mesas para reflejar cambios de disponibilidad
-      queryClient.invalidateQueries({ queryKey: ['tables'] });
+  return useApiMutation<Order, ApiError, string>(
+    (orderId) => orderService.cancelOrder(orderId),
+    {
+      invalidateQueryKeys: [
+        orderKeys.lists(),
+        orderKeys.openOrdersList(),
+        ['tables'],
+      ],
+      suppressSuccessMessage: true, // Manejamos mensaje personalizado en onSuccess
+      suppressErrorMessage: true, // Manejamos mensaje personalizado en onError
+      onSuccess: (cancelledOrder, orderId) => {
+        // Invalidar query específica del detalle de la orden
+        queryClient.invalidateQueries({
+          queryKey: [...orderKeys.details(), orderId],
+        });
 
-      showSnackbar({
-        message: `Orden #${cancelledOrder.shiftOrderNumber} cancelada`,
-        type: 'info',
-      });
+        showSnackbar({
+          message: `Orden #${cancelledOrder.shiftOrderNumber} cancelada`,
+          type: 'info',
+        });
+      },
+      onError: (error) => {
+        const message = getApiErrorMessage(error);
+        showSnackbar({
+          message: `Error al cancelar orden: ${message}`,
+          type: 'error',
+        });
+      },
     },
-    onError: (error) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({
-        message: `Error al cancelar orden: ${message}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
 /**
@@ -126,30 +127,32 @@ export const useCompleteOrderMutation = () => {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation<Order, ApiError, string>({
-    mutationFn: (orderId) =>
-      orderService.updateOrder(orderId, { orderStatus: 'COMPLETED' }),
-    onSuccess: (completedOrder, orderId) => {
-      // Invalidar queries relevantes
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.openOrdersList() });
-      queryClient.invalidateQueries({
-        queryKey: [...orderKeys.details(), orderId],
-      });
+  return useApiMutation<Order, ApiError, string>(
+    (orderId) => orderService.updateOrder(orderId, { status: 'COMPLETED' }),
+    {
+      invalidateQueryKeys: [orderKeys.lists(), orderKeys.openOrdersList()],
+      suppressSuccessMessage: true, // Manejamos mensaje personalizado en onSuccess
+      suppressErrorMessage: true, // Manejamos mensaje personalizado en onError
+      onSuccess: (completedOrder, orderId) => {
+        // Invalidar query específica del detalle de la orden
+        queryClient.invalidateQueries({
+          queryKey: [...orderKeys.details(), orderId],
+        });
 
-      showSnackbar({
-        message: `Orden #${completedOrder.shiftOrderNumber} finalizada exitosamente`,
-        type: 'success',
-      });
+        showSnackbar({
+          message: `Orden #${completedOrder.shiftOrderNumber} finalizada exitosamente`,
+          type: 'success',
+        });
+      },
+      onError: (error) => {
+        const message = getApiErrorMessage(error);
+        showSnackbar({
+          message: `Error al finalizar orden: ${message}`,
+          type: 'error',
+        });
+      },
     },
-    onError: (error) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({
-        message: `Error al finalizar orden: ${message}`,
-        type: 'error',
-      });
-    },
-  });
+  );
 };
 
 /**

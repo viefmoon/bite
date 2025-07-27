@@ -204,11 +204,15 @@ export function ShiftOrdersModal({
           {showOrderHistory && selectedReceipt ? (
             <>
               <Appbar.Header style={styles.header}>
-                <Appbar.BackAction onPress={() => {
-                  setShowOrderHistory(false);
-                  setShowReceiptDetails(true);
-                }} />
-                <Appbar.Content title={`Historial - Orden #${selectedReceipt.shiftOrderNumber || ''}`} />
+                <Appbar.BackAction
+                  onPress={() => {
+                    setShowOrderHistory(false);
+                    setShowReceiptDetails(true);
+                  }}
+                />
+                <Appbar.Content
+                  title={`Historial - Orden #${selectedReceipt.shiftOrderNumber || ''}`}
+                />
               </Appbar.Header>
               <OrderHistoryContent
                 orderId={String(selectedReceipt.id)}

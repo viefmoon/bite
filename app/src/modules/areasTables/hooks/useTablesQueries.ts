@@ -1,14 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { tableService } from '../services/tableService';
 import type { Table } from '@/app/schemas/domain/table.schema';
-import {
-  CreateTableDto,
-  UpdateTableDto,
-  FindAllTablesDto,
-} from '../schema/table-form.schema';
+import { UpdateTableDto, FindAllTablesDto } from '../schema/table-form.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
 
 const tablesQueryKeys = {
   all: ['tables'] as const,
@@ -47,42 +43,30 @@ export const useGetTableById = (
 };
 
 export const useCreateTable = () => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  return useMutation<Table, Error, CreateTableDto>({
-    mutationFn: tableService.createTable,
-    onSuccess: (_newTable) => {
-      queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
-      showSnackbar({ message: 'Mesa creada con éxito', type: 'success' });
-    },
-    onError: (error) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-    },
+  return useApiMutation(tableService.createTable, {
+    successMessage: 'Mesa creada con éxito',
+    invalidateQueryKeys: [tablesQueryKeys.lists()],
   });
 };
 
 export const useUpdateTable = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type UpdateTableContext = { previousDetail?: Table };
 
-  return useMutation<
+  return useApiMutation<
     Table,
     Error,
     { id: string; data: UpdateTableDto },
     UpdateTableContext
-  >({
-    mutationFn: ({ id, data }) => tableService.updateTable(id, data),
-
+  >(({ id, data }) => tableService.updateTable(id, data), {
+    suppressSuccessMessage: true,
+    invalidateQueryKeys: [tablesQueryKeys.lists()],
     onMutate: async (variables) => {
       const { id, data } = variables;
       const detailQueryKey = tablesQueryKeys.detail(id);
 
       await queryClient.cancelQueries({ queryKey: detailQueryKey });
-
       const previousDetail = queryClient.getQueryData<Table>(detailQueryKey);
 
       if (previousDetail) {
@@ -94,11 +78,7 @@ export const useUpdateTable = () => {
 
       return { previousDetail };
     },
-
-    onError: (error, variables, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-
+    onError: (_error, variables, context) => {
       if (context?.previousDetail) {
         queryClient.setQueryData(
           tablesQueryKeys.detail(variables.id),
@@ -106,14 +86,13 @@ export const useUpdateTable = () => {
         );
       }
     },
-
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: tablesQueryKeys.detail(variables.id),
       });
 
       if (!error && data) {
+        const showSnackbar = useSnackbarStore.getState().showSnackbar;
         showSnackbar({
           message: 'Mesa actualizada con éxito',
           type: 'success',
@@ -125,51 +104,49 @@ export const useUpdateTable = () => {
 
 export const useDeleteTable = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type DeleteTableContext = { previousDetail?: Table };
 
-  return useMutation<void, Error, string, DeleteTableContext>({
-    mutationFn: tableService.deleteTable,
+  return useApiMutation<void, Error, string, DeleteTableContext>(
+    tableService.deleteTable,
+    {
+      suppressSuccessMessage: true,
+      invalidateQueryKeys: [tablesQueryKeys.lists()],
+      onMutate: async (deletedId) => {
+        const detailQueryKey = tablesQueryKeys.detail(deletedId);
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousDetail = queryClient.getQueryData<Table>(detailQueryKey);
+        queryClient.removeQueries({ queryKey: detailQueryKey });
+        return { previousDetail };
+      },
+      onError: (_error, deletedId, context) => {
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            tablesQueryKeys.detail(deletedId),
+            context.previousDetail,
+          );
+        }
+      },
+      onSettled: (_data, error, deletedId, context) => {
+        if (context?.previousDetail?.areaId) {
+          queryClient.invalidateQueries({
+            queryKey: tablesQueryKeys.listsByArea(
+              context.previousDetail.areaId,
+            ),
+          });
+        }
 
-    onMutate: async (deletedId) => {
-      const detailQueryKey = tablesQueryKeys.detail(deletedId);
-
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
-
-      const previousDetail = queryClient.getQueryData<Table>(detailQueryKey);
-
-      queryClient.removeQueries({ queryKey: detailQueryKey });
-
-      return { previousDetail };
+        if (!error) {
+          queryClient.removeQueries({
+            queryKey: tablesQueryKeys.detail(deletedId),
+          });
+          const showSnackbar = useSnackbarStore.getState().showSnackbar;
+          showSnackbar({
+            message: 'Mesa eliminada con éxito',
+            type: 'success',
+          });
+        }
+      },
     },
-
-    onError: (error, deletedId, context) => {
-      const errorMessage = getApiErrorMessage(error);
-      showSnackbar({ message: errorMessage, type: 'error' });
-
-      if (context?.previousDetail) {
-        queryClient.setQueryData(
-          tablesQueryKeys.detail(deletedId),
-          context.previousDetail,
-        );
-      }
-    },
-
-    onSettled: (_data, error, deletedId, context) => {
-      queryClient.invalidateQueries({ queryKey: tablesQueryKeys.lists() });
-      if (context?.previousDetail?.areaId) {
-        queryClient.invalidateQueries({
-          queryKey: tablesQueryKeys.listsByArea(context.previousDetail.areaId),
-        });
-      }
-
-      if (!error) {
-        queryClient.removeQueries({
-          queryKey: tablesQueryKeys.detail(deletedId),
-        });
-        showSnackbar({ message: 'Mesa eliminada con éxito', type: 'success' });
-      }
-    },
-  });
+  );
 };

@@ -1,24 +1,18 @@
 import {
   useQuery,
-  useMutation,
   useQueryClient,
   type UseQueryResult,
-  type UseMutationResult,
 } from '@tanstack/react-query';
 import { subcategoriesService } from '../services/subcategoriesService';
 import type { SubCategory } from '@/app/schemas/domain/subcategory.schema';
 import {
-  CreateSubCategoryDto,
   UpdateSubCategoryDto,
   FindAllSubcategoriesDto,
 } from '../schema/subcategory-form.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
 import { ApiError } from '../../../app/lib/errors';
-import {
-  useSnackbarStore,
-  type SnackbarState,
-} from '../../../app/store/snackbarStore';
-import { getApiErrorMessage } from '../../../app/lib/errorMapping';
+import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { useApiMutation } from '@/app/hooks/useApiMutation';
 
 const subcategoryKeys = {
   all: ['subcategories'] as const,
@@ -57,52 +51,25 @@ type UpdateSubcategoryContext = {
   previousDetail?: SubCategory;
 };
 
-export const useCreateSubcategory = (): UseMutationResult<
-  SubCategory,
-  ApiError,
-  CreateSubCategoryDto
-> => {
-  const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore(
-    (state: SnackbarState) => state.showSnackbar,
-  );
-
-  return useMutation<SubCategory, ApiError, CreateSubCategoryDto>({
-    mutationFn: subcategoriesService.createSubcategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: subcategoryKeys.lists() });
-      showSnackbar({
-        message: 'Subcategoría creada con éxito',
-        type: 'success',
-      });
-    },
-    onError: (error) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({ message, type: 'error' });
-    },
+export const useCreateSubcategory = () => {
+  return useApiMutation(subcategoriesService.createSubcategory, {
+    successMessage: 'Subcategoría creada con éxito',
+    invalidateQueryKeys: [subcategoryKeys.lists()],
   });
 };
 
-export const useUpdateSubcategory = (): UseMutationResult<
-  SubCategory,
-  ApiError,
-  { id: string; data: UpdateSubCategoryDto },
-  UpdateSubcategoryContext
-> => {
+export const useUpdateSubcategory = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore(
-    (state: SnackbarState) => state.showSnackbar,
-  );
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
-  return useMutation<
+  return useApiMutation<
     SubCategory,
     ApiError,
     { id: string; data: UpdateSubCategoryDto },
     UpdateSubcategoryContext
-  >({
-    mutationFn: ({ id, data }) =>
-      subcategoriesService.updateSubcategory(id, data),
-
+  >(({ id, data }) => subcategoriesService.updateSubcategory(id, data), {
+    suppressSuccessMessage: true,
+    invalidateQueryKeys: [subcategoryKeys.lists()],
     onMutate: async (variables) => {
       const { id, data } = variables;
       const detailQueryKey = subcategoryKeys.detail(id);
@@ -122,11 +89,7 @@ export const useUpdateSubcategory = (): UseMutationResult<
 
       return { previousDetail };
     },
-
-    onError: (error, variables, context) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({ message, type: 'error' });
-
+    onError: (_error, variables, context) => {
       if (context?.previousDetail) {
         queryClient.setQueryData(
           subcategoryKeys.detail(variables.id),
@@ -134,9 +97,7 @@ export const useUpdateSubcategory = (): UseMutationResult<
         );
       }
     },
-
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: subcategoryKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: subcategoryKeys.detail(variables.id),
       });
@@ -151,59 +112,48 @@ export const useUpdateSubcategory = (): UseMutationResult<
   });
 };
 
-export const useRemoveSubcategory = (): UseMutationResult<
-  void,
-  ApiError,
-  string,
-  { previousDetail?: SubCategory }
-> => {
+export const useRemoveSubcategory = () => {
   const queryClient = useQueryClient();
-  const showSnackbar = useSnackbarStore(
-    (state: SnackbarState) => state.showSnackbar,
-  );
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   type DeleteSubcategoryContext = { previousDetail?: SubCategory };
 
-  return useMutation<void, ApiError, string, DeleteSubcategoryContext>({
-    mutationFn: subcategoriesService.removeSubcategory,
+  return useApiMutation<void, ApiError, string, DeleteSubcategoryContext>(
+    subcategoriesService.removeSubcategory,
+    {
+      suppressSuccessMessage: true,
+      invalidateQueryKeys: [subcategoryKeys.lists()],
+      onMutate: async (deletedId) => {
+        const detailQueryKey = subcategoryKeys.detail(deletedId);
 
-    onMutate: async (deletedId) => {
-      const detailQueryKey = subcategoryKeys.detail(deletedId);
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousDetail =
+          queryClient.getQueryData<SubCategory>(detailQueryKey);
 
-      const previousDetail =
-        queryClient.getQueryData<SubCategory>(detailQueryKey);
+        queryClient.removeQueries({ queryKey: detailQueryKey });
 
-      queryClient.removeQueries({ queryKey: detailQueryKey });
-
-      return { previousDetail };
+        return { previousDetail };
+      },
+      onError: (_error, deletedId, context) => {
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            subcategoryKeys.detail(deletedId),
+            context.previousDetail,
+          );
+        }
+      },
+      onSettled: (_data, error, deletedId) => {
+        if (!error) {
+          queryClient.removeQueries({
+            queryKey: subcategoryKeys.detail(deletedId),
+          });
+          showSnackbar({
+            message: 'Subcategoría eliminada con éxito',
+            type: 'success',
+          });
+        }
+      },
     },
-
-    onError: (error, deletedId, context) => {
-      const message = getApiErrorMessage(error);
-      showSnackbar({ message, type: 'error' });
-
-      if (context?.previousDetail) {
-        queryClient.setQueryData(
-          subcategoryKeys.detail(deletedId),
-          context.previousDetail,
-        );
-      }
-    },
-
-    onSettled: (_data, error, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: subcategoryKeys.lists() });
-
-      if (!error) {
-        queryClient.removeQueries({
-          queryKey: subcategoryKeys.detail(deletedId),
-        });
-        showSnackbar({
-          message: 'Subcategoría eliminada con éxito',
-          type: 'success',
-        });
-      }
-    },
-  });
+  );
 };

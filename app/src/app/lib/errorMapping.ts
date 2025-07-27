@@ -106,6 +106,21 @@ const errorCodeMessages: { [key in ApiErrorCode | string]?: string } = {
   // Archivos específicos
   cantUploadFileType:
     'El tipo de archivo no está permitido. Solo se permiten imágenes (JPG, JPEG, PNG, GIF).',
+
+  // Códigos adicionales específicos del backend
+  ORDER_ITEMS_REQUIRED: 'La orden debe contener al menos un producto.',
+  PAYMENT_FAILED: 'Error en el procesamiento del pago. Intenta nuevamente.',
+  PAYMENT_TIMEOUT: 'El procesamiento del pago tomó demasiado tiempo.',
+  CUSTOMER_NOT_FOUND: 'Cliente no encontrado.',
+  ADDRESS_NOT_FOUND: 'Dirección no encontrada.',
+  DELIVERY_AREA_NOT_COVERED: 'No realizamos entregas en esta zona.',
+  MINIMUM_ORDER_NOT_MET: 'No se alcanzó el monto mínimo de pedido.',
+  RESTAURANT_CLOSED: 'El restaurante está cerrado en este momento.',
+  KITCHEN_OVERLOADED: 'La cocina está saturada. Intenta más tarde.',
+  INVALID_PHONE_NUMBER: 'Número de teléfono inválido.',
+  INVALID_EMAIL_FORMAT: 'Formato de correo electrónico inválido.',
+  EMAIL_ALREADY_EXISTS: 'Este correo electrónico ya está en uso.',
+  PHONE_ALREADY_EXISTS: 'Este número de teléfono ya está registrado.',
 };
 
 export function getApiErrorMessage(error: unknown): string {
