@@ -4,7 +4,7 @@ export {
   ResponsiveRow,
   ResponsiveColumn,
 } from './ResponsiveView';
-export { ResponsiveGrid, ResponsiveFlexGrid, GridItem } from './ResponsiveGrid';
+export { ResponsiveGrid, GridItem } from './ResponsiveGrid';
 export {
   ResponsiveImage,
 } from './ResponsiveImage';

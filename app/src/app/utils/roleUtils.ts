@@ -1,15 +1,4 @@
-import type { User } from '@/app/schemas/domain/user.schema';
-
-/**
- * Enum de roles basado en los IDs del backend
- */
-export enum RoleEnum {
-  ADMIN = 1,
-  MANAGER = 2,
-  CASHIER = 3,
-  WAITER = 4,
-  KITCHEN = 5,
-}
+import { RoleEnum, type User } from '../schemas/domain/user.schema';
 
 /**
  * Verifica si el usuario tiene un rol específico
