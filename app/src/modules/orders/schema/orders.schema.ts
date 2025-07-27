@@ -78,14 +78,41 @@ export type FindAllOrdersDto = z.infer<typeof findAllOrdersDtoSchema>;
 export const orderOpenListSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.string(),
+  shiftOrderNumber: z.number().optional(),
   status: orderStatusSchema,
+  orderStatus: orderStatusSchema.optional(),
   type: orderTypeSchema,
+  orderType: orderTypeSchema.optional(),
   totalAmount: z.number(),
+  total: z.union([z.string(), z.number()]).optional(),
   tableNumber: z.number().nullable(),
   customerName: z.string().nullable(),
   itemCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  isFromWhatsApp: z.boolean().optional(),
+  notes: z.string().optional(),
+  ticketImpressionCount: z.number().optional(),
+  paymentsSummary: z
+    .object({
+      totalPaid: z.number(),
+    })
+    .optional(),
+  preparationScreenStatuses: z
+    .array(
+      z.object({
+        name: z.string(),
+        status: z.enum(['READY', 'IN_PROGRESS', 'PENDING']),
+      }),
+    )
+    .optional(),
+  createdBy: z
+    .object({
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+      username: z.string().optional(),
+    })
+    .optional(),
   table: z
     .object({
       id: z.string().uuid(),
@@ -104,6 +131,7 @@ export const orderOpenListSchema = z.object({
     .object({
       recipientName: z.string(),
       recipientPhone: z.string().nullable(),
+      fullAddress: z.string().optional(),
       address: z
         .object({
           id: z.string().uuid(),

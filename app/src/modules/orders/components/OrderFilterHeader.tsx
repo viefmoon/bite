@@ -1,0 +1,192 @@
+import React from 'react';
+import { View, Pressable } from 'react-native';
+import { Surface, Icon, Text } from 'react-native-paper';
+import { useAppTheme } from '../../../app/styles/theme';
+import { useResponsive } from '../../../app/hooks/useResponsive';
+import {
+  OrderOpenList,
+  OrderTypeEnum,
+  OrderStatusEnum,
+} from '../schema/orders.schema';
+
+interface OrderFilterHeaderProps {
+  selectedOrderType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum;
+  ordersData?: OrderOpenList[];
+  onFilterChange: (
+    filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum,
+  ) => void;
+}
+
+export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
+  selectedOrderType,
+  ordersData,
+  onFilterChange,
+}) => {
+  const theme = useAppTheme();
+  const responsive = useResponsive();
+
+  const styles = {
+    header: {
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+      backgroundColor: 'transparent',
+      elevation: 0,
+    },
+    headerContent: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 0,
+    },
+    filterContainer: {
+      flex: 1,
+      flexDirection: 'row' as const,
+      gap: 0,
+    },
+    filterButton: {
+      flex: 1,
+      height: responsive.isTablet ? 44 : 52,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      borderRadius: 0,
+      elevation: 1,
+      position: 'relative' as const,
+    },
+    filterButtonActive: {
+      elevation: 3,
+    },
+    countBadge: {
+      position: 'absolute' as const,
+      top: responsive.isTablet ? 3 : 6,
+      right: responsive.isTablet ? 3 : 6,
+      minWidth: responsive.isTablet ? 18 : 22,
+      height: responsive.isTablet ? 18 : 22,
+      borderRadius: responsive.isTablet ? 9 : 11,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: responsive.isTablet ? 4 : 6,
+      borderWidth: 1,
+      elevation: 2,
+    },
+    countBadgeText: {
+      fontSize: responsive.isTablet ? 10 : 12,
+      fontWeight: '700' as const,
+    },
+  };
+
+  const getFilterCount = (
+    filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum,
+  ): number => {
+    if (!ordersData) return 0;
+
+    if (filterType === 'ALL') {
+      return ordersData.filter(
+        (o) => !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+      ).length;
+    }
+
+    if (filterType === 'WHATSAPP') {
+      return ordersData.filter(
+        (o) => o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING,
+      ).length;
+    }
+
+    return ordersData.filter(
+      (o) =>
+        o.orderType === filterType &&
+        !(o.isFromWhatsApp && o.orderStatus === OrderStatusEnum.PENDING),
+    ).length;
+  };
+
+  const FilterButton: React.FC<{
+    filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum;
+    icon: string;
+    isActive: boolean;
+  }> = ({ filterType, icon, isActive }) => {
+    const count = getFilterCount(filterType);
+
+    return (
+      <Pressable
+        style={[
+          styles.filterButton,
+          isActive && styles.filterButtonActive,
+          {
+            backgroundColor: isActive
+              ? theme.colors.primaryContainer
+              : theme.colors.surface,
+          },
+        ]}
+        onPress={() => onFilterChange(filterType)}
+      >
+        <Icon
+          source={icon}
+          size={26}
+          color={
+            isActive ? theme.colors.primary : theme.colors.onSurfaceVariant
+          }
+        />
+        {count > 0 && (
+          <View
+            style={[
+              styles.countBadge,
+              {
+                backgroundColor: isActive
+                  ? theme.colors.error
+                  : theme.colors.errorContainer,
+                borderColor: isActive
+                  ? theme.colors.error
+                  : theme.colors.outline,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.countBadgeText,
+                {
+                  color: isActive
+                    ? theme.colors.onError
+                    : theme.colors.onErrorContainer,
+                },
+              ]}
+            >
+              {count}
+            </Text>
+          </View>
+        )}
+      </Pressable>
+    );
+  };
+
+  return (
+    <Surface style={styles.header}>
+      <View style={styles.headerContent}>
+        <View style={styles.filterContainer}>
+          <FilterButton
+            filterType="ALL"
+            icon="view-grid"
+            isActive={selectedOrderType === 'ALL'}
+          />
+          <FilterButton
+            filterType={OrderTypeEnum.DINE_IN}
+            icon="silverware-fork-knife"
+            isActive={selectedOrderType === OrderTypeEnum.DINE_IN}
+          />
+          <FilterButton
+            filterType={OrderTypeEnum.TAKE_AWAY}
+            icon="bag-personal"
+            isActive={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
+          />
+          <FilterButton
+            filterType={OrderTypeEnum.DELIVERY}
+            icon="moped"
+            isActive={selectedOrderType === OrderTypeEnum.DELIVERY}
+          />
+          <FilterButton
+            filterType="WHATSAPP"
+            icon="whatsapp"
+            isActive={selectedOrderType === 'WHATSAPP'}
+          />
+        </View>
+      </View>
+    </Surface>
+  );
+};

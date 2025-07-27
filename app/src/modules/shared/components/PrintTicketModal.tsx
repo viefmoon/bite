@@ -20,8 +20,10 @@ import { useAppTheme } from '@/app/styles/theme';
 import { usePrintersQuery } from '@/modules/printers/hooks/usePrintersQueries';
 
 interface OrderBasicInfo {
-  shiftOrderNumber: number;
-  orderType: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
+  shiftOrderNumber?: number;
+  orderNumber?: string;
+  orderType?: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
+  type?: 'TAKE_AWAY' | 'DELIVERY' | 'DINE_IN';
 }
 
 interface PrintTicketModalProps {

@@ -34,7 +34,7 @@ export const OrderCardActions: React.FC<OrderCardActionsProps> = ({
   );
 };
 
-const createStyles = (responsive: any, theme: any) =>
+const createStyles = (_responsive: any, theme: any) =>
   StyleSheet.create({
     floatingButtonContainer: {
       position: 'absolute',
