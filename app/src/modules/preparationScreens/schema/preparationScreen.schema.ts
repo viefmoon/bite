@@ -1,9 +1,6 @@
 import { z } from 'zod';
 // Importar el schema y tipo de dominio centralizado
-import {
-  preparationScreenSchema as domainPreparationScreenSchema,
-  type PreparationScreen as DomainPreparationScreen,
-} from '../../../app/schemas/domain/preparation-screen.schema';
+import { preparationScreenSchema as domainPreparationScreenSchema } from '../../../app/schemas/domain/preparation-screen.schema';
 
 // Esquema principal extendido desde el dominio para incluir relaciones
 export const PreparationScreenSchema = domainPreparationScreenSchema.extend({

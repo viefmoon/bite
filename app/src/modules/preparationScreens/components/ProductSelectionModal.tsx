@@ -1,23 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import {
-  Modal,
-  Portal,
-  Text,
-  Checkbox,
-  Button,
-  Searchbar,
-  Divider,
-  IconButton,
-} from 'react-native-paper';
+import React, { useState, useMemo } from 'react';
+import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { Modal, Portal, Text, Button, Searchbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
+import { FlashList } from '@shopify/flash-list';
+import { useProductSelectionTree } from '../hooks/useProductSelectionTree';
+import { CategoryRow } from './CategoryRow';
+import { SubcategoryRow } from './SubcategoryRow';
+import { ProductRow } from './ProductRow';
 
 interface Product {
   id: string;
@@ -68,47 +58,27 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedSubcategories, setExpandedSubcategories] = useState<
-    Set<string>
-  >(new Set());
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [conflictingProducts, setConflictingProducts] = useState<
     Array<{ id: string; name: string; currentScreen: string }>
   >([]);
 
-  // Inicializar productos seleccionados
-  useEffect(() => {
-    if (menuData) {
-      const associatedProducts = new Set<string>();
-      menuData.menu.forEach((category) => {
-        category.subcategories.forEach((subcategory) => {
-          subcategory.products.forEach((product) => {
-            if (product.isAssociated) {
-              associatedProducts.add(product.id);
-            }
-          });
-        });
-      });
-      setSelectedProducts(associatedProducts);
-    }
-  }, [menuData]);
-
-  // Crear mapeo de productos a nombres de pantalla para el mensaje de conflicto
-  const getScreenNameForProduct = (productId: string): string => {
-    // Primero intentar obtener el nombre desde screenAssignments
-    if (menuData?.screenAssignments && menuData.screenAssignments[productId]) {
-      return menuData.screenAssignments[productId];
-    }
-
-    // Si no está disponible, usar un nombre genérico
-    return 'otra pantalla de preparación';
-  };
+  const {
+    selectedProducts,
+    toggleCategory,
+    toggleSubcategory,
+    toggleProduct,
+    toggleAllInCategory,
+    toggleAllInSubcategory,
+    isCategoryPartiallySelected,
+    isCategoryFullySelected,
+    isSubcategoryPartiallySelected,
+    isSubcategoryFullySelected,
+    isProductSelected,
+    isCategoryExpanded,
+    isSubcategoryExpanded,
+    getConflictingProducts,
+  } = useProductSelectionTree(menuData, screenId);
 
   // Filtrar menú basado en búsqueda
   const filteredMenu = useMemo(() => {
@@ -130,143 +100,72 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       .filter((category) => category.subcategories.length > 0);
   }, [menuData, searchQuery]);
 
-  const toggleCategory = (categoryId: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(categoryId)) {
-      newExpanded.delete(categoryId);
-    } else {
-      newExpanded.add(categoryId);
-    }
-    setExpandedCategories(newExpanded);
-  };
+  // Crear estructura aplanada para FlashList
+  type FlatItem =
+    | { type: 'category'; data: Category; id: string }
+    | { type: 'subcategory'; data: Subcategory; id: string; categoryId: string }
+    | {
+        type: 'product';
+        data: Product;
+        id: string;
+        categoryId: string;
+        subcategoryId: string;
+      };
 
-  const toggleSubcategory = (subcategoryId: string) => {
-    const newExpanded = new Set(expandedSubcategories);
-    if (newExpanded.has(subcategoryId)) {
-      newExpanded.delete(subcategoryId);
-    } else {
-      newExpanded.add(subcategoryId);
-    }
-    setExpandedSubcategories(newExpanded);
-  };
+  const flattenedData = useMemo(() => {
+    const items: FlatItem[] = [];
 
-  const toggleProduct = (productId: string) => {
-    const newSelected = new Set(selectedProducts);
-    if (newSelected.has(productId)) {
-      newSelected.delete(productId);
-    } else {
-      newSelected.add(productId);
-    }
-    setSelectedProducts(newSelected);
-  };
+    filteredMenu.forEach((category) => {
+      // Agregar categoría
+      items.push({
+        type: 'category',
+        data: category,
+        id: `category-${category.id}`,
+      });
 
-  const toggleAllInCategory = (category: Category) => {
-    const newSelected = new Set(selectedProducts);
-    const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id),
-    );
+      // Si la categoría está expandida, agregar subcategorías y productos
+      if (isCategoryExpanded(category.id)) {
+        category.subcategories.forEach((subcategory) => {
+          items.push({
+            type: 'subcategory',
+            data: subcategory,
+            id: `subcategory-${subcategory.id}`,
+            categoryId: category.id,
+          });
 
-    const allSelected = categoryProducts.every((id) => newSelected.has(id));
+          // Si la subcategoría está expandida, agregar productos
+          if (isSubcategoryExpanded(subcategory.id)) {
+            subcategory.products.forEach((product) => {
+              items.push({
+                type: 'product',
+                data: product,
+                id: `product-${product.id}`,
+                categoryId: category.id,
+                subcategoryId: subcategory.id,
+              });
+            });
+          }
+        });
+      }
+    });
 
-    if (allSelected) {
-      categoryProducts.forEach((id) => newSelected.delete(id));
-    } else {
-      categoryProducts.forEach((id) => newSelected.add(id));
-    }
-
-    setSelectedProducts(newSelected);
-  };
-
-  const toggleAllInSubcategory = (subcategory: Subcategory) => {
-    const newSelected = new Set(selectedProducts);
-    const subcategoryProducts = subcategory.products.map((p) => p.id);
-
-    const allSelected = subcategoryProducts.every((id) => newSelected.has(id));
-
-    if (allSelected) {
-      subcategoryProducts.forEach((id) => newSelected.delete(id));
-    } else {
-      subcategoryProducts.forEach((id) => newSelected.add(id));
-    }
-
-    setSelectedProducts(newSelected);
-  };
-
-  const isCategoryPartiallySelected = (category: Category) => {
-    const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id),
-    );
-    const selectedCount = categoryProducts.filter((id) =>
-      selectedProducts.has(id),
-    ).length;
-    return selectedCount > 0 && selectedCount < categoryProducts.length;
-  };
-
-  const isCategoryFullySelected = (category: Category) => {
-    const categoryProducts = category.subcategories.flatMap((sub) =>
-      sub.products.map((p) => p.id),
-    );
-    return (
-      categoryProducts.length > 0 &&
-      categoryProducts.every((id) => selectedProducts.has(id))
-    );
-  };
-
-  const isSubcategoryPartiallySelected = (subcategory: Subcategory) => {
-    const selectedCount = subcategory.products.filter((p) =>
-      selectedProducts.has(p.id),
-    ).length;
-    return selectedCount > 0 && selectedCount < subcategory.products.length;
-  };
-
-  const isSubcategoryFullySelected = (subcategory: Subcategory) => {
-    return (
-      subcategory.products.length > 0 &&
-      subcategory.products.every((p) => selectedProducts.has(p.id))
-    );
-  };
+    return items;
+  }, [filteredMenu, isCategoryExpanded, isSubcategoryExpanded]);
 
   const handleSave = () => {
-    // Verificar si hay productos seleccionados que ya están asignados a otras pantallas
-    const conflicts: Array<{
-      id: string;
-      name: string;
-      currentScreen: string;
-    }> = [];
-
-    if (menuData) {
-      menuData.menu.forEach((category) => {
-        category.subcategories.forEach((subcategory) => {
-          subcategory.products.forEach((product) => {
-            if (
-              selectedProducts.has(product.id) &&
-              product.currentPreparationScreenId &&
-              product.currentPreparationScreenId !== screenId
-            ) {
-              // Buscar el nombre de la pantalla actual del producto
-              const screenName = getScreenNameForProduct(product.id);
-              conflicts.push({
-                id: product.id,
-                name: product.name,
-                currentScreen: screenName,
-              });
-            }
-          });
-        });
-      });
-    }
+    const conflicts = getConflictingProducts;
 
     if (conflicts.length > 0) {
       setConflictingProducts(conflicts);
       setShowConfirmDialog(true);
     } else {
-      onSave(Array.from(selectedProducts));
+      onSave(selectedProducts);
     }
   };
 
   const handleConfirmSave = () => {
     setShowConfirmDialog(false);
-    onSave(Array.from(selectedProducts));
+    onSave(selectedProducts);
   };
 
   const handleCancelSave = () => {
@@ -299,133 +198,55 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : (
-          <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-          >
-            {filteredMenu.map((category) => (
-              <View key={category.id} style={styles.categoryContainer}>
-                <TouchableOpacity
-                  style={styles.categoryHeader}
-                  onPress={() => toggleCategory(category.id)}
-                >
-                  <View style={styles.categoryTitleContainer}>
-                    <IconButton
-                      icon={
-                        expandedCategories.has(category.id)
-                          ? 'chevron-down'
-                          : 'chevron-right'
-                      }
-                      size={20}
-                    />
-                    <Text variant="titleMedium" style={styles.categoryTitle}>
-                      {category.name}
-                    </Text>
-                  </View>
-                  <Checkbox.Android
-                    status={
-                      isCategoryFullySelected(category)
-                        ? 'checked'
-                        : isCategoryPartiallySelected(category)
-                          ? 'indeterminate'
-                          : 'unchecked'
-                    }
-                    onPress={() => toggleAllInCategory(category)}
-                  />
-                </TouchableOpacity>
-
-                {expandedCategories.has(category.id) && (
-                  <View style={styles.subcategoriesContainer}>
-                    {category.subcategories.map((subcategory) => (
-                      <View
-                        key={subcategory.id}
-                        style={styles.subcategoryContainer}
-                      >
-                        <TouchableOpacity
-                          style={styles.subcategoryHeader}
-                          onPress={() => toggleSubcategory(subcategory.id)}
-                        >
-                          <View style={styles.subcategoryTitleContainer}>
-                            <IconButton
-                              icon={
-                                expandedSubcategories.has(subcategory.id)
-                                  ? 'chevron-down'
-                                  : 'chevron-right'
-                              }
-                              size={16}
-                            />
-                            <Text
-                              variant="titleSmall"
-                              style={styles.subcategoryTitle}
-                            >
-                              {subcategory.name}
-                            </Text>
-                          </View>
-                          <Checkbox.Android
-                            status={
-                              isSubcategoryFullySelected(subcategory)
-                                ? 'checked'
-                                : isSubcategoryPartiallySelected(subcategory)
-                                  ? 'indeterminate'
-                                  : 'unchecked'
-                            }
-                            onPress={() => toggleAllInSubcategory(subcategory)}
-                          />
-                        </TouchableOpacity>
-
-                        {expandedSubcategories.has(subcategory.id) && (
-                          <View style={styles.productsContainer}>
-                            {subcategory.products.map((product) => (
-                              <TouchableOpacity
-                                key={product.id}
-                                style={styles.productItem}
-                                onPress={() => toggleProduct(product.id)}
-                              >
-                                <View style={styles.productInfo}>
-                                  <Text variant="bodyMedium">
-                                    {product.name}
-                                  </Text>
-                                  {product.currentPreparationScreenId &&
-                                    product.currentPreparationScreenId !==
-                                      screenId && (
-                                      <View style={styles.warningContainer}>
-                                        <MaterialCommunityIcons
-                                          name="alert"
-                                          size={12}
-                                          color={theme.colors.error}
-                                        />
-                                        <Text
-                                          variant="bodySmall"
-                                          style={[
-                                            styles.warningText,
-                                            { color: theme.colors.error },
-                                          ]}
-                                        >
-                                          Asignado a otra pantalla
-                                        </Text>
-                                      </View>
-                                    )}
-                                </View>
-                                <Checkbox.Android
-                                  status={
-                                    selectedProducts.has(product.id)
-                                      ? 'checked'
-                                      : 'unchecked'
-                                  }
-                                  onPress={() => toggleProduct(product.id)}
-                                />
-                              </TouchableOpacity>
-                            ))}
-                          </View>
+          <View style={styles.flashListContainer}>
+            <FlashList
+              data={flattenedData}
+              estimatedItemSize={60}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                switch (item.type) {
+                  case 'category':
+                    return (
+                      <CategoryRow
+                        category={item.data}
+                        isExpanded={isCategoryExpanded(item.data.id)}
+                        isFullySelected={isCategoryFullySelected(item.data)}
+                        isPartiallySelected={isCategoryPartiallySelected(
+                          item.data,
                         )}
-                      </View>
-                    ))}
-                  </View>
-                )}
-                <Divider style={styles.divider} />
-              </View>
-            ))}
-          </ScrollView>
+                        onToggleExpansion={toggleCategory}
+                        onToggleSelection={toggleAllInCategory}
+                      />
+                    );
+                  case 'subcategory':
+                    return (
+                      <SubcategoryRow
+                        subcategory={item.data}
+                        isExpanded={isSubcategoryExpanded(item.data.id)}
+                        isFullySelected={isSubcategoryFullySelected(item.data)}
+                        isPartiallySelected={isSubcategoryPartiallySelected(
+                          item.data,
+                        )}
+                        onToggleExpansion={toggleSubcategory}
+                        onToggleSelection={toggleAllInSubcategory}
+                      />
+                    );
+                  case 'product':
+                    return (
+                      <ProductRow
+                        product={item.data}
+                        isSelected={isProductSelected(item.data.id)}
+                        screenId={screenId}
+                        onToggleSelection={toggleProduct}
+                      />
+                    );
+                  default:
+                    return null;
+                }
+              }}
+            />
+          </View>
         )}
 
         <View style={styles.actions}>
@@ -641,75 +462,13 @@ const styles = StyleSheet.create({
   searchBar: {
     marginBottom: 16,
   },
-  scrollView: {
-    maxHeight: 400,
+  flashListContainer: {
+    height: 400,
   },
   loadingContainer: {
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  categoryContainer: {
-    marginBottom: 8,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  categoryTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  categoryTitle: {
-    fontWeight: 'bold',
-  },
-  subcategoriesContainer: {
-    paddingLeft: 20,
-  },
-  subcategoryContainer: {
-    marginBottom: 4,
-  },
-  subcategoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  subcategoryTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  subcategoryTitle: {
-    fontWeight: '600',
-  },
-  productsContainer: {
-    paddingLeft: 20,
-  },
-  productItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingLeft: 16,
-  },
-  productInfo: {
-    flex: 1,
-  },
-  warningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  warningText: {
-    marginLeft: 4,
-    fontSize: 11,
-  },
-  divider: {
-    marginTop: 8,
   },
   actions: {
     flexDirection: 'row',
