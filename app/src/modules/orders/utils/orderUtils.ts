@@ -256,17 +256,16 @@ export const prepareOrderForBackend = (
   const itemsForBackend: OrderItemDtoForBackend[] = [];
 
   items.forEach((item) => {
-    if (isEditMode && item.id && !item.id.startsWith('new-')) {
-      const existingIds = item.id
-        .split(',')
-        .filter((id) => id.trim() && !id.startsWith('new-'));
+    if (isEditMode && !item.isNew) {
+      // Ítem existente en modo de edición
+      const originalItemIds = item.originalItemIds || [];
       const requiredQuantity = item.quantity;
 
       for (let i = 0; i < requiredQuantity; i++) {
-        const isExistingItem = i < existingIds.length;
+        const hasOriginalId = i < originalItemIds.length;
 
         itemsForBackend.push({
-          id: isExistingItem ? existingIds[i] : undefined,
+          id: hasOriginalId ? originalItemIds[i] : undefined,
           productId: item.productId,
           productVariantId: item.variantId || null,
           quantity: 1,
@@ -284,8 +283,10 @@ export const prepareOrderForBackend = (
         });
       }
     } else {
+      // Ítem nuevo (tanto en modo normal como en modo de edición)
       for (let i = 0; i < item.quantity; i++) {
         itemsForBackend.push({
+          // No incluir ID para ítems nuevos - el backend los creará
           productId: item.productId,
           productVariantId: item.variantId || null,
           quantity: 1,

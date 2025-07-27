@@ -29,6 +29,10 @@ export interface CartItem {
     | 'CANCELLED';
   selectedPizzaCustomizations?: SelectedPizzaCustomization[];
   pizzaExtraCost?: number;
+  // Estado explícito para modo de edición
+  isNew?: boolean;
+  isModified?: boolean;
+  originalItemIds?: string[]; // IDs de los ítems originales en la BD
 }
 
 const generateId = () => {
@@ -120,7 +124,7 @@ export const addItemToCart = (
 
   if (isEditMode) {
     const newItem: CartItem = {
-      id: `new-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      id: generateId(),
       productId: product.id,
       productName: product.name,
       quantity,
@@ -138,6 +142,8 @@ export const addItemToCart = (
       selectedPizzaCustomizations,
       pizzaExtraCost,
       preparationStatus: 'NEW' as const,
+      isNew: true,
+      isModified: false,
     };
 
     return [...currentItems, newItem];
@@ -243,6 +249,8 @@ export const updateItemInCart = (
             ? selectedPizzaCustomizations
             : item.selectedPizzaCustomizations,
         pizzaExtraCost,
+        // Marcar como modificado si no es un ítem nuevo
+        isModified: item.isNew ? false : true,
       };
     }
     return item;
@@ -269,6 +277,8 @@ export const updateItemQuantityInCart = (
           item.pizzaExtraCost || 0,
           quantity,
         ),
+        // Marcar como modificado si no es un ítem nuevo
+        isModified: item.isNew ? false : true,
       };
     }
     return item;
@@ -280,4 +290,140 @@ export const removeItemFromCart = (
   itemId: string,
 ): CartItem[] => {
   return currentItems.filter((item) => item.id !== itemId);
+};
+
+/**
+ * Convierte ítems de una orden existente (desde la BD) a CartItems con estado explícito
+ * para uso en modo de edición.
+ */
+export interface ExistingOrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  basePrice: number;
+  finalPrice: number;
+  preparationNotes?: string;
+  productVariantId?: string;
+  variantName?: string;
+  modifiers?: Array<{
+    id: string;
+    modifierGroupId: string;
+    name: string;
+    price: number;
+  }>;
+  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
+  preparationStatus?:
+    | 'NEW'
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'READY'
+    | 'DELIVERED'
+    | 'CANCELLED';
+}
+
+export const convertExistingItemsToCart = (
+  existingItems: ExistingOrderItem[],
+): CartItem[] => {
+  // Agrupar ítems idénticos por configuración
+  const groupedItems = new Map<
+    string,
+    {
+      items: ExistingOrderItem[];
+      config: {
+        productId: string;
+        productName: string;
+        variantId?: string;
+        variantName?: string;
+        preparationNotes?: string;
+        modifiers: CartItemModifier[];
+        selectedPizzaCustomizations?: SelectedPizzaCustomization[];
+        basePrice: number;
+        finalPrice: number;
+      };
+    }
+  >();
+
+  existingItems.forEach((item) => {
+    const modifiers: CartItemModifier[] =
+      item.modifiers?.map((mod) => ({
+        id: mod.id,
+        modifierGroupId: mod.modifierGroupId,
+        name: mod.name,
+        price: mod.price,
+      })) || [];
+
+    const configKey = [
+      item.productId,
+      item.productVariantId || 'no-variant',
+      item.preparationNotes || 'no-notes',
+      JSON.stringify(modifiers.sort((a, b) => a.id.localeCompare(b.id))),
+      JSON.stringify(
+        (item.selectedPizzaCustomizations || []).sort((a, b) =>
+          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
+            `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+          ),
+        ),
+      ),
+    ].join('|');
+
+    if (!groupedItems.has(configKey)) {
+      groupedItems.set(configKey, {
+        items: [],
+        config: {
+          productId: item.productId,
+          productName: item.productName,
+          variantId: item.productVariantId,
+          variantName: item.variantName,
+          preparationNotes: item.preparationNotes,
+          modifiers,
+          selectedPizzaCustomizations: item.selectedPizzaCustomizations,
+          basePrice: item.basePrice,
+          finalPrice: item.finalPrice,
+        },
+      });
+    }
+
+    groupedItems.get(configKey)!.items.push(item);
+  });
+
+  // Convertir grupos a CartItems
+  return Array.from(groupedItems.values()).map((group) => {
+    const { items, config } = group;
+    const quantity = items.length;
+    const originalItemIds = items.map((item) => item.id);
+
+    return {
+      id: generateId(),
+      productId: config.productId,
+      productName: config.productName,
+      quantity,
+      unitPrice: config.basePrice,
+      totalPrice: config.finalPrice * quantity,
+      modifiers: config.modifiers,
+      variantId: config.variantId,
+      variantName: config.variantName,
+      preparationNotes: config.preparationNotes,
+      selectedPizzaCustomizations: config.selectedPizzaCustomizations,
+      pizzaExtraCost: Math.max(
+        0,
+        config.finalPrice -
+          config.basePrice -
+          config.modifiers.reduce((sum, mod) => sum + mod.price, 0),
+      ),
+      preparationStatus: items[0].preparationStatus,
+      isNew: false,
+      isModified: false,
+      originalItemIds,
+    } as CartItem;
+  });
+};
+
+/**
+ * Marca un CartItem como modificado cuando se edita en modo de edición.
+ */
+export const markItemAsModified = (item: CartItem): CartItem => {
+  return {
+    ...item,
+    isModified: true,
+  };
 };
