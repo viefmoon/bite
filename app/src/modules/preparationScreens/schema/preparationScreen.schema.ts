@@ -83,7 +83,6 @@ export type UpdatePreparationScreenDto = z.infer<
   typeof UpdatePreparationScreenSchema
 >;
 
-
 // Esquema para los filtros de búsqueda/listado
 export const FindAllPreparationScreensSchema = z.object({
   name: z.string().optional(),

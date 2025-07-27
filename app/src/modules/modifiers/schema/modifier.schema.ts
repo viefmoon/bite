@@ -42,7 +42,6 @@ export const modifierApiSchema = domainModifierSchema.extend({
   deletedAt: z.string().datetime().nullable().optional(),
 });
 
-
 export type ModifierFormInputs = {
   name: string;
   description?: string | null;

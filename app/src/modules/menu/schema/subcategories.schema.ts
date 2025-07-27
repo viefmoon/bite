@@ -50,4 +50,3 @@ export type FindAllSubcategoriesDto = z.infer<
 
 export type SubCategoryFormInputs = CreateSubCategoryDto;
 export type UpdateSubCategoryFormInputs = UpdateSubCategoryDto;
-

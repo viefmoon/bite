@@ -19,7 +19,7 @@ const CreateOrderScreen = () => {
     isLoading,
     shouldShowShiftClosed,
     userCanOpenShift,
-    
+
     // Estados de navegación y UI
     isCartVisible,
     selectedProduct,
@@ -28,7 +28,7 @@ const CreateOrderScreen = () => {
     navTitle,
     showCartButton,
     totalItemsCount,
-    
+
     // Handlers principales
     handleItemSelect,
     handleBack,
@@ -36,25 +36,25 @@ const CreateOrderScreen = () => {
     handleCloseCart,
     handleEditItem,
     handleCloseProductModal,
-    
+
     // Estados y handlers de modales
     showExitConfirmationModal,
     handleConfirmOrder,
     handleConfirmExit,
     handleCancelExit,
-    
+
     // Estados del modal de producto
     editingItem,
     productNeedsCustomization,
     updateItem,
     handleAddItem,
-    
+
     // Estados del modal de descripción
     selectedProductForDescription,
     isDescriptionModalVisible,
     handleShowProductDescription,
     handleCloseDescriptionModal,
-    
+
     // Estados de audio
     showAudioModal,
     audioOrderData,
@@ -66,13 +66,13 @@ const CreateOrderScreen = () => {
     setShowAudioModal,
     setAudioOrderData,
     setAudioError,
-    
+
     // Referencias y datos adicionales
     cartButtonRef,
     menu,
     selectedCategoryId,
     handleCategorySelect,
-    
+
     // Estilos
     styles,
   } = useOrderCreationScreen();
@@ -108,7 +108,6 @@ const CreateOrderScreen = () => {
       />
     );
   }
-
 
   return (
     <>

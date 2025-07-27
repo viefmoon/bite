@@ -37,4 +37,3 @@ export const FindAllTablesSchema = z.object({
   isTemporary: z.preprocess(transformBoolean, z.boolean().optional()),
 });
 export type FindAllTablesDto = z.infer<typeof FindAllTablesSchema>;
-

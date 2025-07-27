@@ -82,12 +82,20 @@ const useProductFormLogic = ({
 
   // Estados locales para UI
   const [isVariantModalVisible, setIsVariantModalVisible] = useState(false);
-  const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(null);
-  const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(null);
-  const [isInternalImageUploading, setIsInternalImageUploading] = useState(false);
-  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>({});
+  const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(
+    null,
+  );
+  const [localSelectedFile, setLocalSelectedFile] = useState<FileObject | null>(
+    null,
+  );
+  const [isInternalImageUploading, setIsInternalImageUploading] =
+    useState(false);
+  const [groupModifiers, setGroupModifiers] = useState<Record<string, any[]>>(
+    {},
+  );
   const [priceInputValue, setPriceInputValue] = useState<string>('');
-  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] = useState(false);
+  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] =
+    useState(false);
 
   // Valores por defecto del formulario
   const defaultValues = useMemo(
@@ -117,7 +125,14 @@ const useProductFormLogic = ({
     defaultValues: defaultValues,
   });
 
-  const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = form;
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
 
   // useFieldArray para manejar variantes
   const {
@@ -366,14 +381,14 @@ const useProductFormLogic = ({
     control,
     errors,
     handleSubmit: handleSubmit(processSubmit),
-    
+
     // Variantes
     variantFields,
     showVariantModal,
     handleVariantSubmit,
     handleRemoveVariant,
     variantInitialData,
-    
+
     // Estados UI
     isVariantModalVisible,
     setIsVariantModalVisible,
@@ -384,24 +399,24 @@ const useProductFormLogic = ({
     setPriceInputValue,
     preparationScreenMenuVisible,
     setPreparationScreenMenuVisible,
-    
+
     // Datos
     allModifierGroups,
     groupModifiers,
     preparationScreens,
     isLoadingGroups,
-    
+
     // Watchers
     hasVariants,
     currentImageUri,
     priceValue,
-    
+
     // Handlers
     handleImageSelected,
     handleImageRemoved,
     setValue,
     watch,
-    
+
     // Estado
     isEditing,
   };

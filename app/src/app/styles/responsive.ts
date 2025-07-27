@@ -280,7 +280,9 @@ export const getResponsiveValue = (
   tabletMultiplier: number,
   width: number = screenWidth,
 ): number => {
-  return isTablet(width) ? Math.round(mobileValue * tabletMultiplier) : mobileValue;
+  return isTablet(width)
+    ? Math.round(mobileValue * tabletMultiplier)
+    : mobileValue;
 };
 
 // Funciones de conveniencia usando la función genérica

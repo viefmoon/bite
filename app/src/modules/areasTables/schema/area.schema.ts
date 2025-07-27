@@ -19,4 +19,3 @@ export const FindAllAreasSchema = areaBaseSchema
   .partial();
 
 export type FindAllAreasDto = z.infer<typeof FindAllAreasSchema>;
-

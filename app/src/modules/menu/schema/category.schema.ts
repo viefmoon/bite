@@ -36,4 +36,3 @@ export const categoryFormSchema = categoryBaseSchema
 export type CreateCategoryDto = z.infer<typeof createCategoryDtoSchema>;
 export type UpdateCategoryDto = z.infer<typeof updateCategoryDtoSchema>;
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;
-

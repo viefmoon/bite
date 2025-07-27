@@ -164,7 +164,7 @@ export const useOrderCreationScreen = () => {
       selectedProduct,
       navigationLevel,
       handleCloseProductModal,
-      orderCreation.handleAttemptExit,
+      orderCreation,
       handleGoBackInternal,
       navigation,
     ],
@@ -197,7 +197,8 @@ export const useOrderCreationScreen = () => {
   }, [hideCart]);
 
   // Condiciones para renderizado
-  const shouldShowShiftClosed = !shiftLoading && (!shift || shift.status !== 'OPEN');
+  const shouldShowShiftClosed =
+    !shiftLoading && (!shift || shift.status !== 'OPEN');
   const showCartButton = !isCartVisible && !selectedProduct;
 
   // Estilos (movidos desde el componente)
@@ -232,7 +233,7 @@ export const useOrderCreationScreen = () => {
     shiftLoading,
     shouldShowShiftClosed,
     userCanOpenShift,
-    
+
     // Estados de navegación y UI
     isCartVisible,
     selectedProduct,
@@ -241,7 +242,7 @@ export const useOrderCreationScreen = () => {
     navTitle,
     showCartButton,
     totalItemsCount,
-    
+
     // Handlers principales
     handleItemSelect,
     handleBack,
@@ -249,25 +250,26 @@ export const useOrderCreationScreen = () => {
     handleCloseCart,
     handleEditItem,
     handleCloseProductModal,
-    
+
     // Estados y handlers de modales
     showExitConfirmationModal: orderCreation.showExitConfirmationModal,
     handleConfirmOrder: orderCreation.handleConfirmOrder,
     handleConfirmExit: orderCreation.handleConfirmExit,
     handleCancelExit: orderCreation.handleCancelExit,
-    
+
     // Estados del modal de producto
     editingItem: productSelection.editingItem,
     productNeedsCustomization: productSelection.productNeedsCustomization,
     updateItem,
     handleAddItem: productSelection.handleAddItem,
-    
+
     // Estados del modal de descripción
-    selectedProductForDescription: productSelection.selectedProductForDescription,
+    selectedProductForDescription:
+      productSelection.selectedProductForDescription,
     isDescriptionModalVisible: productSelection.isDescriptionModalVisible,
     handleShowProductDescription: productSelection.handleShowProductDescription,
     handleCloseDescriptionModal: productSelection.handleCloseDescriptionModal,
-    
+
     // Estados de audio
     showAudioModal: audioOrder.showAudioModal,
     audioOrderData: audioOrder.audioOrderData,
@@ -279,13 +281,13 @@ export const useOrderCreationScreen = () => {
     setShowAudioModal: audioOrder.setShowAudioModal,
     setAudioOrderData: audioOrder.setAudioOrderData,
     setAudioError: audioOrder.setAudioError,
-    
+
     // Referencias y datos adicionales
     cartButtonRef: productSelection.cartButtonRef,
     menu,
     selectedCategoryId,
     handleCategorySelect,
-    
+
     // Estilos
     styles,
   };

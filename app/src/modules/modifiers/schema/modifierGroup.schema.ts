@@ -86,5 +86,4 @@ export const modifierGroupApiSchema = domainModifierGroupSchema.extend({
   products: z.array(z.any()).optional(),
 });
 
-
 export const modifierGroupSchema = modifierGroupFormValidationSchema;
