@@ -102,7 +102,6 @@ const SubcategoriesScreen: React.FC = () => {
     isDetailModalVisible,
     editingItem,
     selectedItem,
-    isDeleting,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleOpenDetailModal,
@@ -362,8 +361,11 @@ const SubcategoriesScreen: React.FC = () => {
               handleOpenEditModal(selectedItem);
             }
           }}
-          deleteConfirmation={deleteConfirmation}
-          isDeleting={isDeleting}
+          onDelete={() => {
+            if (selectedItem) {
+              deleteConfirmation.show(selectedItem.id);
+            }
+          }}
           showImage={true}
         />
 

@@ -174,7 +174,9 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       borderRadius: 16,
       borderWidth: 2,
       borderColor: theme.colors.primary + '40',
-      ...modalDimensions,
+      width: modalDimensions.width,
+      maxWidth: modalDimensions.maxWidth,
+      maxHeight: modalDimensions.maxHeight,
       overflow: 'hidden',
       // Sombra
       elevation: 8,
@@ -214,7 +216,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
 
   // Contenido del modal
   const modalContent = (
-    <View style={styles.modalInner}>
+    <>
       {/* Header - se muestra automáticamente si hay título */}
       {(title || headerLeft || headerRight) && (
         <>
@@ -284,7 +286,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
           </View>
         </>
       )}
-    </View>
+    </>
   );
 
   const ModalWrapper = Platform.OS === 'ios' ? KeyboardAvoidingView : View;
@@ -337,12 +339,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalInner: {
-    flexDirection: 'column',
-    minHeight: 200,
-  },
   scrollView: {
-    flexGrow: 1,
+    flexGrow: 0,
     flexShrink: 1,
   },
   scrollContent: {

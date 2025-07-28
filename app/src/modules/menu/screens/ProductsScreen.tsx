@@ -19,6 +19,8 @@ import { MenuStackParamList } from '@/modules/menu/navigation/types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
+import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
+import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ProductFormModal from '../components/ProductFormModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { FileObject } from '@/app/components/common/CustomImagePicker';
@@ -91,10 +93,14 @@ function ProductsScreen(): React.ReactElement {
 
   const {
     isFormModalVisible,
+    isDetailModalVisible,
     editingItem,
+    selectedItem,
     handleOpenCreateModal,
     handleOpenEditModal,
+    handleOpenDetailModal,
     handleCloseModalVisibility,
+    deleteConfirmation,
   } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
     queryKey: ['products', queryFilters],
@@ -227,7 +233,7 @@ function ProductsScreen(): React.ReactElement {
       <GenericList<Product & { displayDescription: string }>
         items={products}
         renderConfig={listRenderConfig}
-        onItemPress={handleOpenEditModal}
+        onItemPress={handleOpenDetailModal}
         onRefresh={refetch}
         isRefreshing={isFetching && !isLoading}
         ListEmptyComponent={ListEmptyComponent}
@@ -241,7 +247,7 @@ function ProductsScreen(): React.ReactElement {
         searchPlaceholder="Buscar productos..."
         showFab={true}
         onFabPress={handleOpenCreateModal}
-        isModalOpen={isFormModalVisible}
+        isModalOpen={isFormModalVisible || isDetailModalVisible}
         enableSort={false}
         contentContainerStyle={styles.contentContainer}
         showImagePlaceholder={true}
@@ -250,6 +256,74 @@ function ProductsScreen(): React.ReactElement {
       />
 
       <Portal>
+        <GenericDetailModal<Product>
+          visible={isDetailModalVisible}
+          onDismiss={handleCloseModalVisibility}
+          item={selectedItem}
+          titleField="name"
+          imageField="photo"
+          descriptionField="description"
+          statusConfig={listRenderConfig.statusConfig}
+          fieldsToDisplay={[
+            {
+              field: 'price',
+              label: 'Precio',
+              render: (value) => value ? `$${parseFloat(String(value)).toFixed(2)}` : 'No definido',
+            },
+            {
+              field: 'hasVariants',
+              label: 'Tiene variantes',
+              render: (value) => value ? 'Sí' : 'No',
+            },
+            {
+              field: 'sortOrder',
+              label: 'Orden de visualización',
+              render: (value) => String(value ?? '0'),
+            },
+            {
+              field: 'createdAt',
+              label: 'Fecha de creación',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+              },
+            },
+            {
+              field: 'updatedAt',
+              label: 'Última actualización',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+              },
+            },
+          ]}
+          onEdit={() => {
+            if (selectedItem) {
+              handleOpenEditModal(selectedItem);
+            }
+          }}
+          onDelete={() => {
+            if (selectedItem) {
+              deleteConfirmation.show(selectedItem.id);
+            }
+          }}
+          showImage={true}
+        />
+
         {isFormModalVisible && (
           <ProductFormModal
             visible={isFormModalVisible}
@@ -261,6 +335,18 @@ function ProductsScreen(): React.ReactElement {
             subcategoryId={subcategoryId}
           />
         )}
+
+        <ConfirmationModal
+          visible={deleteConfirmation.visible}
+          title={deleteConfirmation.title}
+          message={deleteConfirmation.message}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmButtonColor={theme.colors.error}
+          onConfirm={deleteConfirmation.onConfirm}
+          onCancel={deleteConfirmation.onCancel}
+          onDismiss={deleteConfirmation.onCancel}
+        />
       </Portal>
     </SafeAreaView>
   );
