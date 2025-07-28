@@ -1,5 +1,5 @@
 import { ReactNode, useMemo } from 'react';
-import { Modal, Portal } from 'react-native-paper';
+import { Modal, Portal, Text, IconButton } from 'react-native-paper';
 import {
   ScrollView,
   ViewStyle,
@@ -26,6 +26,11 @@ interface ResponsiveModalProps {
   scrollable?: boolean;
   fullScreen?: boolean;
   position?: 'center' | 'bottom' | 'top';
+  
+  // Diseño
+  showHeader?: boolean;
+  title?: string;
+  headerRight?: ReactNode;
 
   // Estilos
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -41,6 +46,9 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   scrollable = true,
   fullScreen = false,
   position = 'center',
+  showHeader = false,
+  title,
+  headerRight,
   contentContainerStyle,
 }) => {
   const responsive = useResponsive();
@@ -56,15 +64,12 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       dims.maxWidth = '100%';
       dims.maxHeight = '100%';
     } else {
-      // Ancho por defecto responsive
+      // Ancho responsive
       dims.width = responsive.isTablet ? '80%' : '92%';
-      dims.maxWidth = maxWidth as any || (responsive.isTablet ? 600 : '100%');
+      dims.maxWidth = (maxWidth || (responsive.isTablet ? 600 : '100%')) as any;
       
-      // Altura - dejar que crezca con el contenido hasta maxHeight
+      dims.minHeight = 300;
       dims.maxHeight = maxHeight as any;
-      
-      // Mínimo para evitar modales microscópicos
-      dims.minHeight = 100;
     }
 
     return dims;
@@ -95,9 +100,20 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   // Estilos del contenedor principal
   const containerStyles: ViewStyle = {
     backgroundColor: theme.colors.surface,
-    borderRadius: fullScreen ? 0 : theme.roundness * 2,
+    borderRadius: fullScreen ? 0 : theme.roundness * 3,
+    borderWidth: 1,
+    borderColor: theme.colors.outlineVariant,
     ...modalDimensions,
     overflow: 'hidden',
+    // Sombra para separación visual
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   };
 
   // Ajustes para posiciones bottom/top
@@ -116,20 +132,44 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   }
 
   // Contenido del modal
-  const modalContent = scrollable ? (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[
-        styles.scrollContent,
-        { padding: contentPadding }
-      ]}
-      keyboardShouldPersistTaps="handled"
-    >
-      {children}
-    </ScrollView>
-  ) : (
-    <View style={{ padding: contentPadding }}>
-      {children}
+  const modalContent = (
+    <View style={styles.modalInner}>
+      {/* Header opcional */}
+      {showHeader && (title || headerRight) && (
+        <View style={[styles.headerContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <View style={[styles.header, { paddingHorizontal: contentPadding }]}>
+            {title && (
+              <Text variant="titleLarge" style={styles.headerTitle} numberOfLines={1}>
+                {title}
+              </Text>
+            )}
+            {headerRight || (
+              <IconButton
+                icon="close"
+                size={22}
+                onPress={onDismiss}
+                style={styles.closeIcon}
+              />
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Contenido principal */}
+      {scrollable ? (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.scrollContent, { padding: contentPadding }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[styles.content, { padding: contentPadding }]}>
+          {children}
+        </View>
+      )}
     </View>
   );
 
@@ -160,11 +200,46 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  modalInner: {
+    maxHeight: '100%',
+  },
+  scrollView: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
   scrollContent: {
-    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  content: {
+    paddingBottom: 10,
   },
   fullScreenModal: {
     margin: 0,
+  },
+  headerContainer: {
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  headerTitle: {
+    flex: 1,
+    fontWeight: '600',
+  },
+  closeIcon: {
+    margin: -6,
   },
 });
 
