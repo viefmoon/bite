@@ -94,7 +94,8 @@ function ProductsScreen(): React.ReactElement {
     editingItem,
     handleOpenCreateModal,
     handleOpenEditModal,
-    handleCloseModals,
+    handleCloseModalVisibility,
+    handleCleanupModalState,
   } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
     queryKey: ['products', queryFilters],
@@ -145,7 +146,7 @@ function ProductsScreen(): React.ReactElement {
           : 'Producto creado con éxito';
 
         showSnackbar({ message, type: 'success' });
-        handleCloseModals();
+        handleCloseModalVisibility();
 
         queryClient.invalidateQueries({
           queryKey: ['products', queryFilters],
@@ -168,7 +169,7 @@ function ProductsScreen(): React.ReactElement {
       updateMutation,
       createMutation,
       showSnackbar,
-      handleCloseModals,
+      handleCloseModalVisibility,
       queryClient,
       queryFilters,
     ],
@@ -253,7 +254,8 @@ function ProductsScreen(): React.ReactElement {
         {isFormModalVisible && (
           <ProductFormModal
             visible={isFormModalVisible}
-            onDismiss={handleCloseModals}
+            onDismiss={handleCloseModalVisibility}
+            onModalHide={handleCleanupModalState}
             onSubmit={handleFormSubmit}
             initialData={editingItem}
             isSubmitting={createMutation.isPending || updateMutation.isPending}

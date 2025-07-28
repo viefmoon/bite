@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,6 +31,7 @@ import {
 } from '../schema/category-form.schema';
 import { z } from 'zod';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
+import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 
 type RootStackParamList = {
   Categories: undefined;
@@ -49,16 +50,8 @@ const CategoriesScreen: React.FC = () => {
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null,
-  );
   const [activeFilter, setActiveFilter] = useState<string | number>('all');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
   const {
     data: categoriesResponse,
@@ -76,6 +69,24 @@ const CategoriesScreen: React.FC = () => {
   });
 
   useRefreshModuleOnFocus('categories');
+
+  // Usar useCrudScreenLogic para manejar los modales
+  const {
+    isFormModalVisible,
+    isDetailModalVisible,
+    editingItem: editingCategory,
+    selectedItem: selectedCategory,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleOpenDetailModal,
+    handleCloseModalVisibility,
+    handleCleanupModalState,
+    deleteConfirmation,
+  } = useCrudScreenLogic<Category>({
+    entityName: 'Categoría',
+    queryKey: ['categories', { filter: activeFilter }],
+    deleteMutationFn: (id: string) => categoryService.deleteCategory(id),
+  });
 
   const { ListEmptyComponent } = useListState({
     isLoading: isLoadingCategories,
@@ -100,7 +111,7 @@ const CategoriesScreen: React.FC = () => {
   const commonMutationOptions = {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      closeModals();
+      handleCloseModalVisibility();
     },
     onError: (error: unknown) => {
       const message = getApiErrorMessage(error);
@@ -143,29 +154,6 @@ const CategoriesScreen: React.FC = () => {
       showSnackbar({ message: 'Categoría eliminada', type: 'success' });
     },
   });
-  const openAddModal = useCallback(() => {
-    setEditingCategory(null);
-    setModalVisible(true);
-  }, []);
-
-  const openEditModal = useCallback((category: Category) => {
-    setEditingCategory(category);
-    setDetailModalVisible(false);
-    setModalVisible(true);
-  }, []);
-
-  const openDetailModal = useCallback((category: Category) => {
-    setSelectedCategory(category);
-    setDetailModalVisible(true);
-  }, []);
-
-  const closeModals = useCallback(() => {
-    setModalVisible(false);
-    setDetailModalVisible(false);
-    setEditingCategory(null);
-    setSelectedCategory(null);
-    setIsUploadingImage(false);
-  }, []);
 
   const handleFilterChange = (value: string | number) => {
     setActiveFilter(value);
@@ -194,18 +182,6 @@ const CategoriesScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    setCategoryToDelete(id);
-    setShowDeleteConfirmation(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (categoryToDelete) {
-      deleteCategoryMutation.mutate(categoryToDelete);
-      setShowDeleteConfirmation(false);
-      setCategoryToDelete(null);
-    }
-  };
 
   const categories = useMemo(() => {
     return categoriesResponse?.data ?? [];
@@ -262,10 +238,6 @@ const CategoriesScreen: React.FC = () => {
     loadFormData();
   }, [editingCategory]);
 
-  const selectedCategoryMapped = useMemo(() => {
-    if (!selectedCategory) return null;
-    return selectedCategory;
-  }, [selectedCategory]);
 
   const filterOptions: FilterOption<string | number>[] = [
     { value: 'all', label: 'Todas' },
@@ -356,13 +328,13 @@ const CategoriesScreen: React.FC = () => {
           />
         )}
         renderConfig={listRenderConfig}
-        onItemPress={openDetailModal}
+        onItemPress={handleOpenDetailModal}
         onRefresh={refetchCategories}
         isRefreshing={isFetchingCategories && !isLoadingCategories}
         ListEmptyComponent={ListEmptyComponent}
         showFab={true}
-        onFabPress={openAddModal}
-        isModalOpen={modalVisible || detailModalVisible}
+        onFabPress={handleOpenCreateModal}
+        isModalOpen={isFormModalVisible || isDetailModalVisible}
         showImagePlaceholder={true}
         placeholderIcon="folder-outline"
         isDrawerOpen={isDrawerOpen}
@@ -370,8 +342,9 @@ const CategoriesScreen: React.FC = () => {
 
       <Portal>
         <GenericFormModal
-          visible={modalVisible}
-          onDismiss={closeModals}
+          visible={isFormModalVisible}
+          onDismiss={handleCloseModalVisibility}
+          onModalHide={handleCleanupModalState}
           onSubmit={handleFormSubmit}
           formSchema={
             z.object({
@@ -398,9 +371,10 @@ const CategoriesScreen: React.FC = () => {
         />
 
         <GenericDetailModal
-          visible={detailModalVisible}
-          onDismiss={closeModals}
-          item={selectedCategoryMapped}
+          visible={isDetailModalVisible}
+          onDismiss={handleCloseModalVisibility}
+          onModalHide={handleCleanupModalState}
+          item={selectedCategory}
           titleField="name"
           imageField="photo"
           descriptionField="description"
@@ -438,28 +412,22 @@ const CategoriesScreen: React.FC = () => {
               },
             },
           ]}
-          onEdit={openEditModal as (item: any) => void}
-          onDelete={handleDelete}
+          onEdit={handleOpenEditModal as (item: any) => void}
+          onDelete={deleteConfirmation.show}
           isDeleting={deleteCategoryMutation.isPending}
           showImage={true}
         />
 
         <ConfirmationModal
-          visible={showDeleteConfirmation}
-          title="Confirmar Eliminación"
-          message="¿Estás seguro de que quieres eliminar esta categoría? Esta acción no se puede deshacer."
+          visible={deleteConfirmation.visible}
+          title={deleteConfirmation.title}
+          message={deleteConfirmation.message}
           confirmText="Eliminar"
           cancelText="Cancelar"
           confirmButtonColor={theme.colors.error}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => {
-            setShowDeleteConfirmation(false);
-            setCategoryToDelete(null);
-          }}
-          onDismiss={() => {
-            setShowDeleteConfirmation(false);
-            setCategoryToDelete(null);
-          }}
+          onConfirm={deleteConfirmation.onConfirm}
+          onCancel={deleteConfirmation.onCancel}
+          onDismiss={deleteConfirmation.onCancel}
         />
       </Portal>
     </SafeAreaView>

@@ -49,6 +49,7 @@ import { Menu } from 'react-native-paper';
 interface ProductFormModalProps {
   visible: boolean;
   onDismiss: () => void;
+  onModalHide?: () => void;
   onSubmit: (
     data: ProductFormInputs,
     photoId: string | null | undefined,
@@ -425,6 +426,7 @@ const useProductFormLogic = ({
 function ProductFormModal({
   visible,
   onDismiss,
+  onModalHide,
   onSubmit,
   initialData,
   isSubmitting,

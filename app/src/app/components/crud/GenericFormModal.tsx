@@ -63,6 +63,7 @@ interface GenericFormModalProps<
 > {
   visible: boolean;
   onDismiss: () => void;
+  onModalHide?: () => void;
   onSubmit: (
     data: TFormData,
     photoId: string | null | undefined,
@@ -221,6 +222,7 @@ const GenericFormModal = <
 >({
   visible,
   onDismiss,
+  onModalHide,
   onSubmit,
   formSchema,
   formFields,
@@ -508,6 +510,7 @@ const GenericFormModal = <
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
+      onModalHide={onModalHide}
       title={modalTitle(isEditing)}
       maxWidthPercent={85}
       maxHeightPercent={85}

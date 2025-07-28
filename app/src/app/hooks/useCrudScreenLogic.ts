@@ -60,12 +60,22 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     setIsFormModalVisible(false);
   }, []);
 
-  const handleCloseModals = useCallback(() => {
+  // Separar el cierre de modal de la limpieza de estado
+  const handleCloseModalVisibility = useCallback(() => {
     setIsFormModalVisible(false);
     setIsDetailModalVisible(false);
+  }, []);
+
+  const handleCleanupModalState = useCallback(() => {
     setEditingItem(null);
     setSelectedItem(null);
   }, []);
+
+  // Función original para compatibilidad hacia atrás
+  const handleCloseModals = useCallback(() => {
+    handleCloseModalVisibility();
+    handleCleanupModalState();
+  }, [handleCloseModalVisibility, handleCleanupModalState]);
 
   // Alternative deletion methods for use with ConfirmationModal
   const [deleteConfirmationState, setDeleteConfirmationState] = useState<{
@@ -101,6 +111,9 @@ export function useCrudScreenLogic<TItem extends { id: string }>({
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
+    // Nuevas funciones para evitar parpadeo en modales
+    handleCloseModalVisibility,
+    handleCleanupModalState,
     // Properties for ConfirmationModal integration
     deleteConfirmation: {
       visible: deleteConfirmationState.visible,
