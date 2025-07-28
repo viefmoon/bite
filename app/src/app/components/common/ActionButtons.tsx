@@ -31,48 +31,45 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   const theme = useAppTheme();
 
-  // Función para obtener colores basados en preset
-  const getButtonColors = (button: ActionButton) => {
-    if (button.colorPreset) {
-      switch (button.colorPreset) {
+  // Función para obtener colores basados en preset o icono
+  const getButtonColors = (button: ActionButton, detectedMode: string) => {
+    // Auto-detectar preset basado en el icono si no se especifica
+    let colorPreset = button.colorPreset;
+    if (!colorPreset && button.icon) {
+      if (button.icon === 'pencil' || button.icon === 'edit') {
+        colorPreset = 'primary';
+      } else if (button.icon === 'delete' || button.icon === 'trash-can') {
+        colorPreset = 'error';
+      }
+    }
+
+    if (colorPreset) {
+      const isContained = detectedMode === 'contained';
+      switch (colorPreset) {
         case 'primary':
           return {
-            backgroundColor:
-              button.mode === 'contained' ? theme.colors.primary : undefined,
-            textColor:
-              button.mode === 'contained'
-                ? theme.colors.onPrimary
-                : theme.colors.primary,
+            backgroundColor: isContained ? theme.colors.primary : undefined,
+            textColor: isContained ? theme.colors.onPrimary : theme.colors.primary,
           };
         case 'secondary':
           return {
-            backgroundColor:
-              button.mode === 'contained' ? theme.colors.secondary : undefined,
-            textColor:
-              button.mode === 'contained'
-                ? theme.colors.onSecondary
-                : theme.colors.secondary,
+            backgroundColor: isContained ? theme.colors.secondary : undefined,
+            textColor: isContained ? theme.colors.onSecondary : theme.colors.secondary,
           };
         case 'error':
           return {
-            backgroundColor:
-              button.mode === 'contained' ? theme.colors.error : undefined,
-            textColor:
-              button.mode === 'contained'
-                ? theme.colors.onError
-                : theme.colors.error,
+            backgroundColor: isContained ? theme.colors.error : undefined,
+            textColor: isContained ? theme.colors.onError : theme.colors.error,
           };
         case 'success':
           return {
-            backgroundColor:
-              button.mode === 'contained' ? '#10B981' : undefined,
-            textColor: button.mode === 'contained' ? '#FFFFFF' : '#10B981',
+            backgroundColor: isContained ? '#10B981' : undefined,
+            textColor: isContained ? '#FFFFFF' : '#10B981',
           };
         case 'warning':
           return {
-            backgroundColor:
-              button.mode === 'contained' ? '#F59E0B' : undefined,
-            textColor: button.mode === 'contained' ? '#FFFFFF' : '#F59E0B',
+            backgroundColor: isContained ? '#F59E0B' : undefined,
+            textColor: isContained ? '#FFFFFF' : '#F59E0B',
           };
       }
     }
@@ -85,12 +82,24 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   return (
     <View style={[styles.container, style]}>
       {buttons.map((button, index) => {
-        const colors = getButtonColors(button);
+        // Auto-detectar mode basado en icono si no se especifica
+        let buttonMode = button.mode;
+        if (!buttonMode && button.icon) {
+          if (button.icon === 'pencil' || button.icon === 'edit') {
+            buttonMode = 'contained';
+          } else if (button.icon === 'delete' || button.icon === 'trash-can') {
+            buttonMode = 'outlined';
+          }
+        }
+        buttonMode = buttonMode || 'contained';
+        
+        const colors = getButtonColors(button, buttonMode);
+        
         return (
           <Button
             key={index}
             icon={button.icon}
-            mode={button.mode || 'contained'}
+            mode={buttonMode}
             onPress={button.onPress}
             loading={button.loading}
             disabled={button.disabled}

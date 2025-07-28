@@ -142,7 +142,6 @@ function GenericDetailModal<TItem extends { id: string }>({
                         label: editButtonLabel,
                         onPress: handleEdit,
                         disabled: isDeleting,
-                        colorPreset: 'primary' as const,
                       },
                     ]
                   : []),

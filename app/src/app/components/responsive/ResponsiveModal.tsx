@@ -202,11 +202,13 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     return null;
   }, [footer, actions, responsive.isSmallMobile]);
 
-  // Animaciones simples
+  // Animación moderna estilo iOS
   const animationConfig = useMemo(() => {
     return {
-      animationIn: 'fadeIn' as const,
-      animationOut: 'fadeOut' as const,
+      animationIn: 'zoomIn' as const,
+      animationOut: 'zoomOut' as const,
+      animationInTiming: 180,
+      animationOutTiming: 150,
     };
   }, []);
 
@@ -301,10 +303,12 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       onBackButtonPress={dismissable && !isLoading ? onDismiss : undefined}
       animationIn={animationConfig.animationIn}
       animationOut={animationConfig.animationOut}
+      animationInTiming={animationConfig.animationInTiming}
+      animationOutTiming={animationConfig.animationOutTiming}
       backdropOpacity={0.6}
       useNativeDriver={true}
       useNativeDriverForBackdrop={true}
-      hideModalContentWhileAnimating={true}
+      hideModalContentWhileAnimating={false}
       style={styles.modal}
     >
       <ModalWrapper
