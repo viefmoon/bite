@@ -6,4 +6,4 @@ export {
 } from './ResponsiveView';
 export { ResponsiveGrid, GridItem } from './ResponsiveGrid';
 export { ResponsiveImage } from './ResponsiveImage';
-export { ResponsiveModal, ResponsiveConfirmModal } from './ResponsiveModal';
+export { ResponsiveModal } from './ResponsiveModal';

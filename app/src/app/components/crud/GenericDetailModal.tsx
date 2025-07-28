@@ -1,11 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  StyleSheet,
-  StyleProp,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Text,
   Button,
@@ -14,7 +8,7 @@ import {
   IconButton,
 } from 'react-native-paper';
 import AutoImage from '../common/AutoImage';
-import { useAppTheme, AppTheme } from '../../styles/theme';
+import { useAppTheme } from '../../styles/theme';
 import { ResponsiveModal } from '../responsive/ResponsiveModal';
 import { useResponsive } from '../../hooks/useResponsive';
 import ConfirmationModal from '../common/ConfirmationModal';
@@ -32,211 +26,32 @@ interface StatusConfig<TItem> {
   inactiveLabel: string;
 }
 
-interface DeleteConfirmation {
-  visible: boolean;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  show: (id: string) => void;
-}
-
 interface GenericDetailModalProps<TItem extends { id: string }> {
   visible: boolean;
   onDismiss: () => void;
   item: TItem | null;
+  
+  // Campos principales
   titleField: keyof TItem;
   imageField?: keyof TItem;
   descriptionField?: keyof TItem;
   statusConfig?: StatusConfig<TItem>;
   fieldsToDisplay?: DisplayFieldConfig<TItem>[];
+  showImage?: boolean;
+  
+  // Acciones
   onEdit?: (item: TItem) => void;
   onDelete?: (id: string) => void;
-  deleteConfirmation?: DeleteConfirmation;
   isDeleting?: boolean;
+  
+  // Textos personalizables
   editButtonLabel?: string;
   deleteButtonLabel?: string;
   closeButtonLabel?: string;
-  modalStyle?: StyleProp<ViewStyle>;
-  titleStyle?: StyleProp<TextStyle>;
-  imageStyle?: StyleProp<ViewStyle>;
-  descriptionStyle?: StyleProp<TextStyle>;
-  fieldLabelStyle?: StyleProp<TextStyle>;
-  fieldValueStyle?: StyleProp<TextStyle>;
-  actionsContainerStyle?: StyleProp<ViewStyle>;
-  showImage?: boolean;
+  
+  // Contenido adicional
   children?: React.ReactNode;
 }
-
-const getStyles = (
-  theme: AppTheme,
-  responsive: ReturnType<typeof useResponsive>,
-) => {
-  return StyleSheet.create({
-    modalSurface: {
-      backgroundColor: theme.colors.elevation.level2,
-      borderWidth: 2,
-      borderColor: theme.colors.outline,
-      borderRadius: theme.roundness * 2,
-      elevation: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-    },
-    modalTitle: {
-      marginTop: responsive.spacing(theme.spacing.l),
-      marginBottom: responsive.spacing(theme.spacing.m),
-      textAlign: 'center',
-      fontWeight: '700',
-      fontSize: responsive.isTablet ? 22 : 20,
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-    },
-    detailContent: {
-      alignItems: 'center',
-      marginBottom: responsive.spacing(theme.spacing.m),
-      width: '100%',
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-    },
-    detailImage: {
-      width: responsive.isTablet
-        ? responsive.getResponsiveDimension(120, 150)
-        : responsive.getResponsiveDimension(150, 180),
-      height: responsive.isTablet
-        ? responsive.getResponsiveDimension(120, 150)
-        : responsive.getResponsiveDimension(150, 180),
-      borderRadius: theme.roundness * 2,
-      marginBottom: responsive.spacing(theme.spacing.m),
-      backgroundColor: theme.colors.surfaceDisabled,
-      elevation: 2,
-    },
-    detailDescription: {
-      marginBottom: responsive.spacing(theme.spacing.m),
-      textAlign: 'center',
-      lineHeight: responsive.isTablet ? 20 : 18,
-      fontSize: responsive.isTablet ? 14 : 13,
-      paddingHorizontal: responsive.spacing(theme.spacing.xs),
-      flexWrap: 'wrap',
-      width: '100%',
-    },
-    statusChipContainer: {
-      marginBottom: responsive.spacing(theme.spacing.s),
-      marginTop: responsive.spacing(theme.spacing.s),
-    },
-    statusChip: {
-      paddingHorizontal: responsive.spacing(theme.spacing.s),
-      height: responsive.isTablet ? 36 : 32,
-    },
-    fieldsContainer: {
-      width: '100%',
-      marginBottom: responsive.spacing(theme.spacing.m),
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness * 1.5,
-      padding: responsive.isTablet
-        ? responsive.spacing(theme.spacing.s)
-        : responsive.spacing(theme.spacing.m),
-      marginHorizontal: responsive.spacing(theme.spacing.m),
-      alignSelf: 'center',
-      maxWidth: '90%',
-    },
-    fieldRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: responsive.isTablet
-        ? responsive.spacing(theme.spacing.xs)
-        : responsive.spacing(theme.spacing.s),
-      paddingVertical: responsive.isTablet
-        ? responsive.spacing(theme.spacing.xxs)
-        : responsive.spacing(theme.spacing.xs),
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outlineVariant,
-      flexWrap: 'wrap',
-    },
-    lastFieldRow: {
-      marginBottom: 0,
-      borderBottomWidth: 0,
-    },
-    fieldLabel: {
-      fontWeight: '600',
-      marginRight: responsive.spacing(theme.spacing.s),
-      color: theme.colors.onSurfaceVariant,
-      fontSize: responsive.isTablet ? 14 : 13,
-      flexBasis: '35%',
-      minWidth: 100,
-    },
-    fieldValue: {
-      flex: 1,
-      textAlign: 'right',
-      color: theme.colors.onSurface,
-      fontSize: responsive.isTablet ? 14 : 13,
-      flexWrap: 'wrap',
-      maxWidth: '65%',
-    },
-    detailActions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: responsive.spacing(theme.spacing.s),
-      marginBottom: responsive.spacing(theme.spacing.m),
-      width: '100%',
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-    },
-    closeButton: {
-      alignSelf: 'center',
-      borderRadius: theme.roundness,
-      backgroundColor: theme.colors.surfaceVariant,
-      minWidth: responsive.isTablet ? 150 : 100,
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      marginBottom: responsive.spacing(theme.spacing.l),
-    },
-    loadingContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: 300,
-      flex: 1,
-    },
-    actionButton: {
-      borderRadius: theme.roundness,
-      paddingHorizontal: responsive.spacing(theme.spacing.s),
-      flex: 1,
-      maxWidth: responsive.isTablet ? 180 : '48%',
-      minHeight: responsive.isTablet ? 48 : 40,
-      minWidth: 100,
-    },
-    buttonContainer: {
-      backgroundColor: theme.colors.surface,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      paddingTop: responsive.spacing(theme.spacing.m),
-      paddingBottom: responsive.spacing(theme.spacing.l),
-    },
-    closeIconButton: {
-      position: 'absolute',
-      top: responsive.spacing(theme.spacing.xs),
-      right: responsive.spacing(theme.spacing.xs),
-      zIndex: 1,
-    },
-    renderContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-    },
-    buttonContent: {
-      flexDirection: 'row',
-    },
-    buttonLabel: {
-      fontSize: responsive.isTablet ? 13 : 12,
-    },
-    closeButtonLabel: {
-      fontSize: responsive.isTablet ? 14 : 13,
-    },
-  });
-};
 
 function GenericDetailModal<TItem extends { id: string }>({
   visible,
@@ -249,44 +64,31 @@ function GenericDetailModal<TItem extends { id: string }>({
   fieldsToDisplay = [],
   onEdit,
   onDelete,
-  deleteConfirmation,
   isDeleting = false,
   editButtonLabel = 'Editar',
   deleteButtonLabel = 'Eliminar',
   closeButtonLabel = 'Cerrar',
-  modalStyle,
-  titleStyle,
-  imageStyle,
-  descriptionStyle,
-  fieldLabelStyle,
-  fieldValueStyle,
-  actionsContainerStyle,
   showImage = false,
   children,
 }: GenericDetailModalProps<TItem>) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = useMemo(
-    () => getStyles(theme, responsive),
-    [theme, responsive],
-  );
-  const imageSource = useMemo(() => {
-    if (item && imageField && item.hasOwnProperty(imageField)) {
-      const imageFieldValue = item[imageField];
-      if (
-        typeof imageFieldValue === 'object' &&
-        imageFieldValue !== null &&
-        'path' in imageFieldValue &&
-        typeof imageFieldValue.path === 'string'
-      ) {
-        return imageFieldValue.path;
-      } else if (typeof imageFieldValue === 'string') {
-        return imageFieldValue;
-      }
-    }
-    return null;
-  }, [item, imageField]);
+  
+  // Estado para confirmación de eliminación
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
+  // Extraer imagen si existe
+  const imageSource = useMemo(() => {
+    if (!item || !imageField || !showImage) return null;
+    
+    const imageValue = item[imageField];
+    if (typeof imageValue === 'object' && imageValue !== null && 'path' in imageValue) {
+      return (imageValue as any).path;
+    }
+    return typeof imageValue === 'string' ? imageValue : null;
+  }, [item, imageField, showImage]);
+
+  // Manejadores
   const handleEdit = () => {
     if (onEdit && item) {
       onEdit(item);
@@ -294,212 +96,32 @@ function GenericDetailModal<TItem extends { id: string }>({
   };
 
   const handleDelete = () => {
-    if (item) {
-      if (deleteConfirmation) {
-        deleteConfirmation.show(item.id);
-      } else if (onDelete) {
-        onDelete(item.id);
-      }
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (onDelete && item) {
+      onDelete(item.id);
+      setShowDeleteConfirm(false);
     }
   };
 
-  const renderContent = () => {
-    if (!item) {
-      return (
+  if (!item) {
+    return (
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={onDismiss}
+        maxWidth={responsive.isTablet ? 480 : 400}
+      >
         <View style={styles.loadingContainer}>
-          <ActivityIndicator animating={true} size="large" />
+          <ActivityIndicator animating size="large" />
         </View>
-      );
-    }
-
-    const title = String(item[titleField] ?? 'Detalle');
-    const description =
-      descriptionField && item.hasOwnProperty(descriptionField)
-        ? String(item[descriptionField] ?? '')
-        : null;
-
-    let statusChip = null;
-    if (statusConfig && item.hasOwnProperty(statusConfig.field)) {
-      const { field, activeValue, activeLabel, inactiveLabel } = statusConfig;
-      const isActive = item[field] === activeValue;
-      statusChip = (
-        <View style={styles.statusChipContainer}>
-          <Chip
-            mode="flat"
-            selectedColor={
-              isActive ? theme.colors.success : theme.colors.onSurfaceVariant
-            }
-            style={[
-              styles.statusChip,
-              {
-                backgroundColor: isActive
-                  ? theme.colors.successContainer
-                  : theme.colors.surfaceVariant,
-              },
-            ]}
-          >
-            {isActive ? activeLabel : inactiveLabel}
-          </Chip>
-        </View>
-      );
-    }
-
-    return (
-      <>
-        <IconButton
-          icon="close"
-          size={24}
-          style={styles.closeIconButton}
-          onPress={onDismiss}
-          mode="contained-tonal"
-        />
-        <Text variant="headlineSmall" style={[styles.modalTitle, titleStyle]}>
-          {title}
-        </Text>
-        <View style={styles.detailContent}>
-          {showImage && (
-            <AutoImage
-              source={imageSource}
-              placeholderIcon="image-outline"
-              style={[styles.detailImage, imageStyle]}
-              contentFit="contain"
-              transition={300}
-            />
-          )}
-          {statusChip}
-          {description && (
-            <Text
-              style={[styles.detailDescription, descriptionStyle]}
-              numberOfLines={4}
-              ellipsizeMode="tail"
-            >
-              {description}
-            </Text>
-          )}
-        </View>
-
-        {fieldsToDisplay.length > 0 && (
-          <View style={styles.fieldsContainer}>
-            {fieldsToDisplay.map(({ field, label, render }, index) => {
-              if (!item || !item.hasOwnProperty(field)) return null;
-              const value = item[field];
-              const isLastItem = index === fieldsToDisplay.length - 1;
-
-              return (
-                <View
-                  key={String(field)}
-                  style={[styles.fieldRow, isLastItem && styles.lastFieldRow]}
-                >
-                  <Text style={[styles.fieldLabel, fieldLabelStyle]}>
-                    {label}
-                  </Text>
-                  {render ? (
-                    <View style={styles.renderContainer}>
-                      {(() => {
-                        const rendered = render(value, item);
-                        // Si el render devuelve un string o número, lo envolvemos en Text
-                        if (
-                          typeof rendered === 'string' ||
-                          typeof rendered === 'number'
-                        ) {
-                          return (
-                            <Text
-                              style={[styles.fieldValue, fieldValueStyle]}
-                              numberOfLines={3}
-                              ellipsizeMode="tail"
-                            >
-                              {rendered}
-                            </Text>
-                          );
-                        }
-                        // Si ya es un elemento React, lo devolvemos tal cual
-                        return rendered;
-                      })()}
-                    </View>
-                  ) : (
-                    <Text
-                      style={[styles.fieldValue, fieldValueStyle]}
-                      numberOfLines={3}
-                      ellipsizeMode="tail"
-                    >
-                      {typeof value === 'boolean'
-                        ? value
-                          ? 'Sí'
-                          : 'No'
-                        : String(value ?? 'N/A')}
-                    </Text>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {children}
-      </>
+      </ResponsiveModal>
     );
-  };
+  }
 
-  const renderFooter = () => {
-    if (!item) return null;
-
-    return (
-      <>
-        {(onEdit || onDelete) && (
-          <View style={[styles.detailActions, actionsContainerStyle]}>
-            {onEdit && (
-              <Button
-                icon="pencil"
-                mode="contained-tonal"
-                onPress={handleEdit}
-                disabled={isDeleting}
-                style={styles.actionButton}
-                buttonColor={theme.colors.secondaryContainer}
-                textColor={theme.colors.onSecondaryContainer}
-                contentStyle={styles.buttonContent}
-                labelStyle={styles.buttonLabel}
-                compact={!responsive.isTablet}
-              >
-                {editButtonLabel}
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                icon="delete"
-                mode="contained-tonal"
-                buttonColor={theme.colors.errorContainer}
-                textColor={theme.colors.error}
-                onPress={handleDelete}
-                loading={isDeleting}
-                disabled={isDeleting}
-                style={styles.actionButton}
-                contentStyle={styles.buttonContent}
-                labelStyle={styles.buttonLabel}
-                compact={!responsive.isTablet}
-              >
-                {deleteButtonLabel}
-              </Button>
-            )}
-          </View>
-        )}
-
-        <Button
-          mode="contained-tonal"
-          onPress={onDismiss}
-          style={styles.closeButton}
-          disabled={isDeleting}
-          buttonColor={theme.colors.surfaceVariant}
-          textColor={theme.colors.onSurfaceVariant}
-          labelStyle={styles.closeButtonLabel}
-          contentStyle={{
-            paddingHorizontal: responsive.spacing(theme.spacing.s),
-          }}
-        >
-          {closeButtonLabel}
-        </Button>
-      </>
-    );
-  };
+  const title = String(item[titleField] ?? '');
+  const description = descriptionField ? String(item[descriptionField] ?? '') : null;
 
   return (
     <>
@@ -507,32 +129,221 @@ function GenericDetailModal<TItem extends { id: string }>({
         visible={visible}
         onDismiss={onDismiss}
         dismissable={!isDeleting}
-        dismissableBackButton={!isDeleting}
-        scrollable={true}
         maxWidth={responsive.isTablet ? 480 : 400}
-        maxHeight={'85%'}
-        footer={renderFooter()}
-        stickyFooter={true}
-        contentContainerStyle={[styles.modalSurface, modalStyle]}
+        maxHeight="85%"
       >
-        {renderContent()}
+        {/* Header con botón cerrar */}
+        <View style={styles.header}>
+          <Text variant="headlineMedium" style={styles.title}>
+            {title}
+          </Text>
+          <IconButton
+            icon="close"
+            size={24}
+            onPress={onDismiss}
+            style={styles.closeIcon}
+          />
+        </View>
+
+        {/* Imagen */}
+        {showImage && imageSource && (
+          <AutoImage
+            source={imageSource}
+            placeholderIcon="image-outline"
+            style={styles.image}
+            contentFit="contain"
+          />
+        )}
+
+        {/* Estado */}
+        {statusConfig && item[statusConfig.field] !== undefined && (
+          <View style={styles.statusContainer}>
+            <Chip
+              mode="flat"
+              style={[
+                styles.statusChip,
+                {
+                  backgroundColor: item[statusConfig.field] === statusConfig.activeValue
+                    ? theme.colors.successContainer
+                    : theme.colors.surfaceVariant,
+                }
+              ]}
+            >
+              {item[statusConfig.field] === statusConfig.activeValue
+                ? statusConfig.activeLabel
+                : statusConfig.inactiveLabel}
+            </Chip>
+          </View>
+        )}
+
+        {/* Descripción */}
+        {description && (
+          <Text style={styles.description} numberOfLines={4}>
+            {description}
+          </Text>
+        )}
+
+        {/* Campos adicionales */}
+        {fieldsToDisplay.length > 0 && (
+          <View style={styles.fieldsContainer}>
+            {fieldsToDisplay.map(({ field, label, render }) => {
+              const value = item[field];
+              return (
+                <View key={String(field)} style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>{label}:</Text>
+                  <Text style={styles.fieldValue} numberOfLines={2}>
+                    {render 
+                      ? render(value, item) 
+                      : typeof value === 'boolean' 
+                        ? (value ? 'Sí' : 'No')
+                        : String(value ?? 'N/A')
+                    }
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Contenido adicional */}
+        {children}
+
+        {/* Acciones */}
+        <View style={styles.actions}>
+          {(onEdit || onDelete) && (
+            <View style={styles.actionButtons}>
+              {onEdit && (
+                <Button
+                  icon="pencil"
+                  mode="contained-tonal"
+                  onPress={handleEdit}
+                  disabled={isDeleting}
+                  style={styles.actionButton}
+                  compact
+                >
+                  {editButtonLabel}
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  icon="delete"
+                  mode="contained-tonal"
+                  onPress={handleDelete}
+                  loading={isDeleting}
+                  disabled={isDeleting}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: theme.colors.errorContainer }
+                  ]}
+                  textColor={theme.colors.error}
+                  compact
+                >
+                  {deleteButtonLabel}
+                </Button>
+              )}
+            </View>
+          )}
+          
+          <Button
+            mode="text"
+            onPress={onDismiss}
+            disabled={isDeleting}
+            style={styles.closeButton}
+          >
+            {closeButtonLabel}
+          </Button>
+        </View>
       </ResponsiveModal>
 
-      {deleteConfirmation && (
-        <ConfirmationModal
-          visible={deleteConfirmation.visible}
-          title={deleteConfirmation.title}
-          message={deleteConfirmation.message}
-          onConfirm={deleteConfirmation.onConfirm}
-          onCancel={deleteConfirmation.onCancel}
-          onDismiss={deleteConfirmation.onCancel}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-          confirmButtonColor={theme.colors.error}
-        />
-      )}
+      <ConfirmationModal
+        visible={showDeleteConfirm}
+        title="Confirmar Eliminación"
+        message="¿Estás seguro de que quieres eliminar este elemento?"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmButtonColor={theme.colors.error}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+      />
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    minHeight: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    flex: 1,
+    fontWeight: '600',
+  },
+  closeIcon: {
+    margin: -8,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  statusContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  statusChip: {
+    paddingHorizontal: 16,
+  },
+  description: {
+    textAlign: 'center',
+    marginBottom: 20,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  fieldsContainer: {
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  fieldLabel: {
+    fontWeight: '500',
+    flex: 1,
+  },
+  fieldValue: {
+    flex: 1,
+    textAlign: 'right',
+    color: 'rgba(0,0,0,0.7)',
+  },
+  actions: {
+    marginTop: 24,
+    gap: 12,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+  },
+  closeButton: {
+    alignSelf: 'center',
+  },
+});
 
 export default GenericDetailModal;

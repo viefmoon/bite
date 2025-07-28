@@ -146,7 +146,7 @@ const useProductFormLogic = ({
   });
 
   // Queries para datos asíncronos
-  const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
+  const { data: modifierGroups, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true });
 
   const { data: preparationScreensResponse } = useGetPreparationScreens(
@@ -156,8 +156,8 @@ const useProductFormLogic = ({
 
   const preparationScreens = preparationScreensResponse?.data || [];
   const allModifierGroups = useMemo(
-    () => modifierGroupsResponse?.data || [],
-    [modifierGroupsResponse?.data],
+    () => modifierGroups || [],
+    [modifierGroups],
   );
 
   // Watchers del formulario
