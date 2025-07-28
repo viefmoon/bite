@@ -49,8 +49,8 @@ export class ModifierGroupsController {
   @HttpCode(HttpStatus.OK)
   findAll(
     @Query() findAllModifierGroupsDto: FindAllModifierGroupsDto,
-  ): Promise<Paginated<ModifierGroup>> {
-    return this.modifierGroupsService.findAll(findAllModifierGroupsDto);
+  ): Promise<ModifierGroup[]> {
+    return this.modifierGroupsService.findAllNoPagination(findAllModifierGroupsDto);
   }
 
   @ApiBearerAuth()

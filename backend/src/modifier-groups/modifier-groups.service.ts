@@ -56,6 +56,14 @@ export class ModifierGroupsService {
     });
   }
 
+  async findAllNoPagination(
+    findAllModifierGroupsDto: FindAllModifierGroupsDto,
+  ): Promise<ModifierGroup[]> {
+    return this.modifierGroupRepository.findMany({
+      filterOptions: findAllModifierGroupsDto,
+    });
+  }
+
   async findOne(id: string): Promise<ModifierGroup> {
     const modifierGroup = await this.modifierGroupRepository.findById(id);
 

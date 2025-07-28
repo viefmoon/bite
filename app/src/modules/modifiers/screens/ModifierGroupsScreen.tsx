@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
-import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -19,17 +18,15 @@ import GenericDetailModal, {
   DisplayFieldConfig,
 } from '@/app/components/crud/GenericDetailModal';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
-import { PaginatedResponse } from '@/app/types/api.types';
 import { useListState } from '@/app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
+import { useModifierGroupsQuery } from '../hooks/useModifierGroupsQuery';
 
 type NavigationProps = {
   navigate: (screen: string, params?: any) => void;
 };
 
 type StatusFilter = 'all' | 'active' | 'inactive';
-
-const QUERY_KEY = ['modifierGroups'];
 
 const ModifierGroupsScreen = () => {
   const theme = useAppTheme();
@@ -52,7 +49,7 @@ const ModifierGroupsScreen = () => {
   };
 
   const queryParams = useMemo(() => {
-    const params: Parameters<typeof modifierGroupService.findAll>[0] = {};
+    const params: { isActive?: boolean; search?: string } = {};
     if (statusFilter !== 'all') {
       params.isActive = statusFilter === 'active';
     }
@@ -63,19 +60,14 @@ const ModifierGroupsScreen = () => {
   }, [statusFilter, debouncedSearchQuery]);
 
   const {
-    data: paginatedData,
+    data: modifierGroups,
     isLoading,
     isError,
     refetch,
     isRefetching,
-  } = useQuery<PaginatedResponse<ModifierGroup>, Error>({
-    queryKey: [QUERY_KEY[0], queryParams],
-    queryFn: () => modifierGroupService.findAll(queryParams),
-  });
+  } = useModifierGroupsQuery(queryParams);
 
   useRefreshModuleOnFocus('modifierGroups');
-
-  const modifierGroups = paginatedData?.data || [];
 
   const {
     isFormModalVisible,
@@ -90,7 +82,7 @@ const ModifierGroupsScreen = () => {
     deleteConfirmation,
   } = useCrudScreenLogic<ModifierGroup>({
     entityName: 'Grupo de Modificadores',
-    queryKey: [QUERY_KEY[0], queryParams],
+    queryKey: ['modifierGroups', queryParams],
     deleteMutationFn: modifierGroupService.remove,
   });
 
@@ -177,7 +169,7 @@ const ModifierGroupsScreen = () => {
   const { ListEmptyComponent } = useListState({
     isLoading: isLoading && !isRefetching,
     isError,
-    data: modifierGroups,
+    data: modifierGroups || [],
     emptyConfig: {
       title: searchQuery
         ? 'No se encontraron grupos'
@@ -201,7 +193,7 @@ const ModifierGroupsScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <GenericList<ModifierGroup>
-        items={modifierGroups}
+        items={modifierGroups || []}
         renderConfig={listRenderConfig}
         onItemPress={handleOpenDetailModal}
         onRefresh={handleRefresh}
@@ -267,28 +259,6 @@ const createStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    centered: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    emptyText: {
-      textAlign: 'center',
-      fontSize: 18,
-      color: theme.colors.onSurfaceVariant,
-      marginBottom: 8,
-    },
-    errorText: {
-      color: theme.colors.error,
-      marginBottom: 10,
-      textAlign: 'center',
-    },
-    detailActionButton: {
-      marginTop: theme.spacing.m,
-      alignSelf: 'stretch',
-      borderRadius: theme.roundness,
     },
     descriptionText: {
       color: theme.colors.onSurfaceVariant,

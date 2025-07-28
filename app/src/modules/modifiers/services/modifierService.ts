@@ -73,7 +73,7 @@ export const modifierService = {
   ): Promise<Modifier[]> {
     const queryParams = {
       ...(params.isActive !== undefined && { isActive: params.isActive }),
-      ...(params.search && { search: params.search }),
+      ...(params.search && { name: params.search }),
     };
     const response = await apiClient.get<unknown>(
       API_PATHS.MODIFIERS_BY_GROUP.replace(':modifierGroupId', modifierGroupId),

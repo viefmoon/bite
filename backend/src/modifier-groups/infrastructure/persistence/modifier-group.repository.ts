@@ -18,6 +18,12 @@ export abstract class ModifierGroupRepository {
     paginationOptions: IPaginationOptions;
   }): Promise<Paginated<ModifierGroup>>;
 
+  abstract findMany({
+    filterOptions,
+  }: {
+    filterOptions?: FindAllModifierGroupsDto | null;
+  }): Promise<ModifierGroup[]>;
+
   abstract findById(
     id: ModifierGroup['id'],
   ): Promise<NullableType<ModifierGroup>>;

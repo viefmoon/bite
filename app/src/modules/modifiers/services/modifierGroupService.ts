@@ -7,20 +7,10 @@ import {
   modifierGroupApiSchema,
 } from '../schema/modifier-group-form.schema';
 import { z } from 'zod';
-import { PaginatedResponse } from '@/app/types/api.types';
 
-const paginatedModifierGroupsSchema = z.object({
-  items: z.array(modifierGroupApiSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasNextPage: z.boolean(),
-  hasPrevPage: z.boolean(),
-});
+const modifierGroupsArraySchema = z.array(modifierGroupApiSchema);
 
 interface FindAllParams {
-  page?: number;
-  limit?: number;
   isActive?: boolean;
   search?: string;
 }
@@ -28,30 +18,18 @@ interface FindAllParams {
 export const modifierGroupService = {
   async findAll(
     params: FindAllParams = {},
-  ): Promise<PaginatedResponse<ModifierGroup>> {
+  ): Promise<ModifierGroup[]> {
     const queryParams = {
-      page: params.page ?? 1,
-      limit: params.limit ?? 10,
       ...(params.isActive !== undefined && { isActive: params.isActive }),
-      ...(params.search && { search: params.search }),
+      ...(params.search && { name: params.search }),
     };
     const response = await apiClient.get<unknown>(API_PATHS.MODIFIER_GROUPS, {
       params: queryParams,
     });
 
-    const paginatedResult = paginatedModifierGroupsSchema.safeParse(
-      response.data,
-    );
-    if (paginatedResult.success) {
-      return {
-        data: paginatedResult.data.items,
-        total: paginatedResult.data.total,
-        page: paginatedResult.data.page,
-        limit: paginatedResult.data.limit,
-        totalPages: Math.ceil(
-          paginatedResult.data.total / paginatedResult.data.limit,
-        ),
-      };
+    const result = modifierGroupsArraySchema.safeParse(response.data);
+    if (result.success) {
+      return result.data;
     }
 
     throw new Error('Received invalid data format for modifier groups.');

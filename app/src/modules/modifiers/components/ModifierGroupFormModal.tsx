@@ -119,10 +119,6 @@ const getStyles = (theme: AppTheme) =>
       marginTop: -theme.spacing.s,
       marginBottom: theme.spacing.s,
     },
-    divider: {
-      marginVertical: theme.spacing.m,
-      backgroundColor: theme.colors.outlineVariant,
-    },
     disabledRow: {
       opacity: 0.5,
     },

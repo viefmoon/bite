@@ -86,44 +86,28 @@ export type UpdateModifierGroupInput = z.infer<
   typeof updateModifierGroupSchema
 >;
 
-// Esquema para respuestas de API
+// Esquema para respuestas de API - reutiliza el esquema de dominio
 export const modifierGroupApiSchema = modifierGroupSchema.extend({
-  id: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
+  // Sobrescribir productModifiers para manejar el transform del precio desde string
   productModifiers: z
     .array(
-      z.lazy(() =>
-        z.object({
-          id: z.string(),
-          modifierGroupId: z.string(),
-          name: z.string(),
-          price: z.number(),
-          isActive: z.boolean(),
-          sortOrder: z.number(),
-        }),
-      ),
-    )
-    .optional(),
-  products: z
-    .array(
-      z.lazy(() =>
-        z.object({
-          id: z.string(),
-          name: z.string(),
-          price: z.number().nullable().optional(),
-          hasVariants: z.boolean(),
-          isActive: z.boolean(),
-          isPizza: z.boolean(),
-          subcategoryId: z.string(),
-          sortOrder: z.number(),
-          estimatedPrepTime: z.number(),
-        }),
-      ),
+      z.object({
+        id: z.string(),
+        modifierGroupId: z.string(),
+        name: z.string(),
+        description: z.string().nullable().optional(),
+        price: z.string().transform((val) => parseFloat(val)), // Transform desde API string
+        sortOrder: z.number(),
+        isDefault: z.boolean(),
+        isActive: z.boolean(),
+        createdAt: z.string().datetime(),
+        updatedAt: z.string().datetime(),
+        deletedAt: z.string().datetime().nullable().optional(),
+      }),
     )
     .optional(),
 });
 
-// Exportar el esquema de formulario con un nombre específico
-export { modifierGroupFormValidationSchema as modifierGroupFormSchema };

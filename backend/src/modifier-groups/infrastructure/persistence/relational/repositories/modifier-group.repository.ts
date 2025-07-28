@@ -106,6 +106,57 @@ export class ModifierGroupsRelationalRepository
     return new Paginated(domainResults, count, page, limit);
   }
 
+  async findMany({
+    filterOptions,
+  }: {
+    filterOptions?: FindAllModifierGroupsDto | null;
+  }): Promise<ModifierGroup[]> {
+    const queryBuilder =
+      this.modifierGroupRepository.createQueryBuilder('modifierGroup');
+
+    if (filterOptions?.name) {
+      queryBuilder.andWhere('modifierGroup.name ILIKE :name', {
+        name: `%${filterOptions.name}%`,
+      });
+    }
+
+    if (filterOptions?.isRequired !== undefined) {
+      queryBuilder.andWhere('modifierGroup.isRequired = :isRequired', {
+        isRequired: filterOptions.isRequired,
+      });
+    }
+
+    if (filterOptions?.allowMultipleSelections !== undefined) {
+      queryBuilder.andWhere(
+        'modifierGroup.allowMultipleSelections = :allowMultipleSelections',
+        {
+          allowMultipleSelections: filterOptions.allowMultipleSelections,
+        },
+      );
+    }
+
+    if (filterOptions?.isActive !== undefined) {
+      queryBuilder.andWhere('modifierGroup.isActive = :isActive', {
+        isActive: filterOptions.isActive,
+      });
+    }
+
+    // Incluir relaciones con productModifiers
+    queryBuilder.leftJoinAndSelect(
+      'modifierGroup.productModifiers',
+      'productModifiers',
+    );
+    queryBuilder.orderBy('modifierGroup.sortOrder', 'ASC');
+    queryBuilder.addOrderBy('modifierGroup.name', 'ASC');
+    queryBuilder.addOrderBy('productModifiers.sortOrder', 'ASC');
+
+    const entities = await queryBuilder.getMany();
+
+    return entities
+      .map((entity) => this.modifierGroupMapper.toDomain(entity))
+      .filter((item): item is ModifierGroup => item !== null);
+  }
+
   async findById(
     id: ModifierGroup['id'],
   ): Promise<NullableType<ModifierGroup>> {
