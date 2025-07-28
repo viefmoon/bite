@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { Text, Button, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
@@ -52,43 +52,32 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
     }
   };
 
-  const footerActions = (
-    <View style={styles.footer}>
-      <Button
-        mode="outlined"
-        onPress={onDismiss}
-        style={styles.cancelButton}
-        labelStyle={styles.cancelButtonLabel}
-        contentStyle={styles.footerButtonContent}
-      >
-        Cancelar
-      </Button>
-      <Button
-        mode="contained"
-        onPress={handleConfirm}
-        disabled={
-          !receivedAmount ||
-          isNaN(parseFloat(receivedAmount)) ||
-          parseFloat(receivedAmount) < amountToPay
-        }
-        style={styles.confirmButton}
-        contentStyle={styles.footerButtonContent}
-        labelStyle={styles.confirmButtonLabel}
-      >
-        Confirmar Pago
-      </Button>
-    </View>
-  );
+  const isInvalid =
+    !receivedAmount ||
+    isNaN(parseFloat(receivedAmount)) ||
+    parseFloat(receivedAmount) < amountToPay;
 
   return (
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
       title="Calcular Cambio"
-      widthTablet={480}
-      maxWidthMobile="95%"
-      scrollable={false}
-      footer={footerActions}
+      preset="dialog"
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          colorPreset: 'secondary',
+        },
+        {
+          label: 'Confirmar Pago',
+          mode: 'contained',
+          onPress: handleConfirm,
+          disabled: isInvalid,
+          colorPreset: 'success',
+        },
+      ]}
     >
       <View style={styles.content}>
         {/* Inputs en línea */}
@@ -276,33 +265,6 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: '700',
       letterSpacing: -0.5,
       fontSize: 32,
-    },
-    footer: {
-      flexDirection: 'row',
-      gap: 16,
-      // ResponsiveModal maneja padding, border y background
-    },
-    cancelButton: {
-      flex: 1,
-      borderColor: theme.colors.error,
-      backgroundColor: theme.colors.errorContainer,
-    },
-    cancelButtonLabel: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme.colors.onErrorContainer,
-    },
-    confirmButton: {
-      flex: 2,
-      backgroundColor: '#10B981',
-    },
-    confirmButtonLabel: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: '#FFFFFF',
-    },
-    footerButtonContent: {
-      height: 48,
     },
   });
 

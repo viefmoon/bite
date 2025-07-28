@@ -48,7 +48,11 @@ export const modifierFormValidationSchema = z.object({
 
 // Esquema para respuestas de API
 export const modifierApiSchema = modifierSchema.extend({
-  price: z.string().transform((val) => parseFloat(val)).nullable().optional(),
+  price: z
+    .string()
+    .transform((val) => parseFloat(val))
+    .nullable()
+    .optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
   deletedAt: z.string().datetime().nullable().optional(),

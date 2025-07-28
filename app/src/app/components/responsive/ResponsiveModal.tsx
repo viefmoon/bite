@@ -1,5 +1,5 @@
-import { ReactNode, useMemo } from 'react';
-import { Modal, Portal, Text, IconButton } from 'react-native-paper';
+import React, { ReactNode, useMemo } from 'react';
+import Modal from 'react-native-modal';
 import {
   ScrollView,
   ViewStyle,
@@ -9,237 +9,395 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
+import {
+  Text,
+  IconButton,
+  ActivityIndicator,
+  Divider,
+} from 'react-native-paper';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useAppTheme } from '@/app/styles/theme';
+import { ActionButtons, ActionButton } from '../common/ActionButtons';
 
 interface ResponsiveModalProps {
   visible: boolean;
   onDismiss: () => void;
   children: ReactNode;
 
-  // Dimensiones básicas
-  maxWidth?: number | string;
-  maxHeight?: number | string;
-  
+  // Preset para configuraciones comunes
+  preset?: 'dialog' | 'form' | 'fullscreen' | 'detail';
+
+  // Dimensiones básicas (sobrescriben el preset)
+  maxWidth?: number;
+  maxHeightPercent?: number;
+
   // Comportamiento
   dismissable?: boolean;
-  scrollable?: boolean;
-  fullScreen?: boolean;
-  position?: 'center' | 'bottom' | 'top';
-  
-  // Diseño
-  showHeader?: boolean;
-  title?: string;
+  isLoading?: boolean;
+
+  // Diseño - Header
+  title?: string; // Si tiene valor, el header se muestra automáticamente
+  headerLeft?: ReactNode;
   headerRight?: ReactNode;
+  showCloseButton?: boolean;
+
+  // Diseño - Footer
+  footer?: ReactNode; // Footer personalizado (tiene prioridad sobre actions)
+  actions?: ActionButton[]; // Botones de acción estandarizados
 
   // Estilos
   contentContainerStyle?: StyleProp<ViewStyle>;
+
+  // Deprecated props (para compatibilidad temporal)
+  /** @deprecated Use preset instead */
+  fullScreen?: boolean;
+  /** @deprecated Title automatically shows header */
+  showHeader?: boolean;
 }
+
+/**
+ * ResponsiveModal - Modal responsivo y reutilizable
+ *
+ * @example
+ * // Con footer personalizado
+ * <ResponsiveModal
+ *   visible={visible}
+ *   onDismiss={onDismiss}
+ *   title="Mi Modal"
+ *   showHeader={true}
+ *   footer={<CustomFooter />}
+ * >
+ *   <Content />
+ * </ResponsiveModal>
+ *
+ * @example
+ * // Con acciones estandarizadas
+ * <ResponsiveModal
+ *   visible={visible}
+ *   onDismiss={onDismiss}
+ *   title="Confirmar Acción"
+ *   showHeader={true}
+ *   actions={[
+ *     { label: 'Cancelar', mode: 'text', onPress: onDismiss },
+ *     { label: 'Guardar', mode: 'contained', onPress: handleSave, loading: isSaving }
+ *   ]}
+ * >
+ *   <FormContent />
+ * </ResponsiveModal>
+ */
 
 export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   visible,
   onDismiss,
   children,
-  maxWidth,
-  maxHeight = '85%',
+  preset = 'form',
+  maxWidth: maxWidthOverride,
+  maxHeightPercent: maxHeightOverride,
   dismissable = true,
-  scrollable = true,
-  fullScreen = false,
-  position = 'center',
-  showHeader = false,
+  isLoading = false,
   title,
+  headerLeft,
   headerRight,
+  showCloseButton = true,
+  footer,
+  actions,
   contentContainerStyle,
+  // Deprecated props
+  fullScreen = false,
+  showHeader,
 }) => {
   const responsive = useResponsive();
   const theme = useAppTheme();
 
-  // Calcular dimensiones del modal
-  const modalDimensions = useMemo(() => {
-    const dims: ViewStyle = {};
+  // Determinar el preset real considerando props deprecated
+  const actualPreset = fullScreen ? 'fullscreen' : preset;
 
-    if (fullScreen) {
-      dims.width = '100%';
-      dims.height = '100%';
-      dims.maxWidth = '100%';
-      dims.maxHeight = '100%';
-    } else {
-      // Ancho responsive
-      dims.width = responsive.isTablet ? '80%' : '92%';
-      dims.maxWidth = (maxWidth || (responsive.isTablet ? 600 : '100%')) as any;
-      
-      dims.minHeight = 300;
-      dims.maxHeight = maxHeight as any;
+  // Configuración del preset
+  const presetConfig = useMemo(() => {
+    const { isSmallMobile, isTablet } = responsive;
+
+    switch (actualPreset) {
+      case 'dialog':
+        return {
+          maxWidth: isTablet ? 400 : 360,
+          maxHeightPercent: 60,
+          width: isSmallMobile ? '94%' : '90%',
+          animationIn: 'zoomIn' as const,
+          animationOut: 'zoomOut' as const,
+        };
+      case 'fullscreen':
+        return {
+          width: '100%',
+          height: '100%',
+          maxWidth: '100%',
+          maxHeightPercent: 100,
+          animationIn: 'slideInUp' as const,
+          animationOut: 'slideOutDown' as const,
+        };
+      case 'detail':
+        return {
+          maxWidth: isTablet ? 600 : 480,
+          maxHeightPercent: 90,
+          width: isSmallMobile ? '94%' : isTablet ? '85%' : '92%',
+          animationIn: 'fadeIn' as const,
+          animationOut: 'fadeOut' as const,
+        };
+      case 'form':
+      default:
+        return {
+          maxWidth: isTablet ? 520 : 480,
+          maxHeightPercent: 85,
+          width: isSmallMobile ? '94%' : isTablet ? '85%' : '92%',
+          animationIn: 'fadeIn' as const,
+          animationOut: 'fadeOut' as const,
+        };
+    }
+  }, [actualPreset, responsive]);
+
+  // Calcular dimensiones finales del modal
+  const modalDimensions = useMemo(() => {
+    const dims: ViewStyle = {
+      width: presetConfig.width as any,
+      height: presetConfig.height as any,
+      maxWidth: (maxWidthOverride ?? presetConfig.maxWidth) as any,
+      maxHeight:
+        `${maxHeightOverride ?? presetConfig.maxHeightPercent}%` as any,
+      minHeight: responsive.isSmallMobile ? 150 : 200,
+    };
+
+    if (actualPreset === 'fullscreen') {
+      dims.minHeight = '100%' as any;
     }
 
     return dims;
-  }, [fullScreen, responsive.isTablet, maxWidth, maxHeight]);
+  }, [
+    presetConfig,
+    maxWidthOverride,
+    maxHeightOverride,
+    responsive,
+    actualPreset,
+  ]);
 
-  // Estilos de posición
-  const positionStyles = useMemo(() => {
-    const styles: ViewStyle = {};
-    switch (position) {
-      case 'bottom':
-        styles.justifyContent = 'flex-end';
-        break;
-      case 'top':
-        styles.justifyContent = 'flex-start';
-        break;
-      default:
-        styles.justifyContent = 'center';
-        styles.alignItems = 'center';
+  // Padding del contenido responsivo
+  const contentPadding = useMemo(() => {
+    if (responsive.isSmallMobile) {
+      return responsive.spacing(theme.spacing.s);
+    } else if (responsive.isTablet) {
+      return responsive.spacing(theme.spacing.l);
+    } else {
+      return responsive.spacing(theme.spacing.xl);
     }
-    return styles;
-  }, [position]);
-
-  // Padding del contenido
-  const contentPadding = responsive.spacing(
-    responsive.isTablet ? theme.spacing.l : theme.spacing.m
-  );
+  }, [responsive, theme.spacing]);
 
   // Estilos del contenedor principal
-  const containerStyles: ViewStyle = {
-    backgroundColor: theme.colors.surface,
-    borderRadius: fullScreen ? 0 : theme.roundness * 3,
-    borderWidth: 1,
-    borderColor: theme.colors.outlineVariant,
-    ...modalDimensions,
-    overflow: 'hidden',
-    // Sombra para separación visual
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  };
+  const containerStyles: ViewStyle = useMemo(
+    () => ({
+      backgroundColor: theme.colors.background,
+      borderRadius: actualPreset === 'fullscreen' ? 0 : 16,
+      borderWidth: actualPreset === 'fullscreen' ? 0 : 2,
+      borderColor: theme.colors.primary + '40',
+      ...modalDimensions,
+      overflow: 'hidden',
+      // Sombra adaptada al preset
+      elevation: actualPreset === 'dialog' ? 4 : 8,
+      shadowColor: theme.colors.primary,
+      shadowOffset: {
+        width: 0,
+        height: actualPreset === 'dialog' ? 2 : 4,
+      },
+      shadowOpacity: actualPreset === 'dialog' ? 0.2 : 0.3,
+      shadowRadius: actualPreset === 'dialog' ? 4 : 8,
+    }),
+    [theme, actualPreset, modalDimensions],
+  );
 
-  // Ajustes para posiciones bottom/top
-  if (!fullScreen) {
-    if (position === 'bottom') {
-      containerStyles.borderBottomLeftRadius = 0;
-      containerStyles.borderBottomRightRadius = 0;
-      containerStyles.width = '100%';
-      containerStyles.maxWidth = '100%';
-    } else if (position === 'top') {
-      containerStyles.borderTopLeftRadius = 0;
-      containerStyles.borderTopRightRadius = 0;
-      containerStyles.width = '100%';
-      containerStyles.maxWidth = '100%';
+  // Construir el footer del modal basado en props
+  const modalFooter = useMemo(() => {
+    if (footer) {
+      return footer; // Priorizar el footer personalizado si se proporciona
     }
-  }
+    if (actions && actions.length > 0) {
+      return (
+        <ActionButtons buttons={actions} compact={responsive.isSmallMobile} />
+      );
+    }
+    return null;
+  }, [footer, actions, responsive.isSmallMobile]);
 
   // Contenido del modal
   const modalContent = (
-    <View style={styles.modalInner}>
-      {/* Header opcional */}
-      {showHeader && (title || headerRight) && (
-        <View style={[styles.headerContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <View style={[styles.header, { paddingHorizontal: contentPadding }]}>
+    <View
+      style={[
+        styles.modalInner,
+        {
+          minHeight:
+            actualPreset === 'fullscreen'
+              ? '100%'
+              : responsive.isSmallMobile
+                ? 150
+                : 200,
+        },
+      ]}
+    >
+      {/* Header - se muestra automáticamente si hay título */}
+      {(title || (showHeader && (headerLeft || headerRight))) && (
+        <>
+          <View
+            style={[
+              styles.header,
+              {
+                paddingHorizontal: responsive.spacing(theme.spacing.l),
+                paddingVertical: responsive.spacing(theme.spacing.m),
+              },
+            ]}
+          >
+            {headerLeft && <View style={styles.headerLeft}>{headerLeft}</View>}
             {title && (
-              <Text variant="titleLarge" style={styles.headerTitle} numberOfLines={1}>
+              <Text
+                style={[styles.headerTitle, { color: theme.colors.onSurface }]}
+                numberOfLines={1}
+              >
                 {title}
               </Text>
             )}
-            {headerRight || (
-              <IconButton
-                icon="close"
-                size={22}
-                onPress={onDismiss}
-                style={styles.closeIcon}
-              />
+            {headerRight ? (
+              <View style={styles.headerRight}>{headerRight}</View>
+            ) : (
+              showCloseButton && (
+                <IconButton
+                  icon="close"
+                  size={24}
+                  onPress={onDismiss}
+                  style={styles.closeIcon}
+                />
+              )
             )}
           </View>
-        </View>
+          <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
+        </>
       )}
 
-      {/* Contenido principal */}
-      {scrollable ? (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { padding: contentPadding }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.content, { padding: contentPadding }]}>
-          {children}
-        </View>
+      {/* Contenido principal con scroll */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { padding: contentPadding },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {children}
+      </ScrollView>
+
+      {/* Footer fijo en la parte inferior */}
+      {modalFooter && (
+        <>
+          <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
+          <View
+            style={[
+              styles.footerContainer,
+              {
+                paddingHorizontal: responsive.spacing(theme.spacing.m),
+                paddingVertical: responsive.spacing(theme.spacing.s),
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            {modalFooter}
+          </View>
+        </>
       )}
     </View>
   );
 
   const ModalWrapper = Platform.OS === 'ios' ? KeyboardAvoidingView : View;
-  const keyboardAvoidingProps = Platform.OS === 'ios' 
-    ? { behavior: 'padding' as const, keyboardVerticalOffset: fullScreen ? 0 : 100 }
-    : {};
+  const keyboardAvoidingProps =
+    Platform.OS === 'ios'
+      ? {
+          behavior: 'padding' as const,
+          keyboardVerticalOffset: actualPreset === 'fullscreen' ? 0 : 100,
+        }
+      : {};
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        dismissable={dismissable}
-        dismissableBackButton={dismissable}
-        contentContainerStyle={positionStyles}
-        style={fullScreen ? styles.fullScreenModal : undefined}
+    <Modal
+      isVisible={visible}
+      onBackdropPress={dismissable && !isLoading ? onDismiss : undefined}
+      onBackButtonPress={dismissable && !isLoading ? onDismiss : undefined}
+      animationIn={presetConfig.animationIn}
+      animationOut={presetConfig.animationOut}
+      backdropOpacity={0.6}
+      useNativeDriver={true}
+      useNativeDriverForBackdrop={true}
+      hideModalContentWhileAnimating={true}
+      style={styles.modal}
+    >
+      <ModalWrapper
+        style={[containerStyles, contentContainerStyle]}
+        {...keyboardAvoidingProps}
       >
-        <ModalWrapper
-          style={[containerStyles, contentContainerStyle]}
-          {...keyboardAvoidingProps}
-        >
-          {modalContent}
-        </ModalWrapper>
-      </Modal>
-    </Portal>
+        {modalContent}
+        {isLoading && (
+          <View
+            style={[
+              styles.loadingOverlay,
+              { backgroundColor: `${theme.colors.background}E6` },
+            ]}
+          >
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        )}
+      </ModalWrapper>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  modal: {
+    margin: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalInner: {
-    maxHeight: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
   },
   scrollView: {
-    flexGrow: 0,
-    flexShrink: 1,
+    flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
-  },
-  content: {
-    paddingBottom: 10,
-  },
-  fullScreenModal: {
-    margin: 0,
-  },
-  headerContainer: {
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    minHeight: 48,
+    justifyContent: 'space-between',
   },
   headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     flex: 1,
-    fontWeight: '600',
   },
   closeIcon: {
-    margin: -6,
+    margin: -8,
+  },
+  headerLeft: {
+    marginRight: 12,
+  },
+  headerRight: {
+    marginLeft: 12,
+  },
+  footerContainer: {
+    backgroundColor: 'transparent',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
   },
 });
-

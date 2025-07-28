@@ -27,7 +27,7 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
   visible: boolean;
   onDismiss: () => void;
   item: TItem | null;
-  
+
   // Campos principales
   titleField: keyof TItem;
   imageField?: keyof TItem;
@@ -35,17 +35,17 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
   statusConfig?: StatusConfig<TItem>;
   fieldsToDisplay?: DisplayFieldConfig<TItem>[];
   showImage?: boolean;
-  
+
   // Acciones
   onEdit?: (item: TItem) => void;
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
-  
+
   // Textos personalizables
   editButtonLabel?: string;
   deleteButtonLabel?: string;
   closeButtonLabel?: string;
-  
+
   // Contenido adicional
   children?: React.ReactNode;
 }
@@ -64,21 +64,24 @@ function GenericDetailModal<TItem extends { id: string }>({
   isDeleting = false,
   editButtonLabel = 'Editar',
   deleteButtonLabel = 'Eliminar',
-  closeButtonLabel = 'Cerrar',
   showImage = false,
   children,
 }: GenericDetailModalProps<TItem>) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  
+
   // Estado para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   const imageSource = useMemo(() => {
     if (!item || !imageField || !showImage) return null;
-    
+
     const imageValue = item[imageField];
-    if (typeof imageValue === 'object' && imageValue !== null && 'path' in imageValue) {
+    if (
+      typeof imageValue === 'object' &&
+      imageValue !== null &&
+      'path' in imageValue
+    ) {
       return (imageValue as any).path;
     }
     return typeof imageValue === 'string' ? imageValue : null;
@@ -116,7 +119,9 @@ function GenericDetailModal<TItem extends { id: string }>({
   }
 
   const title = String(item[titleField] ?? '');
-  const description = descriptionField ? String(item[descriptionField] ?? '') : null;
+  const description = descriptionField
+    ? String(item[descriptionField] ?? '')
+    : null;
 
   return (
     <>
@@ -124,46 +129,51 @@ function GenericDetailModal<TItem extends { id: string }>({
         visible={visible}
         onDismiss={onDismiss}
         dismissable={!isDeleting}
-        maxWidth={responsive.isTablet ? 480 : 400}
-        maxHeight="85%"
-        scrollable={true}
-        showHeader={true}
+        preset="detail"
         title={title}
+        footer={
+          onEdit || onDelete ? (
+            <ActionButtons
+              buttons={[
+                ...(onEdit
+                  ? [
+                      {
+                        icon: 'pencil',
+                        label: editButtonLabel,
+                        onPress: handleEdit,
+                        disabled: isDeleting,
+                        colorPreset: 'primary' as const,
+                      },
+                    ]
+                  : []),
+                ...(onDelete
+                  ? [
+                      {
+                        icon: 'delete',
+                        label: deleteButtonLabel,
+                        mode: 'outlined' as const,
+                        onPress: handleDelete,
+                        disabled: isDeleting,
+                        colorPreset: 'error' as const,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          ) : null
+        }
       >
-          {showImage && <ImageSection source={imageSource} />}
-          
-          {statusConfig && item[statusConfig.field] !== undefined && (
-            <StatusSection item={item} config={statusConfig} />
-          )}
-          
-          {description && <DescriptionSection description={description} />}
-          
-          <FieldsSection item={item} fields={fieldsToDisplay} />
+        {showImage && <ImageSection source={imageSource} />}
 
-          {children}
+        {statusConfig && item[statusConfig.field] !== undefined && (
+          <StatusSection item={item} config={statusConfig} />
+        )}
 
-          <View style={styles.actions}>
-            {(onEdit || onDelete) && (
-              <ActionButtons
-                buttons={[
-                  ...(onEdit ? [{
-                    icon: 'pencil',
-                    label: editButtonLabel,
-                    onPress: handleEdit,
-                    disabled: isDeleting,
-                  }] : []),
-                  ...(onDelete ? [{
-                    icon: 'delete',
-                    label: deleteButtonLabel,
-                    mode: 'outlined' as const,
-                    onPress: handleDelete,
-                    disabled: isDeleting,
-                    textColor: theme.colors.error,
-                  }] : []),
-                ]}
-              />
-            )}
-          </View>
+        {description && <DescriptionSection description={description} />}
+
+        <FieldsSection item={item} fields={fieldsToDisplay} />
+
+        {children}
       </ResponsiveModal>
 
       <ConfirmationModal
@@ -186,9 +196,6 @@ const styles = StyleSheet.create({
     minHeight: 200,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  actions: {
-    marginTop: 24,
   },
 });
 

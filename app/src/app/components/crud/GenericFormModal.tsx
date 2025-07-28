@@ -1,20 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
-import {
-  Text,
-  TextInput,
-  Button,
-  Switch,
-  HelperText,
-  ActivityIndicator,
-} from 'react-native-paper';
+import { View, StyleSheet, Alert, StyleProp, ViewStyle } from 'react-native';
+import { Text, TextInput, Switch, HelperText } from 'react-native-paper';
 import {
   useForm,
   Controller,
@@ -90,7 +76,6 @@ interface GenericFormModalProps<
   modalTitle: (isEditing: boolean) => string;
   submitButtonLabel?: (isEditing: boolean) => string;
   cancelButtonLabel?: string;
-  modalStyle?: StyleProp<ViewStyle>;
   formContainerStyle?: StyleProp<ViewStyle>;
   onFileSelected?: (file: FileObject | null) => void;
 }
@@ -197,45 +182,8 @@ const getStyles = (
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
-    modalSurface: {
-      padding: 0,
-      margin: responsive.spacing(20),
-      marginHorizontal: responsive.isTablet
-        ? responsive.spacing(40)
-        : responsive.spacing(20),
-      borderRadius: theme.roundness * 2,
-      elevation: 4,
-      backgroundColor: theme.colors.background,
-      maxHeight: responsive.isTablet ? '92%' : '90%',
-      maxWidth: responsive.isTablet ? 600 : 500,
-      alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '90%',
-      overflow: 'hidden',
-    },
-    modalHeader: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.isTablet
-        ? responsive.spacing(theme.spacing.s)
-        : responsive.spacing(theme.spacing.m),
-      paddingHorizontal: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-    },
     formContainer: {
-      maxHeight: '100%',
-    },
-    scrollViewContent: {
-      padding: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet
-        ? responsive.spacing(theme.spacing.l)
-        : responsive.spacing(theme.spacing.xl),
-    },
-    modalTitle: {
-      color: theme.colors.onPrimary,
-      fontWeight: '700',
-      textAlign: 'center',
+      flex: 1,
     },
     input: {
       marginBottom: responsive.isTablet
@@ -261,42 +209,6 @@ const getStyles = (
       alignItems: 'center',
       marginBottom: responsive.spacing(theme.spacing.l),
     },
-    modalActions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      paddingTop: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet
-        ? responsive.spacing(theme.spacing.l)
-        : responsive.spacing(theme.spacing.xl),
-      paddingHorizontal: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      backgroundColor: theme.colors.surface,
-      gap: responsive.isTablet
-        ? responsive.spacing(theme.spacing.s)
-        : responsive.spacing(theme.spacing.m),
-      minHeight: responsive.isTablet ? 70 : 80,
-    },
-    formButton: {
-      borderRadius: theme.roundness,
-      paddingHorizontal: responsive.spacing(theme.spacing.m),
-      flex: 1,
-      maxWidth: 200,
-      minWidth: responsive.isTablet ? 120 : 140,
-    },
-    cancelButton: {},
-    loadingOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: theme.roundness * 2,
-      zIndex: 10,
-    },
     helperText: {
       marginTop: -responsive.spacing(theme.spacing.s),
       marginBottom: responsive.spacing(theme.spacing.s),
@@ -319,7 +231,6 @@ const GenericFormModal = <
   modalTitle,
   submitButtonLabel = (isEditing: boolean) => (isEditing ? 'Guardar' : 'Crear'),
   cancelButtonLabel = 'Cancelar',
-  modalStyle,
   formContainerStyle,
   onFileSelected,
 }: GenericFormModalProps<TFormData, TItem>) => {
@@ -598,88 +509,63 @@ const GenericFormModal = <
       visible={visible}
       onDismiss={onDismiss}
       title={modalTitle(isEditing)}
+      preset="form"
       dismissable={!isActuallySubmitting}
-      scrollable={false}
-      style={modalStyle}
-      contentContainerStyle={styles.modalSurface}
-      footer={
-        <View style={styles.modalActions}>
-          <Button
-            mode="outlined"
-            onPress={onDismiss}
-            style={[styles.formButton, styles.cancelButton]}
-            disabled={isActuallySubmitting}
-          >
-            {cancelButtonLabel}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={() => {
-              handleSubmit(processSubmit)();
-            }}
-            loading={isActuallySubmitting}
-            disabled={isActuallySubmitting}
-            style={styles.formButton}
-          >
-            {submitButtonLabel(isEditing)}
-          </Button>
-        </View>
-      }
+      isLoading={isActuallySubmitting}
+      actions={[
+        {
+          label: cancelButtonLabel,
+          mode: 'outlined',
+          onPress: onDismiss,
+          disabled: isActuallySubmitting,
+          colorPreset: 'secondary',
+        },
+        {
+          label: submitButtonLabel(isEditing),
+          mode: 'contained',
+          onPress: () => handleSubmit(processSubmit)(),
+          loading: isActuallySubmitting,
+          disabled: isActuallySubmitting,
+          colorPreset: 'primary',
+        },
+      ]}
     >
       <View style={[styles.formContainer, formContainerStyle]}>
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {imagePickerConfig && (
-            <View style={styles.imagePickerContainer}>
-              <CustomImagePicker
-                value={currentImageUri}
-                onImageSelected={handleImageSelected}
-                onImageRemoved={handleImageRemoved}
-                isLoading={isInternalImageUploading}
-                disabled={isParentSubmitting}
-                size={
-                  imagePickerConfig.imagePickerSize ??
-                  responsive.getResponsiveDimension(150, 200)
-                }
-                placeholderIcon={imagePickerConfig.placeholderIcon}
-                placeholderText={imagePickerConfig.placeholderText}
-              />
-              {(
-                errors[imagePickerConfig.imageUriField] as
-                  | FieldError
-                  | undefined
-              )?.message && (
-                <HelperText
-                  type="error"
-                  visible={!!errors[imagePickerConfig.imageUriField]}
-                  style={styles.helperText}
-                >
-                  {
-                    (
-                      errors[imagePickerConfig.imageUriField] as
-                        | FieldError
-                        | undefined
-                    )?.message
-                  }
-                </HelperText>
-              )}
-            </View>
-          )}
-
-          {formFields.map(renderFormField)}
-        </ScrollView>
-
-        {isActuallySubmitting && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator
-              animating={true}
-              size="large"
-              color={theme.colors.primary}
+        {imagePickerConfig && (
+          <View style={styles.imagePickerContainer}>
+            <CustomImagePicker
+              value={currentImageUri}
+              onImageSelected={handleImageSelected}
+              onImageRemoved={handleImageRemoved}
+              isLoading={isInternalImageUploading}
+              disabled={isParentSubmitting}
+              size={
+                imagePickerConfig.imagePickerSize ??
+                responsive.getResponsiveDimension(150, 200)
+              }
+              placeholderIcon={imagePickerConfig.placeholderIcon}
+              placeholderText={imagePickerConfig.placeholderText}
             />
+            {(errors[imagePickerConfig.imageUriField] as FieldError | undefined)
+              ?.message && (
+              <HelperText
+                type="error"
+                visible={!!errors[imagePickerConfig.imageUriField]}
+                style={styles.helperText}
+              >
+                {
+                  (
+                    errors[imagePickerConfig.imageUriField] as
+                      | FieldError
+                      | undefined
+                  )?.message
+                }
+              </HelperText>
+            )}
           </View>
         )}
+
+        {formFields.map(renderFormField)}
       </View>
     </ResponsiveModal>
   );

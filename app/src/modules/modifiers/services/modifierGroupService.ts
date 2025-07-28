@@ -16,9 +16,7 @@ interface FindAllParams {
 }
 
 export const modifierGroupService = {
-  async findAll(
-    params: FindAllParams = {},
-  ): Promise<ModifierGroup[]> {
+  async findAll(params: FindAllParams = {}): Promise<ModifierGroup[]> {
     const queryParams = {
       ...(params.isActive !== undefined && { isActive: params.isActive }),
       ...(params.search && { name: params.search }),

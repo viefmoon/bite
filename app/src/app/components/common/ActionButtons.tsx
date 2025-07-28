@@ -3,7 +3,7 @@ import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Button } from 'react-native-paper';
 import { useAppTheme } from '../../styles/theme';
 
-interface ActionButton {
+export interface ActionButton {
   icon?: string;
   label: string;
   onPress: () => void;
@@ -12,6 +12,8 @@ interface ActionButton {
   disabled?: boolean;
   color?: string;
   textColor?: string;
+  // Preset de color para estandarizar
+  colorPreset?: 'primary' | 'secondary' | 'error' | 'success' | 'warning';
 }
 
 interface ActionButtonsProps {
@@ -28,28 +30,84 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   compact = true,
 }) => {
   const theme = useAppTheme();
-  
+
+  // Función para obtener colores basados en preset
+  const getButtonColors = (button: ActionButton) => {
+    if (button.colorPreset) {
+      switch (button.colorPreset) {
+        case 'primary':
+          return {
+            backgroundColor:
+              button.mode === 'contained' ? theme.colors.primary : undefined,
+            textColor:
+              button.mode === 'contained'
+                ? theme.colors.onPrimary
+                : theme.colors.primary,
+          };
+        case 'secondary':
+          return {
+            backgroundColor:
+              button.mode === 'contained' ? theme.colors.secondary : undefined,
+            textColor:
+              button.mode === 'contained'
+                ? theme.colors.onSecondary
+                : theme.colors.secondary,
+          };
+        case 'error':
+          return {
+            backgroundColor:
+              button.mode === 'contained' ? theme.colors.error : undefined,
+            textColor:
+              button.mode === 'contained'
+                ? theme.colors.onError
+                : theme.colors.error,
+          };
+        case 'success':
+          return {
+            backgroundColor:
+              button.mode === 'contained' ? '#10B981' : undefined,
+            textColor: button.mode === 'contained' ? '#FFFFFF' : '#10B981',
+          };
+        case 'warning':
+          return {
+            backgroundColor:
+              button.mode === 'contained' ? '#F59E0B' : undefined,
+            textColor: button.mode === 'contained' ? '#FFFFFF' : '#F59E0B',
+          };
+      }
+    }
+    return {
+      backgroundColor: button.color,
+      textColor: button.textColor,
+    };
+  };
+
   return (
     <View style={[styles.container, style]}>
-      {buttons.map((button, index) => (
-        <Button
-          key={index}
-          icon={button.icon}
-          mode={button.mode || 'contained'}
-          onPress={button.onPress}
-          loading={button.loading}
-          disabled={button.disabled}
-          style={[
-            styles.button,
-            buttonStyle,
-            button.color && { backgroundColor: button.color }
-          ]}
-          textColor={button.textColor}
-          compact={compact}
-        >
-          {button.label}
-        </Button>
-      ))}
+      {buttons.map((button, index) => {
+        const colors = getButtonColors(button);
+        return (
+          <Button
+            key={index}
+            icon={button.icon}
+            mode={button.mode || 'contained'}
+            onPress={button.onPress}
+            loading={button.loading}
+            disabled={button.disabled}
+            style={[
+              styles.button,
+              buttonStyle,
+              colors.backgroundColor && {
+                backgroundColor: colors.backgroundColor,
+              },
+            ]}
+            textColor={colors.textColor}
+            compact={compact}
+          >
+            {button.label}
+          </Button>
+        );
+      })}
     </View>
   );
 };

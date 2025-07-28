@@ -28,8 +28,8 @@ import {
   CategoryFormData,
   CreateCategoryDto,
   UpdateCategoryDto,
-  categoryFormSchema,
 } from '../schema/category-form.schema';
+import { z } from 'zod';
 import { useRefreshModuleOnFocus } from '../../../app/hooks/useRefreshOnFocus';
 
 type RootStackParamList = {
@@ -373,7 +373,15 @@ const CategoriesScreen: React.FC = () => {
           visible={modalVisible}
           onDismiss={closeModals}
           onSubmit={handleFormSubmit}
-          formSchema={categoryFormSchema}
+          formSchema={
+            z.object({
+              name: z.string().min(1, 'El nombre es requerido'),
+              description: z.string().nullable().optional(),
+              isActive: z.boolean().default(true),
+              sortOrder: z.number().default(0),
+              imageUri: z.string().nullable().optional(),
+            }) as z.ZodType<CategoryFormData>
+          }
           formFields={formFieldsConfig}
           imagePickerConfig={imagePickerConfig}
           initialValues={formInitialValues}
@@ -401,7 +409,33 @@ const CategoriesScreen: React.FC = () => {
             {
               field: 'sortOrder',
               label: 'Orden de visualización',
-              render: (value) => value ?? '0',
+              render: (value) => String(value ?? '0'),
+            },
+            {
+              field: 'createdAt',
+              label: 'Fecha de creación',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                });
+              },
+            },
+            {
+              field: 'updatedAt',
+              label: 'Última actualización',
+              render: (value) => {
+                if (!value) return 'N/A';
+                const date = new Date(value as string);
+                return date.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                });
+              },
             },
           ]}
           onEdit={openEditModal as (item: any) => void}

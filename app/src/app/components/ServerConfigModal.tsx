@@ -1,24 +1,16 @@
 import { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import {
   Text,
-  Modal,
-  Portal,
-  Surface,
   RadioButton,
   TextInput,
   Button,
   HelperText,
   Chip,
-  IconButton,
+  ActivityIndicator,
   useTheme,
 } from 'react-native-paper';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import { ConnectionMode } from '@/services/serverConnectionService';
@@ -218,36 +210,6 @@ export function ServerConfigModal({
   };
 
   const styles = StyleSheet.create({
-    modal: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      margin: 20,
-    },
-    container: {
-      width: '100%',
-      maxWidth: 500,
-      maxHeight: '90%',
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      overflow: 'hidden',
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outlineVariant,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: theme.colors.onSurface,
-    },
-    content: {
-      padding: 16,
-    },
     loadingContainer: {
       padding: 40,
       alignItems: 'center',
@@ -283,168 +245,151 @@ export function ServerConfigModal({
       marginTop: 8,
       marginLeft: 32,
     },
-    actions: {
+    footerActions: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
       gap: 8,
-      padding: 16,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
     },
   });
 
-  return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modal}
-        dismissable={!testing}
+  const footer = (
+    <View style={styles.footerActions}>
+      <Button mode="text" onPress={onDismiss} disabled={testing}>
+        Cancelar
+      </Button>
+      <Button
+        mode="outlined"
+        onPress={testConnection}
+        loading={testing}
+        disabled={testing || loading}
+        icon="connection"
       >
-        <Surface style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Configuración del Servidor</Text>
-            <IconButton
-              icon="close"
-              size={24}
-              onPress={onDismiss}
-              disabled={testing}
-            />
-          </View>
+        Probar
+      </Button>
+      <Button
+        mode="contained"
+        onPress={saveSettings}
+        disabled={testing || loading}
+        icon="content-save"
+      >
+        Guardar
+      </Button>
+    </View>
+  );
 
-          <ScrollView style={styles.content}>
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" />
+  return (
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      dismissable={!testing}
+      showHeader={true}
+      title="Configuración del Servidor"
+      maxWidth={500}
+      footer={footer}
+      isLoading={loading}
+    >
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <>
+          {/* Estado actual */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estado de Conexión</Text>
+            {currentUrl ? (
+              <View style={styles.statusContainer}>
+                <Chip
+                  icon="check-circle"
+                  mode="flat"
+                  style={styles.successChip}
+                >
+                  Conectado
+                </Chip>
+                <Text
+                  variant="bodySmall"
+                  style={styles.urlText}
+                  numberOfLines={1}
+                >
+                  {currentUrl}
+                </Text>
               </View>
             ) : (
-              <>
-                {/* Estado actual */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Estado de Conexión</Text>
-                  {currentUrl ? (
-                    <View style={styles.statusContainer}>
-                      <Chip
-                        icon="check-circle"
-                        mode="flat"
-                        style={styles.successChip}
-                      >
-                        Conectado
-                      </Chip>
-                      <Text
-                        variant="bodySmall"
-                        style={styles.urlText}
-                        numberOfLines={1}
-                      >
-                        {currentUrl}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.statusContainer}>
-                      <Chip
-                        icon="alert-circle"
-                        mode="flat"
-                        style={styles.errorChip}
-                      >
-                        Sin conexión
-                      </Chip>
-                    </View>
-                  )}
-                </View>
-
-                {/* Modo de conexión */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Modo de Conexión</Text>
-                  <RadioButton.Group
-                    onValueChange={(value) => setMode(value as ConnectionMode)}
-                    value={mode}
-                  >
-                    <RadioButton.Item
-                      label="Automático (Red Local)"
-                      value="auto"
-                      status={mode === 'auto' ? 'checked' : 'unchecked'}
-                    />
-                    <HelperText type="info" visible={mode === 'auto'}>
-                      Busca automáticamente el servidor en tu red local
-                    </HelperText>
-
-                    {remoteUrlAvailable && (
-                      <>
-                        <RadioButton.Item
-                          label="Remoto (Internet)"
-                          value="remote"
-                          status={mode === 'remote' ? 'checked' : 'unchecked'}
-                        />
-                        <HelperText type="info" visible={mode === 'remote'}>
-                          Usa el servidor remoto: {remoteUrlAvailable}
-                        </HelperText>
-                      </>
-                    )}
-
-                    <RadioButton.Item
-                      label="Manual"
-                      value="manual"
-                      status={mode === 'manual' ? 'checked' : 'unchecked'}
-                    />
-
-                    {mode === 'manual' && (
-                      <View style={styles.manualConfig}>
-                        <TextInput
-                          label="URL del Servidor"
-                          value={manualUrl}
-                          onChangeText={setManualUrl}
-                          placeholder="192.168.1.230 o http://192.168.1.230:3737"
-                          mode="outlined"
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          keyboardType="url"
-                          error={manualUrl !== '' && !validateUrl(manualUrl)}
-                        />
-                        <HelperText
-                          type="info"
-                          visible={mode === 'manual' && manualUrl === ''}
-                        >
-                          Puedes ingresar solo la IP. El puerto 3737 se agregará
-                          automáticamente.
-                        </HelperText>
-                        <HelperText
-                          type="error"
-                          visible={manualUrl !== '' && !validateUrl(manualUrl)}
-                        >
-                          URL inválida
-                        </HelperText>
-                      </View>
-                    )}
-                  </RadioButton.Group>
-                </View>
-              </>
+              <View style={styles.statusContainer}>
+                <Chip icon="alert-circle" mode="flat" style={styles.errorChip}>
+                  Sin conexión
+                </Chip>
+              </View>
             )}
-          </ScrollView>
-
-          <View style={styles.actions}>
-            <Button mode="text" onPress={onDismiss} disabled={testing}>
-              Cancelar
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={testConnection}
-              loading={testing}
-              disabled={testing || loading}
-              icon="connection"
-            >
-              Probar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={saveSettings}
-              disabled={testing || loading}
-              icon="content-save"
-            >
-              Guardar
-            </Button>
           </View>
-        </Surface>
-      </Modal>
-    </Portal>
+
+          {/* Modo de conexión */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Modo de Conexión</Text>
+            <RadioButton.Group
+              onValueChange={(value) => setMode(value as ConnectionMode)}
+              value={mode}
+            >
+              <RadioButton.Item
+                label="Automático (Red Local)"
+                value="auto"
+                status={mode === 'auto' ? 'checked' : 'unchecked'}
+              />
+              <HelperText type="info" visible={mode === 'auto'}>
+                Busca automáticamente el servidor en tu red local
+              </HelperText>
+
+              {remoteUrlAvailable && (
+                <>
+                  <RadioButton.Item
+                    label="Remoto (Internet)"
+                    value="remote"
+                    status={mode === 'remote' ? 'checked' : 'unchecked'}
+                  />
+                  <HelperText type="info" visible={mode === 'remote'}>
+                    Usa el servidor remoto: {remoteUrlAvailable}
+                  </HelperText>
+                </>
+              )}
+
+              <RadioButton.Item
+                label="Manual"
+                value="manual"
+                status={mode === 'manual' ? 'checked' : 'unchecked'}
+              />
+
+              {mode === 'manual' && (
+                <View style={styles.manualConfig}>
+                  <TextInput
+                    label="URL del Servidor"
+                    value={manualUrl}
+                    onChangeText={setManualUrl}
+                    placeholder="192.168.1.230 o http://192.168.1.230:3737"
+                    mode="outlined"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                    error={manualUrl !== '' && !validateUrl(manualUrl)}
+                  />
+                  <HelperText
+                    type="info"
+                    visible={mode === 'manual' && manualUrl === ''}
+                  >
+                    Puedes ingresar solo la IP. El puerto 3737 se agregará
+                    automáticamente.
+                  </HelperText>
+                  <HelperText
+                    type="error"
+                    visible={manualUrl !== '' && !validateUrl(manualUrl)}
+                  >
+                    URL inválida
+                  </HelperText>
+                </View>
+              )}
+            </RadioButton.Group>
+          </View>
+        </>
+      )}
+    </ResponsiveModal>
   );
 }

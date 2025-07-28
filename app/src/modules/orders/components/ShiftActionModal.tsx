@@ -6,16 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import {
-  Modal,
-  Portal,
-  Text,
-  Button,
-  Surface,
-  Divider,
-} from 'react-native-paper';
+import { Text, Button, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import type { Shift } from '@/app/schemas/domain/shift.schema';
 import { useShiftAction } from '../hooks/useShiftAction';
 import { ShiftSummaryCard } from './ShiftSummaryCard';
@@ -43,6 +38,7 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
   onShiftClosed,
 }) => {
   const theme = useAppTheme();
+  const responsive = useResponsive();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const {
@@ -108,132 +104,115 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
     },
   }[mode];
 
-  return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={handleDismiss}
-        contentContainerStyle={styles.modalContainer}
-        dismissable={!loading}
+  // Footer para ResponsiveRNModal
+  const modalFooter = (
+    <View style={styles.footer}>
+      <Button
+        mode="text"
+        onPress={handleDismiss}
+        style={[styles.button, styles.cancelButton]}
+        labelStyle={styles.cancelButtonText}
+        disabled={loading}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+        Cancelar
+      </Button>
+      <Button
+        mode="contained"
+        onPress={handleShiftAction}
+        style={[
+          styles.button,
+          styles.confirmButton,
+          !isOpenMode && styles.closeConfirmButton,
+        ]}
+        contentStyle={styles.confirmButtonContent}
+        labelStyle={[
+          styles.confirmButtonText,
+          !isOpenMode && styles.closeConfirmButtonText,
+        ]}
+        loading={loading}
+        disabled={loading}
+        icon={config.buttonIcon}
+      >
+        {config.buttonText}
+      </Button>
+    </View>
+  );
+
+  return (
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={handleDismiss}
+      dismissable={!loading}
+      showHeader={false}
+      maxWidth={responsive.isTablet ? 520 : 480}
+      maxHeightPercent={responsive.isSmallMobile ? 95 : 85}
+      isLoading={false}
+      footer={modalFooter}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollViewContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <Surface style={styles.modal} elevation={3}>
-              <View style={[styles.header, !isOpenMode && styles.closeHeader]}>
-                <View
-                  style={[
-                    styles.iconContainer,
-                    !isOpenMode && styles.closeIconContainer,
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name={config.icon as any}
-                    size={48}
-                    color={config.iconColor}
-                  />
-                </View>
-                <Text variant="headlineMedium" style={styles.title}>
-                  {config.title}
-                </Text>
-                <Text variant="bodyLarge" style={styles.date}>
-                  {todayFormatted}
-                </Text>
-              </View>
+          <View style={[styles.header, !isOpenMode && styles.closeHeader]}>
+            <View
+              style={[
+                styles.iconContainer,
+                !isOpenMode && styles.closeIconContainer,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={config.icon as any}
+                size={48}
+                color={config.iconColor}
+              />
+            </View>
+            <Text variant="headlineMedium" style={styles.title}>
+              {config.title}
+            </Text>
+            <Text variant="bodyLarge" style={styles.date}>
+              {todayFormatted}
+            </Text>
+          </View>
 
-              <Divider style={styles.divider} />
+          <Divider style={styles.divider} />
 
-              <View style={styles.content}>
-                {!isOpenMode && shift && (
-                  <ShiftSummaryCard
-                    shift={shift}
-                    formatTime={formatTime}
-                    formatCurrency={formatCurrency}
-                  />
-                )}
+          <View style={styles.content}>
+            {!isOpenMode && shift && (
+              <ShiftSummaryCard
+                shift={shift}
+                formatTime={formatTime}
+                formatCurrency={formatCurrency}
+              />
+            )}
 
-                <ShiftActionForm
-                  mode={mode}
-                  cashAmount={cashAmount}
-                  onCashAmountChange={handleCashAmountChange}
-                  notes={notes}
-                  onNotesChange={handleNotesChange}
-                  error={error}
-                  loading={loading}
-                  shift={shift}
-                  calculateDifference={calculateDifference}
-                  formatCurrency={formatCurrency}
-                />
-              </View>
-
-              <View style={styles.footer}>
-                <Button
-                  mode="text"
-                  onPress={handleDismiss}
-                  style={[styles.button, styles.cancelButton]}
-                  labelStyle={styles.cancelButtonText}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleShiftAction}
-                  style={[
-                    styles.button,
-                    styles.confirmButton,
-                    !isOpenMode && styles.closeConfirmButton,
-                  ]}
-                  contentStyle={styles.confirmButtonContent}
-                  labelStyle={[
-                    styles.confirmButtonText,
-                    !isOpenMode && styles.closeConfirmButtonText,
-                  ]}
-                  loading={loading}
-                  disabled={loading}
-                  icon={config.buttonIcon}
-                >
-                  {config.buttonText}
-                </Button>
-              </View>
-            </Surface>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
-    </Portal>
+            <ShiftActionForm
+              mode={mode}
+              cashAmount={cashAmount}
+              onCashAmountChange={handleCashAmountChange}
+              notes={notes}
+              onNotesChange={handleNotesChange}
+              error={error}
+              loading={loading}
+              shift={shift}
+              calculateDifference={calculateDifference}
+              formatCurrency={formatCurrency}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ResponsiveModal>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
-    modalContainer: {
-      flex: 1,
-    },
     scrollViewContent: {
       flexGrow: 1,
-      justifyContent: 'center',
-      paddingVertical: theme.spacing.xl,
-      paddingHorizontal: theme.spacing.m,
-    },
-    modal: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.roundness * 3,
-      borderWidth: 2,
-      borderColor: theme.colors.outline,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 8,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      elevation: 8,
     },
     header: {
       alignItems: 'center',
@@ -368,14 +347,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     footer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      padding: theme.spacing.l,
-      paddingTop: theme.spacing.s,
       gap: theme.spacing.m,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: theme.roundness * 3,
-      borderBottomRightRadius: theme.roundness * 3,
     },
     button: {
       flex: 1,

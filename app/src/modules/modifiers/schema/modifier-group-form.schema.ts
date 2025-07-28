@@ -110,4 +110,3 @@ export const modifierGroupApiSchema = modifierGroupSchema.extend({
     )
     .optional(),
 });
-

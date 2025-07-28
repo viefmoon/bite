@@ -7,17 +7,11 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import {
-  Modal,
-  Portal,
-  Text,
-  Button,
-  Divider,
-  Surface,
-  IconButton,
-} from 'react-native-paper';
+import { Text, Button, Divider, Surface, IconButton } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../app/styles/theme';
+import { ResponsiveModal } from '../app/components/responsive/ResponsiveModal';
+import { useResponsive } from '../app/hooks/useResponsive';
 import { useGetOrderMenu } from '@/modules/orders/hooks/useMenuQueries';
 import type {
   AIOrderItem,
@@ -78,6 +72,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const { colors } = theme;
+  const responsive = useResponsive();
   const [editableDeliveryInfo, setEditableDeliveryInfo] =
     useState<DeliveryInfo>({});
   const [editableItems, setEditableItems] = useState<AIOrderItem[]>([]);
@@ -1467,111 +1462,101 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     );
   };
 
+  // Calcular el título dinámico
+  const modalTitle = useMemo(() => {
+    if (isProcessing) return '🎤 Procesando orden por voz...';
+    if (error) return '⚠️ Error en el procesamiento';
+    if (!isProcessing && !error && hasValidationErrors)
+      return '⚠️ Revisa los productos';
+    if (!isProcessing && !error && !hasValidationErrors)
+      return 'Agregar a tu orden 🛒';
+    return '';
+  }, [isProcessing, error, hasValidationErrors]);
+
+  // Crear el footer para ResponsiveRNModal
+  const modalFooter = useMemo(() => {
+    if (!isProcessing && !error && orderData) {
+      return (
+        <View style={styles.footer}>
+          {editableItems && editableItems.length > 0 ? (
+            <>
+              <Button
+                mode="outlined"
+                onPress={handleAttemptExit}
+                style={styles.footerButton}
+              >
+                Cancelar
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleConfirm}
+                style={[
+                  styles.footerButton,
+                  hasValidationErrors && {
+                    backgroundColor: colors.error,
+                  },
+                ]}
+                icon={hasValidationErrors ? 'alert-circle' : 'plus'}
+                buttonColor={hasValidationErrors ? colors.error : undefined}
+              >
+                {hasValidationErrors ? 'Hay errores' : 'Agregar'}
+              </Button>
+            </>
+          ) : (
+            <Button
+              mode="contained"
+              onPress={handleAttemptExit}
+              style={[styles.footerButton, styles.footerButtonFull]}
+            >
+              Cerrar
+            </Button>
+          )}
+        </View>
+      );
+    }
+    return null;
+  }, [
+    isProcessing,
+    error,
+    orderData,
+    editableItems,
+    hasValidationErrors,
+    colors.error,
+    handleAttemptExit,
+    handleConfirm,
+  ]);
+
   return (
     <>
-      {visible && (
-        <Portal>
-          <Modal
-            visible={visible}
-            onDismiss={onDismiss}
-            contentContainerStyle={[
-              styles.modalContainer,
-              styles.modalContainerStyle,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.primary,
-                shadowColor: colors.primary,
-              },
-            ]}
-          >
-            <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.onSurface }]}>
-                {isProcessing && '🎤 Procesando orden por voz...'}
-                {error && '⚠️ Error en el procesamiento'}
-                {!isProcessing &&
-                  !error &&
-                  hasValidationErrors &&
-                  '⚠️ Revisa los productos'}
-                {!isProcessing &&
-                  !error &&
-                  !hasValidationErrors &&
-                  'Agregar a tu orden 🛒'}
-              </Text>
-              <IconButton
-                icon="close"
-                size={24}
-                onPress={handleAttemptExit}
-                style={styles.closeButton}
-              />
-            </View>
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={handleAttemptExit}
+        showHeader={true}
+        title={modalTitle}
+        maxWidth={responsive.isTablet ? 520 : 500}
+        maxHeightPercent={90}
+        dismissable={!isProcessing}
+        isLoading={false}
+        footer={modalFooter}
+      >
+        {isProcessing && renderProcessingState()}
+        {error && renderErrorState()}
+        {!isProcessing && !error && orderData && renderOrderSummary()}
+      </ResponsiveModal>
 
-            {!isProcessing && !error && (
-              <Divider style={{ backgroundColor: colors.outlineVariant }} />
-            )}
-
-            {isProcessing && renderProcessingState()}
-            {error && renderErrorState()}
-            {!isProcessing && !error && orderData && renderOrderSummary()}
-
-            {!isProcessing && !error && orderData && (
-              <>
-                <Divider style={{ backgroundColor: colors.outlineVariant }} />
-                <View style={styles.footer}>
-                  {editableItems && editableItems.length > 0 ? (
-                    <>
-                      <Button
-                        mode="outlined"
-                        onPress={handleAttemptExit}
-                        style={styles.footerButton}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        mode="contained"
-                        onPress={handleConfirm}
-                        style={[
-                          styles.footerButton,
-                          hasValidationErrors && {
-                            backgroundColor: colors.error,
-                          },
-                        ]}
-                        icon={hasValidationErrors ? 'alert-circle' : 'plus'}
-                        buttonColor={
-                          hasValidationErrors ? colors.error : undefined
-                        }
-                      >
-                        {hasValidationErrors ? 'Hay errores' : 'Agregar'}
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      mode="contained"
-                      onPress={handleAttemptExit}
-                      style={[styles.footerButton, styles.footerButtonFull]}
-                    >
-                      Cerrar
-                    </Button>
-                  )}
-                </View>
-              </>
-            )}
-          </Modal>
-
-          {showCustomizationModal && editingProduct && editingItem && (
-            <ProductCustomizationModal
-              visible={showCustomizationModal}
-              product={editingProduct}
-              editingItem={editingItem}
-              onDismiss={() => {
-                setShowCustomizationModal(false);
-                setEditingItem(null);
-                setEditingProduct(null);
-              }}
-              onAddToCart={() => {}}
-              onUpdateItem={handleUpdateEditedItem}
-            />
-          )}
-        </Portal>
+      {showCustomizationModal && editingProduct && editingItem && (
+        <ProductCustomizationModal
+          visible={showCustomizationModal}
+          product={editingProduct}
+          editingItem={editingItem}
+          onDismiss={() => {
+            setShowCustomizationModal(false);
+            setEditingItem(null);
+            setEditingProduct(null);
+          }}
+          onAddToCart={() => {}}
+          onUpdateItem={handleUpdateEditedItem}
+        />
       )}
 
       <ConfirmationModal
@@ -1590,36 +1575,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    borderRadius: 16,
-    alignSelf: 'center',
-    flex: 1,
-    marginVertical: 16,
-    marginHorizontal: 12,
-    // Sombra base adicional en negro para mayor contraste
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    margin: 0,
-  },
   scrollView: {
     flex: 1,
   },
@@ -1922,17 +1877,6 @@ const styles = StyleSheet.create({
   },
   compactItemContainerError: {
     borderWidth: 1,
-  },
-  modalContainerStyle: {
-    width: '95%',
-    maxWidth: 500,
-    maxHeight: '90%',
-    height: '85%',
-    borderWidth: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 20,
   },
   footerButtonFull: {
     flex: 1,

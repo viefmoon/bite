@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import {
-  Portal,
-  Modal,
-  Text,
-  TextInput,
-  Button,
-  IconButton,
-  HelperText,
-  Divider,
-} from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Text, TextInput, HelperText } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { Controller, useForm } from 'react-hook-form';
@@ -18,8 +9,9 @@ import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { pizzaConfigurationsService } from '../services/pizzaConfigurationsService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import type { Product } from '@/modules/menu/schema/products.schema';
+import type { Product } from '@/app/schemas/domain/product.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface PizzaConfigurationModalProps {
   visible: boolean;
@@ -39,33 +31,6 @@ const createStyles = (
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
-    modal: {
-      backgroundColor: theme.colors.background,
-      margin: responsive.spacing(theme.spacing.l),
-      borderRadius: theme.roundness * 2,
-      maxHeight: responsive.isTablet ? '85%' : '80%',
-      maxWidth: responsive.isTablet ? 650 : 500,
-      width: responsive.isTablet ? '85%' : '100%',
-      alignSelf: 'center',
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: responsive.spacing(theme.spacing.m),
-      paddingBottom: 0,
-    },
-    title: {
-      fontSize: responsive.fontSize(20),
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    closeButton: {
-      margin: 0,
-    },
-    content: {
-      padding: responsive.spacing(theme.spacing.m),
-    },
     productInfo: {
       backgroundColor: theme.colors.surfaceVariant,
       padding: responsive.spacing(theme.spacing.m),
@@ -119,33 +84,6 @@ const createStyles = (
     exampleText: {
       fontSize: responsive.fontSize(12),
       color: theme.colors.onSurfaceVariant,
-    },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: responsive.spacing(theme.spacing.m),
-      paddingTop: responsive.spacing(theme.spacing.s),
-      gap: responsive.spacing(theme.spacing.m),
-    },
-    actionButton: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      maxWidth: responsive.isTablet ? 180 : 160,
-    },
-    cancelButton: {
-      borderColor: theme.colors.outlineVariant,
-    },
-    saveButton: {
-      borderWidth: 0,
-    },
-    buttonLabel: {
-      fontSize: responsive.fontSize(14),
-      fontWeight: '600',
-    },
-    buttonContent: {
-      paddingVertical: responsive.isTablet ? 4 : 6,
     },
   });
 
@@ -267,8 +205,8 @@ export function PizzaConfigurationModal({
   if (!product) return null;
 
   return (
-    <Portal>
-      <Modal
+    <>
+      <ResponsiveModal
         visible={visible}
         onDismiss={() => {
           if (isDirty) {
@@ -277,28 +215,31 @@ export function PizzaConfigurationModal({
             onDismiss();
           }
         }}
-        contentContainerStyle={styles.modal}
-        dismissable={true}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Configuración de Pizza</Text>
-          <IconButton
-            icon="close"
-            size={24}
-            onPress={() => {
+        title="Configuración de Pizza"
+        preset="form"
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'text',
+            onPress: () => {
               if (isDirty) {
                 setShowConfirmation(true);
               } else {
                 onDismiss();
               }
-            }}
-            style={styles.closeButton}
-          />
-        </View>
-
-        <Divider />
-
-        <ScrollView style={styles.content}>
+            },
+            colorPreset: 'secondary',
+          },
+          {
+            label: 'Guardar',
+            mode: 'contained',
+            onPress: handleSubmit(onSubmit),
+            loading: saveMutation.isPending,
+            colorPreset: 'primary',
+          },
+        ]}
+      >
+        <View>
           <View style={styles.productInfo}>
             <Text variant="titleMedium" style={styles.productName}>
               {product.name}
@@ -431,38 +372,8 @@ export function PizzaConfigurationModal({
               </Text>
             </View>
           </View>
-        </ScrollView>
-
-        <Divider />
-
-        <View style={styles.actions}>
-          <Button
-            mode="outlined"
-            onPress={() => {
-              if (isDirty) {
-                setShowConfirmation(true);
-              } else {
-                onDismiss();
-              }
-            }}
-            style={[styles.actionButton, styles.cancelButton]}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
-          >
-            Cancelar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            loading={saveMutation.isPending}
-            style={[styles.actionButton, styles.saveButton]}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
-          >
-            Guardar
-          </Button>
         </View>
-      </Modal>
+      </ResponsiveModal>
 
       <ConfirmationModal
         visible={showConfirmation}
@@ -480,6 +391,6 @@ export function PizzaConfigurationModal({
         onCancel={() => setShowConfirmation(false)}
         onDismiss={() => setShowConfirmation(false)}
       />
-    </Portal>
+    </>
   );
 }

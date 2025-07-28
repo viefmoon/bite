@@ -13,7 +13,7 @@ interface ImageSectionProps {
 
 export const ImageSection: React.FC<ImageSectionProps> = ({
   source,
-  placeholderIcon = "image-outline",
+  placeholderIcon = 'image-outline',
   style,
 }) => (
   <AutoImage
@@ -38,7 +38,7 @@ interface StatusSectionProps<T> {
 export function StatusSection<T>({ item, config }: StatusSectionProps<T>) {
   const theme = useAppTheme();
   const isActive = item[config.field] === config.activeValue;
-  
+
   return (
     <View style={styles.statusContainer}>
       <Chip
@@ -50,7 +50,7 @@ export function StatusSection<T>({ item, config }: StatusSectionProps<T>) {
             backgroundColor: isActive
               ? theme.colors.successContainer
               : theme.colors.surfaceVariant,
-          }
+          },
         ]}
       >
         {isActive ? config.activeLabel : config.inactiveLabel}
@@ -66,11 +66,7 @@ interface DescriptionSectionProps {
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   description,
-}) => (
-  <Text style={styles.description}>
-    {description}
-  </Text>
-);
+}) => <Text style={styles.description}>{description}</Text>;
 
 // Sección de campos adicionales
 export interface FieldConfig<T> {
@@ -86,25 +82,39 @@ interface FieldsSectionProps<T> {
 
 export function FieldsSection<T>({ item, fields }: FieldsSectionProps<T>) {
   const theme = useAppTheme();
-  
+
   if (fields.length === 0) return null;
-  
+
   return (
-    <View style={[styles.fieldsContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+    <View
+      style={[
+        styles.fieldsContainer,
+        { backgroundColor: theme.colors.surfaceVariant },
+      ]}
+    >
       {fields.map(({ field, label, render }) => {
         const value = item[field];
         return (
           <View key={String(field)} style={styles.fieldRow}>
-            <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              style={[
+                styles.fieldLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               {label}:
             </Text>
-            <Text style={[styles.fieldValue, { color: theme.colors.onSurface }]} numberOfLines={2}>
-              {render 
-                ? render(value, item) 
-                : typeof value === 'boolean' 
-                  ? (value ? 'Sí' : 'No')
-                  : String(value ?? 'N/A')
-              }
+            <Text
+              style={[styles.fieldValue, { color: theme.colors.onSurface }]}
+              numberOfLines={2}
+            >
+              {render
+                ? render(value, item)
+                : typeof value === 'boolean'
+                  ? value
+                    ? 'Sí'
+                    : 'No'
+                  : String(value ?? 'N/A')}
             </Text>
           </View>
         );
@@ -115,11 +125,11 @@ export function FieldsSection<T>({ item, fields }: FieldsSectionProps<T>) {
 
 const styles = StyleSheet.create({
   image: {
-    width: 200,
-    height: 200,
+    width: 160,
+    height: 160,
     alignSelf: 'center',
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   statusContainer: {
     alignItems: 'center',
