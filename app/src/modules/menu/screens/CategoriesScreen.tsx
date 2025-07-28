@@ -80,7 +80,6 @@ const CategoriesScreen: React.FC = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModalVisibility,
-    handleCleanupModalState,
     deleteConfirmation,
   } = useCrudScreenLogic<Category>({
     entityName: 'Categoría',
@@ -344,7 +343,6 @@ const CategoriesScreen: React.FC = () => {
         <GenericFormModal
           visible={isFormModalVisible}
           onDismiss={handleCloseModalVisibility}
-          onModalHide={handleCleanupModalState}
           onSubmit={handleFormSubmit}
           formSchema={
             z.object({
@@ -373,7 +371,6 @@ const CategoriesScreen: React.FC = () => {
         <GenericDetailModal
           visible={isDetailModalVisible}
           onDismiss={handleCloseModalVisibility}
-          onModalHide={handleCleanupModalState}
           item={selectedCategory}
           titleField="name"
           imageField="photo"

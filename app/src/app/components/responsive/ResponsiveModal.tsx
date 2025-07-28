@@ -22,7 +22,6 @@ import { ActionButtons, ActionButton } from '../common/ActionButtons';
 interface ResponsiveModalProps {
   visible: boolean;
   onDismiss: () => void;
-  onModalHide?: () => void; // Se ejecuta después de completar la animación de cierre
   children: ReactNode;
 
   // Dimensiones simples usando solo porcentajes
@@ -121,7 +120,6 @@ interface ResponsiveModalProps {
 export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   visible,
   onDismiss,
-  onModalHide,
   children,
   maxWidthPercent,
   maxHeightPercent,
@@ -303,7 +301,6 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       isVisible={visible}
       onBackdropPress={dismissable && !isLoading ? onDismiss : undefined}
       onBackButtonPress={dismissable && !isLoading ? onDismiss : undefined}
-      onModalHide={onModalHide}
       animationIn={animationConfig.animationIn}
       animationOut={animationConfig.animationOut}
       animationInTiming={animationConfig.animationInTiming}

@@ -95,7 +95,6 @@ function ProductsScreen(): React.ReactElement {
     handleOpenCreateModal,
     handleOpenEditModal,
     handleCloseModalVisibility,
-    handleCleanupModalState,
   } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
     queryKey: ['products', queryFilters],
@@ -255,7 +254,6 @@ function ProductsScreen(): React.ReactElement {
           <ProductFormModal
             visible={isFormModalVisible}
             onDismiss={handleCloseModalVisibility}
-            onModalHide={handleCleanupModalState}
             onSubmit={handleFormSubmit}
             initialData={editingItem}
             isSubmitting={createMutation.isPending || updateMutation.isPending}

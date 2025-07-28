@@ -25,7 +25,6 @@ interface StatusConfig<TItem> {
 interface GenericDetailModalProps<TItem extends { id: string }> {
   visible: boolean;
   onDismiss: () => void;
-  onModalHide?: () => void;
   item: TItem | null;
 
   // Campos principales
@@ -53,7 +52,6 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
 function GenericDetailModal<TItem extends { id: string }>({
   visible,
   onDismiss,
-  onModalHide,
   item,
   titleField,
   imageField,
@@ -109,7 +107,6 @@ function GenericDetailModal<TItem extends { id: string }>({
       <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        onModalHide={onModalHide}
         maxWidthPercent={90}
         maxHeightPercent={90}
       >
@@ -130,7 +127,6 @@ function GenericDetailModal<TItem extends { id: string }>({
       <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        onModalHide={onModalHide}
         dismissable={!isDeleting}
         maxWidthPercent={90}
         maxHeightPercent={90}
