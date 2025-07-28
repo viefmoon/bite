@@ -24,12 +24,9 @@ interface ResponsiveModalProps {
   onDismiss: () => void;
   children: ReactNode;
 
-  // Preset para configuraciones comunes
-  preset?: 'dialog' | 'form' | 'fullscreen' | 'detail';
-
-  // Dimensiones básicas (sobrescriben el preset)
-  maxWidth?: number;
-  maxHeightPercent?: number;
+  // Dimensiones simples usando solo porcentajes
+  maxWidthPercent?: number; // Porcentaje del ancho de pantalla (ej: 90 para 90%)
+  maxHeightPercent?: number; // Porcentaje de la altura de pantalla (ej: 85 para 85%)
 
   // Comportamiento
   dismissable?: boolean;
@@ -47,42 +44,76 @@ interface ResponsiveModalProps {
 
   // Estilos
   contentContainerStyle?: StyleProp<ViewStyle>;
-
-  // Deprecated props (para compatibilidad temporal)
-  /** @deprecated Use preset instead */
-  fullScreen?: boolean;
-  /** @deprecated Title automatically shows header */
-  showHeader?: boolean;
 }
 
 /**
- * ResponsiveModal - Modal responsivo y reutilizable
+ * ResponsiveModal - Modal responsivo y reutilizable con dimensiones basadas en porcentajes
+ * 
+ * Características:
+ * - Dimensiones responsivas automáticas según el dispositivo
+ * - Sistema de acciones estandarizado
+ * - Header y footer opcionales
+ * - Scroll automático del contenido
+ * - Animaciones suaves
+ * - Soporte para loading state
+ *
+ * Valores por defecto responsivos:
+ * - Móvil pequeño: 94% ancho
+ * - Tablet: 80% ancho  
+ * - Otros dispositivos: 85% ancho
+ * - Altura: 85% por defecto
  *
  * @example
- * // Con footer personalizado
- * <ResponsiveModal
- *   visible={visible}
- *   onDismiss={onDismiss}
- *   title="Mi Modal"
- *   showHeader={true}
- *   footer={<CustomFooter />}
- * >
- *   <Content />
- * </ResponsiveModal>
- *
- * @example
- * // Con acciones estandarizadas
+ * // Modal de confirmación pequeño
  * <ResponsiveModal
  *   visible={visible}
  *   onDismiss={onDismiss}
  *   title="Confirmar Acción"
- *   showHeader={true}
+ *   maxWidthPercent={60}
+ *   maxHeightPercent={40}
  *   actions={[
- *     { label: 'Cancelar', mode: 'text', onPress: onDismiss },
+ *     { label: 'Cancelar', mode: 'outlined', onPress: onDismiss },
+ *     { label: 'Confirmar', mode: 'contained', onPress: handleConfirm }
+ *   ]}
+ * >
+ *   <Text>¿Estás seguro de realizar esta acción?</Text>
+ * </ResponsiveModal>
+ *
+ * @example
+ * // Modal para formularios (usa valores por defecto)
+ * <ResponsiveModal
+ *   visible={visible}
+ *   onDismiss={onDismiss}
+ *   title="Editar Usuario"
+ *   actions={[
+ *     { label: 'Cancelar', mode: 'outlined', onPress: onDismiss },
  *     { label: 'Guardar', mode: 'contained', onPress: handleSave, loading: isSaving }
  *   ]}
  * >
- *   <FormContent />
+ *   <UserForm />
+ * </ResponsiveModal>
+ *
+ * @example
+ * // Modal de solo lectura sin acciones
+ * <ResponsiveModal
+ *   visible={visible}
+ *   onDismiss={onDismiss}
+ *   title="Historial de Orden"
+ *   maxWidthPercent={90}
+ *   maxHeightPercent={90}
+ * >
+ *   <OrderHistory />
+ * </ResponsiveModal>
+ *
+ * @example
+ * // Modal con footer personalizado
+ * <ResponsiveModal
+ *   visible={visible}
+ *   onDismiss={onDismiss}
+ *   title="Configuración Avanzada"
+ *   footer={<CustomFooterWithMultipleButtons />}
+ * >
+ *   <AdvancedSettings />
  * </ResponsiveModal>
  */
 
@@ -90,9 +121,8 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   visible,
   onDismiss,
   children,
-  preset = 'form',
-  maxWidth: maxWidthOverride,
-  maxHeightPercent: maxHeightOverride,
+  maxWidthPercent,
+  maxHeightPercent,
   dismissable = true,
   isLoading = false,
   title,
@@ -102,81 +132,29 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   footer,
   actions,
   contentContainerStyle,
-  // Deprecated props
-  fullScreen = false,
-  showHeader,
 }) => {
   const responsive = useResponsive();
   const theme = useAppTheme();
 
-  // Determinar el preset real considerando props deprecated
-  const actualPreset = fullScreen ? 'fullscreen' : preset;
-
-  // Configuración del preset
-  const presetConfig = useMemo(() => {
-    const { isSmallMobile, isTablet } = responsive;
-
-    switch (actualPreset) {
-      case 'dialog':
-        return {
-          maxWidth: isTablet ? 400 : 360,
-          maxHeightPercent: 60,
-          width: isSmallMobile ? '94%' : '90%',
-          animationIn: 'zoomIn' as const,
-          animationOut: 'zoomOut' as const,
-        };
-      case 'fullscreen':
-        return {
-          width: '100%',
-          height: '100%',
-          maxWidth: '100%',
-          maxHeightPercent: 100,
-          animationIn: 'slideInUp' as const,
-          animationOut: 'slideOutDown' as const,
-        };
-      case 'detail':
-        return {
-          maxWidth: isTablet ? 600 : 480,
-          maxHeightPercent: 90,
-          width: isSmallMobile ? '94%' : isTablet ? '85%' : '92%',
-          animationIn: 'fadeIn' as const,
-          animationOut: 'fadeOut' as const,
-        };
-      case 'form':
-      default:
-        return {
-          maxWidth: isTablet ? 520 : 480,
-          maxHeightPercent: 85,
-          width: isSmallMobile ? '94%' : isTablet ? '85%' : '92%',
-          animationIn: 'fadeIn' as const,
-          animationOut: 'fadeOut' as const,
-        };
-    }
-  }, [actualPreset, responsive]);
-
   // Calcular dimensiones finales del modal
   const modalDimensions = useMemo(() => {
-    const dims: ViewStyle = {
-      width: presetConfig.width as any,
-      height: presetConfig.height as any,
-      maxWidth: (maxWidthOverride ?? presetConfig.maxWidth) as any,
-      maxHeight:
-        `${maxHeightOverride ?? presetConfig.maxHeightPercent}%` as any,
-      minHeight: responsive.isSmallMobile ? 150 : 200,
+    const { isSmallMobile, isTablet } = responsive;
+    
+    // Porcentajes por defecto según el dispositivo
+    const defaultMaxWidthPercent = isSmallMobile ? 94 : isTablet ? 80 : 85;
+    const defaultMaxHeightPercent = 85;
+
+    // Usar los porcentajes proporcionados o los por defecto
+    const finalMaxWidthPercent = maxWidthPercent ?? defaultMaxWidthPercent;
+    const finalMaxHeightPercent = maxHeightPercent ?? defaultMaxHeightPercent;
+
+    return {
+      width: `${finalMaxWidthPercent}%` as const,
+      maxWidth: `${finalMaxWidthPercent}%` as const,
+      maxHeight: `${finalMaxHeightPercent}%` as const,
+      // No incluir height para casos normales, permitir ajuste automático
     };
-
-    if (actualPreset === 'fullscreen') {
-      dims.minHeight = '100%' as any;
-    }
-
-    return dims;
-  }, [
-    presetConfig,
-    maxWidthOverride,
-    maxHeightOverride,
-    responsive,
-    actualPreset,
-  ]);
+  }, [responsive, maxWidthPercent, maxHeightPercent]);
 
   // Padding del contenido responsivo
   const contentPadding = useMemo(() => {
@@ -193,22 +171,22 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   const containerStyles: ViewStyle = useMemo(
     () => ({
       backgroundColor: theme.colors.background,
-      borderRadius: actualPreset === 'fullscreen' ? 0 : 16,
-      borderWidth: actualPreset === 'fullscreen' ? 0 : 2,
+      borderRadius: 16,
+      borderWidth: 2,
       borderColor: theme.colors.primary + '40',
       ...modalDimensions,
       overflow: 'hidden',
-      // Sombra adaptada al preset
-      elevation: actualPreset === 'dialog' ? 4 : 8,
+      // Sombra
+      elevation: 8,
       shadowColor: theme.colors.primary,
       shadowOffset: {
         width: 0,
-        height: actualPreset === 'dialog' ? 2 : 4,
+        height: 4,
       },
-      shadowOpacity: actualPreset === 'dialog' ? 0.2 : 0.3,
-      shadowRadius: actualPreset === 'dialog' ? 4 : 8,
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     }),
-    [theme, actualPreset, modalDimensions],
+    [theme, modalDimensions],
   );
 
   // Construir el footer del modal basado en props
@@ -224,23 +202,19 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     return null;
   }, [footer, actions, responsive.isSmallMobile]);
 
+  // Animaciones simples
+  const animationConfig = useMemo(() => {
+    return {
+      animationIn: 'fadeIn' as const,
+      animationOut: 'fadeOut' as const,
+    };
+  }, []);
+
   // Contenido del modal
   const modalContent = (
-    <View
-      style={[
-        styles.modalInner,
-        {
-          minHeight:
-            actualPreset === 'fullscreen'
-              ? '100%'
-              : responsive.isSmallMobile
-                ? 150
-                : 200,
-        },
-      ]}
-    >
+    <View style={styles.modalInner}>
       {/* Header - se muestra automáticamente si hay título */}
-      {(title || (showHeader && (headerLeft || headerRight))) && (
+      {(title || headerLeft || headerRight) && (
         <>
           <View
             style={[
@@ -316,7 +290,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     Platform.OS === 'ios'
       ? {
           behavior: 'padding' as const,
-          keyboardVerticalOffset: actualPreset === 'fullscreen' ? 0 : 100,
+          keyboardVerticalOffset: 100,
         }
       : {};
 
@@ -325,8 +299,8 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       isVisible={visible}
       onBackdropPress={dismissable && !isLoading ? onDismiss : undefined}
       onBackButtonPress={dismissable && !isLoading ? onDismiss : undefined}
-      animationIn={presetConfig.animationIn}
-      animationOut={presetConfig.animationOut}
+      animationIn={animationConfig.animationIn}
+      animationOut={animationConfig.animationOut}
       backdropOpacity={0.6}
       useNativeDriver={true}
       useNativeDriverForBackdrop={true}
@@ -360,12 +334,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalInner: {
-    height: '100%',
-    display: 'flex',
     flexDirection: 'column',
+    minHeight: 200,
   },
   scrollView: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
   },
   scrollContent: {
     flexGrow: 1,

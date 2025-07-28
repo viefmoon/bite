@@ -216,7 +216,8 @@ export function PizzaConfigurationModal({
           }
         }}
         title="Configuración de Pizza"
-        preset="form"
+        maxWidthPercent={85}
+        maxHeightPercent={85}
         actions={[
           {
             label: 'Cancelar',

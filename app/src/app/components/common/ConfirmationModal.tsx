@@ -51,7 +51,8 @@ const ConfirmationModal = ({
     <ResponsiveModal
       visible={visible}
       onDismiss={handleDismiss}
-      preset="dialog"
+      maxWidthPercent={60}
+      maxHeightPercent={40}
       title={title}
       dismissable={!isConfirming}
       isLoading={isConfirming}

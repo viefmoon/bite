@@ -1,11 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
-  Portal,
-  Modal,
-  Card,
   TextInput,
-  Button,
   Switch,
   Text,
   HelperText,
@@ -15,6 +11,7 @@ import { zodResolver } from '@/app/lib/zodResolver';
 import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema';
 import { z } from 'zod';
 import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 const variantFormSchema = z.object({
   id: z.string().optional(),
@@ -95,17 +92,31 @@ function VariantFormModal({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}
-      >
-        <Card style={styles.card}>
-          <Card.Title
-            title={isEditing ? 'Editar Variante' : 'Nueva Variante'}
-          />
-          <Card.Content style={styles.content}>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      maxWidthPercent={85}
+      maxHeightPercent={85}
+      title={isEditing ? 'Editar Variante' : 'Nueva Variante'}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          disabled: isSubmitting,
+          colorPreset: 'secondary'
+        },
+        {
+          label: 'Guardar',
+          mode: 'contained',
+          onPress: handleSubmit(handleFormSubmit),
+          loading: isSubmitting,
+          disabled: isSubmitting,
+          colorPreset: 'primary'
+        }
+      ]}
+    >
+      <View style={styles.content}>
             <View style={styles.fieldContainer}>
               <Controller
                 control={control}
@@ -202,38 +213,16 @@ function VariantFormModal({
                 )}
               />
             </View>
-          </Card.Content>
-          <Card.Actions style={styles.actions}>
-            <Button onPress={onDismiss} disabled={isSubmitting}>
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleSubmit(handleFormSubmit)}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              Guardar
-            </Button>
-          </Card.Actions>
-        </Card>
-      </Modal>
-    </Portal>
+      </View>
+    </ResponsiveModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
-    modalContainer: {
-      padding: theme.spacing.l, // Más padding exterior
-    },
-    card: {
-      backgroundColor: theme.colors.inverseOnSurface,
-      borderRadius: theme.roundness * 3, // Un poco más redondeado
-    },
     content: {
-      paddingHorizontal: theme.spacing.m, // Padding horizontal para el contenido
-      paddingBottom: theme.spacing.s, // Pequeño padding inferior antes de las acciones
+      paddingHorizontal: theme.spacing.m,
+      paddingBottom: theme.spacing.s,
     },
     fieldContainer: {
       marginBottom: theme.spacing.m, // Espacio uniforme debajo de cada campo/grupo
@@ -246,10 +235,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     label: {
       color: theme.colors.onSurfaceVariant,
-    },
-    actions: {
-      justifyContent: 'flex-end',
-      padding: theme.spacing.m, // Padding uniforme para las acciones
     },
   });
 

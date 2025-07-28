@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import { Portal, Modal, Text, Title } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 import type { Product } from '@/app/schemas/domain/product.schema';
 import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface SimpleProductDescriptionModalProps {
   visible: boolean;
@@ -18,19 +19,6 @@ const SimpleProductDescriptionModal: React.FC<
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        modal: {
-          backgroundColor: theme.colors.background,
-          margin: 20,
-          padding: 20,
-          borderRadius: 8,
-          maxHeight: '60%',
-        },
-        title: {
-          fontSize: 20,
-          fontWeight: 'bold',
-          marginBottom: 16,
-          color: theme.colors.onBackground,
-        },
         description: {
           fontSize: 16,
           lineHeight: 24,
@@ -43,18 +31,15 @@ const SimpleProductDescriptionModal: React.FC<
   if (!product || !product.description) return null;
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modal}
-      >
-        <ScrollView>
-          <Title style={styles.title}>{product.name}</Title>
-          <Text style={styles.description}>{product.description}</Text>
-        </ScrollView>
-      </Modal>
-    </Portal>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      maxWidthPercent={70}
+      maxHeightPercent={60}
+      title={product.name}
+    >
+      <Text style={styles.description}>{product.description}</Text>
+    </ResponsiveModal>
   );
 };
 

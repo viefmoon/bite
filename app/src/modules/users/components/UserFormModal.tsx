@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import {
-  Portal,
-  Modal,
   Text,
   TextInput,
-  Button,
   Switch,
   HelperText,
   Surface,
-  IconButton,
   Chip,
   Avatar,
   Divider,
@@ -20,6 +16,7 @@ import { zodResolver } from '@/app/lib/zodResolver';
 import { z } from 'zod';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useCreateUser, useUpdateUser } from '../hooks';
 import type { User } from '@/app/schemas/domain/user.schema';
 import { GenderEnum } from '../schema/user.schema';
@@ -226,52 +223,33 @@ export function UserFormModal({
   ];
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}
-      >
-        <Surface style={styles.modalContent} elevation={5}>
-          <View
-            style={[
-              styles.headerContainer,
-              { backgroundColor: theme.colors.primary },
-            ]}
-          >
-            <View style={styles.headerLeft}>
-              <Avatar.Icon
-                size={32}
-                icon={user ? 'account-edit' : 'account-plus'}
-                style={[
-                  styles.headerIcon,
-                  { backgroundColor: theme.colors.onPrimary + '20' },
-                ]}
-                color={theme.colors.onPrimary}
-              />
-              <View style={styles.headerTextContainer}>
-                <Text
-                  style={[styles.modalTitle, { color: theme.colors.onPrimary }]}
-                  variant="titleMedium"
-                >
-                  {user ? 'Editar Usuario' : 'Nuevo Usuario'}
-                </Text>
-              </View>
-            </View>
-            <IconButton
-              icon="close"
-              size={24}
-              onPress={onDismiss}
-              disabled={isSubmitting}
-              iconColor={theme.colors.onPrimary}
-            />
-          </View>
-
-          <ScrollView
-            style={styles.formContainer}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      maxWidthPercent={85}
+      maxHeightPercent={85}
+      title={user ? 'Editar Usuario' : 'Nuevo Usuario'}
+      dismissable={!isSubmitting}
+      isLoading={isSubmitting}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          disabled: isSubmitting,
+          colorPreset: 'secondary'
+        },
+        {
+          label: user ? 'Guardar' : 'Crear',
+          mode: 'contained',
+          onPress: handleSubmit(onSubmit),
+          loading: isSubmitting,
+          disabled: isSubmitting,
+          colorPreset: 'primary'
+        }
+      ]}
+    >
+      <View style={styles.formContainer}>
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -836,32 +814,9 @@ export function UserFormModal({
               />
             </View>
 
-            <View style={styles.scrollSpacer} />
-          </ScrollView>
-
-          <Surface style={styles.buttonContainer} elevation={2}>
-            <Button
-              onPress={onDismiss}
-              disabled={isSubmitting}
-              style={[styles.button, styles.cancelButton]}
-              textColor={theme.colors.onSecondaryContainer}
-            >
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-              loading={isSubmitting}
-              style={[styles.button, styles.confirmButton]}
-              buttonColor={theme.colors.primary}
-            >
-              {user ? 'Guardar' : 'Crear'}
-            </Button>
-          </Surface>
-        </Surface>
-      </Modal>
-    </Portal>
+        <View style={styles.scrollSpacer} />
+      </View>
+    </ResponsiveModal>
   );
 }
 
@@ -870,55 +825,6 @@ const getStyles = (
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
-    modalContainer: {
-      margin: responsive.isTablet ? theme.spacing.xl : theme.spacing.m,
-      maxWidth: responsive.isTablet ? 700 : 420,
-      alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '92%',
-      paddingHorizontal: 0,
-      height: responsive.isTablet ? '85%' : '80%',
-      maxHeight: responsive.isTablet ? '90%' : '85%',
-      justifyContent: 'center',
-    },
-    modalContent: {
-      borderRadius: theme.roundness * 3,
-      backgroundColor: theme.colors.surface,
-      height: '100%',
-      flex: 1,
-      overflow: 'hidden',
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      borderWidth: 1,
-      borderColor: theme.colors.outlineVariant,
-    },
-    headerContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.m,
-      paddingVertical: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      borderTopLeftRadius: theme.roundness * 3,
-      borderTopRightRadius: theme.roundness * 3,
-    },
-    headerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    headerIcon: {
-      marginRight: theme.spacing.s,
-    },
-    headerTextContainer: {
-      flex: 1,
-    },
-    modalTitle: {
-      fontWeight: '700',
-    },
     formContainer: {
       flex: 1,
       paddingHorizontal: responsive.isTablet
@@ -1066,22 +972,6 @@ const getStyles = (
       marginVertical: theme.spacing.s,
       marginHorizontal: -theme.spacing.m,
     },
-    buttonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      padding: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      gap: theme.spacing.s,
-    },
-    button: {
-      flex: 1,
-      maxWidth: responsive.isTablet ? 180 : 150,
-    },
-    cancelButton: {
-      backgroundColor: theme.colors.secondaryContainer,
-    },
-    confirmButton: {},
     rolesContainer: {
       flexDirection: 'row',
       gap: theme.spacing.s,

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   Button,
   TextInput,
   HelperText,
   Chip,
-  IconButton,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import type {
   OrderAdjustment,
   AdjustmentFormData,
@@ -149,36 +147,27 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[
-          styles.modal,
-          { backgroundColor: theme.colors.surface },
-        ]}
-      >
-        {/* Header simplificado */}
-        <View
-          style={[styles.header, { backgroundColor: theme.colors.primary }]}
-        >
-          <Text
-            variant="titleLarge"
-            style={[styles.title, { color: theme.colors.onPrimary }]}
-          >
-            {adjustment ? 'Editar Ajuste' : 'Nuevo Ajuste'}
-          </Text>
-          <IconButton
-            icon="close"
-            size={20}
-            onPress={onDismiss}
-            style={styles.closeButton}
-            iconColor={theme.colors.onPrimary}
-          />
-        </View>
-
-        {/* Contenido */}
-        <View style={styles.content}>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      maxWidthPercent={85}
+      maxHeightPercent={85}
+      title={adjustment ? 'Editar Ajuste' : 'Nuevo Ajuste'}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          colorPreset: 'secondary'
+        },
+        {
+          label: adjustment ? 'Actualizar' : 'Guardar',
+          mode: 'contained',
+          onPress: handleSave,
+          colorPreset: 'primary'
+        }
+      ]}
+    >
           {/* Nombre del ajuste */}
           <TextInput
             label="Nombre"
@@ -379,88 +368,11 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
               {errors.value || errors.amount}
             </HelperText>
           )}
-        </View>
-
-        {/* Botones de acción */}
-        <View
-          style={[
-            styles.actions,
-            { borderTopColor: theme.colors.outlineVariant },
-          ]}
-        >
-          <Button
-            mode="outlined"
-            onPress={onDismiss}
-            style={[
-              styles.actionButton,
-              {
-                borderColor: theme.colors.outline,
-                backgroundColor: theme.colors.secondaryContainer,
-              },
-            ]}
-            textColor={theme.colors.onSecondaryContainer}
-          >
-            Cancelar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleSave}
-            style={[styles.actionButton, styles.saveButton]}
-            buttonColor={theme.colors.primary}
-          >
-            {adjustment ? 'Actualizar' : 'Guardar'}
-          </Button>
-        </View>
-      </Modal>
-    </Portal>
+    </ResponsiveModal>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {
-    borderRadius: 16,
-    margin: 20,
-    maxWidth: 400,
-    width: '90%',
-    maxHeight: '80%',
-    alignSelf: 'center',
-    elevation: 5,
-    ...Platform.select({
-      web: {
-        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.25)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-    }),
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 48,
-  },
-  title: {
-    flex: 1,
-    fontWeight: '500',
-  },
-  closeButton: {
-    margin: -4,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
   input: {
     marginBottom: 16,
   },
@@ -488,20 +400,5 @@ const styles = StyleSheet.create({
   },
   operationButton: {
     flex: 1,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    gap: 12,
-  },
-  actionButton: {
-    minWidth: 100,
-  },
-  saveButton: {
-    marginLeft: 4,
   },
 });

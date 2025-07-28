@@ -1,19 +1,16 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
-  Button,
   Switch,
   HelperText,
-  ActivityIndicator,
   RadioButton,
 } from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
+import { ResponsiveModal } from '../../../app/components/responsive/ResponsiveModal';
 import {
   PrinterFormData,
   printerFormSchema,
@@ -37,32 +34,6 @@ interface PrinterFormModalProps {
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    modalSurface: {
-      padding: 0,
-      margin: theme.spacing.l,
-      borderRadius: theme.roundness * 2,
-      elevation: 4,
-      backgroundColor: theme.colors.background,
-      maxHeight: '90%',
-      overflow: 'hidden',
-    },
-    modalHeader: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
-    },
-    formContainer: {
-      maxHeight: '100%',
-    },
-    scrollViewContent: {
-      padding: theme.spacing.l,
-      paddingBottom: theme.spacing.xl,
-    },
-    modalTitle: {
-      color: theme.colors.onPrimary,
-      fontWeight: '700',
-      textAlign: 'center',
-    },
     input: {
       marginBottom: theme.spacing.m,
     },
@@ -100,31 +71,6 @@ const getStyles = (theme: AppTheme) =>
     },
     radioLabel: {
       fontSize: 14,
-    },
-    modalActions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      paddingVertical: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outlineVariant,
-      backgroundColor: theme.colors.surface,
-      gap: theme.spacing.m,
-    },
-    formButton: {
-      borderRadius: theme.roundness,
-      paddingHorizontal: theme.spacing.xs,
-      flex: 1,
-      maxWidth: 200,
-    },
-    cancelButton: {},
-    loadingOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: theme.roundness * 2,
-      zIndex: 10,
     },
     helperText: {
       marginTop: -theme.spacing.s,
@@ -245,21 +191,32 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalSurface}
-        dismissable={!isSubmitting}
-      >
-        <View style={styles.formContainer}>
-          <View style={styles.modalHeader}>
-            <Text variant="titleLarge" style={styles.modalTitle}>
-              {isEditing ? 'Editar Impresora' : 'Nueva Impresora'}
-            </Text>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      maxWidthPercent={85}
+      maxHeightPercent={85}
+      title={isEditing ? 'Editar Impresora' : 'Nueva Impresora'}
+      dismissable={!isSubmitting}
+      isLoading={isSubmitting}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          disabled: isSubmitting,
+          colorPreset: 'secondary'
+        },
+        {
+          label: isEditing ? 'Guardar' : 'Crear',
+          mode: 'contained',
+          onPress: handleSubmit(onSubmit),
+          loading: isSubmitting,
+          disabled: isSubmitting,
+          colorPreset: 'primary'
+        }
+      ]}
+    >
             <Controller
               name="name"
               control={control}
@@ -535,40 +492,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
               errors={errors}
               isSubmitting={isSubmitting}
             />
-          </ScrollView>
-
-          {isSubmitting && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator
-                animating={true}
-                size="large"
-                color={theme.colors.primary}
-              />
-            </View>
-          )}
-
-          <View style={styles.modalActions}>
-            <Button
-              mode="outlined"
-              onPress={onDismiss}
-              style={[styles.formButton, styles.cancelButton]}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleSubmit(onSubmit)}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              style={styles.formButton}
-            >
-              {isEditing ? 'Guardar' : 'Crear'}
-            </Button>
-          </View>
-        </View>
-      </Modal>
-    </Portal>
+    </ResponsiveModal>
   );
 };
 

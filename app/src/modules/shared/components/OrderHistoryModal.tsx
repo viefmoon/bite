@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Platform, StyleSheet } from 'react-native';
-import { Modal, Text, Divider } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Text, Divider } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import { OrderHistoryContent } from '@/modules/shiftAudit/components/OrderHistoryContent';
@@ -24,15 +24,14 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-
-  const platformStyles = StyleSheet.create({
-    modalContainerIOS: {
-      marginVertical: 60,
-    },
-    modalContainerAndroid: {
-      marginVertical: 40,
+  
+  const localStyles = StyleSheet.create({
+    modalHeaderSubtitle: {
+      paddingHorizontal: theme.spacing.l,
+      paddingBottom: theme.spacing.s,
     },
   });
+
 
   // Query para obtener el conteo de elementos del historial para el header
   const { data: historyData } = useQuery({
@@ -53,62 +52,38 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   }
 
   return (
-    <Modal
+    <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
-      contentContainerStyle={[
-        styles.modalContainer,
-        Platform.OS === 'ios' && platformStyles.modalContainerIOS,
-        Platform.OS === 'android' && platformStyles.modalContainerAndroid,
-      ]}
+      maxWidthPercent={90}
+      maxHeightPercent={90}
+      title={`Historial de Orden #${orderNumber || ''}`}
       dismissable={true}
-      dismissableBackButton={false}
     >
-      {/* Header del Modal */}
-      <View style={styles.modalHeader}>
-        <View style={styles.headerTitleContainer}>
-          <Text
-            variant="titleMedium"
-            style={[styles.headerTitle, { color: theme.colors.onSurface }]}
-            numberOfLines={1}
-          >
-            Historial de Orden #{orderNumber || ''}
-          </Text>
-          <Text
-            variant="bodySmall"
-            style={[
-              styles.headerSubtitle,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            {historyData?.length || 0} cambios registrados
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={onDismiss}
+      <View style={localStyles.modalHeaderSubtitle}>
+        <Text
+          variant="bodySmall"
           style={[
-            styles.closeButton,
-            { backgroundColor: theme.colors.errorContainer },
+            styles.headerSubtitle,
+            { color: theme.colors.onSurfaceVariant },
           ]}
-          activeOpacity={0.8}
         >
-          <Icon name="close" size={24} color={theme.colors.onErrorContainer} />
-        </TouchableOpacity>
+          {historyData?.length || 0} cambios registrados
+        </Text>
       </View>
 
       <Divider />
 
-      {/* Contenido del Modal usando el componente reutilizable */}
       <View style={styles.modalContent}>
         <OrderHistoryContent
           orderId={orderId}
           orderNumber={orderNumber}
-          showHeaderInfo={false} // Ya tenemos header en el modal
+          showHeaderInfo={false}
           contentContainerStyle={styles.listContent}
           emptyContainerStyle={styles.emptyContainer}
         />
       </View>
-    </Modal>
+    </ResponsiveModal>
   );
 };
 

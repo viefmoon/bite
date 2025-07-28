@@ -3,7 +3,6 @@ import { View, StyleSheet } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { useAppTheme } from '../../styles/theme';
 import { ResponsiveModal } from '../responsive/ResponsiveModal';
-import { useResponsive } from '../../hooks/useResponsive';
 import ConfirmationModal from '../common/ConfirmationModal';
 import {
   ImageSection,
@@ -68,7 +67,6 @@ function GenericDetailModal<TItem extends { id: string }>({
   children,
 }: GenericDetailModalProps<TItem>) {
   const theme = useAppTheme();
-  const responsive = useResponsive();
 
   // Estado para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -109,7 +107,8 @@ function GenericDetailModal<TItem extends { id: string }>({
       <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        maxWidth={responsive.isTablet ? 480 : 400}
+        maxWidthPercent={90}
+        maxHeightPercent={90}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator animating size="large" />
@@ -129,7 +128,8 @@ function GenericDetailModal<TItem extends { id: string }>({
         visible={visible}
         onDismiss={onDismiss}
         dismissable={!isDeleting}
-        preset="detail"
+        maxWidthPercent={90}
+        maxHeightPercent={90}
         title={title}
         footer={
           onEdit || onDelete ? (

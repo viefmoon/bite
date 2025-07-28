@@ -2,11 +2,8 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { Text, Button, Divider } from 'react-native-paper';
+import { Text, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
@@ -38,7 +35,6 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
   onShiftClosed,
 }) => {
   const theme = useAppTheme();
-  const responsive = useResponsive();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const {
@@ -104,123 +100,88 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
     },
   }[mode];
 
-  // Footer para ResponsiveRNModal
-  const modalFooter = (
-    <View style={styles.footer}>
-      <Button
-        mode="text"
-        onPress={handleDismiss}
-        style={[styles.button, styles.cancelButton]}
-        labelStyle={styles.cancelButtonText}
-        disabled={loading}
-      >
-        Cancelar
-      </Button>
-      <Button
-        mode="contained"
-        onPress={handleShiftAction}
-        style={[
-          styles.button,
-          styles.confirmButton,
-          !isOpenMode && styles.closeConfirmButton,
-        ]}
-        contentStyle={styles.confirmButtonContent}
-        labelStyle={[
-          styles.confirmButtonText,
-          !isOpenMode && styles.closeConfirmButtonText,
-        ]}
-        loading={loading}
-        disabled={loading}
-        icon={config.buttonIcon}
-      >
-        {config.buttonText}
-      </Button>
-    </View>
-  );
 
   return (
     <ResponsiveModal
       visible={visible}
       onDismiss={handleDismiss}
       dismissable={!loading}
-      showHeader={false}
-      maxWidth={responsive.isTablet ? 520 : 480}
-      maxHeightPercent={responsive.isSmallMobile ? 95 : 85}
-      isLoading={false}
-      footer={modalFooter}
+      title={config.title}
+      maxWidthPercent={85}
+      maxHeightPercent={85}
+      isLoading={loading}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: handleDismiss,
+          disabled: loading,
+          colorPreset: 'secondary'
+        },
+        {
+          label: config.buttonText,
+          mode: 'contained',
+          onPress: handleShiftAction,
+          loading: loading,
+          disabled: loading,
+          icon: config.buttonIcon,
+          colorPreset: isOpenMode ? 'primary' : 'warning'
+        }
+      ]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+      <View style={[styles.header, !isOpenMode && styles.closeHeader]}>
+        <View
+          style={[
+            styles.iconContainer,
+            !isOpenMode && styles.closeIconContainer,
+          ]}
         >
-          <View style={[styles.header, !isOpenMode && styles.closeHeader]}>
-            <View
-              style={[
-                styles.iconContainer,
-                !isOpenMode && styles.closeIconContainer,
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={config.icon as any}
-                size={48}
-                color={config.iconColor}
-              />
-            </View>
-            <Text variant="headlineMedium" style={styles.title}>
-              {config.title}
-            </Text>
-            <Text variant="bodyLarge" style={styles.date}>
-              {todayFormatted}
-            </Text>
-          </View>
+          <MaterialCommunityIcons
+            name={config.icon as any}
+            size={48}
+            color={config.iconColor}
+          />
+        </View>
+        <Text variant="bodyLarge" style={styles.date}>
+          {todayFormatted}
+        </Text>
+      </View>
 
-          <Divider style={styles.divider} />
+      <Divider style={styles.divider} />
 
-          <View style={styles.content}>
-            {!isOpenMode && shift && (
-              <ShiftSummaryCard
-                shift={shift}
-                formatTime={formatTime}
-                formatCurrency={formatCurrency}
-              />
-            )}
+      <View style={styles.content}>
+        {!isOpenMode && shift && (
+          <ShiftSummaryCard
+            shift={shift}
+            formatTime={formatTime}
+            formatCurrency={formatCurrency}
+          />
+        )}
 
-            <ShiftActionForm
-              mode={mode}
-              cashAmount={cashAmount}
-              onCashAmountChange={handleCashAmountChange}
-              notes={notes}
-              onNotesChange={handleNotesChange}
-              error={error}
-              loading={loading}
-              shift={shift}
-              calculateDifference={calculateDifference}
-              formatCurrency={formatCurrency}
-            />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <ShiftActionForm
+          mode={mode}
+          cashAmount={cashAmount}
+          onCashAmountChange={handleCashAmountChange}
+          notes={notes}
+          onNotesChange={handleNotesChange}
+          error={error}
+          loading={loading}
+          shift={shift}
+          calculateDifference={calculateDifference}
+          formatCurrency={formatCurrency}
+        />
+      </View>
     </ResponsiveModal>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
-    scrollViewContent: {
-      flexGrow: 1,
-    },
     header: {
       alignItems: 'center',
       paddingTop: theme.spacing.xl,
       paddingHorizontal: theme.spacing.l,
       paddingBottom: theme.spacing.l,
-      borderTopLeftRadius: theme.roundness * 3,
-      borderTopRightRadius: theme.roundness * 3,
     },
     closeHeader: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -250,12 +211,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       shadowRadius: 8,
       elevation: 4,
     },
-    title: {
-      color: theme.colors.onSurface,
-      fontWeight: '700',
-      textAlign: 'center',
-      marginBottom: theme.spacing.xs,
-    },
     date: {
       color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
@@ -267,127 +222,5 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     content: {
       padding: theme.spacing.l,
-    },
-    infoCard: {
-      flexDirection: 'row',
-      backgroundColor: theme.colors.primaryContainer,
-      padding: theme.spacing.m,
-      borderRadius: theme.roundness,
-      marginBottom: theme.spacing.l,
-      gap: theme.spacing.s,
-    },
-    infoText: {
-      flex: 1,
-      color: theme.colors.onPrimaryContainer,
-      lineHeight: 20,
-    },
-    summaryCard: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      borderRadius: theme.roundness * 2,
-      marginBottom: theme.spacing.l,
-    },
-    sectionTitle: {
-      color: theme.colors.onSurface,
-      fontWeight: '600',
-      marginBottom: theme.spacing.m,
-    },
-    summaryRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacing.s,
-    },
-    label: {
-      color: theme.colors.onSurfaceVariant,
-      flex: 1,
-    },
-    value: {
-      color: theme.colors.onSurface,
-      fontWeight: '500',
-      textAlign: 'right',
-    },
-    highlight: {
-      color: theme.colors.primary,
-      fontWeight: '600',
-    },
-    inputSection: {
-      marginTop: theme.spacing.s,
-    },
-    input: {
-      backgroundColor: theme.colors.surface,
-      marginBottom: theme.spacing.s,
-    },
-    differenceContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: theme.spacing.m,
-      borderRadius: theme.roundness,
-      marginBottom: theme.spacing.s,
-      gap: theme.spacing.s,
-    },
-    positiveDifference: {
-      backgroundColor: 'rgba(76, 175, 80, 0.1)',
-      borderWidth: 1,
-      borderColor: '#4CAF50',
-    },
-    negativeDifference: {
-      backgroundColor: 'rgba(255, 87, 34, 0.1)',
-      borderWidth: 1,
-      borderColor: '#FF5722',
-    },
-    differenceText: {
-      fontWeight: '600',
-    },
-    errorText: {
-      marginTop: -theme.spacing.xs,
-      marginBottom: theme.spacing.s,
-    },
-    footer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: theme.spacing.m,
-    },
-    button: {
-      flex: 1,
-    },
-    cancelButton: {
-      borderWidth: 2,
-      borderColor: theme.colors.outline,
-      borderRadius: theme.roundness * 2,
-    },
-    cancelButtonText: {
-      color: theme.colors.onSurface,
-      fontWeight: '600',
-    },
-    confirmButton: {
-      backgroundColor: theme.colors.primary,
-      borderWidth: 2,
-      borderColor: theme.colors.primary,
-      borderRadius: theme.roundness * 2,
-    },
-    closeConfirmButton: {
-      backgroundColor: '#FF5722',
-      borderColor: '#FF5722',
-    },
-    confirmButtonContent: {
-      paddingVertical: theme.spacing.xs,
-    },
-    confirmButtonText: {
-      color: theme.colors.onPrimary,
-      fontWeight: '600',
-    },
-    closeConfirmButtonText: {
-      color: '#FFFFFF',
-    },
-    keyboardAvoidingView: {
-      flex: 1,
-    },
-    positiveText: {
-      color: '#4CAF50',
-    },
-    negativeText: {
-      color: '#FF5722',
     },
   });
