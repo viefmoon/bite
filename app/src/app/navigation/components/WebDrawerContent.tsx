@@ -18,9 +18,9 @@ import { THEME_MODE } from '../../types/theme.types';
 import { useAuthStore } from '../../store/authStore';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
-import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 interface WebDrawerContentProps {
   onClose: () => void;
@@ -225,7 +225,7 @@ export function WebDrawerContent({ onClose }: WebDrawerContentProps) {
           <Divider style={styles.divider} />
 
           {/* Sección de Cocina */}
-          {user?.role?.id === 5 && (
+          {user?.role?.id === RoleEnum.KITCHEN && (
             <PaperDrawer.Section style={styles.drawerSection}>
               <Text style={styles.configSubheader}>Cocina</Text>
               <TouchableRipple

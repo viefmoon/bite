@@ -17,13 +17,13 @@ import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 import { clearImageCache } from '../../lib/imageCache';
 import { useSnackbarStore } from '../../store/snackbarStore';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 import {
   hasPermission,
   DRAWER_SECTIONS,
   DrawerSection,
 } from '../../constants/rolePermissions';
 import { generateNavigationAction } from '../helpers/navigationHelpers';
-import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
@@ -213,7 +213,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   ) => {
     return renderDrawerItem(route, label, icon, () => {
       // For kitchen users in KitchenOnlyNavigator, handle navigation differently
-      const isKitchenUser = user?.role?.id === 5;
+      const isKitchenUser = user?.role?.id === RoleEnum.KITCHEN;
       if (isKitchenUser && route === 'KitchenScreen') {
         // Simply navigate to the Kitchen screen without reset
         props.navigation.navigate('Kitchen');
