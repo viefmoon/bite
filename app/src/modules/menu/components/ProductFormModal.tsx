@@ -187,8 +187,12 @@ const useProductFormLogic = ({
 
           let imageUrl = null;
           if (initialData.photo?.path) {
-            const { getImageUrlFromStore } = await import('@/app/lib/imageUtils');
-            imageUrl = getImageUrlFromStore(initialData.photo.path) || initialData.photo.path;
+            const { getImageUrlFromStore } = await import(
+              '@/app/lib/imageUtils'
+            );
+            imageUrl =
+              getImageUrlFromStore(initialData.photo.path) ||
+              initialData.photo.path;
           }
 
           reset({
