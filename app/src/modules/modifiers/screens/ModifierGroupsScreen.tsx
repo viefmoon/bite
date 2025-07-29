@@ -4,6 +4,9 @@ import { Text, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
@@ -33,6 +36,8 @@ const ModifierGroupsScreen = () => {
   const navigation = useNavigation<NavigationProps>();
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,21 +74,38 @@ const ModifierGroupsScreen = () => {
 
   useRefreshModuleOnFocus('modifierGroups');
 
+  const deleteModifierGroupMutation = useMutation({
+    mutationFn: (id: string) => modifierGroupService.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['modifierGroups'] });
+      showSnackbar({
+        message: 'Grupo de modificadores eliminado con éxito',
+        type: 'success',
+      });
+    },
+    onError: (error) => {
+      showSnackbar({
+        message: `Error al eliminar grupo de modificadores: ${getApiErrorMessage(error)}`,
+        type: 'error',
+      });
+    },
+  });
+
+  const { mutateAsync: deleteModifierGroup } = deleteModifierGroupMutation;
+
   const {
     isFormModalVisible,
     isDetailModalVisible,
     editingItem,
     selectedItem,
-    isDeleting,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    deleteConfirmation,
   } = useCrudScreenLogic<ModifierGroup>({
     entityName: 'Grupo de Modificadores',
     queryKey: ['modifierGroups', queryParams],
-    deleteMutationFn: modifierGroupService.remove,
+    deleteMutationFn: deleteModifierGroup,
   });
 
   const handleNavigateToModifiers = (groupId: string, groupName: string) => {
@@ -244,8 +266,8 @@ const ModifierGroupsScreen = () => {
             handleOpenEditModal(selectedItem);
           }
         }}
-        deleteConfirmation={deleteConfirmation}
-        isDeleting={isDeleting}
+        onDelete={(id) => deleteModifierGroupMutation.mutate(id)}
+        isDeleting={deleteModifierGroupMutation.isPending}
         editButtonLabel="Editar"
         deleteButtonLabel="Eliminar"
         showImage={false}

@@ -6,7 +6,6 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Portal, IconButton } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
@@ -80,7 +79,6 @@ const CategoriesScreen: React.FC = () => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModalVisibility,
-    deleteConfirmation,
   } = useCrudScreenLogic<Category>({
     entityName: 'Categoría',
     queryKey: ['categories', { filter: activeFilter }],
@@ -407,21 +405,9 @@ const CategoriesScreen: React.FC = () => {
             },
           ]}
           onEdit={handleOpenEditModal as (item: any) => void}
-          onDelete={deleteConfirmation.show}
+          onDelete={(id) => deleteCategoryMutation.mutate(id)}
           isDeleting={deleteCategoryMutation.isPending}
           showImage={true}
-        />
-
-        <ConfirmationModal
-          visible={deleteConfirmation.visible}
-          title={deleteConfirmation.title}
-          message={deleteConfirmation.message}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-          confirmButtonColor={theme.colors.error}
-          onConfirm={deleteConfirmation.onConfirm}
-          onCancel={deleteConfirmation.onCancel}
-          onDismiss={deleteConfirmation.onCancel}
         />
       </Portal>
     </SafeAreaView>

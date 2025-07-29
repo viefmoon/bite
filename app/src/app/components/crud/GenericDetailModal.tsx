@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
-import { useAppTheme } from '../../styles/theme';
 import { ResponsiveModal } from '../responsive/ResponsiveModal';
 import ConfirmationModal from '../common/ConfirmationModal';
 import {
@@ -37,7 +36,7 @@ interface GenericDetailModalProps<TItem extends { id: string }> {
 
   // Acciones
   onEdit?: (item: TItem) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
 
   // Textos personalizables
@@ -66,7 +65,6 @@ function GenericDetailModal<TItem extends { id: string }>({
   showImage = false,
   children,
 }: GenericDetailModalProps<TItem>) {
-  const theme = useAppTheme();
 
   // Estado para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -95,10 +93,16 @@ function GenericDetailModal<TItem extends { id: string }>({
     setShowDeleteConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (onDelete && item) {
-      onDelete(item.id);
-      setShowDeleteConfirm(false);
+      try {
+        await onDelete(item.id);
+        setShowDeleteConfirm(false);
+        onDismiss(); // Cerrar el modal de detalle después de eliminar
+      } catch (error) {
+        // Si hay error, solo cerrar el modal de confirmación
+        setShowDeleteConfirm(false);
+      }
     }
   };
 
@@ -181,7 +185,8 @@ function GenericDetailModal<TItem extends { id: string }>({
         message="¿Estás seguro de que quieres eliminar este elemento?"
         confirmText="Eliminar"
         cancelText="Cancelar"
-        confirmButtonColor={theme.colors.error}
+        confirmColorPreset="error"
+        isConfirming={isDeleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
         onDismiss={() => setShowDeleteConfirm(false)}

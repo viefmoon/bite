@@ -69,7 +69,6 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    deleteConfirmation,
   } = useCrudScreenLogic<Area>({
     entityName: 'Área',
     queryKey: [
@@ -217,7 +216,7 @@ const AreasScreen: React.FC<AreasListScreenProps> = ({ navigation }) => {
             handleOpenEditModal(selectedItem);
           }
         }}
-        deleteConfirmation={deleteConfirmation}
+        onDelete={(id) => deleteArea(id)}
         isDeleting={isDeleting}
         showImage={false}
       />

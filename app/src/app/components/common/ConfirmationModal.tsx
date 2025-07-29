@@ -39,19 +39,18 @@ const ConfirmationModal = ({
 
   const handleCancel = () => {
     if (onCancel) onCancel();
-    handleDismiss();
   };
 
   const handleConfirm = () => {
     onConfirm();
-    handleDismiss();
+    // No cerrar el modal aquí - dejar que el componente padre lo maneje
   };
 
   return (
     <ResponsiveModal
       visible={visible}
       onDismiss={handleDismiss}
-      maxWidthPercent={60}
+      maxWidthPercent={85}
       maxHeightPercent={40}
       title={title}
       dismissable={!isConfirming}
@@ -61,15 +60,16 @@ const ConfirmationModal = ({
           ? [
               {
                 label: cancelText,
-                mode: 'text' as const,
+                mode: 'outlined' as const,
                 onPress: handleCancel,
                 disabled: isConfirming,
+                colorPreset: 'primary' as const,
               },
             ]
           : []),
         {
           label: confirmText,
-          mode: 'contained' as const,
+          mode: confirmColorPreset === 'error' ? 'contained' as const : 'outlined' as const,
           onPress: handleConfirm,
           loading: isConfirming,
           colorPreset: confirmColorPreset,

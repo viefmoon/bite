@@ -73,7 +73,6 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    deleteConfirmation,
   } = useCrudScreenLogic<Table & { id: string }>({
     entityName: 'Mesa',
     queryKey: [
@@ -229,7 +228,7 @@ const TablesScreen: React.FC<TablesListScreenProps> = ({ route }) => {
             handleOpenEditModal(selectedItem);
           }
         }}
-        deleteConfirmation={deleteConfirmation}
+        onDelete={(id) => deleteTable(id)}
         isDeleting={isDeleting}
         showImage={false}
       />

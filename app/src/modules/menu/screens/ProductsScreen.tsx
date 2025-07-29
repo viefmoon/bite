@@ -20,7 +20,6 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
-import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ProductFormModal from '../components/ProductFormModal';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
 import { FileObject } from '@/app/components/common/CustomImagePicker';
@@ -101,7 +100,6 @@ function ProductsScreen(): React.ReactElement {
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModalVisibility,
-    deleteConfirmation,
   } = useCrudScreenLogic<Product>({
     entityName: 'Producto',
     queryKey: ['products', queryFilters],
@@ -308,11 +306,7 @@ function ProductsScreen(): React.ReactElement {
               handleOpenEditModal(selectedItem);
             }
           }}
-          onDelete={() => {
-            if (selectedItem) {
-              deleteConfirmation.show(selectedItem.id);
-            }
-          }}
+          onDelete={(id) => deleteProduct(id)}
           showImage={true}
         />
 
@@ -327,18 +321,6 @@ function ProductsScreen(): React.ReactElement {
             subcategoryId={subcategoryId}
           />
         )}
-
-        <ConfirmationModal
-          visible={deleteConfirmation.visible}
-          title={deleteConfirmation.title}
-          message={deleteConfirmation.message}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-          confirmButtonColor={theme.colors.error}
-          onConfirm={deleteConfirmation.onConfirm}
-          onCancel={deleteConfirmation.onCancel}
-          onDismiss={deleteConfirmation.onCancel}
-        />
       </Portal>
     </SafeAreaView>
   );

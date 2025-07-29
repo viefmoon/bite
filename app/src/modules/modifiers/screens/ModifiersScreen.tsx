@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Portal, Button } from 'react-native-paper';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -12,6 +12,8 @@ import { useAppTheme } from '@/app/styles/theme';
 import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
+import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 import ModifierFormModal from '../components/ModifierFormModal';
 import GenericList, {
@@ -46,14 +48,14 @@ const ModifiersScreen = () => {
   const route = useRoute<ModifiersScreenRouteProp>();
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
+  const queryClient = useQueryClient();
+  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
 
   const { groupId, groupName } = route.params ?? {};
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-
-  const QUERY_KEY = ['modifiers', groupId];
 
   const debouncedSetSearch = useMemo(
     () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
@@ -91,28 +93,45 @@ const ModifiersScreen = () => {
     refetch,
     isRefetching,
   } = useQuery<Modifier[], Error>({
-    queryKey: [QUERY_KEY[0], groupId, queryParams],
+    queryKey: ['modifiers', groupId, queryParams],
     queryFn: () => modifierService.findByGroupId(groupId, queryParams),
     enabled: !!groupId,
   });
 
   useRefreshModuleOnFocus('modifiers');
 
+  const deleteModifierMutation = useMutation({
+    mutationFn: (id: string) => modifierService.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['modifiers'] });
+      showSnackbar({
+        message: 'Modificador eliminado con éxito',
+        type: 'success',
+      });
+    },
+    onError: (error) => {
+      showSnackbar({
+        message: `Error al eliminar modificador: ${getApiErrorMessage(error)}`,
+        type: 'error',
+      });
+    },
+  });
+
+  const { mutateAsync: deleteModifier } = deleteModifierMutation;
+
   const {
     isFormModalVisible,
     isDetailModalVisible,
     editingItem,
     selectedItem,
-    isDeleting,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleOpenDetailModal,
     handleCloseModals,
-    deleteConfirmation,
   } = useCrudScreenLogic<Modifier>({
     entityName: 'Modificador',
-    queryKey: QUERY_KEY,
-    deleteMutationFn: modifierService.remove,
+    queryKey: ['modifiers', groupId, queryParams],
+    deleteMutationFn: deleteModifier,
   });
 
   const handleFormModalSave = () => {
@@ -249,9 +268,11 @@ const ModifiersScreen = () => {
           statusConfig={listRenderConfig.statusConfig}
           fieldsToDisplay={detailFields}
           onEdit={handleEditFromDetails}
-          deleteConfirmation={deleteConfirmation}
-          isDeleting={isDeleting}
+          onDelete={(id) => deleteModifierMutation.mutate(id)}
+          isDeleting={deleteModifierMutation.isPending}
           showImage={false}
+          editButtonLabel="Editar"
+          deleteButtonLabel="Eliminar"
         />
       </Portal>
     </SafeAreaView>
