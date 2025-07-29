@@ -194,7 +194,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
-      maxWidthPercent={85}
+      maxWidthPercent={95}
       maxHeightPercent={85}
       title={isEditing ? 'Editar Impresora' : 'Nueva Impresora'}
       dismissable={!isSubmitting}
