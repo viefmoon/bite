@@ -173,20 +173,11 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       backgroundColor: theme.colors.background,
       borderRadius: 16,
       borderWidth: 2,
-      borderColor: theme.colors.primary + '40',
+      borderColor: theme.dark ? theme.colors.outlineVariant : theme.colors.outline,
       width: modalDimensions.width,
       maxWidth: modalDimensions.maxWidth,
       maxHeight: modalDimensions.maxHeight,
       overflow: 'hidden',
-      // Sombra
-      elevation: 8,
-      shadowColor: theme.colors.primary,
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
     }),
     [theme, modalDimensions],
   );

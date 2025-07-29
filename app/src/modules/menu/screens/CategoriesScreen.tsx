@@ -294,10 +294,7 @@ const CategoriesScreen: React.FC = () => {
         setIsUploadingImage(false);
       }
     },
-    determineFinalPhotoId: (formImageUri) => {
-      // Para mantener compatibilidad, retornamos la URI del formulario
-      return formImageUri;
-    },
+    determineFinalPhotoId: ImageUploadService.determinePhotoId,
     imagePickerSize: 150,
     placeholderIcon: 'folder-outline',
     placeholderText: 'Imagen de categoría',
