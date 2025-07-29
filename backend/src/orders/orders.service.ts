@@ -1833,9 +1833,15 @@ export class OrdersService {
     // Agregar información del usuario creador
     if (order.user) {
       dto.createdBy = {
-        username: order.user.username,
-        firstName: order.user.firstName,
-        lastName: order.user.lastName,
+        username: order.user.username || 'Usuario',
+        firstName: order.user.firstName || null,
+        lastName: order.user.lastName || null,
+      };
+    } else if (order.isFromWhatsApp) {
+      dto.createdBy = {
+        username: 'WhatsApp',
+        firstName: 'Orden de',
+        lastName: 'WhatsApp',
       };
     }
 
@@ -1960,9 +1966,16 @@ export class OrdersService {
     // Agregar información del usuario creador
     if (order.user) {
       dto.createdBy = {
-        username: order.user.username,
-        firstName: order.user.firstName,
-        lastName: order.user.lastName,
+        username: order.user.username || 'Usuario',
+        firstName: order.user.firstName || null,
+        lastName: order.user.lastName || null,
+      };
+    } else if (order.isFromWhatsApp) {
+      // Si no hay usuario pero es de WhatsApp, indicarlo
+      dto.createdBy = {
+        username: 'WhatsApp',
+        firstName: 'Orden de',
+        lastName: 'WhatsApp',
       };
     }
 
@@ -2012,9 +2025,16 @@ export class OrdersService {
     // Agregar información del usuario creador
     if (order.user) {
       dto.createdBy = {
-        username: order.user.username,
-        firstName: order.user.firstName,
-        lastName: order.user.lastName,
+        username: order.user.username || 'Usuario',
+        firstName: order.user.firstName || null,
+        lastName: order.user.lastName || null,
+      };
+    } else if (order.isFromWhatsApp) {
+      // Si no hay usuario pero es de WhatsApp, indicarlo
+      dto.createdBy = {
+        username: 'WhatsApp',
+        firstName: 'Orden de',
+        lastName: 'WhatsApp',
       };
     }
 

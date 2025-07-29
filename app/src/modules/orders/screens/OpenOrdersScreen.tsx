@@ -18,7 +18,7 @@ import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
 import { useSnackbarStore } from '../../../app/store/snackbarStore';
 import { NAVIGATION_PATHS } from '../../../app/constants/navigationPaths';
-import { OpenOrderItemCard } from '../components/OpenOrderItemCard';
+import OrderSummaryCard from '../../shared/components/OrderSummaryCard';
 import { OrderFilterHeader } from '../components/OrderFilterHeader';
 import {
   useGetOpenOrdersListQuery,
@@ -34,7 +34,9 @@ import { PrintTicketModal } from '../../shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
 import { useListState } from '../../../app/hooks/useListState';
-import { formatOrderType } from '../utils/formatters';
+import { formatOrderType, OrderStatusInfo } from '../utils/formatters';
+import { TouchableOpacity } from 'react-native';
+import { Button, IconButton } from 'react-native-paper';
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
@@ -133,7 +135,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
         await updateOrderMutation.mutateAsync({
           orderId,
           payload: {
-            orderStatus: OrderStatusEnum.IN_PROGRESS,
+            status: OrderStatusEnum.IN_PROGRESS,
           },
         });
 
@@ -157,21 +159,66 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   const renderOrderItem = useCallback(
     ({ item: order }: { item: OrderOpenList }) => (
-      <OpenOrderItemCard
-        order={order}
-        selectedOrderType={selectedOrderType}
-        acceptingOrderId={acceptingOrderId}
-        onPress={handleOrderItemPress}
-        onPrint={handleOpenPrintModal}
-        onAcceptWhatsApp={handleAcceptWhatsAppOrder}
+      <OrderSummaryCard
+        item={{
+          ...order,
+          deliveryInfo: order.deliveryInfo
+            ? {
+                recipientName: order.deliveryInfo.recipientName,
+                recipientPhone: order.deliveryInfo.recipientPhone || undefined,
+                fullAddress: order.deliveryInfo.fullAddress,
+                address: order.deliveryInfo.address?.street
+                  ? `${order.deliveryInfo.address.street} ${order.deliveryInfo.address.number}`
+                  : undefined,
+              }
+            : undefined,
+        }}
+        onPress={() => handleOrderItemPress(order)}
+        showCreatedBy={true}
+        getStatusColor={(status) => OrderStatusInfo.getColor(status, theme)}
+        getStatusLabel={OrderStatusInfo.getLabel}
+        renderActions={(orderItem) => (
+          <View style={styles.actionsContainer}>
+            {selectedOrderType === 'WHATSAPP' &&
+            orderItem.orderStatus === OrderStatusEnum.PENDING ? (
+              <Button
+                mode="contained"
+                icon="check"
+                onPress={() => handleAcceptWhatsAppOrder(orderItem.id as string)}
+                disabled={acceptingOrderId === orderItem.id}
+                loading={acceptingOrderId === orderItem.id}
+                compact
+              >
+                Aceptar
+              </Button>
+            ) : (
+              <TouchableOpacity
+                style={styles.printContainer}
+                onPress={() => handleOpenPrintModal(orderItem as OrderOpenList)}
+                activeOpacity={0.7}
+              >
+                <IconButton icon="printer" size={32} style={styles.printButton} disabled />
+                {((orderItem as OrderOpenList).ticketImpressionCount ?? 0) > 0 && (
+                  <View style={styles.printCountBadge}>
+                    <Text style={styles.printCountText}>
+                      {(orderItem as OrderOpenList).ticketImpressionCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       />
     ),
     [
-      selectedOrderType,
-      acceptingOrderId,
       handleOrderItemPress,
       handleOpenPrintModal,
       handleAcceptWhatsAppOrder,
+      acceptingOrderId,
+      selectedOrderType,
+      theme,
+      styles,
     ],
   );
 
@@ -495,6 +542,37 @@ const createStyles = (
     whatsappButton: {
       backgroundColor: '#25D366',
       borderColor: '#25D366',
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: responsive.isTablet ? 2 : 4,
+    },
+    printContainer: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printButton: {
+      margin: responsive.isTablet ? -6 : -4,
+    },
+    printCountBadge: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      backgroundColor: '#3B82F6',
+      borderRadius: responsive.isTablet ? 8 : 10,
+      minWidth: responsive.isTablet ? 18 : 20,
+      height: responsive.isTablet ? 18 : 20,
+      paddingHorizontal: responsive.isTablet ? 3 : 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printCountText: {
+      color: '#FFFFFF',
+      fontSize: responsive.isTablet ? 9 : 10,
+      fontWeight: 'bold',
     },
   });
 

@@ -14,16 +14,16 @@ interface OrderItemType {
   id: string | number;
   shiftOrderNumber?: number;
   orderNumber?: string | number;
-  orderType: (typeof OrderTypeEnum)[keyof typeof OrderTypeEnum];
+  orderType?: (typeof OrderTypeEnum)[keyof typeof OrderTypeEnum];
   orderStatus: string;
   createdAt: string | Date;
   total?: string | number;
   table?: {
-    name?: string;
-    number?: number;
-    isTemporary?: boolean;
+    id?: string;
+    name: string;
+    isTemporary: boolean;
     area?: { name: string };
-  };
+  } | null;
   area?: { name: string };
   deliveryInfo?: {
     recipientName?: string;
@@ -37,8 +37,8 @@ interface OrderItemType {
   paymentsSummary?: { totalPaid: number };
   payments?: Array<{ amount: number }>;
   createdBy?: {
-    firstName?: string;
-    lastName?: string;
+    firstName?: string | null;
+    lastName?: string | null;
     username?: string;
   };
   isFromWhatsApp?: boolean;
@@ -54,6 +54,7 @@ interface OrderSummaryCardProps {
   renderActions?: (item: OrderItemType) => React.ReactNode;
   getStatusColor?: (status: string) => string;
   getStatusLabel?: (status: string) => string;
+  showCreatedBy?: boolean;
 }
 
 const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
@@ -62,16 +63,20 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   renderActions,
   getStatusColor,
   getStatusLabel,
+  showCreatedBy = true,
 }) => {
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  let orderTitle = `#${item.shiftOrderNumber || item.orderNumber} • ${formatOrderTypeShort(item.orderType)}`;
+  let orderTitle = `#${item.shiftOrderNumber || item.orderNumber}`;
+  if (item.orderType) {
+    orderTitle += ` • ${formatOrderTypeShort(item.orderType)}`;
+  }
 
   if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {
     const tableDisplay = item.table.isTemporary
       ? item.table.name
-      : `Mesa ${item.table.name || item.table.number || 'N/A'}`;
+      : `Mesa ${item.table.name}`;
     orderTitle += ` • ${item.table.area?.name || item.area?.name || 'Sin área'} • ${tableDisplay}`;
   } else if (item.orderType === OrderTypeEnum.TAKE_AWAY) {
     if (item.deliveryInfo?.recipientName || item.deliveryInfo?.customerName) {
@@ -275,11 +280,11 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
             </View>
 
             <View style={styles.rightContainer}>
-              {item.createdBy && (
+              {showCreatedBy && item.createdBy && (
                 <Text style={styles.createdByText} numberOfLines={1}>
                   {item.createdBy.firstName && item.createdBy.lastName
                     ? `${item.createdBy.firstName} ${item.createdBy.lastName}`
-                    : item.createdBy.username}
+                    : item.createdBy.username || 'Usuario desconocido'}
                 </Text>
               )}
               <Chip

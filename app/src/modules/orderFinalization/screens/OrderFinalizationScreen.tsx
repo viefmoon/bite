@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import {
   Surface,
@@ -10,7 +10,8 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrderCard } from '../components/OrderCard';
+import OrderSummaryCard from '../../shared/components/OrderSummaryCard';
+import { OrderStatusInfo } from '../../orders/utils/formatters';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
 import {
@@ -258,12 +259,62 @@ export const OrderFinalizationScreen: React.FC = () => {
 
   const renderOrderCard = useCallback(
     ({ item }: { item: OrderForFinalizationList }) => (
-      <OrderCard
-        order={item}
-        isSelected={selectionState.selectedOrders.has(item.id)}
-        onToggleSelection={handleToggleOrderSelection}
-        onShowDetails={handleShowOrderDetails}
-        onPrintPress={handlePrintFromList}
+      <OrderSummaryCard
+        item={item}
+        onPress={() => handleShowOrderDetails(item)}
+        showCreatedBy={true}
+        getStatusColor={(status) => OrderStatusInfo.getColor(status, theme)}
+        getStatusLabel={OrderStatusInfo.getLabel}
+        renderActions={(orderItem) => (
+          <View style={styles.actionsContainer}>
+            {handlePrintFromList && (
+              <TouchableOpacity
+                style={styles.printContainer}
+                onPress={() => handlePrintFromList(orderItem as OrderForFinalizationList)}
+                activeOpacity={0.7}
+              >
+                <IconButton
+                  icon="printer"
+                  size={32}
+                  style={styles.printButton}
+                  disabled
+                />
+                {((orderItem as OrderForFinalizationList).ticketImpressionCount ?? 0) > 0 && (
+                  <View style={styles.printCountBadge}>
+                    <Text style={styles.printCountText}>
+                      {(orderItem as OrderForFinalizationList).ticketImpressionCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+            <Pressable
+              style={styles.checkboxContainer}
+              onPress={() => handleToggleOrderSelection(orderItem.id as string)}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            >
+              <View style={[
+                styles.customCheckbox,
+                {
+                  backgroundColor: selectionState.selectedOrders.has(orderItem.id as string)
+                    ? theme.colors.primary
+                    : 'transparent',
+                  borderColor: selectionState.selectedOrders.has(orderItem.id as string)
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant,
+                }
+              ]}>
+                {selectionState.selectedOrders.has(orderItem.id as string) && (
+                  <Icon
+                    source="check"
+                    size={responsive.isTablet ? 18 : 22}
+                    color={theme.colors.onPrimary}
+                  />
+                )}
+              </View>
+            </Pressable>
+          </View>
+        )}
       />
     ),
     [
@@ -271,6 +322,9 @@ export const OrderFinalizationScreen: React.FC = () => {
       handleToggleOrderSelection,
       handleShowOrderDetails,
       handlePrintFromList,
+      theme,
+      styles,
+      responsive,
     ],
   );
 
@@ -491,6 +545,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             refreshing={isLoading}
             estimatedItemSize={150}
             removeClippedSubviews={true}
+            extraData={selectionState}
           />
         )}
       </View>
@@ -633,5 +688,50 @@ const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
     listContent: {
       padding: responsive.isTablet ? 6 : 8,
       paddingBottom: responsive.isTablet ? 80 : 100,
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 4,
+    },
+    printContainer: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printButton: {
+      margin: -4,
+    },
+    printCountBadge: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      backgroundColor: '#3B82F6',
+      borderRadius: 10,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    printCountText: {
+      color: '#FFFFFF',
+      fontSize: 10,
+      fontWeight: 'bold',
+    },
+    checkboxContainer: {
+      padding: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    customCheckbox: {
+      width: responsive.isTablet ? 24 : 28,
+      height: responsive.isTablet ? 24 : 28,
+      borderRadius: 6,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });

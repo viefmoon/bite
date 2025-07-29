@@ -104,12 +104,6 @@ export function ShiftOrdersModal({
       // Buscar en notas
       if (order.notes?.toLowerCase().includes(search)) return true;
 
-      // Buscar en user (campo alternativo)
-      if (order.user) {
-        if (order.user.firstName?.toLowerCase().includes(search)) return true;
-        if (order.user.lastName?.toLowerCase().includes(search)) return true;
-      }
-
       return false;
     });
   }, [orders, searchQuery]);
@@ -123,6 +117,12 @@ export function ShiftOrdersModal({
         return theme.colors.error;
       case 'DELIVERED':
         return '#9333EA'; // Morado
+      case 'IN_PROGRESS':
+        return '#FF9800'; // Naranja
+      case 'READY':
+        return '#4CAF50'; // Verde
+      case 'PENDING':
+        return '#2196F3'; // Azul
       default:
         return theme.colors.onSurfaceDisabled;
     }
@@ -136,6 +136,12 @@ export function ShiftOrdersModal({
         return 'Cancelada';
       case 'DELIVERED':
         return 'Entregada';
+      case 'IN_PROGRESS':
+        return 'En progreso';
+      case 'READY':
+        return 'Lista';
+      case 'PENDING':
+        return 'Pendiente';
       default:
         return status;
     }
@@ -157,6 +163,11 @@ export function ShiftOrdersModal({
       notes: item.notes || undefined,
       payments: item.payments as any,
       isFromWhatsApp: item.isFromWhatsApp,
+      createdBy: item.user ? {
+        username: item.user.username,
+        firstName: item.user.firstName,
+        lastName: item.user.lastName,
+      } : undefined,
     };
 
     return (
@@ -165,6 +176,7 @@ export function ShiftOrdersModal({
         onPress={() => handleReceiptPress(item)}
         getStatusColor={getReceiptStatusColor}
         getStatusLabel={getStatusLabel}
+        showCreatedBy={true}
       />
     );
   };

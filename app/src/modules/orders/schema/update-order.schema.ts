@@ -59,7 +59,7 @@ export const updateOrderPayloadSchema = z.object({
   items: z.array(orderItemDtoForBackendSchema).optional(),
   tableId: z.string().uuid().nullable().optional(),
   scheduledAt: z.date().nullable().optional(),
-  deliveryInfo: deliveryInfoSchema.optional(),
+  deliveryInfo: deliveryInfoSchema.nullable().optional(),
   notes: z.string().nullable().optional(),
   status: orderStatusSchema.optional(),
   total: z.number().nonnegative().optional(),

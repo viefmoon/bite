@@ -165,30 +165,29 @@ export const ReceiptsScreen: React.FC = () => {
 
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
-  const renderRestoreAction = (item: ReceiptList) => (
-    <TouchableOpacity
-      style={styles.restoreContainer}
-      onPress={() => handleRecoverPress(item)}
-      activeOpacity={0.7}
-    >
-      <Surface style={styles.restoreButtonSurface} elevation={2}>
-        <IconButton
-          icon="restore"
-          size={36}
-          iconColor={theme.colors.primary}
-          style={styles.restoreButton}
-        />
-      </Surface>
-    </TouchableOpacity>
-  );
-
   const renderReceiptItem = ({ item }: { item: ReceiptList }) => (
     <OrderSummaryCard
       item={item}
       onPress={() => handleReceiptPress(item)}
-      renderActions={renderRestoreAction}
+      renderActions={(orderItem) => (
+        <TouchableOpacity
+          style={styles.restoreContainer}
+          onPress={() => handleRecoverPress(item)}
+          activeOpacity={0.7}
+        >
+          <Surface style={styles.restoreButtonSurface} elevation={2}>
+            <IconButton
+              icon="restore"
+              size={36}
+              iconColor={theme.colors.primary}
+              style={styles.restoreButton}
+            />
+          </Surface>
+        </TouchableOpacity>
+      )}
       getStatusColor={getReceiptStatusColor}
       getStatusLabel={getStatusLabel}
+      showCreatedBy={true}
     />
   );
 

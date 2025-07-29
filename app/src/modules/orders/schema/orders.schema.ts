@@ -83,10 +83,8 @@ export const orderOpenListSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.string(),
   shiftOrderNumber: z.number().optional(),
-  status: orderStatusSchema,
-  orderStatus: orderStatusSchema.optional(),
-  type: orderTypeSchema,
-  orderType: orderTypeSchema.optional(),
+  orderStatus: orderStatusSchema,
+  orderType: orderTypeSchema,
   totalAmount: z.number(),
   total: z.union([z.string(), z.number()]).optional(),
   tableNumber: z.number().nullable(),
@@ -120,7 +118,6 @@ export const orderOpenListSchema = z.object({
   table: z
     .object({
       id: z.string().uuid(),
-      number: z.number(),
       name: z.string(),
       isTemporary: z.boolean(),
       area: z
@@ -166,7 +163,7 @@ export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
 
 // Schema para crear orden
 export const createOrderSchema = z.object({
-  type: orderTypeSchema,
+  orderType: orderTypeSchema,
   orderItems: z.array(orderItemSchema),
   payments: z.array(paymentSchema).optional(),
   adjustments: z.array(adjustmentSchema).optional(),
