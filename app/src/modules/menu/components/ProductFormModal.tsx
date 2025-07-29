@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Modal,
-  Portal,
   Button,
   TextInput,
   Text,
@@ -45,6 +43,7 @@ import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQ
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
 import { Menu } from 'react-native-paper';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -321,7 +320,7 @@ const useProductFormLogic = ({
       variants: hasVariants ? formData.variants : [],
     };
 
-    await onFormSubmit(finalData, finalPhotoId ?? null, localSelectedFile);
+    await onFormSubmit(finalData, finalPhotoId, localSelectedFile);
     setLocalSelectedFile(null);
   };
 
@@ -473,22 +472,32 @@ function ProductFormModal({
   });
 
   return (
-    <Portal>
-      <Modal
+    <>
+      <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={styles.modalSurface}
+        title={isEditing ? 'Editar Producto' : 'Nuevo Producto'}
+        maxWidthPercent={95}
+        maxHeightPercent={90}
         dismissable={!isSubmitting && !isInternalImageUploading}
+        isLoading={isSubmitting || isInternalImageUploading}
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'outlined',
+            onPress: onDismiss,
+            disabled: isSubmitting || isInternalImageUploading,
+          },
+          {
+            label: isEditing ? 'Guardar' : 'Crear',
+            mode: 'contained',
+            onPress: handleSubmit,
+            loading: isSubmitting || isInternalImageUploading,
+            disabled: isSubmitting || isInternalImageUploading,
+          },
+        ]}
       >
-        <View style={styles.modalHeader}>
-          <Text variant="titleLarge" style={styles.modalTitle}>
-            {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
-          </Text>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Card style={styles.card}>
-            <Card.Content>
+          <View style={styles.content}>
               <View style={styles.imagePickerContainer}>
                 <CustomImagePicker
                   value={currentImageUri}
@@ -948,40 +957,8 @@ function ProductFormModal({
                   </HelperText>
                 )}
               </View>
-            </Card.Content>
-          </Card>
-        </ScrollView>
-
-        {(isSubmitting || isInternalImageUploading) && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator
-              animating={true}
-              size="large"
-              color={theme.colors.primary}
-            />
           </View>
-        )}
-
-        <View style={styles.modalActions}>
-          <Button
-            mode="outlined"
-            onPress={onDismiss}
-            style={[styles.formButton, styles.cancelButton]}
-            disabled={isSubmitting || isInternalImageUploading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleSubmit}
-            loading={isSubmitting || isInternalImageUploading}
-            disabled={isSubmitting || isInternalImageUploading}
-            style={styles.formButton}
-          >
-            {isEditing ? 'Guardar' : 'Crear'}
-          </Button>
-        </View>
-      </Modal>
+      </ResponsiveModal>
 
       <VariantFormModal
         visible={isVariantModalVisible}
@@ -989,7 +966,7 @@ function ProductFormModal({
         onSubmit={handleVariantSubmit}
         initialData={variantInitialData}
       />
-    </Portal>
+    </>
   );
 }
 
@@ -998,56 +975,13 @@ const createStyles = (
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
-    modalSurface: {
-      padding: 0,
-      margin: responsive.spacing(20),
-      marginHorizontal: responsive.isTablet
-        ? responsive.spacing(40)
-        : responsive.spacing(20),
-      borderRadius: theme.roundness * 2,
-      elevation: 4,
-      backgroundColor: theme.colors.background,
-      maxHeight: responsive.isTablet ? '92%' : '90%',
-      minHeight: responsive.isTablet ? 650 : undefined,
-      maxWidth: responsive.isTablet ? 700 : 500,
-      alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '90%',
-      overflow: 'hidden',
-    },
-    modalHeader: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.isTablet
-        ? responsive.spacing(theme.spacing.s)
-        : responsive.spacing(theme.spacing.m),
-      paddingHorizontal: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      borderTopLeftRadius: theme.roundness * 2,
-      borderTopRightRadius: theme.roundness * 2,
-    },
-    modalTitle: {
-      color: theme.colors.onPrimary,
-      fontWeight: 'bold',
-      textAlign: 'center',
-      fontSize: responsive.isTablet ? 20 : 22,
-    },
-    scrollContent: {
-      padding: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      paddingBottom: responsive.isTablet
-        ? responsive.spacing(theme.spacing.l)
-        : responsive.spacing(theme.spacing.xl),
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      elevation: 1,
+    content: {
+      flex: 1,
     },
     input: {
       marginBottom: responsive.isTablet
         ? responsive.spacing(theme.spacing.s)
         : responsive.spacing(theme.spacing.m),
-      backgroundColor: theme.colors.surfaceVariant,
     },
     switchContainer: {
       flexDirection: 'row',
@@ -1257,24 +1191,6 @@ const createStyles = (
       gap: responsive.isTablet
         ? responsive.spacing(theme.spacing.s)
         : responsive.spacing(theme.spacing.m),
-    },
-    formButton: {
-      borderRadius: theme.roundness * 2,
-      paddingHorizontal: responsive.isTablet
-        ? responsive.spacing(theme.spacing.m)
-        : responsive.spacing(theme.spacing.l),
-      minWidth: responsive.isTablet ? 100 : 120,
-    },
-    cancelButton: {
-      marginRight: 0,
-    },
-    loadingOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10,
-      borderRadius: theme.roundness * 2,
     },
   });
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -89,6 +89,7 @@ function ProductsScreen(): React.ReactElement {
 
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation();
+
   const { mutateAsync: deleteProduct } = useDeleteProductMutation();
 
   const {
@@ -118,67 +119,56 @@ function ProductsScreen(): React.ReactElement {
     }));
   }, [productsResponse]);
 
-  const handleFormSubmit = useCallback(
-    async (
-      formData: ProductFormInputs,
-      photoId: string | null | undefined,
-      _file?: FileObject | null,
-    ) => {
-      const isEditing = !!editingItem;
+  const handleFormSubmit = async (
+    formData: ProductFormInputs,
+    photoId: string | null | undefined,
+    _file?: FileObject | null,
+  ) => {
+    const isEditing = !!editingItem;
 
-      const { imageUri, ...dataToSend } = formData;
+    const { imageUri, ...dataToSend } = formData;
 
-      const mutationData = {
-        ...dataToSend,
-        modifierGroupIds: dataToSend.modifierGroupIds ?? [],
-        ...(photoId !== undefined && { photoId }),
-      };
+    const mutationData = {
+      ...dataToSend,
+      modifierGroupIds: dataToSend.modifierGroupIds ?? [],
+      ...(photoId !== undefined && { photoId }),
+    };
 
-      try {
-        let productResult: Product;
+    try {
+      let productResult: Product;
 
-        if (isEditing && editingItem) {
-          productResult = await updateMutation.mutateAsync({
-            id: editingItem.id,
-            data: mutationData,
-          });
-        } else {
-          productResult = await createMutation.mutateAsync(mutationData);
-        }
-
-        const message = isEditing
-          ? 'Producto actualizado con éxito'
-          : 'Producto creado con éxito';
-
-        showSnackbar({ message, type: 'success' });
-        handleCloseModalVisibility();
-
-        queryClient.invalidateQueries({
-          queryKey: ['products', queryFilters],
+      if (isEditing && editingItem) {
+        productResult = await updateMutation.mutateAsync({
+          id: editingItem.id,
+          data: mutationData,
         });
-        if (productResult?.id) {
-          queryClient.invalidateQueries({
-            queryKey: ['product', productResult.id],
-          });
-        }
-      } catch (err) {
-        const errorMessage = getApiErrorMessage(err);
-        showSnackbar({
-          message: `Error al ${isEditing ? 'actualizar' : 'crear'} producto: ${errorMessage}`,
-          type: 'error',
+      } else {
+        productResult = await createMutation.mutateAsync(mutationData);
+      }
+
+      const message = isEditing
+        ? 'Producto actualizado con éxito'
+        : 'Producto creado con éxito';
+
+      showSnackbar({ message, type: 'success' });
+      handleCloseModalVisibility();
+
+      queryClient.invalidateQueries({
+        queryKey: ['products', queryFilters],
+      });
+      if (productResult?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['product', productResult.id],
         });
       }
-    },
-    [
-      editingItem,
-      updateMutation,
-      createMutation,
-      showSnackbar,
-      handleCloseModalVisibility,
-      queryClient,
-      queryFilters,
-    ],
-  );
+    } catch (err) {
+      const errorMessage = getApiErrorMessage(err);
+      showSnackbar({
+        message: `Error al ${isEditing ? 'actualizar' : 'crear'} producto: ${errorMessage}`,
+        type: 'error',
+      });
+    }
+  };
 
   const listRenderConfig = {
     titleField: 'name' as keyof Product,
@@ -227,6 +217,8 @@ function ProductsScreen(): React.ReactElement {
       title: subCategoryName ? `Productos de ${subCategoryName}` : 'Productos',
     });
   }, [navigation, subCategoryName]);
+
+
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
