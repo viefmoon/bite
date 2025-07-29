@@ -117,25 +117,6 @@ export function UserDetailModal({
   };
 
   // Header personalizado con el rol chip
-  const headerRight = (
-    <View style={styles.headerRightContainer}>
-      <Chip
-        mode="flat"
-        icon={getRoleInfo(user.role?.id).icon}
-        style={[
-          styles.headerRoleChip,
-          { backgroundColor: theme.colors.surface },
-        ]}
-        textStyle={[
-          styles.headerRoleChipText,
-          { color: getRoleInfo(user.role?.id).color },
-        ]}
-        compact
-      >
-        {getRoleInfo(user.role?.id).label}
-      </Chip>
-    </View>
-  );
 
   // Actions para el footer del modal
   const actions = [

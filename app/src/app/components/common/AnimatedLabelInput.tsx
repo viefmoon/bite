@@ -177,12 +177,7 @@ const AnimatedLabelInput = forwardRef<TextInput, AnimatedLabelInputProps>(
               styles.label,
               staticLabelStyle,
               labelStyle,
-              {
-                position: 'absolute',
-                top: 20,
-                left: 12,
-                zIndex: 10,
-              },
+              styles.staticLabel,
               animatedLabelStyle,
             ]}
             numberOfLines={1}
@@ -265,6 +260,12 @@ const createStyles = (
       left: 10,
       height: 2, // Mismo grosor que el borde
       zIndex: 5,
+    },
+    staticLabel: {
+      position: 'absolute',
+      top: 20,
+      left: 12,
+      zIndex: 10,
     },
     inputBoxNone: {
       pointerEvents: 'box-none',

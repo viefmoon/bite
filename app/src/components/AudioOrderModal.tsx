@@ -307,7 +307,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     setAddressError(null);
   }, [editableOrderType]);
 
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     // Resetear errores
     setAreaError(null);
     setTableError(null);
@@ -340,7 +340,15 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         editableOrderType,
       );
     }
-  };
+  }, [
+    editableItems,
+    hasValidationErrors,
+    showSnackbar,
+    editableDeliveryInfo,
+    onConfirm,
+    orderData?.scheduledDelivery,
+    editableOrderType,
+  ]);
 
   // Función para actualizar la cantidad de un item
   const updateItemQuantity = useCallback(

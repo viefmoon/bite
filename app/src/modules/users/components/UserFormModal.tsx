@@ -7,7 +7,6 @@ import {
   HelperText,
   Surface,
   Chip,
-  Avatar,
   Icon,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';

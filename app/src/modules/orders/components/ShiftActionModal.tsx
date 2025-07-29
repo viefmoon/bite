@@ -4,7 +4,6 @@ import { Text, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
-import { useResponsive } from '@/app/hooks/useResponsive';
 import type { Shift } from '@/app/schemas/domain/shift.schema';
 import { useShiftAction } from '../hooks/useShiftAction';
 import { ShiftSummaryCard } from './ShiftSummaryCard';

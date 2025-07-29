@@ -302,18 +302,18 @@ export const OrderFinalizationScreen: React.FC = () => {
               <View
                 style={[
                   styles.customCheckbox,
-                  {
-                    backgroundColor: selectionState.selectedOrders.has(
-                      orderItem.id as string,
-                    )
-                      ? theme.colors.primary
-                      : 'transparent',
-                    borderColor: selectionState.selectedOrders.has(
-                      orderItem.id as string,
-                    )
-                      ? theme.colors.primary
-                      : theme.colors.onSurfaceVariant,
+                  selectionState.selectedOrders.has(orderItem.id as string) && {
+                    backgroundColor: theme.colors.primary,
+                    borderColor: theme.colors.primary,
                   },
+                  !selectionState.selectedOrders.has(
+                    orderItem.id as string,
+                  ) && [
+                    styles.customCheckboxUnselected,
+                    {
+                      borderColor: theme.colors.onSurfaceVariant,
+                    },
+                  ],
                 ]}
               >
                 {selectionState.selectedOrders.has(orderItem.id as string) && (
@@ -745,5 +745,11 @@ const createStyles = (responsive: ReturnType<typeof useResponsive>) =>
       borderWidth: 2,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    customCheckboxSelected: {
+      backgroundColor: 'transparent', // Se sobrescribe dinámicamente
+    },
+    customCheckboxUnselected: {
+      backgroundColor: 'transparent',
     },
   });

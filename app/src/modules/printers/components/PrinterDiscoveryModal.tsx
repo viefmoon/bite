@@ -55,7 +55,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
     if (!visible && (discoverMutation.isSuccess || discoverMutation.isError)) {
       discoverMutation.reset();
     }
-  }, [visible]);
+  }, [visible, discoverMutation, showSnackbar]);
 
   const handleRescan = () => {
     discoverMutation.mutate();

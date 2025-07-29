@@ -186,13 +186,6 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
 
   if (!printer) return null;
 
-  const getConnectionInfo = () => {
-    if (printer.connectionType === 'NETWORK') {
-      return `${printer.ipAddress || 'N/A'}:${printer.port || 9100}`;
-    }
-    return printer.path || 'N/A';
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('es-ES', {

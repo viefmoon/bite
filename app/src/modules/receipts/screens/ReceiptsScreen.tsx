@@ -169,7 +169,7 @@ export const ReceiptsScreen: React.FC = () => {
     <OrderSummaryCard
       item={item}
       onPress={() => handleReceiptPress(item)}
-      renderActions={(orderItem) => (
+      renderActions={(_orderItem) => (
         <TouchableOpacity
           style={styles.restoreContainer}
           onPress={() => handleRecoverPress(item)}

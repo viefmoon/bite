@@ -100,7 +100,14 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
     }
 
     return actions;
-  }, [isShiftOpen, canOpenShift, handleOpenShift, handleCloseShift, onDismiss]);
+  }, [
+    isShiftOpen,
+    canOpenShift,
+    handleOpenShift,
+    handleCloseShift,
+    onDismiss,
+    onCloseShift,
+  ]);
 
   const modalTitle = isShiftOpen ? 'Turno Abierto' : 'Turno Cerrado';
 
