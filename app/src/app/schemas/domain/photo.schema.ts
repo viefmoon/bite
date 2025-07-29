@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const photoSchema = z.object({
   id: z.string().uuid(), // ID puede ser custom format
-  path: z.string().url(), // Usar url() como en products/subcategories
+  path: z.string(), // Acepta rutas relativas, la URL completa se construye con getImageUrl
 });
 
 // Tipo TypeScript inferido y exportado centralmente
