@@ -205,12 +205,8 @@ const CategoriesScreen: React.FC = () => {
       if (editingCategory) {
         let imageUrl = null;
         if (editingCategory.photo?.path) {
-          try {
-            const { getImageUrl } = await import('@/app/lib/imageUtils');
-            imageUrl = await getImageUrl(editingCategory.photo.path);
-          } catch (error) {
-            imageUrl = editingCategory.photo.path;
-          }
+          const { getImageUrlFromStore } = await import('@/app/lib/imageUtils');
+          imageUrl = getImageUrlFromStore(editingCategory.photo.path) || editingCategory.photo.path;
         }
 
         setFormInitialValues({

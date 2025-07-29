@@ -4,6 +4,7 @@ import { autoReconnectService } from './autoReconnectService';
 import { STORAGE_KEYS } from '../app/constants/storageKeys';
 import EncryptedStorage from '../app/services/secureStorageService';
 import NetInfo from '@react-native-community/netinfo';
+import { useServerUrlStore } from '../app/stores/serverUrlStore';
 
 export type ConnectionMode = 'auto' | 'manual' | 'remote';
 
@@ -41,6 +42,11 @@ class ServerConnectionService {
   constructor() {
     this.loadConnectionMode();
     this.initializeListeners();
+
+    // Inicializar el store con la URL actual si existe
+    if (this.state.currentUrl) {
+      useServerUrlStore.getState().setServerUrl(this.state.currentUrl);
+    }
 
     setTimeout(() => {
       if (!this.state.isConnected && !this.state.isConnecting) {
@@ -344,6 +350,12 @@ class ServerConnectionService {
 
   private updateState(updates: Partial<ConnectionState>): void {
     this.state = { ...this.state, ...updates };
+
+    // Actualizar el store global cuando cambie la URL
+    if ('currentUrl' in updates) {
+      useServerUrlStore.getState().setServerUrl(updates.currentUrl || null);
+    }
+
     this.notifyListeners();
   }
 

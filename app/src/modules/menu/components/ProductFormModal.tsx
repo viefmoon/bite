@@ -38,7 +38,6 @@ import CustomImagePicker, {
   FileObject,
 } from '@/app/components/common/CustomImagePicker';
 import { ImageUploadService } from '@/app/lib/imageUploadService';
-import { getImageUrl } from '@/app/lib/imageUtils';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
@@ -188,11 +187,8 @@ const useProductFormLogic = ({
 
           let imageUrl = null;
           if (initialData.photo?.path) {
-            try {
-              imageUrl = await getImageUrl(initialData.photo.path);
-            } catch (error) {
-              imageUrl = initialData.photo.path;
-            }
+            const { getImageUrlFromStore } = await import('@/app/lib/imageUtils');
+            imageUrl = getImageUrlFromStore(initialData.photo.path) || initialData.photo.path;
           }
 
           reset({

@@ -270,18 +270,9 @@ export async function prefetchImages(
 
   const processSingleImage = async (imagePath: string) => {
     try {
-      const { getImageUrlSync } = await import('./imageUtils');
-      const { serverConnectionService } = await import(
-        '@/services/serverConnectionService'
-      );
+      const { getImageUrlFromStore } = await import('./imageUtils');
 
-      const serverUrl = serverConnectionService.getCurrentUrl();
-      if (!serverUrl) {
-        _failed++;
-        return;
-      }
-
-      const fullUrl = getImageUrlSync(imagePath, serverUrl);
+      const fullUrl = getImageUrlFromStore(imagePath);
       if (!fullUrl) {
         _failed++;
         return;

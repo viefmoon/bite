@@ -11,8 +11,7 @@ import { Platform } from 'react-native';
 import { Image, ImageProps as ExpoImageProps } from 'expo-image';
 import { Icon } from 'react-native-paper';
 import { getCachedImageUri } from '../../lib/imageCache';
-import { getImageUrlSync } from '../../lib/imageUtils';
-import { serverConnectionService } from '@/services/serverConnectionService';
+import { getImageUrlFromStore } from '../../lib/imageUtils';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 
 export interface AutoImageProps
@@ -76,10 +75,7 @@ export const AutoImage = ({
   const fullImageUrl = useMemo(() => {
     if (!originalSourceProp) return null;
 
-    const serverUrl = serverConnectionService.getCurrentUrl();
-    if (!serverUrl) return null;
-
-    return getImageUrlSync(originalSourceProp, serverUrl);
+    return getImageUrlFromStore(originalSourceProp);
   }, [originalSourceProp]);
 
   useEffect(() => {

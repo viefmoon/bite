@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import {
   Surface,
@@ -16,24 +16,19 @@ import { useQuery } from '@tanstack/react-query';
 import { productsService } from '@/modules/menu/services/productsService';
 import EmptyState from '@/app/components/common/EmptyState';
 import { Product } from '@/modules/menu/schema/products.schema';
-import { getImageUrl } from '@/app/lib/imageUtils';
+import { getImageUrlFromStore } from '@/app/lib/imageUtils';
 import { PizzaConfigurationModal } from './PizzaConfigurationModal';
 import { AssociatePizzaToppingsModal } from './AssociatePizzaToppingsModal';
 
 // Custom hook para manejar URLs de imagen
 const useImageUrl = (imagePath: string | null | undefined) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
+  return useMemo(() => {
     if (!imagePath) {
-      setImageUrl(null);
-      return;
+      return null;
     }
 
-    getImageUrl(imagePath).then(setImageUrl);
+    return getImageUrlFromStore(imagePath);
   }, [imagePath]);
-
-  return imageUrl;
 };
 
 export function PizzaProductsTab() {

@@ -15,34 +15,37 @@ import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigati
 import type { SettingsStackParamList } from '../../modules/settings/navigation/types';
 import type { OrdersStackParamList } from '../../modules/orders/navigation/types';
 import type { ModifiersStackParamList } from '../../modules/modifiers/navigation/types';
+import { NAVIGATION_PATHS } from '../constants/navigationPaths';
 
+// Auth Stack
 export type AuthStackParamList = {
-  Login: undefined;
+  [NAVIGATION_PATHS.LOGIN]: undefined;
 };
 
 export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, T>;
 
+// App Drawer
 export type AppDrawerParamList = {
-  Welcome: undefined;
-  MenuStack: NavigatorScreenParams<MenuStackParamList>;
-  ModifiersStack: NavigatorScreenParams<ModifiersStackParamList>;
-  PreparationScreensStack: NavigatorScreenParams<PreparationScreensStackParamList>;
-  AreasTablesStack: NavigatorScreenParams<AreasTablesStackParamList>;
-  OrdersStack: NavigatorScreenParams<OrdersStackParamList>;
-  PrintersStack: NavigatorScreenParams<PrintersStackParamList>;
-  ReceiptsStack: NavigatorScreenParams<ReceiptsStackParamList>;
-  AvailabilityScreen: undefined;
-  OrderFinalizationStack: NavigatorScreenParams<OrderFinalizationStackParamList>;
-  RestaurantConfigStack: NavigatorScreenParams<RestaurantConfigStackParamList>;
-  PizzaCustomizationsStack: NavigatorScreenParams<PizzaCustomizationsStackParamList>;
-  CustomersStack: NavigatorScreenParams<CustomersStackParamList>;
-  SyncStack: NavigatorScreenParams<SyncStackParamList>;
-  UsersScreen: undefined;
-  KitchenScreen: undefined;
-  ShiftAuditStack: NavigatorScreenParams<ShiftAuditStackParamList>;
-  SettingsStack: NavigatorScreenParams<SettingsStackParamList>;
-  ServerSettings: undefined;
+  [NAVIGATION_PATHS.WELCOME]: undefined;
+  [NAVIGATION_PATHS.MENU_STACK]: NavigatorScreenParams<MenuStackParamList>;
+  [NAVIGATION_PATHS.MODIFIERS_STACK]: NavigatorScreenParams<ModifiersStackParamList>;
+  [NAVIGATION_PATHS.PREPARATION_SCREENS_STACK]: NavigatorScreenParams<PreparationScreensStackParamList>;
+  [NAVIGATION_PATHS.AREAS_TABLES_STACK]: NavigatorScreenParams<AreasTablesStackParamList>;
+  [NAVIGATION_PATHS.ORDERS_STACK]: NavigatorScreenParams<OrdersStackParamList>;
+  [NAVIGATION_PATHS.PRINTERS_STACK]: NavigatorScreenParams<PrintersStackParamList>;
+  [NAVIGATION_PATHS.RECEIPTS_STACK]: NavigatorScreenParams<ReceiptsStackParamList>;
+  [NAVIGATION_PATHS.AVAILABILITY_SCREEN]: undefined;
+  [NAVIGATION_PATHS.ORDER_FINALIZATION_STACK]: NavigatorScreenParams<OrderFinalizationStackParamList>;
+  [NAVIGATION_PATHS.RESTAURANT_CONFIG_STACK]: NavigatorScreenParams<RestaurantConfigStackParamList>;
+  [NAVIGATION_PATHS.PIZZA_CUSTOMIZATIONS_STACK]: NavigatorScreenParams<PizzaCustomizationsStackParamList>;
+  [NAVIGATION_PATHS.CUSTOMERS_STACK]: NavigatorScreenParams<CustomersStackParamList>;
+  [NAVIGATION_PATHS.SYNC_STACK]: NavigatorScreenParams<SyncStackParamList>;
+  [NAVIGATION_PATHS.USERS_SCREEN]: undefined;
+  [NAVIGATION_PATHS.KITCHEN_SCREEN]: undefined;
+  [NAVIGATION_PATHS.SHIFT_AUDIT_STACK]: NavigatorScreenParams<ShiftAuditStackParamList>;
+  [NAVIGATION_PATHS.SETTINGS_STACK]: NavigatorScreenParams<SettingsStackParamList>;
+  [NAVIGATION_PATHS.SERVER_SETTINGS]: undefined;
 };
 
 export type DrawerScreenProps<T extends keyof AppDrawerParamList> =
@@ -50,23 +53,34 @@ export type DrawerScreenProps<T extends keyof AppDrawerParamList> =
 
 export type DrawerNavigatorParamList = AppDrawerParamList;
 
+// Root Stack - Unifica todos los ParamList
+export type RootStackParamList = {
+  AuthStack: NavigatorScreenParams<AuthStackParamList>;
+  MainDrawer: NavigatorScreenParams<AppDrawerParamList>;
+} & AuthStackParamList &
+  AppDrawerParamList &
+  ModifiersStackParamList &
+  PreparationScreensStackParamList &
+  AreasTablesStackParamList &
+  OrdersStackParamList &
+  PrintersStackParamList &
+  ReceiptsStackParamList &
+  OrderFinalizationStackParamList &
+  RestaurantConfigStackParamList &
+  PizzaCustomizationsStackParamList &
+  CustomersStackParamList &
+  SyncStackParamList &
+  ShiftAuditStackParamList &
+  SettingsStackParamList &
+  MenuStackParamList;
+
+// Export para uso en hooks de navegación
+export type RootStackScreenProps<T extends keyof RootStackParamList> =
+  NativeStackScreenProps<RootStackParamList, T>;
+
+// Mantener compatibilidad con código existente que usa declare global
 declare global {
   namespace ReactNavigation {
-    interface RootParamList
-      extends AuthStackParamList,
-        AppDrawerParamList,
-        ModifiersStackParamList,
-        PreparationScreensStackParamList,
-        AreasTablesStackParamList,
-        OrdersStackParamList,
-        PrintersStackParamList,
-        ReceiptsStackParamList,
-        OrderFinalizationStackParamList,
-        RestaurantConfigStackParamList,
-        PizzaCustomizationsStackParamList,
-        CustomersStackParamList,
-        SyncStackParamList,
-        ShiftAuditStackParamList,
-        SettingsStackParamList {}
+    interface RootParamList extends RootStackParamList {}
   }
 }

@@ -1,5 +1,13 @@
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
+
 export type MenuStackParamList = {
-  CategoriesScreen: undefined;
-  SubcategoriesScreen: { categoryId: string; categoryName: string };
-  Products: { subcategoryId: string; subCategoryName: string };
+  [NAVIGATION_PATHS.CATEGORIES]: undefined;
+  [NAVIGATION_PATHS.SUBCATEGORIES]: {
+    categoryId: string;
+    categoryName: string;
+  };
+  [NAVIGATION_PATHS.PRODUCTS]: {
+    subcategoryId: string;
+    subCategoryName: string;
+  };
 };

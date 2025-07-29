@@ -1,22 +1,23 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import { AppDrawerParamList } from '../../../app/navigation/types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 export type AreasTablesStackParamList = {
-  AreasList: undefined;
-  TablesList: { areaId: string; areaName: string };
+  [NAVIGATION_PATHS.AREAS_LIST]: undefined;
+  [NAVIGATION_PATHS.TABLES_LIST]: { areaId: string; areaName: string };
 };
 
 export type AreasListScreenProps = NativeStackScreenProps<
   AreasTablesStackParamList,
-  'AreasList'
+  typeof NAVIGATION_PATHS.AREAS_LIST
 >;
 export type TablesListScreenProps = NativeStackScreenProps<
   AreasTablesStackParamList,
-  'TablesList'
+  typeof NAVIGATION_PATHS.TABLES_LIST
 >;
 
 export type AreasTablesDrawerScreenProps = DrawerScreenProps<
   AppDrawerParamList,
-  'AreasTablesStack'
+  typeof NAVIGATION_PATHS.AREAS_TABLES_STACK
 >;

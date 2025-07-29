@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Divider } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+import { formatCurrency } from '@/app/lib/formatters';
 
 interface OrderSummaryProps {
   subtotal: number;
@@ -38,14 +39,14 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <View style={styles.summarySection}>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Subtotal:</Text>
-          <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>
+          <Text style={styles.summaryValue}>{formatCurrency(subtotal)}</Text>
         </View>
 
         {adjustmentsTotal > 0 && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Descuentos:</Text>
             <Text style={[styles.summaryValue, styles.discountText]}>
-              -${adjustmentsTotal.toFixed(2)}
+              -{formatCurrency(adjustmentsTotal)}
             </Text>
           </View>
         )}
@@ -54,7 +55,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
 
         <View style={styles.summaryRow}>
           <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>{formatCurrency(total)}</Text>
         </View>
       </View>
 

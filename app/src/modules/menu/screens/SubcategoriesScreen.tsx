@@ -121,12 +121,8 @@ const SubcategoriesScreen: React.FC = () => {
       if (editingItem) {
         let imageUrl = null;
         if (editingItem.photo?.path) {
-          try {
-            const { getImageUrl } = await import('@/app/lib/imageUtils');
-            imageUrl = await getImageUrl(editingItem.photo.path);
-          } catch (error) {
-            imageUrl = editingItem.photo.path;
-          }
+          const { getImageUrlFromStore } = await import('@/app/lib/imageUtils');
+          imageUrl = getImageUrlFromStore(editingItem.photo.path) || editingItem.photo.path;
         }
 
         setFormInitialValues({
