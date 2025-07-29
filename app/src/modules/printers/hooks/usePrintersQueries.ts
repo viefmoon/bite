@@ -103,8 +103,10 @@ export const useDeletePrinterMutation = () => {
 
   return useApiMutation(printerService.deletePrinter, {
     successMessage: 'Impresora eliminada',
-    invalidateQueryKeys: [printerKeys.lists()],
     onSuccess: (_, deletedId) => {
+      // Invalidar todas las listas de impresoras
+      queryClient.invalidateQueries({ queryKey: printerKeys.all });
+      // Remover el detalle específico
       queryClient.removeQueries({ queryKey: printerKeys.detail(deletedId) });
     },
   });

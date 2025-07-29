@@ -1,24 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   Surface,
   IconButton,
   Divider,
-  Button,
   Chip,
+  Button,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { ThermalPrinter } from '../types/printer.types';
+import { ResponsiveModal } from '../../../app/components/responsive/ResponsiveModal';
 
 interface PrinterDetailModalProps {
   visible: boolean;
   onDismiss: () => void;
   printer: ThermalPrinter | null;
   onEdit?: () => void;
-  onDelete?: () => void;
+  deleteConfirmation?: () => void;
   onTestPrint?: () => void;
   isDeleting?: boolean;
   isTestPrinting?: boolean;
@@ -26,48 +25,15 @@ interface PrinterDetailModalProps {
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    modalContent: {
-      backgroundColor: theme.colors.background,
-      borderRadius: theme.roundness * 3,
-      margin: theme.spacing.l,
-      maxHeight: '90%',
-      overflow: 'hidden',
-    },
-    header: {
-      backgroundColor: theme.colors.primary,
-      padding: theme.spacing.l,
-      paddingBottom: theme.spacing.m,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    headerTextContainer: {
+    contentContainer: {
       flex: 1,
     },
-    headerTitle: {
-      color: theme.colors.onPrimary,
-      fontSize: 20,
-      fontWeight: '700',
-    },
-    headerSubtitle: {
-      color: theme.colors.onPrimary,
-      opacity: 0.8,
-      fontSize: 14,
-      marginTop: 4,
-    },
-    closeButton: {
-      margin: -theme.spacing.xs,
-    },
-    scrollView: {
-      maxHeight: 400,
-    },
     scrollContent: {
-      padding: theme.spacing.l,
+      padding: theme.spacing.m,
+      paddingTop: theme.spacing.s,
     },
     section: {
-      marginBottom: theme.spacing.l,
+      marginBottom: theme.spacing.m,
     },
     sectionTitle: {
       fontSize: 14,
@@ -81,7 +47,7 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: theme.spacing.s,
+      paddingVertical: theme.spacing.xs,
     },
     infoLabel: {
       fontSize: 14,
@@ -99,7 +65,7 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.s,
-      marginBottom: theme.spacing.m,
+      marginBottom: theme.spacing.s,
     },
     statusChip: {
       paddingHorizontal: theme.spacing.xs,
@@ -137,26 +103,17 @@ const getStyles = (theme: AppTheme) =>
       flex: 1,
     },
     divider: {
-      marginVertical: theme.spacing.m,
+      marginVertical: theme.spacing.s,
+    },
+    testPrintSection: {
+      marginTop: theme.spacing.m,
+      paddingTop: theme.spacing.m,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
     },
     testPrintButton: {
-      marginBottom: theme.spacing.m,
-      borderColor: theme.colors.primary,
-    },
-    footer: {
-      padding: theme.spacing.l,
-      paddingTop: 0,
-      gap: theme.spacing.s,
-    },
-    footerButtons: {
-      flexDirection: 'row',
-      gap: theme.spacing.s,
-    },
-    footerButton: {
-      flex: 1,
-    },
-    deleteButton: {
-      borderColor: theme.colors.error,
+      alignSelf: 'center',
+      minWidth: 200,
     },
     emptyState: {
       padding: theme.spacing.xl,
@@ -176,27 +133,54 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
   onDismiss,
   printer,
   onEdit,
-  onDelete,
+  deleteConfirmation,
   onTestPrint,
   isDeleting = false,
   isTestPrinting = false,
 }) => {
   const theme = useAppTheme();
-  const styles = React.useMemo(() => getStyles(theme), [theme]);
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
+  const actions = useMemo(() => {
+    const actionList = [];
+    
+    if (onEdit) {
+      actionList.push({
+        label: 'Editar',
+        mode: 'contained-tonal' as const,
+        onPress: onEdit,
+        disabled: isDeleting || isTestPrinting,
+        colorPreset: 'primary' as const,
+      });
+    }
+    
+    if (deleteConfirmation) {
+      actionList.push({
+        label: 'Eliminar',
+        mode: 'outlined' as const,
+        onPress: deleteConfirmation,
+        loading: isDeleting,
+        disabled: isDeleting || isTestPrinting,
+        colorPreset: 'error' as const,
+      });
+    }
+    
+    return actionList;
+  }, [onEdit, deleteConfirmation, isTestPrinting, isDeleting]);
 
   if (!printer && visible) {
     return (
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={onDismiss}
-          contentContainerStyle={styles.modalContent}
-        >
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No se encontró la impresora</Text>
-          </View>
-        </Modal>
-      </Portal>
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={onDismiss}
+        title="Detalles de Impresora"
+        maxWidthPercent={95}
+        maxHeightPercent={85}
+      >
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>No se encontró la impresora</Text>
+        </View>
+      </ResponsiveModal>
     );
   }
 
@@ -221,227 +205,188 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
   };
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContent}
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title={printer.name}
+      maxWidthPercent={95}
+      maxHeightPercent={90}
+      dismissable={!isDeleting && !isTestPrinting}
+      isLoading={isDeleting}
+      actions={actions}
+      showCloseButton
+    >
+      <ScrollView 
+        style={styles.contentContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View>
-          <Surface style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.headerTitle}>{printer.name}</Text>
-                <Text style={styles.headerSubtitle}>
-                  {printer.connectionType} • {getConnectionInfo()}
-                </Text>
-              </View>
-              <IconButton
-                icon="close"
-                size={24}
-                iconColor={theme.colors.onPrimary}
-                onPress={onDismiss}
-                style={styles.closeButton}
-              />
-            </View>
-          </Surface>
-
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <View style={styles.section}>
-              <View style={styles.statusContainer}>
-                <Chip
-                  mode="flat"
-                  style={[
-                    styles.statusChip,
-                    printer.isActive ? styles.activeChip : styles.inactiveChip,
-                  ]}
-                  textStyle={{
-                    color: printer.isActive
-                      ? theme.colors.onPrimaryContainer
-                      : theme.colors.onErrorContainer,
-                  }}
-                >
-                  {printer.isActive ? 'Activa' : 'Inactiva'}
-                </Chip>
-                {printer.isDefaultPrinter && (
-                  <Chip
-                    mode="flat"
-                    style={[styles.statusChip, styles.activeChip]}
-                    icon="star"
-                    textStyle={{ color: theme.colors.onPrimaryContainer }}
-                  >
-                    Predeterminada
-                  </Chip>
-                )}
-              </View>
-
-              <View style={styles.featuresGrid}>
-                {printer.autoDeliveryPrint && (
-                  <Surface style={styles.featureCard}>
-                    <View style={styles.featureIcon}>
-                      <IconButton
-                        icon="home-export-outline"
-                        size={16}
-                        iconColor={theme.colors.onSecondaryContainer}
-                        style={styles.iconButtonCompact}
-                      />
-                    </View>
-                    <Text style={styles.featureText}>
-                      Impresión automática para domicilio
-                    </Text>
-                  </Surface>
-                )}
-                {printer.autoPickupPrint && (
-                  <Surface style={styles.featureCard}>
-                    <View style={styles.featureIcon}>
-                      <IconButton
-                        icon="bag-checked"
-                        size={16}
-                        iconColor={theme.colors.onSecondaryContainer}
-                        style={styles.iconButtonCompact}
-                      />
-                    </View>
-                    <Text style={styles.featureText}>
-                      Impresión automática para llevar
-                    </Text>
-                  </Surface>
-                )}
-              </View>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Información de Conexión</Text>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Tipo de conexión</Text>
-                <Text style={styles.infoValue}>{printer.connectionType}</Text>
-              </View>
-
-              {printer.connectionType === 'NETWORK' && (
-                <>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Dirección IP</Text>
-                    <Text style={styles.infoValue}>
-                      {printer.ipAddress || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Puerto</Text>
-                    <Text style={styles.infoValue}>
-                      {printer.port || 'N/A'}
-                    </Text>
-                  </View>
-                  {printer.macAddress && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Dirección MAC</Text>
-                      <Text style={styles.infoValue}>{printer.macAddress}</Text>
-                    </View>
-                  )}
-                </>
-              )}
-
-              {printer.connectionType !== 'NETWORK' && printer.path && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Ruta/ID</Text>
-                  <Text style={styles.infoValue}>{printer.path}</Text>
-                </View>
-              )}
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Configuración del Papel</Text>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Ancho del papel</Text>
-                <Text style={styles.infoValue}>{printer.paperWidth}mm</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Caracteres por línea</Text>
-                <Text style={styles.infoValue}>
-                  {printer.charactersPerLine}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Corte automático</Text>
-                <Text style={styles.infoValue}>
-                  {printer.cutPaper ? 'Sí' : 'No'}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Líneas de avance</Text>
-                <Text style={styles.infoValue}>{printer.feedLines}</Text>
-              </View>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Información Adicional</Text>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Creada</Text>
-                <Text style={styles.infoValue}>
-                  {formatDate(printer.createdAt)}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Última actualización</Text>
-                <Text style={styles.infoValue}>
-                  {formatDate(printer.updatedAt)}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.footer}>
-            {onTestPrint && (
-              <Button
-                mode="outlined"
-                icon="printer-check"
-                onPress={onTestPrint}
-                loading={isTestPrinting}
-                disabled={isTestPrinting || isDeleting}
-                style={styles.testPrintButton}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Estado</Text>
+          <View style={styles.statusContainer}>
+            <Chip
+              mode="flat"
+              style={[
+                styles.statusChip,
+                printer.isActive ? styles.activeChip : styles.inactiveChip,
+              ]}
+              textStyle={{
+                color: printer.isActive
+                  ? theme.colors.onPrimaryContainer
+                  : theme.colors.onErrorContainer,
+              }}
+            >
+              {printer.isActive ? 'Activa' : 'Inactiva'}
+            </Chip>
+            {printer.isDefaultPrinter && (
+              <Chip
+                mode="flat"
+                style={[styles.statusChip, styles.activeChip]}
+                icon="star"
+                textStyle={{ color: theme.colors.onPrimaryContainer }}
               >
-                Imprimir Ticket de Prueba
-              </Button>
+                Predeterminada
+              </Chip>
             )}
+          </View>
 
-            <View style={styles.footerButtons}>
-              {onEdit && (
-                <Button
-                  mode="contained-tonal"
-                  onPress={onEdit}
-                  disabled={isDeleting || isTestPrinting}
-                  style={styles.footerButton}
-                >
-                  Editar
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  mode="outlined"
-                  onPress={onDelete}
-                  loading={isDeleting}
-                  disabled={isDeleting || isTestPrinting}
-                  style={[styles.footerButton, styles.deleteButton]}
-                  textColor={theme.colors.error}
-                >
-                  Eliminar
-                </Button>
-              )}
-            </View>
+          <View style={styles.featuresGrid}>
+            {printer.autoDeliveryPrint && (
+              <Surface style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <IconButton
+                    icon="home-export-outline"
+                    size={16}
+                    iconColor={theme.colors.onSecondaryContainer}
+                    style={styles.iconButtonCompact}
+                  />
+                </View>
+                <Text style={styles.featureText}>
+                  Impresión automática para domicilio
+                </Text>
+              </Surface>
+            )}
+            {printer.autoPickupPrint && (
+              <Surface style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <IconButton
+                    icon="bag-checked"
+                    size={16}
+                    iconColor={theme.colors.onSecondaryContainer}
+                    style={styles.iconButtonCompact}
+                  />
+                </View>
+                <Text style={styles.featureText}>
+                  Impresión automática para llevar
+                </Text>
+              </Surface>
+            )}
           </View>
         </View>
-      </Modal>
-    </Portal>
+
+        <Divider style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información de Conexión</Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Tipo de conexión</Text>
+            <Text style={styles.infoValue}>{printer.connectionType}</Text>
+          </View>
+
+          {printer.connectionType === 'NETWORK' && (
+            <>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Dirección IP</Text>
+                <Text style={styles.infoValue}>
+                  {printer.ipAddress || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Puerto</Text>
+                <Text style={styles.infoValue}>
+                  {printer.port || 'N/A'}
+                </Text>
+              </View>
+              {printer.macAddress && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Dirección MAC</Text>
+                  <Text style={styles.infoValue}>{printer.macAddress}</Text>
+                </View>
+              )}
+            </>
+          )}
+
+          {printer.connectionType !== 'NETWORK' && printer.path && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Ruta/ID</Text>
+              <Text style={styles.infoValue}>{printer.path}</Text>
+            </View>
+          )}
+        </View>
+
+        <Divider style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Configuración del Papel</Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Ancho del papel</Text>
+            <Text style={styles.infoValue}>{printer.paperWidth}mm</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Caracteres por línea</Text>
+            <Text style={styles.infoValue}>
+              {printer.charactersPerLine}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Corte automático</Text>
+            <Text style={styles.infoValue}>
+              {printer.cutPaper ? 'Sí' : 'No'}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Líneas de avance</Text>
+            <Text style={styles.infoValue}>{printer.feedLines}</Text>
+          </View>
+        </View>
+
+        {onTestPrint && (
+          <View style={styles.testPrintSection}>
+            <Button
+              mode="outlined"
+              icon="printer-check"
+              onPress={onTestPrint}
+              loading={isTestPrinting}
+              disabled={isTestPrinting || isDeleting}
+              style={styles.testPrintButton}
+            >
+              Test de Impresión
+            </Button>
+          </View>
+        )}
+
+        <Divider style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información Adicional</Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Creada</Text>
+            <Text style={styles.infoValue}>
+              {formatDate(printer.createdAt)}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Última actualización</Text>
+            <Text style={styles.infoValue}>
+              {formatDate(printer.updatedAt)}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </ResponsiveModal>
   );
 };
 

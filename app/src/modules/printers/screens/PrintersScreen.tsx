@@ -8,6 +8,7 @@ import PrinterDiscoveryModal from '../components/PrinterDiscoveryModal';
 import PrinterFormModal from '../components/PrinterFormModal';
 import PrinterListItem from '../components/PrinterListItem';
 import PrinterDetailModal from '../components/PrinterDetailModal';
+import ConfirmationModal from '../../../app/components/common/ConfirmationModal';
 import {
   DiscoveredPrinter,
   ThermalPrinter,
@@ -239,13 +240,14 @@ const PrintersScreen: React.FC = () => {
           initialDataFromDiscovery={
             !editingItem ? (discoveredPrinterData ?? undefined) : undefined
           }
+          onSuccess={refetchList}
         />
         <PrinterDetailModal
           visible={isDetailModalVisible}
           onDismiss={handleCloseModals}
           printer={selectedItem}
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
-          deleteConfirmation={deleteConfirmation}
+          deleteConfirmation={() => selectedItem && deleteConfirmation.show(selectedItem.id)}
           onTestPrint={() => selectedItem && handleTestPrint(selectedItem.id)}
           isDeleting={isDeleting}
           isTestPrinting={testPrintingPrinterId === selectedItem?.id}
@@ -287,6 +289,15 @@ const PrintersScreen: React.FC = () => {
           }}
           fabStyle={{ backgroundColor: theme.colors.primary }}
           color={theme.colors.onPrimary}
+        />
+        <ConfirmationModal
+          visible={deleteConfirmation.visible}
+          title={deleteConfirmation.title}
+          message={deleteConfirmation.message}
+          onConfirm={deleteConfirmation.onConfirm}
+          onCancel={deleteConfirmation.onCancel}
+          confirmColorPreset="error"
+          isConfirming={isDeleting}
         />
       </Portal>
     </SafeAreaView>

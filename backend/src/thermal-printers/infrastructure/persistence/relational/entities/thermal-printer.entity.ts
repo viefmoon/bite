@@ -14,7 +14,6 @@ import { PrinterConnectionType } from '../../../../domain/thermal-printer';
 @Entity({
   name: 'thermal_printer',
 })
-@Unique(['ipAddress'])
 export class ThermalPrinterEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;

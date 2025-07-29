@@ -1,19 +1,15 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Portal,
-  Modal,
   Text,
-  Surface,
-  IconButton,
   Chip,
-  Button,
-  Dialog,
   TextInput,
   Icon,
+  Button,
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useResetPassword, useDeleteUser } from '../hooks';
 import type { User } from '@/app/schemas/domain/user.schema';
 
@@ -125,642 +121,610 @@ export function UserDetailModal({
     }
   };
 
+  // Header personalizado con el rol chip
+  const headerRight = (
+    <View style={styles.headerRightContainer}>
+      <Chip
+        mode="flat"
+        icon={getRoleInfo(user.role?.id).icon}
+        style={[
+          styles.headerRoleChip,
+          { backgroundColor: theme.colors.surface },
+        ]}
+        textStyle={[
+          styles.headerRoleChipText,
+          { color: getRoleInfo(user.role?.id).color },
+        ]}
+        compact
+      >
+        {getRoleInfo(user.role?.id).label}
+      </Chip>
+    </View>
+  );
+
+  // Actions para el footer del modal
+  const actions = [
+    {
+      label: 'Editar',
+      icon: 'pencil',
+      mode: 'contained-tonal' as const,
+      onPress: () => onEdit(user),
+      compact: true,
+    },
+    {
+      label: 'Eliminar',
+      icon: 'delete',
+      mode: 'outlined' as const,
+      onPress: () => setShowDeleteDialog(true),
+      compact: true,
+      colorPreset: 'error' as const,
+    },
+  ];
+
   return (
     <>
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={onDismiss}
-          contentContainerStyle={styles.modalContainer}
-        >
-          <Surface style={styles.modalContent} elevation={3}>
-            <View
-              style={[
-                styles.headerContainer,
-                { backgroundColor: theme.colors.elevation.level2 },
-              ]}
-            >
-              <View style={styles.headerContent}>
-                <View style={styles.headerNameRow}>
-                  <Text
-                    style={[
-                      styles.modalTitle,
-                      { color: theme.colors.onSurface },
-                    ]}
-                    variant="titleMedium"
-                  >
-                    {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-                      user.username}
-                  </Text>
-                  <Chip
-                    mode="flat"
-                    icon={getRoleInfo(user.role?.id).icon}
-                    style={[
-                      styles.headerRoleChip,
-                      { backgroundColor: theme.colors.surface },
-                    ]}
-                    textStyle={[
-                      styles.headerRoleChipText,
-                      { color: getRoleInfo(user.role?.id).color },
-                    ]}
-                    compact
-                  >
-                    {getRoleInfo(user.role?.id).label}
-                  </Chip>
-                </View>
-                <Text
-                  style={[
-                    styles.modalSubtitle,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                  variant="bodySmall"
-                >
-                  {user.username}
-                </Text>
-              </View>
-              <IconButton
-                icon="close"
-                size={20}
-                onPress={onDismiss}
-                iconColor={theme.colors.onSurfaceVariant}
-              />
-            </View>
-
-            <ScrollView
-              style={styles.contentContainer}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.infoSection}>
-                <View style={styles.sectionHeader}>
-                  <Icon
-                    source="contacts"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.sectionTitle} variant="titleMedium">
-                    Información de Contacto
-                  </Text>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="email" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Email
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.email || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="phone" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Teléfono
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.phoneNumber || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.infoSection}>
-                <View style={styles.sectionHeader}>
-                  <Icon
-                    source="account-details"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.sectionTitle} variant="titleMedium">
-                    Información Personal
-                  </Text>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="account"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Nombre completo
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {`${user.firstName || 'No especificado'} ${user.lastName || 'No especificado'}`}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="gender-transgender"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Género
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {getGenderLabel(user.gender)}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="cake-variant"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Fecha de nacimiento
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.birthDate
-                        ? new Date(user.birthDate).toLocaleDateString('es-MX', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source={
-                      user.isActive
-                        ? 'check-circle-outline'
-                        : 'close-circle-outline'
-                    }
-                    size={18}
-                    color={
-                      user.isActive ? theme.colors.primary : theme.colors.error
-                    }
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Estado de la cuenta
-                    </Text>
-                    <Text
-                      style={[
-                        styles.compactValue,
-                        {
-                          color: user.isActive
-                            ? theme.colors.primary
-                            : theme.colors.error,
-                        },
-                      ]}
-                      variant="bodySmall"
-                    >
-                      {user.isActive ? 'Activa' : 'Inactiva'}
-                    </Text>
-                  </View>
-                </View>
-
-                {user.role?.id === 5 && (
-                  <View style={styles.compactRow}>
-                    <Icon
-                      source="monitor"
-                      size={18}
-                      color={theme.colors.primary}
-                    />
-                    <View style={styles.compactContent}>
-                      <Text style={styles.compactLabel} variant="labelSmall">
-                        Pantalla de Preparación
-                      </Text>
-                      <Text style={styles.compactValue} variant="bodySmall">
-                        {user.preparationScreen?.name || 'No asignada'}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.infoSection}>
-                <View style={styles.sectionHeader}>
-                  <Icon
-                    source="map-marker"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.sectionTitle} variant="titleMedium">
-                    Dirección
-                  </Text>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="home" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Dirección
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.address || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="city" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Ciudad
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.city || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="map" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Estado/Provincia
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.state || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon source="earth" size={18} color={theme.colors.primary} />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      País
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.country || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="mailbox"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Código Postal
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.zipCode || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.infoSection}>
-                <View style={styles.sectionHeader}>
-                  <Icon
-                    source="alert-circle"
-                    size={20}
-                    color={theme.colors.error}
-                  />
-                  <Text style={styles.sectionTitle} variant="titleMedium">
-                    Contacto de Emergencia
-                  </Text>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="account-alert"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Nombre
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.emergencyContact?.name || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="phone-alert"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Teléfono
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.emergencyContact?.phone || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.compactRow}>
-                  <Icon
-                    source="account-multiple"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <View style={styles.compactContent}>
-                    <Text style={styles.compactLabel} variant="labelSmall">
-                      Relación
-                    </Text>
-                    <Text style={styles.compactValue} variant="bodySmall">
-                      {user.emergencyContact?.relationship || 'No especificado'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.actionsContainer}>
-                <Button
-                  mode="contained-tonal"
-                  onPress={() => onEdit(user)}
-                  icon="pencil"
-                  style={styles.actionButton}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={styles.buttonLabel}
-                  compact
-                >
-                  Editar Usuario
-                </Button>
-
-                <Button
-                  mode="contained-tonal"
-                  onPress={() => setShowPasswordDialog(true)}
-                  icon="lock-reset"
-                  style={styles.actionButton}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={styles.buttonLabel}
-                  buttonColor={theme.colors.secondaryContainer}
-                  compact
-                >
-                  Cambiar Contraseña
-                </Button>
-
-                <Button
-                  mode="outlined"
-                  onPress={() => setShowDeleteDialog(true)}
-                  icon="delete"
-                  style={[styles.actionButton, styles.deleteButton]}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={styles.buttonLabel}
-                  textColor={theme.colors.error}
-                  compact
-                >
-                  Eliminar Usuario
-                </Button>
-              </View>
-            </ScrollView>
-          </Surface>
-        </Modal>
-      </Portal>
-
-      <Portal>
-        <Dialog
-          visible={showPasswordDialog}
-          onDismiss={() => {
-            setShowPasswordDialog(false);
-            setNewPassword('');
-            setConfirmPassword('');
-            setShowPassword(false);
-          }}
-          style={styles.passwordDialog}
-        >
-          <View
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={onDismiss}
+        title={`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}
+        showCloseButton
+        maxWidthPercent={responsive.isTablet ? 85 : 92}
+        maxHeightPercent={responsive.isTablet ? 85 : 92}
+        actions={actions}
+      >
+        <View style={styles.userSubtitle}>
+          <Text
             style={[
-              styles.passwordDialogContainer,
-              { borderColor: theme.colors.primary },
+              styles.modalSubtitle,
+              { color: theme.colors.onSurfaceVariant },
             ]}
+            variant="bodySmall"
           >
-            <View style={styles.passwordDialogHeader}>
+            @{user.username}
+          </Text>
+          <Chip
+            mode="flat"
+            icon={getRoleInfo(user.role?.id).icon}
+            style={[
+              styles.roleChip,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            textStyle={[
+              styles.roleChipText,
+              { color: getRoleInfo(user.role?.id).color },
+            ]}
+            compact
+          >
+            {getRoleInfo(user.role?.id).label}
+          </Chip>
+        </View>
+
+        <View style={styles.infoSection}>
+          <View style={styles.sectionHeader}>
+            <Icon
+              source="contacts"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.sectionTitle} variant="titleMedium">
+              Información de Contacto
+            </Text>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon source="email" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Email
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.email || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon source="phone" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Teléfono
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.phoneNumber || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.infoSection}>
+          <View style={styles.sectionHeader}>
+            <Icon
+              source="account-details"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.sectionTitle} variant="titleMedium">
+              Información Personal
+            </Text>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="account"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Nombre completo
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {`${user.firstName || 'No especificado'} ${user.lastName || 'No especificado'}`}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="gender-transgender"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Género
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {getGenderLabel(user.gender)}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="cake-variant"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Fecha de nacimiento
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.birthDate
+                  ? new Date(user.birthDate).toLocaleDateString('es-MX', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source={
+                user.isActive
+                  ? 'check-circle-outline'
+                  : 'close-circle-outline'
+              }
+              size={18}
+              color={
+                user.isActive ? theme.colors.primary : theme.colors.error
+              }
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Estado de la cuenta
+              </Text>
+              <Text
+                style={[
+                  styles.compactValue,
+                  {
+                    color: user.isActive
+                      ? theme.colors.primary
+                      : theme.colors.error,
+                  },
+                ]}
+                variant="bodySmall"
+              >
+                {user.isActive ? 'Activa' : 'Inactiva'}
+              </Text>
+            </View>
+          </View>
+
+          {user.role?.id === 5 && (
+            <View style={styles.compactRow}>
               <Icon
-                source="lock-reset"
-                size={40}
+                source="monitor"
+                size={18}
                 color={theme.colors.primary}
               />
-              <Dialog.Title style={styles.passwordDialogTitle}>
-                Cambiar Contraseña
-              </Dialog.Title>
-              <View style={styles.passwordDialogUserInfo}>
-                <Text
-                  variant="bodyMedium"
-                  style={styles.passwordDialogUserName}
-                >
-                  {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-                    user.username}
+              <View style={styles.compactContent}>
+                <Text style={styles.compactLabel} variant="labelSmall">
+                  Pantalla de Preparación
                 </Text>
-                <Text
-                  variant="bodySmall"
-                  style={styles.passwordDialogUserDetail}
-                >
-                  {user.email}
-                </Text>
-                <Text
-                  variant="labelSmall"
-                  style={styles.passwordDialogUserDetail}
-                >
-                  @{user.username}
+                <Text style={styles.compactValue} variant="bodySmall">
+                  {user.preparationScreen?.name || 'No asignada'}
                 </Text>
               </View>
             </View>
+          )}
+        </View>
 
-            <Dialog.Content style={styles.passwordDialogContent}>
-              <TextInput
-                label="Nueva contraseña"
-                value={newPassword}
-                onChangeText={setNewPassword}
-                mode="flat"
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                style={styles.passwordInput}
-                contentStyle={styles.passwordInputContent}
-                underlineColor={theme.colors.surfaceVariant}
-                activeUnderlineColor={theme.colors.primary}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword(!showPassword)}
-                    size={20}
-                    style={styles.passwordInputIcon}
-                  />
-                }
-              />
-
-              <TextInput
-                label="Confirmar contraseña"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                mode="flat"
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                style={styles.passwordInput}
-                contentStyle={styles.passwordInputContent}
-                underlineColor={theme.colors.surfaceVariant}
-                activeUnderlineColor={theme.colors.primary}
-              />
-
-              {(newPassword.length > 0 || confirmPassword.length > 0) && (
-                <View style={styles.passwordValidation}>
-                  <View style={styles.validationItem}>
-                    <Icon
-                      source={
-                        newPassword.length >= 6
-                          ? 'check-circle'
-                          : 'circle-outline'
-                      }
-                      size={16}
-                      color={
-                        newPassword.length >= 6
-                          ? theme.colors.primary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-                    <Text
-                      variant="bodySmall"
-                      style={[
-                        styles.validationText,
-                        {
-                          color:
-                            newPassword.length >= 6
-                              ? theme.colors.primary
-                              : theme.colors.onSurfaceVariant,
-                        },
-                      ]}
-                    >
-                      Mínimo 6 caracteres
-                    </Text>
-                  </View>
-
-                  <View style={styles.validationItem}>
-                    <Icon
-                      source={
-                        newPassword === confirmPassword &&
-                        newPassword.length > 0
-                          ? 'check-circle'
-                          : 'circle-outline'
-                      }
-                      size={16}
-                      color={
-                        newPassword === confirmPassword &&
-                        newPassword.length > 0
-                          ? theme.colors.primary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-                    <Text
-                      variant="bodySmall"
-                      style={[
-                        styles.validationText,
-                        {
-                          color:
-                            newPassword === confirmPassword &&
-                            newPassword.length > 0
-                              ? theme.colors.primary
-                              : theme.colors.onSurfaceVariant,
-                        },
-                      ]}
-                    >
-                      Las contraseñas coinciden
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </Dialog.Content>
-
-            <Dialog.Actions style={styles.passwordDialogActions}>
-              <Button
-                mode="text"
-                onPress={() => {
-                  setShowPasswordDialog(false);
-                  setNewPassword('');
-                  setConfirmPassword('');
-                  setShowPassword(false);
-                }}
-                style={[
-                  styles.passwordDialogButton,
-                  styles.passwordDialogCancelButton,
-                ]}
-                labelStyle={styles.passwordDialogButtonLabel}
-              >
-                Cancelar
-              </Button>
-              <Button
-                mode="contained"
-                onPress={handleResetPassword}
-                loading={resetPasswordMutation.isPending}
-                disabled={
-                  resetPasswordMutation.isPending ||
-                  newPassword.length < 6 ||
-                  newPassword !== confirmPassword
-                }
-                style={[
-                  styles.passwordDialogButton,
-                  styles.passwordDialogPrimaryButton,
-                ]}
-                labelStyle={styles.passwordDialogButtonLabel}
-              >
-                Cambiar
-              </Button>
-            </Dialog.Actions>
+        <View style={styles.infoSection}>
+          <View style={styles.sectionHeader}>
+            <Icon
+              source="map-marker"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.sectionTitle} variant="titleMedium">
+              Dirección
+            </Text>
           </View>
-        </Dialog>
-      </Portal>
 
-      <Portal>
-        <Dialog
-          visible={showDeleteDialog}
-          onDismiss={() => setShowDeleteDialog(false)}
-        >
-          <Dialog.Icon icon="alert" color={theme.colors.error} />
-          <Dialog.Title style={styles.dialogTitle}>
-            Eliminar Usuario
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium" style={styles.dialogText}>
-              ¿Estás seguro de que deseas eliminar al usuario{' '}
-              <Text style={styles.boldText}>{user.username}</Text>?
+          <View style={styles.compactRow}>
+            <Icon source="home" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Dirección
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.address || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon source="city" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Ciudad
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.city || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon source="map" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Estado/Provincia
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.state || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon source="earth" size={18} color={theme.colors.primary} />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                País
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.country || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="mailbox"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Código Postal
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.zipCode || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.infoSection}>
+          <View style={styles.sectionHeader}>
+            <Icon
+              source="alert-circle"
+              size={20}
+              color={theme.colors.error}
+            />
+            <Text style={styles.sectionTitle} variant="titleMedium">
+              Contacto de Emergencia
+            </Text>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="account-alert"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Nombre
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.emergencyContact?.name || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="phone-alert"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Teléfono
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.emergencyContact?.phone || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.compactRow}>
+            <Icon
+              source="account-multiple"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={styles.compactContent}>
+              <Text style={styles.compactLabel} variant="labelSmall">
+                Relación
+              </Text>
+              <Text style={styles.compactValue} variant="bodySmall">
+                {user.emergencyContact?.relationship || 'No especificado'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.passwordButtonContainer}>
+          <Button
+            mode="contained-tonal"
+            onPress={() => setShowPasswordDialog(true)}
+            icon="lock-reset"
+            style={styles.passwordButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.buttonLabel}
+            buttonColor={theme.colors.secondaryContainer}
+            compact
+          >
+            Cambiar Contraseña
+          </Button>
+        </View>
+      </ResponsiveModal>
+
+      <ResponsiveModal
+        visible={showPasswordDialog}
+        onDismiss={() => {
+          setShowPasswordDialog(false);
+          setNewPassword('');
+          setConfirmPassword('');
+          setShowPassword(false);
+        }}
+        title="Cambiar Contraseña"
+        maxWidthPercent={90}
+        maxHeightPercent={70}
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'outlined',
+            onPress: () => {
+              setShowPasswordDialog(false);
+              setNewPassword('');
+              setConfirmPassword('');
+              setShowPassword(false);
+            },
+          },
+          {
+            label: 'Guardar',
+            mode: 'contained',
+            onPress: handleResetPassword,
+            loading: resetPasswordMutation.isPending,
+            disabled:
+              resetPasswordMutation.isPending ||
+              newPassword.length < 6 ||
+              newPassword !== confirmPassword,
+            colorPreset: 'primary',
+          },
+        ]}
+      >
+        <View style={styles.passwordDialogHeader}>
+          <Icon
+            source="lock-reset"
+            size={40}
+            color={theme.colors.primary}
+          />
+          <View style={styles.passwordDialogUserInfo}>
+            <Text
+              variant="bodyMedium"
+              style={styles.passwordDialogUserName}
+            >
+              {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+                user.username}
             </Text>
             <Text
               variant="bodySmall"
-              style={[
-                styles.dialogText,
-                {
-                  marginTop: theme.spacing.s,
-                  color: theme.colors.error,
-                },
-              ]}
+              style={styles.passwordDialogUserDetail}
             >
-              Esta acción no se puede deshacer
+              {user.email}
             </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowDeleteDialog(false)}>Cancelar</Button>
-            <Button
-              onPress={handleDeleteUser}
-              loading={deleteUserMutation.isPending}
-              disabled={deleteUserMutation.isPending}
-              textColor={theme.colors.error}
+            <Text
+              variant="labelSmall"
+              style={styles.passwordDialogUserDetail}
             >
-              Eliminar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+              @{user.username}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.passwordInputsContainer}>
+          <TextInput
+            label="Nueva contraseña"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            mode="flat"
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
+            style={styles.passwordInput}
+            contentStyle={styles.passwordInputContent}
+            underlineColor={theme.colors.surfaceVariant}
+            activeUnderlineColor={theme.colors.primary}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword(!showPassword)}
+                size={20}
+                style={styles.passwordInputIcon}
+              />
+            }
+          />
+
+          <TextInput
+            label="Confirmar contraseña"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            mode="flat"
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
+            style={styles.passwordInput}
+            contentStyle={styles.passwordInputContent}
+            underlineColor={theme.colors.surfaceVariant}
+            activeUnderlineColor={theme.colors.primary}
+          />
+
+          {(newPassword.length > 0 || confirmPassword.length > 0) && (
+            <View style={styles.passwordValidation}>
+              <View style={styles.validationItem}>
+                <Icon
+                  source={
+                    newPassword.length >= 6
+                      ? 'check-circle'
+                      : 'circle-outline'
+                  }
+                  size={16}
+                  color={
+                    newPassword.length >= 6
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
+                />
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.validationText,
+                    {
+                      color:
+                        newPassword.length >= 6
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant,
+                    },
+                  ]}
+                >
+                  Mínimo 6 caracteres
+                </Text>
+              </View>
+
+              <View style={styles.validationItem}>
+                <Icon
+                  source={
+                    newPassword === confirmPassword &&
+                    newPassword.length > 0
+                      ? 'check-circle'
+                      : 'circle-outline'
+                  }
+                  size={16}
+                  color={
+                    newPassword === confirmPassword &&
+                    newPassword.length > 0
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
+                />
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.validationText,
+                    {
+                      color:
+                        newPassword === confirmPassword &&
+                        newPassword.length > 0
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant,
+                    },
+                  ]}
+                >
+                  Las contraseñas coinciden
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </ResponsiveModal>
+
+      <ResponsiveModal
+        visible={showDeleteDialog}
+        onDismiss={() => setShowDeleteDialog(false)}
+        title="Eliminar Usuario"
+        maxWidthPercent={75}
+        maxHeightPercent={40}
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'outlined',
+            onPress: () => setShowDeleteDialog(false),
+          },
+          {
+            label: 'Eliminar',
+            mode: 'contained',
+            onPress: handleDeleteUser,
+            loading: deleteUserMutation.isPending,
+            disabled: deleteUserMutation.isPending,
+            colorPreset: 'error',
+          },
+        ]}
+      >
+        <View style={styles.deleteDialogContent}>
+          <Icon
+            source="alert"
+            size={48}
+            color={theme.colors.error}
+          />
+          <Text variant="bodyMedium" style={styles.dialogText}>
+            ¿Estás seguro de que deseas eliminar al usuario{' '}
+            <Text style={styles.boldText}>{user.username}</Text>?
+          </Text>
+          <Text
+            variant="bodySmall"
+            style={[
+              styles.dialogText,
+              {
+                marginTop: theme.spacing.s,
+                color: theme.colors.error,
+              },
+            ]}
+          >
+            Esta acción no se puede deshacer
+          </Text>
+        </View>
+      </ResponsiveModal>
     </>
   );
 }
@@ -770,27 +734,37 @@ const getStyles = (
   responsive: ReturnType<typeof useResponsive>,
 ) =>
   StyleSheet.create({
-    passwordDialog: {
-      backgroundColor: 'transparent',
-    },
-    passwordDialogContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.roundness * 4,
-      borderWidth: 2,
-      overflow: 'hidden',
+    headerRightContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     passwordDialogHeader: {
       alignItems: 'center',
       paddingTop: theme.spacing.l,
-      paddingBottom: theme.spacing.s,
-      backgroundColor: theme.colors.elevation.level1,
+      paddingBottom: theme.spacing.m,
     },
-    passwordDialogTitle: {
-      textAlign: 'center',
-      fontSize: 20,
-      fontWeight: '600',
-      marginTop: theme.spacing.s,
-      marginBottom: theme.spacing.s,
+    passwordInputsContainer: {
+      marginTop: theme.spacing.m,
+    },
+    passwordButtonContainer: {
+      marginTop: theme.spacing.l,
+      marginBottom: theme.spacing.m,
+    },
+    passwordButton: {
+      borderRadius: theme.roundness * 2,
+      elevation: 0,
+      height: responsive.isTablet ? 36 : 40,
+    },
+    buttonContent: {
+      height: responsive.isTablet ? 36 : 40,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    buttonLabel: {
+      fontSize: responsive.isTablet ? 13 : 14,
+      lineHeight: responsive.isTablet ? 18 : 20,
+      marginVertical: responsive.isTablet ? 6 : 8,
+      includeFontPadding: false,
     },
     passwordDialogUserInfo: {
       alignItems: 'center',
@@ -807,10 +781,6 @@ const getStyles = (
       textAlign: 'center',
       color: theme.colors.onSurfaceVariant,
       marginBottom: 2,
-    },
-    passwordDialogContent: {
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.s,
     },
     passwordInput: {
       backgroundColor: 'transparent',
@@ -839,107 +809,34 @@ const getStyles = (
     validationText: {
       fontSize: 12,
     },
-    passwordDialogActions: {
-      justifyContent: 'center',
-      paddingBottom: theme.spacing.m,
-      paddingHorizontal: theme.spacing.l,
-      gap: theme.spacing.s,
-    },
-    passwordDialogButton: {
-      minWidth: 100,
-      borderRadius: theme.roundness * 3,
-    },
-    passwordDialogCancelButton: {
-      marginRight: theme.spacing.s,
-    },
-    passwordDialogPrimaryButton: {
-      elevation: 0,
-    },
-    passwordDialogButtonLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      letterSpacing: 0.1,
-    },
-    modalContainer: {
-      margin: responsive.isTablet ? theme.spacing.xl : theme.spacing.m,
-      maxWidth: responsive.isTablet ? 700 : 420,
-      alignSelf: 'center',
-      width: responsive.isTablet ? '85%' : '92%',
-      paddingHorizontal: 0,
-      height: responsive.isTablet ? '80%' : '80%',
-      maxHeight: responsive.isTablet ? '85%' : '92%',
-      justifyContent: 'center',
-    },
-    modalContent: {
-      borderRadius: theme.roundness * 3,
-      backgroundColor: theme.colors.surface,
-      height: '100%',
-      flex: 1,
-      overflow: 'hidden',
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      borderWidth: 1,
-      borderColor: theme.colors.outlineVariant,
-    },
-    headerContainer: {
+    userSubtitle: {
+      marginTop: -theme.spacing.s,
+      marginBottom: theme.spacing.m,
       flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.m,
-      paddingVertical: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      borderTopLeftRadius: theme.roundness * 3,
-      borderTopRightRadius: theme.roundness * 3,
-    },
-    headerContent: {
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'center',
-    },
-    headerNameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.xs,
-    },
-    modalTitle: {
-      fontWeight: '600',
-      marginRight: theme.spacing.xs,
-      fontSize: responsive.isTablet ? 15 : 16,
     },
     modalSubtitle: {
-      marginTop: 2,
       fontSize: responsive.isTablet ? 12 : 14,
     },
     headerRoleChip: {
-      minHeight: responsive.isTablet ? 32 : 28,
+      minHeight: responsive.isTablet ? 28 : 24,
       height: 'auto',
       borderRadius: theme.roundness * 2,
       borderWidth: 1,
       borderColor: theme.colors.outlineVariant,
       paddingHorizontal: theme.spacing.s,
-      paddingVertical: 3,
+      paddingVertical: 2,
       alignItems: 'center',
       justifyContent: 'center',
     },
     headerRoleChipText: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600',
-      lineHeight: 16,
+      lineHeight: 14,
       marginVertical: 0,
       paddingVertical: 0,
       includeFontPadding: false,
-    },
-    contentContainer: {
-      flex: 1,
-      paddingHorizontal: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.m,
-      paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
     },
     infoSection: {
       borderRadius: theme.roundness * 2,
@@ -959,41 +856,6 @@ const getStyles = (
       fontWeight: '600',
       color: theme.colors.onSurface,
       fontSize: responsive.isTablet ? 14 : 14,
-    },
-    listItemTitle: {
-      color: theme.colors.onSurface,
-      fontWeight: '500',
-      fontSize: 14,
-    },
-    listItemDescription: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-    },
-    actionsContainer: {
-      gap: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
-      marginBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.m,
-      marginTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      paddingHorizontal: 0,
-    },
-    actionButton: {
-      borderRadius: theme.roundness * 2,
-      elevation: 0,
-      height: responsive.isTablet ? 36 : 40,
-    },
-    buttonContent: {
-      height: responsive.isTablet ? 36 : 40,
-      paddingTop: 0,
-      paddingBottom: 0,
-    },
-    buttonLabel: {
-      fontSize: responsive.isTablet ? 13 : 14,
-      lineHeight: responsive.isTablet ? 18 : 20,
-      marginVertical: responsive.isTablet ? 6 : 8,
-      includeFontPadding: false,
-    },
-    deleteButton: {
-      borderColor: theme.colors.error,
-      marginTop: theme.spacing.xs,
     },
     compactRow: {
       flexDirection: 'row',
@@ -1015,13 +877,34 @@ const getStyles = (
       fontWeight: '500',
       lineHeight: responsive.isTablet ? 16 : 16,
     },
-    dialogTitle: {
-      textAlign: 'center',
+    deleteDialogContent: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.l,
     },
     dialogText: {
       textAlign: 'center',
+      marginTop: theme.spacing.m,
     },
     boldText: {
       fontWeight: 'bold',
+    },
+    roleChip: {
+      minHeight: responsive.isTablet ? 28 : 24,
+      height: 'auto',
+      borderRadius: theme.roundness * 2,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
+      paddingHorizontal: theme.spacing.s,
+      paddingVertical: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    roleChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+      lineHeight: 14,
+      marginVertical: 0,
+      paddingVertical: 0,
+      includeFontPadding: false,
     },
   });

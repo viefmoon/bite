@@ -98,7 +98,9 @@ export class ThermalPrintersRelationalRepository
       return null;
     }
     const entity = await this.printersRepository.findOne({
-      where: { ipAddress },
+      where: { 
+        ipAddress
+      },
     });
 
     return entity ? ThermalPrinterMapper.toDomain(entity) : null;

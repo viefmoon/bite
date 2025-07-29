@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { Modal, Portal, Text, Button, Searchbar } from 'react-native-paper';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Portal, Text, Searchbar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from 'react-native-paper';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { FlashList } from '@shopify/flash-list';
 import { useProductSelectionTree } from '../hooks/useProductSelectionTree';
 import { CategoryRow } from './CategoryRow';
 import { SubcategoryRow } from './SubcategoryRow';
 import { ProductRow } from './ProductRow';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface Product {
   id: string;
@@ -36,7 +37,7 @@ interface MenuData {
   screenId: string;
   screenName: string;
   menu: Category[];
-  screenAssignments?: Record<string, string>; // Mapeo de productId a nombre de pantalla
+  screenAssignments?: Record<string, string>;
 }
 
 interface ProductSelectionModalProps {
@@ -56,12 +57,12 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   menuData,
   loading = false,
 }) => {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [conflictingProducts, setConflictingProducts] = useState<
-    Array<{ id: string; name: string; currentScreen: string }>
-  >([]);
+  
+  // Separar loading de menú y loading de guardado
+  const isLoadingMenu = loading && !menuData;
+  const isSaving = loading && !!menuData;
 
   const {
     selectedProducts,
@@ -153,53 +154,77 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   }, [filteredMenu, isCategoryExpanded, isSubcategoryExpanded]);
 
   const handleSave = () => {
-    const conflicts = getConflictingProducts;
-
-    if (conflicts.length > 0) {
-      setConflictingProducts(conflicts);
-      setShowConfirmDialog(true);
-    } else {
-      onSave(selectedProducts);
-    }
-  };
-
-  const handleConfirmSave = () => {
-    setShowConfirmDialog(false);
+    // Siempre guardar directamente, las reasignaciones se manejan automáticamente
     onSave(selectedProducts);
   };
 
-  const handleCancelSave = () => {
-    setShowConfirmDialog(false);
-  };
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
+  // Obtener productos en conflicto para mostrar en el header
+  const conflicts = getConflictingProducts;
+  
+  const headerActions = useMemo(() => (
+    <View style={styles.headerActions}>
+      {selectedProducts.length > 0 && (
+        <Chip
+          mode="flat"
+          compact
+          style={styles.selectedChip}
+          icon="check-circle"
+        >
+          {selectedProducts.length} seleccionados
+        </Chip>
+      )}
+    </View>
+  ), [selectedProducts.length, styles]);
 
   return (
     <Portal>
-      <Modal
+      <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={[
-          styles.modalContainer,
-          { backgroundColor: theme.colors.surface },
+        title="Seleccionar Productos"
+        headerRight={headerActions}
+        dismissable={!isSaving}
+        showCloseButton={!isSaving}
+        maxHeightPercent={85}
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'outlined' as const,
+            onPress: onDismiss,
+            disabled: isSaving,
+          },
+          {
+            label: isSaving ? 'Guardando...' : 'Guardar',
+            mode: 'contained' as const,
+            onPress: handleSave,
+            disabled: isSaving || selectedProducts.length === 0,
+            loading: isSaving,
+            colorPreset: 'primary' as const,
+          },
         ]}
       >
-        <View style={styles.header}>
-          <Text variant="headlineSmall">Seleccionar Productos</Text>
-        </View>
+        <View style={[styles.content, isSaving && styles.contentDisabled]}>
+          <Searchbar
+            placeholder="Buscar productos..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+            mode="bar"
+            icon="magnify"
+            clearIcon="close"
+            editable={!isSaving}
+          />
 
-        <Searchbar
-          placeholder="Buscar productos..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-        />
-
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-          </View>
-        ) : (
-          <View style={styles.flashListContainer}>
-            <FlashList
+          {isLoadingMenu ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.loadingText}>Cargando productos...</Text>
+            </View>
+          ) : (
+            <View style={[styles.flashListContainer, isSaving && styles.listDisabled]}>
+              <FlashList
               data={flattenedData}
               estimatedItemSize={60}
               keyExtractor={(item) => item.id}
@@ -245,330 +270,124 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                     return null;
                 }
               }}
-            />
+              />
+            </View>
+          )}
+        </View>
+        
+        {/* Mostrar alerta de reasignación dentro del modal principal */}
+        {conflicts.length > 0 && (
+          <View style={styles.conflictAlert}>
+            <View style={styles.conflictAlertHeader}>
+              <MaterialCommunityIcons
+                name="alert"
+                size={20}
+                color={theme.colors.error}
+              />
+              <Text style={styles.conflictAlertTitle}>
+                {conflicts.length === 1
+                  ? '1 producto será reasignado'
+                  : `${conflicts.length} productos serán reasignados`}
+              </Text>
+            </View>
+            <Text style={styles.conflictAlertText}>
+              Los productos seleccionados que ya están en otras pantallas serán movidos automáticamente a esta pantalla.
+            </Text>
           </View>
         )}
-
-        <View style={styles.actions}>
-          <Button mode="outlined" onPress={onDismiss}>
-            Cancelar
-          </Button>
-          <Button mode="contained" onPress={handleSave} disabled={loading}>
-            Guardar
-          </Button>
-        </View>
-      </Modal>
-
-      {/* Modal de confirmación personalizado */}
-      <Modal
-        visible={showConfirmDialog}
-        onDismiss={handleCancelSave}
-        contentContainerStyle={[
-          styles.confirmModalContainer,
-          { backgroundColor: theme.colors.surface },
-        ]}
-      >
-        {/* Header */}
-        <View
-          style={[
-            styles.confirmModalHeader,
-            { borderBottomColor: theme.colors.surfaceVariant },
-          ]}
-        >
-          <View
-            style={[
-              styles.confirmModalIcon,
-              { backgroundColor: theme.colors.errorContainer },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="alert"
-              size={24}
-              color={theme.colors.error}
-            />
-          </View>
-          <Text variant="headlineSmall" style={styles.confirmModalTitle}>
-            Reasignar Productos
-          </Text>
-        </View>
-
-        {/* Subtitle */}
-        <View style={styles.confirmModalSubtitleContainer}>
-          <Text
-            variant="bodyLarge"
-            style={{
-              color: theme.colors.onSurfaceVariant,
-            }}
-          >
-            {conflictingProducts.length === 1
-              ? 'El siguiente producto será reasignado:'
-              : `Los siguientes ${conflictingProducts.length} productos serán reasignados:`}
-          </Text>
-        </View>
-
-        {/* Scrollable Product List */}
-        <ScrollView
-          style={styles.confirmModalScrollView}
-          showsVerticalScrollIndicator={true}
-        >
-          {conflictingProducts.map((product, _index) => (
-            <View
-              key={product.id}
-              style={[
-                styles.confirmModalProductItem,
-                {
-                  backgroundColor: theme.colors.surfaceVariant,
-                  borderLeftColor: theme.colors.error,
-                },
-              ]}
-            >
-              <Text
-                variant="bodyLarge"
-                style={[
-                  styles.confirmModalProductName,
-                  { color: theme.colors.onSurface },
-                ]}
-              >
-                {product.name}
-              </Text>
-              <View
-                style={[
-                  styles.confirmModalProductContent,
-                  { backgroundColor: theme.colors.surface },
-                ]}
-              >
-                <View style={styles.confirmModalProductSection}>
-                  <Text
-                    variant="labelSmall"
-                    style={[
-                      styles.confirmModalProductSectionText,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    Desde
-                  </Text>
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.confirmModalProductSectionLabel,
-                      { color: theme.colors.error },
-                    ]}
-                  >
-                    {product.currentScreen}
-                  </Text>
-                </View>
-
-                <MaterialCommunityIcons
-                  name="arrow-right"
-                  size={20}
-                  color={theme.colors.primary}
-                  style={styles.confirmModalDivider}
-                />
-
-                <View style={styles.confirmModalProductSection}>
-                  <Text
-                    variant="labelSmall"
-                    style={[
-                      styles.confirmModalProductSectionText,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    Hacia
-                  </Text>
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.confirmModalProductSectionLabel,
-                      { color: theme.colors.primary },
-                    ]}
-                  >
-                    {menuData?.screenName || 'Esta pantalla'}
-                  </Text>
-                </View>
-              </View>
+        
+        {/* Overlay de carga al guardar */}
+        {isSaving && (
+          <View style={styles.savingOverlay}>
+            <View style={styles.savingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.savingText}>Guardando cambios...</Text>
             </View>
-          ))}
-        </ScrollView>
-
-        {/* Info Box */}
-        <View
-          style={[
-            styles.confirmModalInfoContainer,
-            { backgroundColor: theme.colors.secondaryContainer },
-          ]}
-        >
-          <MaterialCommunityIcons
-            name="information"
-            size={20}
-            color={theme.colors.onSecondaryContainer}
-            style={styles.confirmModalInfoIcon}
-          />
-          <Text
-            variant="bodySmall"
-            style={[
-              styles.confirmModalInfoText,
-              { color: theme.colors.onSecondaryContainer },
-            ]}
-          >
-            Los productos serán removidos automáticamente de sus pantallas
-            actuales al confirmar.
-          </Text>
-        </View>
-
-        {/* Actions */}
-        <View
-          style={[
-            styles.confirmModalActions,
-            { borderTopColor: theme.colors.surfaceVariant },
-          ]}
-        >
-          <Button
-            onPress={handleCancelSave}
-            mode="outlined"
-            style={[
-              styles.confirmModalActionButton,
-              { borderColor: theme.colors.outline },
-            ]}
-            contentStyle={styles.confirmModalActionButtonContent}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onPress={handleConfirmSave}
-            mode="contained"
-            buttonColor={theme.colors.error}
-            icon="check-circle"
-            style={styles.confirmModalActionButton}
-            contentStyle={styles.confirmModalActionButtonContent}
-          >
-            Reasignar
-          </Button>
-        </View>
-      </Modal>
+          </View>
+        )}
+      </ResponsiveModal>
     </Portal>
   );
 };
 
-const styles = StyleSheet.create({
-  modalContainer: {
-    margin: 20,
-    padding: 20,
-    borderRadius: 8,
-    maxHeight: '90%',
+const getStyles = (theme: AppTheme) => StyleSheet.create({
+  content: {
+    flex: 1,
   },
-  header: {
-    marginBottom: 16,
+  contentDisabled: {
+    opacity: 0.6,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectedChip: {
+    backgroundColor: theme.colors.primaryContainer,
   },
   searchBar: {
-    marginBottom: 16,
+    marginBottom: theme.spacing.m,
+    elevation: 0,
+    backgroundColor: theme.colors.surfaceVariant,
   },
   flashListContainer: {
-    height: 400,
+    flex: 1,
+    minHeight: 300,
+  },
+  listDisabled: {
+    opacity: 0.6,
+    pointerEvents: 'none',
   },
   loadingContainer: {
-    height: 200,
+    flex: 1,
+    minHeight: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
+  loadingText: {
+    marginTop: theme.spacing.m,
+    color: theme.colors.onSurfaceVariant,
   },
-  // Estilos para el modal de confirmación
-  confirmModalContainer: {
-    margin: 20,
-    borderRadius: 16,
-    maxHeight: '75%',
-    elevation: 8,
+  // Estilos para la alerta de conflictos
+  conflictAlert: {
+    backgroundColor: theme.colors.errorContainer,
+    padding: theme.spacing.m,
+    borderRadius: theme.roundness,
+    marginHorizontal: theme.spacing.m,
+    marginBottom: theme.spacing.m,
   },
-  confirmModalHeader: {
+  conflictAlertHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
+    marginBottom: theme.spacing.xs,
   },
-  confirmModalIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  conflictAlertTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: theme.colors.onErrorContainer,
+    marginLeft: theme.spacing.s,
+  },
+  conflictAlertText: {
+    fontSize: 13,
+    color: theme.colors.onErrorContainer,
+    lineHeight: 18,
+  },
+  savingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    zIndex: 1000,
   },
-  confirmModalTitle: {
-    flex: 1,
-  },
-  confirmModalSubtitleContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  confirmModalScrollView: {
-    maxHeight: 250,
-    marginTop: 16,
-    marginHorizontal: 20,
-  },
-  confirmModalProductItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderLeftWidth: 4,
-  },
-  confirmModalProductName: {
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  confirmModalProductContent: {
-    flexDirection: 'row',
+  savingContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.xl,
+    borderRadius: theme.roundness * 2,
     alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
+    elevation: 5,
   },
-  confirmModalProductSection: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  confirmModalProductSectionText: {
-    marginBottom: 2,
-  },
-  confirmModalProductSectionLabel: {
-    fontWeight: '500',
-  },
-  confirmModalDivider: {
-    marginHorizontal: 8,
-  },
-  confirmModalInfoContainer: {
-    margin: 20,
-    marginTop: 16,
-    marginBottom: 0,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  confirmModalInfoIcon: {
-    marginRight: 12,
-  },
-  confirmModalInfoText: {
-    flex: 1,
-  },
-  confirmModalActions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 16,
-    gap: 16,
-    borderTopWidth: 1,
-    marginTop: 16,
-  },
-  confirmModalActionButton: {
-    flex: 1,
-    maxWidth: 150,
-  },
-  confirmModalActionButtonContent: {
-    paddingVertical: 4,
+  savingText: {
+    marginTop: theme.spacing.m,
+    fontSize: 16,
+    color: theme.colors.onSurface,
   },
 });

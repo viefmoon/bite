@@ -92,22 +92,35 @@ const getStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: theme.spacing.m,
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
+      borderRadius: theme.roundness * 2,
       marginTop: theme.spacing.s,
+      paddingVertical: theme.spacing.s,
+      paddingHorizontal: theme.spacing.m,
+    },
+    productCardContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.m,
     },
     productInfo: {
       flex: 1,
     },
+    productTextRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: theme.spacing.s,
+    },
     productCount: {
-      fontSize: 24,
+      fontSize: 18,
       fontWeight: 'bold',
       color: theme.colors.primary,
     },
     productLabel: {
-      fontSize: 12,
+      fontSize: 14,
       color: theme.colors.onSurfaceVariant,
+      marginLeft: theme.spacing.xs,
     },
     emptyState: {
       alignItems: 'center',
@@ -238,24 +251,22 @@ const PreparationScreenDetailModal: React.FC<
 
         {/* Sección de productos */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            <Icon name="food" size={16} /> Productos Asociados
-          </Text>
-
-          <View style={styles.productCard}>
-            <View style={styles.productInfo}>
-              <Text style={styles.productCount}>{productCount}</Text>
-              <Text style={styles.productLabel}>
-                {productCount === 1 ? 'Producto' : 'Productos'}
-              </Text>
-            </View>
-
+          <View style={styles.infoRow}>
+            <Icon
+              name="food"
+              size={20}
+              color={theme.colors.onSurfaceVariant}
+              style={styles.infoIcon}
+            />
+            <Text style={styles.infoText}>
+              {productCount} {productCount === 1 ? 'producto asociado' : 'productos asociados'}
+            </Text>
             {onManageProducts && (
               <Button
-                mode="contained-tonal"
+                mode="outlined"
                 onPress={() => onManageProducts(item)}
-                icon="link-variant"
                 compact
+                icon="link-variant"
               >
                 Gestionar
               </Button>
@@ -285,11 +296,10 @@ const PreparationScreenDetailModal: React.FC<
       visible={visible}
       onDismiss={onDismiss}
       title={item?.name}
-      headerActions={headerActions}
-      hideCloseButton={isDeleting}
+      headerRight={headerActions}
+      showCloseButton={!isDeleting}
       dismissable={!isDeleting}
-      maxHeightTablet="90%"
-      scrollable={true}
+      maxHeightPercent={90}
       actions={item ? [
         ...(onEdit ? [{
           label: 'Editar',
@@ -300,9 +310,9 @@ const PreparationScreenDetailModal: React.FC<
           colorPreset: 'primary' as const,
         }] : []),
         ...(onDelete ? [{
-          label: 'Eliminar',
-          icon: 'delete',
-          mode: 'contained-tonal' as const,
+          label: isDeleting ? 'Eliminando...' : 'Eliminar',
+          icon: 'delete-outline',
+          mode: 'outlined' as const,
           onPress: () => onDelete(item.id),
           loading: isDeleting,
           disabled: isDeleting,

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Snackbar, Portal, Text } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
+import { Snackbar, Text } from 'react-native-paper';
+import { StyleSheet, View, Modal } from 'react-native';
 import { useSnackbarStore, SnackbarType } from '@/app/store/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -57,45 +57,61 @@ const GlobalSnackbar = () => {
   const backgroundColor = getBackgroundColor(type);
   const textColor = getTextColor(type);
 
+  if (!visible) return null;
+
   return (
-    <Portal>
-      <Snackbar
-        visible={visible}
-        onDismiss={hideSnackbar}
-        duration={duration || 2500}
-        style={[
-          styles.snackbar,
-          {
-            backgroundColor,
-          },
-        ]}
-        theme={{
-          ...theme,
-          colors: {
-            ...theme.colors,
-            inversePrimary: textColor,
-            inverseOnSurface: textColor,
-          },
-        }}
-      >
-        <Text style={styles.messageText}>{message || ''}</Text>
-      </Snackbar>
-    </Portal>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={hideSnackbar}
+    >
+      <View style={styles.modalOverlay} pointerEvents="box-none">
+        <View style={styles.snackbarContainer}>
+          <Snackbar
+            visible={true}
+            onDismiss={hideSnackbar}
+            duration={duration || 2500}
+            style={[
+              styles.snackbar,
+              {
+                backgroundColor,
+              },
+            ]}
+            theme={{
+              ...theme,
+              colors: {
+                ...theme.colors,
+                inversePrimary: textColor,
+                inverseOnSurface: textColor,
+              },
+            }}
+          >
+            <Text style={styles.messageText}>{message || ''}</Text>
+          </Snackbar>
+        </View>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  snackbarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 99999,
+    elevation: 99999,
+  },
   snackbar: {
     marginHorizontal: 16,
     borderRadius: 8,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
     marginBottom: 40,
   },
   messageText: {

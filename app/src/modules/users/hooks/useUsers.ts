@@ -28,9 +28,14 @@ export function useGetUser(id?: string) {
 }
 
 export function useCreateUser() {
+  const queryClient = useQueryClient();
+  
   return useApiMutation((data: CreateUserDto) => usersApiService.create(data), {
     successMessage: 'Usuario creado exitosamente',
-    invalidateQueryKeys: [[USERS_QUERY_KEY]],
+    onSuccess: () => {
+      // Invalidar todas las queries que empiecen con USERS_QUERY_KEY
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
+    },
   });
 }
 
@@ -42,8 +47,10 @@ export function useUpdateUser() {
       usersApiService.update(id, data),
     {
       successMessage: 'Usuario actualizado exitosamente',
-      invalidateQueryKeys: [[USERS_QUERY_KEY]],
       onSuccess: (_, { id }) => {
+        // Invalidar todas las queries que empiecen con USERS_QUERY_KEY
+        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
+        // También invalidar la query específica del usuario
         queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
       },
     },
@@ -51,6 +58,8 @@ export function useUpdateUser() {
 }
 
 export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  
   return useApiMutation(
     async (id: string) => {
       await usersApiService.remove(id);
@@ -58,7 +67,10 @@ export function useDeleteUser() {
     },
     {
       successMessage: 'Usuario eliminado exitosamente',
-      invalidateQueryKeys: [[USERS_QUERY_KEY]],
+      onSuccess: () => {
+        // Invalidar todas las queries que empiecen con USERS_QUERY_KEY
+        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
+      },
     },
   );
 }

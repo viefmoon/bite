@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   TextInput,
-  Button,
   Switch,
   HelperText,
-  Surface,
+  ActivityIndicator,
+  Chip,
   List,
   Divider,
+  Searchbar,
 } from 'react-native-paper';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -48,8 +48,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   const theme = useAppTheme();
   const styles = getStyles(theme);
   const isEditing = !!editingItem;
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
 
   // Obtener todos los usuarios activos
   const { data: usersData, isLoading: isLoadingUsers } = useGetUsers({
@@ -179,7 +180,8 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
     setValue('userId', user.id);
-    setShowUserDropdown(false);
+    setShowUserModal(false);
+    setUserSearchQuery('');
   };
 
   const handleClearUser = () => {
@@ -187,64 +189,59 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
     setValue('userId', '');
   };
 
+  // Filtrar usuarios según búsqueda y disponibilidad
+  const filteredUsers = React.useMemo(() => {
+    const searchLower = userSearchQuery.toLowerCase();
+    return allUsers.filter(user => {
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      const matchesSearch = !userSearchQuery || 
+        fullName.toLowerCase().includes(searchLower) ||
+        user.username.toLowerCase().includes(searchLower);
+      return matchesSearch;
+    });
+  }, [allUsers, userSearchQuery]);
+
   const isSubmitting = createScreen.isPending || updateScreen.isPending;
 
-  // Funciones auxiliares para roles
-  const getRoleLabel = (roleId?: number) => {
+  // Función auxiliar para obtener el nombre del rol
+  const getRoleName = (roleId?: number) => {
     switch (roleId) {
-      case RoleEnum.ADMIN:
-        return 'Administrador';
-      case RoleEnum.MANAGER:
-        return 'Gerente';
-      case RoleEnum.CASHIER:
-        return 'Cajero';
-      case RoleEnum.WAITER:
-        return 'Mesero';
-      case RoleEnum.KITCHEN:
-        return 'Cocina';
-      case RoleEnum.DELIVERY:
-        return 'Repartidor';
-      default:
-        return 'Sin rol';
-    }
-  };
-
-  const getIconForRole = (roleId?: number) => {
-    switch (roleId) {
-      case RoleEnum.ADMIN:
-        return 'shield-account';
-      case RoleEnum.MANAGER:
-        return 'account-tie';
-      case RoleEnum.CASHIER:
-        return 'cash-register';
-      case RoleEnum.WAITER:
-        return 'room-service';
-      case RoleEnum.KITCHEN:
-        return 'chef-hat';
-      case RoleEnum.DELIVERY:
-        return 'moped';
-      default:
-        return 'account';
+      case RoleEnum.KITCHEN: return 'Cocina';
+      case RoleEnum.ADMIN: return 'Admin';
+      case RoleEnum.MANAGER: return 'Gerente';
+      case RoleEnum.CASHIER: return 'Cajero';
+      case RoleEnum.WAITER: return 'Mesero';
+      case RoleEnum.DELIVERY: return 'Repartidor';
+      default: return 'Sin rol';
     }
   };
 
   return (
     <>
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={onDismiss}
-          contentContainerStyle={styles.modalContent}
-        >
-          <ScrollView>
-            <Surface style={styles.surface}>
-              <Text variant="headlineSmall" style={styles.title}>
-                {isEditing
-                  ? 'Editar Pantalla de Preparación'
-                  : 'Crear Nueva Pantalla'}
-              </Text>
-
-              <View style={styles.form}>
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={onDismiss}
+        title={isEditing ? 'Editar Pantalla de Preparación' : 'Crear Nueva Pantalla'}
+        dismissable={!isSubmitting}
+        showCloseButton={!isSubmitting}
+        actions={[
+          {
+            label: 'Cancelar',
+            mode: 'outlined' as const,
+            onPress: onDismiss,
+            disabled: isSubmitting,
+          },
+          {
+            label: isEditing ? 'Actualizar' : 'Crear',
+            mode: 'contained' as const,
+            onPress: handleSubmit(onSubmit),
+            loading: isSubmitting,
+            disabled: isSubmitting,
+            colorPreset: 'primary' as const,
+          },
+        ]}
+      >
+        <View style={styles.form}>
                 {/* Campo Nombre */}
                 <Controller
                   control={control}
@@ -314,13 +311,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                         mode="outlined"
                         error={!!errors.userId}
                         disabled={isSubmitting || isLoadingUsers}
-                        onPressOut={() => {
-                          if (
-                            !isSubmitting &&
-                            !isLoadingUsers &&
-                            allUsers.length > 0
-                          ) {
-                            setShowUserDropdown(true);
+                        onPress={() => {
+                          if (!isSubmitting && !isLoadingUsers) {
+                            setShowUserModal(true);
                           }
                         }}
                         showSoftInputOnFocus={false}
@@ -329,18 +322,21 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                           selectedUser ? (
                             <TextInput.Icon
                               icon="close"
-                              onPress={() => {
-                                handleClearUser();
-                              }}
+                              onPress={handleClearUser}
                               disabled={isSubmitting}
+                            />
+                          ) : isLoadingUsers ? (
+                            <TextInput.Icon
+                              icon={() => <ActivityIndicator size="small" />}
+                              disabled
                             />
                           ) : (
                             <TextInput.Icon
-                              icon={isLoadingUsers ? 'loading' : 'chevron-down'}
-                              disabled={isSubmitting || isLoadingUsers}
+                              icon="account-search"
+                              disabled={isSubmitting}
                               onPress={() => {
                                 if (!isSubmitting && !isLoadingUsers) {
-                                  setShowUserDropdown(true);
+                                  setShowUserModal(true);
                                 }
                               }}
                             />
@@ -352,10 +348,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                           {errors.userId.message}
                         </HelperText>
                       )}
-                      {!errors.userId && (
+                      {!errors.userId && !selectedUser && (
                         <HelperText type="info" visible={true}>
-                          Nota: Un usuario solo puede estar asignado a una
-                          pantalla a la vez
+                          Solo usuarios con rol de cocina pueden ser asignados
                         </HelperText>
                       )}
                     </View>
@@ -379,182 +374,174 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                   )}
                 />
               </View>
+      </ResponsiveModal>
 
-              <View style={styles.actions}>
-                <Button mode="text" onPress={onDismiss} disabled={isSubmitting}>
-                  Cancelar
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleSubmit(onSubmit)}
-                  loading={isSubmitting}
-                  disabled={isSubmitting}
-                >
-                  {isEditing ? 'Actualizar' : 'Crear'}
-                </Button>
-              </View>
-            </Surface>
-          </ScrollView>
-        </Modal>
-      </Portal>
+      {/* Modal de selección de usuario */}
+      <ResponsiveModal
+        visible={showUserModal}
+        onDismiss={() => {
+          setShowUserModal(false);
+          setUserSearchQuery('');
+        }}
+        title="Seleccionar Usuario"
+        maxHeightPercent={75}
+        maxWidthPercent={85}
+      >
+        <View style={styles.userModalContent}>
+          <Searchbar
+            placeholder="Buscar por nombre o usuario..."
+            onChangeText={setUserSearchQuery}
+            value={userSearchQuery}
+            style={styles.searchBar}
+            mode="bar"
+            icon="magnify"
+            clearIcon="close"
+          />
 
-      {/* Dropdown de usuarios */}
-      <Portal>
-        <Modal
-          visible={showUserDropdown}
-          onDismiss={() => setShowUserDropdown(false)}
-          contentContainerStyle={[
-            styles.dropdownModal,
-            styles.dropdownModalMaxHeight,
-          ]}
-        >
-          <Surface style={styles.dropdownContent}>
-            <View style={styles.dropdownHeader}>
-              <Text variant="titleMedium" style={styles.dropdownTitle}>
-                Seleccionar Usuario de Cocina
+          {isLoadingUsers ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.loadingText}>Cargando usuarios...</Text>
+            </View>
+          ) : filteredUsers.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text variant="titleMedium" style={styles.emptyTitle}>
+                {userSearchQuery ? 'Sin resultados' : 'No hay usuarios disponibles'}
               </Text>
-              <Text variant="bodySmall" style={styles.dropdownSubtitle}>
-                Solo los usuarios con rol de cocina pueden ser seleccionados
+              <Text style={styles.emptyText}>
+                {userSearchQuery 
+                  ? `No se encontraron usuarios para "${userSearchQuery}"`
+                  : 'No hay usuarios con rol de cocina disponibles'}
               </Text>
             </View>
-            <Divider />
-            <ScrollView>
-              {isLoadingUsers ? (
-                <View style={styles.loadingContainer}>
-                  <Text>Cargando usuarios...</Text>
-                </View>
-              ) : allUsers.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Text>No hay usuarios disponibles</Text>
-                </View>
-              ) : (
-                allUsers.map((user) => {
-                  const displayName =
-                    `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-                    user.username;
-                  const isKitchenUser = user.role?.id === RoleEnum.KITCHEN;
-                  const roleLabel = getRoleLabel(user.role?.id);
-                  const assignedScreen = userAssignments.get(user.id);
-                  const isAssigned = !!assignedScreen;
-                  const isSelectable = isKitchenUser && !isAssigned;
+          ) : (
+            <View style={styles.userList}>
+              {filteredUsers.map((user) => {
+                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                const displayName = fullName || user.username;
+                const isKitchenUser = user.role?.id === RoleEnum.KITCHEN;
+                const assignedScreen = userAssignments.get(user.id);
+                const isAssigned = !!assignedScreen;
+                const isSelectable = isKitchenUser && !isAssigned;
 
-                  return (
+                return (
+                  <React.Fragment key={user.id}>
                     <List.Item
-                      key={user.id}
                       title={displayName}
                       description={
-                        isAssigned
-                          ? `Asignado a: ${assignedScreen}`
-                          : `${user.username !== displayName ? user.username + ' • ' : ''}${roleLabel}`
+                        <View style={styles.userDescription}>
+                          <Text variant="bodySmall">
+                            @{user.username} • {getRoleName(user.role?.id)}
+                          </Text>
+                          {isAssigned && (
+                            <Chip 
+                              compact 
+                              mode="flat" 
+                              style={styles.assignedChip}
+                              icon="monitor"
+                            >
+                              {assignedScreen}
+                            </Chip>
+                          )}
+                        </View>
                       }
-                      onPress={
-                        isSelectable ? () => handleUserSelect(user) : undefined
-                      }
+                      onPress={isSelectable ? () => handleUserSelect(user) : undefined}
                       left={(props) => (
-                        <List.Icon
-                          {...props}
-                          icon={getIconForRole(user.role?.id)}
-                          color={
-                            isAssigned ? theme.colors.outline : props.color
-                          }
+                        <List.Icon 
+                          {...props} 
+                          icon={isKitchenUser ? "chef-hat" : "account"}
+                          color={isSelectable ? theme.colors.primary : theme.colors.onSurfaceDisabled}
                         />
                       )}
+                      right={(props) => 
+                        isSelectable ? (
+                          <List.Icon {...props} icon="chevron-right" />
+                        ) : null
+                      }
                       style={[
-                        styles.dropdownItem,
-                        !isSelectable && styles.disabledDropdownItem,
+                        styles.userListItem,
+                        !isSelectable && styles.disabledUserItem
                       ]}
                       disabled={!isSelectable}
-                      titleStyle={!isSelectable && styles.disabledText}
-                      descriptionStyle={[
-                        !isSelectable && styles.disabledText,
-                        isAssigned && { color: theme.colors.error },
-                      ]}
                     />
-                  );
-                })
-              )}
-            </ScrollView>
-          </Surface>
-        </Modal>
-      </Portal>
+                    <Divider />
+                  </React.Fragment>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </ResponsiveModal>
     </>
   );
 };
 
 const getStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    modalContent: {
-      margin: 20,
-    },
-    surface: {
-      borderRadius: theme.roundness * 2,
-      overflow: 'hidden',
-    },
-    title: {
-      padding: 24,
-      paddingBottom: 16,
-      color: theme.colors.onSurface,
-    },
     form: {
-      paddingHorizontal: 24,
+      paddingTop: theme.spacing.m,
     },
     field: {
-      marginBottom: 16,
+      marginBottom: theme.spacing.m,
     },
     switchField: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 16,
-      paddingVertical: 8,
+      marginBottom: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
     },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      padding: 16,
-      paddingTop: 8,
-      gap: 8,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.surfaceVariant,
+    // Estilos del modal de usuarios
+    userModalContent: {
+      flex: 1,
     },
-    dropdownModal: {
-      margin: 20,
-      marginTop: '30%',
-    },
-    dropdownModalMaxHeight: {
-      maxHeight: 300,
-    },
-    dropdownContent: {
-      borderRadius: theme.roundness * 2,
-      overflow: 'hidden',
-    },
-    dropdownHeader: {
-      padding: 16,
-      paddingBottom: 12,
-    },
-    dropdownTitle: {
-      marginBottom: 4,
-    },
-    dropdownSubtitle: {
-      color: theme.colors.onSurfaceVariant,
-    },
-    dropdownItem: {
-      paddingHorizontal: 16,
-    },
-    disabledDropdownItem: {
-      opacity: 0.5,
-      backgroundColor: theme.colors.surfaceDisabled,
-    },
-    disabledText: {
-      color: theme.colors.onSurfaceDisabled,
+    searchBar: {
+      marginBottom: theme.spacing.m,
+      elevation: 0,
+      backgroundColor: theme.colors.surfaceVariant,
     },
     loadingContainer: {
-      padding: 20,
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    loadingText: {
+      marginTop: theme.spacing.m,
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
     },
     emptyContainer: {
-      padding: 20,
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    emptyTitle: {
+      marginBottom: theme.spacing.s,
+      color: theme.colors.onSurfaceVariant,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    userList: {
+      flex: 1,
+    },
+    userListItem: {
+      paddingVertical: theme.spacing.m,
+    },
+    disabledUserItem: {
+      backgroundColor: theme.colors.surfaceDisabled,
+      opacity: 0.7,
+    },
+    userDescription: {
+      marginTop: theme.spacing.xs,
+    },
+    assignedChip: {
+      marginTop: theme.spacing.xs,
+      backgroundColor: theme.colors.errorContainer,
     },
   });
 

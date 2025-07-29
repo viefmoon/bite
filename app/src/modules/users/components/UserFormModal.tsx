@@ -8,7 +8,6 @@ import {
   Surface,
   Chip,
   Avatar,
-  Divider,
   Icon,
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
@@ -226,8 +225,8 @@ export function UserFormModal({
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
-      maxWidthPercent={85}
-      maxHeightPercent={85}
+      maxWidthPercent={95}
+      maxHeightPercent={90}
       title={user ? 'Editar Usuario' : 'Nuevo Usuario'}
       dismissable={!isSubmitting}
       isLoading={isSubmitting}
@@ -250,7 +249,8 @@ export function UserFormModal({
       ]}
     >
       <View style={styles.formContainer}>
-            <View style={styles.sectionContainer}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
                   source="account-key"
@@ -381,7 +381,7 @@ export function UserFormModal({
                         Rol del usuario
                       </Text>
                     </View>
-                    <View style={[styles.rolesContainer, { marginTop: theme.spacing.s }]}>
+                    <View style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}>
                       {[
                         {
                           value: 1,
@@ -466,8 +466,6 @@ export function UserFormModal({
                 )}
               />
             </View>
-
-            <Divider style={styles.divider} />
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
@@ -615,8 +613,6 @@ export function UserFormModal({
                 )}
               />
             </View>
-
-            <Divider style={styles.divider} />
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
@@ -766,8 +762,6 @@ export function UserFormModal({
               </View>
             </View>
 
-            <Divider style={styles.divider} />
-
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <Icon
@@ -808,7 +802,8 @@ export function UserFormModal({
               />
             </View>
 
-        <View style={styles.scrollSpacer} />
+          <View style={styles.scrollSpacer} />
+        </View>
       </View>
     </ResponsiveModal>
   );
@@ -821,14 +816,16 @@ const getStyles = (
   StyleSheet.create({
     formContainer: {
       flex: 1,
+    },
+    contentWrapper: {
+      flex: 1,
       paddingHorizontal: responsive.isTablet
-        ? theme.spacing.l
-        : theme.spacing.m,
-      paddingTop: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
-      paddingBottom: responsive.isTablet ? theme.spacing.l : theme.spacing.s,
+        ? theme.spacing.m
+        : theme.spacing.s,
+      paddingTop: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
     },
     sectionContainer: {
-      marginBottom: responsive.isTablet ? theme.spacing.m : theme.spacing.s,
+      marginBottom: responsive.isTablet ? theme.spacing.s : theme.spacing.xs,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -839,7 +836,7 @@ const getStyles = (
     sectionTitle: {
       fontWeight: '600',
       color: theme.colors.onSurface,
-      fontSize: 14,
+      fontSize: responsive.isTablet ? 14 : 13,
       flex: 1,
     },
     requiredChip: {
@@ -869,13 +866,13 @@ const getStyles = (
       borderWidth: 1,
     },
     input: {
-      fontSize: 14,
+      fontSize: responsive.isTablet ? 14 : 13,
       backgroundColor: theme.colors.surface,
-      height: 48,
+      height: responsive.isTablet ? 48 : 44,
     },
     inputContent: {
-      paddingVertical: 4,
-      fontSize: 14,
+      paddingVertical: 2,
+      fontSize: responsive.isTablet ? 14 : 13,
       fontFamily: 'System',
     },
     fieldLabel: {
@@ -899,14 +896,16 @@ const getStyles = (
     genderContainer: {
       flexDirection: 'row',
       gap: theme.spacing.s,
-      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
     },
     genderOption: {
       borderRadius: theme.roundness * 2,
       padding: theme.spacing.s,
       alignItems: 'center',
       backgroundColor: theme.colors.surface,
-      minWidth: 85,
+      flex: 1,
+      minWidth: 80,
+      maxWidth: responsive.isTablet ? 120 : 100,
       borderWidth: 1.5,
       borderColor: theme.colors.outlineVariant,
     },
@@ -962,25 +961,22 @@ const getStyles = (
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
-    divider: {
-      marginVertical: theme.spacing.s,
-      marginHorizontal: -theme.spacing.m,
-    },
-    rolesContainer: {
+    rolesGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.s,
-      paddingVertical: theme.spacing.xs,
+      gap: theme.spacing.xs,
+      justifyContent: 'space-between',
     },
     roleCard: {
       borderRadius: theme.roundness * 2,
       padding: theme.spacing.s,
       backgroundColor: theme.colors.surface,
-      marginRight: theme.spacing.xs,
-      minWidth: 90,
+      width: responsive.isTablet ? '30%' : '48%',
+      minWidth: responsive.isTablet ? 120 : 100,
       borderWidth: 1.5,
       borderColor: theme.colors.outlineVariant,
       elevation: 1,
+      marginBottom: theme.spacing.xs,
     },
     roleCardActive: {
       backgroundColor: theme.colors.primaryContainer,

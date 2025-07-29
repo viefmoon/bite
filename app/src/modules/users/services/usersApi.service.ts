@@ -18,13 +18,9 @@ export const usersApiService = {
     if (params?.sortBy) queryParams.sortBy = params.sortBy;
     if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
 
-    if (params?.filters) {
-      if (params.filters.isActive !== undefined) {
-        queryParams['filters[isActive]'] = params.filters.isActive.toString();
-      }
-      if (params.filters.roles && params.filters.roles.length > 0) {
-        queryParams['filters[roles]'] = JSON.stringify(params.filters.roles);
-      }
+    // El backend espera filters como un string JSON
+    if (params?.filters && Object.keys(params.filters).length > 0) {
+      queryParams.filters = JSON.stringify(params.filters);
     }
 
     const response = await apiClient.get(API_PATHS.USERS, {

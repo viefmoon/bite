@@ -43,7 +43,7 @@ export function UsersListScreen() {
     },
   });
 
-  const queryParams: UsersQuery = {
+  const queryParams: UsersQuery = React.useMemo(() => ({
     page: 1,
     limit: 100,
     search: searchQuery || undefined,
@@ -54,14 +54,10 @@ export function UsersListScreen() {
           ? { isActive: true }
           : selectedFilter === 'inactive'
             ? { isActive: false }
-            : selectedFilter === 'admin'
-              ? { roles: [{ id: RoleEnum.ADMIN }] }
-              : selectedFilter === 'user'
-                ? { roles: [{ id: RoleEnum.WAITER }] }
-                : undefined,
+            : undefined,
     sortBy: 'createdAt',
     sortOrder: 'DESC',
-  };
+  }), [searchQuery, selectedFilter]);
 
   const { data, isLoading, error, refetch } = useGetUsers(queryParams);
 
@@ -140,8 +136,6 @@ export function UsersListScreen() {
     { label: 'Todos', value: 'all' },
     { label: 'Activos', value: 'active' },
     { label: 'Inactivos', value: 'inactive' },
-    { label: 'Administradores', value: 'admin' },
-    { label: 'Usuarios', value: 'user' },
   ];
 
   const handleEditUser = (user: User) => {

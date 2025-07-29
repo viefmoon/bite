@@ -52,6 +52,11 @@ export class UsersRelationalRepository implements UserRepository {
         id: Number(role.id),
       }));
     }
+    
+    // Aplicar filtro isActive si está definido
+    if (filterOptions?.isActive !== undefined) {
+      where.isActive = filterOptions.isActive;
+    }
 
     const entities = await this.usersRepository.find({
       skip: (paginationOptions.page - 1) * paginationOptions.limit,

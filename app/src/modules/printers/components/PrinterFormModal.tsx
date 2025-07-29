@@ -30,6 +30,7 @@ interface PrinterFormModalProps {
   onDismiss: () => void;
   editingItem: ThermalPrinter | null;
   initialDataFromDiscovery?: Partial<PrinterFormData>;
+  onSuccess?: () => void;
 }
 
 const getStyles = (theme: AppTheme) =>
@@ -83,6 +84,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
   onDismiss,
   editingItem,
   initialDataFromDiscovery,
+  onSuccess,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -186,6 +188,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
       } else {
         await createMutation.mutateAsync(dataToSend as CreateThermalPrinterDto);
       }
+      onSuccess?.();
       onDismiss();
     } catch (error) {}
   };

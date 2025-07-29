@@ -1,8 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
+import { useFocusEffect } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import { discoveryService } from '@/app/services/discoveryService';
 
 import GenericList, {
@@ -42,6 +44,7 @@ const PreparationScreensScreen = () => {
   const styles = useMemo(() => getStyles(theme), [theme]);
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === 'open';
+  const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<FindAllPreparationScreensFilter>({});
   const [pagination, setPagination] = useState<BaseListQuery>({
@@ -85,6 +88,14 @@ const PreparationScreensScreen = () => {
 
   // Recargar automáticamente cuando la pantalla recibe foco
   useRefreshModuleOnFocus('preparation-screens');
+
+  // Invalidar queries de usuarios cuando la pantalla recibe foco
+  useFocusEffect(
+    useCallback(() => {
+      // Invalidar todas las queries de usuarios para asegurar datos frescos
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }, [queryClient])
+  );
 
   // Enriquecer menuData con información de pantallas
   const enrichedMenuData = React.useMemo(() => {
@@ -336,6 +347,7 @@ const PreparationScreensScreen = () => {
             handleOpenEditModal(itemToEdit);
           }
         }}
+        onDelete={deleteConfirmation.show}
         deleteConfirmation={deleteConfirmation}
         onManageProducts={handleOpenProductModal}
         isDeleting={isDeleting}
@@ -354,7 +366,7 @@ const PreparationScreensScreen = () => {
         onSave={handleSaveProducts}
         screenId={productModalScreenId || ''}
         menuData={enrichedMenuData}
-        loading={isLoadingMenu}
+        loading={isLoadingMenu || associateProductsMutation.isPending}
       />
     </SafeAreaView>
   );
