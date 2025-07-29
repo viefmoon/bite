@@ -40,7 +40,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
   const testPrintMutation = useTestPrintDiscoveredPrinter();
 
   useEffect(() => {
-    if (visible) {
+    if (visible && !discoverMutation.isPending && !discoverMutation.isSuccess) {
       discoverMutation.mutate(undefined, {
         onError: (error) => {
           showSnackbar({
@@ -50,10 +50,15 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
         },
       });
     }
-  }, [visible, discoverMutation, showSnackbar]);
+    
+    // Reset mutation when modal is closed
+    if (!visible && (discoverMutation.isSuccess || discoverMutation.isError)) {
+      discoverMutation.reset();
+    }
+  }, [visible]);
 
   const handleRescan = () => {
-    discoverMutation.mutate(undefined);
+    discoverMutation.mutate();
   };
 
   const handleTestPrint = (printer: DiscoveredPrinter) => {

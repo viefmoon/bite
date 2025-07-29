@@ -9,12 +9,17 @@ import {
 } from '../types/printer.types';
 import { PaginatedResponse } from '../../../app/types/api.types';
 
-const discoverPrinters = async (
-  duration: number = 10000,
-): Promise<DiscoveredPrinter[]> => {
+const discoverPrinters = async (): Promise<DiscoveredPrinter[]> => {
   const response = await apiClient.get<DiscoveredPrinter[]>(
     API_PATHS.THERMAL_PRINTERS_DISCOVER,
-    { params: { duration } },
+    { 
+      params: { 
+        scanTimeout: 500,
+        maxConcurrency: 50,
+        ports: '9100'
+      },
+      timeout: 7000
+    },
   );
   return response.data;
 };

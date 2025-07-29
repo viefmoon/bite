@@ -27,7 +27,7 @@ const printerKeys = {
 
 export const useDiscoverPrinters = () => {
   return useApiMutation(
-    (duration: number | undefined) => printerService.discoverPrinters(duration),
+    () => printerService.discoverPrinters(),
     {
       suppressSuccessMessage: true,
     },

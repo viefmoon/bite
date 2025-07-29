@@ -113,14 +113,14 @@ export class ThermalPrintersController {
     required: false,
     description: 'Concurrencia TCP',
     type: Number,
-    example: 100,
+    example: 50,
   })
   @ApiQuery({
     name: 'ports',
     required: false,
     description: 'Puertos TCP a escanear (separados por coma)',
     type: String,
-    example: '9100,631,515',
+    example: '9100',
   })
   @ApiQuery({
     name: 'subnet',
@@ -136,11 +136,11 @@ export class ThermalPrintersController {
   async discoverPrinters(
     @Query('scanTimeout', new DefaultValuePipe(500), ParseIntPipe)
     scanTimeout?: number,
-    @Query('maxConcurrency', new DefaultValuePipe(100), ParseIntPipe)
+    @Query('maxConcurrency', new DefaultValuePipe(50), ParseIntPipe)
     maxConcurrency?: number,
     @Query(
       'ports',
-      new DefaultValuePipe('9100,631,515'),
+      new DefaultValuePipe('9100'),
       new ParseArrayPipe({ items: Number, separator: ',', optional: true }),
     )
     ports?: number[],

@@ -18,14 +18,31 @@ interface TcpScanOptions {
 @Injectable()
 export class DiscoveryService {
   private readonly logger = new Logger(DiscoveryService.name);
+  private isScanning = false;
+  private lastScanResult: DiscoveredPrinterDto[] = [];
+  private lastScanTime: number = 0;
 
   async discoverPrinters(
     opts: TcpScanOptions = {},
   ): Promise<DiscoveredPrinterDto[]> {
+    // Si ya estamos escaneando, devolver el resultado anterior
+    if (this.isScanning) {
+      this.logger.warn('Ya hay un escaneo en progreso. Devolviendo resultado anterior.');
+      return this.lastScanResult;
+    }
+
+    // Si el último escaneo fue hace menos de 3 segundos, devolver ese resultado
+    const now = Date.now();
+    if (now - this.lastScanTime < 3000 && this.lastScanResult.length > 0) {
+      this.logger.log('Devolviendo resultado del escaneo reciente (cache).');
+      return this.lastScanResult;
+    }
+
+    this.isScanning = true;
     const {
-      scanTimeout = 1000, // Aumentado a 1 segundo
-      maxConcurrency = 100,
-      ports = [9100, 631, 515], // Puertos TCP comunes para impresoras
+      scanTimeout = 500,
+      maxConcurrency = 50,
+      ports = [9100],
       subnet = null,
     } = opts;
 
@@ -48,7 +65,15 @@ export class DiscoveryService {
     this.logger.log(
       `Descubrimiento TCP finalizado. Total impresoras encontradas: ${found.size}`,
     );
-    return [...found.values()];
+    
+    const result = [...found.values()];
+    
+    // Guardar resultado y marcar que terminamos
+    this.lastScanResult = result;
+    this.lastScanTime = Date.now();
+    this.isScanning = false;
+    
+    return result;
   }
 
   /* ─────────────────────────────────────────────────── */
