@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Text,
   TextInput,
@@ -381,93 +381,87 @@ export function UserFormModal({
                         Rol del usuario
                       </Text>
                     </View>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={{ marginTop: theme.spacing.s }}
-                    >
-                      <View style={styles.rolesContainer}>
-                        {[
-                          {
-                            value: 1,
-                            label: 'Admin',
-                            icon: 'shield-account',
-                            description: 'Acceso completo',
-                          },
-                          {
-                            value: 2,
-                            label: 'Gerente',
-                            icon: 'account-tie',
-                            description: 'Gestión general',
-                          },
-                          {
-                            value: 3,
-                            label: 'Cajero',
-                            icon: 'cash-register',
-                            description: 'Ventas',
-                          },
-                          {
-                            value: 4,
-                            label: 'Mesero',
-                            icon: 'room-service',
-                            description: 'Órdenes',
-                          },
-                          {
-                            value: 5,
-                            label: 'Cocina',
-                            icon: 'chef-hat',
-                            description: 'Preparación',
-                          },
-                          {
-                            value: 6,
-                            label: 'Repartidor',
-                            icon: 'moped',
-                            description: 'Entregas',
-                          },
-                        ].map((role) => (
-                          <Surface
-                            key={role.value}
-                            style={[
-                              styles.roleCard,
-                              value === role.value && styles.roleCardActive,
-                            ]}
-                            elevation={value === role.value ? 2 : 0}
+                    <View style={[styles.rolesContainer, { marginTop: theme.spacing.s }]}>
+                      {[
+                        {
+                          value: 1,
+                          label: 'Admin',
+                          icon: 'shield-account',
+                          description: 'Acceso completo',
+                        },
+                        {
+                          value: 2,
+                          label: 'Gerente',
+                          icon: 'account-tie',
+                          description: 'Gestión general',
+                        },
+                        {
+                          value: 3,
+                          label: 'Cajero',
+                          icon: 'cash-register',
+                          description: 'Ventas',
+                        },
+                        {
+                          value: 4,
+                          label: 'Mesero',
+                          icon: 'room-service',
+                          description: 'Órdenes',
+                        },
+                        {
+                          value: 5,
+                          label: 'Cocina',
+                          icon: 'chef-hat',
+                          description: 'Preparación',
+                        },
+                        {
+                          value: 6,
+                          label: 'Repartidor',
+                          icon: 'moped',
+                          description: 'Entregas',
+                        },
+                      ].map((role) => (
+                        <Surface
+                          key={role.value}
+                          style={[
+                            styles.roleCard,
+                            value === role.value && styles.roleCardActive,
+                          ]}
+                          elevation={value === role.value ? 2 : 0}
+                        >
+                          <TouchableOpacity
+                            onPress={() => onChange(role.value)}
+                            style={styles.roleCardContent}
                           >
-                            <TouchableOpacity
-                              onPress={() => onChange(role.value)}
-                              style={styles.roleCardContent}
+                            <Icon
+                              source={role.icon}
+                              size={24}
+                              color={
+                                value === role.value
+                                  ? theme.colors.primary
+                                  : theme.colors.onSurfaceVariant
+                              }
+                            />
+                            <Text
+                              style={[
+                                styles.roleLabel,
+                                value === role.value &&
+                                  styles.roleLabelActive,
+                              ]}
+                              variant="labelMedium"
                             >
-                              <Icon
-                                source={role.icon}
-                                size={24}
-                                color={
-                                  value === role.value
-                                    ? theme.colors.primary
-                                    : theme.colors.onSurfaceVariant
-                                }
-                              />
-                              <Text
-                                style={[
-                                  styles.roleLabel,
-                                  value === role.value &&
-                                    styles.roleLabelActive,
-                                ]}
-                                variant="labelMedium"
-                              >
-                                {role.label}
-                              </Text>
-                              <Text
-                                style={styles.roleDescription}
-                                variant="bodySmall"
-                                numberOfLines={1}
-                              >
-                                {role.description}
-                              </Text>
-                            </TouchableOpacity>
-                          </Surface>
-                        ))}
-                      </View>
-                    </ScrollView>
+                              {role.label}
+                            </Text>
+                            <Text
+                              style={styles.roleDescription}
+                              variant="bodySmall"
+                              numberOfLines={1}
+                            >
+                              {role.description}
+                            </Text>
+                          </TouchableOpacity>
+                        </Surface>
+                      ))}
+                    </View>
                   </View>
                 )}
               />
@@ -974,6 +968,7 @@ const getStyles = (
     },
     rolesContainer: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: theme.spacing.s,
       paddingVertical: theme.spacing.xs,
     },

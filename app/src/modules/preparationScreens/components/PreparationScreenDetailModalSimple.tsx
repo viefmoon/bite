@@ -118,17 +118,6 @@ const getStyles = (theme: AppTheme) =>
       fontSize: 14,
       marginTop: theme.spacing.s,
     },
-    actionContainer: {
-      // ResponsiveModal maneja padding y background
-    },
-    actionButtons: {
-      flexDirection: 'row',
-      gap: theme.spacing.m,
-    },
-    actionButton: {
-      flex: 1,
-      borderRadius: theme.roundness,
-    },
     loadingContainer: {
       justifyContent: 'center',
       alignItems: 'center',
@@ -291,39 +280,6 @@ const PreparationScreenDetailModal: React.FC<
     </View>
   );
 
-  const footerActions = item && (
-    <View style={styles.actionContainer}>
-      <View style={styles.actionButtons}>
-        {onEdit && (
-          <Button
-            icon="pencil"
-            mode="contained"
-            onPress={() => onEdit(item)}
-            disabled={isDeleting}
-            style={styles.actionButton}
-            buttonColor={theme.colors.primary}
-          >
-            Editar
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            icon="delete"
-            mode="contained-tonal"
-            onPress={() => onDelete(item.id)}
-            loading={isDeleting}
-            disabled={isDeleting}
-            style={styles.actionButton}
-            buttonColor={theme.colors.errorContainer}
-            textColor={theme.colors.error}
-          >
-            Eliminar
-          </Button>
-        )}
-      </View>
-    </View>
-  );
-
   return (
     <ResponsiveModal
       visible={visible}
@@ -334,7 +290,25 @@ const PreparationScreenDetailModal: React.FC<
       dismissable={!isDeleting}
       maxHeightTablet="90%"
       scrollable={true}
-      footer={footerActions}
+      actions={item ? [
+        ...(onEdit ? [{
+          label: 'Editar',
+          icon: 'pencil',
+          mode: 'contained' as const,
+          onPress: () => onEdit(item),
+          disabled: isDeleting,
+          colorPreset: 'primary' as const,
+        }] : []),
+        ...(onDelete ? [{
+          label: 'Eliminar',
+          icon: 'delete',
+          mode: 'contained-tonal' as const,
+          onPress: () => onDelete(item.id),
+          loading: isDeleting,
+          disabled: isDeleting,
+          colorPreset: 'error' as const,
+        }] : [])
+      ] : []}
     >
       {renderContent()}
     </ResponsiveModal>

@@ -62,7 +62,8 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
       visible={visible}
       onDismiss={onDismiss}
       title="Calcular Cambio"
-      preset="dialog"
+      maxWidthPercent={85}
+      maxHeightPercent={60}
       actions={[
         {
           label: 'Cancelar',

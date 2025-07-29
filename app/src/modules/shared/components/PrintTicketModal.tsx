@@ -2,22 +2,17 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import {
-  Modal,
-  Portal,
   Text,
   RadioButton,
-  Button,
   Surface,
-  IconButton,
-  Divider,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { usePrintersQuery } from '@/modules/printers/hooks/usePrintersQueries';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface OrderBasicInfo {
   shiftOrderNumber?: number;
@@ -89,31 +84,31 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
   if (!order) return null;
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[
-          styles.modalContent,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-            Imprimir Ticket - Orden #{order.shiftOrderNumber}
-          </Text>
-          <IconButton
-            icon="close"
-            size={24}
-            onPress={onDismiss}
-            style={styles.closeButton}
-          />
-        </View>
-
-        <Divider />
-
-        <ScrollView style={styles.content}>
-          <View style={styles.section}>
+    <ResponsiveModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title={`Imprimir Ticket - Orden #${order.shiftOrderNumber}`}
+      maxWidthPercent={90}
+      maxHeightPercent={85}
+      actions={[
+        {
+          label: 'Cancelar',
+          mode: 'outlined',
+          onPress: onDismiss,
+          disabled: isPrinting,
+          colorPreset: 'secondary'
+        },
+        {
+          label: 'Imprimir',
+          mode: 'contained',
+          onPress: handlePrint,
+          loading: isPrinting,
+          disabled: !selectedPrinterId || activePrinters.length === 0 || isPrinting,
+          colorPreset: 'primary'
+        }
+      ]}
+    >
+      <View style={styles.section}>
             <Text
               style={[styles.sectionTitle, { color: theme.colors.primary }]}
             >
@@ -265,71 +260,12 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
               </RadioButton.Group>
             )}
           </View>
-        </ScrollView>
-
-        <Divider />
-
-        <View style={styles.footer}>
-          <Button
-            mode="outlined"
-            onPress={onDismiss}
-            textColor={theme.colors.error}
-            style={[styles.footerButton, { borderColor: theme.colors.error }]}
-          >
-            Cancelar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handlePrint}
-            loading={isPrinting}
-            disabled={
-              !selectedPrinterId || activePrinters.length === 0 || isPrinting
-            }
-            style={[styles.footerButton, styles.printButton]}
-            buttonColor={theme.colors.primary}
-          >
-            Imprimir
-          </Button>
-        </View>
-      </Modal>
-    </Portal>
+    </ResponsiveModal>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
-    modalContent: {
-      margin: 16,
-      borderRadius: 16,
-      maxHeight: '85%',
-      overflow: 'hidden',
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: '700',
-      flex: 1,
-    },
-    closeButton: {
-      margin: -8,
-    },
-    content: {
-      maxHeight: 400,
-    },
     section: {
       paddingHorizontal: 16,
       paddingVertical: 8,
@@ -369,21 +305,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       textAlign: 'center',
       padding: 12,
       fontWeight: '500',
-    },
-    footer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      gap: 12,
-    },
-    footerButton: {
-      minWidth: 100,
-      borderRadius: 8,
-    },
-    printButton: {
-      paddingHorizontal: 4,
     },
     selectedGeneralItem: {
       borderColor: theme.colors.primary,

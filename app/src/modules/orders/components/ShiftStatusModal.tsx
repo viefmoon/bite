@@ -108,7 +108,8 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
-      preset="detail"
+      maxWidthPercent={85}
+      maxHeightPercent={85}
       title={modalTitle}
       actions={modalActions}
       isLoading={loading}
