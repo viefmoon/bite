@@ -94,7 +94,7 @@ const PreparationScreensScreen = () => {
     useCallback(() => {
       // Invalidar todas las queries de usuarios para asegurar datos frescos
       queryClient.invalidateQueries({ queryKey: ['users'] });
-    }, [queryClient])
+    }, [queryClient]),
   );
 
   // Enriquecer menuData con información de pantallas

@@ -1,5 +1,5 @@
 import type { FieldErrors, FieldValues, ResolverResult } from 'react-hook-form';
-import type { ZodSchema, ZodError } from 'zod';
+import { z, type ZodSchema } from 'zod';
 
 export function zodResolver<T extends FieldValues>(schema: ZodSchema<T>) {
   return async (data: T): Promise<ResolverResult<T>> => {
@@ -10,11 +10,10 @@ export function zodResolver<T extends FieldValues>(schema: ZodSchema<T>) {
         errors: {},
       };
     } catch (error) {
-      if (error instanceof Error && 'errors' in error) {
-        const zodError = error as ZodError;
+      if (error instanceof z.ZodError) {
         const fieldErrors: FieldErrors<T> = {};
 
-        zodError.errors.forEach((err) => {
+        error.errors.forEach((err) => {
           const path = err.path.join('.');
           if (path) {
             (fieldErrors as any)[path] = {

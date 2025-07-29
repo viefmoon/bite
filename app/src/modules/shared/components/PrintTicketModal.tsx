@@ -5,11 +5,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import {
-  Text,
-  RadioButton,
-  Surface,
-} from 'react-native-paper';
+import { Text, RadioButton, Surface } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { usePrintersQuery } from '@/modules/printers/hooks/usePrintersQueries';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
@@ -96,170 +92,165 @@ export const PrintTicketModal: React.FC<PrintTicketModalProps> = ({
           mode: 'outlined',
           onPress: onDismiss,
           disabled: isPrinting,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: 'Imprimir',
           mode: 'contained',
           onPress: handlePrint,
           loading: isPrinting,
-          disabled: !selectedPrinterId || activePrinters.length === 0 || isPrinting,
-          colorPreset: 'primary'
-        }
+          disabled:
+            !selectedPrinterId || activePrinters.length === 0 || isPrinting,
+          colorPreset: 'primary',
+        },
       ]}
     >
       <View style={styles.section}>
-            <Text
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
+        <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+          Tipo de Ticket
+        </Text>
+        <RadioButton.Group
+          onValueChange={(value) =>
+            setSelectedTicketType(value as 'GENERAL' | 'BILLING')
+          }
+          value={selectedTicketType}
+        >
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setSelectedTicketType('GENERAL')}
+          >
+            <Surface
+              style={[
+                styles.radioItem,
+                { backgroundColor: theme.colors.surface },
+                selectedTicketType === 'GENERAL'
+                  ? styles.selectedGeneralItem
+                  : styles.unselectedGeneralItem,
+              ]}
             >
-              Tipo de Ticket
-            </Text>
-            <RadioButton.Group
-              onValueChange={(value) =>
-                setSelectedTicketType(value as 'GENERAL' | 'BILLING')
-              }
-              value={selectedTicketType}
-            >
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setSelectedTicketType('GENERAL')}
-              >
-                <Surface
-                  style={[
-                    styles.radioItem,
-                    { backgroundColor: theme.colors.surface },
-                    selectedTicketType === 'GENERAL'
-                      ? styles.selectedGeneralItem
-                      : styles.unselectedGeneralItem,
-                  ]}
-                >
-                  <View style={styles.radioContent}>
-                    <RadioButton value="GENERAL" color={theme.colors.primary} />
-                    <View style={styles.radioTextContainer}>
-                      <Text
-                        style={[
-                          styles.radioLabel,
-                          { color: theme.colors.onSurface },
-                        ]}
-                      >
-                        📋 Ticket General
-                      </Text>
-                      <Text
-                        style={[
-                          styles.radioDescription,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        Para cocina y delivery (letras grandes)
-                      </Text>
-                    </View>
-                  </View>
-                </Surface>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setSelectedTicketType('BILLING')}
-              >
-                <Surface
-                  style={[
-                    styles.radioItem,
-                    { backgroundColor: theme.colors.surface },
-                    selectedTicketType === 'BILLING'
-                      ? styles.selectedBillingItem
-                      : styles.unselectedBillingItem,
-                  ]}
-                >
-                  <View style={styles.radioContent}>
-                    <RadioButton value="BILLING" color={theme.colors.primary} />
-                    <View style={styles.radioTextContainer}>
-                      <Text
-                        style={[
-                          styles.radioLabel,
-                          { color: theme.colors.onSurface },
-                        ]}
-                      >
-                        💵 Ticket de Cuenta
-                      </Text>
-                      <Text
-                        style={[
-                          styles.radioDescription,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        Para cobro al cliente (formato cuenta)
-                      </Text>
-                    </View>
-                  </View>
-                </Surface>
-              </TouchableOpacity>
-            </RadioButton.Group>
-          </View>
-
-          <View style={styles.section}>
-            <Text
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              Seleccionar Impresora
-            </Text>
-            {isLoadingPrinters ? (
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-            ) : activePrinters.length === 0 ? (
-              <Text
-                style={[styles.noPrintersText, { color: theme.colors.error }]}
-              >
-                No hay impresoras activas disponibles
-              </Text>
-            ) : (
-              <RadioButton.Group
-                onValueChange={(value) => setSelectedPrinterId(value)}
-                value={selectedPrinterId}
-              >
-                {activePrinters.map((printer: any) => (
-                  <TouchableOpacity
-                    key={printer.id}
-                    activeOpacity={0.7}
-                    onPress={() => setSelectedPrinterId(printer.id)}
+              <View style={styles.radioContent}>
+                <RadioButton value="GENERAL" color={theme.colors.primary} />
+                <View style={styles.radioTextContainer}>
+                  <Text
+                    style={[
+                      styles.radioLabel,
+                      { color: theme.colors.onSurface },
+                    ]}
                   >
-                    <Surface
-                      style={[
-                        styles.radioItem,
-                        { backgroundColor: theme.colors.surface },
-                        selectedPrinterId === printer.id
-                          ? styles.selectedPrinterItem
-                          : styles.unselectedPrinterItem,
-                      ]}
-                    >
-                      <View style={styles.radioContent}>
-                        <RadioButton
-                          value={printer.id}
-                          color={theme.colors.primary}
-                        />
-                        <View style={styles.radioTextContainer}>
-                          <Text
-                            style={[
-                              styles.radioLabel,
-                              { color: theme.colors.onSurface },
-                            ]}
-                          >
-                            🖨️ {printer.name}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.radioDescription,
-                              { color: theme.colors.onSurfaceVariant },
-                            ]}
-                          >
-                            {printer.ipAddress || 'Sin IP'} - Puerto{' '}
-                            {printer.port || 'N/A'}
-                          </Text>
-                        </View>
-                      </View>
-                    </Surface>
-                  </TouchableOpacity>
-                ))}
-              </RadioButton.Group>
-            )}
-          </View>
+                    📋 Ticket General
+                  </Text>
+                  <Text
+                    style={[
+                      styles.radioDescription,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    Para cocina y delivery (letras grandes)
+                  </Text>
+                </View>
+              </View>
+            </Surface>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setSelectedTicketType('BILLING')}
+          >
+            <Surface
+              style={[
+                styles.radioItem,
+                { backgroundColor: theme.colors.surface },
+                selectedTicketType === 'BILLING'
+                  ? styles.selectedBillingItem
+                  : styles.unselectedBillingItem,
+              ]}
+            >
+              <View style={styles.radioContent}>
+                <RadioButton value="BILLING" color={theme.colors.primary} />
+                <View style={styles.radioTextContainer}>
+                  <Text
+                    style={[
+                      styles.radioLabel,
+                      { color: theme.colors.onSurface },
+                    ]}
+                  >
+                    💵 Ticket de Cuenta
+                  </Text>
+                  <Text
+                    style={[
+                      styles.radioDescription,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    Para cobro al cliente (formato cuenta)
+                  </Text>
+                </View>
+              </View>
+            </Surface>
+          </TouchableOpacity>
+        </RadioButton.Group>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+          Seleccionar Impresora
+        </Text>
+        {isLoadingPrinters ? (
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        ) : activePrinters.length === 0 ? (
+          <Text style={[styles.noPrintersText, { color: theme.colors.error }]}>
+            No hay impresoras activas disponibles
+          </Text>
+        ) : (
+          <RadioButton.Group
+            onValueChange={(value) => setSelectedPrinterId(value)}
+            value={selectedPrinterId}
+          >
+            {activePrinters.map((printer: any) => (
+              <TouchableOpacity
+                key={printer.id}
+                activeOpacity={0.7}
+                onPress={() => setSelectedPrinterId(printer.id)}
+              >
+                <Surface
+                  style={[
+                    styles.radioItem,
+                    { backgroundColor: theme.colors.surface },
+                    selectedPrinterId === printer.id
+                      ? styles.selectedPrinterItem
+                      : styles.unselectedPrinterItem,
+                  ]}
+                >
+                  <View style={styles.radioContent}>
+                    <RadioButton
+                      value={printer.id}
+                      color={theme.colors.primary}
+                    />
+                    <View style={styles.radioTextContainer}>
+                      <Text
+                        style={[
+                          styles.radioLabel,
+                          { color: theme.colors.onSurface },
+                        ]}
+                      >
+                        🖨️ {printer.name}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.radioDescription,
+                          { color: theme.colors.onSurfaceVariant },
+                        ]}
+                      >
+                        {printer.ipAddress || 'Sin IP'} - Puerto{' '}
+                        {printer.port || 'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+                </Surface>
+              </TouchableOpacity>
+            ))}
+          </RadioButton.Group>
+        )}
+      </View>
     </ResponsiveModal>
   );
 };

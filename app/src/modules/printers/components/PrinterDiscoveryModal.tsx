@@ -50,7 +50,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
         },
       });
     }
-    
+
     // Reset mutation when modal is closed
     if (!visible && (discoverMutation.isSuccess || discoverMutation.isError)) {
       discoverMutation.reset();

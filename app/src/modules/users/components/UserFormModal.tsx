@@ -236,7 +236,7 @@ export function UserFormModal({
           mode: 'outlined',
           onPress: onDismiss,
           disabled: isSubmitting,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: user ? 'Guardar' : 'Crear',
@@ -244,563 +244,563 @@ export function UserFormModal({
           onPress: handleSubmit(onSubmit),
           loading: isSubmitting,
           disabled: isSubmitting,
-          colorPreset: 'primary'
-        }
+          colorPreset: 'primary',
+        },
       ]}
     >
       <View style={styles.formContainer}>
         <View style={styles.contentWrapper}>
           <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Icon
-                  source="account-key"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.sectionTitle} variant="titleMedium">
-                  Información de Cuenta
-                </Text>
-                <Chip
-                  mode="flat"
-                  compact
-                  icon="check"
-                  style={styles.requiredChip}
-                  textStyle={styles.requiredChipText}
-                >
-                  Requerido
-                </Chip>
-              </View>
-
-              <Controller
-                control={control}
-                name="username"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Nombre de usuario"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.username}
-                      mode="outlined"
-                      placeholder="usuario123"
-                      left={<TextInput.Icon icon="account" />}
-                      outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
-                      disabled={!!user} // Username can't be changed
-                    />
-                    {errors.username && (
-                      <HelperText type="error" visible={!!errors.username}>
-                        {errors.username.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
+            <View style={styles.sectionHeader}>
+              <Icon
+                source="account-key"
+                size={20}
+                color={theme.colors.primary}
               />
+              <Text style={styles.sectionTitle} variant="titleMedium">
+                Información de Cuenta
+              </Text>
+              <Chip
+                mode="flat"
+                compact
+                icon="check"
+                style={styles.requiredChip}
+                textStyle={styles.requiredChipText}
+              >
+                Requerido
+              </Chip>
+            </View>
 
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Email (opcional)"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.email}
-                      mode="outlined"
-                      placeholder="usuario@ejemplo.com"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      left={<TextInput.Icon icon="email" />}
-                      outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
-                    />
-                    {errors.email && (
-                      <HelperText type="error" visible={!!errors.email}>
-                        {errors.email.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              />
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Nombre de usuario"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.username}
+                    mode="outlined"
+                    placeholder="usuario123"
+                    left={<TextInput.Icon icon="account" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                    disabled={!!user} // Username can't be changed
+                  />
+                  {errors.username && (
+                    <HelperText type="error" visible={!!errors.username}>
+                      {errors.username.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
 
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label={
-                        user
-                          ? 'Nueva contraseña (dejar vacío para no cambiar)'
-                          : 'Contraseña'
-                      }
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.password}
-                      mode="outlined"
-                      placeholder="••••••"
-                      secureTextEntry={!showPassword}
-                      left={<TextInput.Icon icon="lock" />}
-                      right={
-                        <TextInput.Icon
-                          icon={showPassword ? 'eye-off' : 'eye'}
-                          onPress={() => setShowPassword(!showPassword)}
-                        />
-                      }
-                      outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
-                    />
-                    {errors.password && (
-                      <HelperText type="error" visible={!!errors.password}>
-                        {errors.password.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              />
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Email (opcional)"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.email}
+                    mode="outlined"
+                    placeholder="usuario@ejemplo.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    left={<TextInput.Icon icon="email" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                  {errors.email && (
+                    <HelperText type="error" visible={!!errors.email}>
+                      {errors.email.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
 
-              <Controller
-                control={control}
-                name="role"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <View style={styles.fieldLabelContainer}>
-                      <Icon
-                        source="badge-account"
-                        size={20}
-                        color={theme.colors.primary}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label={
+                      user
+                        ? 'Nueva contraseña (dejar vacío para no cambiar)'
+                        : 'Contraseña'
+                    }
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.password}
+                    mode="outlined"
+                    placeholder="••••••"
+                    secureTextEntry={!showPassword}
+                    left={<TextInput.Icon icon="lock" />}
+                    right={
+                      <TextInput.Icon
+                        icon={showPassword ? 'eye-off' : 'eye'}
+                        onPress={() => setShowPassword(!showPassword)}
                       />
-                      <Text style={styles.sectionTitle} variant="titleMedium">
-                        Rol del usuario
-                      </Text>
-                    </View>
-                    <View style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}>
-                      {[
-                        {
-                          value: 1,
-                          label: 'Admin',
-                          icon: 'shield-account',
-                          description: 'Acceso completo',
-                        },
-                        {
-                          value: 2,
-                          label: 'Gerente',
-                          icon: 'account-tie',
-                          description: 'Gestión general',
-                        },
-                        {
-                          value: 3,
-                          label: 'Cajero',
-                          icon: 'cash-register',
-                          description: 'Ventas',
-                        },
-                        {
-                          value: 4,
-                          label: 'Mesero',
-                          icon: 'room-service',
-                          description: 'Órdenes',
-                        },
-                        {
-                          value: 5,
-                          label: 'Cocina',
-                          icon: 'chef-hat',
-                          description: 'Preparación',
-                        },
-                        {
-                          value: 6,
-                          label: 'Repartidor',
-                          icon: 'moped',
-                          description: 'Entregas',
-                        },
-                      ].map((role) => (
-                        <Surface
-                          key={role.value}
-                          style={[
-                            styles.roleCard,
-                            value === role.value && styles.roleCardActive,
-                          ]}
-                          elevation={value === role.value ? 2 : 0}
+                    }
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                  {errors.password && (
+                    <HelperText type="error" visible={!!errors.password}>
+                      {errors.password.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="role"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.inputContainer}>
+                  <View style={styles.fieldLabelContainer}>
+                    <Icon
+                      source="badge-account"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={styles.sectionTitle} variant="titleMedium">
+                      Rol del usuario
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}
+                  >
+                    {[
+                      {
+                        value: 1,
+                        label: 'Admin',
+                        icon: 'shield-account',
+                        description: 'Acceso completo',
+                      },
+                      {
+                        value: 2,
+                        label: 'Gerente',
+                        icon: 'account-tie',
+                        description: 'Gestión general',
+                      },
+                      {
+                        value: 3,
+                        label: 'Cajero',
+                        icon: 'cash-register',
+                        description: 'Ventas',
+                      },
+                      {
+                        value: 4,
+                        label: 'Mesero',
+                        icon: 'room-service',
+                        description: 'Órdenes',
+                      },
+                      {
+                        value: 5,
+                        label: 'Cocina',
+                        icon: 'chef-hat',
+                        description: 'Preparación',
+                      },
+                      {
+                        value: 6,
+                        label: 'Repartidor',
+                        icon: 'moped',
+                        description: 'Entregas',
+                      },
+                    ].map((role) => (
+                      <Surface
+                        key={role.value}
+                        style={[
+                          styles.roleCard,
+                          value === role.value && styles.roleCardActive,
+                        ]}
+                        elevation={value === role.value ? 2 : 0}
+                      >
+                        <TouchableOpacity
+                          onPress={() => onChange(role.value)}
+                          style={styles.roleCardContent}
                         >
-                          <TouchableOpacity
-                            onPress={() => onChange(role.value)}
-                            style={styles.roleCardContent}
+                          <Icon
+                            source={role.icon}
+                            size={24}
+                            color={
+                              value === role.value
+                                ? theme.colors.primary
+                                : theme.colors.onSurfaceVariant
+                            }
+                          />
+                          <Text
+                            style={[
+                              styles.roleLabel,
+                              value === role.value && styles.roleLabelActive,
+                            ]}
+                            variant="labelMedium"
+                          >
+                            {role.label}
+                          </Text>
+                          <Text
+                            style={styles.roleDescription}
+                            variant="bodySmall"
+                            numberOfLines={1}
+                          >
+                            {role.description}
+                          </Text>
+                        </TouchableOpacity>
+                      </Surface>
+                    ))}
+                  </View>
+                </View>
+              )}
+            />
+          </View>
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Icon
+                source="account-circle"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.sectionTitle} variant="titleMedium">
+                Información Personal
+              </Text>
+              <Chip
+                mode="flat"
+                compact
+                icon="check"
+                style={styles.requiredChip}
+                textStyle={styles.requiredChipText}
+              >
+                Requerido
+              </Chip>
+            </View>
+
+            <Controller
+              control={control}
+              name="firstName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Nombre"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.firstName}
+                    mode="outlined"
+                    placeholder="Juan"
+                    left={<TextInput.Icon icon="account" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                  {errors.firstName && (
+                    <HelperText type="error" visible={!!errors.firstName}>
+                      {errors.firstName.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="lastName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Apellido"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.lastName}
+                    mode="outlined"
+                    placeholder="Pérez"
+                    left={<TextInput.Icon icon="account" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                  {errors.lastName && (
+                    <HelperText type="error" visible={!!errors.lastName}>
+                      {errors.lastName.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.inputContainer}>
+                  <View style={styles.fieldLabelContainer}>
+                    <Icon
+                      source="gender-transgender"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={styles.sectionTitle} variant="titleMedium">
+                      Género
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.genderContainer,
+                      { marginTop: theme.spacing.s },
+                    ]}
+                  >
+                    {genderOptions.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        onPress={() => onChange(option.value)}
+                        activeOpacity={0.7}
+                      >
+                        <Surface
+                          style={[
+                            styles.genderOption,
+                            value === option.value && styles.genderOptionActive,
+                          ]}
+                          elevation={value === option.value ? 3 : 1}
+                        >
+                          <View
+                            style={[
+                              styles.genderIconContainer,
+                              value === option.value && {
+                                backgroundColor: option.color + '20',
+                              },
+                            ]}
                           >
                             <Icon
-                              source={role.icon}
-                              size={24}
+                              source={option.icon}
+                              size={20}
                               color={
-                                value === role.value
-                                  ? theme.colors.primary
+                                value === option.value
+                                  ? option.color
                                   : theme.colors.onSurfaceVariant
                               }
                             />
-                            <Text
-                              style={[
-                                styles.roleLabel,
-                                value === role.value &&
-                                  styles.roleLabelActive,
-                              ]}
-                              variant="labelMedium"
-                            >
-                              {role.label}
-                            </Text>
-                            <Text
-                              style={styles.roleDescription}
-                              variant="bodySmall"
-                              numberOfLines={1}
-                            >
-                              {role.description}
-                            </Text>
-                          </TouchableOpacity>
+                          </View>
+                          <Text
+                            style={[
+                              styles.genderLabel,
+                              value === option.value &&
+                                styles.genderLabelActive,
+                            ]}
+                            variant="labelMedium"
+                          >
+                            {option.label}
+                          </Text>
                         </Surface>
-                      ))}
-                    </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            />
+          </View>
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Icon
+                source="phone-in-talk"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.sectionTitle} variant="titleMedium">
+                Información de Contacto
+              </Text>
+              <Chip
+                mode="flat"
+                compact
+                icon="information"
+                style={styles.optionalChip}
+                textStyle={styles.optionalChipText}
+              >
+                Opcional
+              </Chip>
+            </View>
+
+            <Controller
+              control={control}
+              name="phoneNumber"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Teléfono"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.phoneNumber}
+                    mode="outlined"
+                    placeholder="+52 55 1234 5678"
+                    keyboardType="phone-pad"
+                    left={<TextInput.Icon icon="phone" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                  {errors.phoneNumber && (
+                    <HelperText type="error" visible={!!errors.phoneNumber}>
+                      {errors.phoneNumber.message}
+                    </HelperText>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="address"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Dirección"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    mode="outlined"
+                    placeholder="Calle Principal #123"
+                    left={<TextInput.Icon icon="map-marker" />}
+                    outlineStyle={styles.inputOutline}
+                    contentStyle={styles.inputContent}
+                    style={styles.input}
+                  />
+                </View>
+              )}
+            />
+
+            <View style={styles.rowContainer}>
+              <Controller
+                control={control}
+                name="city"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View style={[styles.inputContainer, styles.halfInput]}>
+                    <TextInput
+                      label="Ciudad"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      mode="outlined"
+                      placeholder="Ciudad"
+                      outlineStyle={styles.inputOutline}
+                    />
+                  </View>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="state"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View style={[styles.inputContainer, styles.halfInput]}>
+                    <TextInput
+                      label="Estado"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      mode="outlined"
+                      placeholder="Estado"
+                      outlineStyle={styles.inputOutline}
+                    />
                   </View>
                 )}
               />
             </View>
 
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Icon
-                  source="account-circle"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.sectionTitle} variant="titleMedium">
-                  Información Personal
-                </Text>
-                <Chip
-                  mode="flat"
-                  compact
-                  icon="check"
-                  style={styles.requiredChip}
-                  textStyle={styles.requiredChipText}
-                >
-                  Requerido
-                </Chip>
-              </View>
-
+            <View style={styles.rowContainer}>
               <Controller
                 control={control}
-                name="firstName"
+                name="country"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
+                  <View style={[styles.inputContainer, styles.halfInput]}>
                     <TextInput
-                      label="Nombre"
+                      label="País"
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      error={!!errors.firstName}
                       mode="outlined"
-                      placeholder="Juan"
-                      left={<TextInput.Icon icon="account" />}
+                      placeholder="México"
                       outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
                     />
-                    {errors.firstName && (
-                      <HelperText type="error" visible={!!errors.firstName}>
-                        {errors.firstName.message}
-                      </HelperText>
-                    )}
                   </View>
                 )}
               />
 
               <Controller
                 control={control}
-                name="lastName"
+                name="zipCode"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
+                  <View style={[styles.inputContainer, styles.halfInput]}>
                     <TextInput
-                      label="Apellido"
+                      label="Código Postal"
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      error={!!errors.lastName}
                       mode="outlined"
-                      placeholder="Pérez"
-                      left={<TextInput.Icon icon="account" />}
+                      placeholder="12345"
+                      keyboardType="number-pad"
                       outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
                     />
-                    {errors.lastName && (
-                      <HelperText type="error" visible={!!errors.lastName}>
-                        {errors.lastName.message}
-                      </HelperText>
-                    )}
                   </View>
                 )}
               />
+            </View>
+          </View>
 
-              <Controller
-                control={control}
-                name="gender"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <View style={styles.fieldLabelContainer}>
-                      <Icon
-                        source="gender-transgender"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
-                      <Text style={styles.sectionTitle} variant="titleMedium">
-                        Género
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Icon
+                source="shield-check"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.sectionTitle} variant="titleMedium">
+                Estado de la cuenta
+              </Text>
+            </View>
+
+            <Controller
+              control={control}
+              name="isActive"
+              render={({ field: { onChange, value } }) => (
+                <Surface style={styles.switchContainer} elevation={1}>
+                  <View style={styles.switchContent}>
+                    <View style={styles.switchTextContainer}>
+                      <Text style={styles.switchLabel} variant="bodyLarge">
+                        Usuario activo
+                      </Text>
+                      <Text
+                        style={styles.switchDescription}
+                        variant="bodySmall"
+                      >
+                        Los usuarios inactivos no pueden iniciar sesión
                       </Text>
                     </View>
-                    <View
-                      style={[
-                        styles.genderContainer,
-                        { marginTop: theme.spacing.s },
-                      ]}
-                    >
-                      {genderOptions.map((option) => (
-                        <TouchableOpacity
-                          key={option.value}
-                          onPress={() => onChange(option.value)}
-                          activeOpacity={0.7}
-                        >
-                          <Surface
-                            style={[
-                              styles.genderOption,
-                              value === option.value &&
-                                styles.genderOptionActive,
-                            ]}
-                            elevation={value === option.value ? 3 : 1}
-                          >
-                            <View
-                              style={[
-                                styles.genderIconContainer,
-                                value === option.value && {
-                                  backgroundColor: option.color + '20',
-                                },
-                              ]}
-                            >
-                              <Icon
-                                source={option.icon}
-                                size={20}
-                                color={
-                                  value === option.value
-                                    ? option.color
-                                    : theme.colors.onSurfaceVariant
-                                }
-                              />
-                            </View>
-                            <Text
-                              style={[
-                                styles.genderLabel,
-                                value === option.value &&
-                                  styles.genderLabelActive,
-                              ]}
-                              variant="labelMedium"
-                            >
-                              {option.label}
-                            </Text>
-                          </Surface>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              />
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Icon
-                  source="phone-in-talk"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.sectionTitle} variant="titleMedium">
-                  Información de Contacto
-                </Text>
-                <Chip
-                  mode="flat"
-                  compact
-                  icon="information"
-                  style={styles.optionalChip}
-                  textStyle={styles.optionalChipText}
-                >
-                  Opcional
-                </Chip>
-              </View>
-
-              <Controller
-                control={control}
-                name="phoneNumber"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Teléfono"
+                    <Switch
                       value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.phoneNumber}
-                      mode="outlined"
-                      placeholder="+52 55 1234 5678"
-                      keyboardType="phone-pad"
-                      left={<TextInput.Icon icon="phone" />}
-                      outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
-                    />
-                    {errors.phoneNumber && (
-                      <HelperText type="error" visible={!!errors.phoneNumber}>
-                        {errors.phoneNumber.message}
-                      </HelperText>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="address"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      label="Dirección"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      mode="outlined"
-                      placeholder="Calle Principal #123"
-                      left={<TextInput.Icon icon="map-marker" />}
-                      outlineStyle={styles.inputOutline}
-                      contentStyle={styles.inputContent}
-                      style={styles.input}
+                      onValueChange={onChange}
+                      color={theme.colors.primary}
                     />
                   </View>
-                )}
-              />
-
-              <View style={styles.rowContainer}>
-                <Controller
-                  control={control}
-                  name="city"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <TextInput
-                        label="Ciudad"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        mode="outlined"
-                        placeholder="Ciudad"
-                        outlineStyle={styles.inputOutline}
-                      />
-                    </View>
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="state"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <TextInput
-                        label="Estado"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        mode="outlined"
-                        placeholder="Estado"
-                        outlineStyle={styles.inputOutline}
-                      />
-                    </View>
-                  )}
-                />
-              </View>
-
-              <View style={styles.rowContainer}>
-                <Controller
-                  control={control}
-                  name="country"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <TextInput
-                        label="País"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        mode="outlined"
-                        placeholder="México"
-                        outlineStyle={styles.inputOutline}
-                      />
-                    </View>
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="zipCode"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <TextInput
-                        label="Código Postal"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        mode="outlined"
-                        placeholder="12345"
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                      />
-                    </View>
-                  )}
-                />
-              </View>
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Icon
-                  source="shield-check"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.sectionTitle} variant="titleMedium">
-                  Estado de la cuenta
-                </Text>
-              </View>
-
-              <Controller
-                control={control}
-                name="isActive"
-                render={({ field: { onChange, value } }) => (
-                  <Surface style={styles.switchContainer} elevation={1}>
-                    <View style={styles.switchContent}>
-                      <View style={styles.switchTextContainer}>
-                        <Text style={styles.switchLabel} variant="bodyLarge">
-                          Usuario activo
-                        </Text>
-                        <Text
-                          style={styles.switchDescription}
-                          variant="bodySmall"
-                        >
-                          Los usuarios inactivos no pueden iniciar sesión
-                        </Text>
-                      </View>
-                      <Switch
-                        value={value}
-                        onValueChange={onChange}
-                        color={theme.colors.primary}
-                      />
-                    </View>
-                  </Surface>
-                )}
-              />
-            </View>
+                </Surface>
+              )}
+            />
+          </View>
 
           <View style={styles.scrollSpacer} />
         </View>

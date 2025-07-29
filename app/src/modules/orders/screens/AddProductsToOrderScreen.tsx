@@ -280,18 +280,13 @@ const AddProductsToOrderScreen = () => {
   const handleBack = () => {
     if (selectedProduct) {
       setSelectedProduct(null);
-    } else if (navigationLevel === 'products') {
-      handleGoBackInternal();
-    } else if (navigationLevel === 'subcategories') {
+    } else if (
+      navigationLevel === 'products' ||
+      navigationLevel === 'subcategories'
+    ) {
       handleGoBackInternal();
     } else {
-      // Si hay productos seleccionados, preguntar antes de salir
-      if (selectedProducts.length > 0) {
-        // Por ahora, simplemente salir sin guardar
-        navigation.goBack();
-      } else {
-        navigation.goBack();
-      }
+      navigation.goBack();
     }
   };
 

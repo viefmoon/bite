@@ -21,7 +21,7 @@ export const adjustmentSchema = z.object({
         id: z.string().uuid(),
         orderNumber: z.string().optional(),
         shiftOrderNumber: z.number().int().positive(),
-        total: z.union([z.string(), z.number()]).optional(),
+        total: z.coerce.number().optional(),
         orderStatus: z.enum([
           'PENDING',
           'IN_PROGRESS',

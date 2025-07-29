@@ -1,3 +1,4 @@
+import { areCartItemsEqual } from '../utils/cartUtils';
 import {
   useCartStore,
   useCartSubtotal,
@@ -14,45 +15,12 @@ import {
 } from '../utils/orderUtils';
 import type { CartItem } from '../utils/cartUtils';
 
-const findModifierById = (modifierId: string, fullMenuData: any) => {
-  if (!fullMenuData) return null;
-
-  for (const product of fullMenuData) {
-    for (const group of product.modifierGroups || []) {
-      for (const modifier of group.modifiers || []) {
-        if (modifier.id === modifierId) {
-          return {
-            id: modifier.id,
-            modifierGroupId: group.id,
-            name: modifier.name,
-            price: modifier.price,
-          };
-        }
-      }
-    }
-  }
-  return null;
-};
-
-const calculateTotalPrice = (
-  unitPrice: number,
-  modifiers: any[],
-  pizzaExtraCost: number,
-  quantity: number,
-) => {
-  const modifiersPrice = modifiers.reduce(
-    (sum, mod) => sum + (mod.price || 0),
-    0,
-  );
-  return (unitPrice + modifiersPrice + pizzaExtraCost) * quantity;
-};
-
 export const useOrderManagement = () => {
   const cartStore = useCartStore();
   const formStore = useOrderFormStore();
   const uiStore = useOrderUIStore();
 
-  const loadOrderForEditing = (orderData: any, fullMenuData?: any) => {
+  const loadOrderForEditing = (orderData: any) => {
     // Reset states first
     cartStore.resetCart();
     formStore.resetForm();
@@ -105,92 +73,119 @@ export const useOrderManagement = () => {
     }
 
     // Handle order items
-    const groupedItemsMap = new Map<string, CartItem>();
-
     if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-      orderData.orderItems.forEach((item: any) => {
+      // Primero procesamos todos los items para normalizar su estructura
+      const processedItems = orderData.orderItems.map((item: any) => {
         const modifiers: any[] = [];
 
-        // Handle modifiers
-        if (item.modifiers && Array.isArray(item.modifiers)) {
-          item.modifiers.forEach((mod: any) => {
+        // Handle modifiers from different possible structures
+        if (item.productModifiers && Array.isArray(item.productModifiers)) {
+          item.productModifiers.forEach((mod: any) => {
             modifiers.push({
-              id: mod.productModifierId,
-              modifierGroupId: mod.productModifier?.modifierGroupId || '',
-              name: mod.productModifier?.name || 'Modificador',
-              price: parseFloat(mod.price) || 0,
+              id: mod.id,
+              modifierGroupId: mod.modifierGroupId || '',
+              name: mod.name || 'Modificador',
+              price: parseFloat(mod.price?.toString() || '0') || 0,
             });
           });
-        } else if (
-          item.productModifiers &&
-          Array.isArray(item.productModifiers)
-        ) {
-          item.productModifiers.forEach((mod: any) => {
-            const modifierInfo = fullMenuData
-              ? findModifierById(mod.id, fullMenuData)
-              : null;
-            modifiers.push(
-              modifierInfo || {
-                id: mod.id,
-                modifierGroupId: mod.modifierGroupId || '',
-                name: mod.name || 'Modificador',
-                price: parseFloat(mod.price) || 0,
-              },
-            );
+        } else if (item.modifiers && Array.isArray(item.modifiers)) {
+          item.modifiers.forEach((mod: any) => {
+            modifiers.push({
+              id: mod.productModifierId || mod.id,
+              modifierGroupId:
+                mod.productModifier?.modifierGroupId ||
+                mod.modifierGroupId ||
+                '',
+              name: mod.productModifier?.name || mod.name || 'Modificador',
+              price: parseFloat(mod.price?.toString() || '0') || 0,
+            });
           });
         }
 
-        const unitPrice = parseFloat(item.basePrice || '0');
-        const modifierIds = modifiers
-          .map((m) => m.id)
-          .sort()
-          .join(',');
-        const pizzaCustomizationIds = item.selectedPizzaCustomizations
-          ? item.selectedPizzaCustomizations
-              .map(
-                (c: any) => `${c.pizzaCustomizationId}-${c.half}-${c.action}`,
-              )
-              .sort()
-              .join(',')
-          : '';
-        const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${modifierIds}-${pizzaCustomizationIds}-${item.preparationNotes || ''}-${item.preparationStatus || 'PENDING'}`;
+        return {
+          ...item,
+          modifiers,
+          basePrice: parseFloat(item.basePrice || '0'),
+          finalPrice: parseFloat(item.finalPrice || '0'),
+        };
+      });
 
-        const existingItem = groupedItemsMap.get(groupKey);
+      // Agrupar items idénticos usando comparación estructurada
+      const groupedItems: Array<{ items: any[]; config: any }> = [];
 
-        if (
-          existingItem &&
-          existingItem.preparationStatus === item.preparationStatus
-        ) {
-          existingItem.quantity += 1;
-          existingItem.totalPrice = calculateTotalPrice(
-            unitPrice,
-            modifiers,
-            0,
-            existingItem.quantity,
-          );
-          existingItem.id = `${existingItem.id},${item.id}`;
+      processedItems.forEach((item: any) => {
+        // Buscar si ya existe un grupo con la misma configuración
+        const existingGroupIndex = groupedItems.findIndex((group) =>
+          areCartItemsEqual(
+            {
+              productId: group.config.productId,
+              variantId: group.config.productVariantId,
+              preparationNotes: group.config.preparationNotes,
+              modifiers: group.config.modifiers,
+              selectedPizzaCustomizations:
+                group.config.selectedPizzaCustomizations,
+              preparationStatus: group.config.preparationStatus,
+            },
+            {
+              productId: item.productId,
+              variantId: item.productVariantId,
+              preparationNotes: item.preparationNotes,
+              modifiers: item.modifiers,
+              selectedPizzaCustomizations: item.selectedPizzaCustomizations,
+              preparationStatus: item.preparationStatus,
+            },
+          ),
+        );
+
+        if (existingGroupIndex !== -1) {
+          // Agregar al grupo existente
+          groupedItems[existingGroupIndex].items.push(item);
         } else {
-          const cartItem: CartItem = {
-            id: item.id,
-            productId: item.productId,
-            productName: item.product?.name || 'Producto desconocido',
-            quantity: 1,
-            unitPrice,
-            totalPrice: calculateTotalPrice(unitPrice, modifiers, 0, 1),
-            modifiers,
-            variantId: item.productVariantId || undefined,
-            variantName: item.productVariant?.name || undefined,
-            preparationNotes: item.preparationNotes || undefined,
-            preparationStatus: item.preparationStatus || 'PENDING',
-            selectedPizzaCustomizations:
-              item.selectedPizzaCustomizations || undefined,
-          };
-          groupedItemsMap.set(groupKey, cartItem);
+          // Crear nuevo grupo
+          groupedItems.push({ items: [item], config: item });
         }
       });
-    }
 
-    cartStore.setItems(Array.from(groupedItemsMap.values()));
+      // Convertir grupos a CartItems
+      const cartItems: CartItem[] = groupedItems.map((group) => {
+        const { items, config } = group;
+        const quantity = items.length;
+        const originalItemIds = items.map((item) => item.id).join(',');
+
+        // Calcular el costo extra de pizza si existe
+        const modifiersPrice = config.modifiers.reduce(
+          (sum: number, mod: any) => sum + (mod.price || 0),
+          0,
+        );
+        const pizzaExtraCost = Math.max(
+          0,
+          config.finalPrice - config.basePrice - modifiersPrice,
+        );
+
+        return {
+          id: originalItemIds,
+          productId: config.productId,
+          productName: config.product?.name || 'Producto desconocido',
+          quantity,
+          unitPrice: config.basePrice,
+          totalPrice: config.finalPrice * quantity,
+          modifiers: config.modifiers,
+          variantId: config.productVariantId || undefined,
+          variantName: config.productVariant?.name || undefined,
+          preparationNotes: config.preparationNotes || undefined,
+          selectedPizzaCustomizations:
+            config.selectedPizzaCustomizations || undefined,
+          pizzaExtraCost: pizzaExtraCost > 0 ? pizzaExtraCost : undefined,
+          preparationStatus: config.preparationStatus || 'PENDING',
+          isNew: false,
+          isModified: false,
+        };
+      });
+
+      cartStore.setItems(cartItems);
+    } else {
+      cartStore.setItems([]);
+    }
 
     // Set original state for comparison
     formStore.setOriginalState(orderData);

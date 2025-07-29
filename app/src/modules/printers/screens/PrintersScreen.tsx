@@ -247,7 +247,9 @@ const PrintersScreen: React.FC = () => {
           onDismiss={handleCloseModals}
           printer={selectedItem}
           onEdit={() => selectedItem && handleOpenEditModal(selectedItem)}
-          deleteConfirmation={() => selectedItem && deleteConfirmation.show(selectedItem.id)}
+          deleteConfirmation={() =>
+            selectedItem && deleteConfirmation.show(selectedItem.id)
+          }
           onTestPrint={() => selectedItem && handleTestPrint(selectedItem.id)}
           isDeleting={isDeleting}
           isTestPrinting={testPrintingPrinterId === selectedItem?.id}

@@ -59,7 +59,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Separar loading de menú y loading de guardado
   const isLoadingMenu = loading && !menuData;
   const isSaving = loading && !!menuData;
@@ -162,21 +162,24 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
   // Obtener productos en conflicto para mostrar en el header
   const conflicts = getConflictingProducts;
-  
-  const headerActions = useMemo(() => (
-    <View style={styles.headerActions}>
-      {selectedProducts.length > 0 && (
-        <Chip
-          mode="flat"
-          compact
-          style={styles.selectedChip}
-          icon="check-circle"
-        >
-          {selectedProducts.length} seleccionados
-        </Chip>
-      )}
-    </View>
-  ), [selectedProducts.length, styles]);
+
+  const headerActions = useMemo(
+    () => (
+      <View style={styles.headerActions}>
+        {selectedProducts.length > 0 && (
+          <Chip
+            mode="flat"
+            compact
+            style={styles.selectedChip}
+            icon="check-circle"
+          >
+            {selectedProducts.length} seleccionados
+          </Chip>
+        )}
+      </View>
+    ),
+    [selectedProducts.length, styles],
+  );
 
   return (
     <Portal>
@@ -223,58 +226,65 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               <Text style={styles.loadingText}>Cargando productos...</Text>
             </View>
           ) : (
-            <View style={[styles.flashListContainer, isSaving && styles.listDisabled]}>
+            <View
+              style={[
+                styles.flashListContainer,
+                isSaving && styles.listDisabled,
+              ]}
+            >
               <FlashList
-              data={flattenedData}
-              estimatedItemSize={60}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => {
-                switch (item.type) {
-                  case 'category':
-                    return (
-                      <CategoryRow
-                        category={item.data}
-                        isExpanded={isCategoryExpanded(item.data.id)}
-                        isFullySelected={isCategoryFullySelected(item.data)}
-                        isPartiallySelected={isCategoryPartiallySelected(
-                          item.data,
-                        )}
-                        onToggleExpansion={toggleCategory}
-                        onToggleSelection={toggleAllInCategory}
-                      />
-                    );
-                  case 'subcategory':
-                    return (
-                      <SubcategoryRow
-                        subcategory={item.data}
-                        isExpanded={isSubcategoryExpanded(item.data.id)}
-                        isFullySelected={isSubcategoryFullySelected(item.data)}
-                        isPartiallySelected={isSubcategoryPartiallySelected(
-                          item.data,
-                        )}
-                        onToggleExpansion={toggleSubcategory}
-                        onToggleSelection={toggleAllInSubcategory}
-                      />
-                    );
-                  case 'product':
-                    return (
-                      <ProductRow
-                        product={item.data}
-                        isSelected={isProductSelected(item.data.id)}
-                        screenId={screenId}
-                        onToggleSelection={toggleProduct}
-                      />
-                    );
-                  default:
-                    return null;
-                }
-              }}
+                data={flattenedData}
+                estimatedItemSize={60}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => {
+                  switch (item.type) {
+                    case 'category':
+                      return (
+                        <CategoryRow
+                          category={item.data}
+                          isExpanded={isCategoryExpanded(item.data.id)}
+                          isFullySelected={isCategoryFullySelected(item.data)}
+                          isPartiallySelected={isCategoryPartiallySelected(
+                            item.data,
+                          )}
+                          onToggleExpansion={toggleCategory}
+                          onToggleSelection={toggleAllInCategory}
+                        />
+                      );
+                    case 'subcategory':
+                      return (
+                        <SubcategoryRow
+                          subcategory={item.data}
+                          isExpanded={isSubcategoryExpanded(item.data.id)}
+                          isFullySelected={isSubcategoryFullySelected(
+                            item.data,
+                          )}
+                          isPartiallySelected={isSubcategoryPartiallySelected(
+                            item.data,
+                          )}
+                          onToggleExpansion={toggleSubcategory}
+                          onToggleSelection={toggleAllInSubcategory}
+                        />
+                      );
+                    case 'product':
+                      return (
+                        <ProductRow
+                          product={item.data}
+                          isSelected={isProductSelected(item.data.id)}
+                          screenId={screenId}
+                          onToggleSelection={toggleProduct}
+                        />
+                      );
+                    default:
+                      return null;
+                  }
+                }}
               />
             </View>
           )}
         </View>
-        
+
         {/* Mostrar alerta de reasignación dentro del modal principal */}
         {conflicts.length > 0 && (
           <View style={styles.conflictAlert}>
@@ -291,11 +301,12 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               </Text>
             </View>
             <Text style={styles.conflictAlertText}>
-              Los productos seleccionados que ya están en otras pantallas serán movidos automáticamente a esta pantalla.
+              Los productos seleccionados que ya están en otras pantallas serán
+              movidos automáticamente a esta pantalla.
             </Text>
           </View>
         )}
-        
+
         {/* Overlay de carga al guardar */}
         {isSaving && (
           <View style={styles.savingOverlay}>
@@ -310,84 +321,85 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   );
 };
 
-const getStyles = (theme: AppTheme) => StyleSheet.create({
-  content: {
-    flex: 1,
-  },
-  contentDisabled: {
-    opacity: 0.6,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  selectedChip: {
-    backgroundColor: theme.colors.primaryContainer,
-  },
-  searchBar: {
-    marginBottom: theme.spacing.m,
-    elevation: 0,
-    backgroundColor: theme.colors.surfaceVariant,
-  },
-  flashListContainer: {
-    flex: 1,
-    minHeight: 300,
-  },
-  listDisabled: {
-    opacity: 0.6,
-    pointerEvents: 'none',
-  },
-  loadingContainer: {
-    flex: 1,
-    minHeight: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.m,
-    color: theme.colors.onSurfaceVariant,
-  },
-  // Estilos para la alerta de conflictos
-  conflictAlert: {
-    backgroundColor: theme.colors.errorContainer,
-    padding: theme.spacing.m,
-    borderRadius: theme.roundness,
-    marginHorizontal: theme.spacing.m,
-    marginBottom: theme.spacing.m,
-  },
-  conflictAlertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  conflictAlertTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.onErrorContainer,
-    marginLeft: theme.spacing.s,
-  },
-  conflictAlertText: {
-    fontSize: 13,
-    color: theme.colors.onErrorContainer,
-    lineHeight: 18,
-  },
-  savingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  savingContainer: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.xl,
-    borderRadius: theme.roundness * 2,
-    alignItems: 'center',
-    elevation: 5,
-  },
-  savingText: {
-    marginTop: theme.spacing.m,
-    fontSize: 16,
-    color: theme.colors.onSurface,
-  },
-});
+const getStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    content: {
+      flex: 1,
+    },
+    contentDisabled: {
+      opacity: 0.6,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    selectedChip: {
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    searchBar: {
+      marginBottom: theme.spacing.m,
+      elevation: 0,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    flashListContainer: {
+      flex: 1,
+      minHeight: 300,
+    },
+    listDisabled: {
+      opacity: 0.6,
+      pointerEvents: 'none',
+    },
+    loadingContainer: {
+      flex: 1,
+      minHeight: 200,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: theme.spacing.m,
+      color: theme.colors.onSurfaceVariant,
+    },
+    // Estilos para la alerta de conflictos
+    conflictAlert: {
+      backgroundColor: theme.colors.errorContainer,
+      padding: theme.spacing.m,
+      borderRadius: theme.roundness,
+      marginHorizontal: theme.spacing.m,
+      marginBottom: theme.spacing.m,
+    },
+    conflictAlertHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    conflictAlertTitle: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: theme.colors.onErrorContainer,
+      marginLeft: theme.spacing.s,
+    },
+    conflictAlertText: {
+      fontSize: 13,
+      color: theme.colors.onErrorContainer,
+      lineHeight: 18,
+    },
+    savingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    savingContainer: {
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.xl,
+      borderRadius: theme.roundness * 2,
+      alignItems: 'center',
+      elevation: 5,
+    },
+    savingText: {
+      marginTop: theme.spacing.m,
+      fontSize: 16,
+      color: theme.colors.onSurface,
+    },
+  });

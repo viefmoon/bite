@@ -19,7 +19,7 @@ export const orderForFinalizationListSchema = z.object({
     'COMPLETED',
     'CANCELLED',
   ]),
-  total: z.union([z.string(), z.number()]),
+  total: z.coerce.number(),
   createdAt: z.string(),
   scheduledAt: z.string().optional(),
   paymentsSummary: z
@@ -123,7 +123,7 @@ export const orderForFinalizationSchema = z.object({
     'COMPLETED',
     'CANCELLED',
   ]),
-  total: z.union([z.string(), z.number()]),
+  total: z.coerce.number(),
   orderItems: z.array(orderItemForFinalizationSchema),
   createdAt: z.string(),
   updatedAt: z.string(),

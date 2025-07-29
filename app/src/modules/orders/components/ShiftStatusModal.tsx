@@ -217,19 +217,20 @@ export const ShiftStatusModal: React.FC<ShiftStatusModalProps> = ({
                   </View>
                 )}
 
-                {shift.expectedCash !== null && shift.expectedCash !== undefined && (
-                  <View style={styles.infoRow}>
-                    <Text variant="bodyMedium" style={styles.label}>
-                      Efectivo esperado:
-                    </Text>
-                    <Text
-                      variant="bodyMedium"
-                      style={[styles.value, styles.highlight]}
-                    >
-                      {formatCurrency(shift.expectedCash)}
-                    </Text>
-                  </View>
-                )}
+                {shift.expectedCash !== null &&
+                  shift.expectedCash !== undefined && (
+                    <View style={styles.infoRow}>
+                      <Text variant="bodyMedium" style={styles.label}>
+                        Efectivo esperado:
+                      </Text>
+                      <Text
+                        variant="bodyMedium"
+                        style={[styles.value, styles.highlight]}
+                      >
+                        {formatCurrency(shift.expectedCash)}
+                      </Text>
+                    </View>
+                  )}
 
                 {shift.notes && (
                   <View style={styles.notesSection}>

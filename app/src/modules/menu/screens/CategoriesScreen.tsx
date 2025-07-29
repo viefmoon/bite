@@ -179,7 +179,6 @@ const CategoriesScreen: React.FC = () => {
     }
   };
 
-
   const categories = useMemo(() => {
     return categoriesResponse?.data ?? [];
   }, [categoriesResponse?.data]);
@@ -234,7 +233,6 @@ const CategoriesScreen: React.FC = () => {
 
     loadFormData();
   }, [editingCategory]);
-
 
   const filterOptions: FilterOption<string | number>[] = [
     { value: 'all', label: 'Todas' },

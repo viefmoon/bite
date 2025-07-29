@@ -26,12 +26,9 @@ const printerKeys = {
 };
 
 export const useDiscoverPrinters = () => {
-  return useApiMutation(
-    () => printerService.discoverPrinters(),
-    {
-      suppressSuccessMessage: true,
-    },
-  );
+  return useApiMutation(() => printerService.discoverPrinters(), {
+    suppressSuccessMessage: true,
+  });
 };
 
 export const usePrintersQuery = (

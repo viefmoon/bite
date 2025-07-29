@@ -192,9 +192,10 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   // Filtrar usuarios según búsqueda y disponibilidad
   const filteredUsers = React.useMemo(() => {
     const searchLower = userSearchQuery.toLowerCase();
-    return allUsers.filter(user => {
+    return allUsers.filter((user) => {
       const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-      const matchesSearch = !userSearchQuery || 
+      const matchesSearch =
+        !userSearchQuery ||
         fullName.toLowerCase().includes(searchLower) ||
         user.username.toLowerCase().includes(searchLower);
       return matchesSearch;
@@ -206,13 +207,20 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
   // Función auxiliar para obtener el nombre del rol
   const getRoleName = (roleId?: number) => {
     switch (roleId) {
-      case RoleEnum.KITCHEN: return 'Cocina';
-      case RoleEnum.ADMIN: return 'Admin';
-      case RoleEnum.MANAGER: return 'Gerente';
-      case RoleEnum.CASHIER: return 'Cajero';
-      case RoleEnum.WAITER: return 'Mesero';
-      case RoleEnum.DELIVERY: return 'Repartidor';
-      default: return 'Sin rol';
+      case RoleEnum.KITCHEN:
+        return 'Cocina';
+      case RoleEnum.ADMIN:
+        return 'Admin';
+      case RoleEnum.MANAGER:
+        return 'Gerente';
+      case RoleEnum.CASHIER:
+        return 'Cajero';
+      case RoleEnum.WAITER:
+        return 'Mesero';
+      case RoleEnum.DELIVERY:
+        return 'Repartidor';
+      default:
+        return 'Sin rol';
     }
   };
 
@@ -221,7 +229,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
       <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        title={isEditing ? 'Editar Pantalla de Preparación' : 'Crear Nueva Pantalla'}
+        title={
+          isEditing ? 'Editar Pantalla de Preparación' : 'Crear Nueva Pantalla'
+        }
         dismissable={!isSubmitting}
         showCloseButton={!isSubmitting}
         actions={[
@@ -242,138 +252,138 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
         ]}
       >
         <View style={styles.form}>
-                {/* Campo Nombre */}
-                <Controller
-                  control={control}
-                  name="name"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={styles.field}>
-                      <TextInput
-                        label="Nombre de la Pantalla *"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        error={!!errors.name}
-                        disabled={isSubmitting}
-                        placeholder="Ej: Cocina Principal, Barra Fría"
-                        mode="outlined"
-                      />
-                      {errors.name && (
-                        <HelperText type="error" visible={!!errors.name}>
-                          {errors.name.message}
-                        </HelperText>
-                      )}
-                    </View>
-                  )}
+          {/* Campo Nombre */}
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View style={styles.field}>
+                <TextInput
+                  label="Nombre de la Pantalla *"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.name}
+                  disabled={isSubmitting}
+                  placeholder="Ej: Cocina Principal, Barra Fría"
+                  mode="outlined"
                 />
+                {errors.name && (
+                  <HelperText type="error" visible={!!errors.name}>
+                    {errors.name.message}
+                  </HelperText>
+                )}
+              </View>
+            )}
+          />
 
-                {/* Campo Descripción */}
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={styles.field}>
-                      <TextInput
-                        label="Descripción (Opcional)"
-                        value={value || ''}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        error={!!errors.description}
-                        disabled={isSubmitting}
-                        placeholder="Ej: Pantalla para órdenes de cocina caliente"
-                        mode="outlined"
-                        multiline
-                        numberOfLines={3}
-                      />
-                      {errors.description && (
-                        <HelperText type="error" visible={!!errors.description}>
-                          {errors.description.message}
-                        </HelperText>
-                      )}
-                    </View>
-                  )}
+          {/* Campo Descripción */}
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View style={styles.field}>
+                <TextInput
+                  label="Descripción (Opcional)"
+                  value={value || ''}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.description}
+                  disabled={isSubmitting}
+                  placeholder="Ej: Pantalla para órdenes de cocina caliente"
+                  mode="outlined"
+                  multiline
+                  numberOfLines={3}
                 />
+                {errors.description && (
+                  <HelperText type="error" visible={!!errors.description}>
+                    {errors.description.message}
+                  </HelperText>
+                )}
+              </View>
+            )}
+          />
 
-                {/* Campo Usuario */}
-                <Controller
-                  control={control}
-                  name="userId"
-                  render={() => (
-                    <View style={styles.field}>
-                      <TextInput
-                        label="Usuario de Cocina *"
-                        value={
-                          selectedUser
-                            ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() ||
-                              selectedUser.username
-                            : ''
-                        }
-                        mode="outlined"
-                        error={!!errors.userId}
-                        disabled={isSubmitting || isLoadingUsers}
+          {/* Campo Usuario */}
+          <Controller
+            control={control}
+            name="userId"
+            render={() => (
+              <View style={styles.field}>
+                <TextInput
+                  label="Usuario de Cocina *"
+                  value={
+                    selectedUser
+                      ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() ||
+                        selectedUser.username
+                      : ''
+                  }
+                  mode="outlined"
+                  error={!!errors.userId}
+                  disabled={isSubmitting || isLoadingUsers}
+                  onPress={() => {
+                    if (!isSubmitting && !isLoadingUsers) {
+                      setShowUserModal(true);
+                    }
+                  }}
+                  showSoftInputOnFocus={false}
+                  editable={false}
+                  right={
+                    selectedUser ? (
+                      <TextInput.Icon
+                        icon="close"
+                        onPress={handleClearUser}
+                        disabled={isSubmitting}
+                      />
+                    ) : isLoadingUsers ? (
+                      <TextInput.Icon
+                        icon={() => <ActivityIndicator size="small" />}
+                        disabled
+                      />
+                    ) : (
+                      <TextInput.Icon
+                        icon="account-search"
+                        disabled={isSubmitting}
                         onPress={() => {
                           if (!isSubmitting && !isLoadingUsers) {
                             setShowUserModal(true);
                           }
                         }}
-                        showSoftInputOnFocus={false}
-                        editable={false}
-                        right={
-                          selectedUser ? (
-                            <TextInput.Icon
-                              icon="close"
-                              onPress={handleClearUser}
-                              disabled={isSubmitting}
-                            />
-                          ) : isLoadingUsers ? (
-                            <TextInput.Icon
-                              icon={() => <ActivityIndicator size="small" />}
-                              disabled
-                            />
-                          ) : (
-                            <TextInput.Icon
-                              icon="account-search"
-                              disabled={isSubmitting}
-                              onPress={() => {
-                                if (!isSubmitting && !isLoadingUsers) {
-                                  setShowUserModal(true);
-                                }
-                              }}
-                            />
-                          )
-                        }
                       />
-                      {errors.userId && (
-                        <HelperText type="error" visible={!!errors.userId}>
-                          {errors.userId.message}
-                        </HelperText>
-                      )}
-                      {!errors.userId && !selectedUser && (
-                        <HelperText type="info" visible={true}>
-                          Solo usuarios con rol de cocina pueden ser asignados
-                        </HelperText>
-                      )}
-                    </View>
-                  )}
+                    )
+                  }
                 />
+                {errors.userId && (
+                  <HelperText type="error" visible={!!errors.userId}>
+                    {errors.userId.message}
+                  </HelperText>
+                )}
+                {!errors.userId && !selectedUser && (
+                  <HelperText type="info" visible={true}>
+                    Solo usuarios con rol de cocina pueden ser asignados
+                  </HelperText>
+                )}
+              </View>
+            )}
+          />
 
-                {/* Campo Activa */}
-                <Controller
-                  control={control}
-                  name="isActive"
-                  render={({ field: { onChange, value } }) => (
-                    <View style={styles.switchField}>
-                      <Text variant="bodyLarge">¿Está activa?</Text>
-                      <Switch
-                        value={value}
-                        onValueChange={onChange}
-                        disabled={isSubmitting}
-                        color={theme.colors.primary}
-                      />
-                    </View>
-                  )}
+          {/* Campo Activa */}
+          <Controller
+            control={control}
+            name="isActive"
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.switchField}>
+                <Text variant="bodyLarge">¿Está activa?</Text>
+                <Switch
+                  value={value}
+                  onValueChange={onChange}
+                  disabled={isSubmitting}
+                  color={theme.colors.primary}
                 />
               </View>
+            )}
+          />
+        </View>
       </ResponsiveModal>
 
       {/* Modal de selección de usuario */}
@@ -406,10 +416,12 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
           ) : filteredUsers.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text variant="titleMedium" style={styles.emptyTitle}>
-                {userSearchQuery ? 'Sin resultados' : 'No hay usuarios disponibles'}
+                {userSearchQuery
+                  ? 'Sin resultados'
+                  : 'No hay usuarios disponibles'}
               </Text>
               <Text style={styles.emptyText}>
-                {userSearchQuery 
+                {userSearchQuery
                   ? `No se encontraron usuarios para "${userSearchQuery}"`
                   : 'No hay usuarios con rol de cocina disponibles'}
               </Text>
@@ -417,7 +429,8 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
           ) : (
             <View style={styles.userList}>
               {filteredUsers.map((user) => {
-                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                const fullName =
+                  `${user.firstName || ''} ${user.lastName || ''}`.trim();
                 const displayName = fullName || user.username;
                 const isKitchenUser = user.role?.id === RoleEnum.KITCHEN;
                 const assignedScreen = userAssignments.get(user.id);
@@ -434,9 +447,9 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                             @{user.username} • {getRoleName(user.role?.id)}
                           </Text>
                           {isAssigned && (
-                            <Chip 
-                              compact 
-                              mode="flat" 
+                            <Chip
+                              compact
+                              mode="flat"
                               style={styles.assignedChip}
                               icon="monitor"
                             >
@@ -445,22 +458,28 @@ const PreparationScreenFormModal: React.FC<PreparationScreenFormModalProps> = ({
                           )}
                         </View>
                       }
-                      onPress={isSelectable ? () => handleUserSelect(user) : undefined}
+                      onPress={
+                        isSelectable ? () => handleUserSelect(user) : undefined
+                      }
                       left={(props) => (
-                        <List.Icon 
-                          {...props} 
-                          icon={isKitchenUser ? "chef-hat" : "account"}
-                          color={isSelectable ? theme.colors.primary : theme.colors.onSurfaceDisabled}
+                        <List.Icon
+                          {...props}
+                          icon={isKitchenUser ? 'chef-hat' : 'account'}
+                          color={
+                            isSelectable
+                              ? theme.colors.primary
+                              : theme.colors.onSurfaceDisabled
+                          }
                         />
                       )}
-                      right={(props) => 
+                      right={(props) =>
                         isSelectable ? (
                           <List.Icon {...props} icon="chevron-right" />
                         ) : null
                       }
                       style={[
                         styles.userListItem,
-                        !isSelectable && styles.disabledUserItem
+                        !isSelectable && styles.disabledUserItem,
                       ]}
                       disabled={!isSelectable}
                     />

@@ -4,7 +4,7 @@ import {
   type AIOrderItem,
 } from '@/services/audioOrderService';
 import { useSnackbarStore } from '@/app/store/snackbarStore';
-import { Product, FullMenuModifierGroup } from '../../schema/orders.schema';
+import { Product } from '../../schema/orders.schema';
 import { CartItemModifier } from '../../utils/cartUtils';
 
 interface UseAudioOrderProps {
@@ -107,9 +107,9 @@ export const useAudioOrder = ({
           if (item.modifiers && item.modifiers.length > 0) {
             for (const modName of item.modifiers) {
               for (const modGroup of foundProduct.modifierGroups || []) {
-                const modifier = (
-                  modGroup as FullMenuModifierGroup
-                ).productModifiers?.find((m) => m.name === modName);
+                const modifier = modGroup.productModifiers?.find(
+                  (m) => m.name === modName,
+                );
                 if (modifier) {
                   selectedModifiers.push({
                     id: modifier.id,

@@ -29,7 +29,7 @@ export function useGetUser(id?: string) {
 
 export function useCreateUser() {
   const queryClient = useQueryClient();
-  
+
   return useApiMutation((data: CreateUserDto) => usersApiService.create(data), {
     successMessage: 'Usuario creado exitosamente',
     onSuccess: () => {
@@ -59,7 +59,7 @@ export function useUpdateUser() {
 
 export function useDeleteUser() {
   const queryClient = useQueryClient();
-  
+
   return useApiMutation(
     async (id: string) => {
       await usersApiService.remove(id);

@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Text,
-  Switch,
-  HelperText,
-  RadioButton,
-} from 'react-native-paper';
+import { Text, Switch, HelperText, RadioButton } from 'react-native-paper';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -208,7 +203,7 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
           mode: 'outlined',
           onPress: onDismiss,
           disabled: isSubmitting,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: isEditing ? 'Guardar' : 'Crear',
@@ -216,285 +211,283 @@ const PrinterFormModal: React.FC<PrinterFormModalProps> = ({
           onPress: handleSubmit(onSubmit),
           loading: isSubmitting,
           disabled: isSubmitting,
-          colorPreset: 'primary'
-        }
+          colorPreset: 'primary',
+        },
       ]}
     >
-            <Controller
-              name="name"
-              control={control}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <AnimatedLabelInput
-                  label="Nombre *"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={!!errors.name}
+      <Controller
+        name="name"
+        control={control}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <AnimatedLabelInput
+            label="Nombre *"
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            error={!!errors.name}
+            disabled={isSubmitting}
+            containerStyle={styles.input}
+          />
+        )}
+      />
+      {errors.name && (
+        <HelperText
+          type="error"
+          visible={!!errors.name}
+          style={styles.helperText}
+        >
+          {errors.name.message}
+        </HelperText>
+      )}
+
+      <View style={styles.radioGroupContainer}>
+        <Text style={styles.radioGroupLabel}>Tipo de Conexión *</Text>
+        <Controller
+          name="connectionType"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <RadioButton.Group onValueChange={onChange} value={value}>
+              <View style={styles.radioGroupHorizontal}>
+                <RadioButton.Item
+                  label="Red"
+                  value="NETWORK"
+                  style={styles.radioButtonItem}
+                  labelStyle={styles.radioLabel}
+                  position="leading"
                   disabled={isSubmitting}
-                  containerStyle={styles.input}
                 />
-              )}
+                <RadioButton.Item
+                  label="USB"
+                  value="USB"
+                  style={styles.radioButtonItem}
+                  labelStyle={styles.radioLabel}
+                  position="leading"
+                  disabled={true}
+                />
+              </View>
+            </RadioButton.Group>
+          )}
+        />
+        {errors.connectionType && (
+          <HelperText
+            type="error"
+            visible={!!errors.connectionType}
+            style={styles.helperText}
+          >
+            {errors.connectionType.message}
+          </HelperText>
+        )}
+      </View>
+
+      {connectionType === 'NETWORK' && (
+        <>
+          <Controller
+            name="ipAddress"
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AnimatedLabelInput
+                label="Dirección IP *"
+                value={value ?? ''}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.ipAddress}
+                disabled={isSubmitting}
+                containerStyle={styles.input}
+                keyboardType="decimal-pad"
+              />
+            )}
+          />
+          {errors.ipAddress && (
+            <HelperText
+              type="error"
+              visible={!!errors.ipAddress}
+              style={styles.helperText}
+            >
+              {errors.ipAddress.message}
+            </HelperText>
+          )}
+
+          <Controller
+            name="port"
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AnimatedLabelInput
+                label="Puerto *"
+                value={
+                  value !== undefined && value !== null ? String(value) : ''
+                }
+                onChangeText={(text) => {
+                  if (!text) {
+                    onChange(undefined);
+                    return;
+                  }
+                  const parsedPort = parseInt(text, 10);
+                  onChange(isNaN(parsedPort) ? undefined : parsedPort);
+                }}
+                onBlur={onBlur}
+                error={!!errors.port}
+                disabled={isSubmitting}
+                containerStyle={styles.input}
+                keyboardType="number-pad"
+              />
+            )}
+          />
+          {errors.port && (
+            <HelperText
+              type="error"
+              visible={!!errors.port}
+              style={styles.helperText}
+            >
+              {errors.port.message}
+            </HelperText>
+          )}
+
+          <Controller
+            name="macAddress"
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AnimatedLabelInput
+                label="Dirección MAC (Opcional)"
+                value={value ?? ''}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.macAddress}
+                disabled={isSubmitting}
+                containerStyle={styles.input}
+                autoCapitalize="characters"
+              />
+            )}
+          />
+          {errors.macAddress && (
+            <HelperText
+              type="error"
+              visible={!!errors.macAddress}
+              style={styles.helperText}
+            >
+              {errors.macAddress.message}
+            </HelperText>
+          )}
+        </>
+      )}
+
+      {connectionType !== 'NETWORK' && (
+        <>
+          <Controller
+            name="path"
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AnimatedLabelInput
+                label="Ruta / Identificador *"
+                value={value ?? ''}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.path}
+                disabled={isSubmitting}
+                containerStyle={styles.input}
+                placeholder={
+                  connectionType === 'USB'
+                    ? '/dev/usb/lp0'
+                    : connectionType === 'SERIAL'
+                      ? '/dev/ttyS0'
+                      : 'Dirección BT'
+                }
+              />
+            )}
+          />
+          {errors.path && (
+            <HelperText
+              type="error"
+              visible={!!errors.path}
+              style={styles.helperText}
+            >
+              {errors.path.message}
+            </HelperText>
+          )}
+        </>
+      )}
+
+      <View style={styles.switchComponentContainer}>
+        <Text variant="bodyLarge" style={styles.switchLabel}>
+          Activa
+        </Text>
+        <Controller
+          name="isActive"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Switch
+              value={value}
+              onValueChange={onChange}
+              disabled={isSubmitting}
             />
-            {errors.name && (
-              <HelperText
-                type="error"
-                visible={!!errors.name}
-                style={styles.helperText}
-              >
-                {errors.name.message}
-              </HelperText>
-            )}
+          )}
+        />
+      </View>
+      {errors.isActive && (
+        <HelperText
+          type="error"
+          visible={!!errors.isActive}
+          style={styles.helperText}
+        >
+          {errors.isActive.message}
+        </HelperText>
+      )}
 
-            <View style={styles.radioGroupContainer}>
-              <Text style={styles.radioGroupLabel}>Tipo de Conexión *</Text>
-              <Controller
-                name="connectionType"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <RadioButton.Group onValueChange={onChange} value={value}>
-                    <View style={styles.radioGroupHorizontal}>
-                      <RadioButton.Item
-                        label="Red"
-                        value="NETWORK"
-                        style={styles.radioButtonItem}
-                        labelStyle={styles.radioLabel}
-                        position="leading"
-                        disabled={isSubmitting}
-                      />
-                      <RadioButton.Item
-                        label="USB"
-                        value="USB"
-                        style={styles.radioButtonItem}
-                        labelStyle={styles.radioLabel}
-                        position="leading"
-                        disabled={true}
-                      />
-                    </View>
-                  </RadioButton.Group>
-                )}
-              />
-              {errors.connectionType && (
-                <HelperText
-                  type="error"
-                  visible={!!errors.connectionType}
-                  style={styles.helperText}
-                >
-                  {errors.connectionType.message}
-                </HelperText>
-              )}
-            </View>
-
-            {connectionType === 'NETWORK' && (
-              <>
-                <Controller
-                  name="ipAddress"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <AnimatedLabelInput
-                      label="Dirección IP *"
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.ipAddress}
-                      disabled={isSubmitting}
-                      containerStyle={styles.input}
-                      keyboardType="decimal-pad"
-                    />
-                  )}
-                />
-                {errors.ipAddress && (
-                  <HelperText
-                    type="error"
-                    visible={!!errors.ipAddress}
-                    style={styles.helperText}
-                  >
-                    {errors.ipAddress.message}
-                  </HelperText>
-                )}
-
-                <Controller
-                  name="port"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <AnimatedLabelInput
-                      label="Puerto *"
-                      value={
-                        value !== undefined && value !== null
-                          ? String(value)
-                          : ''
-                      }
-                      onChangeText={(text) => {
-                        if (!text) {
-                          onChange(undefined);
-                          return;
-                        }
-                        const parsedPort = parseInt(text, 10);
-                        onChange(isNaN(parsedPort) ? undefined : parsedPort);
-                      }}
-                      onBlur={onBlur}
-                      error={!!errors.port}
-                      disabled={isSubmitting}
-                      containerStyle={styles.input}
-                      keyboardType="number-pad"
-                    />
-                  )}
-                />
-                {errors.port && (
-                  <HelperText
-                    type="error"
-                    visible={!!errors.port}
-                    style={styles.helperText}
-                  >
-                    {errors.port.message}
-                  </HelperText>
-                )}
-
-                <Controller
-                  name="macAddress"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <AnimatedLabelInput
-                      label="Dirección MAC (Opcional)"
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.macAddress}
-                      disabled={isSubmitting}
-                      containerStyle={styles.input}
-                      autoCapitalize="characters"
-                    />
-                  )}
-                />
-                {errors.macAddress && (
-                  <HelperText
-                    type="error"
-                    visible={!!errors.macAddress}
-                    style={styles.helperText}
-                  >
-                    {errors.macAddress.message}
-                  </HelperText>
-                )}
-              </>
-            )}
-
-            {connectionType !== 'NETWORK' && (
-              <>
-                <Controller
-                  name="path"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <AnimatedLabelInput
-                      label="Ruta / Identificador *"
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={!!errors.path}
-                      disabled={isSubmitting}
-                      containerStyle={styles.input}
-                      placeholder={
-                        connectionType === 'USB'
-                          ? '/dev/usb/lp0'
-                          : connectionType === 'SERIAL'
-                            ? '/dev/ttyS0'
-                            : 'Dirección BT'
-                      }
-                    />
-                  )}
-                />
-                {errors.path && (
-                  <HelperText
-                    type="error"
-                    visible={!!errors.path}
-                    style={styles.helperText}
-                  >
-                    {errors.path.message}
-                  </HelperText>
-                )}
-              </>
-            )}
-
-            <View style={styles.switchComponentContainer}>
-              <Text variant="bodyLarge" style={styles.switchLabel}>
-                Activa
-              </Text>
-              <Controller
-                name="isActive"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-            </View>
-            {errors.isActive && (
-              <HelperText
-                type="error"
-                visible={!!errors.isActive}
-                style={styles.helperText}
-              >
-                {errors.isActive.message}
-              </HelperText>
-            )}
-
-            <View style={styles.switchComponentContainer}>
-              <Text variant="bodyLarge" style={styles.switchLabel}>
-                Impresora Predeterminada
-              </Text>
-              <Controller
-                name="isDefaultPrinter"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-            </View>
-
-            <View style={styles.switchComponentContainer}>
-              <Text variant="bodyLarge" style={styles.switchLabel}>
-                Imprimir Automáticamente Domicilio
-              </Text>
-              <Controller
-                name="autoDeliveryPrint"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-            </View>
-
-            <View style={styles.switchComponentContainer}>
-              <Text variant="bodyLarge" style={styles.switchLabel}>
-                Imprimir Automáticamente Para Llevar
-              </Text>
-              <Controller
-                name="autoPickupPrint"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-            </View>
-
-            <PrinterAdvancedConfig
-              control={control}
-              errors={errors}
-              isSubmitting={isSubmitting}
+      <View style={styles.switchComponentContainer}>
+        <Text variant="bodyLarge" style={styles.switchLabel}>
+          Impresora Predeterminada
+        </Text>
+        <Controller
+          name="isDefaultPrinter"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Switch
+              value={value}
+              onValueChange={onChange}
+              disabled={isSubmitting}
             />
+          )}
+        />
+      </View>
+
+      <View style={styles.switchComponentContainer}>
+        <Text variant="bodyLarge" style={styles.switchLabel}>
+          Imprimir Automáticamente Domicilio
+        </Text>
+        <Controller
+          name="autoDeliveryPrint"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Switch
+              value={value}
+              onValueChange={onChange}
+              disabled={isSubmitting}
+            />
+          )}
+        />
+      </View>
+
+      <View style={styles.switchComponentContainer}>
+        <Text variant="bodyLarge" style={styles.switchLabel}>
+          Imprimir Automáticamente Para Llevar
+        </Text>
+        <Controller
+          name="autoPickupPrint"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Switch
+              value={value}
+              onValueChange={onChange}
+              disabled={isSubmitting}
+            />
+          )}
+        />
+      </View>
+
+      <PrinterAdvancedConfig
+        control={control}
+        errors={errors}
+        isSubmitting={isSubmitting}
+      />
     </ResponsiveModal>
   );
 };

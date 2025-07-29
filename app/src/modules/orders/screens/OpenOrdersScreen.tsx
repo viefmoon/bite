@@ -184,7 +184,9 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               <Button
                 mode="contained"
                 icon="check"
-                onPress={() => handleAcceptWhatsAppOrder(orderItem.id as string)}
+                onPress={() =>
+                  handleAcceptWhatsAppOrder(orderItem.id as string)
+                }
                 disabled={acceptingOrderId === orderItem.id}
                 loading={acceptingOrderId === orderItem.id}
                 compact
@@ -197,8 +199,14 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 onPress={() => handleOpenPrintModal(orderItem as OrderOpenList)}
                 activeOpacity={0.7}
               >
-                <IconButton icon="printer" size={32} style={styles.printButton} disabled />
-                {((orderItem as OrderOpenList).ticketImpressionCount ?? 0) > 0 && (
+                <IconButton
+                  icon="printer"
+                  size={32}
+                  style={styles.printButton}
+                  disabled
+                />
+                {((orderItem as OrderOpenList).ticketImpressionCount ?? 0) >
+                  0 && (
                   <View style={styles.printCountBadge}>
                     <Text style={styles.printCountText}>
                       {(orderItem as OrderOpenList).ticketImpressionCount}
@@ -407,40 +415,34 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
               setEditingOrderId(null);
             }}
             onAddProducts={() => {
-              // El store ya tiene la orden cargada, simplemente navegar
               setIsEditModalVisible(false);
 
               const orderNumber = ordersData?.find(
                 (o) => o.id === editingOrderId,
               )?.shiftOrderNumber;
 
-              // Navegar a añadir productos
               setTimeout(() => {
                 navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
                   orderId: editingOrderId!,
                   orderNumber: orderNumber!,
                   onProductsAdded: () => {
-                    // Reabrir el modal cuando regresemos
                     setIsEditModalVisible(true);
                   },
                 });
               }, 100);
             }}
             onConfirmOrder={async (details) => {
-              // Adaptar el formato de OrderDetailsForBackend a UpdateOrderPayload
               const payload = {
                 orderType: details.orderType,
-                items: details.items, // Enviar items para actualizar
+                items: details.items,
                 tableId: details.tableId || null,
                 isTemporaryTable: details.isTemporaryTable || false,
                 temporaryTableName: details.temporaryTableName || null,
                 temporaryTableAreaId: details.temporaryTableAreaId || null,
                 scheduledAt: details.scheduledAt || null,
-                // Enviar null cuando deliveryInfo está vacío para indicar limpieza
                 deliveryInfo: (() => {
                   if (!details.deliveryInfo) return null;
 
-                  // Filtrar solo las propiedades que tienen valores reales (no undefined)
                   const filteredDeliveryInfo = Object.entries(
                     details.deliveryInfo,
                   )
@@ -450,7 +452,6 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                       {},
                     );
 
-                  // Si no quedan propiedades con valores, enviar null
                   return Object.keys(filteredDeliveryInfo).length > 0
                     ? filteredDeliveryInfo
                     : null;
@@ -458,11 +459,10 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 notes: details.notes || null,
                 total: details.total,
                 subtotal: details.subtotal,
-                adjustments: details.adjustments || [], // Incluir ajustes en el payload
+                adjustments: details.adjustments || [],
               };
 
               try {
-                // Actualizar la orden (ahora incluye los ajustes)
                 await updateOrderMutation.mutateAsync({
                   orderId: editingOrderId,
                   payload,
@@ -471,7 +471,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
                 setIsEditModalVisible(false);
                 setEditingOrderId(null);
               } catch (error) {
-                // No cerrar el modal en caso de error para que el usuario pueda reintentar
+                // El error se maneja en el hook
               }
             }}
             onCancelOrder={() => {

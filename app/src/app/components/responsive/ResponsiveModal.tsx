@@ -48,7 +48,7 @@ interface ResponsiveModalProps {
 
 /**
  * ResponsiveModal - Modal responsivo y reutilizable con dimensiones basadas en porcentajes
- * 
+ *
  * Características:
  * - Dimensiones responsivas automáticas según el dispositivo
  * - Sistema de acciones estandarizado
@@ -59,7 +59,7 @@ interface ResponsiveModalProps {
  *
  * Valores por defecto responsivos:
  * - Móvil pequeño: 94% ancho
- * - Tablet: 80% ancho  
+ * - Tablet: 80% ancho
  * - Otros dispositivos: 85% ancho
  * - Altura: 85% por defecto
  *
@@ -139,7 +139,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   // Calcular dimensiones finales del modal
   const modalDimensions = useMemo(() => {
     const { isSmallMobile, isTablet } = responsive;
-    
+
     // Porcentajes por defecto según el dispositivo
     const defaultMaxWidthPercent = isSmallMobile ? 94 : isTablet ? 80 : 85;
     const defaultMaxHeightPercent = 85;
@@ -173,7 +173,9 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       backgroundColor: theme.colors.background,
       borderRadius: 16,
       borderWidth: 2,
-      borderColor: theme.dark ? theme.colors.outlineVariant : theme.colors.outline,
+      borderColor: theme.dark
+        ? theme.colors.outlineVariant
+        : theme.colors.outline,
       width: modalDimensions.width,
       maxWidth: modalDimensions.maxWidth,
       maxHeight: modalDimensions.maxHeight,

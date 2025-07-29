@@ -497,467 +497,450 @@ function ProductFormModal({
           },
         ]}
       >
-          <View style={styles.content}>
-              <View style={styles.imagePickerContainer}>
-                <CustomImagePicker
-                  value={currentImageUri}
-                  onImageSelected={handleImageSelected}
-                  onImageRemoved={handleImageRemoved}
-                  isLoading={isInternalImageUploading}
-                  disabled={isSubmitting}
-                  size={150}
-                  placeholderIcon="food-outline"
-                  placeholderText="Imagen del producto"
-                />
-                {errors.imageUri && (
-                  <HelperText type="error">
-                    {errors.imageUri.message}
-                  </HelperText>
-                )}
-              </View>
-
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    label="Nombre del Producto *"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.name}
-                    style={styles.input}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-              {errors.name && (
-                <HelperText type="error" visible={!!errors.name}>
-                  {errors.name.message}
-                </HelperText>
-              )}
-
-              <Controller
-                control={control}
-                name="description"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    label="Descripción"
-                    value={value || ''}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.description}
-                    style={styles.input}
-                    disabled={isSubmitting}
-                    multiline
-                    numberOfLines={3}
-                  />
-                )}
-              />
-              {errors.description && (
-                <HelperText type="error" visible={!!errors.description}>
-                  {errors.description.message}
-                </HelperText>
-              )}
-
-              <View style={styles.switchContainer}>
-                <Text style={styles.label}>¿Tiene Variantes?</Text>
-                <Controller
-                  control={control}
-                  name="hasVariants"
-                  render={({ field: { onChange, value } }) => (
-                    <Switch
-                      value={value}
-                      onValueChange={(newValue) => {
-                        onChange(newValue);
-                        if (newValue) {
-                          setValue('price', null, { shouldValidate: true });
-                        }
-                      }}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-              </View>
-
-              {hasVariants && errors.price && (
-                <HelperText type="error" visible={!!errors.price}>
-                  {errors.price.message}
-                </HelperText>
-              )}
-
-              {!hasVariants && (
-                <>
-                  <Controller
-                    control={control}
-                    name="price"
-                    render={({ field }) => (
-                      <TextInput
-                        mode="outlined"
-                        label="Precio *"
-                        keyboardType="decimal-pad"
-                        value={priceInputValue}
-                        onChangeText={(text) => {
-                          const formattedText = text.replace(/,/g, '.');
-
-                          if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                            setPriceInputValue(formattedText);
-                            if (formattedText === '') {
-                              field.onChange(null);
-                            } else if (formattedText !== '.') {
-                              field.onChange(parseFloat(formattedText));
-                            }
-                          }
-                        }}
-                        error={!!errors.price}
-                        disabled={isSubmitting || hasVariants}
-                        style={styles.input}
-                      />
-                    )}
-                  />
-                  {errors.price && (
-                    <HelperText type="error" visible={!!errors.price}>
-                      {errors.price?.message || 'Precio inválido'}
-                    </HelperText>
-                  )}
-                </>
-              )}
-
-              {hasVariants && (
-                <View style={styles.variantsSection}>
-                  <Divider style={styles.divider} />
-                  <View style={styles.variantsHeader}>
-                    <Text variant="titleMedium">Variantes</Text>
-                    <Button
-                      mode="contained-tonal"
-                      icon="plus"
-                      onPress={() => showVariantModal()}
-                      disabled={isSubmitting}
-                    >
-                      Añadir
-                    </Button>
-                  </View>
-                  {variantFields.length === 0 && (
-                    <Text style={styles.noVariantsText}>
-                      Aún no hay variantes añadidas.
-                    </Text>
-                  )}
-                  {variantFields.map((field, index) => (
-                    <Card
-                      key={field.id || `new-${index}`}
-                      style={[
-                        styles.variantCard,
-                        field.isActive === false && styles.variantCardInactive,
-                      ]}
-                    >
-                      <View style={styles.variantContent}>
-                        <View style={styles.variantInfo}>
-                          <View style={styles.variantHeader}>
-                            <Text
-                              style={[
-                                styles.variantName,
-                                field.isActive === false &&
-                                  styles.variantNameInactive,
-                              ]}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {field.name || 'Nueva Variante'}
-                            </Text>
-                            {field.isActive === false && (
-                              <View style={styles.inactiveBadge}>
-                                <Text style={styles.inactiveBadgeText}>
-                                  Inactiva
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                          <Text style={styles.variantPrice}>
-                            $
-                            {!isNaN(Number(field.price))
-                              ? Number(field.price).toFixed(2)
-                              : '0.00'}
-                          </Text>
-                        </View>
-                        <View style={styles.variantActions}>
-                          <IconButton
-                            icon="pencil"
-                            size={24}
-                            onPress={() => showVariantModal(index)}
-                            disabled={isSubmitting}
-                            style={styles.variantActionButton}
-                          />
-                          <IconButton
-                            icon="delete"
-                            size={24}
-                            onPress={() => handleRemoveVariant(index)}
-                            iconColor={theme.colors.error}
-                            disabled={isSubmitting}
-                            style={styles.variantActionButton}
-                          />
-                        </View>
-                      </View>
-                    </Card>
-                  ))}
-                  {errors.variants?.message && (
-                    <HelperText
-                      type="error"
-                      visible={!!errors.variants.message}
-                    >
-                      {errors.variants.message as string}
-                    </HelperText>
-                  )}
-                  {errors.variants?.root?.message && (
-                    <HelperText
-                      type="error"
-                      visible={!!errors.variants.root.message}
-                    >
-                      {errors.variants.root.message as string}
-                    </HelperText>
-                  )}
-                </View>
-              )}
-
-              <Divider style={styles.divider} />
-
-              <Controller
-                control={control}
-                name="estimatedPrepTime"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    label="Tiempo Prep. Estimado (min)"
-                    value={
-                      value !== null && value !== undefined ? String(value) : ''
-                    }
-                    onChangeText={(text) =>
-                      onChange(text ? parseInt(text, 10) : 0)
-                    }
-                    onBlur={onBlur}
-                    error={!!errors.estimatedPrepTime}
-                    style={styles.input}
-                    keyboardType="numeric"
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-              {errors.estimatedPrepTime && (
-                <HelperText type="error" visible={!!errors.estimatedPrepTime}>
-                  {errors.estimatedPrepTime.message}
-                </HelperText>
-              )}
-
-              <Controller
-                control={control}
-                name="preparationScreenId"
-                render={({ field: { onChange, value } }) => (
-                  <View>
-                    <Menu
-                      visible={preparationScreenMenuVisible}
-                      onDismiss={() => setPreparationScreenMenuVisible(false)}
-                      anchor={
-                        <TextInput
-                          label="Pantalla de Preparación"
-                          value={
-                            preparationScreens.find(
-                              (screen) => screen.id === value,
-                            )?.name || ''
-                          }
-                          onPress={() => setPreparationScreenMenuVisible(true)}
-                          right={
-                            value ? (
-                              <TextInput.Icon
-                                icon="close"
-                                onPress={() => {
-                                  onChange(null);
-                                }}
-                              />
-                            ) : (
-                              <TextInput.Icon
-                                icon="chevron-down"
-                                onPress={() =>
-                                  setPreparationScreenMenuVisible(true)
-                                }
-                              />
-                            )
-                          }
-                          editable={false}
-                          error={!!errors.preparationScreenId}
-                          style={styles.input}
-                          disabled={isSubmitting}
-                        />
-                      }
-                    >
-                      {preparationScreens.map((screen) => (
-                        <Menu.Item
-                          key={screen.id}
-                          onPress={() => {
-                            onChange(screen.id);
-                            setPreparationScreenMenuVisible(false);
-                          }}
-                          title={screen.name}
-                        />
-                      ))}
-                    </Menu>
-                  </View>
-                )}
-              />
-              {errors.preparationScreenId && (
-                <HelperText type="error" visible={!!errors.preparationScreenId}>
-                  {errors.preparationScreenId.message}
-                </HelperText>
-              )}
-
-              <Controller
-                control={control}
-                name="sortOrder"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    label="Orden de visualización"
-                    value={
-                      value !== null && value !== undefined ? String(value) : ''
-                    }
-                    onChangeText={(text) =>
-                      onChange(text ? parseInt(text, 10) : 0)
-                    }
-                    onBlur={onBlur}
-                    error={!!errors.sortOrder}
-                    style={styles.input}
-                    keyboardType="numeric"
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-              {errors.sortOrder && (
-                <HelperText type="error" visible={!!errors.sortOrder}>
-                  {errors.sortOrder.message}
-                </HelperText>
-              )}
-
-              <View style={styles.switchContainer}>
-                <Text style={styles.label}>Activo</Text>
-                <Controller
-                  control={control}
-                  name="isActive"
-                  render={({ field: { onChange, value } }) => (
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-              </View>
-
-              <View style={styles.switchContainer}>
-                <Text style={styles.label}>Es Pizza</Text>
-                <Controller
-                  control={control}
-                  name="isPizza"
-                  render={({ field: { onChange, value } }) => (
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-              </View>
-
-              <Divider style={styles.divider} />
-
-              <View style={styles.modifierGroupSection}>
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Grupos de Modificadores
-                </Text>
-                {isLoadingGroups ? (
-                  <ActivityIndicator
-                    animating={true}
-                    style={{
-                      marginVertical: responsive.spacing(theme.spacing.m),
-                    }}
-                  />
-                ) : allModifierGroups.length === 0 ? (
-                  <Text style={styles.noItemsText}>
-                    No hay grupos de modificadores disponibles.
-                  </Text>
-                ) : (
-                  <Controller
-                    control={control}
-                    name="modifierGroupIds"
-                    render={({ field: { onChange, value } }) => {
-                      const currentIds = Array.isArray(value) ? value : []; // Asegurar que sea array
-                      const availableGroups = allModifierGroups; // Ya es un array de ModifierGroup
-
-                      return (
-                        <>
-                          {availableGroups.map((group: ModifierGroup) => {
-                            const isSelected = currentIds.includes(group.id);
-                            const modifiers = groupModifiers[group.id] || [];
-
-                            return (
-                              <TouchableRipple
-                                key={group.id}
-                                onPress={() => {
-                                  const newIds = isSelected
-                                    ? currentIds.filter((id) => id !== group.id)
-                                    : [...currentIds, group.id];
-                                  onChange(newIds);
-                                }}
-                                disabled={isSubmitting}
-                                style={styles.modifierGroupTouchable}
-                              >
-                                <View style={styles.modifierGroupContent}>
-                                  <Checkbox
-                                    status={
-                                      isSelected ? 'checked' : 'unchecked'
-                                    }
-                                    disabled={isSubmitting}
-                                  />
-                                  <View
-                                    style={styles.modifierGroupTextContainer}
-                                  >
-                                    <Text style={styles.modifierGroupName}>
-                                      {group.name}
-                                    </Text>
-                                    {modifiers.length > 0 && (
-                                      <View
-                                        style={styles.modifiersListContainer}
-                                      >
-                                        {modifiers.map((modifier, index) => (
-                                          <Text
-                                            key={modifier.id}
-                                            style={styles.modifierItem}
-                                          >
-                                            {modifier.isDefault && '✓ '}
-                                            {modifier.name}
-                                            {index < modifiers.length - 1 &&
-                                              ', '}
-                                          </Text>
-                                        ))}
-                                      </View>
-                                    )}
-                                    {modifiers.length === 0 && (
-                                      <Text style={styles.noModifiersText}>
-                                        Sin modificadores activos
-                                      </Text>
-                                    )}
-                                  </View>
-                                </View>
-                              </TouchableRipple>
-                            );
-                          })}
-                        </>
-                      );
-                    }}
-                  />
-                )}
-                {errors.modifierGroupIds && (
-                  <HelperText type="error" visible={!!errors.modifierGroupIds}>
-                    {errors.modifierGroupIds.message as string}
-                  </HelperText>
-                )}
-              </View>
+        <View style={styles.content}>
+          <View style={styles.imagePickerContainer}>
+            <CustomImagePicker
+              value={currentImageUri}
+              onImageSelected={handleImageSelected}
+              onImageRemoved={handleImageRemoved}
+              isLoading={isInternalImageUploading}
+              disabled={isSubmitting}
+              size={150}
+              placeholderIcon="food-outline"
+              placeholderText="Imagen del producto"
+            />
+            {errors.imageUri && (
+              <HelperText type="error">{errors.imageUri.message}</HelperText>
+            )}
           </View>
+
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label="Nombre del Producto *"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.name}
+                style={styles.input}
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          {errors.name && (
+            <HelperText type="error" visible={!!errors.name}>
+              {errors.name.message}
+            </HelperText>
+          )}
+
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label="Descripción"
+                value={value || ''}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.description}
+                style={styles.input}
+                disabled={isSubmitting}
+                multiline
+                numberOfLines={3}
+              />
+            )}
+          />
+          {errors.description && (
+            <HelperText type="error" visible={!!errors.description}>
+              {errors.description.message}
+            </HelperText>
+          )}
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>¿Tiene Variantes?</Text>
+            <Controller
+              control={control}
+              name="hasVariants"
+              render={({ field: { onChange, value } }) => (
+                <Switch
+                  value={value}
+                  onValueChange={(newValue) => {
+                    onChange(newValue);
+                    if (newValue) {
+                      setValue('price', null, { shouldValidate: true });
+                    }
+                  }}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
+          </View>
+
+          {hasVariants && errors.price && (
+            <HelperText type="error" visible={!!errors.price}>
+              {errors.price.message}
+            </HelperText>
+          )}
+
+          {!hasVariants && (
+            <>
+              <Controller
+                control={control}
+                name="price"
+                render={({ field }) => (
+                  <TextInput
+                    mode="outlined"
+                    label="Precio *"
+                    keyboardType="decimal-pad"
+                    value={priceInputValue}
+                    onChangeText={(text) => {
+                      const formattedText = text.replace(/,/g, '.');
+
+                      if (/^(\d*\.?\d*)$/.test(formattedText)) {
+                        setPriceInputValue(formattedText);
+                        if (formattedText === '') {
+                          field.onChange(null);
+                        } else if (formattedText !== '.') {
+                          field.onChange(parseFloat(formattedText));
+                        }
+                      }
+                    }}
+                    error={!!errors.price}
+                    disabled={isSubmitting || hasVariants}
+                    style={styles.input}
+                  />
+                )}
+              />
+              {errors.price && (
+                <HelperText type="error" visible={!!errors.price}>
+                  {errors.price?.message || 'Precio inválido'}
+                </HelperText>
+              )}
+            </>
+          )}
+
+          {hasVariants && (
+            <View style={styles.variantsSection}>
+              <Divider style={styles.divider} />
+              <View style={styles.variantsHeader}>
+                <Text variant="titleMedium">Variantes</Text>
+                <Button
+                  mode="contained-tonal"
+                  icon="plus"
+                  onPress={() => showVariantModal()}
+                  disabled={isSubmitting}
+                >
+                  Añadir
+                </Button>
+              </View>
+              {variantFields.length === 0 && (
+                <Text style={styles.noVariantsText}>
+                  Aún no hay variantes añadidas.
+                </Text>
+              )}
+              {variantFields.map((field, index) => (
+                <Card
+                  key={field.id || `new-${index}`}
+                  style={[
+                    styles.variantCard,
+                    field.isActive === false && styles.variantCardInactive,
+                  ]}
+                >
+                  <View style={styles.variantContent}>
+                    <View style={styles.variantInfo}>
+                      <View style={styles.variantHeader}>
+                        <Text
+                          style={[
+                            styles.variantName,
+                            field.isActive === false &&
+                              styles.variantNameInactive,
+                          ]}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {field.name || 'Nueva Variante'}
+                        </Text>
+                        {field.isActive === false && (
+                          <View style={styles.inactiveBadge}>
+                            <Text style={styles.inactiveBadgeText}>
+                              Inactiva
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.variantPrice}>
+                        $
+                        {!isNaN(Number(field.price))
+                          ? Number(field.price).toFixed(2)
+                          : '0.00'}
+                      </Text>
+                    </View>
+                    <View style={styles.variantActions}>
+                      <IconButton
+                        icon="pencil"
+                        size={24}
+                        onPress={() => showVariantModal(index)}
+                        disabled={isSubmitting}
+                        style={styles.variantActionButton}
+                      />
+                      <IconButton
+                        icon="delete"
+                        size={24}
+                        onPress={() => handleRemoveVariant(index)}
+                        iconColor={theme.colors.error}
+                        disabled={isSubmitting}
+                        style={styles.variantActionButton}
+                      />
+                    </View>
+                  </View>
+                </Card>
+              ))}
+              {errors.variants?.message && (
+                <HelperText type="error" visible={!!errors.variants.message}>
+                  {errors.variants.message as string}
+                </HelperText>
+              )}
+              {errors.variants?.root?.message && (
+                <HelperText
+                  type="error"
+                  visible={!!errors.variants.root.message}
+                >
+                  {errors.variants.root.message as string}
+                </HelperText>
+              )}
+            </View>
+          )}
+
+          <Divider style={styles.divider} />
+
+          <Controller
+            control={control}
+            name="estimatedPrepTime"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label="Tiempo Prep. Estimado (min)"
+                value={
+                  value !== null && value !== undefined ? String(value) : ''
+                }
+                onChangeText={(text) => onChange(text ? parseInt(text, 10) : 0)}
+                onBlur={onBlur}
+                error={!!errors.estimatedPrepTime}
+                style={styles.input}
+                keyboardType="numeric"
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          {errors.estimatedPrepTime && (
+            <HelperText type="error" visible={!!errors.estimatedPrepTime}>
+              {errors.estimatedPrepTime.message}
+            </HelperText>
+          )}
+
+          <Controller
+            control={control}
+            name="preparationScreenId"
+            render={({ field: { onChange, value } }) => (
+              <View>
+                <Menu
+                  visible={preparationScreenMenuVisible}
+                  onDismiss={() => setPreparationScreenMenuVisible(false)}
+                  anchor={
+                    <TextInput
+                      label="Pantalla de Preparación"
+                      value={
+                        preparationScreens.find((screen) => screen.id === value)
+                          ?.name || ''
+                      }
+                      onPress={() => setPreparationScreenMenuVisible(true)}
+                      right={
+                        value ? (
+                          <TextInput.Icon
+                            icon="close"
+                            onPress={() => {
+                              onChange(null);
+                            }}
+                          />
+                        ) : (
+                          <TextInput.Icon
+                            icon="chevron-down"
+                            onPress={() =>
+                              setPreparationScreenMenuVisible(true)
+                            }
+                          />
+                        )
+                      }
+                      editable={false}
+                      error={!!errors.preparationScreenId}
+                      style={styles.input}
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  {preparationScreens.map((screen) => (
+                    <Menu.Item
+                      key={screen.id}
+                      onPress={() => {
+                        onChange(screen.id);
+                        setPreparationScreenMenuVisible(false);
+                      }}
+                      title={screen.name}
+                    />
+                  ))}
+                </Menu>
+              </View>
+            )}
+          />
+          {errors.preparationScreenId && (
+            <HelperText type="error" visible={!!errors.preparationScreenId}>
+              {errors.preparationScreenId.message}
+            </HelperText>
+          )}
+
+          <Controller
+            control={control}
+            name="sortOrder"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label="Orden de visualización"
+                value={
+                  value !== null && value !== undefined ? String(value) : ''
+                }
+                onChangeText={(text) => onChange(text ? parseInt(text, 10) : 0)}
+                onBlur={onBlur}
+                error={!!errors.sortOrder}
+                style={styles.input}
+                keyboardType="numeric"
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          {errors.sortOrder && (
+            <HelperText type="error" visible={!!errors.sortOrder}>
+              {errors.sortOrder.message}
+            </HelperText>
+          )}
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Activo</Text>
+            <Controller
+              control={control}
+              name="isActive"
+              render={({ field: { onChange, value } }) => (
+                <Switch
+                  value={value}
+                  onValueChange={onChange}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
+          </View>
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Es Pizza</Text>
+            <Controller
+              control={control}
+              name="isPizza"
+              render={({ field: { onChange, value } }) => (
+                <Switch
+                  value={value}
+                  onValueChange={onChange}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
+          </View>
+
+          <Divider style={styles.divider} />
+
+          <View style={styles.modifierGroupSection}>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Grupos de Modificadores
+            </Text>
+            {isLoadingGroups ? (
+              <ActivityIndicator
+                animating={true}
+                style={{
+                  marginVertical: responsive.spacing(theme.spacing.m),
+                }}
+              />
+            ) : allModifierGroups.length === 0 ? (
+              <Text style={styles.noItemsText}>
+                No hay grupos de modificadores disponibles.
+              </Text>
+            ) : (
+              <Controller
+                control={control}
+                name="modifierGroupIds"
+                render={({ field: { onChange, value } }) => {
+                  const currentIds = Array.isArray(value) ? value : []; // Asegurar que sea array
+                  const availableGroups = allModifierGroups; // Ya es un array de ModifierGroup
+
+                  return (
+                    <>
+                      {availableGroups.map((group: ModifierGroup) => {
+                        const isSelected = currentIds.includes(group.id);
+                        const modifiers = groupModifiers[group.id] || [];
+
+                        return (
+                          <TouchableRipple
+                            key={group.id}
+                            onPress={() => {
+                              const newIds = isSelected
+                                ? currentIds.filter((id) => id !== group.id)
+                                : [...currentIds, group.id];
+                              onChange(newIds);
+                            }}
+                            disabled={isSubmitting}
+                            style={styles.modifierGroupTouchable}
+                          >
+                            <View style={styles.modifierGroupContent}>
+                              <Checkbox
+                                status={isSelected ? 'checked' : 'unchecked'}
+                                disabled={isSubmitting}
+                              />
+                              <View style={styles.modifierGroupTextContainer}>
+                                <Text style={styles.modifierGroupName}>
+                                  {group.name}
+                                </Text>
+                                {modifiers.length > 0 && (
+                                  <View style={styles.modifiersListContainer}>
+                                    {modifiers.map((modifier, index) => (
+                                      <Text
+                                        key={modifier.id}
+                                        style={styles.modifierItem}
+                                      >
+                                        {modifier.isDefault && '✓ '}
+                                        {modifier.name}
+                                        {index < modifiers.length - 1 && ', '}
+                                      </Text>
+                                    ))}
+                                  </View>
+                                )}
+                                {modifiers.length === 0 && (
+                                  <Text style={styles.noModifiersText}>
+                                    Sin modificadores activos
+                                  </Text>
+                                )}
+                              </View>
+                            </View>
+                          </TouchableRipple>
+                        );
+                      })}
+                    </>
+                  );
+                }}
+              />
+            )}
+            {errors.modifierGroupIds && (
+              <HelperText type="error" visible={!!errors.modifierGroupIds}>
+                {errors.modifierGroupIds.message as string}
+              </HelperText>
+            )}
+          </View>
+        </View>
       </ResponsiveModal>
 
       <VariantFormModal

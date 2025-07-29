@@ -49,12 +49,16 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         case 'primary':
           return {
             backgroundColor: isContained ? theme.colors.primary : undefined,
-            textColor: isContained ? theme.colors.onPrimary : theme.colors.primary,
+            textColor: isContained
+              ? theme.colors.onPrimary
+              : theme.colors.primary,
           };
         case 'secondary':
           return {
             backgroundColor: isContained ? theme.colors.secondary : undefined,
-            textColor: isContained ? theme.colors.onSecondary : theme.colors.secondary,
+            textColor: isContained
+              ? theme.colors.onSecondary
+              : theme.colors.secondary,
           };
         case 'error':
           return {
@@ -92,9 +96,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           }
         }
         buttonMode = buttonMode || 'contained';
-        
+
         const colors = getButtonColors(button, buttonMode);
-        
+
         return (
           <Button
             key={index}

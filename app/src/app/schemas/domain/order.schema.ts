@@ -86,7 +86,7 @@ export const orderSchema = z.object({
   orderNumber: z.string().optional(),
   shiftOrderNumber: z.number().int().positive(),
   orderItems: z.array(orderItemSchema).optional(),
-  total: z.union([z.string(), z.number()]).optional(),
+  total: z.coerce.number().optional(),
   orderStatus: orderStatusSchema,
   orderType: orderTypeSchema,
   createdAt: z.union([z.string().datetime(), z.date()]),
@@ -102,7 +102,7 @@ export const orderSchema = z.object({
   payments: z.array(paymentSchema).optional(),
   deletedAt: z.string().nullable().optional(),
   adjustments: z.array(adjustmentSchema).optional(),
-  subtotal: z.union([z.string(), z.number()]).optional(),
+  subtotal: z.coerce.number().optional(),
   isFromWhatsApp: z.boolean().optional().default(false),
   estimatedDeliveryTime: z
     .union([z.string().datetime(), z.date()])

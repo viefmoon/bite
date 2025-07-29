@@ -43,21 +43,24 @@ export function UsersListScreen() {
     },
   });
 
-  const queryParams: UsersQuery = React.useMemo(() => ({
-    page: 1,
-    limit: 100,
-    search: searchQuery || undefined,
-    filters:
-      selectedFilter === 'all'
-        ? undefined
-        : selectedFilter === 'active'
-          ? { isActive: true }
-          : selectedFilter === 'inactive'
-            ? { isActive: false }
-            : undefined,
-    sortBy: 'createdAt',
-    sortOrder: 'DESC',
-  }), [searchQuery, selectedFilter]);
+  const queryParams: UsersQuery = React.useMemo(
+    () => ({
+      page: 1,
+      limit: 100,
+      search: searchQuery || undefined,
+      filters:
+        selectedFilter === 'all'
+          ? undefined
+          : selectedFilter === 'active'
+            ? { isActive: true }
+            : selectedFilter === 'inactive'
+              ? { isActive: false }
+              : undefined,
+      sortBy: 'createdAt',
+      sortOrder: 'DESC',
+    }),
+    [searchQuery, selectedFilter],
+  );
 
   const { data, isLoading, error, refetch } = useGetUsers(queryParams);
 
@@ -82,7 +85,7 @@ export function UsersListScreen() {
     }
 
     // Si es usuario de cocina y tiene pantalla asignada, mostrarla
-    if (user.role?.id === 5 && user.preparationScreen) {
+    if (user.role?.id === RoleEnum.KITCHEN && user.preparationScreen) {
       parts.push(`\nPantalla: ${user.preparationScreen.name}`);
     }
 
@@ -216,7 +219,7 @@ export function UsersListScreen() {
             {user.email}
           </Text>
         )}
-        {user.role?.id === 5 && user.preparationScreen && (
+        {user.role?.id === RoleEnum.KITCHEN && user.preparationScreen && (
           <Text style={styles.screenInfo}>
             Pantalla: {user.preparationScreen.name}
           </Text>

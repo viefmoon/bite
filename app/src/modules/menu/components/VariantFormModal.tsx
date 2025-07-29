@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  TextInput,
-  Switch,
-  Text,
-  HelperText,
-} from 'react-native-paper';
+import { TextInput, Switch, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema';
@@ -104,7 +99,7 @@ function VariantFormModal({
           mode: 'outlined',
           onPress: onDismiss,
           disabled: isSubmitting,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: 'Guardar',
@@ -112,107 +107,107 @@ function VariantFormModal({
           onPress: handleSubmit(handleFormSubmit),
           loading: isSubmitting,
           disabled: isSubmitting,
-          colorPreset: 'primary'
-        }
+          colorPreset: 'primary',
+        },
       ]}
     >
       <View style={styles.content}>
-            <View style={styles.fieldContainer}>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    label="Nombre Variante *"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={!!errors.name}
-                    style={styles.input}
-                    autoFocus={!isEditing}
-                  />
-                )}
+        <View style={styles.fieldContainer}>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                label="Nombre Variante *"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!errors.name}
+                style={styles.input}
+                autoFocus={!isEditing}
               />
-              {errors.name && (
-                <HelperText type="error" visible={!!errors.name}>
-                  {errors.name.message}
-                </HelperText>
-              )}
-            </View>
+            )}
+          />
+          {errors.name && (
+            <HelperText type="error" visible={!!errors.name}>
+              {errors.name.message}
+            </HelperText>
+          )}
+        </View>
 
-            <View style={styles.fieldContainer}>
-              <Controller
-                control={control}
-                name="price"
-                render={({ field }) => (
-                  <TextInput
-                    label="Precio *"
-                    value={priceInputValue}
-                    onChangeText={(text) => {
-                      const formattedText = text.replace(/,/g, '.');
-                      if (/^(\d*\.?\d*)$/.test(formattedText)) {
-                        setPriceInputValue(formattedText);
-                        if (formattedText === '') {
-                          field.onChange(undefined);
-                        } else if (formattedText !== '.') {
-                          const numericValue = parseFloat(formattedText);
-                          if (!isNaN(numericValue)) {
-                            field.onChange(numericValue);
-                          }
-                        }
+        <View style={styles.fieldContainer}>
+          <Controller
+            control={control}
+            name="price"
+            render={({ field }) => (
+              <TextInput
+                label="Precio *"
+                value={priceInputValue}
+                onChangeText={(text) => {
+                  const formattedText = text.replace(/,/g, '.');
+                  if (/^(\d*\.?\d*)$/.test(formattedText)) {
+                    setPriceInputValue(formattedText);
+                    if (formattedText === '') {
+                      field.onChange(undefined);
+                    } else if (formattedText !== '.') {
+                      const numericValue = parseFloat(formattedText);
+                      if (!isNaN(numericValue)) {
+                        field.onChange(numericValue);
                       }
-                    }}
-                    onBlur={field.onBlur}
-                    error={!!errors.price}
-                    style={styles.input}
-                    keyboardType="decimal-pad"
-                  />
-                )}
+                    }
+                  }
+                }}
+                onBlur={field.onBlur}
+                error={!!errors.price}
+                style={styles.input}
+                keyboardType="decimal-pad"
               />
-              {errors.price && (
-                <HelperText type="error" visible={!!errors.price}>
-                  {errors.price.message}
-                </HelperText>
-              )}
-            </View>
+            )}
+          />
+          {errors.price && (
+            <HelperText type="error" visible={!!errors.price}>
+              {errors.price.message}
+            </HelperText>
+          )}
+        </View>
 
-            <View style={styles.fieldContainer}>
-              <Controller
-                control={control}
-                name="sortOrder"
-                render={({ field }) => (
-                  <TextInput
-                    mode="outlined"
-                    label="Orden de visualización"
-                    value={String(field.value || 0)}
-                    onChangeText={(text) => {
-                      const value = parseInt(text, 10);
-                      field.onChange(isNaN(value) ? 0 : value);
-                    }}
-                    onBlur={field.onBlur}
-                    error={!!errors.sortOrder}
-                    style={styles.input}
-                    keyboardType="numeric"
-                  />
-                )}
+        <View style={styles.fieldContainer}>
+          <Controller
+            control={control}
+            name="sortOrder"
+            render={({ field }) => (
+              <TextInput
+                mode="outlined"
+                label="Orden de visualización"
+                value={String(field.value || 0)}
+                onChangeText={(text) => {
+                  const value = parseInt(text, 10);
+                  field.onChange(isNaN(value) ? 0 : value);
+                }}
+                onBlur={field.onBlur}
+                error={!!errors.sortOrder}
+                style={styles.input}
+                keyboardType="numeric"
               />
-              {errors.sortOrder && (
-                <HelperText type="error" visible={!!errors.sortOrder}>
-                  {errors.sortOrder.message}
-                </HelperText>
-              )}
-            </View>
+            )}
+          />
+          {errors.sortOrder && (
+            <HelperText type="error" visible={!!errors.sortOrder}>
+              {errors.sortOrder.message}
+            </HelperText>
+          )}
+        </View>
 
-            <View style={[styles.fieldContainer, styles.switchContainer]}>
-              <Text style={styles.label}>Variante Activa</Text>
-              <Controller
-                control={control}
-                name="isActive"
-                render={({ field: { onChange, value } }) => (
-                  <Switch value={!!value} onValueChange={onChange} />
-                )}
-              />
-            </View>
+        <View style={[styles.fieldContainer, styles.switchContainer]}>
+          <Text style={styles.label}>Variante Activa</Text>
+          <Controller
+            control={control}
+            name="isActive"
+            render={({ field: { onChange, value } }) => (
+              <Switch value={!!value} onValueChange={onChange} />
+            )}
+          />
+        </View>
       </View>
     </ResponsiveModal>
   );

@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { AppDrawerNavigator } from './AppDrawerNavigator';
 import { KitchenOnlyNavigator } from './KitchenOnlyNavigator';
 import { useAppTheme } from '../styles/theme';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 
 export function ConditionalAppNavigator() {
   const theme = useAppTheme();
@@ -46,8 +47,8 @@ export function ConditionalAppNavigator() {
       // Obtener el ID del rol
       const roleId = typeof user.role === 'object' ? user.role?.id : null;
 
-      // Solo verificar pantalla para usuarios con rol kitchen (ID 5)
-      if (roleId === 5) {
+      // Solo verificar pantalla para usuarios con rol kitchen
+      if (roleId === RoleEnum.KITCHEN) {
         setIsKitchenUser(true);
         // La información de la pantalla ya viene en el objeto user
         const hasScreen = !!user.preparationScreen;

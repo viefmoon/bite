@@ -24,14 +24,13 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  
+
   const localStyles = StyleSheet.create({
     modalHeaderSubtitle: {
       paddingHorizontal: theme.spacing.l,
       paddingBottom: theme.spacing.s,
     },
   });
-
 
   // Query para obtener el conteo de elementos del historial para el header
   const { data: historyData } = useQuery({

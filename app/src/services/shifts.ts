@@ -96,12 +96,7 @@ class ShiftsService {
     }
 
     orders.forEach((order) => {
-      const orderTotal =
-        typeof order.total === 'number'
-          ? order.total
-          : typeof order.total === 'string'
-            ? parseFloat(order.total)
-            : 0;
+      const orderTotal = order.total || 0;
 
       let paymentMethod = 'Sin pagar';
       if (order.payments && order.payments.length > 0) {
@@ -133,12 +128,7 @@ class ShiftsService {
     });
 
     const totalSales = orders.reduce((sum, order) => {
-      const orderTotal =
-        typeof order.total === 'number'
-          ? order.total
-          : typeof order.total === 'string'
-            ? parseFloat(order.total)
-            : 0;
+      const orderTotal = order.total || 0;
       return sum + orderTotal;
     }, 0);
 
@@ -170,12 +160,7 @@ class ShiftsService {
     }
 
     return orders.map((order) => {
-      const total =
-        typeof order.total === 'number'
-          ? order.total
-          : typeof order.total === 'string'
-            ? parseFloat(order.total)
-            : 0;
+      const total = order.total || 0;
 
       let paymentMethod = 'Sin pagar';
       if (order.payments && order.payments.length > 0) {

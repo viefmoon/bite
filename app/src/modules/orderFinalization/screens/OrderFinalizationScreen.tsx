@@ -270,7 +270,9 @@ export const OrderFinalizationScreen: React.FC = () => {
             {handlePrintFromList && (
               <TouchableOpacity
                 style={styles.printContainer}
-                onPress={() => handlePrintFromList(orderItem as OrderForFinalizationList)}
+                onPress={() =>
+                  handlePrintFromList(orderItem as OrderForFinalizationList)
+                }
                 activeOpacity={0.7}
               >
                 <IconButton
@@ -279,10 +281,14 @@ export const OrderFinalizationScreen: React.FC = () => {
                   style={styles.printButton}
                   disabled
                 />
-                {((orderItem as OrderForFinalizationList).ticketImpressionCount ?? 0) > 0 && (
+                {((orderItem as OrderForFinalizationList)
+                  .ticketImpressionCount ?? 0) > 0 && (
                   <View style={styles.printCountBadge}>
                     <Text style={styles.printCountText}>
-                      {(orderItem as OrderForFinalizationList).ticketImpressionCount}
+                      {
+                        (orderItem as OrderForFinalizationList)
+                          .ticketImpressionCount
+                      }
                     </Text>
                   </View>
                 )}
@@ -293,17 +299,23 @@ export const OrderFinalizationScreen: React.FC = () => {
               onPress={() => handleToggleOrderSelection(orderItem.id as string)}
               hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
             >
-              <View style={[
-                styles.customCheckbox,
-                {
-                  backgroundColor: selectionState.selectedOrders.has(orderItem.id as string)
-                    ? theme.colors.primary
-                    : 'transparent',
-                  borderColor: selectionState.selectedOrders.has(orderItem.id as string)
-                    ? theme.colors.primary
-                    : theme.colors.onSurfaceVariant,
-                }
-              ]}>
+              <View
+                style={[
+                  styles.customCheckbox,
+                  {
+                    backgroundColor: selectionState.selectedOrders.has(
+                      orderItem.id as string,
+                    )
+                      ? theme.colors.primary
+                      : 'transparent',
+                    borderColor: selectionState.selectedOrders.has(
+                      orderItem.id as string,
+                    )
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant,
+                  },
+                ]}
+              >
                 {selectionState.selectedOrders.has(orderItem.id as string) && (
                   <Icon
                     source="check"

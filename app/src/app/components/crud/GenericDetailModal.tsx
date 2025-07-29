@@ -65,7 +65,6 @@ function GenericDetailModal<TItem extends { id: string }>({
   showImage = false,
   children,
 }: GenericDetailModalProps<TItem>) {
-
   // Estado para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 

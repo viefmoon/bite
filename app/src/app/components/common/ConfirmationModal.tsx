@@ -69,7 +69,10 @@ const ConfirmationModal = ({
           : []),
         {
           label: confirmText,
-          mode: confirmColorPreset === 'error' ? 'contained' as const : 'outlined' as const,
+          mode:
+            confirmColorPreset === 'error'
+              ? ('contained' as const)
+              : ('outlined' as const),
           onPress: handleConfirm,
           loading: isConfirming,
           colorPreset: confirmColorPreset,

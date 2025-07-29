@@ -259,7 +259,8 @@ const PreparationScreenDetailModal: React.FC<
               style={styles.infoIcon}
             />
             <Text style={styles.infoText}>
-              {productCount} {productCount === 1 ? 'producto asociado' : 'productos asociados'}
+              {productCount}{' '}
+              {productCount === 1 ? 'producto asociado' : 'productos asociados'}
             </Text>
             {onManageProducts && (
               <Button
@@ -300,25 +301,37 @@ const PreparationScreenDetailModal: React.FC<
       showCloseButton={!isDeleting}
       dismissable={!isDeleting}
       maxHeightPercent={90}
-      actions={item ? [
-        ...(onEdit ? [{
-          label: 'Editar',
-          icon: 'pencil',
-          mode: 'contained' as const,
-          onPress: () => onEdit(item),
-          disabled: isDeleting,
-          colorPreset: 'primary' as const,
-        }] : []),
-        ...(onDelete ? [{
-          label: isDeleting ? 'Eliminando...' : 'Eliminar',
-          icon: 'delete-outline',
-          mode: 'outlined' as const,
-          onPress: () => onDelete(item.id),
-          loading: isDeleting,
-          disabled: isDeleting,
-          colorPreset: 'error' as const,
-        }] : [])
-      ] : []}
+      actions={
+        item
+          ? [
+              ...(onEdit
+                ? [
+                    {
+                      label: 'Editar',
+                      icon: 'pencil',
+                      mode: 'contained' as const,
+                      onPress: () => onEdit(item),
+                      disabled: isDeleting,
+                      colorPreset: 'primary' as const,
+                    },
+                  ]
+                : []),
+              ...(onDelete
+                ? [
+                    {
+                      label: isDeleting ? 'Eliminando...' : 'Eliminar',
+                      icon: 'delete-outline',
+                      mode: 'outlined' as const,
+                      onPress: () => onDelete(item.id),
+                      loading: isDeleting,
+                      disabled: isDeleting,
+                      colorPreset: 'error' as const,
+                    },
+                  ]
+                : []),
+            ]
+          : []
+      }
     >
       {renderContent()}
     </ResponsiveModal>

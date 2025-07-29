@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-} from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
@@ -100,7 +97,6 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
     },
   }[mode];
 
-
   return (
     <ResponsiveModal
       visible={visible}
@@ -116,7 +112,7 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
           mode: 'outlined',
           onPress: handleDismiss,
           disabled: loading,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: config.buttonText,
@@ -125,8 +121,8 @@ export const ShiftActionModal: React.FC<ShiftActionModalProps> = ({
           loading: loading,
           disabled: loading,
           icon: config.buttonIcon,
-          colorPreset: isOpenMode ? 'primary' : 'warning'
-        }
+          colorPreset: isOpenMode ? 'primary' : 'warning',
+        },
       ]}
     >
       <View style={[styles.header, !isOpenMode && styles.closeHeader]}>

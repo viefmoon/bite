@@ -143,7 +143,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
 
   const actions = useMemo(() => {
     const actionList = [];
-    
+
     if (onEdit) {
       actionList.push({
         label: 'Editar',
@@ -153,7 +153,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
         colorPreset: 'primary' as const,
       });
     }
-    
+
     if (deleteConfirmation) {
       actionList.push({
         label: 'Eliminar',
@@ -164,7 +164,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
         colorPreset: 'error' as const,
       });
     }
-    
+
     return actionList;
   }, [onEdit, deleteConfirmation, isTestPrinting, isDeleting]);
 
@@ -216,7 +216,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
       actions={actions}
       showCloseButton
     >
-      <ScrollView 
+      <ScrollView
         style={styles.contentContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -304,9 +304,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Puerto</Text>
-                <Text style={styles.infoValue}>
-                  {printer.port || 'N/A'}
-                </Text>
+                <Text style={styles.infoValue}>{printer.port || 'N/A'}</Text>
               </View>
               {printer.macAddress && (
                 <View style={styles.infoRow}>
@@ -336,9 +334,7 @@ const PrinterDetailModal: React.FC<PrinterDetailModalProps> = ({
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Caracteres por línea</Text>
-            <Text style={styles.infoValue}>
-              {printer.charactersPerLine}
-            </Text>
+            <Text style={styles.infoValue}>{printer.charactersPerLine}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Corte automático</Text>

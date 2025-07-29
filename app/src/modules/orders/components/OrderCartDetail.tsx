@@ -100,9 +100,8 @@ const useOrderCart = ({
   const deliveryFormRef = useRef<DeliveryFormRef | null>(null);
 
   // Estados locales
-  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-  const [isModalReady, setIsModalReady] = useState(false);
+  const [hasLoadedOrder, setHasLoadedOrder] = useState(false);
 
   // Conexión con el store de Zustand
   const {
@@ -129,6 +128,7 @@ const useOrderCart = ({
     updateAdjustment,
     removeAdjustment,
     confirmOrder,
+    loadOrderForEditing,
   } = useOrderManagement();
 
   // Cálculos
@@ -223,24 +223,20 @@ const useOrderCart = ({
     });
   }, [scheduledTime, orderType, handleTimeConfirm]);
 
-  const clearEditingState = useCallback(() => {
-    setEditingProduct(null);
-  }, []);
-
   const handleEditCartItem = useCallback(
     (item: CartItem) => {
       if (onEditItem) {
         onEditItem(item);
       } else {
         modalHelpers.showProductCustomization({
-          editingProduct: editingProduct,
+          editingProduct: null,
           editingItemFromList: item,
-          clearEditingState,
+          clearEditingState: () => {},
           handleUpdateEditedItem,
         });
       }
     },
-    [onEditItem, editingProduct, clearEditingState, handleUpdateEditedItem],
+    [onEditItem, handleUpdateEditedItem],
   );
 
   const handleUpdateEditedItem = useCallback(
@@ -268,10 +264,8 @@ const useOrderCart = ({
         selectedPizzaCustomizations,
         pizzaExtraCost,
       );
-
-      clearEditingState();
     },
-    [isEditMode, updateCartItem, clearEditingState],
+    [isEditMode, updateCartItem],
   );
 
   const handlePrepaymentCreated = useCallback(
@@ -446,20 +440,21 @@ const useOrderCart = ({
   ]);
 
   // Effects
-  useEffect(() => {
-    if (!visible && isEditMode) {
-      clearEditingState();
-    }
-  }, [visible, isEditMode, clearEditingState]);
 
+  // Cargar la orden cuando se reciba la data
   useEffect(() => {
-    if (visible && !isModalReady) {
-      const timer = setTimeout(() => {
-        setIsModalReady(true);
-      }, 100);
-      return () => clearTimeout(timer);
+    if (isEditMode && orderData && visible && !hasLoadedOrder) {
+      loadOrderForEditing(orderData);
+      setHasLoadedOrder(true);
     }
-  }, [visible, isModalReady]);
+  }, [isEditMode, orderData, visible, hasLoadedOrder, loadOrderForEditing]);
+
+  // Reset hasLoadedOrder cuando se cierra el modal
+  useEffect(() => {
+    if (!visible) {
+      setHasLoadedOrder(false);
+    }
+  }, [visible]);
 
   // API expuesta
   return {
@@ -474,9 +469,8 @@ const useOrderCart = ({
     isCartVisible,
     hasUnsavedChanges,
     isConfirming,
-    editingProduct,
     showOptionsMenu,
-    isModalReady,
+    hasLoadedOrder,
     orderData,
     isLoadingOrder,
     isErrorOrder,
@@ -502,14 +496,11 @@ const useOrderCart = ({
     setPrepaymentId,
     setPrepaymentAmount,
     setPrepaymentMethod,
-    setEditingProduct,
     setShowOptionsMenu,
-    setIsModalReady,
 
     // Handlers
     showTimePicker,
     handleTimeConfirm,
-    clearEditingState,
     handleEditCartItem,
     handleUpdateEditedItem,
     handleConfirmOrder,
@@ -532,6 +523,7 @@ const useOrderCart = ({
     updateAdjustment,
     removeAdjustment,
     confirmOrder,
+    loadOrderForEditing,
 
     // Theme
     theme,

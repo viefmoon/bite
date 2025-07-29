@@ -216,8 +216,6 @@ function ProductsScreen(): React.ReactElement {
     });
   }, [navigation, subCategoryName]);
 
-
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <GenericList<Product & { displayDescription: string }>
@@ -258,12 +256,15 @@ function ProductsScreen(): React.ReactElement {
             {
               field: 'price',
               label: 'Precio',
-              render: (value) => value ? `$${parseFloat(String(value)).toFixed(2)}` : 'No definido',
+              render: (value) =>
+                value
+                  ? `$${parseFloat(String(value)).toFixed(2)}`
+                  : 'No definido',
             },
             {
               field: 'hasVariants',
               label: 'Tiene variantes',
-              render: (value) => value ? 'Sí' : 'No',
+              render: (value) => (value ? 'Sí' : 'No'),
             },
             {
               field: 'sortOrder',

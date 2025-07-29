@@ -163,11 +163,13 @@ export function ShiftOrdersModal({
       notes: item.notes || undefined,
       payments: item.payments as any,
       isFromWhatsApp: item.isFromWhatsApp,
-      createdBy: item.user ? {
-        username: item.user.username,
-        firstName: item.user.firstName,
-        lastName: item.user.lastName,
-      } : undefined,
+      createdBy: item.user
+        ? {
+            username: item.user.username,
+            firstName: item.user.firstName,
+            lastName: item.user.lastName,
+          }
+        : undefined,
     };
 
     return (

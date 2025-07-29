@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Text,
-  Button,
-  TextInput,
-  HelperText,
-  Chip,
-} from 'react-native-paper';
+import { Text, Button, TextInput, HelperText, Chip } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import type {
@@ -158,216 +152,214 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
           label: 'Cancelar',
           mode: 'outlined',
           onPress: onDismiss,
-          colorPreset: 'secondary'
+          colorPreset: 'secondary',
         },
         {
           label: adjustment ? 'Actualizar' : 'Guardar',
           mode: 'contained',
           onPress: handleSave,
-          colorPreset: 'primary'
-        }
+          colorPreset: 'primary',
+        },
       ]}
     >
-          {/* Nombre del ajuste */}
-          <TextInput
-            label="Nombre"
-            value={formData.name}
-            onChangeText={(text) => {
-              setFormData((prev) => ({ ...prev, name: text }));
-              // Detectar si el usuario editó manualmente el nombre
-              setNameWasEdited(
-                text !== 'Descuento' && text !== 'Cargo adicional',
-              );
+      {/* Nombre del ajuste */}
+      <TextInput
+        label="Nombre"
+        value={formData.name}
+        onChangeText={(text) => {
+          setFormData((prev) => ({ ...prev, name: text }));
+          // Detectar si el usuario editó manualmente el nombre
+          setNameWasEdited(text !== 'Descuento' && text !== 'Cargo adicional');
+        }}
+        mode="outlined"
+        error={!!errors.name}
+        placeholder="Ej: Descuento especial"
+        style={styles.input}
+      />
+      {errors.name && (
+        <HelperText type="error" visible={true}>
+          {errors.name}
+        </HelperText>
+      )}
+
+      {/* Tipo de ajuste con chips */}
+      <View style={styles.typeContainer}>
+        <Text
+          variant="labelLarge"
+          style={[styles.label, { color: theme.colors.onSurface }]}
+        >
+          Tipo de ajuste
+        </Text>
+        <View style={styles.chipGroup}>
+          <Chip
+            mode={formData.isPercentage ? 'flat' : 'outlined'}
+            onPress={() => handleTypeChange(true)}
+            selected={formData.isPercentage}
+            style={[
+              styles.chip,
+              formData.isPercentage && {
+                backgroundColor: theme.colors.primaryContainer,
+              },
+            ]}
+            textStyle={
+              formData.isPercentage && {
+                color: theme.colors.onPrimaryContainer,
+              }
+            }
+          >
+            Porcentaje
+          </Chip>
+          <Chip
+            mode={!formData.isPercentage ? 'flat' : 'outlined'}
+            onPress={() => handleTypeChange(false)}
+            selected={!formData.isPercentage}
+            style={[
+              styles.chip,
+              !formData.isPercentage && {
+                backgroundColor: theme.colors.primaryContainer,
+              },
+            ]}
+            textStyle={
+              !formData.isPercentage && {
+                color: theme.colors.onPrimaryContainer,
+              }
+            }
+          >
+            Monto fijo
+          </Chip>
+        </View>
+      </View>
+
+      {/* Tipo de operación (descuento o cargo) */}
+      <View style={styles.operationContainer}>
+        <Text
+          variant="labelLarge"
+          style={[styles.label, { color: theme.colors.onSurface }]}
+        >
+          Tipo de operación
+        </Text>
+        <View style={styles.operationButtons}>
+          <Button
+            mode={isDiscount ? 'contained' : 'outlined'}
+            onPress={() => {
+              setIsDiscount(true);
+              // Siempre actualizar el nombre si no fue editado manualmente
+              if (!nameWasEdited) {
+                setFormData((prev) => ({ ...prev, name: 'Descuento' }));
+              }
+              if (formData.isPercentage) {
+                const absValue = Math.abs(parseFloat(percentageText) || 0);
+                setFormData((prev) => ({ ...prev, value: -absValue }));
+              } else {
+                const absValue = Math.abs(parseFloat(amountText) || 0);
+                setFormData((prev) => ({ ...prev, amount: -absValue }));
+              }
             }}
-            mode="outlined"
-            error={!!errors.name}
-            placeholder="Ej: Descuento especial"
-            style={styles.input}
-          />
-          {errors.name && (
-            <HelperText type="error" visible={true}>
-              {errors.name}
-            </HelperText>
-          )}
+            style={[
+              styles.operationButton,
+              isDiscount && {
+                backgroundColor: theme.colors.errorContainer,
+                borderColor: theme.colors.error,
+              },
+            ]}
+            labelStyle={{
+              color: isDiscount
+                ? theme.colors.onErrorContainer
+                : theme.colors.error,
+            }}
+            icon="minus"
+          >
+            Descuento
+          </Button>
+          <Button
+            mode={!isDiscount ? 'contained' : 'outlined'}
+            onPress={() => {
+              setIsDiscount(false);
+              // Siempre actualizar el nombre si no fue editado manualmente
+              if (!nameWasEdited) {
+                setFormData((prev) => ({
+                  ...prev,
+                  name: 'Cargo adicional',
+                }));
+              }
+              if (formData.isPercentage) {
+                const absValue = Math.abs(parseFloat(percentageText) || 0);
+                setFormData((prev) => ({ ...prev, value: absValue }));
+              } else {
+                const absValue = Math.abs(parseFloat(amountText) || 0);
+                setFormData((prev) => ({ ...prev, amount: absValue }));
+              }
+            }}
+            style={[
+              styles.operationButton,
+              !isDiscount && {
+                backgroundColor: theme.colors.primaryContainer,
+                borderColor: theme.colors.primary,
+              },
+            ]}
+            labelStyle={{
+              color: !isDiscount
+                ? theme.colors.onPrimaryContainer
+                : theme.colors.primary,
+            }}
+            icon="plus"
+          >
+            Cargo
+          </Button>
+        </View>
+      </View>
 
-          {/* Tipo de ajuste con chips */}
-          <View style={styles.typeContainer}>
-            <Text
-              variant="labelLarge"
-              style={[styles.label, { color: theme.colors.onSurface }]}
-            >
-              Tipo de ajuste
-            </Text>
-            <View style={styles.chipGroup}>
-              <Chip
-                mode={formData.isPercentage ? 'flat' : 'outlined'}
-                onPress={() => handleTypeChange(true)}
-                selected={formData.isPercentage}
-                style={[
-                  styles.chip,
-                  formData.isPercentage && {
-                    backgroundColor: theme.colors.primaryContainer,
-                  },
-                ]}
-                textStyle={
-                  formData.isPercentage && {
-                    color: theme.colors.onPrimaryContainer,
-                  }
-                }
-              >
-                Porcentaje
-              </Chip>
-              <Chip
-                mode={!formData.isPercentage ? 'flat' : 'outlined'}
-                onPress={() => handleTypeChange(false)}
-                selected={!formData.isPercentage}
-                style={[
-                  styles.chip,
-                  !formData.isPercentage && {
-                    backgroundColor: theme.colors.primaryContainer,
-                  },
-                ]}
-                textStyle={
-                  !formData.isPercentage && {
-                    color: theme.colors.onPrimaryContainer,
-                  }
-                }
-              >
-                Monto fijo
-              </Chip>
-            </View>
-          </View>
-
-          {/* Tipo de operación (descuento o cargo) */}
-          <View style={styles.operationContainer}>
-            <Text
-              variant="labelLarge"
-              style={[styles.label, { color: theme.colors.onSurface }]}
-            >
-              Tipo de operación
-            </Text>
-            <View style={styles.operationButtons}>
-              <Button
-                mode={isDiscount ? 'contained' : 'outlined'}
-                onPress={() => {
-                  setIsDiscount(true);
-                  // Siempre actualizar el nombre si no fue editado manualmente
-                  if (!nameWasEdited) {
-                    setFormData((prev) => ({ ...prev, name: 'Descuento' }));
-                  }
-                  if (formData.isPercentage) {
-                    const absValue = Math.abs(parseFloat(percentageText) || 0);
-                    setFormData((prev) => ({ ...prev, value: -absValue }));
-                  } else {
-                    const absValue = Math.abs(parseFloat(amountText) || 0);
-                    setFormData((prev) => ({ ...prev, amount: -absValue }));
-                  }
-                }}
-                style={[
-                  styles.operationButton,
-                  isDiscount && {
-                    backgroundColor: theme.colors.errorContainer,
-                    borderColor: theme.colors.error,
-                  },
-                ]}
-                labelStyle={{
-                  color: isDiscount
-                    ? theme.colors.onErrorContainer
-                    : theme.colors.error,
-                }}
-                icon="minus"
-              >
-                Descuento
-              </Button>
-              <Button
-                mode={!isDiscount ? 'contained' : 'outlined'}
-                onPress={() => {
-                  setIsDiscount(false);
-                  // Siempre actualizar el nombre si no fue editado manualmente
-                  if (!nameWasEdited) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      name: 'Cargo adicional',
-                    }));
-                  }
-                  if (formData.isPercentage) {
-                    const absValue = Math.abs(parseFloat(percentageText) || 0);
-                    setFormData((prev) => ({ ...prev, value: absValue }));
-                  } else {
-                    const absValue = Math.abs(parseFloat(amountText) || 0);
-                    setFormData((prev) => ({ ...prev, amount: absValue }));
-                  }
-                }}
-                style={[
-                  styles.operationButton,
-                  !isDiscount && {
-                    backgroundColor: theme.colors.primaryContainer,
-                    borderColor: theme.colors.primary,
-                  },
-                ]}
-                labelStyle={{
-                  color: !isDiscount
-                    ? theme.colors.onPrimaryContainer
-                    : theme.colors.primary,
-                }}
-                icon="plus"
-              >
-                Cargo
-              </Button>
-            </View>
-          </View>
-
-          {/* Campo de valor */}
-          {formData.isPercentage ? (
-            <TextInput
-              label="Porcentaje"
-              value={percentageText}
-              onChangeText={(text) => {
-                // Solo permitir números positivos
-                const regex = /^\d*\.?\d*$/;
-                if (regex.test(text) || text === '') {
-                  setPercentageText(text);
-                  const value = parseFloat(text) || 0;
-                  setFormData((prev) => ({
-                    ...prev,
-                    value: isDiscount ? -value : value,
-                  }));
-                }
-              }}
-              mode="outlined"
-              keyboardType="numeric"
-              error={!!errors.value}
-              right={<TextInput.Affix text="%" />}
-              style={styles.input}
-            />
-          ) : (
-            <TextInput
-              label="Monto"
-              value={amountText}
-              onChangeText={(text) => {
-                // Solo permitir números positivos
-                const regex = /^\d*\.?\d*$/;
-                if (regex.test(text) || text === '') {
-                  setAmountText(text);
-                  const amount = parseFloat(text) || 0;
-                  setFormData((prev) => ({
-                    ...prev,
-                    amount: isDiscount ? -amount : amount,
-                  }));
-                }
-              }}
-              mode="outlined"
-              keyboardType="numeric"
-              error={!!errors.amount}
-              left={<TextInput.Affix text="$" />}
-              style={styles.input}
-            />
-          )}
-          {(errors.value || errors.amount) && (
-            <HelperText type="error" visible={true}>
-              {errors.value || errors.amount}
-            </HelperText>
-          )}
+      {/* Campo de valor */}
+      {formData.isPercentage ? (
+        <TextInput
+          label="Porcentaje"
+          value={percentageText}
+          onChangeText={(text) => {
+            // Solo permitir números positivos
+            const regex = /^\d*\.?\d*$/;
+            if (regex.test(text) || text === '') {
+              setPercentageText(text);
+              const value = parseFloat(text) || 0;
+              setFormData((prev) => ({
+                ...prev,
+                value: isDiscount ? -value : value,
+              }));
+            }
+          }}
+          mode="outlined"
+          keyboardType="numeric"
+          error={!!errors.value}
+          right={<TextInput.Affix text="%" />}
+          style={styles.input}
+        />
+      ) : (
+        <TextInput
+          label="Monto"
+          value={amountText}
+          onChangeText={(text) => {
+            // Solo permitir números positivos
+            const regex = /^\d*\.?\d*$/;
+            if (regex.test(text) || text === '') {
+              setAmountText(text);
+              const amount = parseFloat(text) || 0;
+              setFormData((prev) => ({
+                ...prev,
+                amount: isDiscount ? -amount : amount,
+              }));
+            }
+          }}
+          mode="outlined"
+          keyboardType="numeric"
+          error={!!errors.amount}
+          left={<TextInput.Affix text="$" />}
+          style={styles.input}
+        />
+      )}
+      {(errors.value || errors.amount) && (
+        <HelperText type="error" visible={true}>
+          {errors.value || errors.amount}
+        </HelperText>
+      )}
     </ResponsiveModal>
   );
 };

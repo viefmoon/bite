@@ -1,17 +1,12 @@
 import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Text,
-  Chip,
-  TextInput,
-  Icon,
-  Button,
-} from 'react-native-paper';
+import { Text, Chip, TextInput, Icon, Button } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useResetPassword, useDeleteUser } from '../hooks';
 import type { User } from '@/app/schemas/domain/user.schema';
+import { RoleEnum } from '../schema/user.schema';
 
 interface UserDetailModalProps {
   visible: boolean;
@@ -166,7 +161,10 @@ export function UserDetailModal({
       <ResponsiveModal
         visible={visible}
         onDismiss={onDismiss}
-        title={`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}
+        title={
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+          user.username
+        }
         showCloseButton
         maxWidthPercent={responsive.isTablet ? 85 : 92}
         maxHeightPercent={responsive.isTablet ? 85 : 92}
@@ -185,10 +183,7 @@ export function UserDetailModal({
           <Chip
             mode="flat"
             icon={getRoleInfo(user.role?.id).icon}
-            style={[
-              styles.roleChip,
-              { backgroundColor: theme.colors.surface },
-            ]}
+            style={[styles.roleChip, { backgroundColor: theme.colors.surface }]}
             textStyle={[
               styles.roleChipText,
               { color: getRoleInfo(user.role?.id).color },
@@ -201,11 +196,7 @@ export function UserDetailModal({
 
         <View style={styles.infoSection}>
           <View style={styles.sectionHeader}>
-            <Icon
-              source="contacts"
-              size={20}
-              color={theme.colors.primary}
-            />
+            <Icon source="contacts" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle} variant="titleMedium">
               Información de Contacto
             </Text>
@@ -249,11 +240,7 @@ export function UserDetailModal({
           </View>
 
           <View style={styles.compactRow}>
-            <Icon
-              source="account"
-              size={18}
-              color={theme.colors.primary}
-            />
+            <Icon source="account" size={18} color={theme.colors.primary} />
             <View style={styles.compactContent}>
               <Text style={styles.compactLabel} variant="labelSmall">
                 Nombre completo
@@ -305,14 +292,10 @@ export function UserDetailModal({
           <View style={styles.compactRow}>
             <Icon
               source={
-                user.isActive
-                  ? 'check-circle-outline'
-                  : 'close-circle-outline'
+                user.isActive ? 'check-circle-outline' : 'close-circle-outline'
               }
               size={18}
-              color={
-                user.isActive ? theme.colors.primary : theme.colors.error
-              }
+              color={user.isActive ? theme.colors.primary : theme.colors.error}
             />
             <View style={styles.compactContent}>
               <Text style={styles.compactLabel} variant="labelSmall">
@@ -334,13 +317,9 @@ export function UserDetailModal({
             </View>
           </View>
 
-          {user.role?.id === 5 && (
+          {user.role?.id === RoleEnum.KITCHEN && (
             <View style={styles.compactRow}>
-              <Icon
-                source="monitor"
-                size={18}
-                color={theme.colors.primary}
-              />
+              <Icon source="monitor" size={18} color={theme.colors.primary} />
               <View style={styles.compactContent}>
                 <Text style={styles.compactLabel} variant="labelSmall">
                   Pantalla de Preparación
@@ -355,11 +334,7 @@ export function UserDetailModal({
 
         <View style={styles.infoSection}>
           <View style={styles.sectionHeader}>
-            <Icon
-              source="map-marker"
-              size={20}
-              color={theme.colors.primary}
-            />
+            <Icon source="map-marker" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle} variant="titleMedium">
               Dirección
             </Text>
@@ -414,11 +389,7 @@ export function UserDetailModal({
           </View>
 
           <View style={styles.compactRow}>
-            <Icon
-              source="mailbox"
-              size={18}
-              color={theme.colors.primary}
-            />
+            <Icon source="mailbox" size={18} color={theme.colors.primary} />
             <View style={styles.compactContent}>
               <Text style={styles.compactLabel} variant="labelSmall">
                 Código Postal
@@ -432,11 +403,7 @@ export function UserDetailModal({
 
         <View style={styles.infoSection}>
           <View style={styles.sectionHeader}>
-            <Icon
-              source="alert-circle"
-              size={20}
-              color={theme.colors.error}
-            />
+            <Icon source="alert-circle" size={20} color={theme.colors.error} />
             <Text style={styles.sectionTitle} variant="titleMedium">
               Contacto de Emergencia
             </Text>
@@ -459,11 +426,7 @@ export function UserDetailModal({
           </View>
 
           <View style={styles.compactRow}>
-            <Icon
-              source="phone-alert"
-              size={18}
-              color={theme.colors.primary}
-            />
+            <Icon source="phone-alert" size={18} color={theme.colors.primary} />
             <View style={styles.compactContent}>
               <Text style={styles.compactLabel} variant="labelSmall">
                 Teléfono
@@ -543,29 +506,16 @@ export function UserDetailModal({
         ]}
       >
         <View style={styles.passwordDialogHeader}>
-          <Icon
-            source="lock-reset"
-            size={40}
-            color={theme.colors.primary}
-          />
+          <Icon source="lock-reset" size={40} color={theme.colors.primary} />
           <View style={styles.passwordDialogUserInfo}>
-            <Text
-              variant="bodyMedium"
-              style={styles.passwordDialogUserName}
-            >
+            <Text variant="bodyMedium" style={styles.passwordDialogUserName}>
               {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
                 user.username}
             </Text>
-            <Text
-              variant="bodySmall"
-              style={styles.passwordDialogUserDetail}
-            >
+            <Text variant="bodySmall" style={styles.passwordDialogUserDetail}>
               {user.email}
             </Text>
-            <Text
-              variant="labelSmall"
-              style={styles.passwordDialogUserDetail}
-            >
+            <Text variant="labelSmall" style={styles.passwordDialogUserDetail}>
               @{user.username}
             </Text>
           </View>
@@ -615,9 +565,7 @@ export function UserDetailModal({
               <View style={styles.validationItem}>
                 <Icon
                   source={
-                    newPassword.length >= 6
-                      ? 'check-circle'
-                      : 'circle-outline'
+                    newPassword.length >= 6 ? 'check-circle' : 'circle-outline'
                   }
                   size={16}
                   color={
@@ -645,15 +593,13 @@ export function UserDetailModal({
               <View style={styles.validationItem}>
                 <Icon
                   source={
-                    newPassword === confirmPassword &&
-                    newPassword.length > 0
+                    newPassword === confirmPassword && newPassword.length > 0
                       ? 'check-circle'
                       : 'circle-outline'
                   }
                   size={16}
                   color={
-                    newPassword === confirmPassword &&
-                    newPassword.length > 0
+                    newPassword === confirmPassword && newPassword.length > 0
                       ? theme.colors.primary
                       : theme.colors.onSurfaceVariant
                   }
@@ -702,11 +648,7 @@ export function UserDetailModal({
         ]}
       >
         <View style={styles.deleteDialogContent}>
-          <Icon
-            source="alert"
-            size={48}
-            color={theme.colors.error}
-          />
+          <Icon source="alert" size={48} color={theme.colors.error} />
           <Text variant="bodyMedium" style={styles.dialogText}>
             ¿Estás seguro de que deseas eliminar al usuario{' '}
             <Text style={styles.boldText}>{user.username}</Text>?
