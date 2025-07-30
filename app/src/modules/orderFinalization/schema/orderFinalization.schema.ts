@@ -196,14 +196,6 @@ export const orderSelectionStateSchema = z.object({
 
 export type OrderSelectionState = z.infer<typeof orderSelectionStateSchema>;
 
-export const finalizeOrdersPayloadSchema = z.object({
-  orderIds: z.array(z.string()),
-  paymentMethod: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export type FinalizeOrdersPayload = z.infer<typeof finalizeOrdersPayloadSchema>;
-
 export const orderFinalizationFilterSchema = z.enum([
   'delivery',
   'take_away',

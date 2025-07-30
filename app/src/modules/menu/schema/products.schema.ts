@@ -92,13 +92,6 @@ export const updateProductSchema = productFormBaseSchema
 
 export type UpdateProductFormInputs = z.infer<typeof updateProductSchema>;
 
-export const productResponseSchema = domainProductSchema;
-export const productsListResponseSchema = z.tuple([
-  z.array(productResponseSchema), // Usa el schema de respuesta definido arriba
-  z.number(), // Count
-]);
-export type ProductsListResponse = z.infer<typeof productsListResponseSchema>;
-
 export const findAllProductsQuerySchema = baseListQuerySchema.extend({
   subcategoryId: z.string().optional(),
   hasVariants: z.boolean().optional(),

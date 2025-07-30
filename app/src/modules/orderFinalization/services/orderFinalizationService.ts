@@ -3,7 +3,6 @@ import { API_PATHS } from '@/app/constants/apiPaths';
 import {
   OrderForFinalization,
   OrderForFinalizationList,
-  FinalizeOrdersPayload,
 } from '../schema/orderFinalization.schema';
 
 export const orderFinalizationService = {
@@ -21,10 +20,6 @@ export const orderFinalizationService = {
       API_PATHS.ORDERS_FOR_FINALIZATION_DETAIL.replace(':id', orderId),
     );
     return response.data;
-  },
-
-  async finalizeOrders(payload: FinalizeOrdersPayload): Promise<void> {
-    await apiClient.patch(API_PATHS.ORDERS_FINALIZE_MULTIPLE, payload);
   },
 
   async quickFinalizeMultipleOrders(
