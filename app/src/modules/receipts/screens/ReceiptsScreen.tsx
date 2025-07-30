@@ -19,11 +19,11 @@ import {
 import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useReceipts, useRecoverOrder } from '../hooks/useReceiptsQueries';
-import type { Receipt, ReceiptList } from '../schema/receipt.schema';
-import { receiptService } from '../services/receiptService';
+import type { Order } from '@/app/schemas/domain/order.schema';
+import { orderService } from '@/app/services/orderService';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import EmptyState from '@/app/components/common/EmptyState';
-import { ReceiptDetailsModal } from '../components/ReceiptDetailsModal';
+import { UnifiedOrderDetailsModal } from '@/modules/shared/components/UnifiedOrderDetailsModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { format } from 'date-fns';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -41,10 +41,10 @@ export const ReceiptsScreen: React.FC = () => {
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const [orderToRecover, setOrderToRecover] = useState<Receipt | null>(null);
+  const [orderToRecover, setOrderToRecover] = useState<Order | null>(null);
   const [showRecoverConfirm, setShowRecoverConfirm] = useState(false);
 
   const recoverOrderMutation = useRecoverOrder();
@@ -108,11 +108,9 @@ export const ReceiptsScreen: React.FC = () => {
     return filtered;
   }, [allReceipts, statusFilter, searchQuery]);
 
-  const handleReceiptPress = useCallback((receipt: ReceiptList) => {
-    receiptService.getReceiptById(receipt.id).then((fullOrder) => {
-      setSelectedReceipt(fullOrder);
-      setShowDetailModal(true);
-    });
+  const handleReceiptPress = useCallback((receipt: Order) => {
+    setSelectedReceipt(receipt);
+    setShowDetailModal(true);
   }, []);
 
   const handleClearFilters = useCallback(() => {
@@ -122,8 +120,9 @@ export const ReceiptsScreen: React.FC = () => {
     setEndDate(undefined);
   }, []);
 
-  const handleRecoverPress = useCallback((receipt: ReceiptList) => {
-    receiptService.getReceiptById(receipt.id)
+  const handleRecoverPress = useCallback((receipt: Order) => {
+    orderService
+      .getOrderById(receipt.id)
       .then((fullOrder) => {
         setOrderToRecover(fullOrder);
         setShowRecoverConfirm(true);
@@ -173,9 +172,9 @@ export const ReceiptsScreen: React.FC = () => {
 
   const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
 
-  const renderReceiptItem = ({ item }: { item: ReceiptList }) => (
+  const renderReceiptItem = ({ item }: { item: Order }) => (
     <OrderSummaryCard
-      item={item}
+      item={{ ...item, notes: item.notes || undefined }}
       onPress={() => handleReceiptPress(item)}
       renderActions={(_orderItem) => (
         <TouchableOpacity
@@ -355,13 +354,16 @@ export const ReceiptsScreen: React.FC = () => {
         ListEmptyComponent={renderEmptyComponent}
       />
 
-      <ReceiptDetailsModal
+      <UnifiedOrderDetailsModal
         visible={showDetailModal}
         onDismiss={() => {
           setShowDetailModal(false);
           setSelectedReceipt(null);
         }}
-        receipt={selectedReceipt}
+        orderId={selectedReceipt?.id || null}
+        orderNumber={selectedReceipt?.shiftOrderNumber}
+        dataSource="receipts"
+        showHistoryButton={true}
       />
 
       <ConfirmationModal

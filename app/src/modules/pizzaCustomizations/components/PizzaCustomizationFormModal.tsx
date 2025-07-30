@@ -16,13 +16,13 @@ import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import {
   pizzaCustomizationFormSchema,
   PizzaCustomizationFormInputs,
+  CustomizationTypeEnum,
 } from '../schema/pizzaCustomization.schema';
 import {
   usePizzaCustomization,
   useCreatePizzaCustomization,
   useUpdatePizzaCustomization,
 } from '../hooks/usePizzaCustomizationsQueries';
-import { CustomizationTypeEnum } from '../schema/pizzaCustomization.schema';
 
 interface PizzaCustomizationFormModalProps {
   visible: boolean;

@@ -17,10 +17,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useShiftOrders } from '../hooks/useShiftOrders';
 import EmptyState from '@/app/components/common/EmptyState';
 import type { Order } from '@/app/schemas/domain/order.schema';
-import { receiptService } from '@/modules/receipts/services/receiptService';
-import type { Receipt } from '@/modules/receipts/schema/receipt.schema';
-import { OrderDetailsView } from './OrderDetailsView';
-import { OrderHistoryContent } from './OrderHistoryContent';
+import { UnifiedOrderDetailsModal } from '@/modules/shared/components/UnifiedOrderDetailsModal';
 
 interface ShiftOrdersModalProps {
   visible: boolean;
@@ -37,9 +34,8 @@ export function ShiftOrdersModal({
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
-  const [showReceiptDetails, setShowReceiptDetails] = useState(false);
-  const [showOrderHistory, setShowOrderHistory] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
@@ -56,14 +52,9 @@ export function ShiftOrdersModal({
     setIsRefreshing(false);
   };
 
-  const handleReceiptPress = async (order: Order) => {
-    try {
-      const fullOrder = await receiptService.getReceiptById(order.id);
-      setSelectedReceipt(fullOrder);
-      setShowReceiptDetails(true);
-    } catch (error) {
-      // Error al cargar detalles del recibo
-    }
+  const handleReceiptPress = (order: Order) => {
+    setSelectedOrder(order);
+    setShowDetails(true);
   };
 
   // Filtrar órdenes basado en búsqueda
@@ -75,7 +66,6 @@ export function ShiftOrdersModal({
     return orders.filter((order) => {
       // Buscar por número de orden
       if (order.shiftOrderNumber?.toString().includes(search)) return true;
-      if (order.orderNumber?.includes(search)) return true;
 
       // Buscar en información de entrega
       if (order.deliveryInfo) {
@@ -153,7 +143,6 @@ export function ShiftOrdersModal({
     const orderItem = {
       id: item.id,
       shiftOrderNumber: item.shiftOrderNumber,
-      orderNumber: item.orderNumber,
       orderType: item.orderType as any,
       orderStatus: item.orderStatus as string,
       createdAt: item.createdAt,
@@ -215,90 +204,67 @@ export function ShiftOrdersModal({
         presentationStyle="formSheet"
       >
         <View style={styles.container}>
-          {showOrderHistory && selectedReceipt ? (
-            <>
-              <Appbar.Header style={styles.header}>
-                <Appbar.BackAction
-                  onPress={() => {
-                    setShowOrderHistory(false);
-                    setShowReceiptDetails(true);
-                  }}
-                />
-                <Appbar.Content
-                  title={`Historial - Orden #${selectedReceipt.shiftOrderNumber || ''}`}
-                />
-              </Appbar.Header>
-              <OrderHistoryContent
-                orderId={String(selectedReceipt.id)}
-                orderNumber={Number(selectedReceipt.shiftOrderNumber) || 0}
-                showHeaderInfo={false}
-              />
-            </>
-          ) : showReceiptDetails && selectedReceipt ? (
-            <OrderDetailsView
-              visible={showReceiptDetails}
-              order={selectedReceipt}
-              onDismiss={() => {
-                setShowReceiptDetails(false);
-                setSelectedReceipt(null);
-              }}
-              onShowHistory={() => {
-                setShowReceiptDetails(false);
-                setShowOrderHistory(true);
-              }}
+          <Appbar.Header style={styles.header}>
+            <Appbar.BackAction onPress={onClose} />
+            <Appbar.Content title="Órdenes del Turno" />
+            <Appbar.Action
+              icon="refresh"
+              onPress={handleRefresh}
+              disabled={isLoading || isRefreshing}
+            />
+          </Appbar.Header>
+
+          {/* Búsqueda */}
+          <View style={styles.searchContainer}>
+            <Searchbar
+              placeholder="Buscar por nombre, teléfono o dirección..."
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              style={styles.searchbar}
+              elevation={0}
+            />
+          </View>
+
+          {/* Lista de órdenes */}
+          {error ? (
+            <EmptyState
+              icon="alert-circle"
+              title="Error al cargar"
+              message={error.message || 'No se pudieron cargar las órdenes'}
+              actionLabel="Reintentar"
+              onAction={refetch}
             />
           ) : (
-            <>
-              <Appbar.Header style={styles.header}>
-                <Appbar.BackAction onPress={onClose} />
-                <Appbar.Content title="Órdenes del Turno" />
-                <Appbar.Action
-                  icon="refresh"
-                  onPress={handleRefresh}
-                  disabled={isLoading || isRefreshing}
+            <FlatList
+              data={filteredOrders}
+              renderItem={renderReceiptItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={refetch}
+                  colors={[theme.colors.primary]}
                 />
-              </Appbar.Header>
-
-              {/* Búsqueda */}
-              <View style={styles.searchContainer}>
-                <Searchbar
-                  placeholder="Buscar por nombre, teléfono o dirección..."
-                  onChangeText={setSearchQuery}
-                  value={searchQuery}
-                  style={styles.searchbar}
-                  elevation={0}
-                />
-              </View>
-
-              {/* Lista de órdenes */}
-              {error ? (
-                <EmptyState
-                  icon="alert-circle"
-                  title="Error al cargar"
-                  message={error.message || 'No se pudieron cargar las órdenes'}
-                  actionLabel="Reintentar"
-                  onAction={refetch}
-                />
-              ) : (
-                <FlatList
-                  data={filteredOrders}
-                  renderItem={renderReceiptItem}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.listContent}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={isRefetching}
-                      onRefresh={refetch}
-                      colors={[theme.colors.primary]}
-                    />
-                  }
-                  ListEmptyComponent={renderEmptyComponent}
-                />
-              )}
-            </>
+              }
+              ListEmptyComponent={renderEmptyComponent}
+            />
           )}
         </View>
       </Modal>
+
+      <UnifiedOrderDetailsModal
+        visible={showDetails}
+        onDismiss={() => {
+          setShowDetails(false);
+          setSelectedOrder(null);
+        }}
+        orderId={selectedOrder?.id || null}
+        orderNumber={selectedOrder?.shiftOrderNumber}
+        dataSource="shiftAudit"
+        showHistoryButton={true}
+        shiftId={shiftId}
+      />
     </Portal>
   );
 }

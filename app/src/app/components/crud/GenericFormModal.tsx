@@ -388,7 +388,7 @@ const GenericFormModal = <
           imagePickerConfig.determineFinalPhotoId ??
           ImageUploadService.determinePhotoId;
         const entityForPhotoCheck = editingItem ?? undefined;
-        finalPhotoId = await determineFn(formImageUri, entityForPhotoCheck);
+        finalPhotoId = determineFn(formImageUri, entityForPhotoCheck);
       }
     }
 

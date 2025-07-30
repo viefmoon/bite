@@ -282,9 +282,8 @@ export function ServerConfigModal({
       visible={visible}
       onDismiss={onDismiss}
       dismissable={!testing}
-      showHeader={true}
       title="Configuración del Servidor"
-      maxWidth={500}
+      maxWidthPercent={85}
       footer={footer}
       isLoading={loading}
     >

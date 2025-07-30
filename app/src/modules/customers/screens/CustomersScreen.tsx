@@ -113,7 +113,7 @@ function CustomersScreen(): React.ReactElement {
   const handleOpenEditModal = useCallback(
     (item: any) => {
       setDetailModalVisible(false);
-      const { fullName, ...originalCustomer } = item;
+      const { fullName: _fullName, ...originalCustomer } = item;
       originalHandleOpenEditModal(originalCustomer as Customer);
     },
     [originalHandleOpenEditModal],

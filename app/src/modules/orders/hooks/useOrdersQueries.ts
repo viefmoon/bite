@@ -5,25 +5,15 @@ import {
   useQueryClient,
   UseQueryResult,
 } from '@tanstack/react-query';
-import { orderService } from '../services/orderService';
+import { orderService, orderKeys } from '@/app/services/orderService';
+import { ORDER_FILTER_PRESETS } from '@/app/types/order-filters.types';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../utils/orderUtils';
-import type { OrderOpenList } from '../schema/orders.schema';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import type { UpdateOrderPayload } from '../schema/update-order.schema';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-
-// Query Keys
-const orderKeys = {
-  all: ['orders'] as const,
-  lists: () => [...orderKeys.all, 'list'] as const,
-  list: (filters: any) => [...orderKeys.lists(), filters] as const,
-  openOrdersList: () => [...orderKeys.all, 'list', 'open-orders-list'] as const,
-  details: () => [...orderKeys.all, 'detail'] as const,
-  detail: (id: string) => [...orderKeys.details(), id] as const,
-};
 
 /**
  * Hook para crear una nueva orden.
@@ -160,12 +150,12 @@ export const useCompleteOrderMutation = () => {
  */
 export const useGetOpenOrdersListQuery = (options?: {
   enabled?: boolean;
-}): UseQueryResult<OrderOpenList[], ApiError> => {
+}): UseQueryResult<Order[], ApiError> => {
   const queryKey = orderKeys.openOrdersList();
 
-  return useQuery<OrderOpenList[], ApiError>({
+  return useQuery<Order[], ApiError>({
     queryKey: queryKey,
-    queryFn: () => orderService.getOpenOrdersList(),
+    queryFn: () => orderService.getOrders(ORDER_FILTER_PRESETS.open()),
     enabled: options?.enabled ?? true,
     refetchInterval: 10000, // Actualizar cada 10 segundos
     refetchIntervalInBackground: false,

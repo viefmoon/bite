@@ -10,8 +10,9 @@ import { useAppTheme } from '../../../app/styles/theme';
 import { useSnackbarStore } from '../../../app/stores/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 import { useListState } from '../../../app/hooks/useListState';
-import GenericList from '../../../app/components/crud/GenericList';
-import { FilterOption } from '../../../app/components/crud/GenericList';
+import GenericList, {
+  FilterOption,
+} from '../../../app/components/crud/GenericList';
 import GenericDetailModal from '../../../app/components/crud/GenericDetailModal';
 import GenericFormModal, {
   FormFieldConfig,
@@ -161,7 +162,7 @@ const CategoriesScreen: React.FC = () => {
     formData: CategoryFormData,
     photoId: string | null | undefined,
   ) => {
-    const { imageUri, ...dataToSubmit } = formData;
+    const { imageUri: _imageUri, ...dataToSubmit } = formData;
     const finalData: any = {
       ...dataToSubmit,
     };

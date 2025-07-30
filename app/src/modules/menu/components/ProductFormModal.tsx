@@ -11,6 +11,7 @@ import {
   Card,
   Checkbox,
   TouchableRipple,
+  Menu,
 } from 'react-native-paper';
 import {
   useForm,
@@ -40,7 +41,6 @@ import { ImageUploadService } from '@/app/lib/imageUploadService';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
-import { Menu } from 'react-native-paper';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 
 interface ProductFormModalProps {
@@ -291,7 +291,7 @@ const useProductFormLogic = ({
         setIsInternalImageUploading(false);
       }
     } else {
-      finalPhotoId = await ImageUploadService.determinePhotoId(
+      finalPhotoId = ImageUploadService.determinePhotoId(
         currentImageUri ?? null,
         initialData ?? undefined,
       );
@@ -325,12 +325,12 @@ const useProductFormLogic = ({
       };
       const finalDataToUpdate =
         !originalVariantId && 'id' in dataToUpdate
-          ? (({ id, ...rest }) => rest)(dataToUpdate)
+          ? (({ id: _id, ...rest }) => rest)(dataToUpdate)
           : dataToUpdate;
 
       updateVariant(editingVariantIndex, finalDataToUpdate as ProductVariant);
     } else {
-      const { id, price, ...restNewVariantData } = variantData;
+      const { id: _id, price, ...restNewVariantData } = variantData;
       const newPriceAsNumber = Number(price);
       const newVariantData = {
         ...restNewVariantData,

@@ -17,12 +17,8 @@ import {
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
-import { OrderForFinalizationDto } from './dto/order-for-finalization.dto';
-import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
-import { OrderOpenListDto } from './dto/order-open-list.dto';
-import { ReceiptListDto } from './dto/receipt-list.dto';
-import { ReceiptDetailDto } from './dto/receipt-detail.dto';
 import { OrderType } from './domain/enums/order-type.enum';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -77,93 +73,27 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
-  @Get('open-orders-list')
-  @ApiOperation({ summary: 'Obtener lista optimizada de órdenes abiertas' })
+  @Get()
+  @ApiOperation({ 
+    summary: 'Get orders with filters',
+    description: 'Unified endpoint to get orders with flexible filtering options. Replaces multiple specific endpoints.'
+  })
   @ApiResponse({
     status: 200,
-    description:
-      'Lista optimizada de órdenes abiertas con campos mínimos necesarios.',
-    type: [OrderOpenListDto],
+    description: 'Returns filtered list of orders with optional optimization.',
+    type: [Order],
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
   @HttpCode(HttpStatus.OK)
-  async findOpenOrdersList(): Promise<OrderOpenListDto[]> {
-    return this.ordersService.findOpenOrdersOptimized();
+  async findAll(@Query() filterDto: FindAllOrdersDto): Promise<Order[]> {
+    return this.ordersService.findAllWithFilters(filterDto);
   }
 
-  @Get('receipts-list')
-  @ApiOperation({
-    summary:
-      'Obtener lista optimizada de recibos del turno actual (órdenes completadas/canceladas)',
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Lista optimizada de recibos del turno actual con campos mínimos necesarios.',
-    type: [ReceiptListDto],
-  })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiQuery({ name: 'orderType', required: false, enum: OrderType })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
-  @HttpCode(HttpStatus.OK)
-  async findReceiptsList(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('orderType') orderType?: OrderType,
-  ): Promise<ReceiptListDto[]> {
-    const filterOptions: any = {};
 
-    if (startDate) {
-      filterOptions.startDate = new Date(startDate);
-    }
-    if (endDate) {
-      filterOptions.endDate = new Date(endDate);
-    }
-    if (orderType) {
-      filterOptions.orderType = orderType;
-    }
 
-    return this.ordersService.getReceiptsList(filterOptions);
-  }
 
-  @Get('receipts/:id')
-  @ApiOperation({ summary: 'Obtener detalle completo de un recibo' })
-  @ApiResponse({
-    status: 200,
-    description: 'Detalle completo del recibo con todos los datos necesarios.',
-    type: ReceiptDetailDto,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  async getReceiptDetail(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<ReceiptDetailDto> {
-    return this.ordersService.getReceiptDetail(id);
-  }
-
-  @Get('for-finalization/list')
-  @ApiOperation({ summary: 'Obtener lista ligera de órdenes para finalizar' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista optimizada de órdenes para la vista de lista.',
-    type: [OrderForFinalizationListDto],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  async findOrdersForFinalizationList(): Promise<
-    OrderForFinalizationListDto[]
-  > {
-    return this.ordersService.findOrdersForFinalizationList();
-  }
 
   @Get('items/:id')
   @ApiOperation({ summary: 'Get a specific order item by ID' })
@@ -261,25 +191,6 @@ export class OrdersController {
     return this.ordersService.deleteOrderItem(id);
   }
 
-  @Get('for-finalization/:id')
-  @ApiOperation({
-    summary: 'Obtener detalle completo de una orden para finalización',
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Detalle completo de la orden con todos sus items y relaciones.',
-    type: OrderForFinalizationDto,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  findOrderForFinalizationById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderForFinalizationDto> {
-    return this.ordersService.findOrderForFinalizationById(id);
-  }
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get all orders for a specific user' })

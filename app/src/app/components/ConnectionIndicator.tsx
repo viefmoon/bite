@@ -76,7 +76,7 @@ export function ConnectionIndicator() {
 
   const status = getConnectionStatus();
 
-  const handlePress = async () => {
+  const handlePress = () => {
     const iconExplanation = getIconExplanation();
     showSnackbar({
       message: iconExplanation,
@@ -99,26 +99,28 @@ export function ConnectionIndicator() {
     if (isConnected && !isChecking && !isReconnecting) {
       setIsChecking(true);
 
-      setTimeout(async () => {
-        try {
-          const isHealthyNow = await healthMonitoringService.forceCheck();
+      setTimeout(() => {
+        (async () => {
+          try {
+            const isHealthyNow = await healthMonitoringService.forceCheck();
 
-          showSnackbar({
-            message: isHealthyNow
-              ? 'Servidor funcionando correctamente ✓'
-              : 'El servidor no responde ✗',
-            type: isHealthyNow ? 'success' : 'error',
-            duration: 3000,
-          });
-        } catch (error) {
-          showSnackbar({
-            message: 'Error al verificar el servidor',
-            type: 'error',
-            duration: 3000,
-          });
-        } finally {
-          setIsChecking(false);
-        }
+            showSnackbar({
+              message: isHealthyNow
+                ? 'Servidor funcionando correctamente ✓'
+                : 'El servidor no responde ✗',
+              type: isHealthyNow ? 'success' : 'error',
+              duration: 3000,
+            });
+          } catch (error) {
+            showSnackbar({
+              message: 'Error al verificar el servidor',
+              type: 'error',
+              duration: 3000,
+            });
+          } finally {
+            setIsChecking(false);
+          }
+        })();
       }, 1000);
     }
 

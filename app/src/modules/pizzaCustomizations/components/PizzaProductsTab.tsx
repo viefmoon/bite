@@ -15,7 +15,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useQuery } from '@tanstack/react-query';
 import { productsService } from '@/modules/menu/services/productsService';
 import EmptyState from '@/app/components/common/EmptyState';
-import { Product } from '@/modules/menu/schema/products.schema';
+import type { Product } from '@/app/schemas/domain/product.schema';
 import { getImageUrlFromStore } from '@/app/lib/imageUtils';
 import { PizzaConfigurationModal } from './PizzaConfigurationModal';
 import { AssociatePizzaToppingsModal } from './AssociatePizzaToppingsModal';

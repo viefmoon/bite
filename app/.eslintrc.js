@@ -15,6 +15,7 @@ module.exports = {
     'react-hooks',
     'react-native',
     'prettier',
+    'import',
   ],
   extends: [
     'eslint:recommended',
@@ -33,6 +34,12 @@ module.exports = {
     react: {
       version: 'detect',
     },
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+      typescript: {},
+    },
   },
   rules: {
     // TypeScript
@@ -44,9 +51,30 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
-    '@typescript-eslint/no-explicit-any': 'off', // Too many to fix now
+    // TypeScript - solo errores reales importantes
+    '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
+    '@typescript-eslint/no-explicit-any': 'off', // Permitir any cuando sea necesario
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-namespace': 'off',
+    '@typescript-eslint/prefer-optional-chain': 'off', // Sugerencia, no error
+    '@typescript-eslint/prefer-nullish-coalescing': 'off', // Sugerencia, no error
+    
+    // Detectar errores reales críticos - configuración práctica  
+    '@typescript-eslint/no-unsafe-argument': 'off', // Demasiado estricto en proyectos reales
+    '@typescript-eslint/no-unsafe-assignment': 'off', 
+    '@typescript-eslint/no-unsafe-call': 'off', // Común en APIs externas
+    '@typescript-eslint/no-unsafe-member-access': 'off', 
+    '@typescript-eslint/no-unsafe-return': 'off', // Común en funciones utilitarias
+    
+    // Errores de tipos importantes que queremos capturar
+    '@typescript-eslint/no-misused-promises': 'off', // Desactivar - muy común en React Native
+    '@typescript-eslint/await-thenable': 'error', // Mantener - errores reales de await
+    '@typescript-eslint/no-unsafe-assignment': 'off', // Desactivar - demasiado ruido en código real
+    '@typescript-eslint/strict-boolean-expressions': 'off', // Evita ser demasiado estricto con expresiones booleanas
+
+    // Import validation básica
+    'import/no-duplicates': 'error',
+    'import/no-self-import': 'error',
 
     // React
     'react/react-in-jsx-scope': 'off', // Not needed with React 17+

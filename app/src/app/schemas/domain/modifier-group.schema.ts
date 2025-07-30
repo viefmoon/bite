@@ -27,6 +27,7 @@ export const modifierGroupSchema = z.object({
           name: z.string(),
           price: z.number(),
           isActive: z.boolean(),
+          isDefault: z.boolean().default(false),
           sortOrder: z.number(),
         }),
       ),

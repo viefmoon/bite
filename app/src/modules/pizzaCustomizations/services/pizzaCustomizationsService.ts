@@ -1,8 +1,8 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type { PaginatedResponse } from '@/app/types/api.types';
-import type { PizzaCustomization } from '../schema/pizzaCustomization.schema';
 import type {
+  PizzaCustomization,
   PizzaCustomizationFormInputs,
   FindAllPizzaCustomizationsQuery,
 } from '../schema/pizzaCustomization.schema';

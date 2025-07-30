@@ -10,13 +10,14 @@ import {
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppTheme, AppTheme } from '../../../app/styles/theme';
-import GenericList from '../../../app/components/crud/GenericList';
+import GenericList, {
+  FilterOption,
+} from '../../../app/components/crud/GenericList';
 import GenericDetailModal from '../../../app/components/crud/GenericDetailModal';
 import GenericFormModal, {
   FormFieldConfig,
   ImagePickerConfig,
 } from '../../../app/components/crud/GenericFormModal';
-import { FilterOption } from '../../../app/components/crud/GenericList';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { useListState } from '../../../app/hooks/useListState';
@@ -162,7 +163,7 @@ const SubcategoriesScreen: React.FC = () => {
     formData: SubCategoryFormInputs | UpdateSubCategoryFormInputs,
     photoId: string | null | undefined,
   ) => {
-    const { imageUri, ...dataToSubmit } = formData;
+    const { imageUri: _imageUri, ...dataToSubmit } = formData;
     const finalData = {
       ...dataToSubmit,
       ...(photoId !== undefined && { photoId }),

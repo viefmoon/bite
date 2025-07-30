@@ -112,7 +112,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       setCurrentTranscription('');
 
       try {
-        await ExpoSpeechRecognitionModule.start({
+        ExpoSpeechRecognitionModule.start({
           lang: 'es-MX',
           interimResults: true,
           continuous: true,
@@ -122,8 +122,8 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      await audioRecorder.prepareToRecordAsync();
-      await audioRecorder.record();
+      audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
 
       if (isMounted.current) {
         setIsRecording(true);
@@ -159,7 +159,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
 
       if (isTranscribing.current) {
         try {
-          await ExpoSpeechRecognitionModule.stop();
+          ExpoSpeechRecognitionModule.stop();
           await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
         } finally {

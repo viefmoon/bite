@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { Product } from '../schema/orders.schema';
 import { CartItemModifier } from '../utils/cartUtils';
-import { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {
+  SelectedPizzaCustomization,
   PizzaCustomization,
   CustomizationActionEnum,
-} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 
 interface ValidationError {

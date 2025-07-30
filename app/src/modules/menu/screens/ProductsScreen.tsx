@@ -128,7 +128,7 @@ function ProductsScreen(): React.ReactElement {
   ) => {
     const isEditing = !!editingItem;
 
-    const { imageUri, ...dataToSend } = formData;
+    const { imageUri: _imageUri, ...dataToSend } = formData;
 
     const mutationData = {
       ...dataToSend,

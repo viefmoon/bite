@@ -18,7 +18,7 @@ import type { OrdersStackScreenProps } from '../navigation/types';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { useOrderManagement } from '../stores/useOrderManagement';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 
 type AddProductsRouteProps = {
   orderId: string;
@@ -154,14 +154,12 @@ const AddProductsToOrderScreen = () => {
           const newQuantity = existingItem.quantity + quantity;
 
           const modifiersTotal = existingItem.modifiers.reduce(
-            (sum, mod) => sum + Number(mod.price || 0),
+            (sum, mod) => sum + (mod.price || 0),
             0,
           );
           const pizzaCostTotal = existingItem.pizzaExtraCost || 0;
           const unitPriceWithModifiers =
-            Number(existingItem.unitPrice || 0) +
-            modifiersTotal +
-            pizzaCostTotal;
+            (existingItem.unitPrice || 0) + modifiersTotal + pizzaCostTotal;
 
           updated[existingIndex] = {
             ...existingItem,
@@ -392,7 +390,7 @@ const AddProductsToOrderScreen = () => {
         prev.map((item) => {
           if (item.id === itemId) {
             const modifiersPrice = modifiers.reduce(
-              (sum, mod) => sum + Number(mod.price || 0),
+              (sum, mod) => sum + (mod.price || 0),
               0,
             );
             const pizzaCost = pizzaExtraCost || 0;

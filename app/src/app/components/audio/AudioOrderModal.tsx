@@ -7,7 +7,16 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import { Text, Button, Divider, Surface, IconButton } from 'react-native-paper';
+import {
+  Text,
+  Button,
+  Divider,
+  Surface,
+  IconButton,
+  Menu,
+  Checkbox,
+  HelperText,
+} from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
@@ -19,7 +28,11 @@ import type {
   ScheduledDeliveryData,
 } from '@/app/services/audioOrderService';
 import ProductCustomizationModal from '@/modules/orders/components/ProductCustomizationModal';
-import type { FullMenuProduct as Product } from '@/modules/orders/schema/orders.schema';
+import type {
+  FullMenuProduct as Product,
+  OrderType,
+} from '@/modules/orders/schema/orders.schema';
+import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
 import type {
   CartItem,
   CartItemModifier,
@@ -27,17 +40,12 @@ import type {
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { Swipeable } from 'react-native-gesture-handler';
-import {
-  OrderTypeEnum,
-  type OrderType,
-} from '@/modules/orders/schema/orders.schema';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
 import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
 import type { Area } from '@/app/schemas/domain/area.schema';
 import type { Table } from '@/app/schemas/domain/table.schema';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
-import { Menu, Checkbox, HelperText } from 'react-native-paper';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 

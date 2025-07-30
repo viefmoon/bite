@@ -10,11 +10,14 @@ import {
   TouchableRipple,
   RadioButton,
 } from 'react-native-paper';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import type { PizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
-import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
-import { CustomizationTypeEnum } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
-import { useAppTheme } from '@/app/styles/theme';
+import type {
+  SelectedPizzaCustomization,
+  PizzaCustomization,
+  PizzaCustomizationInput,
+} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
+import type { PizzaConfiguration } from '../../pizzaCustomizations/schema/pizzaConfiguration.schema';
+import { CustomizationTypeEnum } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
+import { useAppTheme } from '../../../app/styles/theme';
 
 // Extraer tipos del SelectedPizzaCustomization
 type PizzaHalf = SelectedPizzaCustomization['half'];
@@ -36,7 +39,9 @@ interface PizzaCustomizationSectionProps {
   pizzaCustomizations: PizzaCustomization[];
   pizzaConfiguration: PizzaConfiguration | null;
   selectedPizzaCustomizations: SelectedPizzaCustomization[];
-  onCustomizationChange: (customizations: SelectedPizzaCustomization[]) => void;
+  onCustomizationChange: (
+    customizations: (SelectedPizzaCustomization | PizzaCustomizationInput)[],
+  ) => void;
   loading?: boolean;
 }
 
@@ -253,21 +258,25 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             // Segundo sabor - convertir a mitades
             const existingFlavor = currentFlavors[0];
 
-            // Cambiar el sabor existente a mitad 1
-            nonFlavorSelections.push({
-              pizzaCustomizationId: existingFlavor.pizzaCustomizationId,
-              half: PIZZA_HALF.HALF_1,
-              action: CUSTOMIZATION_ACTION.ADD,
-            });
+            // Crear las nuevas customizaciones como mitades
+            const newCustomizations: (
+              | SelectedPizzaCustomization
+              | PizzaCustomizationInput
+            )[] = [
+              ...nonFlavorSelections,
+              {
+                pizzaCustomizationId: existingFlavor.pizzaCustomizationId,
+                half: PIZZA_HALF.HALF_1,
+                action: CUSTOMIZATION_ACTION.ADD,
+              },
+              {
+                pizzaCustomizationId: flavorId,
+                half: PIZZA_HALF.HALF_2,
+                action: CUSTOMIZATION_ACTION.ADD,
+              },
+            ];
 
-            // Agregar el nuevo sabor a mitad 2
-            nonFlavorSelections.push({
-              pizzaCustomizationId: flavorId,
-              half: PIZZA_HALF.HALF_2,
-              action: CUSTOMIZATION_ACTION.ADD,
-            });
-
-            onCustomizationChange(nonFlavorSelections);
+            onCustomizationChange(newCustomizations);
           }
         }
       },
@@ -288,7 +297,10 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             sc.action === action,
         );
 
-        let newSelections: SelectedPizzaCustomization[];
+        let newSelections: (
+          | SelectedPizzaCustomization
+          | PizzaCustomizationInput
+        )[];
 
         if (existingIndex >= 0) {
           newSelections = selectedPizzaCustomizations.filter(

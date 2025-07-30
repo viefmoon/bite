@@ -10,6 +10,7 @@ import { Order } from './domain/order';
 import { OrderRepository } from './infrastructure/persistence/order.repository';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { OrderStatus } from './domain/enums/order-status.enum';
 import { OrderItemRepository } from './infrastructure/persistence/order-item.repository';
 import { OrderItem } from './domain/order-item';
@@ -29,13 +30,6 @@ import {
   ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
 } from '../common/tokens';
 import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
-import {
-  OrderForFinalizationDto,
-  OrderItemForFinalizationDto,
-} from './dto/order-for-finalization.dto';
-import { OrderForFinalizationListDto } from './dto/order-for-finalization-list.dto';
-import { OrderOpenListDto } from './dto/order-open-list.dto';
-import { ReceiptListDto } from './dto/receipt-list.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
 import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
@@ -549,12 +543,12 @@ export class OrdersService {
       }
       if (
         updateOrderDto.subtotal !== undefined &&
-        Number(updateOrderDto.subtotal) !== Number(existingOrder.subtotal)
+        updateOrderDto.subtotal !== existingOrder.subtotal
       )
         updatePayload.subtotal = updateOrderDto.subtotal;
       if (
         updateOrderDto.total !== undefined &&
-        Number(updateOrderDto.total) !== Number(existingOrder.total)
+        updateOrderDto.total !== existingOrder.total
       )
         updatePayload.total = updateOrderDto.total;
       if (
@@ -806,6 +800,68 @@ export class OrdersService {
     return orders;
   }
 
+  /**
+   * Unified method to find orders with flexible filtering
+   * Uses repository directly with real filters - NO MORE specific methods!
+   */
+  async findAllWithFilters(filterDto: FindAllOrdersDto): Promise<Order[]> {
+    const {
+      status,
+      shiftId,
+      orderType,
+      startDate,
+      endDate,
+      userId,
+      tableId,
+    } = filterDto;
+
+    // Get current shift if no specific shiftId provided
+    let effectiveShiftId = shiftId;
+    if (!effectiveShiftId) {
+      const currentShift = await this.shiftsService.getCurrentShift();
+      if (!currentShift) {
+        return []; // No shift, no orders
+      }
+      effectiveShiftId = currentShift.id;
+    }
+
+    // Build filter options for repository
+    const filterOptions: any = {
+      shiftId: effectiveShiftId,
+    };
+
+    // Add status filter if provided
+    if (status && Array.isArray(status) && status.length > 0) {
+      filterOptions.status = status;
+    }
+
+    // Add other filters
+    if (orderType) {
+      filterOptions.orderType = orderType;
+    }
+    if (userId) {
+      filterOptions.userId = userId;
+    }
+    if (tableId) {
+      filterOptions.tableId = tableId;
+    }
+    if (startDate) {
+      filterOptions.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      filterOptions.endDate = new Date(endDate);
+    }
+
+    // Use repository directly with filters
+    const [orders] = await this.orderRepository.findManyWithPagination({
+      filterOptions,
+      paginationOptions: { page: 1, limit: 1000 }, // High limit for now
+    });
+
+    return orders;
+  }
+
+
   async findOpenOrders(): Promise<Order[]> {
     // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
@@ -828,22 +884,6 @@ export class OrdersService {
     );
   }
 
-  async findOpenOrdersOptimized(): Promise<OrderOpenListDto[]> {
-    // Obtener el turno actual
-    const currentShift = await this.shiftsService.getCurrentShift();
-    if (!currentShift) {
-      return [];
-    }
-
-    // Usar una consulta optimizada que solo trae los campos necesarios
-    const orders = await this.orderRepository.findOpenOrdersOptimized(
-      currentShift.openedAt,
-      new Date(),
-    );
-
-    // Mapear a DTO con el campo createdBy
-    return orders.map((order) => this.mapToOpenListDto(order));
-  }
 
   // OrderItem methods
   // Este método ahora solo crea el item, los modificadores se manejan en 'create'
@@ -1032,9 +1072,9 @@ export class OrdersService {
       (updateDto.productVariantId === undefined ||
         existingItem.productVariantId === updateDto.productVariantId) &&
       (updateDto.basePrice === undefined ||
-        Number(existingItem.basePrice) === Number(updateDto.basePrice)) &&
+        existingItem.basePrice === updateDto.basePrice) &&
       (updateDto.finalPrice === undefined ||
-        Number(existingItem.finalPrice) === Number(updateDto.finalPrice)) &&
+        existingItem.finalPrice === updateDto.finalPrice) &&
       (updateDto.preparationNotes === undefined ||
         existingItem.preparationNotes === updateDto.preparationNotes ||
         (existingItem.preparationNotes === null &&
@@ -1254,670 +1294,6 @@ export class OrdersService {
 
     // Actualizar directamente a estado READY
     return this.update(id, { orderStatus: OrderStatus.READY });
-  }
-
-  async findOrdersForFinalizationList(): Promise<
-    OrderForFinalizationListDto[]
-  > {
-    // Obtener el turno actual
-    const currentShift = await this.shiftsService.getCurrentShift();
-    if (!currentShift) {
-      return [];
-    }
-
-    const orders = await this.dataSource.getRepository(OrderEntity).find({
-      where: {
-        shiftId: currentShift.id,
-        orderStatus: Not(In([OrderStatus.COMPLETED, OrderStatus.CANCELLED])),
-      },
-      relations: [
-        'user',
-        'table',
-        'table.area',
-        'payments',
-        'deliveryInfo',
-        'preparationScreenStatuses',
-        'preparationScreenStatuses.preparationScreen',
-        'ticketImpressions',
-      ],
-      select: {
-        id: true,
-        shiftOrderNumber: true,
-        orderType: true,
-        orderStatus: true,
-        total: true,
-        createdAt: true,
-        scheduledAt: true,
-        notes: true,
-        isFromWhatsApp: true,
-        user: {
-          username: true,
-          firstName: true,
-          lastName: true,
-        },
-        table: {
-          id: true,
-          name: true,
-          area: {
-            id: true,
-            name: true,
-          },
-        },
-        payments: {
-          id: true,
-          amount: true,
-        },
-        deliveryInfo: {
-          id: true,
-          recipientName: true,
-          recipientPhone: true,
-          fullAddress: true,
-        },
-        orderItems: {
-          id: true,
-          product: {
-            id: true,
-            preparationScreen: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    });
-
-    return orders.map((order) => this.mapToFinalizationListDto(order));
-  }
-
-  async findOrderForFinalizationById(
-    id: string,
-  ): Promise<OrderForFinalizationDto> {
-    const order = await this.orderRepository.findOrderForFinalizationById(id);
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`);
-    }
-
-    return this.mapOrderToFinalizationDto(order);
-  }
-
-  private mapOrderToFinalizationDto(order: Order): OrderForFinalizationDto {
-    const groupedItems = new Map<
-      string,
-      {
-        items: OrderItem[];
-        modifiers: any[];
-      }
-    >();
-
-    order.orderItems.forEach((item) => {
-      // Crear clave única basada en producto, variante, modificadores y notas
-      const modifierKeys =
-        item.productModifiers
-          ?.map((m) => m.id)
-          .sort()
-          .join(',') || '';
-      const key = `${item.productId}-${item.productVariantId || ''}-${modifierKeys}-${item.preparationNotes || ''}-${item.preparationStatus}`;
-
-      if (!groupedItems.has(key)) {
-        groupedItems.set(key, {
-          items: [],
-          modifiers: item.productModifiers || [],
-        });
-      }
-
-      groupedItems.get(key)!.items.push(item);
-    });
-
-    const orderItemDtos: OrderItemForFinalizationDto[] = [];
-
-    groupedItems.forEach(({ items, modifiers }) => {
-      const firstItem = items[0];
-
-      const dto: OrderItemForFinalizationDto = {
-        productId: firstItem.productId,
-        productVariantId: firstItem.productVariantId || undefined,
-        quantity: items.length,
-        basePrice: firstItem.basePrice,
-        finalPrice: firstItem.finalPrice,
-        preparationNotes: firstItem.preparationNotes || undefined,
-        preparationStatus: firstItem.preparationStatus,
-        product: firstItem.product
-          ? {
-              id: firstItem.product.id,
-              name: firstItem.product.name,
-              description: firstItem.product.description || undefined,
-            }
-          : {
-              id: firstItem.productId,
-              name: 'Producto no encontrado',
-              description: undefined,
-            },
-        productVariant: firstItem.productVariant
-          ? {
-              id: firstItem.productVariant.id,
-              name: firstItem.productVariant.name,
-            }
-          : undefined,
-        modifiers: modifiers.map((m) => ({
-          id: m.id,
-          name: m.name,
-          price: m.price,
-        })),
-        selectedPizzaCustomizations:
-          firstItem.selectedPizzaCustomizations || undefined,
-      };
-
-      orderItemDtos.push(dto);
-    });
-
-    const orderDto: OrderForFinalizationDto = {
-      id: order.id,
-      shiftOrderNumber: order.shiftOrderNumber,
-      orderType: order.orderType,
-      orderStatus: order.orderStatus,
-      total: order.total,
-      orderItems: orderItemDtos,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-      scheduledAt: order.scheduledAt || undefined,
-      tableId: order.tableId || undefined,
-      user: order.user
-        ? {
-            id: order.user.id,
-            firstName: order.user.firstName || undefined,
-            lastName: order.user.lastName || undefined,
-          }
-        : undefined,
-      table: order.table
-        ? {
-            id: order.table.id,
-            number: order.table.name, // Mapear 'name' a 'number' como espera el DTO
-            area: order.table.area
-              ? {
-                  name: order.table.area.name,
-                }
-              : undefined,
-          }
-        : undefined,
-      deliveryInfo: order.deliveryInfo || undefined,
-      isFromWhatsApp: order.isFromWhatsApp,
-      payments:
-        order.payments?.map((payment) => ({
-          id: payment.id,
-          amount: payment.amount,
-          paymentMethod: payment.paymentMethod,
-          paymentStatus: payment.paymentStatus,
-          createdAt: payment.createdAt,
-          updatedAt: payment.updatedAt,
-        })) || undefined,
-      preparationScreenStatuses: order.preparationScreenStatuses?.map(
-        (status) => ({
-          id: status.id,
-          preparationScreenId: status.preparationScreenId,
-          preparationScreenName:
-            status.preparationScreen?.name || 'Pantalla desconocida',
-          status: status.status.toString(),
-          startedAt: status.startedAt ? status.startedAt.toISOString() : null,
-          completedAt: status.completedAt
-            ? status.completedAt.toISOString()
-            : null,
-        }),
-      ),
-      ticketImpressions:
-        order.ticketImpressions?.map((impression) => ({
-          id: impression.id,
-          ticketType: impression.ticketType,
-          impressionTime: impression.impressionTime,
-          user: impression.user
-            ? {
-                id: impression.user.id,
-                firstName: impression.user.firstName || undefined,
-                lastName: impression.user.lastName || undefined,
-              }
-            : undefined,
-          printer: impression.printer
-            ? {
-                id: impression.printer.id,
-                name: impression.printer.name,
-              }
-            : undefined,
-        })) || undefined,
-    };
-
-    return orderDto;
-  }
-
-  async getReceiptDetail(id: string): Promise<any> {
-    const order = await this.dataSource.getRepository(OrderEntity).findOne({
-      where: {
-        id,
-        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
-      },
-      relations: [
-        'user',
-        'table',
-        'table.area',
-        'deliveryInfo',
-        'orderItems',
-        'orderItems.product',
-        'orderItems.productVariant',
-        'orderItems.selectedPizzaCustomizations',
-        'orderItems.selectedPizzaCustomizations.pizzaCustomization',
-        'orderItems.productModifiers',
-        'payments',
-        'preparationScreenStatuses',
-        'preparationScreenStatuses.preparationScreen',
-        'ticketImpressions',
-        'ticketImpressions.user',
-        'ticketImpressions.printer',
-      ],
-    });
-
-    if (!order) {
-      throw new NotFoundException('Recibo no encontrado');
-    }
-
-    return {
-      id: order.id,
-      shiftOrderNumber: order.shiftOrderNumber,
-      orderType: order.orderType,
-      orderStatus: order.orderStatus,
-      total: Number(order.total),
-      subtotal: Number(order.subtotal),
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-      finalizedAt: order.finalizedAt || undefined,
-      scheduledAt: order.scheduledAt || undefined,
-      notes: order.notes || undefined,
-      user: order.user
-        ? {
-            id: order.user.id,
-            firstName: order.user.firstName || undefined,
-            lastName: order.user.lastName || undefined,
-            username: order.user.username,
-          }
-        : undefined,
-      table: order.table
-        ? {
-            id: order.table.id,
-            number: order.table.name,
-            name: order.table.name,
-            isTemporary: order.table.isTemporary,
-            area: order.table.area
-              ? {
-                  id: order.table.area.id,
-                  name: order.table.area.name,
-                }
-              : undefined,
-          }
-        : undefined,
-      deliveryInfo: order.deliveryInfo || undefined,
-      orderItems:
-        order.orderItems?.map((item: any) => ({
-          id: item.id,
-          quantity: item.quantity,
-          basePrice: Number(item.basePrice),
-          finalPrice: Number(item.finalPrice),
-          preparationNotes: item.preparationNotes || undefined,
-          preparationStatus: item.preparationStatus || undefined,
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            description: item.product.description || undefined,
-            price: Number(item.product.price),
-          },
-          productVariant: item.productVariant
-            ? {
-                id: item.productVariant.id,
-                name: item.productVariant.name,
-                price: Number(item.productVariant.price),
-              }
-            : undefined,
-          productModifiers:
-            item.productModifiers?.map((mod: any) => ({
-              id: mod.id,
-              name: mod.name,
-              price: Number(mod.price),
-            })) || undefined,
-          selectedPizzaCustomizations:
-            item.selectedPizzaCustomizations?.map((custom: any) => ({
-              pizzaCustomizationId: custom.pizzaCustomizationId,
-              half: custom.half,
-              action: custom.action,
-              pizzaCustomization: custom.pizzaCustomization
-                ? {
-                    id: custom.pizzaCustomization.id,
-                    name: custom.pizzaCustomization.name,
-                    type: custom.pizzaCustomization.type,
-                  }
-                : undefined,
-            })) || undefined,
-        })) || [],
-      payments:
-        order.payments?.map((payment: any) => ({
-          id: payment.id,
-          amount: Number(payment.amount),
-          paymentMethod: payment.paymentMethod,
-          paymentStatus: payment.paymentStatus,
-          createdAt: payment.createdAt,
-          updatedAt: payment.updatedAt,
-        })) || undefined,
-      ticketImpressions:
-        order.ticketImpressions?.map((impression: any) => ({
-          id: impression.id,
-          ticketType: impression.ticketType,
-          impressionTime: impression.impressionTime,
-          user: impression.user
-            ? {
-                id: impression.user.id,
-                firstName: impression.user.firstName || undefined,
-                lastName: impression.user.lastName || undefined,
-              }
-            : undefined,
-          printer: impression.printer
-            ? {
-                id: impression.printer.id,
-                name: impression.printer.name,
-              }
-            : undefined,
-        })) || undefined,
-    };
-  }
-
-  private mapToFinalizationListDto(order: any): OrderForFinalizationListDto {
-    const totalPaid =
-      order.payments?.reduce(
-        (sum: number, payment: any) => sum + Number(payment.amount),
-        0,
-      ) || 0;
-
-    // Usar la relación directa de preparationScreenStatuses de la orden
-    const preparationScreenStatuses =
-      order.preparationScreenStatuses?.map((status: any) => ({
-        id: status.id,
-        preparationScreenId: status.preparationScreenId,
-        preparationScreenName:
-          status.preparationScreen?.name || 'Pantalla desconocida',
-        status: status.status.toString(),
-        startedAt: status.startedAt ? status.startedAt.toISOString() : null,
-        completedAt: status.completedAt
-          ? status.completedAt.toISOString()
-          : null,
-      })) || [];
-
-    const dto: OrderForFinalizationListDto = {
-      id: order.id,
-      shiftOrderNumber: order.shiftOrderNumber,
-      orderType: order.orderType,
-      orderStatus: order.orderStatus,
-      total: Number(order.total),
-      createdAt: order.createdAt,
-      scheduledAt: order.scheduledAt || undefined,
-      isFromWhatsApp: order.isFromWhatsApp,
-      paymentsSummary: {
-        totalPaid,
-      },
-    };
-
-    if (preparationScreenStatuses.length > 0) {
-      dto.preparationScreenStatuses = preparationScreenStatuses;
-    }
-
-    if (order.table) {
-      dto.table = {
-        number: order.table.name,
-        area: order.table.area
-          ? {
-              name: order.table.area.name,
-            }
-          : undefined,
-      };
-    }
-
-    if (order.deliveryInfo) {
-      dto.deliveryInfo = {
-        recipientName: order.deliveryInfo.recipientName || undefined,
-        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
-        fullAddress: order.deliveryInfo.fullAddress || undefined,
-      };
-    }
-
-    if (order.ticketImpressions && order.ticketImpressions.length > 0) {
-      dto.ticketImpressionCount = order.ticketImpressions.length;
-    }
-
-    if (order.notes) {
-      dto.notes = order.notes;
-    }
-
-    // Agregar información del usuario creador
-    if (order.user) {
-      dto.createdBy = {
-        username: order.user.username || 'Usuario',
-        firstName: order.user.firstName || null,
-        lastName: order.user.lastName || null,
-      };
-    } else if (order.isFromWhatsApp) {
-      dto.createdBy = {
-        username: 'WhatsApp',
-        firstName: 'Orden de',
-        lastName: 'WhatsApp',
-      };
-    }
-
-    return dto;
-  }
-
-  private mapToReceiptListDto(order: any): ReceiptListDto {
-    const totalPaid =
-      order.payments?.reduce(
-        (sum: number, payment: any) =>
-          payment.paymentStatus === 'COMPLETED'
-            ? sum + Number(payment.amount)
-            : sum,
-        0,
-      ) || 0;
-
-    // Usar la relación directa de preparationScreenStatuses de la orden
-    const preparationScreenStatuses =
-      order.preparationScreenStatuses?.map((status: any) => ({
-        id: status.id,
-        preparationScreenId: status.preparationScreenId,
-        preparationScreenName:
-          status.preparationScreen?.name || 'Pantalla desconocida',
-        status: status.status.toString(),
-        startedAt: status.startedAt ? status.startedAt.toISOString() : null,
-        completedAt: status.completedAt
-          ? status.completedAt.toISOString()
-          : null,
-      })) || [];
-
-    const dto: ReceiptListDto = {
-      id: order.id,
-      shiftOrderNumber: order.shiftOrderNumber,
-      orderType: order.orderType,
-      orderStatus: order.orderStatus,
-      total: Number(order.total),
-      createdAt: order.createdAt,
-      finalizedAt: order.finalizedAt,
-      scheduledAt: order.scheduledAt || undefined,
-      isFromWhatsApp: order.isFromWhatsApp,
-      paymentsSummary: {
-        totalPaid,
-      },
-    };
-
-    // Agregar pantallas de preparación y sus estados
-    if (preparationScreenStatuses.length > 0) {
-      dto.preparationScreenStatuses = preparationScreenStatuses;
-    }
-
-    if (order.table) {
-      dto.table = {
-        id: order.table.id,
-        number: order.table.number || order.table.name,
-        name: order.table.name,
-        isTemporary: order.table.isTemporary || false,
-        area: order.table.area
-          ? {
-              name: order.table.area.name,
-            }
-          : undefined,
-      };
-    }
-
-    if (order.deliveryInfo) {
-      dto.deliveryInfo = {
-        recipientName: order.deliveryInfo.recipientName || undefined,
-        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
-        fullAddress: order.deliveryInfo.fullAddress || undefined,
-      };
-    }
-
-    // Agregar contador de impresiones de tickets
-    if (order.ticketImpressions && order.ticketImpressions.length > 0) {
-      dto.ticketImpressionCount = order.ticketImpressions.length;
-    }
-
-    // Agregar notas si existen
-    if (order.notes) {
-      dto.notes = order.notes;
-    }
-
-    // Agregar información del usuario creador
-    if (order.user) {
-      dto.createdBy = {
-        username: order.user.username || 'Usuario',
-        firstName: order.user.firstName || null,
-        lastName: order.user.lastName || null,
-      };
-    } else if (order.isFromWhatsApp) {
-      // Si no hay usuario pero es de WhatsApp, indicarlo
-      dto.createdBy = {
-        username: 'WhatsApp',
-        firstName: 'Orden de',
-        lastName: 'WhatsApp',
-      };
-    }
-
-    return dto;
-  }
-
-  private mapToOpenListDto(order: Order): OrderOpenListDto {
-    const dto: OrderOpenListDto = {
-      id: order.id,
-      shiftOrderNumber: order.shiftOrderNumber,
-      orderType: order.orderType,
-      orderStatus: order.orderStatus,
-      total: order.total,
-      createdAt: order.createdAt,
-      scheduledAt: order.scheduledAt || undefined,
-      notes: order.notes,
-      paymentsSummary: order.paymentsSummary,
-      ticketImpressionCount: order.ticketImpressionCount,
-      preparationScreenStatuses: order.preparationScreenStatuses?.map(
-        (status) => ({
-          id: status.id,
-          preparationScreenId: status.preparationScreenId,
-          preparationScreenName:
-            status.preparationScreen?.name || 'Pantalla desconocida',
-          status: status.status.toString(),
-          startedAt: status.startedAt ? status.startedAt.toISOString() : null,
-          completedAt: status.completedAt
-            ? status.completedAt.toISOString()
-            : null,
-        }),
-      ),
-      isFromWhatsApp: order.isFromWhatsApp,
-    };
-
-    // Mapear tabla si existe
-    if (order.table) {
-      dto.table = {
-        id: order.table.id,
-        number: order.table.name, // En el dominio Table, 'name' contiene el número
-        name: order.table.name,
-        isTemporary: order.table.isTemporary,
-        area: order.table.area
-          ? {
-              name: order.table.area.name,
-            }
-          : undefined,
-      };
-    }
-
-    // Mapear deliveryInfo si existe
-    if (order.deliveryInfo) {
-      dto.deliveryInfo = {
-        recipientName: order.deliveryInfo.recipientName || undefined,
-        recipientPhone: order.deliveryInfo.recipientPhone || undefined,
-        fullAddress: order.deliveryInfo.fullAddress || undefined,
-      };
-    }
-
-    // Agregar información del usuario creador
-    if (order.user) {
-      dto.createdBy = {
-        username: order.user.username || 'Usuario',
-        firstName: order.user.firstName || null,
-        lastName: order.user.lastName || null,
-      };
-    } else if (order.isFromWhatsApp) {
-      // Si no hay usuario pero es de WhatsApp, indicarlo
-      dto.createdBy = {
-        username: 'WhatsApp',
-        firstName: 'Orden de',
-        lastName: 'WhatsApp',
-      };
-    }
-
-    return dto;
-  }
-
-  async getReceiptsList(filterOptions?: {
-    startDate?: Date;
-    endDate?: Date;
-    orderType?: OrderType;
-  }): Promise<ReceiptListDto[]> {
-    // Obtener el turno actual
-    const currentShift = await this.shiftsService.getCurrentShift();
-    if (!currentShift) {
-      return [];
-    }
-
-    const orders = await this.dataSource.getRepository(OrderEntity).find({
-      where: {
-        shiftId: currentShift.id,
-        orderStatus: In([OrderStatus.COMPLETED, OrderStatus.CANCELLED]),
-        ...(filterOptions?.orderType && { orderType: filterOptions.orderType }),
-        ...(filterOptions?.startDate &&
-          filterOptions?.endDate && {
-            finalizedAt: Between(
-              filterOptions.startDate,
-              filterOptions.endDate,
-            ),
-          }),
-      },
-      relations: [
-        'user',
-        'table',
-        'table.area',
-        'payments',
-        'deliveryInfo',
-        'preparationScreenStatuses',
-        'preparationScreenStatuses.preparationScreen',
-        'ticketImpressions',
-      ],
-      order: {
-        finalizedAt: 'DESC', // Más recientes primero
-      },
-    });
-
-    return orders.map((order) => this.mapToReceiptListDto(order));
   }
 
   async finalizeMultipleOrders(
@@ -2373,11 +1749,10 @@ export class OrdersService {
       // Calcular el monto pendiente de pago
       const totalPaid =
         order.payments?.reduce((sum, payment) => {
-          return sum + Number(payment.amount);
+          return sum + payment.amount;
         }, 0) || 0;
 
-      const totalOrder =
-        typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      const totalOrder = order.total;
       const pendingAmount = totalOrder - totalPaid;
 
       // Si hay monto pendiente, crear un pago en efectivo
@@ -2677,8 +2052,8 @@ export class OrdersService {
     printer.drawLine();
 
     // Calcular totales
-    const subtotal = Number(order.subtotal || order.total);
-    const total = Number(order.total);
+    const subtotal = order.subtotal || order.total;
+    const total = order.total;
     const subtotalStr = this.formatMoney(subtotal);
     const totalStr = this.formatMoney(total);
     const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
@@ -2818,7 +2193,7 @@ export class OrdersService {
       if (existingItem) {
         // Si ya existe un item idéntico, incrementar la cantidad
         existingItem.quantity += 1;
-        existingItem.totalPrice += Number(item.finalPrice);
+        existingItem.totalPrice += item.finalPrice;
       } else {
         // Si es nuevo, agregarlo al mapa
         const groupedItem = {
@@ -2827,12 +2202,12 @@ export class OrdersService {
           variantId: item.productVariantId || undefined,
           variantName: item.productVariant?.name || undefined,
           quantity: 1,
-          unitPrice: Number(item.basePrice),
-          totalPrice: Number(item.finalPrice),
+          unitPrice: item.basePrice,
+          totalPrice: item.finalPrice,
           modifiers: (item.productModifiers || []).map((mod) => ({
             id: mod.id,
             name: mod.name,
-            price: Number(mod.price) || 0,
+            price: mod.price || 0,
           })),
           preparationNotes: item.preparationNotes || undefined,
           pizzaCustomizations: this.formatPizzaCustomizationsForBilling(
@@ -2965,7 +2340,7 @@ export class OrdersService {
         if (!category) continue;
 
         const quantity = 1;
-        const itemPrice = Number(item.finalPrice) || 0;
+        const itemPrice = item.finalPrice || 0;
         const amount = itemPrice;
 
         if (itemPrice === 0) continue;

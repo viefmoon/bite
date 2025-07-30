@@ -16,20 +16,14 @@ const mapReceiptItemToUnified = (
   productName: item.product?.name || 'Producto desconocido',
   variantName: item.productVariant?.name,
   quantity: item.quantity || 1,
-  finalPrice:
-    typeof item.finalPrice === 'string'
-      ? parseFloat(item.finalPrice)
-      : item.finalPrice,
-  basePrice:
-    typeof item.basePrice === 'string'
-      ? parseFloat(item.basePrice)
-      : item.basePrice,
+  finalPrice: item.finalPrice || 0,
+  basePrice: item.basePrice || 0,
   preparationStatus: item.preparationStatus,
   preparationNotes: item.preparationNotes,
   modifiers: item.productModifiers?.map((mod) => ({
     id: mod.id,
     name: mod.name,
-    price: typeof mod.price === 'string' ? parseFloat(mod.price) : mod.price,
+    price: mod.price || 0,
   })),
   selectedPizzaCustomizations: item.selectedPizzaCustomizations,
 });
@@ -39,20 +33,14 @@ const mapOrderForFinalizationItemToUnified = (item: any): UnifiedOrderItem => ({
   productName: item.product?.name || 'Producto desconocido',
   variantName: item.productVariant?.name,
   quantity: item.quantity || 1,
-  finalPrice:
-    typeof item.finalPrice === 'string'
-      ? parseFloat(item.finalPrice)
-      : item.finalPrice,
-  basePrice:
-    typeof item.basePrice === 'string'
-      ? parseFloat(item.basePrice)
-      : item.basePrice,
+  finalPrice: item.finalPrice || 0,
+  basePrice: item.basePrice || 0,
   preparationStatus: item.preparationStatus,
   preparationNotes: item.preparationNotes,
   modifiers: item.modifiers?.map((mod: any) => ({
     id: mod.id,
     name: mod.name,
-    price: typeof mod.price === 'string' ? parseFloat(mod.price) : mod.price,
+    price: mod.price || 0,
   })),
   selectedPizzaCustomizations: item.selectedPizzaCustomizations,
 });
@@ -83,15 +71,8 @@ export const mapReceiptToUnifiedOrder = (
     shiftOrderNumber: receipt.shiftOrderNumber,
     orderType: receipt.orderType,
     orderStatus: receipt.orderStatus,
-    total:
-      typeof receipt.total === 'string'
-        ? parseFloat(receipt.total)
-        : receipt.total,
-    subtotal: receipt.subtotal
-      ? typeof receipt.subtotal === 'string'
-        ? parseFloat(receipt.subtotal)
-        : receipt.subtotal
-      : undefined,
+    total: receipt.total || 0,
+    subtotal: receipt.subtotal,
     createdAt: receipt.createdAt,
     updatedAt: receipt.updatedAt,
     finalizedAt: receipt.finalizedAt || null,
@@ -115,28 +96,29 @@ export const mapReceiptToUnifiedOrder = (
 
     deliveryInfo: receipt.deliveryInfo
       ? {
-          recipientName: receipt.deliveryInfo.recipientName,
-          recipientPhone: receipt.deliveryInfo.recipientPhone,
-          fullAddress: receipt.deliveryInfo.fullAddress,
-          deliveryInstructions: receipt.deliveryInfo.deliveryInstructions,
-          street: receipt.deliveryInfo.street,
-          number: receipt.deliveryInfo.number,
-          interiorNumber: receipt.deliveryInfo.interiorNumber,
-          neighborhood: receipt.deliveryInfo.neighborhood,
-          city: receipt.deliveryInfo.city,
-          state: receipt.deliveryInfo.state,
-          zipCode: receipt.deliveryInfo.zipCode,
-          country: receipt.deliveryInfo.country,
-          latitude: receipt.deliveryInfo.latitude,
-          longitude: receipt.deliveryInfo.longitude,
+          recipientName: receipt.deliveryInfo.recipientName || undefined,
+          recipientPhone: receipt.deliveryInfo.recipientPhone || undefined,
+          fullAddress: receipt.deliveryInfo.fullAddress || undefined,
+          deliveryInstructions:
+            receipt.deliveryInfo.deliveryInstructions || undefined,
+          street: receipt.deliveryInfo.street || undefined,
+          number: receipt.deliveryInfo.number || undefined,
+          interiorNumber: receipt.deliveryInfo.interiorNumber || undefined,
+          neighborhood: receipt.deliveryInfo.neighborhood || undefined,
+          city: receipt.deliveryInfo.city || undefined,
+          state: receipt.deliveryInfo.state || undefined,
+          zipCode: receipt.deliveryInfo.zipCode || undefined,
+          country: receipt.deliveryInfo.country || undefined,
+          latitude: receipt.deliveryInfo.latitude || undefined,
+          longitude: receipt.deliveryInfo.longitude || undefined,
         }
       : null,
 
     user: receipt.user
       ? {
           id: receipt.user.id,
-          firstName: receipt.user.firstName || null,
-          lastName: receipt.user.lastName || null,
+          firstName: receipt.user.firstName || undefined,
+          lastName: receipt.user.lastName || undefined,
           username: receipt.user.username || '',
         }
       : null,
@@ -172,8 +154,8 @@ export const mapReceiptToUnifiedOrder = (
         user: impression.user
           ? {
               id: impression.user.id,
-              firstName: impression.user.firstName || null,
-              lastName: impression.user.lastName || null,
+              firstName: impression.user.firstName || undefined,
+              lastName: impression.user.lastName || undefined,
             }
           : undefined,
         printer: impression.printer
@@ -220,8 +202,7 @@ export const mapOrderForFinalizationToUnifiedOrder = (
     shiftOrderNumber: order.shiftOrderNumber,
     orderType: order.orderType,
     orderStatus: order.orderStatus,
-    total:
-      typeof order.total === 'string' ? parseFloat(order.total) : order.total,
+    total: order.total || 0,
     subtotal: undefined, // OrderForFinalization no tiene subtotal típicamente
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
@@ -254,8 +235,8 @@ export const mapOrderForFinalizationToUnifiedOrder = (
     user: order.user
       ? {
           id: order.user.id,
-          firstName: order.user.firstName || null,
-          lastName: order.user.lastName || null,
+          firstName: order.user.firstName || undefined,
+          lastName: order.user.lastName || undefined,
           username: '',
         }
       : null,
@@ -284,8 +265,8 @@ export const mapOrderForFinalizationToUnifiedOrder = (
         user: impression.user
           ? {
               id: impression.user.id,
-              firstName: impression.user.firstName || null,
-              lastName: impression.user.lastName || null,
+              firstName: impression.user.firstName || undefined,
+              lastName: impression.user.lastName || undefined,
             }
           : undefined,
         printer: impression.printer
@@ -363,8 +344,8 @@ export const mapOrderToUnifiedOrder = (order: Order): UnifiedOrderDetails => {
     user: order.user
       ? {
           id: order.user.id,
-          firstName: order.user.firstName || null,
-          lastName: order.user.lastName || null,
+          firstName: order.user.firstName || undefined,
+          lastName: order.user.lastName || undefined,
           username: order.user.username || '',
         }
       : null,

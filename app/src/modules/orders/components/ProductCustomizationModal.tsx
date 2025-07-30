@@ -13,14 +13,13 @@ import {
   Surface,
 } from 'react-native-paper';
 import { Controller } from 'react-hook-form';
-import { useAppTheme } from '@/app/styles/theme';
+import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import {
   FullMenuProduct as Product,
   FullMenuModifierGroup,
 } from '../schema/orders.schema';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
-import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
@@ -214,15 +213,19 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         );
         // Determinar el precio base: variante tiene prioridad
         let unitPrice: number;
-        
+
         if (variant) {
           if (typeof variant.price !== 'number' || variant.price == null) {
-            throw new Error(`La variante '${variant.name}' no tiene un precio válido`);
+            throw new Error(
+              `La variante '${variant.name}' no tiene un precio válido`,
+            );
           }
           unitPrice = variant.price;
         } else {
           if (typeof product.price !== 'number' || product.price == null) {
-            throw new Error(`El producto '${product.name}' no tiene un precio válido`);
+            throw new Error(
+              `El producto '${product.name}' no tiene un precio válido`,
+            );
           }
           unitPrice = product.price;
         }
@@ -334,7 +337,14 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                       pizzaCustomizations={pizzaCustomizations}
                       pizzaConfiguration={pizzaConfiguration}
                       selectedPizzaCustomizations={selectedPizzaCustomizations}
-                      onCustomizationChange={setSelectedPizzaCustomizations}
+                      onCustomizationChange={(customizations) => {
+                        // Filtrar solo los objetos que son SelectedPizzaCustomization completos
+                        const fullCustomizations = customizations.filter(
+                          (c): c is SelectedPizzaCustomization =>
+                            'id' in c && 'createdAt' in c,
+                        );
+                        setSelectedPizzaCustomizations(fullCustomizations);
+                      }}
                       loading={false}
                     />
                   </Card.Content>

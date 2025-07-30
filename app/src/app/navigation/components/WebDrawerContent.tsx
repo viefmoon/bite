@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   Drawer as PaperDrawer,
   Text,

@@ -8,8 +8,10 @@ import type {
   FullMenuModifierGroup,
 } from '../schema/orders.schema';
 import type { CartItemModifier, CartItem } from '../utils/cartUtils';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
-import type { PizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+import type {
+  SelectedPizzaCustomization,
+  PizzaCustomization,
+} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 import {
   PizzaHalfEnum,
@@ -121,7 +123,7 @@ export const useProductCustomization = ({
     if (totalToppingValue > pizzaConfiguration.includedToppings) {
       const extraToppings =
         totalToppingValue - pizzaConfiguration.includedToppings;
-      return extraToppings * Number(pizzaConfiguration.extraToppingCost);
+      return extraToppings * (pizzaConfiguration.extraToppingCost || 0);
     }
 
     return 0;
@@ -204,7 +206,7 @@ export const useProductCustomization = ({
           id: modifier.id,
           modifierGroupId: group.id,
           name: modifier.name,
-          price: Number(modifier.price) || 0,
+          price: modifier.price || 0,
         };
 
         if (!group.allowMultipleSelections) {
@@ -251,11 +253,11 @@ export const useProductCustomization = ({
   );
 
   const basePrice = selectedVariant
-    ? Number(selectedVariant.price)
-    : Number(product.price) || 0;
+    ? selectedVariant.price
+    : product.price || 0;
 
   const modifiersPrice = selectedModifiers.reduce(
-    (sum, mod) => sum + Number(mod.price || 0),
+    (sum, mod) => sum + (mod.price || 0),
     0,
   );
 
@@ -315,7 +317,7 @@ export const useProductCustomization = ({
                   id: modifier.id,
                   modifierGroupId: group.id,
                   name: modifier.name,
-                  price: Number(modifier.price) || 0,
+                  price: modifier.price || 0,
                 });
               }
             });

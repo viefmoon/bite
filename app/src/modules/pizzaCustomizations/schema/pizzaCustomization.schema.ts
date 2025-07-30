@@ -54,6 +54,17 @@ export type SelectedPizzaCustomization = z.infer<
   typeof selectedPizzaCustomizationSchema
 >;
 
+// Tipo para customizaciones durante la edición (sin campos del backend)
+export const pizzaCustomizationInputSchema = z.object({
+  pizzaCustomizationId: z.string(),
+  half: pizzaHalfSchema,
+  action: customizationActionSchema,
+});
+
+export type PizzaCustomizationInput = z.infer<
+  typeof pizzaCustomizationInputSchema
+>;
+
 // Esquemas para formularios
 export const pizzaCustomizationFormSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),

@@ -1,11 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
   IsOptional,
   IsString,
-  IsArray,
+  IsNumber,
+  IsIn,
 } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { OrderStatus } from '../domain/enums/order-status.enum';
 import { OrderType } from '../domain/enums/order-type.enum';
 
@@ -37,27 +39,22 @@ export class FindAllOrdersDto {
   @IsString()
   shiftId?: string;
 
-  @ApiProperty({
-    description: 'Filter orders by status',
-    enum: OrderStatus,
-    example: OrderStatus.PENDING,
-    required: false,
+  @ApiPropertyOptional({
+    description: 'Filter orders by status (single or comma-separated string)',
+    examples: {
+      single: { value: 'COMPLETED' },
+      multiple: { value: 'COMPLETED,CANCELLED' },
+      array: { value: ['COMPLETED', 'CANCELLED'] }
+    },
   })
   @IsOptional()
-  @IsEnum(OrderStatus)
-  orderStatus?: OrderStatus;
-
-  @ApiProperty({
-    description: 'Filter orders by multiple statuses',
-    enum: OrderStatus,
-    isArray: true,
-    example: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
-    required: false,
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map(s => s.trim().toUpperCase());
+    }
+    return Array.isArray(value) ? value : [value];
   })
-  @IsOptional()
-  @IsArray()
-  @IsEnum(OrderStatus, { each: true })
-  orderStatuses?: OrderStatus[];
+  status?: OrderStatus[] | string;
 
   @ApiProperty({
     description: 'Filter orders by type',
@@ -86,4 +83,33 @@ export class FindAllOrdersDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Fields to include in response (minimal for optimized queries)',
+    enum: ['minimal', 'full'],
+    example: 'minimal',
+  })
+  @IsOptional()
+  @IsIn(['minimal', 'full'])
+  includeFields?: 'minimal' | 'full';
+
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    example: 1,
+    type: Number,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  page?: number;
+
+  @ApiPropertyOptional({
+    description: 'Limit per page',
+    example: 10,
+    type: Number,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  limit?: number;
 }

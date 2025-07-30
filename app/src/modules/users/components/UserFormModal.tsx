@@ -236,7 +236,7 @@ export function UserFormModal({
         };
 
         if (user) {
-          const { username, password, ...updateData } = cleanData;
+          const { username: _username, password, ...updateData } = cleanData;
           const finalUpdateData = password
             ? { ...updateData, password }
             : updateData;

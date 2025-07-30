@@ -27,7 +27,7 @@ export const RefreshButton: React.FC = () => {
 
       setIsRefreshing(true);
       try {
-        await refetchRef.current();
+        refetchRef.current();
       } finally {
         setTimeout(() => setIsRefreshing(false), 500);
       }

@@ -6,8 +6,8 @@ import {
   StyleProp,
   ViewStyle,
   DimensionValue,
+  Platform,
 } from 'react-native';
-import { Platform } from 'react-native';
 import { Image, ImageProps as ExpoImageProps } from 'expo-image';
 import { Icon } from 'react-native-paper';
 import { getCachedImageUri } from '../../lib/imageCache';

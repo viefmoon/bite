@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Portal } from 'react-native-paper';
+import {
+  Portal,
+  Text,
+  Switch,
+  TextInput,
+  Button,
+  ActivityIndicator,
+  Dialog,
+  Surface,
+  Chip,
+  Icon,
+} from 'react-native-paper';
 import {
   View,
   StyleSheet,
@@ -11,17 +22,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Text,
-  Switch,
-  TextInput,
-  Button,
-  ActivityIndicator,
-  Dialog,
-  Surface,
-  Chip,
-  Icon,
-} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
@@ -34,8 +34,7 @@ import BusinessHoursForm from '../components/BusinessHoursForm';
 import TimeZoneSelector from '../components/TimeZoneSelector';
 import { WebViewDeliveryCoverageMap } from '../components/WebViewDeliveryCoverageMap';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 type TabType = 'basic' | 'operation' | 'schedule';

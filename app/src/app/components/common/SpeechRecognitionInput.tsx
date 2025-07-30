@@ -81,7 +81,7 @@ class RecognitionInstance {
       RecognitionInstance.activeInstanceId = this.id;
       this.isActive = true;
 
-      await ExpoSpeechRecognitionModule.start({
+      ExpoSpeechRecognitionModule.start({
         lang,
         interimResults: false,
         continuous: false,
@@ -100,7 +100,7 @@ class RecognitionInstance {
   async stop() {
     if (this.isActive) {
       try {
-        await ExpoSpeechRecognitionModule.stop();
+        ExpoSpeechRecognitionModule.stop();
       } catch (error) {
         // Ignorar errores al detener
       } finally {

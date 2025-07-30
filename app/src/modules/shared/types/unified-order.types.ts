@@ -1,19 +1,15 @@
-// app/src/modules/shared/types/unified-order.types.ts
+/**
+ * Tipos unificados para order details
+ * Representa la estructura normalizada que usa la UI, independiente del source de datos
+ */
 
-import {
-  OrderStatus,
-  OrderType,
-  SelectedPizzaCustomization,
-} from '@/app/schemas/domain/order.schema';
-
-// Interfaz para un item de orden unificado
 export interface UnifiedOrderItem {
   id: string;
   productName: string;
   variantName?: string;
   quantity: number;
-  finalPrice: number;
   basePrice: number;
+  finalPrice: number;
   preparationStatus?: string;
   preparationNotes?: string;
   modifiers?: Array<{
@@ -21,110 +17,94 @@ export interface UnifiedOrderItem {
     name: string;
     price: number;
   }>;
-  selectedPizzaCustomizations?: SelectedPizzaCustomization[];
+  selectedPizzaCustomizations?: unknown[];
 }
 
-// Interfaz principal unificada para los detalles de la orden
+export interface UnifiedTable {
+  id: string;
+  name: string;
+  number: string;
+  area?: {
+    id?: string;
+    name: string;
+  };
+}
+
+export interface UnifiedDeliveryInfo {
+  recipientName?: string;
+  recipientPhone?: string;
+  fullAddress?: string;
+  deliveryInstructions?: string;
+  street?: string;
+  number?: string;
+  interiorNumber?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface UnifiedUser {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+}
+
+export interface UnifiedPayment {
+  id: string;
+  amount: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Estructura unificada para order details
+ * Normaliza todos los tipos de órdenes a una interfaz consistente
+ */
 export interface UnifiedOrderDetails {
+  // Información básica
   id: string;
   shiftOrderNumber: number;
-  orderType: OrderType;
-  orderStatus: OrderStatus;
+  orderType: string;
+  orderStatus: string;
   total: number;
   subtotal?: number;
-  createdAt: string | Date;
-  updatedAt?: string | Date;
-  finalizedAt?: string | Date | null;
-  scheduledAt?: string | Date | null;
+
+  // Fechas
+  createdAt: string;
+  updatedAt: string;
+  finalizedAt?: string | null;
+  scheduledAt?: string | null;
+  estimatedDeliveryTime?: string | null;
+
+  // Notas
   notes?: string | null;
 
-  // Información del cliente y mesa
-  table?: {
-    id?: string;
-    name?: string;
-    number?: string;
-    area?: {
-      id?: string;
-      name: string;
-    };
-  } | null;
-  deliveryInfo?: {
-    recipientName?: string;
-    recipientPhone?: string;
-    fullAddress?: string;
-    deliveryInstructions?: string;
-    street?: string;
-    number?: string;
-    interiorNumber?: string;
-    neighborhood?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-  user?: {
-    id?: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    username?: string;
-  } | null;
-  customer?: {
-    id: string;
-    name: string;
-    phone?: string;
-    email?: string;
-  } | null;
-
-  // Listas de datos asociados
-  orderItems: UnifiedOrderItem[];
-  payments?: Array<{
-    id: string;
-    amount: number;
-    paymentMethod: string;
-    paymentStatus: string;
-    createdAt: string | Date;
-    updatedAt?: string | Date;
-  }> | null;
-  ticketImpressions?: Array<{
-    id: string;
-    ticketType: string;
-    impressionTime: string | Date;
-    user?: {
-      id?: string;
-      firstName?: string | null;
-      lastName?: string | null;
-    };
-    printer?: {
-      id?: string;
-      name: string;
-    };
-  }> | null;
-  adjustments?: Array<{
-    id: string;
-    type: string;
-    amount: number;
-    reason?: string;
-    createdAt: string | Date;
-  }> | null;
-
-  // Información adicional
-  preparationScreenStatuses?: Array<{
-    id: string;
-    preparationScreenId: string;
-    preparationScreenName: string;
-    status: import('./preparation-screen-status.enum').PreparationScreenStatus;
-    startedAt?: string | Date | null;
-    completedAt?: string | Date | null;
-  }> | null;
-  paymentsSummary?: {
-    totalPaid: number;
-  } | null;
-  isFromWhatsApp?: boolean;
-  estimatedDeliveryTime?: string | Date | null;
+  // Referencias
   userId?: string | null;
   tableId?: string | null;
   customerId?: string | null;
   deletedAt?: string | null;
+
+  // Información adicional
+  isFromWhatsApp?: boolean;
+
+  // Relaciones
+  table?: UnifiedTable | null;
+  deliveryInfo?: UnifiedDeliveryInfo | null;
+  user?: UnifiedUser | null;
+  customer?: unknown | null;
+
+  // Datos asociados
+  orderItems?: UnifiedOrderItem[];
+  payments?: UnifiedPayment[] | null;
+  adjustments?: unknown[] | null;
+  preparationScreenStatuses?: unknown[] | null;
+  ticketImpressions?: unknown[] | null;
 }

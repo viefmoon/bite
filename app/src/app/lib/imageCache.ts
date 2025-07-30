@@ -49,7 +49,7 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
   let urlToHash = remoteUrl;
 
   // Incluir el host en el hash para URLs de nuestra API
-  if (remoteUrl.includes(API_PATHS.FILES_CHECK)) {
+  if (remoteUrl.includes(API_PATHS.FILES_UPLOAD)) {
     try {
       const parsedUrl = new URL(remoteUrl);
       urlToHash = `${parsedUrl.host}${parsedUrl.pathname}`;

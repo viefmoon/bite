@@ -12,23 +12,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderSummaryCard from '../../shared/components/OrderSummaryCard';
 import { OrderStatusInfo } from '../../orders/utils/formatters';
-import { OrderDetailsModal } from '../components/OrderDetailsModal';
+import { UnifiedOrderDetailsModal } from '@/modules/shared/components/UnifiedOrderDetailsModal';
 import { PrintTicketModal } from '@/modules/shared/components/PrintTicketModal';
-import {
-  useOrdersForFinalizationList,
-  useOrderForFinalizationDetail,
-} from '../hooks/useOrderFinalizationQueries';
+import { useOrdersForFinalizationList } from '../hooks/useOrderFinalizationQueries';
 import {
   OrderFinalizationFilter,
   OrderSelectionState,
-  OrderForFinalizationList,
 } from '../schema/orderFinalization.schema';
+import type { Order } from '@/app/schemas/domain/order.schema';
 import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
-import { orderFinalizationService } from '../services/orderFinalizationService';
+import { orderService } from '@/app/services/orderService';
 
 export const OrderFinalizationScreen: React.FC = () => {
   const theme = useAppTheme();
@@ -43,24 +40,18 @@ export const OrderFinalizationScreen: React.FC = () => {
   const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] = useState<
     string | null
   >(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [isFinalizingOrders, setIsFinalizingOrders] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedOrderForPrint, setSelectedOrderForPrint] =
-    useState<OrderForFinalizationList | null>(null);
+    useState<Order | null>(null);
 
   const {
     data: orders = [],
     isLoading,
     refetch,
   } = useOrdersForFinalizationList();
-
-  const { data: selectedOrderDetails, isLoading: isLoadingDetails } =
-    useOrderForFinalizationDetail(selectedOrderIdForDetails);
-
-  const { data: orderForPrint } = useOrderForFinalizationDetail(
-    selectedOrderForPrint?.id || null,
-  );
 
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
@@ -124,12 +115,11 @@ export const OrderFinalizationScreen: React.FC = () => {
       setSelectionState((prevState) => {
         const newSelectedOrders = new Set(prevState.selectedOrders);
         let newTotalAmount = prevState.totalAmount;
-        const orderTotal =
-          typeof order.total === 'string'
-            ? parseFloat(order.total)
-            : order.total;
-        const paymentsSummary = order.paymentsSummary;
-        const paid = paymentsSummary?.totalPaid || 0;
+        const orderTotal = order.total || 0;
+        // Calcular pagos desde el array de payments
+        const paid =
+          order.payments?.reduce((sum, payment) => sum + payment.amount, 0) ||
+          0;
         const pendingAmount = orderTotal - paid;
 
         if (newSelectedOrders.has(orderId)) {
@@ -154,7 +144,7 @@ export const OrderFinalizationScreen: React.FC = () => {
 
     const selectedOrdersList = Array.from(selectionState.selectedOrders)
       .map((id) => orders.find((o) => o.id === id))
-      .filter(Boolean) as OrderForFinalizationList[];
+      .filter(Boolean) as Order[];
 
     return selectedOrdersList.filter((order) => order.orderStatus !== 'READY');
   }, [selectionState.selectedOrders, orders]);
@@ -181,7 +171,7 @@ export const OrderFinalizationScreen: React.FC = () => {
   const handleConfirmFinalization = useCallback(async () => {
     setIsFinalizingOrders(true);
     try {
-      await orderFinalizationService.quickFinalizeMultipleOrders(
+      await orderService.quickFinalizeMultipleOrders(
         Array.from(selectionState.selectedOrders),
       );
 
@@ -207,35 +197,23 @@ export const OrderFinalizationScreen: React.FC = () => {
     }
   }, [selectionState.selectedOrders, showSnackbar, refetch]);
 
-  const handleShowOrderDetails = useCallback(
-    (order: OrderForFinalizationList) => {
-      setSelectedOrderIdForDetails(null);
-      setTimeout(() => {
-        setSelectedOrderIdForDetails(order.id);
-      }, 50);
-    },
-    [],
-  );
+  const handleShowOrderDetails = useCallback((order: Order) => {
+    setSelectedOrder(order);
+    setSelectedOrderIdForDetails(order.id);
+  }, []);
 
-  const _handlePrintPress = useCallback(() => {
+  const handlePrintFromList = useCallback(async (order: Order) => {
+    setSelectedOrderForPrint(order);
     setShowPrintModal(true);
   }, []);
 
-  const handlePrintFromList = useCallback(
-    async (order: OrderForFinalizationList) => {
-      setSelectedOrderForPrint(order);
-      setShowPrintModal(true);
-    },
-    [],
-  );
-
   const handlePrint = useCallback(
     async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
-      const orderToUse = orderForPrint || selectedOrderDetails;
+      const orderToUse = selectedOrderForPrint;
       if (!orderToUse) return;
 
       try {
-        await orderFinalizationService.printTicket(orderToUse.id, {
+        await orderService.printTicket(orderToUse.id, {
           printerId,
           ticketType,
         });
@@ -254,13 +232,21 @@ export const OrderFinalizationScreen: React.FC = () => {
         });
       }
     },
-    [orderForPrint, selectedOrderDetails, showSnackbar, refetch],
+    [selectedOrderForPrint, showSnackbar, refetch],
   );
 
   const renderOrderCard = useCallback(
-    ({ item }: { item: OrderForFinalizationList }) => (
+    ({ item }: { item: Order }) => (
       <OrderSummaryCard
-        item={item}
+        item={{
+          ...item,
+          notes: item.notes || undefined,
+          payments: item.payments
+            ? item.payments
+                .filter((p: any) => p && typeof p.amount === 'number')
+                .map((p: any) => ({ amount: p.amount }))
+            : undefined,
+        }}
         onPress={() => handleShowOrderDetails(item)}
         showCreatedBy={true}
         getStatusColor={(status) => OrderStatusInfo.getColor(status, theme)}
@@ -270,9 +256,7 @@ export const OrderFinalizationScreen: React.FC = () => {
             {handlePrintFromList && (
               <TouchableOpacity
                 style={styles.printContainer}
-                onPress={() =>
-                  handlePrintFromList(orderItem as OrderForFinalizationList)
-                }
+                onPress={() => handlePrintFromList(orderItem as Order)}
                 activeOpacity={0.7}
               >
                 <IconButton
@@ -281,14 +265,13 @@ export const OrderFinalizationScreen: React.FC = () => {
                   style={styles.printButton}
                   disabled
                 />
-                {((orderItem as OrderForFinalizationList)
-                  .ticketImpressionCount ?? 0) > 0 && (
+                {(((orderItem as any).ticketImpressions?.length ?? 0) > 0 ||
+                  ((orderItem as any).ticketImpressionCount ?? 0) > 0) && (
                   <View style={styles.printCountBadge}>
                     <Text style={styles.printCountText}>
-                      {
-                        (orderItem as OrderForFinalizationList)
-                          .ticketImpressionCount
-                      }
+                      {(orderItem as any).ticketImpressions?.length ||
+                        (orderItem as any).ticketImpressionCount ||
+                        0}
                     </Text>
                   </View>
                 )}
@@ -577,12 +560,16 @@ export const OrderFinalizationScreen: React.FC = () => {
         </Surface>
       )}
 
-      <OrderDetailsModal
+      <UnifiedOrderDetailsModal
         visible={selectedOrderIdForDetails !== null}
-        onDismiss={() => setSelectedOrderIdForDetails(null)}
-        order={selectedOrderDetails || null}
-        isLoading={isLoadingDetails}
-        orderId={selectedOrderIdForDetails || undefined}
+        onDismiss={() => {
+          setSelectedOrderIdForDetails(null);
+          setSelectedOrder(null);
+        }}
+        orderId={selectedOrderIdForDetails}
+        orderNumber={selectedOrder?.shiftOrderNumber}
+        dataSource="finalization"
+        showHistoryButton={false}
       />
 
       <PrintTicketModal
@@ -591,7 +578,7 @@ export const OrderFinalizationScreen: React.FC = () => {
           setShowPrintModal(false);
           setSelectedOrderForPrint(null);
         }}
-        order={orderForPrint || selectedOrderDetails || null}
+        order={selectedOrderForPrint}
         onPrint={handlePrint}
       />
 

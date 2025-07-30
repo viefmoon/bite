@@ -7,7 +7,6 @@ import {
   Text,
   Divider,
   IconButton,
-  Chip,
   ActivityIndicator,
 } from 'react-native-paper';
 import { format } from 'date-fns';
@@ -30,8 +29,12 @@ import {
 interface OrderDetailsViewProps {
   order: UnifiedOrderDetails | null;
   isLoading?: boolean;
+  headerActions?: React.ReactNode;
+  showFinalizationDate?: boolean;
   showPrintHistory?: boolean;
   onTogglePrintHistory?: () => void;
+  noPadding?: boolean;
+  compactMode?: boolean;
 }
 
 const formatPizzaCustomizations = (customizations: any[]): string => {
@@ -125,11 +128,56 @@ const formatPizzaCustomizations = (customizations: any[]): string => {
 export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   order,
   isLoading = false,
+  headerActions,
+  showFinalizationDate = false,
   showPrintHistory = false,
   onTogglePrintHistory,
+  noPadding = false,
+  compactMode = false,
 }) => {
   const theme = useAppTheme();
   const [localShowPrintHistory, setLocalShowPrintHistory] = useState(false);
+
+  // Calcular padding basado en las props
+  const contentPadding = noPadding ? 0 : compactMode ? 8 : 14;
+  const verticalSpacing = compactMode ? 6 : 10;
+  const cardSpacing = compactMode ? 4 : 8;
+
+  // Estilos dinámicos basados en props
+  const dynamicStyles = {
+    headerInfo: {
+      paddingHorizontal: contentPadding,
+      paddingVertical: verticalSpacing,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(0,0,0,0.08)',
+      marginBottom: compactMode ? 6 : 12,
+    },
+    infoSection: {
+      paddingHorizontal: contentPadding,
+      gap: 5,
+      marginBottom: verticalSpacing,
+      paddingVertical: verticalSpacing,
+    },
+    itemsList: {
+      paddingHorizontal: contentPadding,
+      paddingVertical: compactMode ? 8 : 12,
+      marginBottom: verticalSpacing,
+    },
+    paymentsSection: {
+      paddingHorizontal: contentPadding,
+      marginBottom: compactMode ? 8 : 12,
+    },
+    ticketImpressionsSection: {
+      paddingHorizontal: contentPadding,
+      marginBottom: compactMode ? 8 : 12,
+    },
+    footer: {
+      paddingHorizontal: contentPadding,
+      paddingVertical: compactMode ? 10 : 14,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(0,0,0,0.08)',
+    },
+  };
 
   const shouldShowPrintHistory = onTogglePrintHistory
     ? showPrintHistory
@@ -231,8 +279,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       <Surface
         style={[
           styles.itemCard,
-          styles.itemCardWithBackground,
-          { backgroundColor: theme.colors.elevation.level1 },
+          {
+            backgroundColor: theme.colors.elevation.level1,
+            marginBottom: cardSpacing,
+          },
         ]}
         elevation={1}
       >
@@ -291,14 +341,14 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                     >
                       • {modifier.name}
                     </Text>
-                    {modifier.price && Number(modifier.price) > 0 && (
+                    {modifier.price && modifier.price > 0 && (
                       <Text
                         style={[
                           styles.modifierPrice,
                           { color: theme.colors.tertiary },
                         ]}
                       >
-                        +${Number(modifier.price).toFixed(2)}
+                        +${modifier.price.toFixed(2)}
                       </Text>
                     )}
                   </View>
@@ -381,7 +431,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header Info */}
-      <View style={styles.headerInfo}>
+      <View style={dynamicStyles.headerInfo}>
         <View style={styles.chipsRow}>
           <View
             style={[
@@ -458,7 +508,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 })
               : ''}
           </Text>
-          {order.finalizedAt && (
+          {showFinalizationDate && order.finalizedAt && (
             <Text style={[styles.headerDate, { color: theme.colors.primary }]}>
               Finalizado:{' '}
               {format(new Date(order.finalizedAt), 'dd/MM/yyyy HH:mm', {
@@ -467,10 +517,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             </Text>
           )}
         </View>
+        {headerActions && (
+          <View style={styles.headerActions}>{headerActions}</View>
+        )}
       </View>
 
       {/* Order Info Section */}
-      <View style={styles.infoSection}>
+      <View style={dynamicStyles.infoSection}>
         {order.deliveryInfo?.recipientName && (
           <View style={styles.infoRow}>
             <Text
@@ -560,7 +613,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       <Divider style={styles.divider} />
 
       {/* Order Items */}
-      <View style={styles.itemsList}>
+      <View style={dynamicStyles.itemsList}>
         {order.orderItems.map((item) => (
           <React.Fragment key={item.id || `item-${item.productName}`}>
             {renderItem(item)}
@@ -573,7 +626,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       {/* Payments Section */}
       {order.payments && order.payments.length > 0 && (
         <>
-          <View style={styles.paymentsSection}>
+          <View style={dynamicStyles.paymentsSection}>
             <View style={styles.paymentSummaryCompact}>
               <View style={styles.summaryCompactRow}>
                 <Text
@@ -582,7 +635,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                     { color: theme.colors.onSurfaceVariant },
                   ]}
                 >
-                  Total: ${order.total.toFixed(2)}
+                  Total: ${(order.total || 0).toFixed(2)}
                 </Text>
                 <Text
                   style={[styles.summaryCompactLabel, styles.paidAmountText]}
@@ -597,7 +650,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                     (sum, p) => sum + p.amount,
                     0,
                   );
-                  const remaining = order.total - totalPaid;
+                  const remaining = (order.total || 0) - totalPaid;
                   if (remaining > 0) {
                     return (
                       <Text
@@ -733,7 +786,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       {/* Ticket Impressions Section */}
       {order.ticketImpressions && order.ticketImpressions.length > 0 && (
         <>
-          <View style={styles.ticketImpressionsSection}>
+          <View style={dynamicStyles.ticketImpressionsSection}>
             <TouchableOpacity
               style={styles.collapsibleHeader}
               onPress={handleTogglePrintHistory}
@@ -835,7 +888,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       )}
 
       {/* Footer with Payment Status */}
-      <View style={styles.footer}>
+      <View style={dynamicStyles.footer}>
         <View style={styles.footerLeft}>
           <Text
             style={[
@@ -846,7 +899,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             Total:
           </Text>
           <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
-            ${order.total.toFixed(2)}
+            ${(order.total || 0).toFixed(2)}
           </Text>
         </View>
         <View
@@ -923,6 +976,10 @@ const styles = StyleSheet.create({
   },
   headerDate: {
     fontSize: 11,
+  },
+  headerActions: {
+    marginTop: 8,
+    alignItems: 'flex-end',
   },
   infoSection: {
     paddingHorizontal: 14,

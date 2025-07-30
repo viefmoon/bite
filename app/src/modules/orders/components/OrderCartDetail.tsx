@@ -5,7 +5,16 @@ import React, {
   useState,
   useRef,
 } from 'react';
-import { Portal } from 'react-native-paper';
+import {
+  Portal,
+  Text,
+  Divider,
+  Button,
+  Menu,
+  IconButton,
+  Modal,
+  FAB,
+} from 'react-native-paper';
 import {
   View,
   ScrollView,
@@ -15,15 +24,6 @@ import {
   Keyboard,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  Text,
-  Divider,
-  Button,
-  Menu,
-  IconButton,
-  Modal,
-  FAB,
-} from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { OrderTypeEnum, OrderType } from '../schema/orders.schema';
@@ -43,7 +43,7 @@ import { useAuthStore } from '@/app/stores/authStore';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import {
   OrderTypeSelector,
   DineInForm,
@@ -224,22 +224,6 @@ const useOrderCart = ({
     });
   }, [scheduledTime, orderType, handleTimeConfirm]);
 
-  const handleEditCartItem = useCallback(
-    (item: CartItem) => {
-      if (onEditItem) {
-        onEditItem(item);
-      } else {
-        modalHelpers.showProductCustomization({
-          editingProduct: null,
-          editingItemFromList: item,
-          clearEditingState: () => {},
-          handleUpdateEditedItem,
-        });
-      }
-    },
-    [onEditItem, handleUpdateEditedItem],
-  );
-
   const handleUpdateEditedItem = useCallback(
     (
       itemId: string,
@@ -278,6 +262,22 @@ const useOrderCart = ({
       }
     },
     [isEditMode, setPrepaymentId, setPrepaymentAmount, setPrepaymentMethod],
+  );
+
+  const handleEditCartItem = useCallback(
+    (item: CartItem) => {
+      if (onEditItem) {
+        onEditItem(item);
+      } else {
+        modalHelpers.showProductCustomization({
+          editingProduct: null,
+          editingItemFromList: item,
+          clearEditingState: () => {},
+          handleUpdateEditedItem,
+        });
+      }
+    },
+    [onEditItem, handleUpdateEditedItem],
   );
 
   const handlePrepaymentDeleted = useCallback(() => {

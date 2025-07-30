@@ -38,9 +38,7 @@ export const OrderTypeEnum = orderTypeSchema.enum;
 
 // Tipos para el menú completo con relaciones anidadas
 // Extendemos los tipos base para incluir las relaciones necesarias
-export type FullMenuModifierGroup = ModifierGroup & {
-  productModifiers?: Modifier[];
-};
+export type FullMenuModifierGroup = ModifierGroup;
 
 export type FullMenuProduct = Product & {
   modifierGroups?: FullMenuModifierGroup[];

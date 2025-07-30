@@ -83,7 +83,11 @@ export function useUpdateProductMutation() {
           detailQueryKey,
           (old: Product | undefined) => {
             if (!old) return undefined;
-            const { variants, modifierGroupIds, ...restOfData } = data;
+            const {
+              variants: _variants,
+              modifierGroupIds: _modifierGroupIds,
+              ...restOfData
+            } = data;
             return { ...old, ...restOfData };
           },
         );
