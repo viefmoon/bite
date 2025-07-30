@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { orderService, orderKeys } from '@/app/services/orderService';
 import { ORDER_FILTER_PRESETS } from '@/app/types/order-filters.types';
+import { mapOrderToOrderOpenList } from '@/app/utils/typeConversions';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../utils/orderUtils';
 import { ApiError } from '@/app/lib/errors';
@@ -150,12 +151,15 @@ export const useCompleteOrderMutation = () => {
  */
 export const useGetOpenOrdersListQuery = (options?: {
   enabled?: boolean;
-}): UseQueryResult<Order[], ApiError> => {
+}): UseQueryResult<any[], ApiError> => {
   const queryKey = orderKeys.openOrdersList();
 
-  return useQuery<Order[], ApiError>({
+  return useQuery<any[], ApiError>({
     queryKey: queryKey,
-    queryFn: () => orderService.getOrders(ORDER_FILTER_PRESETS.open()),
+    queryFn: async () => {
+      const orders = await orderService.getOrders(ORDER_FILTER_PRESETS.open());
+      return orders.map(mapOrderToOrderOpenList);
+    },
     enabled: options?.enabled ?? true,
     refetchInterval: 10000, // Actualizar cada 10 segundos
     refetchIntervalInBackground: false,

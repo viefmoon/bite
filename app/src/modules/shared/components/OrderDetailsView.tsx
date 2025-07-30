@@ -15,6 +15,8 @@ import { useAppTheme } from '@/app/styles/theme';
 import {
   UnifiedOrderDetails,
   UnifiedOrderItem,
+  UnifiedPreparationScreenStatus,
+  UnifiedTicketImpression,
 } from '../types/unified-order.types';
 import {
   PreparationScreenStatusColors,
@@ -446,7 +448,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             </Text>
           </View>
           {order.preparationScreenStatuses &&
-            order.preparationScreenStatuses.map((screenStatus) => {
+            order.preparationScreenStatuses.map((screenStatus: UnifiedPreparationScreenStatus) => {
               const getStatusColor = (status: string) => {
                 return (
                   PreparationScreenStatusColors[
@@ -614,7 +616,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
       {/* Order Items */}
       <View style={dynamicStyles.itemsList}>
-        {order.orderItems.map((item) => (
+        {order.orderItems?.map((item) => (
           <React.Fragment key={item.id || `item-${item.productName}`}>
             {renderItem(item)}
           </React.Fragment>
@@ -806,7 +808,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
             {shouldShowPrintHistory && (
               <View style={styles.collapsibleContent}>
-                {order.ticketImpressions.map((impression, index) => {
+                {order.ticketImpressions.map((impression: UnifiedTicketImpression, index) => {
                   const getTicketTypeLabel = (type: string) => {
                     switch (type) {
                       case 'KITCHEN':
@@ -872,11 +874,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                           { color: theme.colors.onSurfaceVariant },
                         ]}
                       >
-                        {format(
-                          new Date(impression.impressionTime),
-                          'HH:mm:ss',
-                          { locale: es },
-                        )}
+                        {impression.impressionTime 
+                          ? format(
+                              new Date(impression.impressionTime),
+                              'HH:mm:ss',
+                              { locale: es },
+                            )
+                          : 'N/A'}
                       </Text>
                     </View>
                   );

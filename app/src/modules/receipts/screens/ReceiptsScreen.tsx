@@ -174,7 +174,12 @@ export const ReceiptsScreen: React.FC = () => {
 
   const renderReceiptItem = ({ item }: { item: Order }) => (
     <OrderSummaryCard
-      item={{ ...item, notes: item.notes || undefined }}
+      item={{ 
+        ...item, 
+        notes: item.notes || undefined,
+        payments: item.payments || undefined,
+        shiftOrderNumber: item.shiftOrderNumber || undefined,
+      }}
       onPress={() => handleReceiptPress(item)}
       renderActions={(_orderItem) => (
         <TouchableOpacity

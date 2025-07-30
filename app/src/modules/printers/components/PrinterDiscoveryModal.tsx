@@ -58,7 +58,7 @@ const PrinterDiscoveryModal: React.FC<PrinterDiscoveryModalProps> = ({
   }, [visible, discoverMutation, showSnackbar]);
 
   const handleRescan = () => {
-    discoverMutation.mutate();
+    discoverMutation.mutate(undefined);
   };
 
   const handleTestPrint = (printer: DiscoveredPrinter) => {

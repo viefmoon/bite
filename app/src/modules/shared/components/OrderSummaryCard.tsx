@@ -12,7 +12,7 @@ import {
 
 interface OrderItemType {
   id: string | number;
-  shiftOrderNumber: number;
+  shiftOrderNumber?: number;
   orderType?: (typeof OrderTypeEnum)[keyof typeof OrderTypeEnum];
   orderStatus: string;
   createdAt: string | Date;
@@ -42,9 +42,10 @@ interface OrderItemType {
   };
   isFromWhatsApp?: boolean;
   preparationScreenStatuses?: Array<{
-    id: string;
-    preparationScreenId: string;
-    preparationScreenName: string;
+    id?: string;
+    preparationScreenId?: string;
+    preparationScreenName?: string;
+    name?: string;
     status: string;
     startedAt?: string | null;
     completedAt?: string | null;
@@ -71,9 +72,10 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  let orderTitle = `#${item.shiftOrderNumber}`;
+  let orderTitle = item.shiftOrderNumber ? `#${item.shiftOrderNumber}` : '';
   if (item.orderType) {
-    orderTitle += ` • ${formatOrderTypeShort(item.orderType)}`;
+    const separator = orderTitle ? ' • ' : '';
+    orderTitle += `${separator}${formatOrderTypeShort(item.orderType)}`;
   }
 
   if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {

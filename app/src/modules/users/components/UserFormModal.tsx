@@ -510,7 +510,7 @@ export function UserFormModal({
               name="gender"
               render={({ field: { onChange, value } }) => (
                 <GenderSelector
-                  value={value}
+                  value={value ?? null}
                   onChange={onChange}
                   options={GENDER_OPTIONS}
                   theme={theme}

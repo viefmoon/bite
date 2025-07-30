@@ -63,6 +63,33 @@ export interface UnifiedPayment {
   updatedAt: string;
 }
 
+export interface UnifiedPreparationScreenStatus {
+  id: string;
+  preparationScreenId: string;
+  preparationScreenName: string;
+  status: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}
+
+export interface UnifiedTicketImpression {
+  id: string;
+  ticketType: string;
+  printedAt?: string;
+  impressionTime?: string;
+  printedBy?: string | null;
+  printerName?: string | null;
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  printer?: {
+    id: string;
+    name: string;
+  };
+}
+
 /**
  * Estructura unificada para order details
  * Normaliza todos los tipos de órdenes a una interfaz consistente
@@ -105,6 +132,6 @@ export interface UnifiedOrderDetails {
   orderItems?: UnifiedOrderItem[];
   payments?: UnifiedPayment[] | null;
   adjustments?: unknown[] | null;
-  preparationScreenStatuses?: unknown[] | null;
-  ticketImpressions?: unknown[] | null;
+  preparationScreenStatuses?: UnifiedPreparationScreenStatus[] | null;
+  ticketImpressions?: UnifiedTicketImpression[] | null;
 }
