@@ -26,18 +26,6 @@ export const useGetAreas = (
   });
 };
 
-export const useGetAreaById = (
-  id: string | null,
-  options?: { enabled?: boolean },
-) => {
-  const queryKey = areasQueryKeys.detail(id!); // Use non-null assertion as it's enabled conditionally
-  return useQuery<Area, Error>({
-    queryKey,
-    queryFn: () => areaService.getAreaById(id!),
-    enabled: !!id && (options?.enabled ?? true),
-  });
-};
-
 export const useCreateArea = () => {
   return useApiMutation(areaService.createArea, {
     successMessage: 'Área creada con éxito',

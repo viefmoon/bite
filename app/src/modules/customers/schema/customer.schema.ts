@@ -1,12 +1,5 @@
 import { z } from 'zod';
 
-// Pure TypeScript interfaces that can't be represented by Zod
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-}
-
 // Schema base para dirección
 export const addressBaseSchema = z.object({
   name: z.string().min(1, 'El nombre de la dirección es requerido').max(100),
@@ -91,8 +84,6 @@ export const customerEntitySchema = customerBaseSchema
     email: z.string().email().nullable().optional(),
     birthDate: z.date().nullable().optional(),
     stripeCustomerId: z.string().nullable().optional(),
-    fullChatHistory: z.array(z.custom<ChatMessage>()).nullable().optional(),
-    relevantChatHistory: z.array(z.custom<ChatMessage>()).nullable().optional(),
     lastInteraction: z.date().nullable().optional(),
     totalOrders: z.number().int().nonnegative(),
     totalSpent: z.number().nonnegative(),

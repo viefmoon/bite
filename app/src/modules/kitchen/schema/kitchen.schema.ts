@@ -106,13 +106,3 @@ export const kitchenFiltersSchema = z.object({
 });
 
 export type KitchenFilters = z.infer<typeof kitchenFiltersSchema>;
-
-// Esquema para PreparationScreen
-export const preparationScreenSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  isActive: z.boolean(),
-});
-
-export type PreparationScreen = z.infer<typeof preparationScreenSchema>;

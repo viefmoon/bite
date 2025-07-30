@@ -30,14 +30,6 @@ const getAreas = async (
   return response.data.items;
 };
 
-const getAreaById = async (id: string): Promise<Area> => {
-  const response = await apiClient.get<Area>(
-    API_PATHS.AREAS_BY_ID.replace(':id', id),
-  );
-
-  return response.data;
-};
-
 const createArea = async (data: CreateAreaDto): Promise<Area> => {
   const response = await apiClient.post<Area>(API_PATHS.AREAS, data);
 
@@ -59,7 +51,6 @@ const deleteArea = async (id: string): Promise<void> => {
 
 export const areaService = {
   getAreas,
-  getAreaById,
   createArea,
   updateArea,
   deleteArea,

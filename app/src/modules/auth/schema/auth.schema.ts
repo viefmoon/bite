@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 
 export type LoginFormInputs = z.infer<typeof loginSchema>;
 
-export const authEmailLoginDtoSchema = z.object({
+const authEmailLoginDtoSchema = z.object({
   email: z.string().email().optional(),
   username: z.string().optional(),
   password: z.string(),
@@ -20,7 +20,7 @@ import { userSchema } from '../../../app/schemas/domain/user.schema';
 export type { User } from '../../../app/schemas/domain/user.schema';
 export { userSchema };
 
-export const loginResponseDtoSchema = z.object({
+const loginResponseDtoSchema = z.object({
   token: z.string(),
   refreshToken: z.string(),
   tokenExpires: z.number(),

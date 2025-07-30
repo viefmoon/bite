@@ -18,8 +18,9 @@ import {
 } from '../hooks/useAvailabilityQueries';
 import { usePizzaCustomizationsAvailability } from '../hooks/usePizzaCustomizationsAvailability';
 import EmptyState from '@/app/components/common/EmptyState';
-import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import type { AppTheme } from '@/app/styles/theme';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 
 export const AvailabilityScreen: React.FC = () => {

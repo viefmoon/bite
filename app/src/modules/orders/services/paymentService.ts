@@ -1,9 +1,6 @@
 import apiClient from '../../../app/services/apiClient';
 import { API_PATHS } from '../../../app/constants/apiPaths';
-import type {
-  Payment,
-  CreatePaymentDto,
-} from '../schema/payment.schema';
+import type { Payment, CreatePaymentDto } from '../schema/payment.schema';
 
 class PaymentService {
   async createPayment(dto: CreatePaymentDto): Promise<Payment> {

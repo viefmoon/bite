@@ -133,7 +133,6 @@ export const formatPaymentMethod = (method: string): string => {
   return methodMap[method] || method;
 };
 
-
 /**
  * Obtiene el estado de pago basado en la información de la orden
  */

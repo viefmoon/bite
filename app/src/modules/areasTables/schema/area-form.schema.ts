@@ -23,9 +23,8 @@ export type CreateAreaDto = z.infer<typeof CreateAreaSchema>;
 export const UpdateAreaSchema = CreateAreaSchema.partial();
 export type UpdateAreaDto = z.infer<typeof UpdateAreaSchema>;
 
-// Esquema para filtros de búsqueda
-export const FindAllAreasSchema = areaSchema
-  .pick({ name: true, isActive: true })
-  .partial();
-
-export type FindAllAreasDto = z.infer<typeof FindAllAreasSchema>;
+// Tipo para filtros de búsqueda
+export type FindAllAreasDto = {
+  name?: string;
+  isActive?: boolean;
+};

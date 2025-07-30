@@ -37,21 +37,12 @@ export type CreateTableDto = z.infer<typeof CreateTableSchema>;
 export const UpdateTableSchema = CreateTableSchema.partial();
 export type UpdateTableDto = z.infer<typeof UpdateTableSchema>;
 
-// Transformador helper para convertir strings boolean
-const transformBoolean = (val: unknown) => {
-  if (val === 'true') return true;
-  if (val === 'false') return false;
-  return val;
+// Tipo para filtros de búsqueda
+export type FindAllTablesDto = {
+  name?: string;
+  areaId?: string;
+  capacity?: number;
+  isActive?: boolean;
+  isAvailable?: boolean;
+  isTemporary?: boolean;
 };
-
-// Esquema para filtros de búsqueda
-export const FindAllTablesSchema = z.object({
-  name: z.string().optional(),
-  areaId: z.string().uuid().optional(),
-  capacity: z.coerce.number().int().optional(),
-  isActive: z.preprocess(transformBoolean, z.boolean().optional()),
-  isAvailable: z.preprocess(transformBoolean, z.boolean().optional()),
-  isTemporary: z.preprocess(transformBoolean, z.boolean().optional()),
-});
-
-export type FindAllTablesDto = z.infer<typeof FindAllTablesSchema>;

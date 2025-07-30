@@ -31,14 +31,6 @@ const getTablesByAreaId = async (
   return response.data.items;
 };
 
-const getTableById = async (id: string): Promise<Table> => {
-  const response = await apiClient.get<Table>(
-    API_PATHS.TABLES_BY_ID.replace(':id', id),
-  );
-
-  return response.data;
-};
-
 const createTable = async (data: CreateTableDto): Promise<Table> => {
   const response = await apiClient.post<Table>(API_PATHS.TABLES, data);
 
@@ -63,7 +55,6 @@ const deleteTable = async (id: string): Promise<void> => {
 
 export const tableService = {
   getTablesByAreaId,
-  getTableById,
   createTable,
   updateTable,
   deleteTable,

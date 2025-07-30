@@ -12,7 +12,7 @@ const orderMenuQueryKey = ['orderMenu'];
 
 /**
  * Hook para obtener el menú en pantallas de creación y edición de órdenes.
- * Devuelve el menú completo con todas las relaciones necesarias para 
+ * Devuelve el menú completo con todas las relaciones necesarias para
  * validar modificadores y configuraciones.
  */
 export function useGetOrderMenu() {

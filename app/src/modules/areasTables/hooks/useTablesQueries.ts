@@ -30,18 +30,6 @@ export const useGetTablesByAreaId = (
   });
 };
 
-export const useGetTableById = (
-  id: string | null,
-  options?: { enabled?: boolean },
-) => {
-  const queryKey = tablesQueryKeys.detail(id!);
-  return useQuery<Table, Error>({
-    queryKey,
-    queryFn: () => tableService.getTableById(id!),
-    enabled: !!id && (options?.enabled ?? true),
-  });
-};
-
 export const useCreateTable = () => {
   return useApiMutation(tableService.createTable, {
     successMessage: 'Mesa creada con éxito',

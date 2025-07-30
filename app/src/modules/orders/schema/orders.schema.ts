@@ -143,5 +143,3 @@ export const orderOpenListSchema = z.object({
 });
 
 export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
-
-

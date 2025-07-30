@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Surface, Text, IconButton, Switch } from 'react-native-paper';
-import { useAppTheme, AppTheme } from '@/app/styles/theme';
+import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import type { AppTheme } from '@/app/styles/theme';
 
 interface AvailabilityListItemProps {
   title: string;
