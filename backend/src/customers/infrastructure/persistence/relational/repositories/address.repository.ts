@@ -78,5 +78,4 @@ export class AddressRelationalRepository
 
     return this.mapper.toDomain(saved);
   }
-
 }

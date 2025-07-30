@@ -27,7 +27,9 @@ export class DiscoveryService {
   ): Promise<DiscoveredPrinterDto[]> {
     // Si ya estamos escaneando, devolver el resultado anterior
     if (this.isScanning) {
-      this.logger.warn('Ya hay un escaneo en progreso. Devolviendo resultado anterior.');
+      this.logger.warn(
+        'Ya hay un escaneo en progreso. Devolviendo resultado anterior.',
+      );
       return this.lastScanResult;
     }
 
@@ -65,14 +67,14 @@ export class DiscoveryService {
     this.logger.log(
       `Descubrimiento TCP finalizado. Total impresoras encontradas: ${found.size}`,
     );
-    
+
     const result = [...found.values()];
-    
+
     // Guardar resultado y marcar que terminamos
     this.lastScanResult = result;
     this.lastScanTime = Date.now();
     this.isScanning = false;
-    
+
     return result;
   }
 

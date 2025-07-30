@@ -71,7 +71,9 @@ export class AvailabilityService {
     return menuAvailability;
   }
 
-  async getPizzaCustomizationsAvailability(): Promise<{ type: string; items: any[] }[]> {
+  async getPizzaCustomizationsAvailability(): Promise<
+    { type: string; items: any[] }[]
+  > {
     const customizationsResult = await this.pizzaCustomizationsService.findAll({
       page: 1,
       limit: 1000,
@@ -102,7 +104,9 @@ export class AvailabilityService {
     }));
   }
 
-  async getModifierGroupsAvailability(): Promise<ModifierGroupAvailabilityDto[]> {
+  async getModifierGroupsAvailability(): Promise<
+    ModifierGroupAvailabilityDto[]
+  > {
     const modifierGroupsResult = await this.modifierGroupsService.findAll({
       page: 1,
       limit: 1000,
@@ -165,10 +169,15 @@ export class AvailabilityService {
     await this.categoriesService.update(categoryId, { isActive });
 
     if (cascade) {
-      const subcategories = await this.subcategoriesService.findAllByCategoryId(categoryId);
+      const subcategories =
+        await this.subcategoriesService.findAllByCategoryId(categoryId);
 
       for (const subcategory of subcategories) {
-        await this.updateSubcategoryAvailability(subcategory.id, isActive, true);
+        await this.updateSubcategoryAvailability(
+          subcategory.id,
+          isActive,
+          true,
+        );
       }
     }
   }
@@ -181,7 +190,8 @@ export class AvailabilityService {
     await this.subcategoriesService.update(subcategoryId, { isActive });
 
     if (cascade) {
-      const products = await this.productsService.findAllBySubcategoryId(subcategoryId);
+      const products =
+        await this.productsService.findAllBySubcategoryId(subcategoryId);
 
       for (const product of products) {
         await this.productsService.update(product.id, { isActive });
@@ -204,7 +214,8 @@ export class AvailabilityService {
     await this.modifierGroupsService.update(groupId, { isActive });
 
     if (cascade) {
-      const modifiers = await this.productModifiersService.findByGroupId(groupId);
+      const modifiers =
+        await this.productModifiersService.findByGroupId(groupId);
 
       for (const modifier of modifiers) {
         await this.productModifiersService.update(modifier.id, { isActive });

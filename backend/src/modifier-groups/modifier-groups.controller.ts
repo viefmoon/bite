@@ -50,7 +50,9 @@ export class ModifierGroupsController {
   findAll(
     @Query() findAllModifierGroupsDto: FindAllModifierGroupsDto,
   ): Promise<ModifierGroup[]> {
-    return this.modifierGroupsService.findAllNoPagination(findAllModifierGroupsDto);
+    return this.modifierGroupsService.findAllNoPagination(
+      findAllModifierGroupsDto,
+    );
   }
 
   @ApiBearerAuth()

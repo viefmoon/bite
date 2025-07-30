@@ -269,7 +269,6 @@ export class ReceiptDetailDto {
   @ApiProperty({ type: () => DeliveryInfoDto, required: false })
   deliveryInfo?: DeliveryInfoDto;
 
-
   @ApiProperty({ type: () => [OrderItemDto] })
   orderItems: OrderItemDto[];
 

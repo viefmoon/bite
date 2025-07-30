@@ -43,7 +43,6 @@ export class ProductVariantsController {
     return this.productVariantsService.create(createProductVariantDto);
   }
 
-
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener una variante de producto por ID',

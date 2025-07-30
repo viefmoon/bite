@@ -22,7 +22,6 @@ export abstract class CustomerRepository
   ): Promise<NullableType<Customer>>;
   abstract remove(id: Customer['id']): Promise<void>;
 
-
   abstract findByEmail(
     email: Customer['email'],
   ): Promise<NullableType<Customer>>;
@@ -32,5 +31,4 @@ export abstract class CustomerRepository
   ): Promise<NullableType<Customer>>;
 
   abstract findBannedCustomers(): Promise<Customer[]>;
-
 }

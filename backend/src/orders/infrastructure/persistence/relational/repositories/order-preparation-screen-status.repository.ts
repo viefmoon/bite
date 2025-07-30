@@ -140,4 +140,8 @@ export class OrderPreparationScreenStatusRelationalRepository
   async deleteByOrderId(orderId: string): Promise<void> {
     await this.repository.delete({ orderId });
   }
+
+  async remove(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
 }

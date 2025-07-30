@@ -26,4 +26,6 @@ export abstract class OrderPreparationScreenStatusRepository {
   ): Promise<OrderPreparationScreenStatus>;
 
   abstract deleteByOrderId(orderId: string): Promise<void>;
+
+  abstract remove(id: string): Promise<void>;
 }

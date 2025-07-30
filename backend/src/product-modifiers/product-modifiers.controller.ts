@@ -39,7 +39,6 @@ export class ProductModifiersController {
     return this.productModifiersService.create(createProductModifierDto);
   }
 
-
   @Get(':id')
   @ApiOperation({ summary: 'Get a product modifier by id' })
   @ApiResponse({

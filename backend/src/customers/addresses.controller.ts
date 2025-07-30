@@ -43,7 +43,6 @@ export class AddressesController {
     return this.addressesService.create(createAddressDto);
   }
 
-
   @Get(':id')
   @ApiOperation({ summary: 'Find one address by ID' })
   @ApiParam({ name: 'id', description: 'Address ID' })

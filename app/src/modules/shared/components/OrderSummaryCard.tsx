@@ -43,8 +43,12 @@ interface OrderItemType {
   };
   isFromWhatsApp?: boolean;
   preparationScreenStatuses?: Array<{
-    name: string;
+    id: string;
+    preparationScreenId: string;
+    preparationScreenName: string;
     status: string;
+    startedAt?: string | null;
+    completedAt?: string | null;
   }>;
 }
 
@@ -268,7 +272,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                                   : screen.status === 'IN_PROGRESS'
                                     ? '⏳'
                                     : ''}
-                                🍳 {screen.name}
+                                🍳 {screen.preparationScreenName}
                               </Text>
                             </View>
                           );

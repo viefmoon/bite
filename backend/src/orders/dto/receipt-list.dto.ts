@@ -104,15 +104,26 @@ export class ReceiptListDto {
     items: {
       type: 'object',
       properties: {
-        name: { type: 'string' },
+        id: { type: 'string' },
+        preparationScreenId: { type: 'string' },
+        preparationScreenName: { type: 'string' },
         status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] },
+        startedAt: { type: 'string', nullable: true },
+        completedAt: { type: 'string', nullable: true },
       },
     },
     required: false,
     description: 'Estados de las pantallas de preparación',
   })
   @Expose()
-  preparationScreenStatuses?: Array<{ name: string; status: string }>;
+  preparationScreenStatuses?: Array<{
+    id: string;
+    preparationScreenId: string;
+    preparationScreenName: string;
+    status: string;
+    startedAt: string | null;
+    completedAt: string | null;
+  }>;
 
   @ApiProperty({
     description: 'Cantidad de tickets impresos para esta orden',

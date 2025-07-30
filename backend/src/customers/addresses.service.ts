@@ -20,7 +20,6 @@ export class AddressesService extends BaseCrudService<
     super(repo);
   }
 
-
   async setDefaultAddress(
     customerId: string,
     addressId: string,

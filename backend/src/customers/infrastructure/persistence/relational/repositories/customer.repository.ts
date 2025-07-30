@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  FindOptionsWhere,
-  ILike,
-  Repository,
-  MoreThanOrEqual,
-} from 'typeorm';
+import { FindOptionsWhere, ILike, Repository, MoreThanOrEqual } from 'typeorm';
 import { CustomerEntity } from '../entities/customer.entity';
 import { CustomerRepository } from '../../customer.repository';
 import { Customer } from '../../../../domain/customer';

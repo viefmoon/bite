@@ -541,6 +541,16 @@ export class OrdersRelationalRepository implements OrderRepository {
       // Incluir información del usuario creador
       .leftJoin('order.user', 'user')
       .addSelect(['user.username', 'user.firstName', 'user.lastName'])
+      .leftJoin('order.preparationScreenStatuses', 'pss')
+      .addSelect([
+        'pss.id',
+        'pss.preparationScreenId',
+        'pss.status',
+        'pss.startedAt',
+        'pss.completedAt',
+      ])
+      .leftJoin('pss.preparationScreen', 'ps')
+      .addSelect(['ps.name'])
       .where('order.createdAt >= :startDate', { startDate })
       .andWhere('order.createdAt <= :endDate', { endDate })
       .andWhere('order.orderStatus NOT IN (:...excludedStatuses)', {
@@ -566,33 +576,6 @@ export class OrdersRelationalRepository implements OrderRepository {
           .setParameter('completed', 'COMPLETED')
           .getRawOne();
 
-        // Obtener las pantallas de preparación con sus estados
-        const preparationScreensResult = await this.ordersRepository
-          .createQueryBuilder('o')
-          .select([
-            'ps.name as "screenName"',
-            'ps.id as "screenId"',
-            `CASE 
-              WHEN COUNT(oi.id) = COUNT(CASE WHEN oi.preparationStatus IN ('READY', 'DELIVERED') THEN 1 END) THEN 'READY'
-              WHEN COUNT(CASE WHEN oi.preparationStatus = 'IN_PROGRESS' THEN 1 END) > 0 THEN 'IN_PROGRESS'
-              ELSE 'PENDING'
-            END as "status"`,
-          ])
-          .leftJoin('o.orderItems', 'oi')
-          .leftJoin('oi.product', 'p')
-          .leftJoin('p.preparationScreen', 'ps')
-          .where('o.id = :orderId', { orderId: entity.id })
-          .andWhere('ps.id IS NOT NULL')
-          .groupBy('ps.id, ps.name')
-          .getRawMany();
-
-        const preparationScreenStatuses = preparationScreensResult
-          .map((r) => ({
-            name: r.screenName,
-            status: r.status,
-          }))
-          .filter((s) => s.name);
-
         const order = this.orderMapper.toDomain(entity);
         if (order) {
           // Crear un objeto optimizado con solo los campos necesarios
@@ -615,8 +598,7 @@ export class OrdersRelationalRepository implements OrderRepository {
             ticketImpressionCount: parseInt(
               aggregateResult?.impressioncount || '0',
             ),
-            preparationScreenStatuses: preparationScreenStatuses,
-            // Campos requeridos pero vacíos para la vista de lista
+            preparationScreenStatuses: order.preparationScreenStatuses,
             userId: order.userId,
             tableId: order.tableId,
             subtotal: order.subtotal,
@@ -630,7 +612,7 @@ export class OrdersRelationalRepository implements OrderRepository {
             customer: order.customer,
             isFromWhatsApp: order.isFromWhatsApp,
             estimatedDeliveryTime: order.estimatedDeliveryTime,
-            preparationScreenStatusesFull: undefined,
+
             ticketImpressions: undefined,
             finalizedAt: order.finalizedAt,
           };

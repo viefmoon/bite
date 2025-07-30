@@ -77,7 +77,6 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
-
   @Get('open-orders-list')
   @ApiOperation({ summary: 'Obtener lista optimizada de órdenes abiertas' })
   @ApiResponse({

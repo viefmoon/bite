@@ -80,7 +80,6 @@ export class CustomersService extends BaseCrudService<
     return this.findOne(id);
   }
 
-
   async addAddressToCustomer(
     customerId: string,
     dto: CreateAddressDto,
@@ -151,7 +150,6 @@ export class CustomersService extends BaseCrudService<
     await this.addressesService.remove(addressId);
   }
 
-
   async appendToChatHistory(
     customerId: string,
     message: { role: 'user' | 'assistant' | 'system'; content: string },
@@ -216,7 +214,6 @@ export class CustomersService extends BaseCrudService<
       lastInteractionAfter: dateThreshold,
     });
   }
-
 
   async banCustomer(customerId: string, banReason: string): Promise<Customer> {
     const customer = await this.findOne(customerId);

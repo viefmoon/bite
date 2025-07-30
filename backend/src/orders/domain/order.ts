@@ -59,7 +59,7 @@ export class Order {
 
   estimatedDeliveryTime?: Date | null;
 
-  preparationScreenStatusesFull?: OrderPreparationScreenStatus[];
+  preparationScreenStatuses?: OrderPreparationScreenStatus[];
 
   ticketImpressions?: TicketImpression[];
 
@@ -67,12 +67,6 @@ export class Order {
   paymentsSummary?: {
     totalPaid: number;
   };
-
-  // Vista simplificada de estados de pantallas para listas
-  preparationScreenStatuses?: Array<{
-    name: string;
-    status: string;
-  }>;
 
   ticketImpressionCount?: number;
 }

@@ -135,7 +135,6 @@ export class OrderForFinalizationDto {
   })
   isFromWhatsApp?: boolean;
 
-
   @ApiProperty({
     description: 'Pagos asociados a la orden',
     required: false,
@@ -143,6 +142,18 @@ export class OrderForFinalizationDto {
   payments?: any[];
 
   @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        preparationScreenId: { type: 'string' },
+        preparationScreenName: { type: 'string' },
+        status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'READY'] },
+        startedAt: { type: 'string', nullable: true },
+        completedAt: { type: 'string', nullable: true },
+      },
+    },
     description: 'Estados de las pantallas de preparación para la orden',
     required: false,
   })
@@ -151,8 +162,8 @@ export class OrderForFinalizationDto {
     preparationScreenId: string;
     preparationScreenName: string;
     status: string;
-    startedAt?: Date | null;
-    completedAt?: Date | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
   }[];
 
   @ApiProperty({

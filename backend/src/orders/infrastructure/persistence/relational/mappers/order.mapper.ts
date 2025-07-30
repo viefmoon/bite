@@ -75,7 +75,7 @@ export class OrderMapper extends BaseMapper<OrderEntity, Order> {
       : null;
     domain.estimatedDeliveryTime = entity.estimatedDeliveryTime;
 
-    domain.preparationScreenStatusesFull = mapArray(
+    domain.preparationScreenStatuses = mapArray(
       entity.preparationScreenStatuses,
       (status) => this.orderPreparationScreenStatusMapper.toDomain(status),
     );
