@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Snackbar, Text } from 'react-native-paper';
-import { StyleSheet, View, Modal } from 'react-native';
+import { Snackbar, Text, Portal } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
 import { useSnackbarStore, SnackbarType } from '@/app/stores/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -60,59 +60,40 @@ const GlobalSnackbar = () => {
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={hideSnackbar}
-    >
-      <View style={styles.modalOverlay} pointerEvents="box-none">
-        <View style={styles.snackbarContainer}>
-          <Snackbar
-            visible={true}
-            onDismiss={hideSnackbar}
-            duration={duration || 2500}
-            style={[
-              styles.snackbar,
-              {
-                backgroundColor,
-              },
-            ]}
-            theme={{
-              ...theme,
-              colors: {
-                ...theme.colors,
-                inversePrimary: textColor,
-                inverseOnSurface: textColor,
-              },
-            }}
-          >
-            <Text style={styles.messageText}>{message || ''}</Text>
-          </Snackbar>
-        </View>
-      </View>
-    </Modal>
+    <Portal>
+      <Snackbar
+        visible={visible}
+        onDismiss={hideSnackbar}
+        duration={duration || 2500}
+        style={[
+          styles.snackbar,
+          {
+            backgroundColor,
+          },
+        ]}
+        theme={{
+          ...theme,
+          colors: {
+            ...theme.colors,
+            inversePrimary: textColor,
+            inverseOnSurface: textColor,
+          },
+        }}
+      >
+        <Text style={[styles.messageText, { color: textColor }]}>{message || ''}</Text>
+      </Snackbar>
+    </Portal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  snackbarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 99999,
-    elevation: 99999,
-  },
   snackbar: {
-    marginHorizontal: 16,
+    position: 'absolute',
+    bottom: 30,
+    left: 16,
+    right: 16,
     borderRadius: 8,
-    marginBottom: 40,
+    zIndex: 99999,
   },
   messageText: {
     textAlign: 'center',
