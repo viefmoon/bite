@@ -388,7 +388,6 @@ export const useOrderManagement = () => {
     prepareOrderForBackend: prepareOrderForBackendData,
     confirmOrder,
     resetOrder,
-    resetToOriginalState: formStore.resetToOriginalState,
     checkForUnsavedChanges,
 
     // State getters

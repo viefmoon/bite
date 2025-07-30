@@ -121,22 +121,6 @@ export const formatOrderTypeShort = (type: OrderType): string => {
 };
 
 /**
- * Obtiene el ícono para el tipo de orden
- */
-export const getOrderTypeIcon = (type: OrderType): string => {
-  switch (type) {
-    case OrderTypeEnum.DINE_IN:
-      return 'silverware-fork-knife';
-    case OrderTypeEnum.TAKE_AWAY:
-      return 'bag-checked';
-    case OrderTypeEnum.DELIVERY:
-      return 'moped';
-    default:
-      return 'help-circle';
-  }
-};
-
-/**
  * Formatea el método de pago
  */
 export const formatPaymentMethod = (method: string): string => {

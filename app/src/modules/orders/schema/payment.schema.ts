@@ -41,11 +41,3 @@ export const createPaymentDtoSchema = z.object({
 });
 
 export type CreatePaymentDto = z.infer<typeof createPaymentDtoSchema>;
-
-export const updatePaymentDtoSchema = z.object({
-  paymentMethod: paymentMethodSchema.optional(),
-  amount: z.number().positive().optional(),
-  paymentStatus: paymentStatusSchema.optional(),
-});
-
-export type UpdatePaymentDto = z.infer<typeof updatePaymentDtoSchema>;

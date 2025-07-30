@@ -48,7 +48,6 @@ interface OrderFormState {
   setEditMode: (isEdit: boolean, orderId?: string | null) => void;
   checkForUnsavedChanges: () => void;
   resetForm: () => void;
-  resetToOriginalState: () => void;
   setOriginalState: (state: any) => void;
 }
 
@@ -255,22 +254,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
     });
   },
 
-  resetToOriginalState: () => {
-    const { originalState } = get();
-    if (!originalState) return;
-
-    set({
-      orderType: originalState.orderType,
-      selectedTableId: originalState.tableId,
-      isTemporaryTable: originalState.isTemporaryTable,
-      temporaryTableName: originalState.temporaryTableName,
-      deliveryInfo: { ...originalState.deliveryInfo },
-      orderNotes: originalState.notes,
-      scheduledTime: originalState.scheduledAt,
-      adjustments: [...originalState.adjustments],
-      hasUnsavedChanges: false,
-    });
-  },
 
   setOriginalState: (orderData: any) => {
     const originalState = {

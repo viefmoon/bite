@@ -9,7 +9,6 @@ import type { Category } from '@/app/schemas/domain/category.schema';
 import {
   orderStatusSchema,
   orderTypeSchema,
-  orderItemSchema,
 } from '@/app/schemas/domain/order.schema';
 import type {
   OrderItemModifier,
@@ -18,9 +17,6 @@ import type {
   OrderType,
   Order,
 } from '@/app/schemas/domain/order.schema';
-import { paymentSchema } from './payment.schema';
-import { adjustmentSchema } from '@/app/schemas/domain/adjustment.schema';
-import { deliveryInfoSchema } from '@/app/schemas/domain/delivery-info.schema';
 
 // Re-exportar tipos de dominio
 export type {
@@ -65,21 +61,17 @@ export type FullMenuCategory = Category & {
   subcategories: FullMenuSubCategory[];
 };
 
-// Schema para filtrar órdenes
-export const findAllOrdersDtoSchema = z.object({
-  userId: z.string().uuid().optional(),
-  tableId: z.string().uuid().optional(),
-  orderStatus: z
-    .union([orderStatusSchema, z.array(orderStatusSchema)])
-    .optional(),
-  orderType: orderTypeSchema.optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  page: z.number().int().positive().optional(),
-  limit: z.number().int().positive().optional(),
-});
-
-export type FindAllOrdersDto = z.infer<typeof findAllOrdersDtoSchema>;
+// Interface para filtrar órdenes
+export interface FindAllOrdersDto {
+  userId?: string;
+  tableId?: string;
+  orderStatus?: OrderStatus | OrderStatus[];
+  orderType?: OrderType;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
 
 // Schema para orden en lista abierta
 export const orderOpenListSchema = z.object({
@@ -164,66 +156,14 @@ export const orderOpenListSchema = z.object({
 
 export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
 
-// Schema para crear orden
-export const createOrderSchema = z.object({
-  orderType: orderTypeSchema,
-  orderItems: z.array(orderItemSchema),
-  payments: z.array(paymentSchema).optional(),
-  adjustments: z.array(adjustmentSchema).optional(),
-  tableId: z.string().uuid().optional(),
-  customerId: z.string().uuid().optional(),
-  deliveryInfo: deliveryInfoSchema.optional(),
-});
+// Interface para crear orden
+export interface CreateOrderDto {
+  orderType: OrderType;
+  orderItems: OrderItem[];
+  payments?: any[]; // TODO: Definir tipo Payment cuando se necesite
+  adjustments?: any[]; // TODO: Definir tipo Adjustment cuando se necesite
+  tableId?: string;
+  customerId?: string;
+  deliveryInfo?: any; // TODO: Definir tipo DeliveryInfo cuando se necesite
+}
 
-export type CreateOrderDto = z.infer<typeof createOrderSchema>;
-
-// Schema para orden con inclusiones
-export const orderWithIncludesSchema = z.object({
-  includeItems: z.boolean().optional(),
-  includePayments: z.boolean().optional(),
-  includeAdjustments: z.boolean().optional(),
-  includeUser: z.boolean().optional(),
-  includeCustomer: z.boolean().optional(),
-  includeTable: z.boolean().optional(),
-});
-
-export type OrderWithIncludes = z.infer<typeof orderWithIncludesSchema>;
-
-// Schema para parámetros de audio
-export const audioOrderParamsSchema = z.object({
-  audioFileUri: z.string(),
-  duration: z.number(),
-  tableNumber: z.number().optional(),
-  areaId: z.string().uuid().optional(),
-  customerPhone: z.string().optional(),
-  orderType: orderTypeSchema.optional(),
-});
-
-export type AudioOrderParams = z.infer<typeof audioOrderParamsSchema>;
-
-// Schema para respuesta de audio
-export const audioOrderResponseSchema = z.object({
-  success: z.boolean(),
-  parsedOrder: z
-    .object({
-      items: z.array(
-        z.object({
-          productName: z.string(),
-          variantName: z.string().nullable(),
-          quantity: z.number(),
-          modifiers: z.array(z.string()),
-          specialInstructions: z.string().nullable(),
-        }),
-      ),
-      tableNumber: z.number().nullable(),
-      customerPhone: z.string().nullable(),
-      orderType: orderTypeSchema,
-      specialRequests: z.string().nullable(),
-      deliveryAddress: z.string().nullable(),
-    })
-    .optional(),
-  error: z.string().optional(),
-  transcription: z.string().optional(),
-});
-
-export type AudioOrderResponse = z.infer<typeof audioOrderResponseSchema>;
