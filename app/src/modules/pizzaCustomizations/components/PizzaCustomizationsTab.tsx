@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Text,
@@ -24,7 +24,6 @@ import {
   PizzaCustomization,
 } from '../schema/pizzaCustomization.schema';
 import EmptyState from '@/app/components/common/EmptyState';
-import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 export function PizzaCustomizationsTab() {
   const theme = useAppTheme();
@@ -37,9 +36,6 @@ export function PizzaCustomizationsTab() {
   const [selectedCustomization, setSelectedCustomization] =
     useState<PizzaCustomization | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-  const [customizationToDelete, setCustomizationToDelete] =
-    useState<PizzaCustomization | null>(null);
   const [formModalVisible, setFormModalVisible] = useState(false);
   const [editingCustomizationId, setEditingCustomizationId] = useState<
     string | undefined
@@ -72,18 +68,9 @@ export function PizzaCustomizationsTab() {
     setFormModalVisible(true);
   };
 
-  const handleDelete = (customization: PizzaCustomization) => {
-    setCustomizationToDelete(customization);
+  const handleDelete = async (customization: PizzaCustomization) => {
     setDetailModalVisible(false);
-    setDeleteConfirmVisible(true);
-  };
-
-  const confirmDelete = async () => {
-    if (customizationToDelete) {
-      await deleteMutation.mutateAsync(customizationToDelete.id);
-      setDeleteConfirmVisible(false);
-      setCustomizationToDelete(null);
-    }
+    await deleteMutation.mutateAsync(customization.id);
   };
 
   const renderItem = ({ item }: { item: any }) => (
@@ -459,23 +446,6 @@ export function PizzaCustomizationsTab() {
         isDeleting={deleteMutation.isPending}
       />
 
-      <ConfirmationModal
-        visible={deleteConfirmVisible}
-        title="Eliminar personalización"
-        message={`¿Estás seguro de que quieres eliminar "${customizationToDelete?.name}"?`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        confirmButtonColor={theme.colors.error}
-        onConfirm={confirmDelete}
-        onCancel={() => {
-          setDeleteConfirmVisible(false);
-          setCustomizationToDelete(null);
-        }}
-        onDismiss={() => {
-          setDeleteConfirmVisible(false);
-          setCustomizationToDelete(null);
-        }}
-      />
 
       <PizzaCustomizationFormModal
         visible={formModalVisible}

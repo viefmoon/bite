@@ -244,15 +244,15 @@ export function ShiftsListScreen() {
                   styles.statusChip,
                   {
                     backgroundColor: isOpen
-                      ? theme.colors.primaryContainer
-                      : theme.colors.surfaceVariant,
+                      ? theme.colors.outline
+                      : theme.colors.outlineVariant,
                   },
                 ]}
                 textStyle={[
                   styles.statusChipText,
                   {
                     color: isOpen
-                      ? theme.colors.onPrimaryContainer
+                      ? theme.colors.surface
                       : theme.colors.onSurfaceVariant,
                   },
                 ]}
@@ -795,15 +795,19 @@ export function ShiftsListScreen() {
       paddingBottom: theme.spacing.m,
     },
     shiftCard: {
-      marginHorizontal: theme.spacing.m,
-      marginVertical: theme.spacing.xs,
-      backgroundColor: theme.colors.surface,
+      marginHorizontal: theme.spacing.s,
+      marginVertical: theme.spacing.xs / 2,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderWidth: 0,
+      elevation: 1,
     },
     openShiftCard: {
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.surface,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.primary,
     },
     shiftHeader: {
-      marginBottom: theme.spacing.s,
+      marginBottom: theme.spacing.xs,
     },
     shiftTitleRow: {
       flexDirection: 'row',
@@ -812,14 +816,14 @@ export function ShiftsListScreen() {
       marginBottom: 2,
     },
     shiftNumber: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '600',
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
       flex: 1,
     },
     shiftDate: {
-      fontSize: 13,
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      color: theme.colors.outline,
     },
     statusChip: {
       marginLeft: 'auto',
@@ -829,10 +833,12 @@ export function ShiftsListScreen() {
       fontSize: 11,
     },
     divider: {
-      marginVertical: theme.spacing.s,
+      marginVertical: theme.spacing.xs,
+      backgroundColor: theme.colors.outlineVariant,
+      opacity: 0.5,
     },
     shiftDetails: {
-      gap: theme.spacing.s,
+      gap: theme.spacing.xs,
     },
     timeSection: {
       flexDirection: 'row',
@@ -846,12 +852,13 @@ export function ShiftsListScreen() {
       textTransform: 'uppercase',
     },
     timeText: {
-      fontSize: 14,
-      color: theme.colors.onSurface,
-    },
-    durationText: {
       fontSize: 13,
       color: theme.colors.onSurfaceVariant,
+      fontWeight: '400',
+    },
+    durationText: {
+      fontSize: 12,
+      color: theme.colors.outline,
     },
     statsSection: {
       flexDirection: 'row',
@@ -859,43 +866,48 @@ export function ShiftsListScreen() {
     },
     statCard: {
       flex: 1,
-      padding: theme.spacing.s,
+      padding: theme.spacing.xs,
       borderRadius: theme.roundness,
-      backgroundColor: theme.colors.surfaceVariant,
+      backgroundColor: theme.colors.surface,
       alignItems: 'center',
-      gap: 2,
+      gap: 1,
+      elevation: 0,
     },
     statLabel: {
-      fontSize: 10,
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 9,
+      color: theme.colors.outline,
       textTransform: 'uppercase',
       letterSpacing: 0.3,
+      fontWeight: '500',
     },
     statValue: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: theme.colors.onSurface,
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.onSurfaceVariant,
     },
     cashSection: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: theme.spacing.s,
-      backgroundColor: theme.colors.surfaceVariant,
+      padding: theme.spacing.xs,
+      backgroundColor: theme.colors.surface,
       borderRadius: theme.roundness,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     cashRow: {
       alignItems: 'center',
     },
     cashLabel: {
-      fontSize: 11,
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 10,
+      color: theme.colors.outline,
+      fontWeight: '500',
     },
     cashValue: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
-      color: theme.colors.onSurface,
-      marginTop: 2,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: 1,
     },
     differenceLabel: {
       fontWeight: '600',
@@ -906,34 +918,37 @@ export function ShiftsListScreen() {
     userSection: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: theme.spacing.xs,
+      marginTop: theme.spacing.xs / 2,
     },
     userText: {
-      fontSize: 12,
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 11,
+      color: theme.colors.outline,
       fontStyle: 'italic',
+      fontWeight: '400',
     },
     actionButtonsContainer: {
       flexDirection: 'row',
-      marginTop: theme.spacing.s,
-      gap: theme.spacing.s,
+      marginTop: theme.spacing.xs,
+      gap: theme.spacing.xs,
     },
     actionButton: {
       flex: 1,
-      borderRadius: theme.roundness,
+      borderRadius: theme.roundness * 1.5,
+      elevation: 2,
     },
     ordersButton: {
-      // Estilo específico para el botón de órdenes si es necesario
+      // Los botones contained-tonal ya usan los colores del tema
     },
     summaryButton: {
-      // Estilo específico para el botón de resumen si es necesario
+      // Los botones contained-tonal ya usan los colores del tema
     },
     actionButtonLabel: {
-      fontSize: 12,
-      fontWeight: '600',
+      fontSize: 11,
+      fontWeight: '700',
     },
     actionButtonContent: {
-      paddingHorizontal: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs / 2,
+      paddingVertical: theme.spacing.xs / 2,
     },
     emptyContainer: {
       flex: 1,
