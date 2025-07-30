@@ -103,6 +103,7 @@ const SubcategoriesScreen: React.FC = () => {
     isDetailModalVisible,
     editingItem,
     selectedItem,
+    isDeleting,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleOpenDetailModal,

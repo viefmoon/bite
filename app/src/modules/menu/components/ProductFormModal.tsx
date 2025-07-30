@@ -195,6 +195,10 @@ const useProductFormLogic = ({
               initialData.photo.path;
           }
 
+          const associatedGroupIds = initialData.modifierGroups 
+            ? initialData.modifierGroups.map((group: ModifierGroup) => group.id)
+            : [];
+
           reset({
             name: initialData.name,
             description: initialData.description || null,
@@ -210,7 +214,7 @@ const useProductFormLogic = ({
             variants: initialData.variants || [],
             variantsToDelete: [],
             imageUri: imageUrl,
-            modifierGroupIds: [],
+            modifierGroupIds: associatedGroupIds,
           });
           setLocalSelectedFile(null);
         } else {
@@ -245,25 +249,7 @@ const useProductFormLogic = ({
     }
   }, [allModifierGroups]);
 
-  // Efecto para establecer los grupos de modificadores iniciales
-  useEffect(() => {
-    if (visible) {
-      if (isEditing && initialData?.modifierGroups) {
-        if (Array.isArray(initialData.modifierGroups)) {
-          const assignedIds = initialData.modifierGroups.map(
-            (group: ModifierGroup) => group.id,
-          );
-          setValue('modifierGroupIds', assignedIds);
-        } else {
-          setValue('modifierGroupIds', []);
-        }
-      } else if (!isEditing) {
-        setValue('modifierGroupIds', []);
-      } else if (isEditing && !initialData?.modifierGroups) {
-        setValue('modifierGroupIds', []);
-      }
-    }
-  }, [visible, isEditing, initialData, setValue, reset, defaultValues]);
+  // Este efecto ya no es necesario porque la precarga se hace en el reset inicial
 
   // Handlers para imágenes
   const handleImageSelected = useCallback(
