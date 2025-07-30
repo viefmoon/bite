@@ -285,7 +285,6 @@ export const useResponsive = (): ResponsiveInfo => {
     [dimensions.width],
   );
 
-
   return {
     // Dimensiones
     width: dimensions.width,
@@ -329,19 +328,4 @@ export const useResponsive = (): ResponsiveInfo => {
     // Breakpoints
     breakpoints: BREAKPOINTS,
   };
-};
-
-// Hook adicional para estilos responsive con el tema
-import { useAppTheme } from '@/app/styles/theme';
-
-export const useResponsiveStyles = <T extends Record<string, any>>(
-  styleFactory: (theme: any, responsive: ResponsiveInfo) => T,
-): T => {
-  const theme = useAppTheme();
-  const responsive = useResponsive();
-
-  return useMemo(
-    () => styleFactory(theme, responsive),
-    [theme, responsive, styleFactory],
-  );
 };

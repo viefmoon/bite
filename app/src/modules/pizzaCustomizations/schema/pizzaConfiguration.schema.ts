@@ -12,7 +12,6 @@ export const pizzaConfigurationSchema = z.object({
 
 export type PizzaConfiguration = z.infer<typeof pizzaConfigurationSchema>;
 
-
 // Esquemas para formularios
 export const pizzaConfigurationFormSchema = z.object({
   productId: z.string().min(1, 'El producto es requerido'),

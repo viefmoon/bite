@@ -47,16 +47,11 @@ export const API_PATHS = {
   ORDERS_RECEIPTS_LIST: '/api/v1/orders/receipts-list',
   ORDERS_RECEIPTS_BY_ID: '/api/v1/orders/receipts/:id',
   ORDERS_RECOVER: '/api/v1/orders/:id/recover',
-  PRINT_ORDER_TICKET: '/api/v1/print/order',
-
   THERMAL_PRINTERS: '/api/v1/thermal-printers',
   THERMAL_PRINTERS_BY_ID: '/api/v1/thermal-printers/:id',
   THERMAL_PRINTERS_DISCOVER: '/api/v1/thermal-printers/discover',
   THERMAL_PRINTERS_PING: '/api/v1/thermal-printers/:id/ping',
   THERMAL_PRINTERS_TEST_PRINT: '/api/v1/thermal-printers/test-print',
-
-  ADJUSTMENTS: '/api/v1/adjustments',
-  ADJUSTMENTS_BY_ID: '/api/v1/adjustments/:id',
 
   RESTAURANT_CONFIG: '/api/v1/restaurant-config',
 
@@ -82,10 +77,6 @@ export const API_PATHS = {
 
   CUSTOMERS: '/api/v1/customers',
   CUSTOMERS_BY_ID: '/api/v1/customers/:id',
-  CUSTOMERS_CHAT_MESSAGE: '/api/v1/customers/:customerId/chat-message',
-  CUSTOMERS_CHAT_HISTORY: '/api/v1/customers/:customerId/relevant-chat-history',
-  CUSTOMERS_STATS: '/api/v1/customers/:customerId/stats',
-  CUSTOMERS_ACTIVE_RECENT: '/api/v1/customers/active/recent',
   ADDRESSES: '/api/v1/addresses',
   ADDRESSES_BY_ID: '/api/v1/addresses/:id',
   ADDRESSES_BY_CUSTOMER: '/api/v1/customers/:customerId/addresses',
@@ -98,7 +89,6 @@ export const API_PATHS = {
   KITCHEN_ORDERS_COMPLETE_PREPARATION:
     '/api/v1/kitchen/orders/:orderId/complete-preparation',
   KITCHEN_MARK_PREPARED: '/api/v1/kitchen/order-items/:itemId/prepare',
-  KITCHEN_MARK_UNPREPARED: '/api/v1/kitchen/order-items/:itemId/unprepare',
 
   SHIFTS: '/api/v1/shifts',
   SHIFTS_OPEN: '/api/v1/shifts/open',
@@ -120,8 +110,6 @@ export const API_PATHS = {
   ORDERS_HISTORY: '/api/v1/orders/:orderId/history',
   ORDERS_QUICK_FINALIZE_MULTIPLE: '/api/v1/orders/quick-finalize-multiple',
   ORDERS_PRINT_TICKET: '/api/v1/orders/:orderId/print-ticket',
-
-  FILES_CHECK: '/api/v1/files/',
 
   AUDIO_ORDERS_PROCESS: '/api/v1/audio-orders/process',
   AUDIO_ORDERS_HEALTH: '/api/v1/audio-orders/health',

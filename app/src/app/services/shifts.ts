@@ -56,13 +56,6 @@ class ShiftsService {
     return response.data;
   }
 
-  async getById(id: string): Promise<Shift> {
-    const response = await apiClient.get(
-      API_PATHS.SHIFTS_DETAIL.replace(':id', id),
-    );
-    return response.data;
-  }
-
   async isShiftOpen(): Promise<boolean> {
     const currentShift = await this.getCurrentShift();
     return currentShift !== null && currentShift.status === 'OPEN';

@@ -25,10 +25,10 @@ export function useKitchenOrders(filters: Partial<KitchenFilters> = {}) {
 }
 
 /**
- * Hook para marcar items como preparados con actualización optimista granular
+ * Hook interno para marcar items como preparados con actualización optimista granular
  * No invalida toda la query, solo actualiza el item específico
  */
-export function useUpdateKitchenItem() {
+function useUpdateKitchenItem() {
   const queryClient = useQueryClient();
   const { showError } = useKitchenSnackbar();
 
@@ -109,9 +109,9 @@ export function useUpdateKitchenItem() {
 }
 
 /**
- * Hook para iniciar preparación de órdenes con actualización optimista granular
+ * Hook interno para iniciar preparación de órdenes con actualización optimista granular
  */
-export function useUpdateKitchenOrderStatus() {
+function useUpdateKitchenOrderStatus() {
   const queryClient = useQueryClient();
   const { showError } = useKitchenSnackbar();
 

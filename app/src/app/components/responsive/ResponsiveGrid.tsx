@@ -42,7 +42,6 @@ interface ResponsiveGridProps {
   itemPadding?: number;
 }
 
-
 export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   children,
   style,

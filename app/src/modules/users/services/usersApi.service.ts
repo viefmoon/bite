@@ -56,14 +56,4 @@ export const usersApiService = {
     );
     return response.data;
   },
-
-  async toggleActive(id: string, isActive: boolean): Promise<User> {
-    const response = await apiClient.patch(
-      API_PATHS.USERS_BY_ID.replace(':id', id),
-      {
-        isActive,
-      },
-    );
-    return response.data;
-  },
 };

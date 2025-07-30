@@ -364,13 +364,3 @@ export const ResponsiveView: React.FC<ResponsiveViewProps> = ({
     </View>
   );
 };
-
-// Exportar también un componente Row para facilitar layouts horizontales
-export const ResponsiveRow: React.FC<ResponsiveViewProps> = (props) => {
-  return <ResponsiveView direction="row" {...props} />;
-};
-
-// Exportar un componente Column para mantener consistencia
-export const ResponsiveColumn: React.FC<ResponsiveViewProps> = (props) => {
-  return <ResponsiveView direction="column" {...props} />;
-};

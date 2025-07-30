@@ -45,15 +45,8 @@ async function update(
   return response.data;
 }
 
-async function remove(id: string): Promise<void> {
-  await apiClient.delete(
-    API_PATHS.PIZZA_CONFIGURATIONS_BY_ID.replace(':id', id),
-  );
-}
-
 export const pizzaConfigurationsService = {
   findByProductId,
   create,
   update,
-  remove,
 };

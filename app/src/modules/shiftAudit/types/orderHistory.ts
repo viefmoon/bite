@@ -66,4 +66,3 @@ export interface HistoryItem {
   batchOperations?: BatchOperation[];
   type: 'order' | 'item';
 }
-

@@ -34,10 +34,6 @@ class AppConfigService {
     const config = await this.getConfig();
     return config.maps.apiKey;
   }
-
-  clearCache() {
-    this.config = null;
-  }
 }
 
 export const appConfigService = new AppConfigService();
