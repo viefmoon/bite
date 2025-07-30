@@ -98,7 +98,6 @@ export const uploadFile = async (
 
 const fileService = {
   uploadFile,
-  uploadImage: uploadFile,
 };
 
 export default fileService;

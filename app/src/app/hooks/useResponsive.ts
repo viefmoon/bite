@@ -15,7 +15,6 @@ import {
   applyResponsiveStyle,
   getGridColumns,
   getOrientation as getOrientationUtil,
-  maintainAspectRatio,
   normalizeDPI,
 } from '@/app/styles/responsive';
 
@@ -105,26 +104,10 @@ export interface ResponsiveInfo {
     gap?: number,
     padding?: number,
   ) => number;
-  maintainAspectRatio: (
-    originalWidth: number,
-    originalHeight: number,
-    maxWidth: number,
-    maxHeight: number,
-  ) => { width: number; height: number };
   normalizeDPI: (size: number) => number;
 
   // Breakpoints
   breakpoints: typeof BREAKPOINTS;
-
-  // Helpers de comparación
-  isBreakpoint: {
-    xs: boolean;
-    sm: boolean;
-    md: boolean;
-    lg: boolean;
-    xl: boolean;
-    xxl: boolean;
-  };
 }
 
 export const useResponsive = (): ResponsiveInfo => {
@@ -302,24 +285,6 @@ export const useResponsive = (): ResponsiveInfo => {
     [dimensions.width],
   );
 
-  // Helpers de breakpoint
-  const isBreakpoint = useMemo(
-    () => ({
-      xs:
-        dimensions.width >= BREAKPOINTS.xs && dimensions.width < BREAKPOINTS.sm,
-      sm:
-        dimensions.width >= BREAKPOINTS.sm && dimensions.width < BREAKPOINTS.md,
-      md:
-        dimensions.width >= BREAKPOINTS.md && dimensions.width < BREAKPOINTS.lg,
-      lg:
-        dimensions.width >= BREAKPOINTS.lg && dimensions.width < BREAKPOINTS.xl,
-      xl:
-        dimensions.width >= BREAKPOINTS.xl &&
-        dimensions.width < BREAKPOINTS.xxl,
-      xxl: dimensions.width >= BREAKPOINTS.xxl,
-    }),
-    [dimensions.width],
-  );
 
   return {
     // Dimensiones
@@ -359,12 +324,10 @@ export const useResponsive = (): ResponsiveInfo => {
     // Utilidades
     applyResponsiveStyle: applyResponsiveStyleMemo,
     getGridColumns: getGridColumnsMemo,
-    maintainAspectRatio,
     normalizeDPI,
 
     // Breakpoints
     breakpoints: BREAKPOINTS,
-    isBreakpoint,
   };
 };
 

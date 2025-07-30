@@ -12,25 +12,6 @@ export const pizzaConfigurationSchema = z.object({
 
 export type PizzaConfiguration = z.infer<typeof pizzaConfigurationSchema>;
 
-// Esquemas para inputs
-export const createPizzaConfigurationInputSchema = z.object({
-  productId: z.string(),
-  includedToppings: z.number(),
-  extraToppingCost: z.number(),
-});
-
-export type CreatePizzaConfigurationInput = z.infer<
-  typeof createPizzaConfigurationInputSchema
->;
-
-export const updatePizzaConfigurationInputSchema = z.object({
-  includedToppings: z.number().optional(),
-  extraToppingCost: z.number().optional(),
-});
-
-export type UpdatePizzaConfigurationInput = z.infer<
-  typeof updatePizzaConfigurationInputSchema
->;
 
 // Esquemas para formularios
 export const pizzaConfigurationFormSchema = z.object({

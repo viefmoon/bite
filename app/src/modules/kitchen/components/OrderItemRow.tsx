@@ -6,7 +6,6 @@ import { useResponsive } from '@/app/hooks/useResponsive';
 
 interface OrderItemRowProps {
   item: KitchenOrderItem;
-  onPress?: () => void;
   onTogglePrepared?: (itemId: string, currentStatus: boolean) => void;
   isOrderInPreparation?: boolean;
 }

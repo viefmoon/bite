@@ -42,25 +42,6 @@ interface ResponsiveGridProps {
   itemPadding?: number;
 }
 
-interface GridItemProps {
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  span?: number;
-  spanTablet?: number;
-}
-
-// Componente para items del grid
-export const GridItem: React.FC<GridItemProps> = ({
-  children,
-  style,
-  span = 1,
-  spanTablet,
-}) => {
-  const responsive = useResponsive();
-  const actualSpan = responsive.isTablet && spanTablet ? spanTablet : span;
-
-  return <View style={[{ flex: actualSpan }, style]}>{children}</View>;
-};
 
 export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   children,
