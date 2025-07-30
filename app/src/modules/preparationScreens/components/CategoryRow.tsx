@@ -5,7 +5,7 @@ import { Text, Checkbox, IconButton, Divider } from 'react-native-paper';
 interface Category {
   id: string;
   name: string;
-  photo: any;
+  photo?: any;
   subcategories: any[];
 }
 

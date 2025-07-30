@@ -6,8 +6,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 interface Product {
   id: string;
   name: string;
-  photo: any;
-  price: string | number | null | undefined;
+  photo?: any;
+  price?: string | number | null | undefined;
   isAssociated: boolean;
   currentPreparationScreenId: string | null;
 }

@@ -5,7 +5,7 @@ import { Text, Checkbox, IconButton } from 'react-native-paper';
 interface Subcategory {
   id: string;
   name: string;
-  photo: any;
+  photo?: any;
   products: any[];
 }
 

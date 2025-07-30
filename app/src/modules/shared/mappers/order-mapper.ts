@@ -151,6 +151,7 @@ export const mapReceiptToUnifiedOrder = (
         id: impression.id,
         ticketType: impression.ticketType,
         impressionTime: impression.impressionTime,
+        printedAt: impression.impressionTime,
         user: impression.user
           ? {
               id: impression.user.id,
@@ -262,6 +263,7 @@ export const mapOrderForFinalizationToUnifiedOrder = (
         id: impression.id,
         ticketType: impression.ticketType,
         impressionTime: impression.impressionTime,
+        printedAt: impression.impressionTime,
         user: impression.user
           ? {
               id: impression.user.id,

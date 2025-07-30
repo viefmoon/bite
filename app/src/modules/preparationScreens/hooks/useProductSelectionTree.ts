@@ -3,8 +3,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 interface Product {
   id: string;
   name: string;
-  photo: any;
-  price: string | number | null | undefined;
+  photo?: any;
+  price?: string | number | null | undefined;
   isAssociated: boolean;
   currentPreparationScreenId: string | null;
 }
@@ -12,14 +12,14 @@ interface Product {
 interface Subcategory {
   id: string;
   name: string;
-  photo: any;
+  photo?: any;
   products: Product[];
 }
 
 interface Category {
   id: string;
   name: string;
-  photo: any;
+  photo?: any;
   subcategories: Subcategory[];
 }
 
