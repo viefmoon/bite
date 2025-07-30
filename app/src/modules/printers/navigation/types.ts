@@ -5,7 +5,3 @@ export type PrintersStackParamList = {
   [NAVIGATION_PATHS.PRINTERS_LIST]: undefined;
 };
 
-export type PrintersListScreenProps = NativeStackScreenProps<
-  PrintersStackParamList,
-  typeof NAVIGATION_PATHS.PRINTERS_LIST
->;

@@ -1,24 +1,7 @@
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { DrawerNavigationOptions } from '@react-navigation/drawer';
 import { AppTheme } from '../styles/theme';
 import { ResponsiveInfo } from '../hooks/useResponsive';
 
-export const getDrawerHeaderOptions = (
-  theme: AppTheme,
-  responsive?: ResponsiveInfo,
-): DrawerNavigationOptions => ({
-  headerStyle: {
-    backgroundColor: theme.colors.primary,
-  },
-  headerTintColor: theme.colors.onPrimary,
-  headerTitleStyle: {
-    ...theme.fonts.titleLarge,
-    color: theme.colors.onPrimary,
-    fontWeight: 'bold',
-    fontSize: responsive?.fontSizePreset.xl,
-  },
-  headerShadowVisible: false,
-});
 
 export const getStackHeaderOptions = (
   theme: AppTheme,

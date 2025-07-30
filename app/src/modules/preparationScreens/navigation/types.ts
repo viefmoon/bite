@@ -6,8 +6,3 @@ export type PreparationScreensStackParamList = {
   [NAVIGATION_PATHS.PREPARATION_SCREENS_LIST]: undefined; // La pantalla de lista no recibe parámetros
 };
 
-// Tipos específicos para las props de cada pantalla del Stack
-export type PreparationScreensListScreenProps = NativeStackScreenProps<
-  PreparationScreensStackParamList,
-  typeof NAVIGATION_PATHS.PREPARATION_SCREENS_LIST
->;
