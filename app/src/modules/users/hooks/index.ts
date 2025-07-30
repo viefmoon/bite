@@ -4,5 +4,4 @@ export {
   useUpdateUser,
   useDeleteUser,
   useResetPassword,
-  useToggleUserActive,
 } from './useUsers';

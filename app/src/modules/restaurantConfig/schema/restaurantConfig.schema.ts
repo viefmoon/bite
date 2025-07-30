@@ -73,7 +73,6 @@ export type CreateBusinessHoursDto = z.infer<
   typeof createBusinessHoursDtoSchema
 >;
 
-
 export const updateRestaurantConfigDtoSchema = z.object({
   // Información básica
   restaurantName: z.string().optional(),

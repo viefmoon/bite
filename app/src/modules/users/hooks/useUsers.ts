@@ -81,23 +81,3 @@ export function useResetPassword() {
   );
 }
 
-export function useToggleUserActive() {
-  const queryClient = useQueryClient();
-
-  return useApiMutation(
-    ({ id, isActive }: { id: string; isActive: boolean }) =>
-      usersApiService.toggleActive(id, isActive),
-    {
-      suppressSuccessMessage: true,
-      invalidateQueryKeys: [[USERS_QUERY_KEY]],
-      onSuccess: (_, { id, isActive }) => {
-        queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY, id] });
-        const showSnackbar = useSnackbarStore.getState().showSnackbar;
-        showSnackbar({
-          message: `Usuario ${isActive ? 'activado' : 'desactivado'} exitosamente`,
-          type: 'success',
-        });
-      },
-    },
-  );
-}

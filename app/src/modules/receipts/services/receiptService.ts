@@ -62,5 +62,4 @@ export const receiptQueryOptions = {
     queryKey: ['receipts', params],
     queryFn: () => receiptService.getReceiptsList(params),
   }),
-
 };

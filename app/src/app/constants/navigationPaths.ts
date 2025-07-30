@@ -55,7 +55,6 @@ export const NAVIGATION_PATHS = {
   PREPARATION_SCREENS_STACK: 'PreparationScreensStack',
   PREPARATION_SCREENS_LIST: 'PreparationScreensList',
 
-
   SERVER_SETTINGS: 'ServerSettings',
   WELCOME: 'Welcome',
 } as const;

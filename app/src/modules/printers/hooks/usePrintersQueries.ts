@@ -43,7 +43,6 @@ export const usePrintersQuery = (
   });
 };
 
-
 export const useCreatePrinterMutation = () => {
   return useApiMutation(printerService.createPrinter, {
     invalidateQueryKeys: [printerKeys.lists()],

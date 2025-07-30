@@ -28,7 +28,6 @@ export const useReceipts = (filters?: ReceiptFilters) => {
   return query;
 };
 
-
 export const useRecoverOrder = () => {
   return useApiMutation(
     (orderId: string) => receiptService.recoverOrder(orderId),
