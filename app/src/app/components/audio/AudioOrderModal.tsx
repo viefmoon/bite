@@ -25,7 +25,7 @@ import type {
   CartItemModifier,
 } from '@/modules/orders/utils/cartUtils';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import { Swipeable } from 'react-native-gesture-handler';
 import {
   OrderTypeEnum,
@@ -451,9 +451,14 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
         variantName: foundProduct.variants?.find((v) => v.id === item.variantId)
           ?.name,
         selectedPizzaCustomizations: item.pizzaCustomizations?.map((pc) => ({
+          id: `temp-${pc.customizationId}-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+          orderItemId: `${item.productId}-${index}`,
           pizzaCustomizationId: pc.customizationId,
-          half: pc.half as any,
-          action: pc.action as any,
+          updatedAt: new Date().toISOString(),
+          half: pc.half as 'FULL' | 'HALF_1' | 'HALF_2',
+          action: pc.action as 'ADD' | 'REMOVE',
+          pizzaCustomization: undefined,
         })),
       };
 
@@ -1539,9 +1544,8 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
       <ResponsiveModal
         visible={visible}
         onDismiss={handleAttemptExit}
-        showHeader={true}
         title={modalTitle}
-        maxWidth={responsive.isTablet ? 520 : 500}
+        maxWidthPercent={responsive.isTablet ? 85 : 94}
         maxHeightPercent={90}
         dismissable={!isProcessing}
         isLoading={false}

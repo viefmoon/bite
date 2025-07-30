@@ -178,8 +178,7 @@ const useProductFormLogic = ({
         if (isEditing && initialData) {
           const initialPrice = initialData.price;
           const parsedPrice =
-            initialPrice !== null &&
-            initialPrice !== undefined
+            initialPrice !== null && initialPrice !== undefined
               ? initialPrice
               : null;
 

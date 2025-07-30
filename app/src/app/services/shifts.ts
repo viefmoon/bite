@@ -61,7 +61,6 @@ class ShiftsService {
     return currentShift !== null && currentShift.status === 'OPEN';
   }
 
-
   calculateShiftSummary(shift: Shift, orders: Order[]): ShiftSummary {
     const paymentMethodsSummary = new Map<
       string,

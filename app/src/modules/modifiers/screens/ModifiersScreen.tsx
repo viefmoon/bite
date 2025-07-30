@@ -205,7 +205,9 @@ const ModifiersScreen = () => {
       label: 'Precio Adicional',
       render: (value) => (
         <Text style={styles.fieldValue}>
-          {value !== null && typeof value === 'number' ? `$${value.toFixed(2)}` : 'N/A'}
+          {value !== null && typeof value === 'number'
+            ? `$${value.toFixed(2)}`
+            : 'N/A'}
         </Text>
       ),
     },

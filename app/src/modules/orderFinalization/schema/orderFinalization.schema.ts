@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { selectedPizzaCustomizationSchema } from '@/app/schemas/domain/order.schema';
+import { selectedPizzaCustomizationSchema } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 
 const deliveryInfoSchema = z.object({
   recipientName: z.string().optional(),

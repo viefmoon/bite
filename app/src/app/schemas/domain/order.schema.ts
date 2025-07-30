@@ -45,9 +45,11 @@ export const orderSchema = z.object({
   deliveryInfo: z.any().optional().nullable(),
   preparationScreenStatuses: z.array(z.any()).optional(),
   ticketImpressions: z.array(z.any()).optional(),
-  paymentsSummary: z.object({
-    totalPaid: z.number(),
-  }).optional(),
+  paymentsSummary: z
+    .object({
+      totalPaid: z.number(),
+    })
+    .optional(),
   customer: z.any().optional().nullable(),
   ticketImpressionCount: z.number().optional(),
 });
