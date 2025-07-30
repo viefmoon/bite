@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
-export interface ProductSalesSummary {
+interface ProductSalesSummary {
   productId: string;
   productName: string;
   quantity: number;
@@ -27,7 +27,7 @@ export interface CategorySalesSummary {
   subcategories: SubcategorySalesSummary[];
 }
 
-export interface ShiftSalesSummary {
+interface ShiftSalesSummary {
   shiftId: string;
   shiftNumber: number;
   date: string;

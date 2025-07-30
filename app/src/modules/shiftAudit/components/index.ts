@@ -1,9 +1,2 @@
-export { BatchOperationsSection } from './BatchOperationsSection';
-export { ChangeDetailRenderer } from './ChangeDetailRenderer';
-export { HistoryItemComponent } from './HistoryItemComponent';
-export { OrderDetailsSection } from './OrderDetailsSection';
-export { OrderDetailsView } from './OrderDetailsView';
+// Solo exportamos los componentes que se usan externamente
 export { OrderHistoryContent } from './OrderHistoryContent';
-export { ProductItemRenderer } from './ProductItemRenderer';
-export { ShiftOrdersModal } from './ShiftOrdersModal';
-export { ShiftSalesSummaryView } from './ShiftSalesSummaryView';

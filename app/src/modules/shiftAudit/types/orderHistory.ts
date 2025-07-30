@@ -67,8 +67,3 @@ export interface HistoryItem {
   type: 'order' | 'item';
 }
 
-export interface OrderHistoryViewProps {
-  orderId: string;
-  orderNumber?: number | null;
-  onBack: () => void;
-}

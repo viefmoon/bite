@@ -26,7 +26,8 @@ import { useAppTheme } from '@/app/styles/theme';
 import { useShifts } from '../hooks/useShifts';
 import { formatCurrency } from '@/app/lib/formatters';
 import type { Shift } from '@/app/schemas/domain/shift.schema';
-import { ShiftOrdersModal, ShiftSalesSummaryView } from '../components';
+import { ShiftOrdersModal } from '../components/ShiftOrdersModal';
+import { ShiftSalesSummaryView } from '../components/ShiftSalesSummaryView';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -223,7 +224,7 @@ export function ShiftsListScreen() {
   };
 
   const renderShiftItem = ({ item: shift }: { item: Shift }) => {
-    const isOpen = shift.status === 'open';
+    const isOpen = shift.status === 'OPEN';
 
     return (
       <Card
