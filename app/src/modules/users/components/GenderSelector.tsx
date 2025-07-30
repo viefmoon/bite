@@ -18,81 +18,71 @@ interface GenderSelectorProps {
   responsive: ReturnType<typeof useResponsive>;
 }
 
-export const GenderSelector = React.memo(({ 
-  value, 
-  onChange, 
-  options, 
-  theme, 
-  responsive 
-}: GenderSelectorProps) => {
-  const styles = getStyles(theme, responsive);
+export const GenderSelector = React.memo(
+  ({ value, onChange, options, theme, responsive }: GenderSelectorProps) => {
+    const styles = getStyles(theme, responsive);
 
-  return (
-    <View style={styles.inputContainer}>
-      <View style={styles.fieldLabelContainer}>
-        <Icon
-          source="gender-transgender"
-          size={20}
-          color={theme.colors.primary}
-        />
-        <Text style={styles.sectionTitle} variant="titleMedium">
-          Género
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.genderContainer,
-          { marginTop: theme.spacing.s },
-        ]}
-      >
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            activeOpacity={0.7}
-          >
-            <Surface
-              style={[
-                styles.genderOption,
-                value === option.value && styles.genderOptionActive,
-              ]}
-              elevation={value === option.value ? 3 : 1}
+    return (
+      <View style={styles.inputContainer}>
+        <View style={styles.fieldLabelContainer}>
+          <Icon
+            source="gender-transgender"
+            size={20}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sectionTitle} variant="titleMedium">
+            Género
+          </Text>
+        </View>
+        <View style={[styles.genderContainer, { marginTop: theme.spacing.s }]}>
+          {options.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              activeOpacity={0.7}
             >
-              <View
+              <Surface
                 style={[
-                  styles.genderIconContainer,
-                  value === option.value && {
-                    backgroundColor: option.color + '20',
-                  },
+                  styles.genderOption,
+                  value === option.value && styles.genderOptionActive,
                 ]}
+                elevation={value === option.value ? 3 : 1}
               >
-                <Icon
-                  source={option.icon}
-                  size={20}
-                  color={
-                    value === option.value
-                      ? option.color
-                      : theme.colors.onSurfaceVariant
-                  }
-                />
-              </View>
-              <Text
-                style={[
-                  styles.genderLabel,
-                  value === option.value &&
-                    styles.genderLabelActive,
-                ]}
-                variant="labelMedium"
-              >
-                {option.label}
-              </Text>
-            </Surface>
-          </TouchableOpacity>
-        ))}
+                <View
+                  style={[
+                    styles.genderIconContainer,
+                    value === option.value && {
+                      backgroundColor: option.color + '20',
+                    },
+                  ]}
+                >
+                  <Icon
+                    source={option.icon}
+                    size={20}
+                    color={
+                      value === option.value
+                        ? option.color
+                        : theme.colors.onSurfaceVariant
+                    }
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.genderLabel,
+                    value === option.value && styles.genderLabelActive,
+                  ]}
+                  variant="labelMedium"
+                >
+                  {option.label}
+                </Text>
+              </Surface>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-    </View>
-  );
-});
+    );
+  },
+);
 
 GenderSelector.displayName = 'GenderSelector';
 

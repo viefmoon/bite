@@ -179,7 +179,7 @@ export function ServerSettingsScreen() {
           if (discoveredUrl) {
             showSnackbar({ message: 'Servidor encontrado ✓', type: 'success' });
             const { healthMonitoringService } = await import(
-              '@/services/healthMonitoringService'
+              '@/app/services/healthMonitoringService'
             );
             healthMonitoringService.startMonitoring();
           } else {
@@ -209,7 +209,7 @@ export function ServerSettingsScreen() {
           showSnackbar({ message: 'Verificando conexión...', type: 'info' });
 
           const { healthMonitoringService } = await import(
-            '@/services/healthMonitoringService'
+            '@/app/services/healthMonitoringService'
           );
 
           try {

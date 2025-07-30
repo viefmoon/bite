@@ -25,7 +25,7 @@ import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { useShifts } from '../hooks/useShifts';
 import { formatCurrency } from '@/app/lib/formatters';
-import type { Shift } from '../types';
+import type { Shift } from '@/app/schemas/domain/shift.schema';
 import { ShiftOrdersModal, ShiftSalesSummaryView } from '../components';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import DateTimePicker from '@react-native-community/datetimepicker';

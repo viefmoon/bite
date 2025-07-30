@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { shiftsService } from '@/app/services/shifts';
-import type { Shift } from '../types';
+import type { Shift } from '@/app/schemas/domain/shift.schema';
 
 export const useShifts = (params?: {
   startDate?: string;

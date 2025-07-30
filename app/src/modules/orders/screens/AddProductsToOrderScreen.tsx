@@ -29,7 +29,11 @@ type AddProductsRouteProps = {
 const AddProductsToOrderScreen = () => {
   const navigation = useNavigation();
   const route =
-    useRoute<OrdersStackScreenProps<typeof NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER>['route']>();
+    useRoute<
+      OrdersStackScreenProps<
+        typeof NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER
+      >['route']
+    >();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 

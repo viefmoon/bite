@@ -18,7 +18,6 @@ export function useGetUsers(params?: UsersQuery) {
   });
 }
 
-
 export function useCreateUser() {
   const queryClient = useQueryClient();
 

@@ -142,7 +142,10 @@ export function UserFormModal({
 }: UserFormModalProps) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = useMemo(() => getStyles(theme, responsive), [theme, responsive]);
+  const styles = useMemo(
+    () => getStyles(theme, responsive),
+    [theme, responsive],
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   const createUserMutation = useCreateUser();
@@ -211,59 +214,60 @@ export function UserFormModal({
     }
   }, [user, reset]);
 
-  const onSubmit = useCallback(async (
-    data: CreateUserFormInputs | UpdateUserFormInputs,
-  ) => {
-    try {
-      // Clean empty strings to undefined
-      const cleanData = {
-        username: data.username,
-        email: data.email || undefined,
-        password: data.password || undefined,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber || undefined,
-        gender: data.gender || null,
-        address: data.address || undefined,
-        city: data.city || undefined,
-        state: data.state || undefined,
-        country: data.country || undefined,
-        zipCode: data.zipCode || undefined,
-        role: { id: data.role },
-        isActive: data.isActive,
-      };
-
-      if (user) {
-        const { username, password, ...updateData } = cleanData;
-        const finalUpdateData = password
-          ? { ...updateData, password }
-          : updateData;
-
-        await updateUserMutation.mutateAsync({
-          id: user.id,
-          data: finalUpdateData,
-        });
-      } else {
-        if (!data.password) {
-          return;
-        }
-        const createData = {
-          ...cleanData,
-          password: data.password,
+  const onSubmit = useCallback(
+    async (data: CreateUserFormInputs | UpdateUserFormInputs) => {
+      try {
+        // Clean empty strings to undefined
+        const cleanData = {
+          username: data.username,
+          email: data.email || undefined,
+          password: data.password || undefined,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phoneNumber: data.phoneNumber || undefined,
+          gender: data.gender || null,
+          address: data.address || undefined,
+          city: data.city || undefined,
+          state: data.state || undefined,
+          country: data.country || undefined,
+          zipCode: data.zipCode || undefined,
+          role: { id: data.role },
+          isActive: data.isActive,
         };
-        await createUserMutation.mutateAsync(createData);
+
+        if (user) {
+          const { username, password, ...updateData } = cleanData;
+          const finalUpdateData = password
+            ? { ...updateData, password }
+            : updateData;
+
+          await updateUserMutation.mutateAsync({
+            id: user.id,
+            data: finalUpdateData,
+          });
+        } else {
+          if (!data.password) {
+            return;
+          }
+          const createData = {
+            ...cleanData,
+            password: data.password,
+          };
+          await createUserMutation.mutateAsync(createData);
+        }
+        onDismiss();
+      } catch (error) {
+        // Error is handled by mutation hooks
       }
-      onDismiss();
-    } catch (error) {
-      // Error is handled by mutation hooks
-    }
-  }, [user, updateUserMutation, createUserMutation, onDismiss]);
+    },
+    [user, updateUserMutation, createUserMutation, onDismiss],
+  );
 
   const isSubmitting =
     createUserMutation.isPending || updateUserMutation.isPending;
 
   const togglePasswordVisibility = useCallback(() => {
-    setShowPassword(prev => !prev);
+    setShowPassword((prev) => !prev);
   }, []);
 
   return (

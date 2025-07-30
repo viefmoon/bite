@@ -17,73 +17,65 @@ interface RoleSelectorProps {
   responsive: ReturnType<typeof useResponsive>;
 }
 
-export const RoleSelector = React.memo(({ 
-  value, 
-  onChange, 
-  roles, 
-  theme, 
-  responsive 
-}: RoleSelectorProps) => {
-  const styles = getStyles(theme, responsive);
+export const RoleSelector = React.memo(
+  ({ value, onChange, roles, theme, responsive }: RoleSelectorProps) => {
+    const styles = getStyles(theme, responsive);
 
-  return (
-    <View style={styles.inputContainer}>
-      <View style={styles.fieldLabelContainer}>
-        <Icon
-          source="badge-account"
-          size={20}
-          color={theme.colors.primary}
-        />
-        <Text style={styles.sectionTitle} variant="titleMedium">
-          Rol del usuario
-        </Text>
-      </View>
-      <View style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}>
-        {roles.map((role) => (
-          <Surface
-            key={role.value}
-            style={[
-              styles.roleCard,
-              value === role.value && styles.roleCardActive,
-            ]}
-            elevation={value === role.value ? 2 : 0}
-          >
-            <TouchableOpacity
-              onPress={() => onChange(role.value)}
-              style={styles.roleCardContent}
+    return (
+      <View style={styles.inputContainer}>
+        <View style={styles.fieldLabelContainer}>
+          <Icon source="badge-account" size={20} color={theme.colors.primary} />
+          <Text style={styles.sectionTitle} variant="titleMedium">
+            Rol del usuario
+          </Text>
+        </View>
+        <View style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}>
+          {roles.map((role) => (
+            <Surface
+              key={role.value}
+              style={[
+                styles.roleCard,
+                value === role.value && styles.roleCardActive,
+              ]}
+              elevation={value === role.value ? 2 : 0}
             >
-              <Icon
-                source={role.icon}
-                size={24}
-                color={
-                  value === role.value
-                    ? theme.colors.primary
-                    : theme.colors.onSurfaceVariant
-                }
-              />
-              <Text
-                style={[
-                  styles.roleLabel,
-                  value === role.value && styles.roleLabelActive,
-                ]}
-                variant="labelMedium"
+              <TouchableOpacity
+                onPress={() => onChange(role.value)}
+                style={styles.roleCardContent}
               >
-                {role.label}
-              </Text>
-              <Text
-                style={styles.roleDescription}
-                variant="bodySmall"
-                numberOfLines={1}
-              >
-                {role.description}
-              </Text>
-            </TouchableOpacity>
-          </Surface>
-        ))}
+                <Icon
+                  source={role.icon}
+                  size={24}
+                  color={
+                    value === role.value
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
+                />
+                <Text
+                  style={[
+                    styles.roleLabel,
+                    value === role.value && styles.roleLabelActive,
+                  ]}
+                  variant="labelMedium"
+                >
+                  {role.label}
+                </Text>
+                <Text
+                  style={styles.roleDescription}
+                  variant="bodySmall"
+                  numberOfLines={1}
+                >
+                  {role.description}
+                </Text>
+              </TouchableOpacity>
+            </Surface>
+          ))}
+        </View>
       </View>
-    </View>
-  );
-});
+    );
+  },
+);
 
 RoleSelector.displayName = 'RoleSelector';
 

@@ -30,7 +30,6 @@ export const usersApiService = {
     return response.data;
   },
 
-
   async create(data: CreateUserDto): Promise<User> {
     const response = await apiClient.post(API_PATHS.USERS, data);
     return response.data;

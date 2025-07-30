@@ -24,7 +24,6 @@ const buildImageUrl = (imagePath: string, apiUrl: string): string | null => {
   return `${normalizedApiUrl}${formattedPath}`;
 };
 
-
 /**
  * Versión síncrona que usa el store global para obtener la URL del servidor.
  * Esta es la versión preferida para evitar llamadas asíncronas en renderizado.

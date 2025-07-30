@@ -61,15 +61,18 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
   // Usar base64 en lugar de SHA256 para mejor rendimiento
   // Convertir string a base64 usando btoa (disponible en React Native)
   // Reemplazar caracteres no seguros para nombres de archivo
-  const base64 = btoa(encodeURIComponent(urlToHash).replace(/%([0-9A-F]{2})/g, 
-    (match, p1) => String.fromCharCode(parseInt(p1, 16))))
+  const base64 = btoa(
+    encodeURIComponent(urlToHash).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+      String.fromCharCode(parseInt(p1, 16)),
+    ),
+  )
     .replace(/\//g, '_')
     .replace(/\+/g, '-')
     .replace(/=/g, '');
-  
+
   // Limitar la longitud del nombre de archivo a 200 caracteres para evitar problemas con sistemas de archivos
   const truncatedBase64 = base64.substring(0, 200);
-  
+
   const extensionMatch = remoteUrl.match(/\.([a-zA-Z0-9]+)(?:[?#]|$)/);
   const extension = extensionMatch ? extensionMatch[1] : 'jpg';
   return `${truncatedBase64}.${extension}`;

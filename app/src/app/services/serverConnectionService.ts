@@ -126,7 +126,7 @@ class ServerConnectionService {
       const apiUrl = await discoveryService.getApiUrl();
 
       const { reinitializeApiClient } = await import(
-        '../app/services/apiClient'
+        '@/app/services/apiClient'
       );
       await reinitializeApiClient(apiUrl || undefined);
 
@@ -146,7 +146,7 @@ class ServerConnectionService {
       const apiUrl = await discoveryService.getApiUrl();
 
       const { reinitializeApiClient } = await import(
-        '../app/services/apiClient'
+        '@/app/services/apiClient'
       );
       await reinitializeApiClient(apiUrl || undefined);
 
@@ -262,7 +262,7 @@ class ServerConnectionService {
       healthMonitoringService.startMonitoring();
 
       const { reinitializeApiClient } = await import(
-        '../app/services/apiClient'
+        '@/app/services/apiClient'
       );
       await reinitializeApiClient(apiUrl || undefined);
 

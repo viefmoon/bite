@@ -28,7 +28,10 @@ import { useListState } from '@/app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
-type ProductsScreenRouteProp = RouteProp<MenuStackParamList, typeof NAVIGATION_PATHS.PRODUCTS>;
+type ProductsScreenRouteProp = RouteProp<
+  MenuStackParamList,
+  typeof NAVIGATION_PATHS.PRODUCTS
+>;
 
 function ProductsScreen(): React.ReactElement {
   const theme = useAppTheme();
