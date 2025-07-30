@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
-  Button,
   TextInput,
   Text,
   ActivityIndicator,
@@ -195,7 +194,7 @@ const useProductFormLogic = ({
               initialData.photo.path;
           }
 
-          const associatedGroupIds = initialData.modifierGroups 
+          const associatedGroupIds = initialData.modifierGroups
             ? initialData.modifierGroups.map((group: ModifierGroup) => group.id)
             : [];
 

@@ -74,7 +74,6 @@ async function getModifierGroups(productId: string): Promise<Product> {
   return response.data;
 }
 
-
 async function findAllPizzas(): Promise<Product[]> {
   const response = await apiClient.get<Product[]>(API_PATHS.PRODUCTS_PIZZAS);
   return response.data;
@@ -97,7 +96,6 @@ async function updatePizzaCustomizations(
   );
   return response.data;
 }
-
 
 export const productsService = {
   findAll,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ReceiptsScreen } from '../screens/ReceiptsScreen';
 import { getStackHeaderOptions } from '@/app/navigation/options';

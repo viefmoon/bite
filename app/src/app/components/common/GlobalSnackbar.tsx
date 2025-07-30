@@ -80,7 +80,9 @@ const GlobalSnackbar = () => {
           },
         }}
       >
-        <Text style={[styles.messageText, { color: textColor }]}>{message || ''}</Text>
+        <Text style={[styles.messageText, { color: textColor }]}>
+          {message || ''}
+        </Text>
       </Snackbar>
     </Portal>
   );

@@ -2,7 +2,6 @@ import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { AppTheme } from '../styles/theme';
 import { ResponsiveInfo } from '../hooks/useResponsive';
 
-
 export const getStackHeaderOptions = (
   theme: AppTheme,
   responsive?: ResponsiveInfo,

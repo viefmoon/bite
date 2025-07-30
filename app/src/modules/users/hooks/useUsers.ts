@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersApiService } from '../services';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type {
   CreateUserDto,
   UpdateUserDto,
