@@ -23,6 +23,8 @@ export const useOrderForFinalizationDetail = (orderId: string | null) => {
         ? orderFinalizationService.getOrderForFinalizationDetail(orderId)
         : null,
     enabled: !!orderId,
-    staleTime: 30000,
+    staleTime: 0, // Siempre refetch cuando se abre el modal
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };

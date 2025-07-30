@@ -2529,8 +2529,8 @@ export class OrdersService {
       throw error;
     }
 
-    // Registrar la impresión
-    await this.registerTicketImpression(orderId, userId, TicketType.BILLING);
+    // Registrar la impresión con el printerId
+    await this.registerTicketImpression(orderId, userId, TicketType.BILLING, printerDetails.id);
   }
 
   private async printBillingTicket(

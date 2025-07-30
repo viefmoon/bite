@@ -217,7 +217,7 @@ export const OrderFinalizationScreen: React.FC = () => {
     [],
   );
 
-  const handlePrintPress = useCallback(() => {
+  const _handlePrintPress = useCallback(() => {
     setShowPrintModal(true);
   }, []);
 
@@ -582,7 +582,7 @@ export const OrderFinalizationScreen: React.FC = () => {
         onDismiss={() => setSelectedOrderIdForDetails(null)}
         order={selectedOrderDetails || null}
         isLoading={isLoadingDetails}
-        onPrintPress={handlePrintPress}
+        orderId={selectedOrderIdForDetails || undefined}
       />
 
       <PrintTicketModal

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {
-  Text,
   Searchbar,
   Chip,
   Surface,
@@ -16,7 +15,6 @@ import {
   IconButton,
   Divider,
   Badge,
-  Icon,
 } from 'react-native-paper';
 import OrderSummaryCard from '@/modules/shared/components/OrderSummaryCard';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
@@ -218,13 +216,6 @@ export const ReceiptsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Surface style={styles.header} elevation={2}>
-        <Surface style={styles.shiftIndicator} elevation={1}>
-          <Icon source="cash-register" size={20} color={theme.colors.primary} />
-          <Text style={styles.shiftText}>Recibos del turno actual</Text>
-          <View style={styles.shiftBadge}>
-            <Text style={styles.shiftBadgeText}>ACTIVO</Text>
-          </View>
-        </Surface>
         <View style={styles.searchContainer}>
           <Searchbar
             placeholder="Buscar por nombre, teléfono o dirección..."
@@ -557,33 +548,6 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       alignItems: 'center',
       padding: 32,
-    },
-    shiftIndicator: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      marginBottom: 8,
-      borderRadius: 20,
-      backgroundColor: theme.colors.primaryContainer,
-    },
-    shiftText: {
-      ...theme.fonts.bodyMedium,
-      color: theme.colors.onPrimaryContainer,
-      fontWeight: '600',
-    },
-    shiftBadge: {
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 10,
-    },
-    shiftBadgeText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: theme.colors.onPrimary,
     },
     miniPaymentBadge: {
       width: 20,

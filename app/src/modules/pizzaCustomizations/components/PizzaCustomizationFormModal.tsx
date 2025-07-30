@@ -1,8 +1,5 @@
 import { useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-} from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Text,
   TextInput,
@@ -181,21 +178,26 @@ export function PizzaCustomizationFormModal({
     }
   };
 
-  const modalTitle = isEditMode ? 'Editar personalización' : 'Nueva personalización';
-  
+  const modalTitle = isEditMode
+    ? 'Editar personalización'
+    : 'Nueva personalización';
+
   const modalActions = [
     {
       label: 'Cancelar',
       mode: 'contained-tonal' as const,
       onPress: onDismiss,
-      disabled: isSubmitting || createMutation.isPending || updateMutation.isPending,
+      disabled:
+        isSubmitting || createMutation.isPending || updateMutation.isPending,
     },
     {
       label: isEditMode ? 'Guardar' : 'Crear',
       mode: 'contained' as const,
       onPress: handleSubmit(onSubmit),
-      loading: isSubmitting || createMutation.isPending || updateMutation.isPending,
-      disabled: isSubmitting || createMutation.isPending || updateMutation.isPending,
+      loading:
+        isSubmitting || createMutation.isPending || updateMutation.isPending,
+      disabled:
+        isSubmitting || createMutation.isPending || updateMutation.isPending,
     },
   ];
 
@@ -403,7 +405,9 @@ export function PizzaCustomizationFormModal({
       title={modalTitle}
       maxWidthPercent={90}
       maxHeightPercent={85}
-      dismissable={!isSubmitting && !createMutation.isPending && !updateMutation.isPending}
+      dismissable={
+        !isSubmitting && !createMutation.isPending && !updateMutation.isPending
+      }
       actions={modalActions}
     >
       {modalContent}

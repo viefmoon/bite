@@ -44,6 +44,7 @@ interface ResponsiveModalProps {
 
   // Estilos
   contentContainerStyle?: StyleProp<ViewStyle>;
+  noPadding?: boolean; // Elimina el padding automático del contenido
 }
 
 /**
@@ -132,6 +133,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   footer,
   actions,
   contentContainerStyle,
+  noPadding = false,
 }) => {
   const responsive = useResponsive();
   const theme = useAppTheme();
@@ -253,7 +255,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { padding: contentPadding },
+          !noPadding && { padding: contentPadding },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

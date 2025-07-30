@@ -1,20 +1,19 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Modal,
   Portal,
   Text,
   IconButton,
-  Divider,
-  Card,
-  Chip,
   Surface,
+  Chip,
+  Divider,
 } from 'react-native-paper';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
+import { OrderDetailsView } from '@/modules/shared/components/OrderDetailsView';
+import { mapOrderToUnifiedOrder } from '@/modules/shared/mappers/order-mapper';
+import { OrderStatusInfo } from '../utils/formatters';
 
 interface OrderDetailModalProps {
   visible: boolean;
@@ -26,112 +25,49 @@ interface OrderDetailModalProps {
 
 // Componente interno para mostrar el contenido de detalles
 export const OrderDetailContent: React.FC<{
-  orderId: string | null;
-  orderNumber?: number;
   orderData?: any; // Datos de la orden pasados como prop
 }> = ({ orderData }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // Mapear los datos de la orden a formato unificado
+  const unifiedOrder = useMemo(() => {
+    if (!orderData) return null;
+    try {
+      return mapOrderToUnifiedOrder(orderData);
+    } catch (error) {
+      // Si hay error en el mapeo, devolver null para mostrar error
+      console.warn('Error mapeando orden:', error);
+      return null;
+    }
+  }, [orderData]);
+
+  if (!orderData) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon
+          name="alert-circle-outline"
+          size={48}
+          color={theme.colors.error}
+        />
+        <Text style={styles.errorText}>
+          No hay datos de la orden disponibles
+        </Text>
+      </View>
+    );
+  }
+
+  // Usar el componente compartido pero con un scroll view container
   return (
-    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-      {!orderData ? (
-        <View style={styles.errorContainer}>
-          <Icon
-            name="alert-circle-outline"
-            size={48}
-            color={theme.colors.error}
-          />
-          <Text style={styles.errorText}>
-            No hay datos de la orden disponibles
-          </Text>
-        </View>
-      ) : (
-        <>
-          {/* Información General - Simplificada */}
-          <View style={styles.infoHeader}>
-            <View style={styles.infoHeaderRow}>
-              <Text style={styles.infoHeaderLabel}>Hora de creación:</Text>
-              <Text style={styles.infoHeaderValue}>
-                {format(new Date(orderData.createdAt), 'HH:mm', { locale: es })}
-              </Text>
-            </View>
-          </View>
-
-          {/* Items de la Orden */}
-          <Card style={styles.itemsCard}>
-            <Card.Content style={styles.cardContentCompact}>
-              <Text style={styles.sectionTitle}>
-                Artículos ({orderData.orderItems?.length || 0})
-              </Text>
-
-              {orderData.orderItems?.map((item: any, index: number) => (
-                <View key={item.id || index} style={styles.itemRow}>
-                  <View style={styles.itemCompactRow}>
-                    <View style={styles.itemMainInfo}>
-                      <View style={styles.itemTitleRow}>
-                        <Text style={styles.itemName}>
-                          {item.product?.name || 'Producto desconocido'}
-                          {item.productVariant &&
-                            ` - ${item.productVariant.name}`}
-                        </Text>
-                        <Chip
-                          mode="flat"
-                          compact
-                          style={[
-                            styles.preparationChip,
-                            {
-                              backgroundColor:
-                                PreparationStatusInfo.getColor(
-                                  item.preparationStatus,
-                                  theme,
-                                ) + '20',
-                            },
-                          ]}
-                          textStyle={[
-                            styles.preparationChipText,
-                            {
-                              color: PreparationStatusInfo.getColor(
-                                item.preparationStatus,
-                                theme,
-                              ),
-                            },
-                          ]}
-                        >
-                          {PreparationStatusInfo.getLabel(
-                            item.preparationStatus,
-                          )}
-                        </Chip>
-                      </View>
-                      {item.preparationNotes && (
-                        <Text style={styles.itemNotes}>
-                          📝 {item.preparationNotes}
-                        </Text>
-                      )}
-                    </View>
-                    {item.preparedAt && (
-                      <Text style={styles.preparedTime}>
-                        {format(new Date(item.preparedAt), 'HH:mm')}
-                      </Text>
-                    )}
-                  </View>
-                  {index < orderData.orderItems.length - 1 && (
-                    <Divider style={styles.itemDivider} />
-                  )}
-                </View>
-              ))}
-            </Card.Content>
-          </Card>
-        </>
-      )}
-    </ScrollView>
+    <View style={styles.content}>
+      <OrderDetailsView order={unifiedOrder} isLoading={false} />
+    </View>
   );
 };
 
 export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   visible,
   onDismiss,
-  orderId,
   orderNumber,
   orderData,
 }) => {
@@ -184,11 +120,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <Divider />
 
           {/* Content */}
-          <OrderDetailContent
-            orderId={orderId}
-            orderNumber={orderNumber}
-            orderData={orderData}
-          />
+          <OrderDetailContent orderData={orderData} />
         </Surface>
       </Modal>
     </Portal>
@@ -248,14 +180,7 @@ const createStyles = (theme: any) =>
     },
     content: {
       maxHeight: 600,
-    },
-    loadingContainer: {
-      padding: 40,
-      alignItems: 'center',
-    },
-    loadingText: {
-      marginTop: 16,
-      color: theme.colors.onSurfaceVariant,
+      flex: 1,
     },
     errorContainer: {
       padding: 40,
@@ -264,148 +189,6 @@ const createStyles = (theme: any) =>
     errorText: {
       marginTop: 16,
       color: theme.colors.error,
-    },
-    infoHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: theme.colors.surfaceVariant,
-      marginBottom: 4,
-    },
-    infoHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    infoHeaderLabel: {
-      fontSize: 13,
-      color: theme.colors.onSurfaceVariant,
-      marginRight: 8,
-    },
-    infoHeaderValue: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    infoCard: {
-      margin: 8,
-      marginBottom: 4,
-    },
-    itemsCard: {
-      marginHorizontal: 8,
-      marginTop: 4,
-      marginBottom: 8,
-      flex: 1,
-    },
-    itemRow: {
-      paddingVertical: 3,
-    },
-    itemCompactRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: 8,
-    },
-    itemMainInfo: {
-      flex: 1,
-    },
-    itemTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flexWrap: 'nowrap',
-    },
-    itemStatusInfo: {
-      alignItems: 'flex-end',
-      gap: 2,
-    },
-    itemContent: {
-      flex: 1,
-    },
-    itemHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 2,
-    },
-    itemFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 8,
-    },
-    itemDivider: {
-      marginTop: 2,
-      marginBottom: 1,
-      backgroundColor: theme.colors.outlineVariant,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-      marginBottom: 12,
-    },
-    itemName: {
-      fontWeight: '600',
-      fontSize: 13,
-      color: theme.colors.onSurface,
-      flex: 1,
-      flexShrink: 1,
-    },
-    itemVariant: {
-      fontSize: 13,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: 2,
-    },
-    itemNotes: {
-      fontSize: 10,
-      color: theme.colors.onSurfaceVariant,
-      fontStyle: 'italic',
-      marginTop: 0,
-    },
-    preparationChip: {
-      minHeight: 26,
-      height: 'auto',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-    },
-    preparationChipText: {
-      fontSize: 12,
-      fontWeight: '600',
-      lineHeight: 16,
-      includeFontPadding: false,
-      textAlignVertical: 'center',
-    },
-    preparedTime: {
-      fontSize: 12,
-      color: theme.colors.primary,
-      fontWeight: '600',
-      minWidth: 40,
-      textAlign: 'right',
-      alignSelf: 'center',
-      lineHeight: 16,
-    },
-    itemTimesContainer: {
-      flex: 1,
-      alignItems: 'flex-end',
-    },
-    itemCreatedTime: {
-      fontSize: 11,
-      color: theme.colors.onSurfaceVariant,
-    },
-    preparedByText: {
-      fontSize: 11,
-      color: theme.colors.primary,
-      fontWeight: '500',
-      marginTop: 2,
-    },
-    notPrepared: {
-      fontSize: 12,
-      color: theme.colors.onSurfaceDisabled,
-    },
-    cardContentCompact: {
-      paddingVertical: 6,
-      paddingHorizontal: 10,
     },
   });
 
