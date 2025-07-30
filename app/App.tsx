@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   useThemeStore,
   useSystemThemeDetector,
-} from './src/app/store/themeStore';
+} from './src/app/stores/themeStore';
 import { AppNavigator } from './src/app/navigation/AppNavigator';
 import GlobalSnackbar from './src/app/components/common/GlobalSnackbar';
 import { useInitializeAuth } from './src/app/hooks/useInitializeAuth';
