@@ -18,6 +18,10 @@ import {
   UnifiedOrderItem,
 } from '../types/unified-order.types';
 import {
+  PreparationScreenStatusColors,
+  PreparationScreenStatusLabels,
+} from '../types/preparation-screen-status.enum';
+import {
   CustomizationTypeEnum,
   PizzaHalfEnum,
   CustomizationActionEnum,
@@ -391,18 +395,43 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               {getOrderStatusLabel(order.orderStatus)}
             </Text>
           </View>
-          {order.preparationScreens &&
-            order.preparationScreens.map((screen, index) => (
-              <Chip
-                key={index}
-                mode="outlined"
-                compact
-                style={styles.screenChip}
-                textStyle={styles.screenChipText}
-              >
-                🍳 {screen}
-              </Chip>
-            ))}
+          {order.preparationScreenStatuses &&
+            order.preparationScreenStatuses.map((screenStatus) => {
+              const getStatusColor = (status: string) => {
+                return PreparationScreenStatusColors[status as keyof typeof PreparationScreenStatusColors] || theme.colors.onSurfaceVariant;
+              };
+
+              const getStatusLabel = (status: string) => {
+                return PreparationScreenStatusLabels[status as keyof typeof PreparationScreenStatusLabels] || status;
+              };
+
+              return (
+                <View
+                  key={screenStatus.id}
+                  style={[
+                    styles.preparationScreenStatus,
+                    { backgroundColor: getStatusColor(screenStatus.status) + '20' }
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.preparationScreenName,
+                      { color: getStatusColor(screenStatus.status) }
+                    ]}
+                  >
+                    🍳 {screenStatus.preparationScreenName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.preparationScreenStatusText,
+                      { color: getStatusColor(screenStatus.status) }
+                    ]}
+                  >
+                    {getStatusLabel(screenStatus.status)}
+                  </Text>
+                </View>
+              );
+            })}
         </View>
         <View style={styles.headerDatesRow}>
           <Text
@@ -860,12 +889,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  screenChip: {
-    height: 20,
+  preparationScreenStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    marginRight: 6,
+    marginBottom: 4,
   },
-  screenChipText: {
+  preparationScreenName: {
     fontSize: 10,
-    marginVertical: -2,
+    fontWeight: '600',
+    marginBottom: 1,
+  },
+  preparationScreenStatusText: {
+    fontSize: 9,
+    fontWeight: '500',
   },
   headerDatesRow: {
     gap: 4,

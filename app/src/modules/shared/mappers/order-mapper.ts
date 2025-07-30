@@ -194,7 +194,14 @@ export const mapReceiptToUnifiedOrder = (
       })) || null,
 
     // Información adicional
-    preparationScreens: receipt.preparationScreens || null,
+    preparationScreenStatuses: receipt.preparationScreenStatuses?.map((status: any) => ({
+      id: status.id,
+      preparationScreenId: status.preparationScreenId,
+      preparationScreenName: status.preparationScreenName,
+      status: status.status,
+      startedAt: status.startedAt,
+      completedAt: status.completedAt,
+    })) || null,
     isFromWhatsApp: receipt.isFromWhatsApp,
     estimatedDeliveryTime: receipt.estimatedDeliveryTime || null,
     userId: receipt.userId || null,
@@ -289,7 +296,14 @@ export const mapOrderForFinalizationToUnifiedOrder = (
       })) || null,
 
     // Información adicional
-    preparationScreens: order.preparationScreens || null,
+    preparationScreenStatuses: order.preparationScreenStatuses?.map((status: any) => ({
+      id: status.id,
+      preparationScreenId: status.preparationScreenId,
+      preparationScreenName: status.preparationScreenName,
+      status: status.status,
+      startedAt: status.startedAt,
+      completedAt: status.completedAt,
+    })) || null,
     isFromWhatsApp: order.isFromWhatsApp,
     tableId: order.tableId || null,
   };

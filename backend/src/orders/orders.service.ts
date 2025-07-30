@@ -1436,13 +1436,7 @@ export class OrdersService {
       }
     >();
 
-    const preparationScreens = new Set<string>();
-
     order.orderItems.forEach((item) => {
-      if (item.product?.preparationScreen?.name) {
-        preparationScreens.add(item.product.preparationScreen.name);
-      }
-
       // Crear clave única basada en producto, variante, modificadores y notas
       const modifierKeys =
         item.productModifiers
@@ -1534,7 +1528,6 @@ export class OrdersService {
         : undefined,
       deliveryInfo: order.deliveryInfo || undefined,
       isFromWhatsApp: order.isFromWhatsApp,
-      preparationScreens: Array.from(preparationScreens).sort(),
       payments:
         order.payments?.map((payment) => ({
           id: payment.id,
@@ -1608,14 +1601,6 @@ export class OrdersService {
       throw new NotFoundException('Recibo no encontrado');
     }
 
-    const preparationScreens = new Set<string>();
-    if (order.orderItems) {
-      order.orderItems.forEach((item: any) => {
-        if (item.product?.preparationScreen?.name) {
-          preparationScreens.add(item.product.preparationScreen.name);
-        }
-      });
-    }
 
     return {
       id: order.id,
@@ -1652,7 +1637,6 @@ export class OrdersService {
           }
         : undefined,
       deliveryInfo: order.deliveryInfo || undefined,
-      preparationScreens: Array.from(preparationScreens).sort(),
       orderItems:
         order.orderItems?.map((item: any) => ({
           id: item.id,
@@ -1799,7 +1783,6 @@ export class OrdersService {
     };
 
     if (preparationScreenStatuses.length > 0) {
-      dto.preparationScreens = preparationScreenStatuses.map((s) => s.name);
       dto.preparationScreenStatuses = preparationScreenStatuses;
     }
 

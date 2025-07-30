@@ -135,13 +135,6 @@ export class OrderForFinalizationDto {
   })
   isFromWhatsApp?: boolean;
 
-  @ApiProperty({
-    description:
-      'Pantallas de preparación únicas de todos los items de la orden',
-    required: false,
-    type: [String],
-  })
-  preparationScreens?: string[];
 
   @ApiProperty({
     description: 'Pagos asociados a la orden',

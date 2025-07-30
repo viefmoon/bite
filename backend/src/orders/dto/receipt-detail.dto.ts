@@ -269,8 +269,6 @@ export class ReceiptDetailDto {
   @ApiProperty({ type: () => DeliveryInfoDto, required: false })
   deliveryInfo?: DeliveryInfoDto;
 
-  @ApiProperty({ type: [String], required: false })
-  preparationScreens?: string[];
 
   @ApiProperty({ type: () => [OrderItemDto] })
   orderItems: OrderItemDto[];

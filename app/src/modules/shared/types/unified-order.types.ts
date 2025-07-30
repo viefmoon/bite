@@ -110,10 +110,13 @@ export interface UnifiedOrderDetails {
   }> | null;
 
   // Información adicional
-  preparationScreens?: string[] | null;
   preparationScreenStatuses?: Array<{
-    name: string;
-    status: 'PENDING' | 'IN_PROGRESS' | 'READY';
+    id: string;
+    preparationScreenId: string;
+    preparationScreenName: string;
+    status: import('./preparation-screen-status.enum').PreparationScreenStatus;
+    startedAt?: string | Date | null;
+    completedAt?: string | Date | null;
   }> | null;
   paymentsSummary?: {
     totalPaid: number;

@@ -46,8 +46,12 @@ export const receiptListSchema = z.object({
   preparationScreenStatuses: z
     .array(
       z.object({
-        name: z.string(),
-        status: z.enum(['PENDING', 'IN_PROGRESS', 'READY']),
+        id: z.string(),
+        preparationScreenId: z.string(),
+        preparationScreenName: z.string(),
+        status: z.enum(['PENDING', 'IN_PREPARATION', 'READY']),
+        startedAt: z.string().nullable().optional(),
+        completedAt: z.string().nullable().optional(),
       }),
     )
     .optional(),
@@ -130,7 +134,18 @@ export const receiptSchema = z.object({
       longitude: z.number().optional(),
     })
     .optional(),
-  preparationScreens: z.array(z.string()).optional(),
+  preparationScreenStatuses: z
+    .array(
+      z.object({
+        id: z.string(),
+        preparationScreenId: z.string(),
+        preparationScreenName: z.string(),
+        status: z.enum(['PENDING', 'IN_PREPARATION', 'READY']),
+        startedAt: z.string().nullable().optional(),
+        completedAt: z.string().nullable().optional(),
+      }),
+    )
+    .optional(),
   orderItems: z.array(
     z.object({
       id: z.string(),

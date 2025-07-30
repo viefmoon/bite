@@ -34,12 +34,15 @@ export const orderForFinalizationListSchema = z.object({
       fullAddress: z.string().optional(),
     })
     .optional(),
-  preparationScreens: z.array(z.string()).optional(),
   preparationScreenStatuses: z
     .array(
       z.object({
-        name: z.string(),
-        status: z.enum(['PENDING', 'IN_PROGRESS', 'READY']),
+        id: z.string(),
+        preparationScreenId: z.string(),
+        preparationScreenName: z.string(),
+        status: z.enum(['PENDING', 'IN_PREPARATION', 'READY']),
+        startedAt: z.string().nullable().optional(),
+        completedAt: z.string().nullable().optional(),
       }),
     )
     .optional(),
@@ -149,7 +152,18 @@ export const orderForFinalizationSchema = z.object({
     .nullable()
     .optional(),
   isFromWhatsApp: z.boolean().optional(),
-  preparationScreens: z.array(z.string()).optional(),
+  preparationScreenStatuses: z
+    .array(
+      z.object({
+        id: z.string(),
+        preparationScreenId: z.string(),
+        preparationScreenName: z.string(),
+        status: z.enum(['PENDING', 'IN_PREPARATION', 'READY']),
+        startedAt: z.string().nullable().optional(),
+        completedAt: z.string().nullable().optional(),
+      }),
+    )
+    .optional(),
   payments: z
     .array(
       z.object({
