@@ -244,28 +244,33 @@ export function ShiftsListScreen() {
                   styles.statusChip,
                   {
                     backgroundColor: isOpen
-                      ? theme.colors.outline
-                      : theme.colors.outlineVariant,
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant,
                   },
                 ]}
                 textStyle={[
                   styles.statusChipText,
                   {
                     color: isOpen
-                      ? theme.colors.surface
-                      : theme.colors.onSurfaceVariant,
+                      ? theme.colors.onPrimary
+                      : theme.colors.surface,
                   },
                 ]}
-                compact
               >
                 {isOpen ? 'Abierto' : 'Cerrado'}
               </Chip>
             </View>
-            <Text style={styles.shiftDate}>
-              {shift.openedAt
-                ? formatShiftDate(shift.openedAt)
-                : 'Fecha no disponible'}
-            </Text>
+            <View style={styles.shiftSubHeader}>
+              <Text style={styles.shiftDate}>
+                {shift.openedAt
+                  ? formatShiftDate(shift.openedAt)
+                  : 'Fecha no disponible'}
+              </Text>
+              <Text style={styles.createdByText}>
+                👤 {shift.openedBy?.firstName || 'N/A'}{' '}
+                {shift.openedBy?.lastName || ''}
+              </Text>
+            </View>
           </View>
 
           <Divider style={styles.divider} />
@@ -342,19 +347,15 @@ export function ShiftsListScreen() {
               )}
             </View>
 
-            {/* Usuarios en una línea */}
-            <View style={styles.userSection}>
-              <Text style={styles.userText}>
-                👤 {shift.openedBy?.firstName || 'N/A'}{' '}
-                {shift.openedBy?.lastName || ''}
-              </Text>
-              {shift.closedBy && (
-                <Text style={styles.userText}>
-                  🔒 {shift.closedBy.firstName || 'N/A'}{' '}
+            {/* Usuario que cerró (si existe) */}
+            {shift.closedBy && (
+              <View style={styles.closedBySection}>
+                <Text style={styles.closedByText}>
+                  🔒 Cerrado por: {shift.closedBy.firstName || 'N/A'}{' '}
                   {shift.closedBy.lastName || ''}
                 </Text>
-              )}
-            </View>
+              </View>
+            )}
 
             {/* Botones de acciones */}
             <View style={styles.actionButtonsContainer}>
@@ -642,13 +643,13 @@ export function ShiftsListScreen() {
     },
     filterContainer: {
       backgroundColor: theme.colors.surface,
-      marginHorizontal: theme.spacing.m,
-      marginVertical: theme.spacing.s,
+      marginHorizontal: theme.spacing.s,
+      marginVertical: theme.spacing.xs,
       borderRadius: theme.roundness * 2,
       elevation: 1,
     },
     filterContent: {
-      padding: theme.spacing.s,
+      padding: theme.spacing.xs,
     },
     filterButton: {
       flexDirection: 'row',
@@ -792,50 +793,69 @@ export function ShiftsListScreen() {
       paddingVertical: 4,
     },
     listContent: {
-      paddingBottom: theme.spacing.m,
+      paddingBottom: theme.spacing.s,
+      paddingHorizontal: theme.spacing.xs,
     },
     shiftCard: {
-      marginHorizontal: theme.spacing.s,
-      marginVertical: theme.spacing.xs / 2,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderWidth: 0,
-      elevation: 1,
+      marginHorizontal: theme.spacing.xs,
+      marginVertical: theme.spacing.xs / 3,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      elevation: 2,
     },
     openShiftCard: {
       backgroundColor: theme.colors.surface,
-      borderLeftWidth: 3,
+      borderLeftWidth: 1,
       borderLeftColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+      elevation: 3,
     },
     shiftHeader: {
-      marginBottom: theme.spacing.xs,
+      marginBottom: theme.spacing.xs / 2,
     },
     shiftTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.xs,
-      marginBottom: 2,
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.xs / 2,
+    },
+    shiftSubHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
     shiftNumber: {
-      fontSize: 15,
-      fontWeight: '600',
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    createdByText: {
+      fontSize: 11,
       color: theme.colors.onSurfaceVariant,
-      flex: 1,
+      fontStyle: 'italic',
+      fontWeight: '500',
     },
     shiftDate: {
-      fontSize: 12,
-      color: theme.colors.outline,
+      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
     },
     statusChip: {
-      marginLeft: 'auto',
+      height: 28,
+      paddingHorizontal: theme.spacing.xs,
     },
     statusChipText: {
       fontWeight: '600',
       fontSize: 11,
+      lineHeight: 16,
+      textAlign: 'center',
     },
     divider: {
       marginVertical: theme.spacing.xs,
-      backgroundColor: theme.colors.outlineVariant,
-      opacity: 0.5,
+      backgroundColor: theme.colors.outline,
+      opacity: 0.3,
+      height: 1,
     },
     shiftDetails: {
       gap: theme.spacing.xs,
@@ -852,61 +872,65 @@ export function ShiftsListScreen() {
       textTransform: 'uppercase',
     },
     timeText: {
-      fontSize: 13,
-      color: theme.colors.onSurfaceVariant,
-      fontWeight: '400',
+      fontSize: 14,
+      color: theme.colors.onSurface,
+      fontWeight: '600',
     },
     durationText: {
-      fontSize: 12,
-      color: theme.colors.outline,
+      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
     },
     statsSection: {
       flexDirection: 'row',
       gap: theme.spacing.s,
+      marginVertical: theme.spacing.xs / 2,
     },
     statCard: {
       flex: 1,
       padding: theme.spacing.xs,
       borderRadius: theme.roundness,
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.surfaceVariant,
       alignItems: 'center',
-      gap: 1,
-      elevation: 0,
+      gap: 2,
+      elevation: 1,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     statLabel: {
-      fontSize: 9,
-      color: theme.colors.outline,
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
-      letterSpacing: 0.3,
-      fontWeight: '500',
+      letterSpacing: 0.5,
+      fontWeight: '600',
     },
     statValue: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
     },
     cashSection: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: theme.spacing.xs,
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.roundness,
-      borderWidth: 1,
-      borderColor: theme.colors.outlineVariant,
+      borderWidth: 1.5,
+      borderColor: theme.colors.outline,
     },
     cashRow: {
       alignItems: 'center',
     },
     cashLabel: {
-      fontSize: 10,
-      color: theme.colors.outline,
-      fontWeight: '500',
+      fontSize: 11,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '600',
     },
     cashValue: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
       marginTop: 1,
     },
     differenceLabel: {
@@ -915,16 +939,14 @@ export function ShiftsListScreen() {
     differenceValue: {
       fontWeight: '700',
     },
-    userSection: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    closedBySection: {
       marginTop: theme.spacing.xs / 2,
     },
-    userText: {
+    closedByText: {
       fontSize: 11,
-      color: theme.colors.outline,
+      color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
-      fontWeight: '400',
+      fontWeight: '500',
     },
     actionButtonsContainer: {
       flexDirection: 'row',
@@ -947,8 +969,8 @@ export function ShiftsListScreen() {
       fontWeight: '700',
     },
     actionButtonContent: {
-      paddingHorizontal: theme.spacing.xs / 2,
-      paddingVertical: theme.spacing.xs / 2,
+      paddingHorizontal: theme.spacing.xs / 3,
+      paddingVertical: theme.spacing.xs / 3,
     },
     emptyContainer: {
       flex: 1,
@@ -1035,7 +1057,7 @@ export function ShiftsListScreen() {
             data={filteredShifts as Shift[]}
             renderItem={renderShiftItem}
             keyExtractor={(item) => item.id}
-            estimatedItemSize={200}
+            estimatedItemSize={160}
             contentContainerStyle={styles.listContent}
             refreshControl={
               <RefreshControl
