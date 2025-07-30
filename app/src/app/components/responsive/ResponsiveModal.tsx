@@ -1,5 +1,4 @@
 import React, { ReactNode, useMemo } from 'react';
-import Modal from 'react-native-modal';
 import {
   ScrollView,
   ViewStyle,
@@ -14,6 +13,8 @@ import {
   IconButton,
   ActivityIndicator,
   Divider,
+  Modal,
+  Portal,
 } from 'react-native-paper';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useAppTheme } from '@/app/styles/theme';
@@ -199,16 +200,6 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
     return null;
   }, [footer, actions, responsive.isSmallMobile]);
 
-  // Animación moderna estilo iOS
-  const animationConfig = useMemo(() => {
-    return {
-      animationIn: 'zoomIn' as const,
-      animationOut: 'zoomOut' as const,
-      animationInTiming: 180,
-      animationOutTiming: 150,
-    };
-  }, []);
-
   // Contenido del modal
   const modalContent = (
     <>
@@ -294,43 +285,37 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
       : {};
 
   return (
-    <Modal
-      isVisible={visible}
-      onBackdropPress={dismissable && !isLoading ? onDismiss : undefined}
-      onBackButtonPress={dismissable && !isLoading ? onDismiss : undefined}
-      animationIn={animationConfig.animationIn}
-      animationOut={animationConfig.animationOut}
-      animationInTiming={animationConfig.animationInTiming}
-      animationOutTiming={animationConfig.animationOutTiming}
-      backdropOpacity={0.6}
-      useNativeDriver={true}
-      useNativeDriverForBackdrop={true}
-      hideModalContentWhileAnimating={false}
-      style={styles.modal}
-    >
-      <ModalWrapper
-        style={[containerStyles, contentContainerStyle]}
-        {...keyboardAvoidingProps}
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={dismissable && !isLoading ? onDismiss : undefined}
+        dismissable={dismissable && !isLoading}
+        dismissableBackButton={dismissable && !isLoading}
+        contentContainerStyle={styles.modalContainer}
       >
-        {modalContent}
-        {isLoading && (
-          <View
-            style={[
-              styles.loadingOverlay,
-              { backgroundColor: `${theme.colors.background}E6` },
-            ]}
-          >
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-          </View>
-        )}
-      </ModalWrapper>
-    </Modal>
+        <ModalWrapper
+          style={[containerStyles, contentContainerStyle]}
+          {...keyboardAvoidingProps}
+        >
+          {modalContent}
+          {isLoading && (
+            <View
+              style={[
+                styles.loadingOverlay,
+                { backgroundColor: `${theme.colors.background}E6` },
+              ]}
+            >
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          )}
+        </ModalWrapper>
+      </Modal>
+    </Portal>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {
-    margin: 0,
+  modalContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
