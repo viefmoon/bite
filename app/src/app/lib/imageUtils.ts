@@ -1,4 +1,3 @@
-import { serverConnectionService } from '@/app/services/serverConnectionService';
 import { useServerUrlStore } from '@/app/stores/serverUrlStore';
 
 /**

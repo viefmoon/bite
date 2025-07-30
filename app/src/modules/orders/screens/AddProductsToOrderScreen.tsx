@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Portal } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 

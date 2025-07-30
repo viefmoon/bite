@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Text, Chip } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';

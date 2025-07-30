@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { TouchableOpacity, StyleSheet, View, Text } from 'react-native';
 import { Icon, Surface, Checkbox } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';

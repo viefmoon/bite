@@ -62,7 +62,7 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
   // Convertir string a base64 usando btoa (disponible en React Native)
   // Reemplazar caracteres no seguros para nombres de archivo
   const base64 = btoa(
-    encodeURIComponent(urlToHash).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+    encodeURIComponent(urlToHash).replace(/%([0-9A-F]{2})/g, (_, p1) =>
       String.fromCharCode(parseInt(p1, 16)),
     ),
   )
