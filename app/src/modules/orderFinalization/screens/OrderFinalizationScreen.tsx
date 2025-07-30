@@ -246,6 +246,13 @@ export const OrderFinalizationScreen: React.FC = () => {
                 .filter((p: any) => p && typeof p.amount === 'number')
                 .map((p: any) => ({ amount: p.amount }))
             : undefined,
+          createdBy: item.user
+            ? {
+                username: item.user.username,
+                firstName: item.user.firstName,
+                lastName: item.user.lastName,
+              }
+            : undefined,
         }}
         onPress={() => handleShowOrderDetails(item)}
         showCreatedBy={true}

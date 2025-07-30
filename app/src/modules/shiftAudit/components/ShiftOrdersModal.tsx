@@ -152,6 +152,7 @@ export function ShiftOrdersModal({
       notes: item.notes || undefined,
       payments: item.payments as any,
       isFromWhatsApp: item.isFromWhatsApp,
+      preparationScreenStatuses: item.preparationScreenStatuses as any,
       createdBy: item.user
         ? {
             username: item.user.username,

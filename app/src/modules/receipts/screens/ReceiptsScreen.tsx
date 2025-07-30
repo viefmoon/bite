@@ -179,6 +179,13 @@ export const ReceiptsScreen: React.FC = () => {
         notes: item.notes || undefined,
         payments: item.payments || undefined,
         shiftOrderNumber: item.shiftOrderNumber || undefined,
+        createdBy: item.user
+          ? {
+              username: item.user.username,
+              firstName: item.user.firstName,
+              lastName: item.user.lastName,
+            }
+          : undefined,
       }}
       onPress={() => handleReceiptPress(item)}
       renderActions={(_orderItem) => (

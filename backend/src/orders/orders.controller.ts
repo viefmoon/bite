@@ -20,11 +20,6 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
 import { OrderType } from './domain/enums/order-type.enum';
-import { CreateOrderItemDto } from './dto/create-order-item.dto';
-import { UpdateOrderItemDto } from './dto/update-order-item.dto';
-import { OrderItem } from './domain/order-item';
-import { OrderStatus } from './domain/enums/order-status.enum';
-import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -95,38 +90,7 @@ export class OrdersController {
 
 
 
-  @Get('items/:id')
-  @ApiOperation({ summary: 'Get a specific order item by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the order item with the specified ID.',
-    type: OrderItem,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findOrderItemById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderItem> {
-    return this.ordersService.findOrderItemById(id);
-  }
 
-  @Patch('finalize-multiple')
-  @ApiOperation({ summary: 'Finalizar múltiples órdenes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Las órdenes han sido finalizadas exitosamente.',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  finalizeMultipleOrders(
-    @Body() finalizeOrdersDto: FinalizeOrdersDto,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
-    return this.ordersService.finalizeMultipleOrders(finalizeOrdersDto, userId);
-  }
 
   @Post('quick-finalize-multiple')
   @ApiOperation({
@@ -160,89 +124,11 @@ export class OrdersController {
     };
   }
 
-  @Patch('items/:id')
-  @ApiOperation({ summary: 'Update a specific order item by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The order item has been successfully updated.',
-    type: OrderItem,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  updateOrderItem(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateOrderItemDto: UpdateOrderItemDto,
-  ): Promise<OrderItem> {
-    return this.ordersService.updateOrderItem(id, updateOrderItemDto);
-  }
-
-  @Delete('items/:id')
-  @ApiOperation({ summary: 'Delete a specific order item by ID' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'The order item has been successfully deleted.',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  removeOrderItem(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.ordersService.deleteOrderItem(id);
-  }
 
 
-  @Get('user/:userId')
-  @ApiOperation({ summary: 'Get all orders for a specific user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders for the specified user.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findByUserId(
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByUserId(userId);
-  }
 
-  @Get('table/:tableId')
-  @ApiOperation({ summary: 'Get all orders for a specific table' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders for the specified table.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findByTableId(
-    @Param('tableId', ParseUUIDPipe) tableId: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByTableId(tableId);
-  }
 
-  @Get('shift/:shiftId')
-  @ApiOperation({
-    summary:
-      'Get all orders for a specific shift with preparation status summary',
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Return all orders for the specified shift with calculated preparation screen statuses.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  findByShiftId(
-    @Param('shiftId', ParseUUIDPipe) shiftId: string,
-  ): Promise<any[]> {
-    return this.ordersService.findByShiftId(shiftId);
-  }
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific order by ID' })
@@ -275,19 +161,6 @@ export class OrdersController {
     return this.ordersService.update(id, updateOrderDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a specific order by ID' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'The order has been successfully deleted.',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.ordersService.remove(id);
-  }
 
   @Post(':id/recover')
   @ApiOperation({ summary: 'Recover a completed or cancelled order' })
@@ -304,56 +177,8 @@ export class OrdersController {
     return this.ordersService.recoverOrder(id);
   }
 
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Change order status' })
-  @ApiResponse({
-    status: 200,
-    description: 'The order status has been successfully changed.',
-    type: Order,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  changeOrderStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { status: OrderStatus },
-  ): Promise<Order> {
-    return this.ordersService.changeOrderStatus(id, body.status);
-  }
 
-  @Post(':orderId/items')
-  @ApiOperation({ summary: 'Create a new order item for an order' })
-  @ApiResponse({
-    status: 201,
-    description: 'The order item has been successfully created.',
-    type: OrderItem,
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  createOrderItem(
-    @Param('orderId', ParseUUIDPipe) orderId: string,
-    @Body() createOrderItemDto: CreateOrderItemDto,
-  ): Promise<OrderItem> {
-    createOrderItemDto.orderId = orderId;
-    return this.ordersService.createOrderItem(createOrderItemDto);
-  }
 
-  @Get(':orderId/items')
-  @ApiOperation({ summary: 'Get all order items for a specific order' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all order items for the specified order.',
-    type: [OrderItem],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  findOrderItemsByOrderId(
-    @Param('orderId', ParseUUIDPipe) orderId: string,
-  ): Promise<OrderItem[]> {
-    return this.ordersService.findOrderItemsByOrderId(orderId);
-  }
 
   @Get(':id/history')
   @HttpCode(HttpStatus.OK)
@@ -388,122 +213,8 @@ export class OrdersController {
     return infinityPagination(data, paginationOptions);
   }
 
-  @Patch(':id/start-preparation')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Start order preparation',
-    description:
-      'Changes all pending items of an order to IN_PROGRESS status and updates order status',
-  })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Order preparation started successfully',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.kitchen)
-  async startOrderPreparation(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
-    await this.ordersService.changeOrderItemsStatus(
-      id,
-      userId,
-      'PENDING',
-      'IN_PROGRESS',
-    );
 
-    await this.ordersService.update(id, {
-      orderStatus: OrderStatus.IN_PREPARATION,
-    });
-  }
 
-  @Patch(':id/cancel-preparation')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Cancel order preparation',
-    description:
-      'Returns order to previous state. If order is READY goes back to IN_PREPARATION (items keep their state). If order is IN_PREPARATION goes back to IN_PROGRESS (all items go to PENDING).',
-  })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Order preparation cancelled successfully',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.kitchen)
-  async cancelOrderPreparation(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
-    const order = await this.ordersService.findOne(id);
-
-    if (order.orderStatus === OrderStatus.READY) {
-      await this.ordersService.update(id, {
-        orderStatus: OrderStatus.IN_PREPARATION,
-      });
-    } else if (order.orderStatus === OrderStatus.IN_PREPARATION) {
-      const hasInProgressItems = await this.ordersService.hasItemsWithStatus(
-        id,
-        'IN_PROGRESS',
-      );
-      if (hasInProgressItems) {
-        await this.ordersService.changeOrderItemsStatus(
-          id,
-          userId,
-          'IN_PROGRESS',
-          'PENDING',
-        );
-      }
-
-      const hasReadyItems = await this.ordersService.hasItemsWithStatus(
-        id,
-        'READY',
-      );
-      if (hasReadyItems) {
-        await this.ordersService.changeOrderItemsStatus(
-          id,
-          userId,
-          'READY',
-          'PENDING',
-        );
-      }
-
-      await this.ordersService.update(id, {
-        orderStatus: OrderStatus.IN_PROGRESS,
-      });
-    }
-  }
-
-  @Patch(':id/complete-preparation')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Complete order preparation',
-    description:
-      'Changes all in-progress items of an order to READY status and updates order status',
-  })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Order preparation completed successfully',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.kitchen)
-  async completeOrderPreparation(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
-    await this.ordersService.changeOrderItemsStatus(
-      id,
-      userId,
-      'IN_PROGRESS',
-      'READY',
-    );
-
-    await this.ordersService.update(id, {
-      orderStatus: OrderStatus.READY,
-    });
-  }
 
   @Post(':id/print-ticket')
   @ApiOperation({ summary: 'Imprimir ticket de una orden' })
