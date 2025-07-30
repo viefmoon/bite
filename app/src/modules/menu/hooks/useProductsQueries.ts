@@ -192,27 +192,3 @@ export function useProductModifierGroupsQuery(
   });
 }
 
-export function useRemoveModifierGroupsMutation() {
-  const queryClient = useQueryClient();
-
-  return useApiMutation(
-    ({
-      productId,
-      data,
-    }: {
-      productId: string;
-      data: AssignModifierGroupsInput;
-    }) => productsService.removeModifierGroups(productId, data),
-    {
-      successMessage: 'Grupos de modificadores removidos con éxito',
-      onSuccess: (updatedProduct) => {
-        queryClient.invalidateQueries({
-          queryKey: productKeys.details(updatedProduct.id),
-        });
-        queryClient.invalidateQueries({
-          queryKey: productKeys.detailModifierGroups(updatedProduct.id),
-        });
-      },
-    },
-  );
-}

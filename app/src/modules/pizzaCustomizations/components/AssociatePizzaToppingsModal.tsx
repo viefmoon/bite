@@ -1,14 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  Portal,
-  Modal,
   Text,
   Checkbox,
   Button,
-  IconButton,
   Chip,
-  Divider,
   ActivityIndicator,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -18,6 +14,7 @@ import { pizzaCustomizationsService } from '../services/pizzaCustomizationsServi
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { CustomizationTypeEnum } from '../schema/pizzaCustomization.schema';
 import type { Product } from '@/modules/menu/schema/products.schema';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 interface AssociatePizzaToppingsModalProps {
@@ -163,86 +160,42 @@ export function AssociatePizzaToppingsModal({
   const isLoading = isLoadingToppings || isLoadingAssociated;
 
   const styles = StyleSheet.create({
-    modal: {
-      backgroundColor: theme.colors.background,
-      margin: theme.spacing.m,
-      marginTop: theme.spacing.xl * 2,
-      borderRadius: theme.roundness * 2,
-      height: '90%',
-      maxHeight: '90%',
-    },
-    header: {
-      backgroundColor: theme.colors.elevation.level1,
-      borderTopLeftRadius: theme.roundness * 2,
-      borderTopRightRadius: theme.roundness * 2,
-      paddingHorizontal: theme.spacing.m,
-      paddingTop: theme.spacing.m,
-      paddingBottom: theme.spacing.s,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    titleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    titleIcon: {
-      margin: 0,
-      marginRight: theme.spacing.xs,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: theme.colors.onSurface,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
-      marginLeft: theme.spacing.xl + theme.spacing.m,
-    },
-    closeButton: {
-      margin: 0,
-    },
     filterContainer: {
       backgroundColor: theme.colors.background,
+      paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.m,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
+      marginBottom: theme.spacing.s,
+      marginTop: -theme.spacing.l, // Compensar el padding del ResponsiveModal
+      marginHorizontal: -theme.spacing.l, // Compensar el padding horizontal del ResponsiveModal
     },
     filterButtons: {
       flexDirection: 'row',
       gap: theme.spacing.xs,
-      justifyContent: 'space-between',
+      justifyContent: 'center',
     },
     filterChip: {
       flex: 1,
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outlineVariant,
-      height: 32,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     filterChipActive: {
       backgroundColor: theme.colors.primaryContainer,
       borderColor: theme.colors.primary,
     },
     filterChipText: {
-      fontSize: 12,
+      fontSize: 14,
       color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
     },
     filterChipTextActive: {
       color: theme.colors.primary,
       fontWeight: '600',
-    },
-    content: {
-      flex: 1,
-      minHeight: 200,
-    },
-    scrollContent: {
-      padding: theme.spacing.m,
-      paddingBottom: theme.spacing.xl * 2,
+      textAlign: 'center',
     },
     selectAllContainer: {
       marginBottom: theme.spacing.l,
@@ -308,253 +261,207 @@ export function AssociatePizzaToppingsModal({
       color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
     },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.m,
-      gap: theme.spacing.m,
-    },
-    actionButton: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-    },
-    cancelButton: {
-      borderColor: theme.colors.outlineVariant,
-    },
-    saveButton: {
-      borderWidth: 0,
-    },
-    buttonContent: {
-      paddingVertical: 6,
+    productSubtitle: {
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
     },
   });
 
   if (!product) return null;
 
-  return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={() => {
-          if (hasChanges) {
-            setShowConfirmation(true);
-          } else {
-            onDismiss();
-          }
-        }}
-        contentContainerStyle={styles.modal}
-        dismissable={true}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.titleContainer}>
-              <IconButton
-                icon="food-variant"
-                size={20}
-                iconColor={theme.colors.primary}
-                style={styles.titleIcon}
-              />
-              <Text style={styles.title}>Personalizar Producto</Text>
-            </View>
-            <IconButton
-              icon="close"
-              size={24}
-              onPress={() => {
-                if (hasChanges) {
-                  setShowConfirmation(true);
-                } else {
-                  onDismiss();
-                }
-              }}
-              style={styles.closeButton}
-            />
-          </View>
-          <Text style={styles.subtitle}>{product.name}</Text>
-        </View>
+  const handleDismiss = () => {
+    if (hasChanges) {
+      setShowConfirmation(true);
+    } else {
+      onDismiss();
+    }
+  };
 
-        <View style={styles.filterContainer}>
-          <View style={styles.filterButtons}>
-            <Chip
-              mode={filterType === 'all' ? 'flat' : 'outlined'}
-              onPress={() => setFilterType('all')}
-              style={[
-                styles.filterChip,
-                filterType === 'all' && styles.filterChipActive,
-              ]}
-              textStyle={[
-                styles.filterChipText,
-                filterType === 'all' && styles.filterChipTextActive,
-              ]}
-              icon="format-list-bulleted"
-              compact
-            >
-              Todos
-            </Chip>
-            <Chip
-              mode={filterType === 'flavors' ? 'flat' : 'outlined'}
-              onPress={() => setFilterType('flavors')}
-              style={[
-                styles.filterChip,
-                filterType === 'flavors' && styles.filterChipActive,
-              ]}
-              textStyle={[
-                styles.filterChipText,
-                filterType === 'flavors' && styles.filterChipTextActive,
-              ]}
-              icon="pizza"
-              compact
-            >
-              Sabores
-            </Chip>
-            <Chip
-              mode={filterType === 'ingredients' ? 'flat' : 'outlined'}
-              onPress={() => setFilterType('ingredients')}
-              style={[
-                styles.filterChip,
-                filterType === 'ingredients' && styles.filterChipActive,
-              ]}
-              textStyle={[
-                styles.filterChipText,
-                filterType === 'ingredients' && styles.filterChipTextActive,
-              ]}
-              icon="food-variant"
-              compact
-            >
-              Ingredientes
-            </Chip>
-          </View>
-        </View>
+  // Header personalizado con subtítulo del producto
+  const modalHeader = (
+    <View>
+      <Text style={styles.productSubtitle}>{product.name}</Text>
+    </View>
+  );
 
-        <View style={styles.content}>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-            </View>
-          ) : (
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}
+  // Acciones del modal
+  const modalActions = [
+    {
+      label: 'Cancelar',
+      mode: 'contained-tonal' as const,
+      onPress: handleDismiss,
+    },
+    {
+      label: 'Guardar',
+      mode: 'contained' as const,
+      onPress: () => updateMutation.mutate(),
+      loading: updateMutation.isPending,
+      disabled: !hasChanges,
+    },
+  ];
+
+  const modalContent = (
+    <>
+      {/* Filtros */}
+      <View style={styles.filterContainer}>
+        <View style={styles.filterButtons}>
+          <Chip
+            mode={filterType === 'all' ? 'flat' : 'outlined'}
+            onPress={() => setFilterType('all')}
+            style={[
+              styles.filterChip,
+              filterType === 'all' && styles.filterChipActive,
+            ]}
+            textStyle={[
+              styles.filterChipText,
+              filterType === 'all' && styles.filterChipTextActive,
+            ]}
+            compact
+          >
+            Todos
+          </Chip>
+          <Chip
+            mode={filterType === 'flavors' ? 'flat' : 'outlined'}
+            onPress={() => setFilterType('flavors')}
+            style={[
+              styles.filterChip,
+              filterType === 'flavors' && styles.filterChipActive,
+            ]}
+            textStyle={[
+              styles.filterChipText,
+              filterType === 'flavors' && styles.filterChipTextActive,
+            ]}
+            compact
+          >
+            Sabores
+          </Chip>
+          <Chip
+            mode={filterType === 'ingredients' ? 'flat' : 'outlined'}
+            onPress={() => setFilterType('ingredients')}
+            style={[
+              styles.filterChip,
+              filterType === 'ingredients' && styles.filterChipActive,
+            ]}
+            textStyle={[
+              styles.filterChipText,
+              filterType === 'ingredients' && styles.filterChipTextActive,
+            ]}
+            compact
+          >
+            Ingredientes
+          </Chip>
+        </View>
+      </View>
+
+      {/* Contenido principal */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <>
+          <View style={styles.selectAllContainer}>
+            <Button
+              mode="contained-tonal"
+              onPress={toggleAll}
+              style={styles.selectAllButton}
+              icon={
+                selectedToppings.size === allToppings?.length
+                  ? 'checkbox-marked'
+                  : 'checkbox-blank-outline'
+              }
+              contentStyle={styles.selectAllContent}
             >
-              <View style={styles.selectAllContainer}>
-                <Button
-                  mode="contained-tonal"
-                  onPress={toggleAll}
-                  style={styles.selectAllButton}
-                  icon={
-                    selectedToppings.size === allToppings?.length
-                      ? 'checkbox-marked'
-                      : 'checkbox-blank-outline'
-                  }
-                  contentStyle={styles.selectAllContent}
-                >
-                  {selectedToppings.size === allToppings?.length
-                    ? 'Quitar selección'
-                    : 'Seleccionar todo'}
-                </Button>
-                <Text style={styles.selectionCount}>
-                  {selectedToppings.size} de {allToppings?.length || 0}{' '}
-                  seleccionados
+              {selectedToppings.size === allToppings?.length
+                ? 'Quitar selección'
+                : 'Seleccionar todo'}
+            </Button>
+            <Text style={styles.selectionCount}>
+              {selectedToppings.size} de {allToppings?.length || 0}{' '}
+              seleccionados
+            </Text>
+          </View>
+
+          {filteredToppings.displayFlavors.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Sabores ({filteredToppings.displayFlavors.length})
+              </Text>
+              {filteredToppings.displayFlavors.map((flavor) => (
+                <View key={flavor.id} style={styles.toppingItem}>
+                  <Checkbox.Item
+                    label={flavor.name}
+                    status={
+                      selectedToppings.has(flavor.id) ? 'checked' : 'unchecked'
+                    }
+                    onPress={() => toggleTopping(flavor.id)}
+                    labelStyle={styles.checkboxLabel}
+                    style={styles.checkbox}
+                    position="leading"
+                  />
+                  {flavor.ingredients && (
+                    <Text style={styles.ingredientsText}>
+                      {flavor.ingredients}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {filteredToppings.displayIngredients.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Ingredientes ({filteredToppings.displayIngredients.length})
+              </Text>
+              {filteredToppings.displayIngredients.map((ingredient) => (
+                <View key={ingredient.id} style={styles.toppingItem}>
+                  <Checkbox.Item
+                    label={ingredient.name}
+                    status={
+                      selectedToppings.has(ingredient.id)
+                        ? 'checked'
+                        : 'unchecked'
+                    }
+                    onPress={() => toggleTopping(ingredient.id)}
+                    labelStyle={styles.checkboxLabel}
+                    style={styles.checkbox}
+                    position="leading"
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {filteredToppings.displayFlavors.length === 0 &&
+            filteredToppings.displayIngredients.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>
+                  No hay sabores ni ingredientes disponibles
                 </Text>
               </View>
+            )}
+        </>
+      )}
+    </>
+  );
 
-              {filteredToppings.displayFlavors.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Sabores ({filteredToppings.displayFlavors.length})
-                  </Text>
-                  {filteredToppings.displayFlavors.map((flavor) => (
-                    <View key={flavor.id} style={styles.toppingItem}>
-                      <Checkbox.Item
-                        label={flavor.name}
-                        status={
-                          selectedToppings.has(flavor.id)
-                            ? 'checked'
-                            : 'unchecked'
-                        }
-                        onPress={() => toggleTopping(flavor.id)}
-                        labelStyle={styles.checkboxLabel}
-                        style={styles.checkbox}
-                        position="leading"
-                      />
-                      {flavor.ingredients && (
-                        <Text style={styles.ingredientsText}>
-                          {flavor.ingredients}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {filteredToppings.displayIngredients.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Ingredientes ({filteredToppings.displayIngredients.length})
-                  </Text>
-                  {filteredToppings.displayIngredients.map((ingredient) => (
-                    <View key={ingredient.id} style={styles.toppingItem}>
-                      <Checkbox.Item
-                        label={ingredient.name}
-                        status={
-                          selectedToppings.has(ingredient.id)
-                            ? 'checked'
-                            : 'unchecked'
-                        }
-                        onPress={() => toggleTopping(ingredient.id)}
-                        labelStyle={styles.checkboxLabel}
-                        style={styles.checkbox}
-                        position="leading"
-                      />
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {filteredToppings.displayFlavors.length === 0 &&
-                filteredToppings.displayIngredients.length === 0 && (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>
-                      No hay sabores ni ingredientes disponibles
-                    </Text>
-                  </View>
-                )}
-            </ScrollView>
-          )}
-        </View>
-
-        <Divider />
-
-        <View>
-          <View style={styles.actions}>
-            <Button
-              mode="outlined"
-              onPress={() => {
-                if (hasChanges) {
-                  setShowConfirmation(true);
-                } else {
-                  onDismiss();
-                }
-              }}
-              style={[styles.actionButton, styles.cancelButton]}
-              contentStyle={styles.buttonContent}
-            >
-              Cancelar
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => updateMutation.mutate()}
-              loading={updateMutation.isPending}
-              disabled={!hasChanges}
-              style={[styles.actionButton, styles.saveButton]}
-              contentStyle={styles.buttonContent}
-            >
-              Guardar
-            </Button>
-          </View>
-        </View>
-      </Modal>
+  return (
+    <>
+      <ResponsiveModal
+        visible={visible}
+        onDismiss={handleDismiss}
+        title="Personalizar Producto"
+        headerLeft={modalHeader}
+        maxWidthPercent={95}
+        maxHeightPercent={90}
+        dismissable={!isLoading}
+        isLoading={false}
+        actions={modalActions}
+      >
+        {modalContent}
+      </ResponsiveModal>
 
       <ConfirmationModal
         visible={showConfirmation}
@@ -571,6 +478,6 @@ export function AssociatePizzaToppingsModal({
         onCancel={() => setShowConfirmation(false)}
         onDismiss={() => setShowConfirmation(false)}
       />
-    </Portal>
+    </>
   );
 }

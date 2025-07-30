@@ -77,35 +77,6 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
-  @Get('open-today')
-  @ApiOperation({ summary: 'Obtener las órdenes abiertas del turno actual' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de órdenes abiertas del turno actual.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  findOpenOrders(): Promise<Order[]> {
-    return this.ordersService.findOpenOrders();
-  }
-
-  @Get('open-current-shift')
-  @ApiOperation({ summary: 'Obtener las órdenes abiertas del turno actual' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de órdenes abiertas del turno actual.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier, RoleEnum.waiter)
-  @HttpCode(HttpStatus.OK)
-  findOpenOrdersCurrentShift(): Promise<Order[]> {
-    return this.ordersService.findOpenOrders();
-  }
 
   @Get('open-orders-list')
   @ApiOperation({ summary: 'Obtener lista optimizada de órdenes abiertas' })

@@ -39,22 +39,6 @@ export class ProductModifiersController {
     return this.productModifiersService.create(createProductModifierDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all product modifiers with pagination' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Return a paginated list of product modifiers',
-  })
-  findAll(
-    @Query() filterDto: FindAllProductModifiersDto,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ): Promise<Paginated<ProductModifier>> {
-    return this.productModifiersService.findAll(filterDto, {
-      page,
-      limit,
-    });
-  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a product modifier by id' })

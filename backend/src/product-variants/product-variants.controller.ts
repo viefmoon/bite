@@ -43,14 +43,6 @@ export class ProductVariantsController {
     return this.productVariantsService.create(createProductVariantDto);
   }
 
-  @Get()
-  @ApiOperation({
-    summary: 'Obtener todas las variantes de productos',
-  })
-  @HttpCode(HttpStatus.OK)
-  findAll(@Query() findAllProductVariantsDto: FindAllProductVariantsDto) {
-    return this.productVariantsService.findAll(findAllProductVariantsDto);
-  }
 
   @Get(':id')
   @ApiOperation({

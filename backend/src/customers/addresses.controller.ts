@@ -43,12 +43,6 @@ export class AddressesController {
     return this.addressesService.create(createAddressDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Find all addresses' })
-  @HttpCode(HttpStatus.OK)
-  findAll(@Query() query: FindAllAddressesDto): Promise<Address[]> {
-    return this.addressesService.findAll(query);
-  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Find one address by ID' })

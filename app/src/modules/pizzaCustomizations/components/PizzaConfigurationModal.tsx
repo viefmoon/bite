@@ -221,7 +221,7 @@ export function PizzaConfigurationModal({
         actions={[
           {
             label: 'Cancelar',
-            mode: 'text',
+            mode: 'contained-tonal',
             onPress: () => {
               if (isDirty) {
                 setShowConfirmation(true);
@@ -229,7 +229,6 @@ export function PizzaConfigurationModal({
                 onDismiss();
               }
             },
-            colorPreset: 'secondary',
           },
           {
             label: 'Guardar',

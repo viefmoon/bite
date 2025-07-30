@@ -36,7 +36,6 @@ export const API_PATHS = {
 
   ORDERS: '/api/v1/orders',
   ORDERS_BY_ID: '/api/v1/orders/:orderId',
-  ORDERS_OPEN_CURRENT_SHIFT: '/api/v1/orders/open-current-shift',
   ORDERS_OPEN_ORDERS_LIST: '/api/v1/orders/open-orders-list',
   ORDERS_FOR_FINALIZATION_LIST: '/api/v1/orders/for-finalization/list',
   ORDERS_FOR_FINALIZATION_DETAIL: '/api/v1/orders/for-finalization/:id',
@@ -64,7 +63,6 @@ export const API_PATHS = {
   PAYMENTS_BY_ID: '/api/v1/payments/:paymentId',
   PAYMENTS_BY_ORDER: '/api/v1/payments/order/:orderId',
   PAYMENTS_PREPAYMENT: '/api/v1/payments/prepayment',
-  PAYMENTS_ASSOCIATE: '/api/v1/payments/:paymentId/associate/:orderId',
 
   PIZZA_CUSTOMIZATIONS: '/api/v1/pizza-customizations',
   PIZZA_CUSTOMIZATIONS_BY_ID: '/api/v1/pizza-customizations/:id',
@@ -75,7 +73,6 @@ export const API_PATHS = {
 
   CUSTOMERS: '/api/v1/customers',
   CUSTOMERS_BY_ID: '/api/v1/customers/:id',
-  ADDRESSES: '/api/v1/addresses',
   ADDRESSES_BY_ID: '/api/v1/addresses/:id',
   ADDRESSES_BY_CUSTOMER: '/api/v1/customers/:customerId/addresses',
 

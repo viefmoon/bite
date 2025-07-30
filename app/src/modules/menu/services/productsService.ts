@@ -74,16 +74,6 @@ async function getModifierGroups(productId: string): Promise<Product> {
   return response.data;
 }
 
-async function removeModifierGroups(
-  productId: string,
-  data: AssignModifierGroupsInput,
-): Promise<Product> {
-  const response = await apiClient.delete<Product>(
-    API_PATHS.PRODUCTS_MODIFIER_GROUPS.replace(':productId', productId),
-    { data },
-  );
-  return response.data;
-}
 
 async function findAllPizzas(): Promise<Product[]> {
   const response = await apiClient.get<Product[]>(API_PATHS.PRODUCTS_PIZZAS);
@@ -117,7 +107,6 @@ export const productsService = {
   remove,
   assignModifierGroups,
   getModifierGroups,
-  removeModifierGroups,
   findAllPizzas,
   getPizzaCustomizations,
   updatePizzaCustomizations,

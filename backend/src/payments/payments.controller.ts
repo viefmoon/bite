@@ -113,17 +113,4 @@ export class PaymentsController {
     return this.paymentsService.createPrepayment(createPrepaymentDto);
   }
 
-  @Patch(':paymentId/associate/:orderId')
-  @ApiOperation({ summary: 'Asociar un pre-pago a una orden' })
-  @ApiResponse({
-    status: 200,
-    description: 'El pago ha sido asociado a la orden exitosamente',
-    type: Payment,
-  })
-  associateToOrder(
-    @Param('paymentId', ParseUUIDPipe) paymentId: string,
-    @Param('orderId', ParseUUIDPipe) orderId: string,
-  ) {
-    return this.paymentsService.associatePaymentToOrder(paymentId, orderId);
-  }
 }
