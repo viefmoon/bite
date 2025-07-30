@@ -612,14 +612,13 @@ function ProductFormModal({
               <Divider style={styles.divider} />
               <View style={styles.variantsHeader}>
                 <Text variant="titleMedium">Variantes</Text>
-                <Button
-                  mode="contained-tonal"
+                <IconButton
                   icon="plus"
+                  mode="contained-tonal"
                   onPress={() => showVariantModal()}
                   disabled={isSubmitting}
-                >
-                  Añadir
-                </Button>
+                  size={20}
+                />
               </View>
               {variantFields.length === 0 && (
                 <Text style={styles.noVariantsText}>
