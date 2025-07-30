@@ -6,7 +6,7 @@ interface Product {
   photo?: any;
   price?: string | number | null | undefined;
   isAssociated: boolean;
-  currentPreparationScreenId: string | null;
+  currentPreparationScreenId?: string | null | undefined;
 }
 
 interface Subcategory {
