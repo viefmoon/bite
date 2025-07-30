@@ -21,9 +21,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   orderId,
 }) => {
   // Obtener datos frescos cuando se abre el modal
-  const { data: freshOrder, isLoading: isFetchingFresh } = useOrderForFinalizationDetail(
-    visible && orderId ? orderId : null
-  );
+  const { data: freshOrder, isLoading: isFetchingFresh } =
+    useOrderForFinalizationDetail(visible && orderId ? orderId : null);
 
   // Usar datos frescos si están disponibles, caso contrario usar los pasados por props
   const orderToUse = freshOrder || order;

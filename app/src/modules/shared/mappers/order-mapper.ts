@@ -194,14 +194,15 @@ export const mapReceiptToUnifiedOrder = (
       })) || null,
 
     // Información adicional
-    preparationScreenStatuses: receipt.preparationScreenStatuses?.map((status: any) => ({
-      id: status.id,
-      preparationScreenId: status.preparationScreenId,
-      preparationScreenName: status.preparationScreenName,
-      status: status.status,
-      startedAt: status.startedAt,
-      completedAt: status.completedAt,
-    })) || null,
+    preparationScreenStatuses:
+      receipt.preparationScreenStatuses?.map((status: any) => ({
+        id: status.id,
+        preparationScreenId: status.preparationScreenId,
+        preparationScreenName: status.preparationScreenName,
+        status: status.status,
+        startedAt: status.startedAt,
+        completedAt: status.completedAt,
+      })) || null,
     isFromWhatsApp: receipt.isFromWhatsApp,
     estimatedDeliveryTime: receipt.estimatedDeliveryTime || null,
     userId: receipt.userId || null,
@@ -296,14 +297,15 @@ export const mapOrderForFinalizationToUnifiedOrder = (
       })) || null,
 
     // Información adicional
-    preparationScreenStatuses: order.preparationScreenStatuses?.map((status: any) => ({
-      id: status.id,
-      preparationScreenId: status.preparationScreenId,
-      preparationScreenName: status.preparationScreenName,
-      status: status.status,
-      startedAt: status.startedAt,
-      completedAt: status.completedAt,
-    })) || null,
+    preparationScreenStatuses:
+      order.preparationScreenStatuses?.map((status: any) => ({
+        id: status.id,
+        preparationScreenId: status.preparationScreenId,
+        preparationScreenName: status.preparationScreenName,
+        status: status.status,
+        startedAt: status.startedAt,
+        completedAt: status.completedAt,
+      })) || null,
     isFromWhatsApp: order.isFromWhatsApp,
     tableId: order.tableId || null,
   };

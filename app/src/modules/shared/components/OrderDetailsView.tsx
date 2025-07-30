@@ -398,11 +398,19 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
           {order.preparationScreenStatuses &&
             order.preparationScreenStatuses.map((screenStatus) => {
               const getStatusColor = (status: string) => {
-                return PreparationScreenStatusColors[status as keyof typeof PreparationScreenStatusColors] || theme.colors.onSurfaceVariant;
+                return (
+                  PreparationScreenStatusColors[
+                    status as keyof typeof PreparationScreenStatusColors
+                  ] || theme.colors.onSurfaceVariant
+                );
               };
 
               const getStatusLabel = (status: string) => {
-                return PreparationScreenStatusLabels[status as keyof typeof PreparationScreenStatusLabels] || status;
+                return (
+                  PreparationScreenStatusLabels[
+                    status as keyof typeof PreparationScreenStatusLabels
+                  ] || status
+                );
               };
 
               return (
@@ -410,13 +418,16 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   key={screenStatus.id}
                   style={[
                     styles.preparationScreenStatus,
-                    { backgroundColor: getStatusColor(screenStatus.status) + '20' }
+                    {
+                      backgroundColor:
+                        getStatusColor(screenStatus.status) + '20',
+                    },
                   ]}
                 >
                   <Text
                     style={[
                       styles.preparationScreenName,
-                      { color: getStatusColor(screenStatus.status) }
+                      { color: getStatusColor(screenStatus.status) },
                     ]}
                   >
                     🍳 {screenStatus.preparationScreenName}
@@ -424,7 +435,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   <Text
                     style={[
                       styles.preparationScreenStatusText,
-                      { color: getStatusColor(screenStatus.status) }
+                      { color: getStatusColor(screenStatus.status) },
                     ]}
                   >
                     {getStatusLabel(screenStatus.status)}

@@ -428,10 +428,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                         : ''}
                     </Text>
                   </View>
-                  {order?.preparationScreens &&
-                  Array.isArray(order.preparationScreens)
-                    ? (order.preparationScreens as any[]).map(
-                        (screen: any, index: number) => (
+                  {order?.preparationScreenStatuses &&
+                  Array.isArray(order.preparationScreenStatuses)
+                    ? order.preparationScreenStatuses.map(
+                        (screenStatus, index: number) => (
                           <Chip
                             key={index}
                             mode="outlined"
@@ -439,7 +439,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                             style={styles.screenChip}
                             textStyle={styles.screenChipText}
                           >
-                            🍳 {screen}
+                            🍳 {screenStatus.preparationScreenName}
                           </Chip>
                         ),
                       )

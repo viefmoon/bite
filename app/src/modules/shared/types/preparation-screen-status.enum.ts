@@ -2,7 +2,7 @@
 
 export enum PreparationScreenStatus {
   PENDING = 'PENDING',
-  IN_PREPARATION = 'IN_PREPARATION', 
+  IN_PREPARATION = 'IN_PREPARATION',
   READY = 'READY',
 }
 
