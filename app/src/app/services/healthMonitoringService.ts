@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { discoveryService } from '../app/services/discoveryService';
+import { discoveryService } from '@/app/services/discoveryService';
 import EventEmitter from 'eventemitter3';
-import { NETWORK_CONFIG } from '../app/constants/network';
-import { API_PATHS } from '../app/constants/apiPaths';
+import { NETWORK_CONFIG } from '@/app/constants/network';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export type HealthStatus = 'ok' | 'error' | 'checking';
 

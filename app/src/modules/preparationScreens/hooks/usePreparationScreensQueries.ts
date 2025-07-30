@@ -4,6 +4,7 @@ import {
   PreparationScreen,
   UpdatePreparationScreenDto,
   FindAllPreparationScreensDto,
+  MenuWithAssociations,
 } from '../schema/preparationScreen.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { PaginatedResponse } from '../../../app/types/api.types';
@@ -237,7 +238,7 @@ export const useGetMenuWithAssociations = (
   options?: { enabled?: boolean },
 ) => {
   const queryKey = preparationScreensQueryKeys.menuWithAssociations(id!);
-  return useQuery<any, Error>({
+  return useQuery<MenuWithAssociations, Error>({
     queryKey,
     queryFn: () => preparationScreenService.getMenuWithAssociations(id!),
     enabled: !!id && (options?.enabled ?? true),

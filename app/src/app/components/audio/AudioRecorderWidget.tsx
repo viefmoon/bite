@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
-import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { useAudioRecorder } from '@/app/hooks/useAudioRecorder';
 import {
   audioServiceHealth,
   type AudioServiceHealthStatus,
-} from '../services/audioServiceHealth';
-import { serverConnectionService } from '../services/serverConnectionService';
+} from '@/app/services/audioServiceHealth';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
 interface AudioRecorderWidgetProps {
   onRecordingComplete: (audioUri: string, transcription: string) => void;

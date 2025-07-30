@@ -1,6 +1,6 @@
-import apiClient from '../app/services/apiClient';
+import apiClient from '@/app/services/apiClient';
 import * as FileSystem from 'expo-file-system';
-import { API_PATHS } from '../app/constants/apiPaths';
+import { API_PATHS } from '@/app/constants/apiPaths';
 
 export interface AIOrderItem {
   productId: string;

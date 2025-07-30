@@ -25,7 +25,7 @@ import {
 } from '../schema/customer.schema';
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
-import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
+import { useGoogleMapsConfig } from '@/app/hooks/useGoogleMapsConfig';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 interface AddressFormModalProps {

@@ -21,7 +21,7 @@ import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import {
   serverConnectionService,
   ConnectionMode,
-} from '@/services/serverConnectionService';
+} from '@/app/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';

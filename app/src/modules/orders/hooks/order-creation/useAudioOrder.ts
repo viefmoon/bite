@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   audioOrderService,
   type AIOrderItem,
-} from '@/services/audioOrderService';
+} from '@/app/services/audioOrderService';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { Product } from '../../schema/orders.schema';
 import { CartItemModifier } from '../../utils/cartUtils';

@@ -91,3 +91,60 @@ export const FindAllPreparationScreensSchema = z.object({
 export type FindAllPreparationScreensDto = z.infer<
   typeof FindAllPreparationScreensSchema
 >;
+
+// Schema para productos del menú con información de asociación
+export const MenuProductSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  photo: z
+    .object({
+      id: z.string(),
+      url: z.string(),
+    })
+    .nullable()
+    .optional(),
+  price: z.number().nullable().optional(),
+  isAssociated: z.boolean(),
+  currentPreparationScreenId: z.string().uuid().nullable().optional(),
+});
+
+// Schema para subcategorías del menú
+export const MenuSubcategorySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  photo: z
+    .object({
+      id: z.string(),
+      url: z.string(),
+    })
+    .nullable()
+    .optional(),
+  products: z.array(MenuProductSchema),
+});
+
+// Schema para categorías del menú
+export const MenuCategorySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  photo: z
+    .object({
+      id: z.string(),
+      url: z.string(),
+    })
+    .nullable()
+    .optional(),
+  subcategories: z.array(MenuSubcategorySchema),
+});
+
+// Schema para la respuesta completa de getMenuWithAssociations
+export const MenuWithAssociationsSchema = z.object({
+  screenId: z.string().uuid(),
+  screenName: z.string(),
+  menu: z.array(MenuCategorySchema),
+});
+
+// Tipos inferidos de los nuevos schemas
+export type MenuProduct = z.infer<typeof MenuProductSchema>;
+export type MenuSubcategory = z.infer<typeof MenuSubcategorySchema>;
+export type MenuCategory = z.infer<typeof MenuCategorySchema>;
+export type MenuWithAssociations = z.infer<typeof MenuWithAssociationsSchema>;

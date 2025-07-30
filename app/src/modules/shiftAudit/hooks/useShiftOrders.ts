@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { shiftsService } from '@/services/shifts';
+import { shiftsService } from '@/app/services/shifts';
 import type { Order } from '@/app/schemas/domain/order.schema';
 
 export const useShiftOrders = (shiftId: string | undefined) => {

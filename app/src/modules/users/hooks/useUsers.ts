@@ -18,14 +18,6 @@ export function useGetUsers(params?: UsersQuery) {
   });
 }
 
-export function useGetUser(id?: string) {
-  return useQuery({
-    queryKey: [USERS_QUERY_KEY, id],
-    queryFn: () => (id ? usersApiService.findOne(id) : Promise.resolve(null)),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-  });
-}
 
 export function useCreateUser() {
   const queryClient = useQueryClient();

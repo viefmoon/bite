@@ -22,6 +22,3 @@ export const deliveryInfoSchema = z.object({
 });
 
 export type DeliveryInfo = z.infer<typeof deliveryInfoSchema>;
-
-// Alias para compatibilidad
-export const DeliveryInfoSchema = deliveryInfoSchema;

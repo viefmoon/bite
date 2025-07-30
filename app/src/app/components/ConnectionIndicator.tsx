@@ -4,8 +4,8 @@ import { IconButton, Surface, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useSnackbarStore } from '../stores/snackbarStore';
-import { healthMonitoringService } from '@/services/healthMonitoringService';
-import { autoReconnectService } from '@/services/autoReconnectService';
+import { healthMonitoringService } from '@/app/services/healthMonitoringService';
+import { autoReconnectService } from '@/app/services/autoReconnectService';
 
 export function ConnectionIndicator() {
   const theme = useAppTheme();

@@ -99,7 +99,6 @@ export const API_PATHS = {
     '/api/v1/kitchen/orders/:orderId/complete-preparation',
   KITCHEN_MARK_PREPARED: '/api/v1/kitchen/order-items/:itemId/prepare',
   KITCHEN_MARK_UNPREPARED: '/api/v1/kitchen/order-items/:itemId/unprepare',
-  KITCHEN_MY_SCREEN: '/api/v1/kitchen/my-screen',
 
   SHIFTS: '/api/v1/shifts',
   SHIFTS_OPEN: '/api/v1/shifts/open',

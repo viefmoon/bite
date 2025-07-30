@@ -24,10 +24,4 @@ export const availabilityService = {
   async updateAvailability(payload: AvailabilityUpdatePayload): Promise<void> {
     await apiClient.patch(API_PATHS.AVAILABILITY_UPDATE, payload);
   },
-
-  async bulkUpdateAvailability(
-    updates: AvailabilityUpdatePayload[],
-  ): Promise<void> {
-    await apiClient.patch(API_PATHS.AVAILABILITY_BULK_UPDATE, { updates });
-  },
 };

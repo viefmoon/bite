@@ -20,7 +20,7 @@ import type {
 } from '@/app/schemas/domain/order.schema';
 import { paymentSchema } from './payment.schema';
 import { adjustmentSchema } from '@/app/schemas/domain/adjustment.schema';
-import { DeliveryInfoSchema } from '@/app/schemas/domain/delivery-info.schema';
+import { deliveryInfoSchema } from '@/app/schemas/domain/delivery-info.schema';
 
 // Re-exportar tipos de dominio
 export type {
@@ -158,7 +158,7 @@ export const createOrderSchema = z.object({
   adjustments: z.array(adjustmentSchema).optional(),
   tableId: z.string().uuid().optional(),
   customerId: z.string().uuid().optional(),
-  deliveryInfo: DeliveryInfoSchema.optional(),
+  deliveryInfo: deliveryInfoSchema.optional(),
 });
 
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { serverConnectionService } from '@/services/serverConnectionService';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
 export interface ServerConnectionState {
   isSearching: boolean;

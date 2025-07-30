@@ -1,6 +1,5 @@
 export {
   useGetUsers,
-  useGetUser,
   useCreateUser,
   useUpdateUser,
   useDeleteUser,

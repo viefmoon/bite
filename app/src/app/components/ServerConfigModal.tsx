@@ -13,7 +13,7 @@ import {
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { STORAGE_KEYS } from '@/app/constants/storageKeys';
-import { ConnectionMode } from '@/services/serverConnectionService';
+import { ConnectionMode } from '@/app/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import axios from 'axios';

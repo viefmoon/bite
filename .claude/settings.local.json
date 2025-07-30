@@ -70,7 +70,8 @@
       "Bash(npx kill-port:*)",
       "Bash(docker compose:*)",
       "Bash(timeout:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git mv:*)"
     ],
     "deny": []
   }

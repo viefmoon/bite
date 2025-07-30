@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 
 /**
  * Servicio de almacenamiento seguro usando expo-secure-store
@@ -53,19 +54,8 @@ class SecureStorageService {
 
   async clear(): Promise<void> {
     // expo-secure-store no tiene un método clear()
-    // Necesitamos eliminar las claves conocidas manualmente
-    const keysToRemove = [
-      'auth_token',
-      'refresh_token',
-      'user_info',
-      'last_known_api_url',
-      'kitchen_filters_preferences',
-      'app_theme_preference',
-      'user_credentials',
-      'remember_me_preference',
-      'connection_mode',
-      'manual_server_url',
-    ];
+    // Iteramos sobre todas las claves definidas en STORAGE_KEYS
+    const keysToRemove = Object.values(STORAGE_KEYS);
 
     for (const key of keysToRemove) {
       try {

@@ -21,7 +21,7 @@ import { ServerConfigModal } from './ServerConfigModal';
 import {
   autoReconnectService,
   ReconnectState,
-} from '@/services/autoReconnectService';
+} from '@/app/services/autoReconnectService';
 import { useServerConnection } from '../hooks/useServerConnection';
 import { useAuthStore } from '../stores/authStore';
 

@@ -9,15 +9,15 @@ import {
 } from 'react-native';
 import { Text, Button, Divider, Surface, IconButton } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAppTheme } from '../app/styles/theme';
-import { ResponsiveModal } from '../app/components/responsive/ResponsiveModal';
-import { useResponsive } from '../app/hooks/useResponsive';
+import { useAppTheme } from '@/app/styles/theme';
+import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
+import { useResponsive } from '@/app/hooks/useResponsive';
 import { useGetOrderMenu } from '@/modules/orders/hooks/useMenuQueries';
 import type {
   AIOrderItem,
   DeliveryInfoData,
   ScheduledDeliveryData,
-} from '@/services/audioOrderService';
+} from '@/app/services/audioOrderService';
 import ProductCustomizationModal from '@/modules/orders/components/ProductCustomizationModal';
 import type { FullMenuProduct as Product } from '@/modules/orders/schema/orders.schema';
 import type {

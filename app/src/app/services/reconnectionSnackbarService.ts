@@ -1,6 +1,6 @@
 import { autoReconnectService } from './autoReconnectService';
-import { useSnackbarStore } from '../app/stores/snackbarStore';
-import { useAuthStore } from '../app/stores/authStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
+import { useAuthStore } from '@/app/stores/authStore';
 
 class ReconnectionSnackbarService {
   private unsubscribe: (() => void) | null = null;

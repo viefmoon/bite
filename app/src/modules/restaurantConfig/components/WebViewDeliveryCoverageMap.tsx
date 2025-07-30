@@ -9,7 +9,7 @@ import {
 } from 'react-native-paper';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { DeliveryCoveragePoint } from '../schema/restaurantConfig.schema';
-import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
+import { useGoogleMapsConfig } from '@/app/hooks/useGoogleMapsConfig';
 
 interface DeliveryCoverageMapProps {
   initialPolygon?: DeliveryCoveragePoint[] | null;

@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/app/styles/theme';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import { type Shift } from '@/services/shifts';
+import { type Shift } from '@/app/services/shifts';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

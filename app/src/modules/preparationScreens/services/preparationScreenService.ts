@@ -7,6 +7,7 @@ import {
   CreatePreparationScreenDto,
   UpdatePreparationScreenDto,
   FindAllPreparationScreensDto,
+  MenuWithAssociations,
 } from '../schema/preparationScreen.schema';
 
 /**
@@ -135,8 +136,10 @@ export const getPreparationScreenProducts = async (
  * @returns A promise that resolves to the menu data with associations.
  * @throws {ApiError} If the API request fails.
  */
-export const getMenuWithAssociations = async (id: string): Promise<any> => {
-  const response = await apiClient.get<any>(
+export const getMenuWithAssociations = async (
+  id: string,
+): Promise<MenuWithAssociations> => {
+  const response = await apiClient.get<MenuWithAssociations>(
     API_PATHS.PREPARATION_SCREENS_MENU_WITH_ASSOCIATIONS.replace(':id', id),
   );
   return response.data;

@@ -1,10 +1,10 @@
-import { discoveryService } from '../app/services/discoveryService';
+import { discoveryService } from '@/app/services/discoveryService';
 import { healthMonitoringService } from './healthMonitoringService';
 import { autoReconnectService } from './autoReconnectService';
-import { STORAGE_KEYS } from '../app/constants/storageKeys';
-import EncryptedStorage from '../app/services/secureStorageService';
+import { STORAGE_KEYS } from '@/app/constants/storageKeys';
+import EncryptedStorage from '@/app/services/secureStorageService';
 import NetInfo from '@react-native-community/netinfo';
-import { useServerUrlStore } from '../app/stores/serverUrlStore';
+import { useServerUrlStore } from '@/app/stores/serverUrlStore';
 
 export type ConnectionMode = 'auto' | 'manual' | 'remote';
 

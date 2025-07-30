@@ -30,12 +30,6 @@ export const usersApiService = {
     return response.data;
   },
 
-  async findOne(id: string): Promise<User> {
-    const response = await apiClient.get(
-      API_PATHS.USERS_BY_ID.replace(':id', id),
-    );
-    return response.data;
-  },
 
   async create(data: CreateUserDto): Promise<User> {
     const response = await apiClient.post(API_PATHS.USERS, data);

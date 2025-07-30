@@ -7,8 +7,8 @@ import { Product, Category, SubCategory } from '../schema/orders.schema';
 
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
-import { AudioRecorderWidget } from '@/components/AudioRecorderWidget';
-import { AudioOrderModal } from '@/components/AudioOrderModal';
+import { AudioRecorderWidget } from '@/app/components/audio/AudioRecorderWidget';
+import { AudioOrderModal } from '@/app/components/audio/AudioOrderModal';
 
 import { CategoryGrid } from '../components/order-creation';
 import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';

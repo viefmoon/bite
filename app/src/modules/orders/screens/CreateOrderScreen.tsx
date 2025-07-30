@@ -7,8 +7,8 @@ import OrderCartDetail from '../components/OrderCartDetail';
 import ProductCustomizationModal from '../components/ProductCustomizationModal';
 import SimpleProductDescriptionModal from '../components/SimpleProductDescriptionModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
-import { AudioRecorderWidget } from '@/components/AudioRecorderWidget';
-import { AudioOrderModal } from '@/components/AudioOrderModal';
+import { AudioRecorderWidget } from '@/app/components/audio/AudioRecorderWidget';
+import { AudioOrderModal } from '@/app/components/audio/AudioOrderModal';
 
 import { ShiftClosedView, CategoryGrid } from '../components/order-creation';
 import { useOrderCreationScreen } from '../hooks/order-creation';

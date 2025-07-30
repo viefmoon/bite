@@ -47,12 +47,6 @@ class KitchenService {
     );
   }
 
-  async unmarkItemPrepared(itemId: string): Promise<void> {
-    await apiClient.patch(
-      API_PATHS.KITCHEN_MARK_UNPREPARED.replace(':itemId', itemId),
-    );
-  }
-
   async startOrderPreparation(orderId: string): Promise<void> {
     await apiClient.patch(
       API_PATHS.KITCHEN_ORDERS_START_PREPARATION.replace(':orderId', orderId),

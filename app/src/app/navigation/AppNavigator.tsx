@@ -8,8 +8,8 @@ import { AuthStack } from './AuthStack';
 import { ConditionalAppNavigator } from './ConditionalAppNavigator';
 import { useAppTheme } from '../styles/theme';
 import { initImageCache } from '../lib/imageCache';
-import { reconnectionSnackbarService } from '@/services/reconnectionSnackbarService';
-import { serverConnectionService } from '@/services/serverConnectionService';
+import { reconnectionSnackbarService } from '@/app/services/reconnectionSnackbarService';
+import { serverConnectionService } from '@/app/services/serverConnectionService';
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

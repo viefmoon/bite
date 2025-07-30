@@ -1,8 +1,8 @@
 import EventEmitter from 'eventemitter3';
 import { healthMonitoringService } from './healthMonitoringService';
-import { discoveryService } from '../app/services/discoveryService';
+import { discoveryService } from '@/app/services/discoveryService';
 import NetInfo from '@react-native-community/netinfo';
-import { NETWORK_CONFIG } from '../app/constants/network';
+import { NETWORK_CONFIG } from '@/app/constants/network';
 
 export type ReconnectStatus =
   | 'idle'

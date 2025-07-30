@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { adjustmentSchema } from './adjustment.schema';
-import { DeliveryInfoSchema } from './delivery-info.schema';
+import { deliveryInfoSchema } from './delivery-info.schema';
 import { tableSchema } from './table.schema';
 import { paymentSchema } from '@/modules/orders/schema/payment.schema';
 import { userSchema } from './user.schema';
@@ -96,7 +96,7 @@ export const orderSchema = z.object({
   tableId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
   scheduledAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-  deliveryInfo: DeliveryInfoSchema,
+  deliveryInfo: deliveryInfoSchema,
   user: userSchema.optional(),
   table: tableSchema.optional(),
   payments: z.array(paymentSchema).optional(),
