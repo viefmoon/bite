@@ -141,8 +141,8 @@ export function PizzaConfigurationModal({
         configuration.extraToppingCost !== undefined &&
         configuration.extraToppingCost !== null
       ) {
-        const cost = Number(configuration.extraToppingCost);
-        const toppings = Number(configuration.includedToppings) || 4;
+        const cost = configuration.extraToppingCost;
+        const toppings = configuration.includedToppings || 4;
         reset({
           includedToppings: toppings,
           extraToppingCost: cost,

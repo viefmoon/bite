@@ -207,7 +207,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
 
           {shouldShowPrice() && (
             <Text style={styles.priceText}>
-              ${Number((item as Product).price).toFixed(2)}
+              ${(item as Product).price?.toFixed(2) || '0.00'}
             </Text>
           )}
 

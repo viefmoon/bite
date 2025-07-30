@@ -179,9 +179,8 @@ const useProductFormLogic = ({
           const initialPrice = initialData.price;
           const parsedPrice =
             initialPrice !== null &&
-            initialPrice !== undefined &&
-            !isNaN(parseFloat(String(initialPrice)))
-              ? parseFloat(String(initialPrice))
+            initialPrice !== undefined
+              ? initialPrice
               : null;
 
           let imageUrl = null;

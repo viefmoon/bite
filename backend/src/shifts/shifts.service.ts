@@ -145,7 +145,7 @@ export class ShiftsService {
 
     // Calcular total de ventas
     const totalSales = completedOrders.reduce(
-      (sum, order) => sum + Number(order.total),
+      (sum, order) => sum + order.total,
       0,
     );
 
@@ -160,7 +160,7 @@ export class ShiftsService {
           payment.paymentStatus === PaymentStatus.COMPLETED &&
           payment.paymentMethod === 'CASH',
       )
-      .reduce((sum, payment) => sum + Number(payment.amount), 0);
+      .reduce((sum, payment) => sum + payment.amount, 0);
 
     // Calcular efectivo esperado y diferencia
     const expectedCash = currentShift.initialCash + cashSales;
@@ -240,7 +240,7 @@ export class ShiftsService {
 
     // Calcular total de ventas (solo de órdenes completadas)
     shift.totalSales = completedOrders.reduce(
-      (sum, order) => sum + Number(order.total),
+      (sum, order) => sum + order.total,
       0,
     );
 
@@ -279,7 +279,7 @@ export class ShiftsService {
         );
 
         shift.totalSales = completedOrders.reduce(
-          (sum, order) => sum + Number(order.total),
+          (sum, order) => sum + order.total,
           0,
         );
         shift.totalOrders = orders.length; // Contar TODAS las órdenes
@@ -319,7 +319,7 @@ export class ShiftsService {
           payment.paymentStatus === PaymentStatus.COMPLETED &&
           payment.paymentMethod === 'CASH',
       )
-      .reduce((sum, payment) => sum + Number(payment.amount), 0);
+      .reduce((sum, payment) => sum + payment.amount, 0);
 
     return currentShift.initialCash + cashSales;
   }

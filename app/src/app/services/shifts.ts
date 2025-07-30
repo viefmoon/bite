@@ -61,12 +61,6 @@ class ShiftsService {
     return currentShift !== null && currentShift.status === 'OPEN';
   }
 
-  async getOrdersByShift(shiftId: string): Promise<Order[]> {
-    const url = API_PATHS.ORDERS_BY_SHIFT.replace(':shiftId', shiftId);
-    const response = await apiClient.get<Order[]>(url);
-
-    return Array.isArray(response.data) ? response.data : [];
-  }
 
   calculateShiftSummary(shift: Shift, orders: Order[]): ShiftSummary {
     const paymentMethodsSummary = new Map<
@@ -162,8 +156,7 @@ class ShiftsService {
 
       return {
         id: order.id,
-        orderNumber:
-          order.orderNumber || `#${order.shiftOrderNumber || order.id}`,
+        shiftOrderNumber: order.shiftOrderNumber,
         total: total,
         status: order.orderStatus || 'COMPLETED',
         paymentMethod: paymentMethod,
@@ -171,7 +164,7 @@ class ShiftsService {
         createdAt:
           typeof order.createdAt === 'string'
             ? order.createdAt
-            : order.createdAt.toISOString(),
+            : (order.createdAt as Date).toISOString(),
         items:
           order.orderItems?.map((item: any) => ({
             id: item.id || String(Math.random()),

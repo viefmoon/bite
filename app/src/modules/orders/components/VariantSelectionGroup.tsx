@@ -102,7 +102,7 @@ const VariantSelectionGroup = memo<VariantSelectionGroupProps>(
                         !variant.isActive && styles.inactiveText,
                       ]}
                     >
-                      ${Number(variant.price).toFixed(2)}
+                      ${variant.price.toFixed(2)}
                     </Text>
                   </View>
                 </TouchableRipple>

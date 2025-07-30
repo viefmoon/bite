@@ -61,10 +61,28 @@ export class AddressEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true, name: 'delivery_instructions' })
   deliveryInstructions: string | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 8,
+    nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : null),
+    },
+  })
   latitude: number | null;
 
-  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 11,
+    scale: 8,
+    nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : null),
+    },
+  })
   longitude: number | null;
 
   @Column({ type: 'boolean', default: false })

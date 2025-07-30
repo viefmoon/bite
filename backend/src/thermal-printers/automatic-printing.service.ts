@@ -196,7 +196,7 @@ export class AutomaticPrintingService {
           modifiers: (item.productModifiers || []).map((mod) => ({
             id: mod.id,
             name: mod.name,
-            price: Number(mod.price) || 0,
+            price: mod.price || 0,
           })),
           preparationNotes: item.preparationNotes || undefined,
           selectedPizzaCustomizations:
@@ -701,8 +701,8 @@ export class AutomaticPrintingService {
       printer.alignLeft();
 
       // Calcular el ancho máximo necesario para los totales
-      const subtotalStr = formatter.formatMoney(Number(order.subtotal));
-      const totalStr = formatter.formatMoney(Number(order.total));
+      const subtotalStr = formatter.formatMoney(order.subtotal);
+      const totalStr = formatter.formatMoney(order.total);
       const maxTotalWidth = Math.max(subtotalStr.length, totalStr.length) + 2;
 
       // Subtotal

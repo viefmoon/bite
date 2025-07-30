@@ -99,7 +99,7 @@ export const modifierGroupApiSchema = modifierGroupSchema.extend({
         modifierGroupId: z.string(),
         name: z.string(),
         description: z.string().nullable().optional(),
-        price: z.string().transform((val) => parseFloat(val)), // Transform desde API string
+        price: z.number(),
         sortOrder: z.number(),
         isDefault: z.boolean(),
         isActive: z.boolean(),

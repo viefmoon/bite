@@ -109,12 +109,11 @@ export class OrdersRelationalRepository implements OrderRepository {
     }
     // Soportar tanto un solo estado como múltiples estados
     if (
-      filterOptions?.orderStatuses &&
-      filterOptions.orderStatuses.length > 0
+      filterOptions?.status &&
+      Array.isArray(filterOptions.status) &&
+      filterOptions.status.length > 0
     ) {
-      where.orderStatus = In(filterOptions.orderStatuses);
-    } else if (filterOptions?.orderStatus) {
-      where.orderStatus = filterOptions.orderStatus;
+      where.orderStatus = In(filterOptions.status);
     }
     if (filterOptions?.orderType) {
       where.orderType = filterOptions.orderType;

@@ -26,15 +26,15 @@ export class PizzaPriceCalculatorService {
     let basePrice = 0;
 
     if (productVariant) {
-      basePrice = Number(productVariant.price);
+      basePrice = productVariant.price;
     } else if (product.hasVariants) {
       throw new Error('Producto con variantes requiere selección de variante');
     } else {
-      basePrice = Number(product.price) || 0;
+      basePrice = product.price || 0;
     }
 
     const modifiersPrice = productModifiers.reduce(
-      (sum, modifier) => sum + (Number(modifier.price) || 0),
+      (sum, modifier) => sum + (modifier.price || 0),
       0,
     );
 

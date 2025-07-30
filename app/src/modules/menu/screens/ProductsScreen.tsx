@@ -115,8 +115,8 @@ function ProductsScreen(): React.ReactElement {
       ...p,
       displayDescription: p.hasVariants
         ? `${p.variants?.length || 0} variante(s)`
-        : !isNaN(parseFloat(String(p.price)))
-          ? `$${parseFloat(String(p.price)).toFixed(2)}`
+        : p.price != null
+          ? `$${p.price.toFixed(2)}`
           : 'Precio no definido',
     }));
   }, [productsResponse]);
@@ -261,8 +261,8 @@ function ProductsScreen(): React.ReactElement {
               field: 'price',
               label: 'Precio',
               render: (value) =>
-                value
-                  ? `$${parseFloat(String(value)).toFixed(2)}`
+                value && typeof value === 'number'
+                  ? `$${value.toFixed(2)}`
                   : 'No definido',
             },
             {

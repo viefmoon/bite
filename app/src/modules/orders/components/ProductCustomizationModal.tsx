@@ -23,7 +23,7 @@ import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { AppTheme } from '@/app/styles/theme';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import {
   CustomizationActionEnum,
   PizzaHalfEnum,
@@ -212,9 +212,20 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         const variant = product.variants?.find(
           (v) => v.id === selectedVariantId,
         );
-        const unitPrice = variant
-          ? Number(variant.price)
-          : Number(product.price) || 0;
+        // Determinar el precio base: variante tiene prioridad
+        let unitPrice: number;
+        
+        if (variant) {
+          if (typeof variant.price !== 'number' || variant.price == null) {
+            throw new Error(`La variante '${variant.name}' no tiene un precio válido`);
+          }
+          unitPrice = variant.price;
+        } else {
+          if (typeof product.price !== 'number' || product.price == null) {
+            throw new Error(`El producto '${product.name}' no tiene un precio válido`);
+          }
+          unitPrice = product.price;
+        }
 
         onUpdateItem(
           editingItem.id,

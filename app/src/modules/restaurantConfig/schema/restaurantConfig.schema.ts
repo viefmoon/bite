@@ -48,7 +48,7 @@ export const restaurantConfigSchema = z.object({
 
   // Configuración de delivery
   deliveryCoverageArea: z.array(deliveryCoveragePointSchema).nullable(),
-  minimumOrderValueForDelivery: z.union([z.number(), z.string()]), // Puede venir como string desde el backend (decimal)
+  minimumOrderValueForDelivery: z.number(),
 
   // Relaciones
   businessHours: z.array(businessHoursSchema),

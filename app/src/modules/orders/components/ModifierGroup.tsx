@@ -121,14 +121,14 @@ const ModifierGroup = memo<ModifierGroupProps>(
                           {modifier.name}
                           {!modifier.isActive && ' (No disponible)'}
                         </Text>
-                        {Number(modifier.price) > 0 && (
+                        {(modifier.price || 0) > 0 && (
                           <Text
                             style={[
                               styles.modifierPrice,
                               !modifier.isActive && styles.inactiveText,
                             ]}
                           >
-                            +${Number(modifier.price).toFixed(2)}
+                            +${(modifier.price || 0).toFixed(2)}
                           </Text>
                         )}
                       </View>
@@ -189,14 +189,14 @@ const ModifierGroup = memo<ModifierGroupProps>(
                             {modifier.name}
                             {!modifier.isActive && ' (No disponible)'}
                           </Text>
-                          {Number(modifier.price) > 0 && (
+                          {(modifier.price || 0) > 0 && (
                             <Text
                               style={[
                                 styles.modifierPrice,
                                 !modifier.isActive && styles.inactiveText,
                               ]}
                             >
-                              +${Number(modifier.price).toFixed(2)}
+                              +${(modifier.price || 0).toFixed(2)}
                             </Text>
                           )}
                         </View>

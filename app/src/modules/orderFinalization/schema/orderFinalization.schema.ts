@@ -77,7 +77,7 @@ export type OrderForFinalizationList = z.infer<
 export const orderItemModifierForFinalizationSchema = z.object({
   id: z.string(),
   name: z.string(),
-  price: z.union([z.number(), z.string()]),
+  price: z.number(),
 });
 
 export type OrderItemModifierForFinalization = z.infer<
@@ -87,8 +87,8 @@ export type OrderItemModifierForFinalization = z.infer<
 export const orderItemForFinalizationSchema = z.object({
   id: z.string(),
   quantity: z.number(),
-  basePrice: z.string(),
-  finalPrice: z.string(),
+  basePrice: z.number(),
+  finalPrice: z.number(),
   preparationNotes: z.string().optional(),
   preparationStatus: z.string().optional(),
   product: z.object({

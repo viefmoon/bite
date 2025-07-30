@@ -43,7 +43,16 @@ export class ShiftEntity {
   @JoinColumn({ name: 'closed_by_id' })
   closedBy: UserEntity | null;
 
-  @Column({ name: 'initial_cash', type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    name: 'initial_cash',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   initialCash: number;
 
   @Column({
@@ -52,6 +61,10 @@ export class ShiftEntity {
     precision: 10,
     scale: 2,
     nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : null),
+    },
   })
   finalCash: number | null;
 
@@ -61,6 +74,10 @@ export class ShiftEntity {
     precision: 10,
     scale: 2,
     nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : null),
+    },
   })
   totalSales: number | null;
 
@@ -73,6 +90,10 @@ export class ShiftEntity {
     precision: 10,
     scale: 2,
     nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : null),
+    },
   })
   cashDifference: number | null;
 

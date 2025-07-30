@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Product } from '../schema/orders.schema';
-import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import {
   type CartItem,
   type CartItemModifier,

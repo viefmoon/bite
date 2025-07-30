@@ -85,7 +85,7 @@ export const useOrderManagement = () => {
               id: mod.id,
               modifierGroupId: mod.modifierGroupId || '',
               name: mod.name || 'Modificador',
-              price: parseFloat(mod.price?.toString() || '0') || 0,
+              price: mod.price || 0,
             });
           });
         } else if (item.modifiers && Array.isArray(item.modifiers)) {
@@ -97,7 +97,7 @@ export const useOrderManagement = () => {
                 mod.modifierGroupId ||
                 '',
               name: mod.productModifier?.name || mod.name || 'Modificador',
-              price: parseFloat(mod.price?.toString() || '0') || 0,
+              price: mod.price || 0,
             });
           });
         }
@@ -105,8 +105,8 @@ export const useOrderManagement = () => {
         return {
           ...item,
           modifiers,
-          basePrice: parseFloat(item.basePrice || '0'),
-          finalPrice: parseFloat(item.finalPrice || '0'),
+          basePrice: item.basePrice || 0,
+          finalPrice: item.finalPrice || 0,
         };
       });
 

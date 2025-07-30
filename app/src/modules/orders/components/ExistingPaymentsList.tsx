@@ -8,7 +8,7 @@ import { formatPaymentMethod } from '../utils/formatters';
 
 interface Payment {
   id: string;
-  amount: string | number;
+  amount: number;
   paymentMethod: string;
   paymentStatus: string;
   createdAt: string;
@@ -97,7 +97,7 @@ export const ExistingPaymentsList: React.FC<ExistingPaymentsListProps> = ({
 
           <View style={styles.paymentRightInfo}>
             <Text style={styles.paymentAmountCompact}>
-              ${(Number(payment.amount) || 0).toFixed(2)}
+              ${(payment.amount || 0).toFixed(2)}
             </Text>
 
             <Chip

@@ -53,7 +53,16 @@ export class CustomerEntity extends EntityRelationalHelper {
   @Column({ type: 'int', default: 0 })
   totalOrders: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   totalSpent: number;
 
   @Column({ type: 'boolean', default: true })

@@ -102,10 +102,7 @@ const ModifierFormModal: React.FC<Props> = ({
     async (formData: ModifierFormInputs) => {
       const baseData = {
         ...formData,
-        price:
-          formData.price === undefined || isNaN(Number(formData.price))
-            ? null
-            : Number(formData.price),
+        price: formData.price === undefined ? null : formData.price,
         description:
           formData.description === undefined ? null : formData.description,
         sortOrder: formData.sortOrder ?? 0,

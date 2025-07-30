@@ -12,12 +12,11 @@ import {
 
 interface OrderItemType {
   id: string | number;
-  shiftOrderNumber?: number;
-  orderNumber?: string | number;
+  shiftOrderNumber: number;
   orderType?: (typeof OrderTypeEnum)[keyof typeof OrderTypeEnum];
   orderStatus: string;
   createdAt: string | Date;
-  total?: string | number;
+  total?: number;
   table?: {
     id?: string;
     name: string;
@@ -72,7 +71,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   const theme = useAppTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  let orderTitle = `#${item.shiftOrderNumber || item.orderNumber}`;
+  let orderTitle = `#${item.shiftOrderNumber}`;
   if (item.orderType) {
     orderTitle += ` • ${formatOrderTypeShort(item.orderType)}`;
   }
@@ -98,8 +97,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
     }
   }
 
-  const totalAmount =
-    typeof item.total === 'string' ? parseFloat(item.total) : item.total || 0;
+  const totalAmount = item.total || 0;
   const totalPaid =
     item.paymentsSummary?.totalPaid ||
     item.payments?.reduce((sum: number, p) => sum + (p.amount || 0), 0) ||

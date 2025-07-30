@@ -36,13 +36,7 @@ export const API_PATHS = {
 
   ORDERS: '/api/v1/orders',
   ORDERS_BY_ID: '/api/v1/orders/:orderId',
-  ORDERS_OPEN_ORDERS_LIST: '/api/v1/orders/open-orders-list',
-  ORDERS_FOR_FINALIZATION_LIST: '/api/v1/orders/for-finalization/list',
-  ORDERS_FOR_FINALIZATION_DETAIL: '/api/v1/orders/for-finalization/:id',
   ORDERS_FINALIZE_MULTIPLE: '/api/v1/orders/finalize-multiple',
-  ORDERS_DETAIL: '/api/v1/orders/:orderId/detail',
-  ORDERS_RECEIPTS_LIST: '/api/v1/orders/receipts-list',
-  ORDERS_RECEIPTS_BY_ID: '/api/v1/orders/receipts/:id',
   ORDERS_RECOVER: '/api/v1/orders/:id/recover',
   THERMAL_PRINTERS: '/api/v1/thermal-printers',
   THERMAL_PRINTERS_BY_ID: '/api/v1/thermal-printers/:id',
@@ -91,7 +85,6 @@ export const API_PATHS = {
   SHIFTS_CURRENT: '/api/v1/shifts/current',
   SHIFTS_HISTORY: '/api/v1/shifts/history',
   SHIFTS_DETAIL: '/api/v1/shifts/:id',
-  ORDERS_BY_SHIFT: '/api/v1/orders/shift/:shiftId',
   ORDERS_BY_SHIFT_SALES_SUMMARY: '/api/v1/orders/shift/:shiftId/sales-summary',
 
   USERS: '/api/v1/users',

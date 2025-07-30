@@ -58,7 +58,7 @@ export const usePaymentModal = ({
     }
     return (payments || [])
       .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
-      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+      .reduce((sum, payment) => sum + (payment.amount || 0), 0);
   }, [payments, mode]);
 
   const pendingAmount = orderTotal - totalPaid;

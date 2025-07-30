@@ -62,10 +62,28 @@ export class DeliveryInfoEntity extends EntityRelationalHelper {
   @Column({ name: 'delivery_instructions', type: 'text', nullable: true })
   deliveryInstructions?: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 8,
+    nullable: true,
+    transformer: {
+      to: (value: number | undefined) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : undefined),
+    },
+  })
   latitude?: number;
 
-  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 11,
+    scale: 8,
+    nullable: true,
+    transformer: {
+      to: (value: number | undefined) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : undefined),
+    },
+  })
   longitude?: number;
 
   @CreateDateColumn({ type: 'timestamptz' })

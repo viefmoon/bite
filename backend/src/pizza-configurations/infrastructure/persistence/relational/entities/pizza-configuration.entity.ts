@@ -34,6 +34,10 @@ export class PizzaConfigurationEntity extends EntityRelationalHelper {
     precision: 10,
     scale: 2,
     default: 20,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
   })
   extraToppingCost: number;
 

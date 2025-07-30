@@ -71,7 +71,7 @@ export const validateOrderForConfirmation = (
     }, 0);
     const total = subtotal - adjustmentTotal;
 
-    if (parseFloat(prepaymentAmount || '0') > total) {
+    if ((Number(prepaymentAmount) || 0) > total) {
       return {
         isValid: false,
         errorMessage:
@@ -269,8 +269,8 @@ export const prepareOrderForBackend = (
           productId: item.productId,
           productVariantId: item.variantId || null,
           quantity: 1,
-          basePrice: Number(item.unitPrice),
-          finalPrice: Number(item.totalPrice / item.quantity),
+          basePrice: item.unitPrice,
+          finalPrice: item.totalPrice / item.quantity,
           preparationNotes: item.preparationNotes || null,
           productModifiers:
             item.modifiers && item.modifiers.length > 0
@@ -290,8 +290,8 @@ export const prepareOrderForBackend = (
           productId: item.productId,
           productVariantId: item.variantId || null,
           quantity: 1,
-          basePrice: Number(item.unitPrice),
-          finalPrice: Number(item.totalPrice / item.quantity),
+          basePrice: item.unitPrice,
+          finalPrice: item.totalPrice / item.quantity,
           preparationNotes: item.preparationNotes || null,
           productModifiers:
             item.modifiers && item.modifiers.length > 0

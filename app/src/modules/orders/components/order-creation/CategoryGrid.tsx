@@ -372,7 +372,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
           ) {
             return (
               <Text style={styles.priceText}>
-                ${Number(productItem.price).toFixed(2)}
+                ${productItem.price.toFixed(2)}
               </Text>
             );
           }

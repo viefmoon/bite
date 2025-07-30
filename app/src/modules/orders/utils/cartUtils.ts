@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import type { Product } from '../schema/orders.schema';
-import type { SelectedPizzaCustomization } from '../../../app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 
 export interface CartItemModifier {
   id: string;
@@ -160,9 +160,22 @@ export const addItemToCart = (
     ? product.variants?.find((v) => v.id === variantId)
     : undefined;
 
-  const unitPrice = variantToAdd
-    ? Number(variantToAdd.price)
-    : Number(product.price);
+  // Determinar el precio base: variante tiene prioridad sobre producto
+  let unitPrice: number;
+  
+  if (variantToAdd) {
+    // Si hay variante seleccionada, debe tener precio
+    if (typeof variantToAdd.price !== 'number' || variantToAdd.price == null) {
+      throw new Error(`La variante '${variantToAdd.name}' no tiene un precio válido`);
+    }
+    unitPrice = variantToAdd.price;
+  } else {
+    // Si no hay variante, el producto debe tener precio
+    if (typeof product.price !== 'number' || product.price == null) {
+      throw new Error(`El producto '${product.name}' no tiene un precio válido`);
+    }
+    unitPrice = product.price;
+  }
 
   if (isEditMode) {
     const newItem: CartItem = {

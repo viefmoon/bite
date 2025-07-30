@@ -59,7 +59,7 @@ export const orderItemSchema = z.object({
 
 export const shiftOrderSchema = z.object({
   id: z.string(),
-  orderNumber: z.string(),
+  shiftOrderNumber: z.number(),
   total: z.number(),
   status: z.string(),
   paymentMethod: z.string(),

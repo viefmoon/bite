@@ -23,13 +23,11 @@ export class ShiftMapper {
     domain.closedBy = entity.closedBy
       ? this.userMapper.toDomain(entity.closedBy)
       : null;
-    domain.initialCash = Number(entity.initialCash);
-    domain.finalCash = entity.finalCash ? Number(entity.finalCash) : null;
-    domain.totalSales = entity.totalSales ? Number(entity.totalSales) : null;
+    domain.initialCash = entity.initialCash;
+    domain.finalCash = entity.finalCash;
+    domain.totalSales = entity.totalSales;
     domain.totalOrders = entity.totalOrders;
-    domain.cashDifference = entity.cashDifference
-      ? Number(entity.cashDifference)
-      : null;
+    domain.cashDifference = entity.cashDifference;
     domain.status = entity.status;
     domain.notes = entity.notes;
     domain.closeNotes = entity.closeNotes;
