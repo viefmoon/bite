@@ -130,30 +130,95 @@ export class OrdersRelationalRepository implements OrderRepository {
       const startDate = new Date(0);
       where.createdAt = Between(startDate, endDate);
     }
-    const [entities, count] = await this.ordersRepository.findAndCount({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      where: where,
-      relations: [
-        'user',
-        'table',
-        'table.area',
-        'shift',
-        'orderItems',
-        'orderItems.product',
-        'orderItems.productVariant',
-        'orderItems.productModifiers',
-        'orderItems.preparedBy',
-        'orderItems.selectedPizzaCustomizations',
-        'orderItems.selectedPizzaCustomizations.pizzaCustomization',
-        'payments',
-        'adjustments',
-        'deliveryInfo',
-      ],
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    // Optimizar consulta basada en includeFields
+    const isMinimal = filterOptions?.includeFields === 'minimal';
+    
+    let entities: OrderEntity[];
+    let count: number;
+
+    if (isMinimal) {
+      // Consulta optimizada para includeFields=minimal
+      const queryBuilder = this.ordersRepository
+        .createQueryBuilder('order')
+        .select([
+          'order.id',
+          'order.shiftOrderNumber',
+          'order.shiftId',
+          'order.orderType',
+          'order.orderStatus',
+          'order.total',
+          'order.subtotal',
+          'order.createdAt',
+          'order.updatedAt',
+          'order.scheduledAt',
+          'order.notes',
+          'order.isFromWhatsApp',
+          'order.userId',
+          'order.tableId',
+          'order.customerId',
+          'order.estimatedDeliveryTime',
+          'order.finalizedAt',
+        ])
+        .leftJoin('order.table', 'table')
+        .addSelect(['table.id', 'table.name', 'table.isTemporary'])
+        .leftJoin('table.area', 'area')
+        .addSelect(['area.id', 'area.name'])
+        .leftJoin('order.user', 'user')
+        .addSelect(['user.id', 'user.firstName', 'user.lastName'])
+        .leftJoin('order.deliveryInfo', 'deliveryInfo')
+        .addSelect([
+          'deliveryInfo.recipientName',
+          'deliveryInfo.recipientPhone',
+          'deliveryInfo.fullAddress',
+        ])
+        .leftJoin('order.preparationScreenStatuses', 'pss')
+        .addSelect(['pss.id', 'pss.status'])
+        .leftJoin('pss.preparationScreen', 'ps')
+        .addSelect(['ps.name'])
+        .skip((paginationOptions.page - 1) * paginationOptions.limit)
+        .take(paginationOptions.limit)
+        .where(where)
+        .orderBy('order.createdAt', 'DESC');
+
+      entities = await queryBuilder.getMany();
+      
+      // Para obtener el count total, hacer una consulta separada más eficiente
+      const countQueryBuilder = this.ordersRepository
+        .createQueryBuilder('order')
+        .select('COUNT(order.id)', 'count')
+        .where(where);
+      
+      const countResult = await countQueryBuilder.getRawOne();
+      count = parseInt(countResult?.count || '0', 10);
+    } else {
+      // Consulta completa para includeFields=full o sin especificar
+      [entities, count] = await this.ordersRepository.findAndCount({
+        skip: (paginationOptions.page - 1) * paginationOptions.limit,
+        take: paginationOptions.limit,
+        where: where,
+        relations: [
+          'user',
+          'table',
+          'table.area',
+          'shift',
+          'orderItems',
+          'orderItems.product',
+          'orderItems.productVariant',
+          'orderItems.productModifiers',
+          'orderItems.preparedBy',
+          'orderItems.selectedPizzaCustomizations',
+          'orderItems.selectedPizzaCustomizations.pizzaCustomization',
+          'payments',
+          'adjustments',
+          'deliveryInfo',
+          'preparationScreenStatuses',
+          'preparationScreenStatuses.preparationScreen',
+        ],
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+    }
     const domainOrders = entities
       .map((order) => this.orderMapper.toDomain(order))
       .filter((order): order is Order => order !== null);

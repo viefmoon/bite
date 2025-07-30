@@ -39,7 +39,7 @@ const NumericField: React.FC<NumericFieldProps> = ({
     if (numericText === '') {
       onChange(undefined);
     } else {
-      const numValue = parseInt(numericText, 10);
+      const numValue = Number(numericText);
       if (!isNaN(numValue)) {
         onChange(numValue);
       }

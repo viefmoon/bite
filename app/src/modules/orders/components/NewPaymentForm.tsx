@@ -18,8 +18,8 @@ import { formatPaymentMethod } from '../utils/formatters';
 interface NewPaymentFormProps {
   selectedMethod: PaymentMethod;
   onMethodChange: (method: PaymentMethod) => void;
-  amount: string;
-  onAmountChange: (amount: string) => void;
+  amount: number | null;
+  onAmountChange: (amount: number | null) => void;
   pendingAmount: number;
   mode?: 'payment' | 'prepayment';
   isLoading?: boolean;
@@ -47,8 +47,7 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
   );
   const amountInputRef = useRef<View>(null);
 
-  const isValidAmount =
-    amount !== '' && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
+  const isValidAmount = amount !== null && amount > 0;
 
   return (
     <View style={styles.formSection}>
@@ -101,18 +100,21 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
         <View style={styles.amountRow}>
           <TextInput
             label="Monto a pagar"
-            value={amount}
-            onChangeText={onAmountChange}
+            value={amount?.toString() || ''}
+            onChangeText={(text) => {
+              const numValue = parseFloat(text);
+              onAmountChange(isNaN(numValue) ? null : numValue);
+            }}
             keyboardType="decimal-pad"
             mode="outlined"
             left={<TextInput.Affix text="$" />}
             style={styles.amountInput}
-            error={!isValidAmount && amount !== ''}
+            error={!isValidAmount && amount !== null}
             disabled={isLoading}
           />
           <Button
             mode="outlined"
-            onPress={() => onAmountChange(pendingAmount.toFixed(2))}
+            onPress={() => onAmountChange(pendingAmount)}
             style={styles.totalPendingButton}
             labelStyle={styles.totalPendingButtonLabel}
             contentStyle={styles.totalPendingButtonContent}
@@ -122,7 +124,7 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
             Total a pagar
           </Button>
         </View>
-        <HelperText type="error" visible={!isValidAmount && amount !== ''}>
+        <HelperText type="error" visible={!isValidAmount && amount !== null}>
           Ingrese un monto válido
         </HelperText>
       </View>

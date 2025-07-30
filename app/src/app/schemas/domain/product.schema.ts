@@ -14,7 +14,7 @@ export const productSchema = z.object({
   id: z.string(), // ID es requerido en el dominio
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().nullable().optional(), // Campo descripción agregado
-  price: z.coerce
+  price: z
     .number()
     .positive('El precio debe ser positivo')
     .multipleOf(0.01, 'El precio debe tener como máximo dos decimales')

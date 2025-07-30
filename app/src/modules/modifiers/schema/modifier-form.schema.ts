@@ -34,14 +34,8 @@ export type UpdateModifierInput = z.infer<typeof updateModifierSchema>;
 export const modifierFormValidationSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
   description: z.string().max(255).nullable().optional(),
-  price: z.preprocess(
-    (val) => (val === '' || val === null ? undefined : val),
-    z.coerce.number().nullable().optional(),
-  ),
-  sortOrder: z.preprocess(
-    (val) => (val === '' || val === null ? 0 : val),
-    z.coerce.number().int().optional().default(0),
-  ),
+  price: z.number().nullable().optional(),
+  sortOrder: z.number().int().optional().default(0),
   isDefault: z.boolean().optional().default(false),
   isActive: z.boolean().optional().default(true),
 });

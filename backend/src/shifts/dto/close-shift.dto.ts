@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class CloseShiftDto {
   @ApiProperty({
@@ -10,7 +9,6 @@ export class CloseShiftDto {
   })
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) => parseFloat(value))
   finalCash: number;
 
   @ApiProperty({

@@ -813,6 +813,7 @@ export class OrdersService {
       endDate,
       userId,
       tableId,
+      includeFields,
     } = filterDto;
 
     // Get current shift if no specific shiftId provided
@@ -850,6 +851,9 @@ export class OrdersService {
     }
     if (endDate) {
       filterOptions.endDate = new Date(endDate);
+    }
+    if (includeFields) {
+      filterOptions.includeFields = includeFields;
     }
 
     // Use repository directly with filters

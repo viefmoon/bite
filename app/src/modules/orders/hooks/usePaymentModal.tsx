@@ -32,7 +32,7 @@ export const usePaymentModal = ({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     PaymentMethodEnum.CASH,
   );
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [showChangeCalculator, setShowChangeCalculator] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
@@ -68,9 +68,9 @@ export const usePaymentModal = ({
   useEffect(() => {
     if (visible) {
       if (mode === 'prepayment') {
-        setAmount(orderTotal.toFixed(2));
+        setAmount(orderTotal);
       } else {
-        setAmount(pendingAmount > 0 ? pendingAmount.toFixed(2) : '');
+        setAmount(pendingAmount > 0 ? pendingAmount : null);
       }
       setShowChangeCalculator(false);
       setSelectedMethod(PaymentMethodEnum.CASH);
@@ -100,9 +100,7 @@ export const usePaymentModal = ({
   }, []);
 
   const handleSubmit = async () => {
-    const parsedAmount = parseFloat(amount);
-
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (!amount || amount <= 0) {
       return;
     }
 
@@ -120,7 +118,7 @@ export const usePaymentModal = ({
     | { id: string; amount: number; paymentMethod: string } // Prepayment result
     | { shouldClose: boolean } // Payment result
   > => {
-    const parsedAmount = parseFloat(amount);
+    if (!amount) throw new Error('Amount is required');
 
     try {
       if (mode === 'prepayment') {
@@ -128,7 +126,7 @@ export const usePaymentModal = ({
         setIsCreatingPrepayment(true);
         const prepayment = await prepaymentService.createPrepayment({
           paymentMethod: selectedMethod,
-          amount: parsedAmount,
+          amount: amount,
         });
 
         return prepayment;
@@ -139,14 +137,14 @@ export const usePaymentModal = ({
         await createPaymentMutation.mutateAsync({
           orderId: orderId,
           paymentMethod: selectedMethod,
-          amount: parsedAmount,
+          amount: amount,
         });
 
         // Resetear formulario
-        setAmount('');
+        setAmount(null);
         setShowChangeCalculator(false);
 
-        return { shouldClose: pendingAmount - parsedAmount <= 0 };
+        return { shouldClose: pendingAmount - amount <= 0 };
       }
     } finally {
       setIsCreatingPrepayment(false);
@@ -183,7 +181,7 @@ export const usePaymentModal = ({
   };
 
   const resetForm = () => {
-    setAmount('');
+    setAmount(null);
     setSelectedMethod(PaymentMethodEnum.CASH);
     setShowChangeCalculator(false);
     setShowDeleteConfirm(false);

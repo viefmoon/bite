@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   scrollContent: {
-    flexGrow: 1,
+    flexGrow: 0,
   },
   header: {
     flexDirection: 'row',

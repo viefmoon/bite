@@ -63,7 +63,7 @@ export const orderOpenListSchema = z.object({
   orderStatus: orderStatusSchema,
   orderType: orderTypeSchema,
   totalAmount: z.number(),
-  total: z.coerce.number().optional(),
+  total: z.number().optional(),
   tableNumber: z.number().nullable(),
   customerName: z.string().nullable(),
   itemCount: z.number(),

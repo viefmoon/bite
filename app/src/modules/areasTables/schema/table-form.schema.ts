@@ -16,15 +16,12 @@ export const CreateTableSchema = tableSchema
     // Validaciones específicas del formulario
     name: z.string().min(1, 'El nombre es requerido'),
     areaId: z.string().uuid('Debe seleccionar un área válida'),
-    capacity: z.preprocess(
-      (val) => (val === '' || val === null ? undefined : val),
-      z.coerce
-        .number()
-        .int()
-        .positive('La capacidad debe ser un número positivo')
-        .nullable()
-        .optional(),
-    ),
+    capacity: z
+      .number()
+      .int()
+      .positive('La capacidad debe ser un número positivo')
+      .nullable()
+      .optional(),
     isActive: z.boolean().optional().default(true),
     isAvailable: z.boolean().optional().default(true),
     isTemporary: z.boolean().optional().default(false),

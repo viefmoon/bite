@@ -135,7 +135,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
       if (mode === 'prepayment' && 'id' in result) {
         // Notificar al componente padre
-        onPrepaymentCreated?.(result.id, parseFloat(amount), selectedMethod);
+        onPrepaymentCreated?.(result.id, amount || 0, selectedMethod);
         onDismiss();
       } else if (
         mode === 'payment' &&
@@ -282,8 +282,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   onPress={handleSubmit}
                   disabled={
                     !amount ||
-                    isNaN(parseFloat(amount)) ||
-                    parseFloat(amount) <= 0 ||
+                    amount <= 0 ||
                     createPaymentMutation.isPending ||
                     isCreatingPrepayment
                   }
@@ -343,7 +342,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           setShowChangeCalculator(false);
           handleProcessPayment();
         }}
-        amountToPay={parseFloat(amount) || 0}
+        amountToPay={amount || 0}
       />
 
       {/* Modal de confirmación para finalizar orden */}

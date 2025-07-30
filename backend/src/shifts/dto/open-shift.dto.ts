@@ -6,7 +6,6 @@ import {
   Min,
   IsDateString,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class OpenShiftDto {
   @ApiProperty({
@@ -16,7 +15,6 @@ export class OpenShiftDto {
   })
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) => parseFloat(value))
   initialCash: number;
 
   @ApiProperty({

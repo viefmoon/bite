@@ -49,6 +49,12 @@ interface OrderItemType {
     status: string;
     startedAt?: string | null;
     completedAt?: string | null;
+    preparationScreen?: {
+      id?: string;
+      name: string;
+      description?: string;
+      isActive?: boolean;
+    };
   }>;
 }
 
@@ -272,7 +278,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                                   : screen.status === 'IN_PROGRESS'
                                     ? '⏳'
                                     : ''}
-                                🍳 {screen.preparationScreenName}
+                                🍳 {screen.preparationScreen?.name || screen.preparationScreenName || screen.name || 'Pantalla'}
                               </Text>
                             </View>
                           );
