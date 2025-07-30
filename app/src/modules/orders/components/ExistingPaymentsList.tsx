@@ -190,7 +190,6 @@ const createStyles = (
     },
     statusChipCompact: {
       height: responsive.isTablet ? 24 : 26,
-      minWidth: responsive.isTablet ? 80 : 90,
     },
     statusChipTextCompact: {
       fontSize: responsive.fontSize(11),

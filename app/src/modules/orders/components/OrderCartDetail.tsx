@@ -22,6 +22,8 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
@@ -770,9 +772,20 @@ const OrderContent: React.FC<{
   addItem: any;
   adjustments: any[];
   subtotal: number;
+  totalAdjustments: number;
+  total: number;
+  totalPaid: number;
+  pendingAmount: number;
+  canRegisterPayments: boolean;
+  prepaymentId: string | null;
+  paymentAmount: string;
+  paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | null;
   handleAddAdjustment: (adjustment: OrderAdjustment) => void;
   handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
   handleRemoveAdjustment: (id: string) => void;
+  handlePrepaymentCreated: (id: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => void;
+  handlePrepaymentDeleted: () => void;
+  handleDeletePrepayment: () => void;
   showSnackbar: any;
   theme: any;
 }> = ({
@@ -794,9 +807,20 @@ const OrderContent: React.FC<{
   addItem,
   adjustments,
   subtotal,
+  totalAdjustments,
+  total,
+  totalPaid,
+  pendingAmount,
+  canRegisterPayments,
+  prepaymentId,
+  paymentAmount,
+  paymentMethod,
   handleAddAdjustment,
   handleUpdateAdjustment,
   handleRemoveAdjustment,
+  handlePrepaymentCreated,
+  handlePrepaymentDeleted,
+  handleDeletePrepayment,
   showSnackbar,
   theme,
 }) => {
@@ -927,6 +951,47 @@ const OrderContent: React.FC<{
           canManageAdjustments={true}
         />
       )}
+
+      <Divider style={styles.divider} />
+
+      {/* Subtotal dentro del scroll */}
+      <View style={styles.subtotalSection}>
+        <View style={styles.subtotalContainer}>
+          <Text style={styles.subtotalText}>Subtotal:</Text>
+          <Text style={styles.subtotalValue}>${subtotal.toFixed(2)}</Text>
+        </View>
+        {totalAdjustments > 0 && (
+          <View style={styles.subtotalContainer}>
+            <Text style={styles.subtotalText}>Descuentos:</Text>
+            <Text style={[styles.subtotalValue, styles.discountText]}>
+              -${totalAdjustments.toFixed(2)}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <Divider style={styles.divider} />
+
+      {/* Prepayment Section dentro del scroll */}
+      <PrepaymentSection
+        isEditMode={isEditMode}
+        prepaymentId={prepaymentId}
+        paymentAmount={paymentAmount}
+        paymentMethod={paymentMethod}
+        total={total}
+        totalPaid={totalPaid}
+        pendingAmount={pendingAmount}
+        canRegisterPayments={canRegisterPayments}
+        onShowPrepaymentModal={() =>
+          modalHelpers.showPrepayment({
+            orderTotal: total,
+            prepaymentId,
+            handlePrepaymentCreated,
+            handlePrepaymentDeleted,
+          })
+        }
+        onDeletePrepayment={handleDeletePrepayment}
+      />
     </ScrollView>
   );
 };
@@ -1198,66 +1263,24 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
                 addItem={addItem}
                 adjustments={adjustments}
                 subtotal={subtotal}
-                handleAddAdjustment={handleAddAdjustment}
-                handleUpdateAdjustment={handleUpdateAdjustment}
-                handleRemoveAdjustment={handleRemoveAdjustment}
-                showSnackbar={showSnackbar}
-                theme={theme}
-              />
-
-              <OrderSummarySection
-                subtotal={subtotal}
                 totalAdjustments={totalAdjustments}
-                total={total}
-                theme={theme}
-              />
-
-              <PrepaymentSection
-                isEditMode={isEditMode}
-                prepaymentId={prepaymentId}
-                paymentAmount={paymentAmount}
-                paymentMethod={paymentMethod}
                 total={total}
                 totalPaid={totalPaid}
                 pendingAmount={pendingAmount}
                 canRegisterPayments={canRegisterPayments}
-                onShowPrepaymentModal={() =>
-                  modalHelpers.showPrepayment({
-                    orderTotal: total,
-                    prepaymentId,
-                    handlePrepaymentCreated,
-                    handlePrepaymentDeleted,
-                  })
-                }
-                onDeletePrepayment={handleDeletePrepayment}
+                prepaymentId={prepaymentId}
+                paymentAmount={paymentAmount}
+                paymentMethod={paymentMethod}
+                handleAddAdjustment={handleAddAdjustment}
+                handleUpdateAdjustment={handleUpdateAdjustment}
+                handleRemoveAdjustment={handleRemoveAdjustment}
+                handlePrepaymentCreated={handlePrepaymentCreated}
+                handlePrepaymentDeleted={handlePrepaymentDeleted}
+                handleDeletePrepayment={handleDeletePrepayment}
+                showSnackbar={showSnackbar}
+                theme={theme}
               />
 
-              <View style={styles.footer}>
-                <Button
-                  mode="contained"
-                  onPress={handleConfirmOrder}
-                  disabled={
-                    isConfirming ||
-                    items.length === 0 ||
-                    (isEditMode && !hasUnsavedChanges)
-                  }
-                  style={[
-                    styles.confirmButton,
-                    isEditMode && hasUnsavedChanges && styles.cancelButton,
-                  ]}
-                  loading={isConfirming}
-                >
-                  {isConfirming
-                    ? isEditMode
-                      ? 'Guardando...'
-                      : 'Enviando...'
-                    : isEditMode
-                      ? hasUnsavedChanges
-                        ? '⚠️ Guardar Cambios'
-                        : 'Guardar Cambios'
-                      : 'Enviar Orden'}
-                </Button>
-              </View>
 
               {isEditMode && orderId && visible && (
                 <FAB
@@ -1297,6 +1320,38 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
               <ModalsContainer />
             </View>
           </TouchableWithoutFeedback>
+
+          {/* Footer con solo el total y el botón */}
+          <View style={styles.footer}>
+            <View style={styles.totalContainer}>
+              <Text style={styles.totalLabel}>Total:</Text>
+              <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+            </View>
+            <Button
+              mode="contained"
+              onPress={handleConfirmOrder}
+              disabled={
+                isConfirming ||
+                items.length === 0 ||
+                (isEditMode && !hasUnsavedChanges)
+              }
+              style={[
+                styles.confirmButton,
+                isEditMode && hasUnsavedChanges && styles.cancelButton,
+              ]}
+              loading={isConfirming}
+            >
+              {isConfirming
+                ? isEditMode
+                  ? 'Guardando...'
+                  : 'Enviando...'
+                : isEditMode
+                  ? hasUnsavedChanges
+                    ? '⚠️ Guardar Cambios'
+                    : 'Guardar Cambios'
+                  : 'Enviar Orden'}
+            </Button>
+          </View>
         </GestureHandlerRootView>
       </Modal>
     </Portal>
@@ -1412,6 +1467,45 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     paymentFabCompleted: {
       backgroundColor: '#4CAF50',
+    },
+    subtotalSection: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+    },
+    subtotalContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
+    },
+    subtotalText: {
+      fontSize: 16,
+      color: theme.colors.onSurface,
+    },
+    subtotalValue: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+    },
+    discountText: {
+      color: theme.colors.primary,
+    },
+    totalContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.s,
+      paddingHorizontal: theme.spacing.xs,
+    },
+    totalLabel: {
+      fontWeight: 'bold',
+      fontSize: 18,
+      color: theme.colors.onSurface,
+    },
+    totalValue: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
     },
   });
 

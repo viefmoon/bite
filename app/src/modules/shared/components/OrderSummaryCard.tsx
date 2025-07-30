@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { OrderTypeEnum } from '@/modules/orders/schema/orders.schema';
 import {
-  formatOrderTypeShort,
+  formatOrderTypeShortWithIcon,
   getPaymentStatus,
 } from '@/modules/orders/utils/formatters';
 
@@ -81,7 +81,7 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   let orderTitle = item.shiftOrderNumber ? `#${item.shiftOrderNumber}` : '';
   if (item.orderType) {
     const separator = orderTitle ? ' • ' : '';
-    orderTitle += `${separator}${formatOrderTypeShort(item.orderType)}`;
+    orderTitle += `${separator}${formatOrderTypeShortWithIcon(item.orderType)}`;
   }
 
   if (item.orderType === OrderTypeEnum.DINE_IN && item.table) {

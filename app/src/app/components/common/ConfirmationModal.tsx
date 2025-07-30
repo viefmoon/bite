@@ -50,10 +50,10 @@ const ConfirmationModal = ({
       visible={visible}
       onDismiss={handleDismiss}
       maxWidthPercent={85}
-      maxHeightPercent={40}
       title={title}
       dismissable={!isConfirming}
       isLoading={isConfirming}
+      noScroll={true}
       actions={[
         ...(onCancel
           ? [
@@ -88,6 +88,8 @@ const styles = StyleSheet.create({
   message: {
     lineHeight: 22,
     textAlign: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
 });
 

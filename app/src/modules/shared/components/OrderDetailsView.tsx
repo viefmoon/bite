@@ -528,15 +528,6 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
       {/* Order Info Section */}
       <View style={dynamicStyles.infoSection}>
-        {order.deliveryInfo?.recipientName && (
-          <View style={styles.infoRow}>
-            <Text
-              style={[styles.contactText, { color: theme.colors.onSurface }]}
-            >
-              👤 Nombre del Cliente: {order.deliveryInfo.recipientName}
-            </Text>
-          </View>
-        )}
 
         {order.deliveryInfo?.recipientPhone && (
           <View style={styles.infoRow}>
@@ -898,25 +889,27 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       {/* Footer with Payment Status */}
       <View style={dynamicStyles.footer}>
         <View style={styles.footerLeft}>
-          <Text
+          <View style={styles.totalContainer}>
+            <Text
+              style={[
+                styles.totalLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              Total:
+            </Text>
+            <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
+              ${(order.total || 0).toFixed(2)}
+            </Text>
+          </View>
+          <View
             style={[
-              styles.totalLabel,
-              { color: theme.colors.onSurfaceVariant },
+              styles.paymentBadge,
+              { backgroundColor: paymentStatus.color },
             ]}
           >
-            Total:
-          </Text>
-          <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
-            ${(order.total || 0).toFixed(2)}
-          </Text>
-        </View>
-        <View
-          style={[
-            styles.paymentBadge,
-            { backgroundColor: paymentStatus.color },
-          ]}
-        >
-          <Text style={styles.paymentBadgeText}>💵 {paymentStatus.label}</Text>
+            <Text style={styles.paymentBadgeText}>💵 {paymentStatus.label}</Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -1231,15 +1224,18 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 14,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.08)',
   },
   footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  totalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

@@ -150,129 +150,12 @@ export class CustomersService extends BaseCrudService<
     await this.addressesService.remove(addressId);
   }
 
-  async appendToChatHistory(
-    customerId: string,
-    message: { role: 'user' | 'assistant' | 'system'; content: string },
-  ): Promise<Customer> {
-    const customer = await this.findOne(customerId);
-
-    const newMessage = {
-      ...message,
-      timestamp: new Date(),
-    };
-
-    const fullChatHistory = customer.fullChatHistory || [];
-    fullChatHistory.push(newMessage);
-    await super.update(customerId, {
-      fullChatHistory,
-      lastInteraction: new Date().toISOString(),
-    });
-
-    return this.findOne(customerId);
-  }
-
-  async updateRelevantChatHistory(
-    customerId: string,
-    relevantHistory: any[],
-  ): Promise<Customer> {
-    await this.findOne(customerId);
-
-    await super.update(customerId, {
-      relevantChatHistory: relevantHistory,
-    });
-
-    return this.findOne(customerId);
-  }
-
-  async updateCustomerStats(
-    customerId: string,
-    stats: { totalOrders?: number; totalSpent?: number },
-  ): Promise<Customer> {
-    await this.findOne(customerId);
-
-    const updatePayload: any = {};
-    if (stats.totalOrders !== undefined) {
-      updatePayload.totalOrders = stats.totalOrders;
-    }
-    if (stats.totalSpent !== undefined) {
-      updatePayload.totalSpent = stats.totalSpent;
-    }
-
-    await this.repo.update(customerId, updatePayload);
-
-    return this.findOne(customerId);
-  }
-
-  async getActiveCustomersWithRecentInteraction(
-    daysAgo: number = 30,
-  ): Promise<Customer[]> {
-    const dateThreshold = new Date();
-    dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
-
-    return this.repo.findAll({
-      isActive: true,
-      lastInteractionAfter: dateThreshold,
-    });
-  }
-
-  async banCustomer(customerId: string, banReason: string): Promise<Customer> {
-    const customer = await this.findOne(customerId);
-
-    if (customer.isBanned) {
-      throw new BadRequestException('El cliente ya está baneado');
-    }
-
-    await super.update(customerId, {
-      isBanned: true,
-      isActive: false, // Desactivar al cliente cuando se banea
-    });
-    await this.updateBanFields(customerId, {
-      bannedAt: new Date(),
-      banReason,
-    });
-
-    return this.findOne(customerId);
-  }
-
-  async unbanCustomer(customerId: string): Promise<Customer> {
-    const customer = await this.findOne(customerId);
-
-    if (!customer.isBanned) {
-      throw new BadRequestException('El cliente no está baneado');
-    }
-
-    await super.update(customerId, {
-      isBanned: false,
-      isActive: true, // Reactivar al cliente cuando se desbanea
-    });
-    await this.updateBanFields(customerId, {
-      bannedAt: null,
-      banReason: null,
-    });
-
-    return this.findOne(customerId);
-  }
-
-  async getBannedCustomers(): Promise<Customer[]> {
-    return this.repo.findBannedCustomers();
-  }
-
   async isCustomerBanned(customerId: string): Promise<boolean> {
     try {
       const customer = await this.findOne(customerId);
       return customer.isBanned;
     } catch {
       return false;
-    }
-  }
-
-  private async updateBanFields(
-    customerId: string,
-    fields: { bannedAt: Date | null; banReason: string | null },
-  ): Promise<void> {
-    const repository = this.repo as any;
-    if (repository.ormRepo) {
-      await repository.ormRepo.update(customerId, fields);
     }
   }
 }

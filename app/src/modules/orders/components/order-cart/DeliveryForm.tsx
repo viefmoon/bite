@@ -37,9 +37,6 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
     const theme = useAppTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [addressError, setAddressError] = useState<string | null>(null);
-    const [recipientNameError, setRecipientNameError] = useState<string | null>(
-      null,
-    );
     const [recipientPhoneError, setRecipientPhoneError] = useState<
       string | null
     >(null);
@@ -52,11 +49,6 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
       }
     }, [deliveryInfo.fullAddress]);
 
-    React.useEffect(() => {
-      if (deliveryInfo.recipientName?.trim()) {
-        setRecipientNameError(null);
-      }
-    }, [deliveryInfo.recipientName]);
 
     React.useEffect(() => {
       if (deliveryInfo.recipientPhone?.trim()) {
@@ -69,20 +61,10 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
         setAddressError('Por favor ingresa la dirección de entrega');
         isValid = false;
       }
-      if (!deliveryInfo.recipientName?.trim()) {
-        setRecipientNameError('Por favor ingresa el nombre del cliente');
-        isValid = false;
-      }
-      if (!deliveryInfo.recipientPhone?.trim()) {
-        setRecipientPhoneError('Por favor ingresa el teléfono del cliente');
-        isValid = false;
-      }
 
       return isValid;
     }, [
       deliveryInfo.fullAddress,
-      deliveryInfo.recipientName,
-      deliveryInfo.recipientPhone,
     ]);
     useImperativeHandle(
       ref,
@@ -114,31 +96,11 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
           )}
         </View>
 
-        <View style={[styles.section, styles.fieldContainer]}>
-          <SpeechRecognitionInput
-            key="recipient-name-input-delivery"
-            label="Nombre del Cliente *"
-            value={deliveryInfo.recipientName || ''}
-            onChangeText={(text) => {
-              setDeliveryInfo({ ...deliveryInfo, recipientName: text });
-              if (recipientNameError) setRecipientNameError(null);
-            }}
-            error={!!recipientNameError}
-            speechLang="es-MX"
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
-          {recipientNameError && (
-            <HelperText type="error" visible={true} style={styles.helperText}>
-              {recipientNameError}
-            </HelperText>
-          )}
-        </View>
 
         <View style={[styles.section, styles.fieldContainer]}>
           <SpeechRecognitionInput
             key="phone-input-delivery"
-            label="Teléfono *"
+            label="Teléfono (Opcional)"
             value={deliveryInfo.recipientPhone || ''}
             onChangeText={(text) => {
               setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });

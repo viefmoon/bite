@@ -31,7 +31,6 @@ import { CustomersModule } from './customers/customers.module';
 import { PreparationScreensModule } from './preparation-screens/preparation-screens.module';
 import { CommonModule } from './common/common.module';
 import { AvailabilityModule } from './availability/availability.module';
-import { AdjustmentsModule } from './adjustments/adjustments.module';
 import { RestaurantConfigModule } from './restaurant-config/restaurant-config.module';
 import { PizzaCustomizationsModule } from './pizza-customizations/pizza-customizations.module';
 import { PizzaConfigurationsModule } from './pizza-configurations/pizza-configurations.module';
@@ -87,7 +86,6 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     CustomersModule,
     PreparationScreensModule,
     AvailabilityModule,
-    AdjustmentsModule,
     RestaurantConfigModule,
     PizzaCustomizationsModule,
     PizzaConfigurationsModule,

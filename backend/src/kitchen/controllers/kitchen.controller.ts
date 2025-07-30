@@ -79,42 +79,6 @@ export class KitchenController {
     );
   }
 
-  @Patch('order-items/:id/unprepare')
-  @ApiOperation({
-    summary: 'Desmarcar item de orden como preparado',
-    description:
-      'Desmarca uno o varios items (si están agrupados) como no preparados',
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'Item desmarcado exitosamente',
-  })
-  @Roles(RoleEnum.kitchen, RoleEnum.admin)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async unmarkItemPrepared(
-    @Param('id') itemId: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
-    await this.kitchenService.markItemPrepared(itemId, userId, false);
-  }
-
-  @Get('my-screen')
-  @ApiOperation({
-    summary: 'Obtener pantalla de preparación asignada al usuario',
-    description:
-      'Retorna la pantalla de preparación predeterminada del usuario actual',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Información de la pantalla asignada',
-  })
-  @Roles(RoleEnum.kitchen, RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  async getMyScreen(@CurrentUser('id') userId: string) {
-    const screen = await this.kitchenService.getUserDefaultScreen(userId);
-    return { screen };
-  }
-
   @Patch('orders/:orderId/start-preparation')
   @ApiOperation({
     summary: 'Iniciar preparación para una pantalla específica',

@@ -32,6 +32,7 @@ interface ResponsiveModalProps {
   // Comportamiento
   dismissable?: boolean;
   isLoading?: boolean;
+  noScroll?: boolean; // Desactiva el scroll interno - útil para modales de confirmación
 
   // Diseño - Header
   title?: string; // Si tiene valor, el header se muestra automáticamente
@@ -66,13 +67,13 @@ interface ResponsiveModalProps {
  * - Altura: 85% por defecto
  *
  * @example
- * // Modal de confirmación pequeño
+ * // Modal de confirmación pequeño sin scroll
  * <ResponsiveModal
  *   visible={visible}
  *   onDismiss={onDismiss}
  *   title="Confirmar Acción"
- *   maxWidthPercent={60}
- *   maxHeightPercent={40}
+ *   maxWidthPercent={85}
+ *   noScroll={true}
  *   actions={[
  *     { label: 'Cancelar', mode: 'outlined', onPress: onDismiss },
  *     { label: 'Confirmar', mode: 'contained', onPress: handleConfirm }
@@ -127,6 +128,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   maxHeightPercent,
   dismissable = true,
   isLoading = false,
+  noScroll = false,
   title,
   headerLeft,
   headerRight,
@@ -241,18 +243,29 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
         </>
       )}
 
-      {/* Contenido principal con scroll */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          !noPadding && { padding: contentPadding },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {children}
-      </ScrollView>
+      {/* Contenido principal con o sin scroll */}
+      {noScroll ? (
+        <View
+          style={[
+            styles.noScrollContent,
+            !noPadding && { padding: contentPadding },
+          ]}
+        >
+          {children}
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            !noPadding && { padding: contentPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+      )}
 
       {/* Footer fijo en la parte inferior */}
       {modalFooter && (
@@ -325,6 +338,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 0,
+    paddingBottom: 60,
+  },
+  noScrollContent: {
+    flexGrow: 1,
+    flexShrink: 1,
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',

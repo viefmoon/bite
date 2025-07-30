@@ -121,6 +121,22 @@ export const formatOrderTypeShort = (type: OrderType): string => {
 };
 
 /**
+ * Formatea el tipo de orden a texto corto con icono
+ */
+export const formatOrderTypeShortWithIcon = (type: OrderType): string => {
+  switch (type) {
+    case OrderTypeEnum.DINE_IN:
+      return '🍽️ Local';
+    case OrderTypeEnum.TAKE_AWAY:
+      return '🥡 Llevar';
+    case OrderTypeEnum.DELIVERY:
+      return '🏍️ Delivery';
+    default:
+      return type;
+  }
+};
+
+/**
  * Formatea el método de pago
  */
 export const formatPaymentMethod = (method: string): string => {
