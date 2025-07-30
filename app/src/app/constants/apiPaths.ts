@@ -36,7 +36,6 @@ export const API_PATHS = {
 
   ORDERS: '/api/v1/orders',
   ORDERS_BY_ID: '/api/v1/orders/:orderId',
-  ORDERS_FINALIZE_MULTIPLE: '/api/v1/orders/finalize-multiple',
   ORDERS_RECOVER: '/api/v1/orders/:id/recover',
   THERMAL_PRINTERS: '/api/v1/thermal-printers',
   THERMAL_PRINTERS_BY_ID: '/api/v1/thermal-printers/:id',

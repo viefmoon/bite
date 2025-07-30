@@ -6,7 +6,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
   ParseUUIDPipe,
   ParseIntPipe,
@@ -19,7 +18,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { Order } from './domain/order';
-import { OrderType } from './domain/enums/order-type.enum';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -27,7 +25,6 @@ import {
   ApiTags,
   ApiParam,
   ApiBody,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
@@ -43,7 +40,6 @@ import {
   InfinityPaginationResponse,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
-import { plainToInstance } from 'class-transformer';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 
 @ApiTags('orders')
@@ -69,9 +65,10 @@ export class OrdersController {
   }
 
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get orders with filters',
-    description: 'Unified endpoint to get orders with flexible filtering options. Replaces multiple specific endpoints.'
+    description:
+      'Unified endpoint to get orders with flexible filtering options. Replaces multiple specific endpoints.',
   })
   @ApiResponse({
     status: 200,
@@ -85,12 +82,6 @@ export class OrdersController {
   async findAll(@Query() filterDto: FindAllOrdersDto): Promise<Order[]> {
     return this.ordersService.findAllWithFilters(filterDto);
   }
-
-
-
-
-
-
 
   @Post('quick-finalize-multiple')
   @ApiOperation({
@@ -124,12 +115,6 @@ export class OrdersController {
     };
   }
 
-
-
-
-
-
-
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific order by ID' })
   @ApiResponse({
@@ -161,13 +146,11 @@ export class OrdersController {
     return this.ordersService.update(id, updateOrderDto);
   }
 
-
   @Post(':id/recover')
   @ApiOperation({ summary: 'Recover a completed or cancelled order' })
   @ApiResponse({
     status: 200,
-    description:
-      'The order has been successfully recovered to READY status.',
+    description: 'The order has been successfully recovered to READY status.',
     type: Order,
   })
   @ApiBearerAuth()
@@ -176,9 +159,6 @@ export class OrdersController {
   recoverOrder(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
     return this.ordersService.recoverOrder(id);
   }
-
-
-
 
   @Get(':id/history')
   @HttpCode(HttpStatus.OK)
@@ -212,9 +192,6 @@ export class OrdersController {
     );
     return infinityPagination(data, paginationOptions);
   }
-
-
-
 
   @Post(':id/print-ticket')
   @ApiOperation({ summary: 'Imprimir ticket de una orden' })

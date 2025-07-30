@@ -132,7 +132,7 @@ export class OrdersRelationalRepository implements OrderRepository {
     }
     // Optimizar consulta basada en includeFields
     const isMinimal = filterOptions?.includeFields === 'minimal';
-    
+
     let entities: OrderEntity[];
     let count: number;
 
@@ -181,13 +181,13 @@ export class OrdersRelationalRepository implements OrderRepository {
         .orderBy('order.createdAt', 'DESC');
 
       entities = await queryBuilder.getMany();
-      
+
       // Para obtener el count total, hacer una consulta separada más eficiente
       const countQueryBuilder = this.ordersRepository
         .createQueryBuilder('order')
         .select('COUNT(order.id)', 'count')
         .where(where);
-      
+
       const countResult = await countQueryBuilder.getRawOne();
       count = parseInt(countResult?.count || '0', 10);
     } else {

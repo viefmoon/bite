@@ -44,13 +44,13 @@ export class FindAllOrdersDto {
     examples: {
       single: { value: 'COMPLETED' },
       multiple: { value: 'COMPLETED,CANCELLED' },
-      array: { value: ['COMPLETED', 'CANCELLED'] }
+      array: { value: ['COMPLETED', 'CANCELLED'] },
     },
   })
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.split(',').map(s => s.trim().toUpperCase());
+      return value.split(',').map((s) => s.trim().toUpperCase());
     }
     return Array.isArray(value) ? value : [value];
   })
@@ -85,7 +85,8 @@ export class FindAllOrdersDto {
   endDate?: string;
 
   @ApiPropertyOptional({
-    description: 'Fields to include in response (minimal for optimized queries)',
+    description:
+      'Fields to include in response (minimal for optimized queries)',
     enum: ['minimal', 'full'],
     example: 'minimal',
   })

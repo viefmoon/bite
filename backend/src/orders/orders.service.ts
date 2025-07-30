@@ -29,7 +29,6 @@ import {
   PRODUCT_REPOSITORY,
   ORDER_PREPARATION_SCREEN_STATUS_REPOSITORY,
 } from '../common/tokens';
-import { FinalizeOrdersDto } from './dto/finalize-orders.dto';
 import { CustomersService } from '../customers/customers.service';
 import { DeliveryInfo } from './domain/delivery-info';
 import { RestaurantConfigService } from '../restaurant-config/restaurant-config.service';
@@ -37,7 +36,7 @@ import { OrderType } from './domain/enums/order-type.enum';
 import { ProductRepository } from '../products/infrastructure/persistence/product.repository';
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
 import { UserContextService } from '../common/services/user-context.service';
-import { DataSource, Not, In, Between } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
 import {
@@ -575,7 +574,13 @@ export class OrdersService {
 
       // Manejar deliveryInfo por separado
       if (hasDeliveryInfoChanges) {
-        await this._updateDeliveryInfo(manager, id, updateOrderDto, finalOrderType, existingOrder);
+        await this._updateDeliveryInfo(
+          manager,
+          id,
+          updateOrderDto,
+          finalOrderType,
+          existingOrder,
+        );
       }
 
       // Procesar items si se proporcionaron
@@ -782,24 +787,6 @@ export class OrdersService {
     }); // Fin de la transacción
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
-    return this.orderRepository.remove(id);
-  }
-
-  async findByUserId(userId: string): Promise<Order[]> {
-    return this.orderRepository.findByUserId(userId);
-  }
-
-  async findByTableId(tableId: string): Promise<Order[]> {
-    return this.orderRepository.findByTableId(tableId);
-  }
-
-  async findByShiftId(shiftId: string): Promise<Order[]> {
-    const orders = await this.orderRepository.findByShiftId(shiftId);
-    return orders;
-  }
-
   /**
    * Unified method to find orders with flexible filtering
    * Uses repository directly with real filters - NO MORE specific methods!
@@ -865,7 +852,6 @@ export class OrdersService {
     return orders;
   }
 
-
   async findOpenOrders(): Promise<Order[]> {
     // Obtener el turno actual
     const currentShift = await this.shiftsService.getCurrentShift();
@@ -888,14 +874,8 @@ export class OrdersService {
     );
   }
 
-
   // OrderItem methods
   // Este método ahora solo crea el item, los modificadores se manejan en 'create'
-  async createOrderItem(
-    createOrderItemDto: CreateOrderItemDto,
-  ): Promise<OrderItem> {
-    return this.createOrderItemInternal(createOrderItemDto);
-  }
 
   async findOrderItemById(id: string): Promise<OrderItem> {
     const orderItem = await this.orderItemRepository.findById(id);
@@ -905,11 +885,6 @@ export class OrdersService {
     }
 
     return orderItem;
-  }
-
-  async findOrderItemsByOrderId(orderId: string): Promise<OrderItem[]> {
-    await this.findOne(orderId); // Verificar que la orden existe
-    return this.orderItemRepository.findByOrderId(orderId);
   }
 
   private cleanDeliveryInfoByOrderType(
@@ -1282,7 +1257,7 @@ export class OrdersService {
   async recoverOrder(id: string): Promise<Order> {
     // Verificar que la orden existe y está en estado recuperable
     const order = await this.findOne(id);
-    
+
     if (!order) {
       throw new NotFoundException(`Orden con ID ${id} no encontrada`);
     }
@@ -1298,116 +1273,6 @@ export class OrdersService {
 
     // Actualizar directamente a estado READY
     return this.update(id, { orderStatus: OrderStatus.READY });
-  }
-
-  async finalizeMultipleOrders(
-    finalizeOrdersDto: FinalizeOrdersDto,
-    userId: string,
-  ): Promise<void> {
-    const { orderIds, paymentMethod, notes } = finalizeOrdersDto;
-
-    for (const orderId of orderIds) {
-      const order = await this.findOne(orderId);
-
-      // Verificar que la orden esté en un estado finalizable
-      if (
-        order.orderStatus !== OrderStatus.READY &&
-        order.orderStatus !== OrderStatus.DELIVERED
-      ) {
-        continue; // Saltar órdenes que no están en estado finalizable
-      }
-
-      // Preparar nota de finalización
-      const finalizationNote = `[Finalizada por usuario ${userId} el ${new Date().toLocaleString()}] Método de pago: ${paymentMethod}`;
-      const currentNotes = order.notes || '';
-      let finalNotes = finalizationNote;
-
-      if (notes && notes.trim()) {
-        finalNotes += ` - ${notes.trim()}`;
-      }
-
-      if (currentNotes) {
-        finalNotes = `${currentNotes}\n${finalNotes}`;
-      }
-
-      // Actualizar el estado de la orden a COMPLETED
-      const updateData: UpdateOrderDto = {
-        orderStatus: OrderStatus.COMPLETED,
-        notes: finalNotes,
-      };
-
-      await this.update(orderId, updateData);
-
-      // Liberar la mesa si la orden tenía una asignada
-      if (order.tableId) {
-        // Verificar si es una mesa temporal
-        const table = await this.tablesService.findOne(order.tableId);
-
-        if (table.isTemporary) {
-          // Eliminar mesa temporal
-          await this.tablesService.remove(order.tableId);
-        } else {
-          // Liberar mesa normal
-          await this.tablesService.update(order.tableId, { isAvailable: true });
-        }
-      }
-    }
-  }
-
-  async changeOrderStatus(id: string, newStatus: OrderStatus): Promise<Order> {
-    const order = await this.findOne(id);
-
-    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
-      [OrderStatus.PENDING]: [
-        OrderStatus.IN_PROGRESS,
-        OrderStatus.IN_PREPARATION,
-        OrderStatus.CANCELLED,
-      ],
-      [OrderStatus.IN_PROGRESS]: [
-        OrderStatus.IN_PREPARATION,
-        OrderStatus.READY,
-        OrderStatus.CANCELLED,
-      ],
-      [OrderStatus.IN_PREPARATION]: [OrderStatus.READY, OrderStatus.CANCELLED],
-      [OrderStatus.READY]: [
-        OrderStatus.IN_DELIVERY,
-        OrderStatus.DELIVERED,
-        OrderStatus.COMPLETED,
-        OrderStatus.CANCELLED,
-      ],
-      [OrderStatus.IN_DELIVERY]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
-      [OrderStatus.DELIVERED]: [OrderStatus.COMPLETED],
-      [OrderStatus.COMPLETED]: [], // No se puede cambiar desde completado
-      [OrderStatus.CANCELLED]: [], // No se puede cambiar desde cancelado
-    };
-
-    const allowedTransitions = validTransitions[order.orderStatus] || [];
-    if (!allowedTransitions.includes(newStatus)) {
-      throw new BadRequestException(
-        `No se puede cambiar el estado de ${order.orderStatus} a ${newStatus}`,
-      );
-    }
-
-    const updatedOrder = await this.update(id, { orderStatus: newStatus });
-
-    if (
-      order.tableId &&
-      (newStatus === OrderStatus.COMPLETED ||
-        newStatus === OrderStatus.CANCELLED)
-    ) {
-      // Verificar si es una mesa temporal
-      const table = await this.tablesService.findOne(order.tableId);
-
-      if (table.isTemporary) {
-        // Eliminar mesa temporal
-        await this.tablesService.remove(order.tableId);
-      } else {
-        // Liberar mesa normal
-        await this.tablesService.update(order.tableId, { isAvailable: true });
-      }
-    }
-
-    return updatedOrder;
   }
 
   async hasItemsWithStatus(orderId: string, status: string): Promise<boolean> {
@@ -1730,11 +1595,7 @@ export class OrdersService {
       // Obtener la orden con toda la información necesaria dentro de la transacción
       const order = await manager.findOne(OrderEntity, {
         where: { id: orderId },
-        relations: [
-          'table',
-          'payments',
-          'deliveryInfo',
-        ],
+        relations: ['table', 'payments', 'deliveryInfo'],
       });
 
       // Verificar que la orden exista
@@ -1747,7 +1608,9 @@ export class OrdersService {
         order.orderStatus === OrderStatus.COMPLETED ||
         order.orderStatus === OrderStatus.CANCELLED
       ) {
-        throw new BadRequestException('La orden ya está finalizada o cancelada');
+        throw new BadRequestException(
+          'La orden ya está finalizada o cancelada',
+        );
       }
 
       // Calcular el monto pendiente de pago
@@ -1769,9 +1632,9 @@ export class OrdersService {
       }
 
       // Cambiar el estado de la orden a COMPLETED directamente dentro de la transacción
-      await manager.update(OrderEntity, orderId, { 
+      await manager.update(OrderEntity, orderId, {
         orderStatus: OrderStatus.COMPLETED,
-        finalizedAt: new Date()
+        finalizedAt: new Date(),
       });
 
       // Si la orden tiene mesa asignada, liberarla
