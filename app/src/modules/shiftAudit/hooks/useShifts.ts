@@ -2,18 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { shiftsService } from '@/app/services/shifts';
 import type { Shift } from '@/app/schemas/domain/shift.schema';
 
+// Tipo para los shifts transformados manteniendo el status original
+type TransformedShift = Shift;
+
 export const useShifts = (params?: {
   startDate?: string;
   endDate?: string;
 }) => {
-  return useQuery<Shift[], Error>({
+  return useQuery<TransformedShift[], Error>({
     queryKey: ['shifts', 'history', params],
     queryFn: async () => {
       const data = await shiftsService.getHistory(params);
       return data.map((shift) => ({
         ...shift,
-        status:
-          shift.status === 'OPEN' ? ('open' as const) : ('closed' as const),
         openedBy: shift.openedBy || {
           id: '',
           firstName: '',
