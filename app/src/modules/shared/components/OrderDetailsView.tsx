@@ -448,53 +448,55 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             </Text>
           </View>
           {order.preparationScreenStatuses &&
-            order.preparationScreenStatuses.map((screenStatus: UnifiedPreparationScreenStatus) => {
-              const getStatusColor = (status: string) => {
-                return (
-                  PreparationScreenStatusColors[
-                    status as keyof typeof PreparationScreenStatusColors
-                  ] || theme.colors.onSurfaceVariant
-                );
-              };
+            order.preparationScreenStatuses.map(
+              (screenStatus: UnifiedPreparationScreenStatus) => {
+                const getStatusColor = (status: string) => {
+                  return (
+                    PreparationScreenStatusColors[
+                      status as keyof typeof PreparationScreenStatusColors
+                    ] || theme.colors.onSurfaceVariant
+                  );
+                };
 
-              const getStatusLabel = (status: string) => {
-                return (
-                  PreparationScreenStatusLabels[
-                    status as keyof typeof PreparationScreenStatusLabels
-                  ] || status
-                );
-              };
+                const getStatusLabel = (status: string) => {
+                  return (
+                    PreparationScreenStatusLabels[
+                      status as keyof typeof PreparationScreenStatusLabels
+                    ] || status
+                  );
+                };
 
-              return (
-                <View
-                  key={screenStatus.id}
-                  style={[
-                    styles.preparationScreenStatus,
-                    {
-                      backgroundColor:
-                        getStatusColor(screenStatus.status) + '20',
-                    },
-                  ]}
-                >
-                  <Text
+                return (
+                  <View
+                    key={screenStatus.id}
                     style={[
-                      styles.preparationScreenName,
-                      { color: getStatusColor(screenStatus.status) },
+                      styles.preparationScreenStatus,
+                      {
+                        backgroundColor:
+                          getStatusColor(screenStatus.status) + '20',
+                      },
                     ]}
                   >
-                    🍳 {screenStatus.preparationScreenName}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.preparationScreenStatusText,
-                      { color: getStatusColor(screenStatus.status) },
-                    ]}
-                  >
-                    {getStatusLabel(screenStatus.status)}
-                  </Text>
-                </View>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.preparationScreenName,
+                        { color: getStatusColor(screenStatus.status) },
+                      ]}
+                    >
+                      🍳 {screenStatus.preparationScreenName}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.preparationScreenStatusText,
+                        { color: getStatusColor(screenStatus.status) },
+                      ]}
+                    >
+                      {getStatusLabel(screenStatus.status)}
+                    </Text>
+                  </View>
+                );
+              },
+            )}
         </View>
         <View style={styles.headerDatesRow}>
           <Text
@@ -808,83 +810,85 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
             {shouldShowPrintHistory && (
               <View style={styles.collapsibleContent}>
-                {order.ticketImpressions.map((impression: UnifiedTicketImpression, index) => {
-                  const getTicketTypeLabel = (type: string) => {
-                    switch (type) {
-                      case 'KITCHEN':
-                        return '🍳 Cocina';
-                      case 'BAR':
-                        return '🍺 Barra';
-                      case 'BILLING':
-                        return '💵 Cuenta';
-                      case 'CUSTOMER_COPY':
-                        return '📄 Copia Cliente';
-                      case 'GENERAL':
-                        return '📋 General';
-                      default:
-                        return type;
-                    }
-                  };
+                {order.ticketImpressions.map(
+                  (impression: UnifiedTicketImpression, index) => {
+                    const getTicketTypeLabel = (type: string) => {
+                      switch (type) {
+                        case 'KITCHEN':
+                          return '🍳 Cocina';
+                        case 'BAR':
+                          return '🍺 Barra';
+                        case 'BILLING':
+                          return '💵 Cuenta';
+                        case 'CUSTOMER_COPY':
+                          return '📄 Copia Cliente';
+                        case 'GENERAL':
+                          return '📋 General';
+                        default:
+                          return type;
+                      }
+                    };
 
-                  return (
-                    <View
-                      key={impression.id || index}
-                      style={styles.impressionRow}
-                    >
-                      <View style={styles.impressionLeft}>
+                    return (
+                      <View
+                        key={impression.id || index}
+                        style={styles.impressionRow}
+                      >
+                        <View style={styles.impressionLeft}>
+                          <Text
+                            style={[
+                              styles.impressionType,
+                              { color: theme.colors.onSurface },
+                            ]}
+                          >
+                            {getTicketTypeLabel(impression.ticketType)}
+                          </Text>
+                          <View style={styles.impressionDetails}>
+                            {impression.user && (
+                              <Text
+                                style={[
+                                  styles.impressionUser,
+                                  {
+                                    color: theme.colors.onSurfaceVariant,
+                                  },
+                                ]}
+                              >
+                                por {impression.user.firstName || ''}{' '}
+                                {impression.user.lastName || ''}
+                              </Text>
+                            )}
+                            {impression.printer && (
+                              <Text
+                                style={[
+                                  styles.impressionPrinter,
+                                  {
+                                    color: theme.colors.onSurfaceVariant,
+                                  },
+                                ]}
+                              >
+                                🖨️ {impression.printer.name}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
                         <Text
                           style={[
-                            styles.impressionType,
-                            { color: theme.colors.onSurface },
+                            styles.impressionTime,
+                            { color: theme.colors.onSurfaceVariant },
                           ]}
                         >
-                          {getTicketTypeLabel(impression.ticketType)}
+                          {impression.impressionTime
+                            ? format(
+                                new Date(impression.impressionTime),
+                                'HH:mm:ss',
+                                { locale: es },
+                              )
+                            : 'N/A'}
                         </Text>
-                        <View style={styles.impressionDetails}>
-                          {impression.user && (
-                            <Text
-                              style={[
-                                styles.impressionUser,
-                                {
-                                  color: theme.colors.onSurfaceVariant,
-                                },
-                              ]}
-                            >
-                              por {impression.user.firstName || ''}{' '}
-                              {impression.user.lastName || ''}
-                            </Text>
-                          )}
-                          {impression.printer && (
-                            <Text
-                              style={[
-                                styles.impressionPrinter,
-                                {
-                                  color: theme.colors.onSurfaceVariant,
-                                },
-                              ]}
-                            >
-                              🖨️ {impression.printer.name}
-                            </Text>
-                          )}
-                        </View>
                       </View>
-                      <Text
-                        style={[
-                          styles.impressionTime,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        {impression.impressionTime 
-                          ? format(
-                              new Date(impression.impressionTime),
-                              'HH:mm:ss',
-                              { locale: es },
-                            )
-                          : 'N/A'}
-                      </Text>
-                    </View>
-                  );
-                })}
+                    );
+                  },
+                )}
               </View>
             )}
           </View>

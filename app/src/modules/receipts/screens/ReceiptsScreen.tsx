@@ -174,8 +174,8 @@ export const ReceiptsScreen: React.FC = () => {
 
   const renderReceiptItem = ({ item }: { item: Order }) => (
     <OrderSummaryCard
-      item={{ 
-        ...item, 
+      item={{
+        ...item,
         notes: item.notes || undefined,
         payments: item.payments || undefined,
         shiftOrderNumber: item.shiftOrderNumber || undefined,
