@@ -119,7 +119,7 @@ export const useUpdatePreparationScreen = () => {
       },
       // --- Fin Actualización Optimista ---
 
-      onError: (error, variables, context) => {
+      onError: (_, variables, context) => {
         // Revertir caché de detalle
         if (context?.previousDetail) {
           queryClient.setQueryData(
@@ -183,7 +183,7 @@ export const useDeletePreparationScreen = () => {
       },
       // --- Fin Actualización Optimista ---
 
-      onError: (error, deletedId, context) => {
+      onError: (_, deletedId, context) => {
         // Revertir caché de detalle si hubo error
         if (context?.previousDetail) {
           queryClient.setQueryData(

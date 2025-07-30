@@ -446,7 +446,6 @@ export function PizzaCustomizationsTab() {
         isDeleting={deleteMutation.isPending}
       />
 
-
       <PizzaCustomizationFormModal
         visible={formModalVisible}
         onDismiss={() => {

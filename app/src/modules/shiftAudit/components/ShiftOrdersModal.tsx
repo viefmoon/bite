@@ -236,8 +236,9 @@ export function ShiftOrdersModal({
             </>
           ) : showReceiptDetails && selectedReceipt ? (
             <OrderDetailsView
+              visible={showReceiptDetails}
               order={selectedReceipt}
-              onBack={() => {
+              onDismiss={() => {
                 setShowReceiptDetails(false);
                 setSelectedReceipt(null);
               }}
