@@ -12,7 +12,6 @@ import type { CustomersStackParamList } from '../../modules/customers/navigation
 import type { PizzaCustomizationsStackParamList } from '../../modules/pizzaCustomizations/navigation/types';
 import type { SyncStackParamList } from '../../modules/sync/navigation/SyncStackNavigator';
 import type { ShiftAuditStackParamList } from '../../modules/shiftAudit/navigation/types';
-import type { SettingsStackParamList } from '../../modules/settings/navigation/types';
 import type { OrdersStackParamList } from '../../modules/orders/navigation/types';
 import type { ModifiersStackParamList } from '../../modules/modifiers/navigation/types';
 import { NAVIGATION_PATHS } from '../constants/navigationPaths';
@@ -44,7 +43,6 @@ export type AppDrawerParamList = {
   [NAVIGATION_PATHS.USERS_SCREEN]: undefined;
   [NAVIGATION_PATHS.KITCHEN_SCREEN]: undefined;
   [NAVIGATION_PATHS.SHIFT_AUDIT_STACK]: NavigatorScreenParams<ShiftAuditStackParamList>;
-  [NAVIGATION_PATHS.SETTINGS_STACK]: NavigatorScreenParams<SettingsStackParamList>;
   [NAVIGATION_PATHS.SERVER_SETTINGS]: undefined;
 };
 
@@ -71,7 +69,6 @@ export type RootStackParamList = {
   CustomersStackParamList &
   SyncStackParamList &
   ShiftAuditStackParamList &
-  SettingsStackParamList &
   MenuStackParamList;
 
 // Export para uso en hooks de navegación

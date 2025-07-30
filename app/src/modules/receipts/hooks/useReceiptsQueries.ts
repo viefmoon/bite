@@ -9,7 +9,6 @@ import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type {
   ReceiptFilters,
   ReceiptsListResponse,
-  Receipt,
 } from '../schema/receipt.schema';
 
 export const useReceipts = (filters?: ReceiptFilters) => {
@@ -29,22 +28,6 @@ export const useReceipts = (filters?: ReceiptFilters) => {
   return query;
 };
 
-export const useReceipt = (id: string) => {
-  const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
-
-  const query = useQuery<Receipt, Error>({
-    ...receiptQueryOptions.receipt(id),
-  });
-
-  if (query.error) {
-    showSnackbar({
-      message: query.error.message || 'Error al cargar el recibo',
-      type: 'error',
-    });
-  }
-
-  return query;
-};
 
 export const useRecoverOrder = () => {
   return useApiMutation(

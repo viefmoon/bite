@@ -141,15 +141,11 @@ export type UpdateThermalPrinterDto = z.infer<
   typeof updateThermalPrinterDtoSchema
 >;
 
-export const findAllThermalPrintersFilterSchema = baseListQuerySchema.extend({
-  name: z.string().optional(),
-  connectionType: PrinterConnectionTypeSchema.optional(),
-  isActive: z.boolean().optional(),
-});
-
-export type FindAllThermalPrintersDto = z.infer<
-  typeof findAllThermalPrintersFilterSchema
->;
+export type FindAllThermalPrintersDto = z.infer<typeof baseListQuerySchema> & {
+  name?: string;
+  connectionType?: PrinterConnectionType;
+  isActive?: boolean;
+};
 
 export const printerFormSchema = createThermalPrinterDtoSchema;
 export type PrinterFormData = z.input<typeof printerFormSchema>;

@@ -73,16 +73,6 @@ export type CreateBusinessHoursDto = z.infer<
   typeof createBusinessHoursDtoSchema
 >;
 
-export const updateBusinessHoursDtoSchema = z.object({
-  openingTime: z.string().nullable().optional(),
-  closingTime: z.string().nullable().optional(),
-  closesNextDay: z.boolean().optional(),
-  isClosed: z.boolean().optional(),
-});
-
-export type UpdateBusinessHoursDto = z.infer<
-  typeof updateBusinessHoursDtoSchema
->;
 
 export const updateRestaurantConfigDtoSchema = z.object({
   // Información básica

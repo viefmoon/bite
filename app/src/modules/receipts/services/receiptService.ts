@@ -1,5 +1,5 @@
 import apiClient from '@/app/services/apiClient';
-import type { QueryOptions } from '@tanstack/react-query';
+import type { UseQueryOptions } from '@tanstack/react-query';
 import { API_PATHS } from '@/app/constants/apiPaths';
 import type {
   Receipt,
@@ -58,13 +58,9 @@ export const receiptService = {
 export const receiptQueryOptions = {
   receipts: (
     params: ReceiptFilters = {},
-  ): QueryOptions<ReceiptsListResponse, Error> => ({
+  ): UseQueryOptions<ReceiptsListResponse, Error> => ({
     queryKey: ['receipts', params],
     queryFn: () => receiptService.getReceiptsList(params),
   }),
 
-  receipt: (id: string): QueryOptions<Receipt, Error> => ({
-    queryKey: ['receipt', id],
-    queryFn: () => receiptService.getReceiptById(id),
-  }),
 };

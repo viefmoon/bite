@@ -43,17 +43,6 @@ export const usePrintersQuery = (
   });
 };
 
-export const usePrinterQuery = (
-  id: string | undefined,
-  options?: { enabled?: boolean },
-): UseQueryResult<ThermalPrinter, ApiError> => {
-  const queryKey = printerKeys.detail(id!);
-  return useQuery<ThermalPrinter, ApiError>({
-    queryKey: queryKey,
-    queryFn: () => printerService.findOnePrinter(id!),
-    enabled: !!id && (options?.enabled ?? true),
-  });
-};
 
 export const useCreatePrinterMutation = () => {
   return useApiMutation(printerService.createPrinter, {
