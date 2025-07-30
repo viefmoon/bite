@@ -6,8 +6,6 @@ export const API_PATHS = {
   PRODUCTS_MODIFIER_GROUPS: '/api/v1/products/:productId/modifier-groups',
   PRODUCTS_PIZZA_CUSTOMIZATIONS:
     '/api/v1/products/:productId/pizza-customizations',
-  PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK:
-    '/api/v1/products/pizzas/customizations/bulk',
   CATEGORIES: '/api/v1/categories',
   CATEGORIES_BY_ID: '/api/v1/categories/:id',
   CATEGORIES_ORDER_MENU: '/api/v1/categories/order-menu',

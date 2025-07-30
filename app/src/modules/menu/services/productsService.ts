@@ -108,13 +108,6 @@ async function updatePizzaCustomizations(
   return response.data;
 }
 
-async function bulkUpdatePizzaCustomizations(
-  updates: Array<{ productId: string; customizationIds: string[] }>,
-): Promise<void> {
-  await apiClient.put(API_PATHS.PRODUCTS_PIZZAS_CUSTOMIZATIONS_BULK, {
-    updates,
-  });
-}
 
 export const productsService = {
   findAll,
@@ -128,5 +121,4 @@ export const productsService = {
   findAllPizzas,
   getPizzaCustomizations,
   updatePizzaCustomizations,
-  bulkUpdatePizzaCustomizations,
 };
