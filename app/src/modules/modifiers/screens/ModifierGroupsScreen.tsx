@@ -12,7 +12,7 @@ import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import debounce from 'lodash.debounce';
+import { useDebounce } from '@/app/hooks/useDebounce';
 import ModifierGroupFormModal from '../components/ModifierGroupFormModal';
 import GenericList, {
   RenderItemConfig,
@@ -42,16 +42,11 @@ const ModifierGroupsScreen = () => {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const debouncedSetSearch = useMemo(
-    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [setDebouncedSearchQuery],
-  );
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    debouncedSetSearch(query);
   };
 
   const queryParams = useMemo(() => {

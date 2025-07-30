@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus } from '@react-navigation/drawer';
-import debounce from 'lodash.debounce';
+import { useDebounce } from '@/app/hooks/useDebounce';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
 import {
@@ -34,7 +34,6 @@ function CustomersScreen(): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive' | 'banned'
   >('all');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
@@ -42,14 +41,10 @@ function CustomersScreen(): React.ReactElement {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
-  const debouncedSetSearch = useMemo(
-    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    debouncedSetSearch(query);
   };
 
   const handleFilterChange = (value: string | number) => {
