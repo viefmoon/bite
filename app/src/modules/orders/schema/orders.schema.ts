@@ -61,18 +61,6 @@ export type FullMenuCategory = Category & {
   subcategories: FullMenuSubCategory[];
 };
 
-// Interface para filtrar órdenes
-export interface FindAllOrdersDto {
-  userId?: string;
-  tableId?: string;
-  orderStatus?: OrderStatus | OrderStatus[];
-  orderType?: OrderType;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}
-
 // Schema para orden en lista abierta
 export const orderOpenListSchema = z.object({
   id: z.string().uuid(),
@@ -156,14 +144,4 @@ export const orderOpenListSchema = z.object({
 
 export type OrderOpenList = z.infer<typeof orderOpenListSchema>;
 
-// Interface para crear orden
-export interface CreateOrderDto {
-  orderType: OrderType;
-  orderItems: OrderItem[];
-  payments?: any[]; // TODO: Definir tipo Payment cuando se necesite
-  adjustments?: any[]; // TODO: Definir tipo Adjustment cuando se necesite
-  tableId?: string;
-  customerId?: string;
-  deliveryInfo?: any; // TODO: Definir tipo DeliveryInfo cuando se necesite
-}
 

@@ -8,7 +8,7 @@ import {
 import { orderService } from '../services/orderService';
 import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../utils/orderUtils';
-import type { FindAllOrdersDto, OrderOpenList } from '../schema/orders.schema';
+import type { OrderOpenList } from '../schema/orders.schema';
 import { ApiError } from '@/app/lib/errors';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
@@ -19,7 +19,7 @@ import { useApiMutation } from '@/app/hooks/useApiMutation';
 const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
-  list: (filters: FindAllOrdersDto) => [...orderKeys.lists(), filters] as const,
+  list: (filters: any) => [...orderKeys.lists(), filters] as const,
   openOrdersList: () => [...orderKeys.all, 'list', 'open-orders-list'] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
   detail: (id: string) => [...orderKeys.details(), id] as const,
