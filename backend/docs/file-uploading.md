@@ -179,5 +179,3 @@ We prefer not to delete files, as this may have negative experience during resto
 ---
 
 Previous: [Serialization](serialization.md)
-
-Next: [Tests](tests.md)

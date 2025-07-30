@@ -1,7 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { TicketImpressionsController } from './ticket-impressions.controller';
 import { OrderChangeLogService } from './order-change-log.service';
 import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.service';
 import { UsersModule } from '../users/users.module';
@@ -35,7 +34,7 @@ import { ThermalPrintersModule } from '../thermal-printers/thermal-printers.modu
     forwardRef(() => ShiftsModule),
     forwardRef(() => ThermalPrintersModule),
   ],
-  controllers: [OrdersController, TicketImpressionsController],
+  controllers: [OrdersController],
   providers: [
     OrdersService,
     OrderChangeLogService,

@@ -24,8 +24,8 @@
     "seed:run:relational": "ts-node -r tsconfig-paths/register ./src/database/seeds/relational/run-seed.ts",
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "fix:linebreaks": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" --end-of-line lf",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "fix:linebreaks": "prettier --write \"src/**/*.ts\" --end-of-line lf",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:swc": "nest start -b swc -w",
@@ -36,13 +36,7 @@
     "start:swc:tz": "TZ=UTC nest start -b swc -w",
     "start:debug:tz": "TZ=UTC nest start --debug --watch",
     "start:prod:tz": "TZ=UTC node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "env-cmd jest --config ./test/jest-e2e.json",
-    "test:e2e:relational:docker": "docker compose -f docker-compose.relational.test.yaml --env-file env-example-relational -p tests up -d --build && docker compose -f docker-compose.relational.test.yaml -p tests exec api /opt/wait-for-it.sh -t 0 localhost:3000 -- npm run test:e2e -- --watchAll --runInBand && docker compose -f docker-compose.relational.test.yaml -p tests down && docker compose -p tests rm -svf",
+    "lint": "eslint \"{src,apps,libs}/**/*.ts\"",
     "release": "release-it",
     "setup:cloudflare-tunnel": "node scripts/setup-cloudflare-tunnel.js"
   },
@@ -126,23 +120,6 @@
     "tsconfig-paths": "4.2.0",
     "tslib": "2.8.1",
     "typescript": "^5.3.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   },
   "engines": {
     "node": ">=16.0.0",
