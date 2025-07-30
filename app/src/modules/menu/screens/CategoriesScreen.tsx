@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Portal, IconButton } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppTheme } from '../../../app/styles/theme';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { useSnackbarStore } from '../../../app/stores/snackbarStore';
 import { getApiErrorMessage } from '../../../app/lib/errorMapping';
 import { useListState } from '../../../app/hooks/useListState';
 import GenericList from '../../../app/components/crud/GenericList';
@@ -17,6 +17,7 @@ import GenericFormModal, {
   FormFieldConfig,
   ImagePickerConfig,
 } from '../../../app/components/crud/GenericFormModal';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import {
   ImageUploadService,
   FileObject,
@@ -309,7 +310,7 @@ const CategoriesScreen: React.FC = () => {
             icon="format-list-bulleted"
             size={28}
             onPress={() =>
-              navigation.navigate('SubcategoriesScreen', {
+              navigation.navigate(NAVIGATION_PATHS.SUBCATEGORIES, {
                 categoryId: item.id,
                 categoryName: item.name,
               })

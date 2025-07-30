@@ -4,6 +4,7 @@ import { PrintersStackParamList } from './types';
 import PrintersScreen from '../screens/PrintersScreen';
 import { useAppTheme } from '@/app/styles/theme';
 import { getStackHeaderOptions } from '@/app/navigation/options';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<PrintersStackParamList>();
 
@@ -12,13 +13,13 @@ const PrintersStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName="PrintersList"
+      initialRouteName={NAVIGATION_PATHS.PRINTERS_LIST}
       screenOptions={{
         ...getStackHeaderOptions(theme),
       }}
     >
       <Stack.Screen
-        name="PrintersList"
+        name={NAVIGATION_PATHS.PRINTERS_LIST}
         component={PrintersScreen}
         options={{
           title: 'Impresoras',

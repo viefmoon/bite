@@ -13,10 +13,10 @@ import { useAppTheme, AppTheme } from '../../../app/styles/theme';
 import { useResponsive } from '../../../app/hooks/useResponsive';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../navigation/types';
-import { useAuthStore } from '../../../app/store/authStore';
+import { useAuthStore } from '../../../app/stores/authStore';
 import { canOpenShift } from '../../../app/utils/roleUtils';
 import { useGlobalShift } from '../../../app/hooks/useGlobalShift';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { useSnackbarStore } from '../../../app/stores/snackbarStore';
 import { NAVIGATION_PATHS } from '../../../app/constants/navigationPaths';
 import OrderSummaryCard from '../../shared/components/OrderSummaryCard';
 import { OrderFilterHeader } from '../components/OrderFilterHeader';
@@ -40,7 +40,7 @@ import { Button, IconButton } from 'react-native-paper';
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
-  'OpenOrders'
+  typeof NAVIGATION_PATHS.OPEN_ORDERS
 >;
 
 const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {

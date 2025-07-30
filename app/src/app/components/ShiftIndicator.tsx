@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Icon, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
 import { canOpenShift } from '../utils/roleUtils';
 import { ShiftActionModal } from '@/modules/orders/components/ShiftActionModal';
 import { ShiftStatusModal } from '@/modules/orders/components/ShiftStatusModal';

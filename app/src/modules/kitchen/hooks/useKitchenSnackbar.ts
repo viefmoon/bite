@@ -1,4 +1,4 @@
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 export function useKitchenSnackbar() {
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);

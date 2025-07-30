@@ -5,8 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
@@ -109,7 +110,7 @@ const ModifierGroupsScreen = () => {
   });
 
   const handleNavigateToModifiers = (groupId: string, groupName: string) => {
-    navigation.navigate('ModifiersScreen', { groupId, groupName });
+    navigation.navigate(NAVIGATION_PATHS.MODIFIERS, { groupId, groupName });
   };
 
   const handleFormSaveSuccess = () => {

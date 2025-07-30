@@ -11,7 +11,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import { ConnectionMode } from '@/services/serverConnectionService';
 import { discoveryService } from '@/app/services/discoveryService';

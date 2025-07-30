@@ -4,6 +4,7 @@ import { ReceiptsScreen } from '../screens/ReceiptsScreen';
 import { getStackHeaderOptions } from '@/app/navigation/options';
 import { useAppTheme } from '@/app/styles/theme';
 import { ReceiptsStackParamList } from './types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<ReceiptsStackParamList>();
 
@@ -13,7 +14,7 @@ export const ReceiptsStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={getStackHeaderOptions(theme)}>
       <Stack.Screen
-        name="ReceiptsList"
+        name={NAVIGATION_PATHS.RECEIPTS_LIST}
         component={ReceiptsScreen}
         options={{
           title: 'Recibos',

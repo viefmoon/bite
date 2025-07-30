@@ -12,7 +12,7 @@ import { useAppTheme } from '@/app/styles/theme';
 import debounce from 'lodash.debounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 import ModifierFormModal from '../components/ModifierFormModal';

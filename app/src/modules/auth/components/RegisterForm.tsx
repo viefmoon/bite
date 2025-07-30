@@ -20,7 +20,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { registerSchema, RegisterFormInputs } from '../schema/auth.schema';
 

@@ -1,3 +1,5 @@
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
+
 export type ShiftAuditStackParamList = {
-  ShiftsList: undefined;
+  [NAVIGATION_PATHS.SHIFTS_LIST]: undefined;
 };

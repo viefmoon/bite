@@ -9,7 +9,7 @@ import {
   useCancelOrderPreparation,
   useCompleteOrderPreparation,
 } from '../hooks/useKitchenOrders';
-import { useKitchenStore } from '../store/kitchenStore';
+import { useKitchenStore } from '../stores/kitchenStore';
 import { OrderCard } from '../components/OrderCard';
 import { KitchenEmptyState } from '../components/KitchenEmptyState';
 import { KitchenOrder } from '../schema/kitchen.schema';

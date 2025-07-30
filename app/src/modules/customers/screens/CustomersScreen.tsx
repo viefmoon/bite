@@ -17,7 +17,7 @@ import { useAppTheme, AppTheme } from '@/app/styles/theme';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import CustomerFormModal from '../components/CustomerFormModal';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
 import { formatCurrency } from '@/app/lib/formatters';

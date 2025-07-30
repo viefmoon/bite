@@ -5,11 +5,11 @@ import axios, {
 } from 'axios';
 import EncryptedStorage from '@/app/services/secureStorageService';
 import { STORAGE_KEYS } from '../constants/storageKeys';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
 import { ApiError } from '../lib/errors';
 import axiosRetry from 'axios-retry';
 import { discoveryService } from './discoveryService';
-import { useSnackbarStore } from '../store/snackbarStore';
+import { useSnackbarStore } from '../stores/snackbarStore';
 import { API_PATHS } from '../constants/apiPaths';
 import { certificateValidator } from './certificateValidator';
 

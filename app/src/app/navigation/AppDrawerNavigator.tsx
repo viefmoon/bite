@@ -32,10 +32,11 @@ import type { AppDrawerParamList } from './types';
 import { useResponsive } from '../hooks/useResponsive';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
 import { ShiftIndicator } from '../components/ShiftIndicator';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
 import { KitchenFilterButton } from '../../modules/kitchen/components/KitchenFilterButton';
 import { useKitchenStore } from '../../modules/kitchen/store/kitchenStore';
 import { OrderTypeEnum } from '../../modules/kitchen/schema/kitchen.schema';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 
@@ -62,7 +63,7 @@ export function AppDrawerNavigator() {
   };
 
   // Ruta inicial por defecto (no-kitchen users)
-  const initialRouteName = 'OrdersStack';
+  const initialRouteName = NAVIGATION_PATHS.ORDERS_STACK;
 
   const styles = React.useMemo(
     () =>
@@ -174,57 +175,57 @@ export function AppDrawerNavigator() {
           headerTitle: ({ children }) => {
             let title = '';
             switch (children) {
-              case 'MenuStack':
+              case NAVIGATION_PATHS.MENU_STACK:
                 title = 'Menú';
                 break;
-              case 'ModifiersStack':
+              case NAVIGATION_PATHS.MODIFIERS_STACK:
                 title = 'Modificadores';
                 break;
-              case 'PreparationScreensStack':
+              case NAVIGATION_PATHS.PREPARATION_SCREENS_STACK:
                 title = 'Pantallas Preparación';
                 break;
-              case 'AreasTablesStack':
+              case NAVIGATION_PATHS.AREAS_TABLES_STACK:
                 title = 'Áreas y Mesas';
                 break;
-              case 'OrdersStack':
+              case NAVIGATION_PATHS.ORDERS_STACK:
                 title = 'Órdenes';
                 break;
-              case 'PrintersStack':
+              case NAVIGATION_PATHS.PRINTERS_STACK:
                 title = 'Impresoras';
                 break;
-              case 'ReceiptsStack':
+              case NAVIGATION_PATHS.RECEIPTS_STACK:
                 title = 'Recibos';
                 break;
-              case 'AvailabilityScreen':
+              case NAVIGATION_PATHS.AVAILABILITY_SCREEN:
                 title = 'Disponibilidad';
                 break;
-              case 'OrderFinalizationStack':
+              case NAVIGATION_PATHS.ORDER_FINALIZATION_STACK:
                 title = 'Finalización';
                 break;
-              case 'RestaurantConfigStack':
+              case NAVIGATION_PATHS.RESTAURANT_CONFIG_STACK:
                 title = 'Configuración';
                 break;
-              case 'CustomersStack':
+              case NAVIGATION_PATHS.CUSTOMERS_STACK:
                 title = 'Clientes';
                 break;
-              case 'PizzaCustomizationsStack':
+              case NAVIGATION_PATHS.PIZZA_CUSTOMIZATIONS_STACK:
                 title = 'Personalizaciones';
                 break;
-              case 'SyncStack':
+              case NAVIGATION_PATHS.SYNC_STACK:
                 title = 'Sincronización';
                 break;
-              case 'UsersScreen':
+              case NAVIGATION_PATHS.USERS_SCREEN:
                 title = 'Usuarios';
                 break;
-              case 'KitchenScreen':
+              case NAVIGATION_PATHS.KITCHEN_SCREEN:
                 title =
                   kitchenScreenName +
                   (filters.orderType ? getFilterText() : '');
                 break;
-              case 'ShiftAuditStack':
+              case NAVIGATION_PATHS.SHIFT_AUDIT_STACK:
                 title = 'Historial de Turnos';
                 break;
-              case 'ServerSettings':
+              case NAVIGATION_PATHS.SERVER_SETTINGS:
                 title = 'Configuración del Servidor';
                 break;
               default:
@@ -255,7 +256,7 @@ export function AppDrawerNavigator() {
         })}
       >
         <Drawer.Screen
-          name="OrdersStack"
+          name={NAVIGATION_PATHS.ORDERS_STACK}
           component={OrdersStackNavigator}
           options={{
             title: 'Órdenes',
@@ -269,7 +270,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="ReceiptsStack"
+          name={NAVIGATION_PATHS.RECEIPTS_STACK}
           component={ReceiptsStackNavigator}
           options={{
             title: 'Recibos',
@@ -283,7 +284,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="OrderFinalizationStack"
+          name={NAVIGATION_PATHS.ORDER_FINALIZATION_STACK}
           component={OrderFinalizationStackNavigator}
           options={{
             title: 'Finalización',
@@ -297,7 +298,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="MenuStack"
+          name={NAVIGATION_PATHS.MENU_STACK}
           component={MenuStackNavigator}
           options={{
             title: 'Menú',
@@ -311,7 +312,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="AvailabilityScreen"
+          name={NAVIGATION_PATHS.AVAILABILITY_SCREEN}
           component={AvailabilityScreen}
           options={{
             title: 'Disponibilidad',
@@ -325,7 +326,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="ModifiersStack"
+          name={NAVIGATION_PATHS.MODIFIERS_STACK}
           component={ModifiersStackNavigator}
           options={{
             title: 'Modificadores',
@@ -339,7 +340,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="PizzaCustomizationsStack"
+          name={NAVIGATION_PATHS.PIZZA_CUSTOMIZATIONS_STACK}
           component={PizzaCustomizationsStackNavigator}
           options={{
             title: 'Gestión de Pizzas',
@@ -353,7 +354,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="PreparationScreensStack"
+          name={NAVIGATION_PATHS.PREPARATION_SCREENS_STACK}
           component={PreparationScreensStackNavigator}
           options={{
             title: 'Pantallas Preparación',
@@ -367,7 +368,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="AreasTablesStack"
+          name={NAVIGATION_PATHS.AREAS_TABLES_STACK}
           component={AreasTablesStackNavigator}
           options={{
             title: 'Áreas y Mesas',
@@ -382,7 +383,7 @@ export function AppDrawerNavigator() {
         />
 
         <Drawer.Screen
-          name="PrintersStack"
+          name={NAVIGATION_PATHS.PRINTERS_STACK}
           component={PrintersStackNavigator}
           options={{
             title: 'Impresoras',
@@ -396,7 +397,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="RestaurantConfigStack"
+          name={NAVIGATION_PATHS.RESTAURANT_CONFIG_STACK}
           component={RestaurantConfigStackNavigator}
           options={{
             title: 'Configuración',
@@ -410,7 +411,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="CustomersStack"
+          name={NAVIGATION_PATHS.CUSTOMERS_STACK}
           component={CustomersStackNavigator}
           options={{
             title: 'Clientes',
@@ -424,7 +425,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="SyncStack"
+          name={NAVIGATION_PATHS.SYNC_STACK}
           component={SyncStackNavigator}
           options={{
             title: 'Sincronización',
@@ -438,7 +439,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="UsersScreen"
+          name={NAVIGATION_PATHS.USERS_SCREEN}
           component={UsersListScreen}
           options={{
             title: 'Usuarios',
@@ -452,7 +453,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="ShiftAuditStack"
+          name={NAVIGATION_PATHS.SHIFT_AUDIT_STACK}
           component={ShiftAuditStackNavigator}
           options={{
             title: 'Historial de Turnos',
@@ -466,7 +467,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="KitchenScreen"
+          name={NAVIGATION_PATHS.KITCHEN_SCREEN}
           component={KitchenOrdersScreen}
           options={{
             title: kitchenScreenName,
@@ -525,7 +526,7 @@ export function AppDrawerNavigator() {
           }}
         />
         <Drawer.Screen
-          name="ServerSettings"
+          name={NAVIGATION_PATHS.SERVER_SETTINGS}
           component={ServerSettingsScreen}
           options={{
             title: 'Configuración del Servidor',

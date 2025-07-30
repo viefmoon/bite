@@ -25,6 +25,7 @@ import {
   FAB,
 } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { OrderTypeEnum, OrderType } from '../schema/orders.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import { OrderStatusInfo, PreparationStatusInfo } from '../utils/formatters';
@@ -38,8 +39,8 @@ import {
 } from '../stores/useOrderManagement';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { OrderDetailsForBackend } from '../utils/orderUtils';
-import { useAuthStore } from '@/app/store/authStore';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useAuthStore } from '@/app/stores/authStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
 import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
@@ -850,7 +851,7 @@ const OrderContent: React.FC<{
               onAddProducts();
             } else if (navigation && orderId && orderNumber) {
               try {
-                navigation.navigate('AddProductsToOrder', {
+                navigation.navigate(NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER, {
                   orderId,
                   orderNumber,
                   existingOrderItemsCount: items

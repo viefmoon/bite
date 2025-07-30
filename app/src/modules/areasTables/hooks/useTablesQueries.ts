@@ -4,7 +4,7 @@ import type { Table } from '@/app/schemas/domain/table.schema';
 import { UpdateTableDto, FindAllTablesDto } from '../schema/table-form.schema';
 import { BaseListQuery } from '../../../app/types/query.types';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 const tablesQueryKeys = {
   all: ['tables'] as const,

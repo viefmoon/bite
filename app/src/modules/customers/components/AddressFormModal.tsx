@@ -26,7 +26,7 @@ import {
 import { WebView } from 'react-native-webview';
 import { GOOGLE_MAPS_CONFIG } from '../constants/maps.config';
 import { useGoogleMapsConfig } from '@/hooks/useGoogleMapsConfig';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 interface AddressFormModalProps {
   visible: boolean;

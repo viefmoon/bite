@@ -8,7 +8,7 @@ import {
 import { BaseListQuery } from '../../../app/types/query.types';
 import { PaginatedResponse } from '../../../app/types/api.types';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-import { useSnackbarStore } from '../../../app/store/snackbarStore';
+import { useSnackbarStore } from '../../../app/stores/snackbarStore';
 
 // --- Query Keys ---
 const preparationScreensQueryKeys = {

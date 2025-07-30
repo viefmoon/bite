@@ -8,6 +8,7 @@ import { useAppTheme } from '../styles/theme';
 import { Icon } from 'react-native-paper';
 import { useResponsive } from '../hooks/useResponsive';
 import { KitchenProvider } from '../../modules/kitchen/context/KitchenContext';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Drawer = createDrawerNavigator();
 
@@ -69,7 +70,7 @@ function KitchenOnlyNavigatorContent() {
         barStyle={theme.dark ? 'light-content' : 'dark-content'}
       />
       <Drawer.Navigator
-        initialRouteName="Kitchen"
+        initialRouteName={NAVIGATION_PATHS.KITCHEN_SCREEN}
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         defaultStatus="closed"
         screenOptions={() => ({
@@ -99,7 +100,7 @@ function KitchenOnlyNavigatorContent() {
         })}
       >
         <Drawer.Screen
-          name="Kitchen"
+          name={NAVIGATION_PATHS.KITCHEN_SCREEN}
           options={{
             title: 'Cocina',
             drawerIcon: ({ color, size }) => (
@@ -111,7 +112,7 @@ function KitchenOnlyNavigatorContent() {
         </Drawer.Screen>
 
         <Drawer.Screen
-          name="ServerSettings"
+          name={NAVIGATION_PATHS.SERVER_SETTINGS}
           component={ServerSettingsScreen}
           options={{
             title: 'Configuración del Servidor',

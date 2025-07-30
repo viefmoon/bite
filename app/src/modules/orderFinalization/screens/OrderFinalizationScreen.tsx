@@ -27,7 +27,7 @@ import EmptyState from '@/app/components/common/EmptyState';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { orderFinalizationService } from '../services/orderFinalizationService';
 
 export const OrderFinalizationScreen: React.FC = () => {

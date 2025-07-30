@@ -8,7 +8,7 @@ import { zodResolver } from '@/app/lib/zodResolver';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { pizzaConfigurationsService } from '../services/pizzaConfigurationsService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type { Product } from '@/app/schemas/domain/product.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';

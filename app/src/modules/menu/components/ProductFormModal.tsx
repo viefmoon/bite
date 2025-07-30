@@ -32,7 +32,7 @@ import type { ProductVariant } from '@/app/schemas/domain/product-variant.schema
 import type { Product } from '@/app/schemas/domain/product.schema';
 import type { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import VariantFormModal from './VariantFormModal';
 import CustomImagePicker, {
   FileObject,

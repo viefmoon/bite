@@ -6,7 +6,7 @@ import { useResponsive } from '@/app/hooks/useResponsive';
 import { ConnectionIndicator } from '@/app/components/ConnectionIndicator';
 import { KitchenFilterButton } from '@/modules/kitchen/components/KitchenFilterButton';
 import { RefreshButton } from '@/modules/kitchen/components/RefreshButton';
-import { useAuthStore } from '@/app/store/authStore';
+import { useAuthStore } from '@/app/stores/authStore';
 import { useKitchenStore } from '@/modules/kitchen/store/kitchenStore';
 import { OrderTypeEnum } from '@/modules/kitchen/schema/kitchen.schema';
 

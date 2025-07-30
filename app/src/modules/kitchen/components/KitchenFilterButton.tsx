@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Portal, Modal, Surface, Text, Switch } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
-import { useKitchenStore } from '../store/kitchenStore';
+import { useKitchenStore } from '../stores/kitchenStore';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { OrderTypeEnum } from '../schema/kitchen.schema';
 

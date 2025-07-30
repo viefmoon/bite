@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { shiftsService } from '@/services/shifts';
 import type { Shift } from '@/app/schemas/domain/shift.schema';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 type ShiftActionMode = 'open' | 'close';
 

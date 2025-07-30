@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { IconButton, Surface, Badge } from 'react-native-paper';
 import { useAppTheme } from '../styles/theme';
 import { useServerConnection } from '../hooks/useServerConnection';
-import { useSnackbarStore } from '../store/snackbarStore';
+import { useSnackbarStore } from '../stores/snackbarStore';
 import { healthMonitoringService } from '@/services/healthMonitoringService';
 import { autoReconnectService } from '@/services/autoReconnectService';
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Snackbar, Text } from 'react-native-paper';
 import { StyleSheet, View, Modal } from 'react-native';
-import { useSnackbarStore, SnackbarType } from '@/app/store/snackbarStore';
+import { useSnackbarStore, SnackbarType } from '@/app/stores/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 
 const GlobalSnackbar = () => {

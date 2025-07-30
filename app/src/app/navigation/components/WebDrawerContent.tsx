@@ -13,14 +13,14 @@ import {
   Dialog,
   Button,
 } from 'react-native-paper';
-import { useThemeStore } from '../../store/themeStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 import { RoleEnum } from '@/modules/users/schema/user.schema';
 import { clearImageCache } from '../../lib/imageCache';
-import { useSnackbarStore } from '../../store/snackbarStore';
+import { useSnackbarStore } from '../../stores/snackbarStore';
 
 interface WebDrawerContentProps {
   onClose: () => void;

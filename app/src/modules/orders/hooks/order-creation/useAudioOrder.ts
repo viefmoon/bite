@@ -3,7 +3,7 @@ import {
   audioOrderService,
   type AIOrderItem,
 } from '@/services/audioOrderService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { Product } from '../../schema/orders.schema';
 import { CartItemModifier } from '../../utils/cartUtils';
 

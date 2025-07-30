@@ -16,7 +16,7 @@ import {
   TouchableRipple,
   ProgressBar,
 } from 'react-native-paper';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import {
   serverConnectionService,

@@ -1,5 +1,4 @@
 import * as FileSystem from 'expo-file-system';
-import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 import { API_PATHS } from '@/app/constants/apiPaths';
 
@@ -59,14 +58,21 @@ async function getCacheFilename(remoteUrl: string): Promise<string> {
     }
   }
 
-  const digest = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    urlToHash,
-    { encoding: Crypto.CryptoEncoding.HEX },
-  );
+  // Usar base64 en lugar de SHA256 para mejor rendimiento
+  // Convertir string a base64 usando btoa (disponible en React Native)
+  // Reemplazar caracteres no seguros para nombres de archivo
+  const base64 = btoa(encodeURIComponent(urlToHash).replace(/%([0-9A-F]{2})/g, 
+    (match, p1) => String.fromCharCode(parseInt(p1, 16))))
+    .replace(/\//g, '_')
+    .replace(/\+/g, '-')
+    .replace(/=/g, '');
+  
+  // Limitar la longitud del nombre de archivo a 200 caracteres para evitar problemas con sistemas de archivos
+  const truncatedBase64 = base64.substring(0, 200);
+  
   const extensionMatch = remoteUrl.match(/\.([a-zA-Z0-9]+)(?:[?#]|$)/);
   const extension = extensionMatch ? extensionMatch[1] : 'jpg';
-  return `${digest}.${extension}`;
+  return `${truncatedBase64}.${extension}`;
 }
 
 interface ExistingFileInfo {

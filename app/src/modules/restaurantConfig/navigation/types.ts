@@ -1,3 +1,5 @@
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
+
 export type RestaurantConfigStackParamList = {
-  RestaurantConfig: undefined;
+  [NAVIGATION_PATHS.RESTAURANT_CONFIG]: undefined;
 };

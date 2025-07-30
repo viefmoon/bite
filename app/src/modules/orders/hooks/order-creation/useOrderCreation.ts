@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useCreateOrderMutation } from '../../hooks/useOrdersQueries';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import type { OrderDetailsForBackend } from '../../utils/orderUtils';
 

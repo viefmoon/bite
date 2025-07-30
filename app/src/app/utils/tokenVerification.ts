@@ -1,5 +1,5 @@
 import { authService } from '@/modules/auth/services/authService';
-import { useAuthStore } from '@/app/store/authStore';
+import { useAuthStore } from '@/app/stores/authStore';
 import { STORAGE_KEYS } from '@/app/constants/storageKeys';
 import EncryptedStorage from '@/app/services/secureStorageService';
 

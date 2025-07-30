@@ -12,7 +12,7 @@ import {
 } from '../schema/products.schema';
 import { PaginatedResponse } from '@/app/types/api.types';
 import { ApiError } from '@/app/lib/errors';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
 
 const productKeys = {

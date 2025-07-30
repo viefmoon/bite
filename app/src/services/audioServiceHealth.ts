@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { serverConnectionService } from './serverConnectionService';
-import { useAuthStore } from '../app/store/authStore';
+import { useAuthStore } from '../app/stores/authStore';
 import NetInfo from '@react-native-community/netinfo';
 import { API_PATHS } from '../app/constants/apiPaths';
 

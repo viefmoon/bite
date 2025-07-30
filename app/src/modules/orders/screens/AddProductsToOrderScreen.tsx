@@ -13,8 +13,9 @@ import { AudioOrderModal } from '@/components/AudioOrderModal';
 import { CategoryGrid } from '../components/order-creation';
 import { useOrderNavigation, useAudioOrder } from '../hooks/order-creation';
 
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type { OrdersStackScreenProps } from '../navigation/types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { useOrderManagement } from '../stores/useOrderManagement';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
@@ -28,7 +29,7 @@ type AddProductsRouteProps = {
 const AddProductsToOrderScreen = () => {
   const navigation = useNavigation();
   const route =
-    useRoute<OrdersStackScreenProps<'AddProductsToOrder'>['route']>();
+    useRoute<OrdersStackScreenProps<typeof NAVIGATION_PATHS.ADD_PRODUCTS_TO_ORDER>['route']>();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const cartButtonRef = useRef<{ animate: () => void }>(null);
 

@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import GenericFormModal, {
   FormFieldConfig,

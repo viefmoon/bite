@@ -23,7 +23,7 @@ import {
   ReconnectState,
 } from '@/services/autoReconnectService';
 import { useServerConnection } from '../hooks/useServerConnection';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

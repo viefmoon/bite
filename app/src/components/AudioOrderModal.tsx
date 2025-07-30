@@ -24,7 +24,7 @@ import type {
   CartItem,
   CartItemModifier,
 } from '@/modules/orders/utils/cartUtils';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import { Swipeable } from 'react-native-gesture-handler';
 import {

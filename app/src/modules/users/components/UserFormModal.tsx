@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Text,
@@ -18,6 +18,8 @@ import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useCreateUser, useUpdateUser } from '../hooks';
 import type { User } from '@/app/schemas/domain/user.schema';
 import { GenderEnum } from '../schema/user.schema';
+import { RoleSelector } from './RoleSelector';
+import { GenderSelector } from './GenderSelector';
 
 const createUserSchema = z.object({
   username: z
@@ -72,6 +74,67 @@ interface UserFormModalProps {
   user?: User | null;
 }
 
+// Constantes extraídas del componente para evitar recreación
+const GENDER_OPTIONS = [
+  {
+    value: GenderEnum.MALE,
+    label: 'Masculino',
+    icon: 'gender-male',
+    color: '#3498db',
+  },
+  {
+    value: GenderEnum.FEMALE,
+    label: 'Femenino',
+    icon: 'gender-female',
+    color: '#e74c3c',
+  },
+  {
+    value: GenderEnum.OTHER,
+    label: 'Otro',
+    icon: 'gender-transgender',
+    color: '#9b59b6',
+  },
+];
+
+const ROLE_OPTIONS = [
+  {
+    value: 1,
+    label: 'Admin',
+    icon: 'shield-account',
+    description: 'Acceso completo',
+  },
+  {
+    value: 2,
+    label: 'Gerente',
+    icon: 'account-tie',
+    description: 'Gestión general',
+  },
+  {
+    value: 3,
+    label: 'Cajero',
+    icon: 'cash-register',
+    description: 'Ventas',
+  },
+  {
+    value: 4,
+    label: 'Mesero',
+    icon: 'room-service',
+    description: 'Órdenes',
+  },
+  {
+    value: 5,
+    label: 'Cocina',
+    icon: 'chef-hat',
+    description: 'Preparación',
+  },
+  {
+    value: 6,
+    label: 'Repartidor',
+    icon: 'moped',
+    description: 'Entregas',
+  },
+];
+
 export function UserFormModal({
   visible,
   onDismiss,
@@ -79,7 +142,7 @@ export function UserFormModal({
 }: UserFormModalProps) {
   const theme = useAppTheme();
   const responsive = useResponsive();
-  const styles = getStyles(theme, responsive);
+  const styles = useMemo(() => getStyles(theme, responsive), [theme, responsive]);
   const [showPassword, setShowPassword] = useState(false);
 
   const createUserMutation = useCreateUser();
@@ -148,7 +211,7 @@ export function UserFormModal({
     }
   }, [user, reset]);
 
-  const onSubmit = async (
+  const onSubmit = useCallback(async (
     data: CreateUserFormInputs | UpdateUserFormInputs,
   ) => {
     try {
@@ -194,31 +257,14 @@ export function UserFormModal({
     } catch (error) {
       // Error is handled by mutation hooks
     }
-  };
+  }, [user, updateUserMutation, createUserMutation, onDismiss]);
 
   const isSubmitting =
     createUserMutation.isPending || updateUserMutation.isPending;
 
-  const genderOptions = [
-    {
-      value: GenderEnum.MALE,
-      label: 'Masculino',
-      icon: 'gender-male',
-      color: '#3498db',
-    },
-    {
-      value: GenderEnum.FEMALE,
-      label: 'Femenino',
-      icon: 'gender-female',
-      color: '#e74c3c',
-    },
-    {
-      value: GenderEnum.OTHER,
-      label: 'Otro',
-      icon: 'gender-transgender',
-      color: '#9b59b6',
-    },
-  ];
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
 
   return (
     <ResponsiveModal
@@ -349,7 +395,7 @@ export function UserFormModal({
                     right={
                       <TextInput.Icon
                         icon={showPassword ? 'eye-off' : 'eye'}
-                        onPress={() => setShowPassword(!showPassword)}
+                        onPress={togglePasswordVisibility}
                       />
                     }
                     outlineStyle={styles.inputOutline}
@@ -369,100 +415,13 @@ export function UserFormModal({
               control={control}
               name="role"
               render={({ field: { onChange, value } }) => (
-                <View style={styles.inputContainer}>
-                  <View style={styles.fieldLabelContainer}>
-                    <Icon
-                      source="badge-account"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.sectionTitle} variant="titleMedium">
-                      Rol del usuario
-                    </Text>
-                  </View>
-                  <View
-                    style={[styles.rolesGrid, { marginTop: theme.spacing.s }]}
-                  >
-                    {[
-                      {
-                        value: 1,
-                        label: 'Admin',
-                        icon: 'shield-account',
-                        description: 'Acceso completo',
-                      },
-                      {
-                        value: 2,
-                        label: 'Gerente',
-                        icon: 'account-tie',
-                        description: 'Gestión general',
-                      },
-                      {
-                        value: 3,
-                        label: 'Cajero',
-                        icon: 'cash-register',
-                        description: 'Ventas',
-                      },
-                      {
-                        value: 4,
-                        label: 'Mesero',
-                        icon: 'room-service',
-                        description: 'Órdenes',
-                      },
-                      {
-                        value: 5,
-                        label: 'Cocina',
-                        icon: 'chef-hat',
-                        description: 'Preparación',
-                      },
-                      {
-                        value: 6,
-                        label: 'Repartidor',
-                        icon: 'moped',
-                        description: 'Entregas',
-                      },
-                    ].map((role) => (
-                      <Surface
-                        key={role.value}
-                        style={[
-                          styles.roleCard,
-                          value === role.value && styles.roleCardActive,
-                        ]}
-                        elevation={value === role.value ? 2 : 0}
-                      >
-                        <TouchableOpacity
-                          onPress={() => onChange(role.value)}
-                          style={styles.roleCardContent}
-                        >
-                          <Icon
-                            source={role.icon}
-                            size={24}
-                            color={
-                              value === role.value
-                                ? theme.colors.primary
-                                : theme.colors.onSurfaceVariant
-                            }
-                          />
-                          <Text
-                            style={[
-                              styles.roleLabel,
-                              value === role.value && styles.roleLabelActive,
-                            ]}
-                            variant="labelMedium"
-                          >
-                            {role.label}
-                          </Text>
-                          <Text
-                            style={styles.roleDescription}
-                            variant="bodySmall"
-                            numberOfLines={1}
-                          >
-                            {role.description}
-                          </Text>
-                        </TouchableOpacity>
-                      </Surface>
-                    ))}
-                  </View>
-                </View>
+                <RoleSelector
+                  value={value}
+                  onChange={onChange}
+                  roles={ROLE_OPTIONS}
+                  theme={theme}
+                  responsive={responsive}
+                />
               )}
             />
           </View>
@@ -546,69 +505,13 @@ export function UserFormModal({
               control={control}
               name="gender"
               render={({ field: { onChange, value } }) => (
-                <View style={styles.inputContainer}>
-                  <View style={styles.fieldLabelContainer}>
-                    <Icon
-                      source="gender-transgender"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.sectionTitle} variant="titleMedium">
-                      Género
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.genderContainer,
-                      { marginTop: theme.spacing.s },
-                    ]}
-                  >
-                    {genderOptions.map((option) => (
-                      <TouchableOpacity
-                        key={option.value}
-                        onPress={() => onChange(option.value)}
-                        activeOpacity={0.7}
-                      >
-                        <Surface
-                          style={[
-                            styles.genderOption,
-                            value === option.value && styles.genderOptionActive,
-                          ]}
-                          elevation={value === option.value ? 3 : 1}
-                        >
-                          <View
-                            style={[
-                              styles.genderIconContainer,
-                              value === option.value && {
-                                backgroundColor: option.color + '20',
-                              },
-                            ]}
-                          >
-                            <Icon
-                              source={option.icon}
-                              size={20}
-                              color={
-                                value === option.value
-                                  ? option.color
-                                  : theme.colors.onSurfaceVariant
-                              }
-                            />
-                          </View>
-                          <Text
-                            style={[
-                              styles.genderLabel,
-                              value === option.value &&
-                                styles.genderLabelActive,
-                            ]}
-                            variant="labelMedium"
-                          >
-                            {option.label}
-                          </Text>
-                        </Surface>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+                <GenderSelector
+                  value={value}
+                  onChange={onChange}
+                  options={GENDER_OPTIONS}
+                  theme={theme}
+                  responsive={responsive}
+                />
               )}
             />
           </View>
@@ -892,43 +795,6 @@ const getStyles = (
     segmentedButtons: {
       marginTop: theme.spacing.xs,
     },
-    genderContainer: {
-      flexDirection: 'row',
-      gap: theme.spacing.s,
-      justifyContent: 'flex-start',
-    },
-    genderOption: {
-      borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
-      alignItems: 'center',
-      backgroundColor: theme.colors.surface,
-      flex: 1,
-      minWidth: 80,
-      maxWidth: responsive.isTablet ? 120 : 100,
-      borderWidth: 1.5,
-      borderColor: theme.colors.outlineVariant,
-    },
-    genderOptionActive: {
-      backgroundColor: theme.colors.primaryContainer,
-      borderColor: theme.colors.primary,
-    },
-    genderIconContainer: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: theme.spacing.xs,
-    },
-    genderLabel: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-      textAlign: 'center',
-    },
-    genderLabelActive: {
-      color: theme.colors.onPrimaryContainer,
-      fontWeight: '600',
-    },
     rowContainer: {
       flexDirection: 'row',
       gap: theme.spacing.s,
@@ -959,46 +825,6 @@ const getStyles = (
     switchDescription: {
       color: theme.colors.onSurfaceVariant,
       marginTop: 2,
-    },
-    rolesGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.xs,
-      justifyContent: 'space-between',
-    },
-    roleCard: {
-      borderRadius: theme.roundness * 2,
-      padding: theme.spacing.s,
-      backgroundColor: theme.colors.surface,
-      width: responsive.isTablet ? '30%' : '48%',
-      minWidth: responsive.isTablet ? 120 : 100,
-      borderWidth: 1.5,
-      borderColor: theme.colors.outlineVariant,
-      elevation: 1,
-      marginBottom: theme.spacing.xs,
-    },
-    roleCardActive: {
-      backgroundColor: theme.colors.primaryContainer,
-      borderColor: theme.colors.primary,
-      elevation: 3,
-    },
-    roleCardContent: {
-      alignItems: 'center',
-    },
-    roleLabel: {
-      color: theme.colors.onSurfaceVariant,
-      marginTop: theme.spacing.xs,
-      fontWeight: '500',
-    },
-    roleLabelActive: {
-      color: theme.colors.onPrimaryContainer,
-      fontWeight: '700',
-    },
-    roleDescription: {
-      color: theme.colors.onSurfaceVariant,
-      marginTop: 2,
-      fontSize: 10,
-      textAlign: 'center',
     },
     scrollSpacer: {
       height: 10,

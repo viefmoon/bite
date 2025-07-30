@@ -21,7 +21,7 @@ import {
 } from '../schema/orders.schema';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { AppTheme } from '@/app/styles/theme';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
 import {

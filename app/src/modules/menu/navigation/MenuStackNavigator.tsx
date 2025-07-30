@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppTheme } from '../../../app/styles/theme';
 import { getStackHeaderOptions } from '../../../app/navigation/options';
 import type { MenuStackParamList } from './types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 import CategoriesScreen from '../screens/CategoriesScreen';
 import SubcategoriesScreen from '../screens/SubcategoriesScreen';
@@ -21,14 +22,14 @@ export const MenuStackNavigator: React.FC = () => {
       }}
     >
       <Stack.Screen
-        name="CategoriesScreen"
+        name={NAVIGATION_PATHS.CATEGORIES}
         component={CategoriesScreen}
         options={{
           title: 'Categorías',
         }}
       />
       <Stack.Screen
-        name="SubcategoriesScreen"
+        name={NAVIGATION_PATHS.SUBCATEGORIES}
         component={SubcategoriesScreen}
         options={({ route }) => ({
           title: route.params?.categoryName
@@ -37,7 +38,7 @@ export const MenuStackNavigator: React.FC = () => {
         })}
       />
       <Stack.Screen
-        name="Products"
+        name={NAVIGATION_PATHS.PRODUCTS}
         component={ProductsScreen}
         options={({ route }) => ({
           title: route.params?.subCategoryName

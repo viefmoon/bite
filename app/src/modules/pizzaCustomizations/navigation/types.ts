@@ -1,3 +1,5 @@
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
+
 export type PizzaCustomizationsStackParamList = {
-  PizzaCustomizationsList: undefined;
+  [NAVIGATION_PATHS.PIZZA_CUSTOMIZATIONS_LIST]: undefined;
 };

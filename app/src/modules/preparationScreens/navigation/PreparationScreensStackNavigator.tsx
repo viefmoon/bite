@@ -4,6 +4,7 @@ import { PreparationScreensStackParamList } from './types';
 import PreparationScreensScreen from '../screens/PreparationScreensScreen';
 import { useAppTheme } from '../../../app/styles/theme';
 import { getStackHeaderOptions } from '../../../app/navigation/options';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<PreparationScreensStackParamList>();
 
@@ -12,13 +13,13 @@ const PreparationScreensStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName="PreparationScreensList"
+      initialRouteName={NAVIGATION_PATHS.PREPARATION_SCREENS_LIST}
       screenOptions={{
         ...getStackHeaderOptions(theme),
       }}
     >
       <Stack.Screen
-        name="PreparationScreensList"
+        name={NAVIGATION_PATHS.PREPARATION_SCREENS_LIST}
         component={PreparationScreensScreen}
         options={{
           title: 'Pantallas de Preparación',

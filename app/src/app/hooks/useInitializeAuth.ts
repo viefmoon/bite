@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { initializeAuthStore } from '../store/authStore';
+import { initializeAuthStore } from '../stores/authStore';
 import { verifyStoredToken } from '../utils/tokenVerification';
 
 export function useInitializeAuth() {

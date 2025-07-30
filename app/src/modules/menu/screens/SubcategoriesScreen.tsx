@@ -18,6 +18,7 @@ import GenericFormModal, {
 } from '../../../app/components/crud/GenericFormModal';
 import { FilterOption } from '../../../app/components/crud/GenericList';
 import { useCrudScreenLogic } from '../../../app/hooks/useCrudScreenLogic';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 import { useListState } from '../../../app/hooks/useListState';
 
 import {
@@ -42,11 +43,11 @@ import { MenuStackParamList } from '@/modules/menu/navigation/types';
 
 type SubcategoriesScreenRouteProp = RouteProp<
   MenuStackParamList,
-  'SubcategoriesScreen'
+  typeof NAVIGATION_PATHS.SUBCATEGORIES
 >;
 type SubcategoriesScreenNavigationProp = NativeStackNavigationProp<
   MenuStackParamList,
-  'SubcategoriesScreen'
+  typeof NAVIGATION_PATHS.SUBCATEGORIES
 >;
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -283,7 +284,7 @@ const SubcategoriesScreen: React.FC = () => {
       icon="chevron-right"
       size={28}
       onPress={() =>
-        navigation.navigate('Products', {
+        navigation.navigate(NAVIGATION_PATHS.PRODUCTS, {
           subcategoryId: item.id,
           subCategoryName: item.name,
         })

@@ -15,7 +15,7 @@ import { zodResolver } from '@/app/lib/zodResolver';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import { modifierGroupService } from '../services/modifierGroupService';
 import { ModifierGroup } from '@/app/schemas/domain/modifier-group.schema';

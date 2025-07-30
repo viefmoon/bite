@@ -18,7 +18,7 @@ import {
 } from '../hooks/usePrintersQueries';
 import { DiscoveredPrinter } from '../types/printer.types';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 
 interface PrinterDiscoveryModalProps {

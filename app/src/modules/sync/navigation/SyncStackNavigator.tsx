@@ -1,9 +1,10 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SyncStatusScreen } from '../screens/SyncStatusScreen';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 export type SyncStackParamList = {
-  SyncStatus: undefined;
+  [NAVIGATION_PATHS.SYNC_STATUS]: undefined;
 };
 
 const Stack = createNativeStackNavigator<SyncStackParamList>();
@@ -16,7 +17,7 @@ export const SyncStackNavigator: React.FC = () => {
       }}
     >
       <Stack.Screen
-        name="SyncStatus"
+        name={NAVIGATION_PATHS.SYNC_STATUS}
         component={SyncStatusScreen}
         options={{ title: 'Estado de Sincronización' }}
       />

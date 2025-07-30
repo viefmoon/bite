@@ -21,7 +21,7 @@ import {
   SYNC_TYPE_LABELS,
   SYNC_DIRECTION_LABELS,
 } from '../schema/sync.schema';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 

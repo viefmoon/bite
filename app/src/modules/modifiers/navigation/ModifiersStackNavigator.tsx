@@ -7,6 +7,7 @@ import ModifierGroupsScreen from '../screens/ModifierGroupsScreen';
 import ModifiersScreen from '../screens/ModifiersScreen';
 import { useAppTheme } from '@/app/styles/theme';
 import { getStackHeaderOptions } from '@/app/navigation/options';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<ModifiersStackParamList>();
 
@@ -20,14 +21,14 @@ const ModifiersStackNavigator = () => {
       }}
     >
       <Stack.Screen
-        name="ModifierGroupsScreen"
+        name={NAVIGATION_PATHS.MODIFIER_GROUPS}
         component={ModifierGroupsScreen}
         options={(): NativeStackNavigationOptions => ({
           title: 'Grupos de Modificadores',
         })}
       />
       <Stack.Screen
-        name="ModifiersScreen"
+        name={NAVIGATION_PATHS.MODIFIERS}
         component={ModifiersScreen}
         options={{ title: 'Modificadores' }}
       />

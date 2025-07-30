@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { prepaymentService } from '@/modules/payments/services/prepaymentService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 interface UsePrepaymentProps {
   initialPrepaymentId?: string | null;

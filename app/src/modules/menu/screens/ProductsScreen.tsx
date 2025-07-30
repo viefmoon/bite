@@ -21,13 +21,14 @@ import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import GenericList, { FilterOption } from '@/app/components/crud/GenericList';
 import GenericDetailModal from '@/app/components/crud/GenericDetailModal';
 import ProductFormModal from '../components/ProductFormModal';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { FileObject } from '@/app/components/common/CustomImagePicker';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useListState } from '@/app/hooks/useListState';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
-type ProductsScreenRouteProp = RouteProp<MenuStackParamList, 'Products'>;
+type ProductsScreenRouteProp = RouteProp<MenuStackParamList, typeof NAVIGATION_PATHS.PRODUCTS>;
 
 function ProductsScreen(): React.ReactElement {
   const theme = useAppTheme();

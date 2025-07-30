@@ -4,7 +4,7 @@ import {
   receiptQueryOptions,
 } from '../services/receiptService';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 import type {
   ReceiptFilters,

@@ -7,7 +7,7 @@ import {
   useIsOrderEmpty,
   useOrderItemsCount,
 } from '../../stores/useOrderManagement';
-import { useAuthStore } from '@/app/store/authStore';
+import { useAuthStore } from '@/app/stores/authStore';
 import { Product, Category, SubCategory } from '../../schema/orders.schema';
 import { canOpenShift } from '@/app/utils/roleUtils';
 import { useAppTheme } from '@/app/styles/theme';

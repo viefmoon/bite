@@ -1,3 +1,5 @@
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
+
 export type OrderFinalizationStackParamList = {
-  OrderFinalizationScreen: undefined;
+  [NAVIGATION_PATHS.ORDER_FINALIZATION]: undefined;
 };

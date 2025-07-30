@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Portal, Dialog, Button, Text } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
 import { AppDrawerNavigator } from './AppDrawerNavigator';
 import { KitchenOnlyNavigator } from './KitchenOnlyNavigator';
 import { useAppTheme } from '../styles/theme';

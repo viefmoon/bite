@@ -4,6 +4,7 @@ import { getStackHeaderOptions } from '@/app/navigation/options';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
 import type { SettingsStackParamList } from './types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -19,7 +20,7 @@ export function SettingsStackNavigator() {
       }}
     >
       <Stack.Screen
-        name="ServerSettings"
+        name={NAVIGATION_PATHS.SERVER_SETTINGS}
         component={ServerSettingsScreen}
         options={{
           title: 'Configuración del Servidor',

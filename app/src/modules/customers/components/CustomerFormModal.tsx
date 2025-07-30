@@ -32,7 +32,7 @@ import PhoneNumberInput from '@/app/components/common/PhoneNumberInput';
 import { useGetAddressesByCustomer } from '../hooks/useCustomersQueries';
 import AddressFormModal from './AddressFormModal';
 import { addressesService } from '../services/addressesService';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 
 interface CustomerFormModalProps {
   visible: boolean;

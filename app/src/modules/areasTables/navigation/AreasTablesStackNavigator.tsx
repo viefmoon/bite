@@ -4,6 +4,7 @@ import AreasScreen from '../screens/AreasScreen';
 import TablesScreen from '../screens/TablesScreen';
 import { useAppTheme } from '../../../app/styles/theme';
 import { getStackHeaderOptions } from '../../../app/navigation/options';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<AreasTablesStackParamList>();
 
@@ -12,20 +13,20 @@ const AreasTablesStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName="AreasList"
+      initialRouteName={NAVIGATION_PATHS.AREAS_LIST}
       screenOptions={{
         ...getStackHeaderOptions(theme),
       }}
     >
       <Stack.Screen
-        name="AreasList"
+        name={NAVIGATION_PATHS.AREAS_LIST}
         component={AreasScreen}
         options={{
           title: 'Áreas',
         }}
       />
       <Stack.Screen
-        name="TablesList"
+        name={NAVIGATION_PATHS.TABLES_LIST}
         component={TablesScreen}
         options={({ route }) => ({
           title: `Mesas de ${route.params.areaName || 'Área'}`,

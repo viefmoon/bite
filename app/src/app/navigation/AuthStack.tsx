@@ -3,6 +3,7 @@ import { useAppTheme } from '../styles/theme';
 
 import LoginScreen from '../../modules/auth/screens/LoginScreen';
 import type { AuthStackParamList } from './types';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -22,7 +23,7 @@ export function AuthStack() {
       }}
     >
       <Stack.Screen
-        name="Login"
+        name={NAVIGATION_PATHS.LOGIN}
         component={LoginScreen}
         options={{
           title: 'Iniciar Sesión',

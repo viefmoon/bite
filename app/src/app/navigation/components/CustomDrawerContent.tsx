@@ -10,13 +10,13 @@ import {
   Icon,
   Surface,
 } from 'react-native-paper';
-import { useThemeStore } from '../../store/themeStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { THEME_MODE } from '../../types/theme.types';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useAppTheme, AppTheme } from '../../styles/theme';
 import { useResponsive } from '../../hooks/useResponsive';
 import { clearImageCache } from '../../lib/imageCache';
-import { useSnackbarStore } from '../../store/snackbarStore';
+import { useSnackbarStore } from '../../stores/snackbarStore';
 import { RoleEnum } from '@/modules/users/schema/user.schema';
 import {
   hasPermission,
@@ -24,6 +24,7 @@ import {
   DrawerSection,
 } from '../../constants/rolePermissions';
 import { generateNavigationAction } from '../helpers/navigationHelpers';
+import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
 
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
@@ -216,7 +217,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
       const isKitchenUser = user?.role?.id === RoleEnum.KITCHEN;
       if (isKitchenUser && route === 'KitchenScreen') {
         // Simply navigate to the Kitchen screen without reset
-        props.navigation.navigate('Kitchen');
+        props.navigation.navigate(NAVIGATION_PATHS.KITCHEN_SCREEN);
       } else {
         const action = generateNavigationAction(route, user?.role?.id);
         if (action) {
@@ -407,7 +408,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         <TouchableRipple
           onPress={() => {
-            props.navigation.navigate('ServerSettings');
+            props.navigation.navigate(NAVIGATION_PATHS.SERVER_SETTINGS);
           }}
           style={styles.drawerItemContainer}
           rippleColor={`${theme.colors.primary}20`}

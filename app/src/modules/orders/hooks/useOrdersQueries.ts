@@ -10,7 +10,7 @@ import type { Order } from '../../../app/schemas/domain/order.schema';
 import type { OrderDetailsForBackend } from '../utils/orderUtils';
 import type { FindAllOrdersDto, OrderOpenList } from '../schema/orders.schema';
 import { ApiError } from '@/app/lib/errors';
-import { useSnackbarStore } from '@/app/store/snackbarStore';
+import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { getApiErrorMessage } from '@/app/lib/errorMapping';
 import type { UpdateOrderPayload } from '../schema/update-order.schema';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
