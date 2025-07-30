@@ -4,7 +4,7 @@ import { Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
-import debounce from 'lodash.debounce';
+import { useDebounce } from '@/app/hooks/useDebounce';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -49,16 +49,11 @@ function ProductsScreen(): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive'
   >('all');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const debouncedSetSearch = useMemo(
-    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [],
-  );
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    debouncedSetSearch(query);
   };
 
   const handleFilterChange = (value: string | number) => {

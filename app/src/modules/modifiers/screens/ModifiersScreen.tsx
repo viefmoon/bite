@@ -9,7 +9,7 @@ import { useDrawerStatus } from '@react-navigation/drawer';
 import { modifierService } from '../services/modifierService';
 import { Modifier } from '@/app/schemas/domain/modifier.schema';
 import { useAppTheme } from '@/app/styles/theme';
-import debounce from 'lodash.debounce';
+import { useDebounce } from '@/app/hooks/useDebounce';
 import { useRefreshModuleOnFocus } from '@/app/hooks/useRefreshOnFocus';
 import { useCrudScreenLogic } from '@/app/hooks/useCrudScreenLogic';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
@@ -55,16 +55,11 @@ const ModifiersScreen = () => {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const debouncedSetSearch = useMemo(
-    () => debounce((query: string) => setDebouncedSearchQuery(query), 300),
-    [setDebouncedSearchQuery],
-  );
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    debouncedSetSearch(query);
   };
 
   useLayoutEffect(() => {
