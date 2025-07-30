@@ -123,10 +123,14 @@ export const ReceiptsScreen: React.FC = () => {
   }, []);
 
   const handleRecoverPress = useCallback((receipt: ReceiptList) => {
-    receiptService.getReceiptById(receipt.id).then((fullOrder) => {
-      setOrderToRecover(fullOrder);
-      setShowRecoverConfirm(true);
-    });
+    receiptService.getReceiptById(receipt.id)
+      .then((fullOrder) => {
+        setOrderToRecover(fullOrder);
+        setShowRecoverConfirm(true);
+      })
+      .catch((error) => {
+        console.error('Error al obtener detalles de la orden:', error);
+      });
   }, []);
 
   const handleConfirmRecover = useCallback(async () => {
@@ -136,8 +140,14 @@ export const ReceiptsScreen: React.FC = () => {
       await recoverOrderMutation.mutateAsync(orderToRecover.id);
       setShowRecoverConfirm(false);
       setOrderToRecover(null);
-    } catch (error) {}
-  }, [orderToRecover, recoverOrderMutation]);
+      // Refrescar la lista después de recuperar la orden
+      refetch();
+    } catch (error) {
+      console.error('Error al recuperar la orden:', error);
+      setShowRecoverConfirm(false);
+      setOrderToRecover(null);
+    }
+  }, [orderToRecover, recoverOrderMutation, refetch]);
 
   const getReceiptStatusColor = (status: string) => {
     switch (status) {
@@ -357,14 +367,16 @@ export const ReceiptsScreen: React.FC = () => {
       <ConfirmationModal
         visible={showRecoverConfirm}
         title="Recuperar Orden"
-        message={`¿Estás seguro de que deseas recuperar la orden #${orderToRecover?.shiftOrderNumber}?\n\nLa orden se marcará como entregada y volverá a estar visible en las órdenes activas.`}
+        message={`¿Estás seguro de que deseas recuperar la orden #${orderToRecover?.shiftOrderNumber}?\n\nLa orden se marcará como lista y volverá a estar visible en las órdenes activas.`}
         onConfirm={handleConfirmRecover}
         onCancel={() => {
           setShowRecoverConfirm(false);
           setOrderToRecover(null);
         }}
-        confirmText="Confirmar"
+        confirmText="Recuperar"
         cancelText="Cancelar"
+        confirmColorPreset="primary"
+        isConfirming={recoverOrderMutation.isPending}
       />
 
       <DatePickerModal

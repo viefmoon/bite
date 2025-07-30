@@ -383,12 +383,12 @@ export class OrdersController {
   @ApiResponse({
     status: 200,
     description:
-      'The order has been successfully recovered to DELIVERED status.',
+      'The order has been successfully recovered to READY status.',
     type: Order,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.cashier)
   recoverOrder(@Param('id', ParseUUIDPipe) id: string): Promise<Order> {
     return this.ordersService.recoverOrder(id);
   }

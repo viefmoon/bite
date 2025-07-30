@@ -230,7 +230,7 @@ export class OrdersService {
     }
 
     // Crear estados de pantalla para cada pantalla que tenga items
-    await this.createInitialScreenStatuses(order.id);
+    await this.syncPreparationScreenStatuses(order.id);
 
     // Asociar pre-pago si se proporcionó uno
     if (createOrderDto.prepaymentId) {
@@ -362,12 +362,10 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    // Usar transacción para garantizar consistencia entre actualización y historial
     return await this.dataSource.transaction(async (manager) => {
-      // Obtener la orden existente para comparar
       const existingOrder = await this.findOne(id);
 
-      // Capturar el estado anterior completo con todas las relaciones
+      // Capturar estado anterior para el historial
       const previousOrderEntity = await manager.findOne(OrderEntity, {
         where: { id },
         relations: [
@@ -574,36 +572,19 @@ export class OrdersService {
       const finalOrderType =
         updateOrderDto.orderType || existingOrder.orderType;
 
-      // Manejar delivery_info de forma centralizada y robusta
-      const deliveryInfoInPayload = 'deliveryInfo' in updateOrderDto;
-
-      if (finalOrderType === OrderType.DINE_IN) {
-        // Si es DINE_IN, siempre eliminar delivery_info
-        updatePayload.deliveryInfo = null;
-      } else if (deliveryInfoInPayload || (existingOrder as any).deliveryInfo) {
-        // Si hay datos nuevos o existentes, procesarlos con el método centralizado
-        const deliveryData = deliveryInfoInPayload
-          ? {
-              ...(existingOrder as any).deliveryInfo,
-              ...updateOrderDto.deliveryInfo,
-            }
-          : (existingOrder as any).deliveryInfo;
-
-        const deliveryInfo = await this.handleDeliveryInfo(
-          id,
-          deliveryData,
-          finalOrderType,
-        );
-        // Convertir a entidad compatible
-        updatePayload.deliveryInfo = deliveryInfo as any;
+      // Separar deliveryInfo del payload básico para evitar errores de TypeORM
+      const hasDeliveryInfoChanges = 'deliveryInfo' in updateOrderDto;
+      const { deliveryInfo: _, ...basicUpdatePayload } = updatePayload;
+      if (Object.keys(basicUpdatePayload).length > 0) {
+        await manager.update(OrderEntity, id, basicUpdatePayload);
       }
 
-      // Solo actualizar si hay cambios en los campos básicos
-      if (Object.keys(updatePayload).length > 0) {
-        await manager.update(OrderEntity, id, updatePayload);
+      // Manejar deliveryInfo por separado
+      if (hasDeliveryInfoChanges) {
+        await this._updateDeliveryInfo(manager, id, updateOrderDto, finalOrderType, existingOrder);
       }
 
-      // Solo procesar items si se proporcionaron explícitamente
+      // Procesar items si se proporcionaron
       if (
         updateOrderDto.items !== undefined &&
         Array.isArray(updateOrderDto.items)
@@ -711,13 +692,14 @@ export class OrdersService {
         }
 
         // Eliminar items que no están en el DTO actualizado
+        const hasDeletedItems = itemsToDelete.size > 0;
         for (const itemIdToDelete of itemsToDelete) {
           await this.orderItemRepository.delete(itemIdToDelete);
         }
 
-        // Si se agregaron nuevos items, verificar y actualizar estados de pantalla
-        if (hasNewItems) {
-          await this.handleNewItemsAddedToOrder(id, existingOrder);
+        // Sincronizar estados de pantallas si hubo cambios en los items
+        if (hasNewItems || hasDeletedItems) {
+          await this.syncPreparationScreenStatuses(id, existingOrder);
         }
       }
 
@@ -821,71 +803,7 @@ export class OrdersService {
 
   async findByShiftId(shiftId: string): Promise<Order[]> {
     const orders = await this.orderRepository.findByShiftId(shiftId);
-
-    return orders.map((order) => {
-      const preparationScreensMap = new Map<string, any>();
-
-      if (order.orderItems) {
-        order.orderItems.forEach((item) => {
-          const screenName = item.product?.preparationScreen?.name;
-
-          if (screenName) {
-            if (!preparationScreensMap.has(screenName)) {
-              preparationScreensMap.set(screenName, {
-                name: screenName,
-                items: [],
-              });
-            }
-            preparationScreensMap.get(screenName)!.items.push(item);
-          }
-        });
-      }
-
-      const preparationScreenStatuses = Array.from(
-        preparationScreensMap.values(),
-      ).map((screen) => {
-        const items = screen.items;
-        const allReady = items.every(
-          (item: any) =>
-            item.preparationStatus === 'READY' ||
-            item.preparationStatus === 'DELIVERED',
-        );
-        const someInProgress = items.some(
-          (item: any) => item.preparationStatus === 'IN_PROGRESS',
-        );
-
-        let status: string;
-        if (allReady) {
-          status = 'READY';
-        } else if (someInProgress) {
-          status = 'IN_PROGRESS';
-        } else {
-          status = 'PENDING';
-        }
-
-        return {
-          name: screen.name,
-          status,
-        };
-      });
-
-      const totalPaid =
-        order.payments?.reduce(
-          (sum, payment) => sum + (payment.amount || 0),
-          0,
-        ) || 0;
-
-      return {
-        ...order,
-        preparationScreenStatuses:
-          preparationScreenStatuses.length > 0
-            ? preparationScreenStatuses
-            : undefined,
-        paymentsSummary: {
-          totalPaid,
-        },
-      };
-    });
+    return orders;
   }
 
   async findOpenOrders(): Promise<Order[]> {
@@ -1318,24 +1236,24 @@ export class OrdersService {
   }
 
   async recoverOrder(id: string): Promise<Order> {
+    // Verificar que la orden existe y está en estado recuperable
     const order = await this.findOne(id);
+    
+    if (!order) {
+      throw new NotFoundException(`Orden con ID ${id} no encontrada`);
+    }
 
-    // Verificar que la orden esté en un estado recuperable
     if (
       order.orderStatus !== OrderStatus.COMPLETED &&
       order.orderStatus !== OrderStatus.CANCELLED
     ) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         `La orden no está en un estado recuperable. Estado actual: ${order.orderStatus}`,
       );
     }
 
-    // Actualizar el estado de la orden a DELIVERED sin modificar las notas
-    const updateData: UpdateOrderDto = {
-      orderStatus: OrderStatus.DELIVERED,
-    };
-
-    return this.update(id, updateData);
+    // Actualizar directamente a estado READY
+    return this.update(id, { orderStatus: OrderStatus.READY });
   }
 
   async findOrdersForFinalizationList(): Promise<
@@ -1358,9 +1276,8 @@ export class OrdersService {
         'table.area',
         'payments',
         'deliveryInfo',
-        'orderItems',
-        'orderItems.product',
-        'orderItems.product.preparationScreen',
+        'preparationScreenStatuses',
+        'preparationScreenStatuses.preparationScreen',
         'ticketImpressions',
       ],
       select: {
@@ -1537,15 +1454,17 @@ export class OrdersService {
           createdAt: payment.createdAt,
           updatedAt: payment.updatedAt,
         })) || undefined,
-      preparationScreenStatuses: order.preparationScreenStatusesFull?.map(
+      preparationScreenStatuses: order.preparationScreenStatuses?.map(
         (status) => ({
           id: status.id,
           preparationScreenId: status.preparationScreenId,
           preparationScreenName:
             status.preparationScreen?.name || 'Pantalla desconocida',
-          status: status.status,
-          startedAt: status.startedAt,
-          completedAt: status.completedAt,
+          status: status.status.toString(),
+          startedAt: status.startedAt ? status.startedAt.toISOString() : null,
+          completedAt: status.completedAt
+            ? status.completedAt.toISOString()
+            : null,
         }),
       ),
       ticketImpressions:
@@ -1585,12 +1504,13 @@ export class OrdersService {
         'deliveryInfo',
         'orderItems',
         'orderItems.product',
-        'orderItems.product.preparationScreen',
         'orderItems.productVariant',
         'orderItems.selectedPizzaCustomizations',
         'orderItems.selectedPizzaCustomizations.pizzaCustomization',
         'orderItems.productModifiers',
         'payments',
+        'preparationScreenStatuses',
+        'preparationScreenStatuses.preparationScreen',
         'ticketImpressions',
         'ticketImpressions.user',
         'ticketImpressions.printer',
@@ -1600,7 +1520,6 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException('Recibo no encontrado');
     }
-
 
     return {
       id: order.id,
@@ -1716,57 +1635,19 @@ export class OrdersService {
         0,
       ) || 0;
 
-    // Recopilar pantallas de preparación únicas y calcular sus estados
-    const preparationScreensMap = new Map<
-      string,
-      {
-        items: any[];
-        name: string;
-      }
-    >();
-
-    if (order.orderItems) {
-      order.orderItems.forEach((item: any) => {
-        if (item.product?.preparationScreen?.name) {
-          const screenName = item.product.preparationScreen.name;
-          if (!preparationScreensMap.has(screenName)) {
-            preparationScreensMap.set(screenName, {
-              name: screenName,
-              items: [],
-            });
-          }
-          preparationScreensMap.get(screenName)!.items.push(item);
-        }
-      });
-    }
-
-    const preparationScreenStatuses = Array.from(
-      preparationScreensMap.values(),
-    ).map((screen) => {
-      const items = screen.items;
-      const allReady = items.every(
-        (item: any) =>
-          item.preparationStatus === 'READY' ||
-          item.preparationStatus === 'DELIVERED',
-      );
-      const someInProgress = items.some(
-        (item: any) => item.preparationStatus === 'IN_PROGRESS',
-      );
-
-      let status: string;
-      if (allReady) {
-        status = 'READY';
-      } else if (someInProgress) {
-        status = 'IN_PROGRESS';
-      } else {
-        status = 'PENDING';
-      }
-
-      return {
-        name: screen.name,
-        status,
-      };
-    });
+    // Usar la relación directa de preparationScreenStatuses de la orden
+    const preparationScreenStatuses =
+      order.preparationScreenStatuses?.map((status: any) => ({
+        id: status.id,
+        preparationScreenId: status.preparationScreenId,
+        preparationScreenName:
+          status.preparationScreen?.name || 'Pantalla desconocida',
+        status: status.status.toString(),
+        startedAt: status.startedAt ? status.startedAt.toISOString() : null,
+        completedAt: status.completedAt
+          ? status.completedAt.toISOString()
+          : null,
+      })) || [];
 
     const dto: OrderForFinalizationListDto = {
       id: order.id,
@@ -1841,58 +1722,19 @@ export class OrdersService {
         0,
       ) || 0;
 
-    // Recopilar pantallas de preparación únicas y calcular sus estados
-    const preparationScreensMap = new Map<
-      string,
-      {
-        items: any[];
-        name: string;
-      }
-    >();
-
-    if (order.orderItems) {
-      order.orderItems.forEach((item: any) => {
-        if (item.product?.preparationScreen?.name) {
-          const screenName = item.product.preparationScreen.name;
-          if (!preparationScreensMap.has(screenName)) {
-            preparationScreensMap.set(screenName, {
-              name: screenName,
-              items: [],
-            });
-          }
-          preparationScreensMap.get(screenName)!.items.push(item);
-        }
-      });
-    }
-
-    // Calcular el estado de cada pantalla
-    const preparationScreenStatuses = Array.from(
-      preparationScreensMap.values(),
-    ).map((screen) => {
-      const items = screen.items;
-      const allReady = items.every(
-        (item: any) =>
-          item.preparationStatus === 'READY' ||
-          item.preparationStatus === 'DELIVERED',
-      );
-      const someInProgress = items.some(
-        (item: any) => item.preparationStatus === 'IN_PROGRESS',
-      );
-
-      let status: string;
-      if (allReady) {
-        status = 'READY';
-      } else if (someInProgress) {
-        status = 'IN_PROGRESS';
-      } else {
-        status = 'PENDING';
-      }
-
-      return {
-        name: screen.name,
-        status,
-      };
-    });
+    // Usar la relación directa de preparationScreenStatuses de la orden
+    const preparationScreenStatuses =
+      order.preparationScreenStatuses?.map((status: any) => ({
+        id: status.id,
+        preparationScreenId: status.preparationScreenId,
+        preparationScreenName:
+          status.preparationScreen?.name || 'Pantalla desconocida',
+        status: status.status.toString(),
+        startedAt: status.startedAt ? status.startedAt.toISOString() : null,
+        completedAt: status.completedAt
+          ? status.completedAt.toISOString()
+          : null,
+      })) || [];
 
     const dto: ReceiptListDto = {
       id: order.id,
@@ -1977,7 +1819,19 @@ export class OrdersService {
       notes: order.notes,
       paymentsSummary: order.paymentsSummary,
       ticketImpressionCount: order.ticketImpressionCount,
-      preparationScreenStatuses: order.preparationScreenStatuses,
+      preparationScreenStatuses: order.preparationScreenStatuses?.map(
+        (status) => ({
+          id: status.id,
+          preparationScreenId: status.preparationScreenId,
+          preparationScreenName:
+            status.preparationScreen?.name || 'Pantalla desconocida',
+          status: status.status.toString(),
+          startedAt: status.startedAt ? status.startedAt.toISOString() : null,
+          completedAt: status.completedAt
+            ? status.completedAt.toISOString()
+            : null,
+        }),
+      ),
       isFromWhatsApp: order.isFromWhatsApp,
     };
 
@@ -2054,9 +1908,8 @@ export class OrdersService {
         'table.area',
         'payments',
         'deliveryInfo',
-        'orderItems',
-        'orderItems.product',
-        'orderItems.product.preparationScreen',
+        'preparationScreenStatuses',
+        'preparationScreenStatuses.preparationScreen',
         'ticketImpressions',
       ],
       order: {
@@ -2300,6 +2153,85 @@ export class OrdersService {
     }
   }
 
+  /**
+   * Método centralizado para sincronizar los estados de pantallas de preparación
+   * basándose en los orderItems actuales de la orden
+   */
+  private async syncPreparationScreenStatuses(
+    orderId: string,
+    existingOrder?: Order,
+  ): Promise<void> {
+    // Obtener todos los items actuales de la orden
+    const orderItems = await this.orderItemRepository.findByOrderId(orderId);
+
+    // Agrupar items por pantalla de preparación
+    const itemsByScreen = new Map<string, OrderItem[]>();
+
+    for (const item of orderItems) {
+      if (item.product?.preparationScreenId) {
+        const screenId = item.product.preparationScreenId;
+        if (!itemsByScreen.has(screenId)) {
+          itemsByScreen.set(screenId, []);
+        }
+        itemsByScreen.get(screenId)!.push(item);
+      }
+    }
+
+    // Obtener todos los estados existentes para esta orden
+    const existingStatuses =
+      await this.screenStatusRepository.findByOrderId(orderId);
+    const existingStatusesMap = new Map(
+      existingStatuses.map((status) => [status.preparationScreenId, status]),
+    );
+
+    // Procesar cada pantalla de preparación requerida
+    for (const [screenId, items] of itemsByScreen) {
+      const existingStatus = existingStatusesMap.get(screenId);
+
+      if (existingStatus) {
+        // Verificar si hay items pendientes en esta pantalla
+        const hasPendingItems = items.some(
+          (item) => item.preparationStatus === PreparationStatus.PENDING,
+        );
+
+        // Si la pantalla estaba READY pero ahora tiene items pendientes,
+        // cambiar a IN_PREPARATION
+        if (
+          existingStatus.status === PreparationScreenStatus.READY &&
+          hasPendingItems
+        ) {
+          await this.screenStatusRepository.update(existingStatus.id, {
+            status: PreparationScreenStatus.IN_PREPARATION,
+            completedAt: null,
+            completedById: null,
+          });
+
+          // Si la orden estaba READY, cambiarla a IN_PREPARATION
+          if (existingOrder?.orderStatus === OrderStatus.READY) {
+            await this.orderRepository.update(orderId, {
+              orderStatus: OrderStatus.IN_PREPARATION,
+            });
+          }
+        }
+      } else {
+        // Crear nuevo estado para pantalla que no existía antes
+        await this.screenStatusRepository.create({
+          orderId,
+          preparationScreenId: screenId,
+          status: PreparationScreenStatus.PENDING,
+        } as OrderPreparationScreenStatus);
+      }
+    }
+
+    // Eliminar estados de pantallas que ya no tienen items asociados
+    const requiredScreenIds = new Set(itemsByScreen.keys());
+    for (const existingStatus of existingStatuses) {
+      if (!requiredScreenIds.has(existingStatus.preparationScreenId)) {
+        await this.screenStatusRepository.remove(existingStatus.id);
+      }
+    }
+  }
+
   private async handleDeliveryInfo(
     orderId: string,
     deliveryData: Partial<DeliveryInfo>,
@@ -2351,6 +2283,40 @@ export class OrdersService {
     }
   }
 
+  /**
+   * Método helper para manejar actualizaciones de deliveryInfo
+   */
+  private async _updateDeliveryInfo(
+    manager: any,
+    orderId: string,
+    updateOrderDto: UpdateOrderDto,
+    finalOrderType: OrderType,
+    existingOrder: Order,
+  ): Promise<void> {
+    if (finalOrderType === OrderType.DINE_IN) {
+      // Si es DINE_IN, eliminar delivery_info
+      await manager.delete('delivery_info', { orderId });
+      return;
+    }
+
+    // Para otros tipos de orden, procesar los datos de entrega
+    const deliveryData = {
+      ...(existingOrder as any).deliveryInfo,
+      ...updateOrderDto.deliveryInfo,
+    };
+
+    const deliveryInfo = await this.handleDeliveryInfo(
+      orderId,
+      deliveryData,
+      finalOrderType,
+    );
+
+    if (deliveryInfo) {
+      // Usar el repositorio que maneja correctamente las relaciones
+      await this.orderRepository.update(orderId, { deliveryInfo });
+    }
+  }
+
   async quickFinalizeMultipleOrders(
     orderIds: string[],
     userId: string,
@@ -2379,57 +2345,69 @@ export class OrdersService {
   }
 
   async quickFinalizeOrder(orderId: string, _userId: string): Promise<void> {
-    // Obtener la orden con toda la información necesaria
-    const order = await this.findOne(orderId);
-
-    // Verificar que la orden exista
-    if (!order) {
-      throw new NotFoundException(`Orden con ID ${orderId} no encontrada`);
-    }
-
-    // Verificar que la orden no esté ya completada o cancelada
-    if (
-      order.orderStatus === OrderStatus.COMPLETED ||
-      order.orderStatus === OrderStatus.CANCELLED
-    ) {
-      throw new BadRequestException('La orden ya está finalizada o cancelada');
-    }
-
-    // Calcular el monto pendiente de pago
-    const totalPaid =
-      order.payments?.reduce((sum, payment) => {
-        return sum + Number(payment.amount);
-      }, 0) || 0;
-
-    const totalOrder =
-      typeof order.total === 'string' ? parseFloat(order.total) : order.total;
-    const pendingAmount = totalOrder - totalPaid;
-
-    // Si hay monto pendiente, crear un pago en efectivo
-    if (pendingAmount > 0) {
-      await this.paymentsService.create({
-        orderId: orderId,
-        amount: pendingAmount,
-        paymentMethod: PaymentMethod.CASH,
+    // Ejecutar toda la operación en una transacción
+    await this.dataSource.transaction(async (manager) => {
+      // Obtener la orden con toda la información necesaria dentro de la transacción
+      const order = await manager.findOne(OrderEntity, {
+        where: { id: orderId },
+        relations: [
+          'table',
+          'payments',
+          'deliveryInfo',
+        ],
       });
-    }
 
-    // Cambiar el estado de la orden a COMPLETED directamente
-    // Para finalización rápida, permitimos saltar las validaciones de transición
-    await this.update(orderId, { orderStatus: OrderStatus.COMPLETED });
-
-    // Si la orden tiene mesa asignada, liberarla
-    if (order.tableId) {
-      const table = await this.tablesService.findOne(order.tableId);
-
-      if (table.isTemporary) {
-        // Eliminar mesa temporal
-        await this.tablesService.remove(order.tableId);
-      } else {
-        // Liberar mesa normal
-        await this.tablesService.update(order.tableId, { isAvailable: true });
+      // Verificar que la orden exista
+      if (!order) {
+        throw new NotFoundException(`Orden con ID ${orderId} no encontrada`);
       }
-    }
+
+      // Verificar que la orden no esté ya completada o cancelada
+      if (
+        order.orderStatus === OrderStatus.COMPLETED ||
+        order.orderStatus === OrderStatus.CANCELLED
+      ) {
+        throw new BadRequestException('La orden ya está finalizada o cancelada');
+      }
+
+      // Calcular el monto pendiente de pago
+      const totalPaid =
+        order.payments?.reduce((sum, payment) => {
+          return sum + Number(payment.amount);
+        }, 0) || 0;
+
+      const totalOrder =
+        typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      const pendingAmount = totalOrder - totalPaid;
+
+      // Si hay monto pendiente, crear un pago en efectivo
+      if (pendingAmount > 0) {
+        await this.paymentsService.create({
+          orderId: orderId,
+          amount: pendingAmount,
+          paymentMethod: PaymentMethod.CASH,
+        });
+      }
+
+      // Cambiar el estado de la orden a COMPLETED directamente dentro de la transacción
+      await manager.update(OrderEntity, orderId, { 
+        orderStatus: OrderStatus.COMPLETED,
+        finalizedAt: new Date()
+      });
+
+      // Si la orden tiene mesa asignada, liberarla
+      if (order.tableId) {
+        const table = await this.tablesService.findOne(order.tableId);
+
+        if (table.isTemporary) {
+          // Eliminar mesa temporal
+          await this.tablesService.remove(order.tableId);
+        } else {
+          // Liberar mesa normal
+          await this.tablesService.update(order.tableId, { isAvailable: true });
+        }
+      }
+    });
   }
 
   async printOrderTicket(
@@ -2513,7 +2491,12 @@ export class OrdersService {
     }
 
     // Registrar la impresión con el printerId
-    await this.registerTicketImpression(orderId, userId, TicketType.BILLING, printerDetails.id);
+    await this.registerTicketImpression(
+      orderId,
+      userId,
+      TicketType.BILLING,
+      printerDetails.id,
+    );
   }
 
   private async printBillingTicket(

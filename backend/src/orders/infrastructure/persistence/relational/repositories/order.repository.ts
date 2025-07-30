@@ -413,7 +413,7 @@ export class OrdersRelationalRepository implements OrderRepository {
     }
     // Manejar delivery_info de manera especial para evitar violaciones de unique constraint
     if (persistenceModel.deliveryInfo) {
-      if (entity.deliveryInfo) {
+      if (entity.deliveryInfo && entity.deliveryInfo.id) {
         // Si ya existe delivery_info, preservar su ID y actualizar los campos
         persistenceModel.deliveryInfo.id = entity.deliveryInfo.id;
         persistenceModel.deliveryInfo.createdAt = entity.deliveryInfo.createdAt;
