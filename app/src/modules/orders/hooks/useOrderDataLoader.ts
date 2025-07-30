@@ -3,7 +3,7 @@ import type { CartItem } from '../utils/cartUtils';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import type { OrderType } from '../schema/orders.schema';
-import { useFullMenuQuery } from './useMenuQueries';
+import { useGetOrderMenu } from './useMenuQueries';
 
 interface CartItemModifier {
   id: string;
@@ -49,7 +49,7 @@ export const useOrderDataLoader = ({
   setOriginalOrderState,
   setHasUnsavedChanges,
 }: OrderDataLoaderProps) => {
-  const { data: fullMenuData } = useFullMenuQuery();
+  const { data: fullMenuData } = useGetOrderMenu();
 
   const findModifierById = useCallback(
     (modifierId: string) => {

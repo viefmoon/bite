@@ -6,6 +6,7 @@ import type {
   UpdateCategoryDto,
 } from '../schema/category-form.schema';
 import { PaginatedResponse } from '../../../app/types/api.types';
+import type { FullMenuCategory } from '@/modules/orders/schema/orders.schema';
 
 export const getCategories = async (params?: {
   isActive?: boolean;
@@ -59,8 +60,8 @@ export const deleteCategory = async (id: string): Promise<void> => {
   await apiClient.delete(API_PATHS.CATEGORIES_BY_ID.replace(':id', id));
 };
 
-export async function getOrderMenu(): Promise<Category[]> {
-  const response = await apiClient.get<Category[]>(
+export async function getOrderMenu(): Promise<FullMenuCategory[]> {
+  const response = await apiClient.get<FullMenuCategory[]>(
     API_PATHS.CATEGORIES_ORDER_MENU,
   );
   return response.data;

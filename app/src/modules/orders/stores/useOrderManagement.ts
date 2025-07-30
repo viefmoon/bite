@@ -459,13 +459,6 @@ export const useOrderManagement = () => {
 };
 
 // Export additional hooks for backward compatibility
-export const useOrderValidation = () => {
-  const management = useOrderManagement();
-  return {
-    validateForConfirmation: management.validateForConfirmation,
-    getValidationErrors: management.getValidationErrors,
-  };
-};
 
 export const useOrderSubtotal = useCartSubtotal;
 
@@ -492,12 +485,3 @@ export const useOrderTotal = () => {
 
 export const useOrderItemsCount = useCartItemsCount;
 export const useIsOrderEmpty = useIsCartEmpty;
-
-export const useOrderConfirmation = () => {
-  const management = useOrderManagement();
-  return {
-    confirmOrder: management.confirmOrder,
-    isConfirming: management.isConfirming,
-    prepareOrderForBackend: management.prepareOrderForBackend,
-  };
-};

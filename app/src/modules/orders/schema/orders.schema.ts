@@ -45,11 +45,25 @@ export const OrderTypeEnum = orderTypeSchema.enum;
 // --- Interfaces específicas del módulo de Órdenes ---
 
 // Tipos para el menú completo con relaciones anidadas
-// Usamos los tipos base directamente ya que ya incluyen las relaciones necesarias
-export type FullMenuModifierGroup = ModifierGroup;
-export type FullMenuProduct = Product;
-export type FullMenuSubCategory = SubCategory;
-export type FullMenuCategory = Category;
+// Extendemos los tipos base para incluir las relaciones necesarias
+export type FullMenuModifierGroup = ModifierGroup & {
+  productModifiers?: Modifier[];
+};
+
+export type FullMenuProduct = Product & {
+  modifierGroups?: FullMenuModifierGroup[];
+  variants?: ProductVariant[];
+  pizzaCustomizations?: any[];
+  pizzaConfiguration?: any;
+};
+
+export type FullMenuSubCategory = SubCategory & {
+  products: FullMenuProduct[];
+};
+
+export type FullMenuCategory = Category & {
+  subcategories: FullMenuSubCategory[];
+};
 
 // Schema para filtrar órdenes
 export const findAllOrdersDtoSchema = z.object({

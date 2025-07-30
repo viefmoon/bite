@@ -149,18 +149,6 @@ export const formatPaymentMethod = (method: string): string => {
   return methodMap[method] || method;
 };
 
-/**
- * Obtiene el ícono para el método de pago
- */
-export const getPaymentMethodIcon = (method: string): string => {
-  const iconMap: Record<string, string> = {
-    CASH: 'cash',
-    CARD: 'credit-card',
-    TRANSFER: 'bank-transfer',
-  };
-
-  return iconMap[method] || 'help-circle';
-};
 
 /**
  * Obtiene el estado de pago basado en la información de la orden

@@ -11,21 +11,9 @@ import { prefetchMenuImages } from '@/app/lib/imageCache';
 const orderMenuQueryKey = ['orderMenu'];
 
 /**
- * Hook para obtener el menú completo con todas las relaciones.
- * Usado para validar modificadores y configuraciones.
- */
-export function useFullMenuQuery() {
-  return useQuery<FullMenuCategory[], ApiError>({
-    queryKey: ['fullMenu'],
-    queryFn: getOrderMenu,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
  * Hook para obtener el menú en pantallas de creación y edición de órdenes.
- * Devuelve solo los campos necesarios para mejorar el rendimiento.
+ * Devuelve el menú completo con todas las relaciones necesarias para 
+ * validar modificadores y configuraciones.
  */
 export function useGetOrderMenu() {
   const query = useQuery<FullMenuCategory[], ApiError>({
