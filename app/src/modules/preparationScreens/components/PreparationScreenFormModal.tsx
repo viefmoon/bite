@@ -15,7 +15,8 @@ import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@/app/lib/zodResolver';
 import { useAppTheme, AppTheme } from '@/app/styles/theme';
-import { User, RoleEnum } from '@/modules/users/schema/user.schema';
+import type { User } from '@/app/schemas/domain/user.schema';
+import { RoleEnum } from '@/modules/users/schema/user.schema';
 import { useGetUsers } from '@/modules/users/hooks/useUsers';
 import {
   PreparationScreen,

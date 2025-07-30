@@ -60,10 +60,7 @@ export const OrderDetailContent: React.FC<{
   // Usar el componente compartido pero con un scroll view container
   return (
     <View style={styles.content}>
-      <OrderDetailsView 
-        order={unifiedOrder} 
-        isLoading={false}
-      />
+      <OrderDetailsView order={unifiedOrder} isLoading={false} />
     </View>
   );
 };

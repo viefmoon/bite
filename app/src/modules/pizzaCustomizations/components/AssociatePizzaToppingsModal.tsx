@@ -13,7 +13,7 @@ import { productsService } from '@/modules/menu/services/productsService';
 import { pizzaCustomizationsService } from '../services/pizzaCustomizationsService';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { CustomizationTypeEnum } from '../schema/pizzaCustomization.schema';
-import type { Product } from '@/modules/menu/schema/products.schema';
+import type { Product } from '@/app/schemas/domain/product.schema';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 

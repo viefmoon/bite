@@ -2,8 +2,8 @@ import { z } from 'zod';
 import {
   orderTypeSchema,
   orderStatusSchema,
-  selectedPizzaCustomizationSchema,
 } from '@/app/schemas/domain/order.schema';
+import { selectedPizzaCustomizationSchema } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 
 export type OrderType = z.infer<typeof orderTypeSchema>;
 export type OrderStatus = z.infer<typeof orderStatusSchema>;

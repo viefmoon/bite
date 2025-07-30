@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Product } from '../../schema/orders.schema';
 import { CartItem, CartItemModifier } from '../../utils/cartUtils';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
-import type { SelectedPizzaCustomization } from '@/app/schemas/domain/order.schema';
+import type { SelectedPizzaCustomization } from '../../../pizzaCustomizations/schema/pizzaCustomization.schema';
 
 interface UseProductSelectionProps {
   menu: any;

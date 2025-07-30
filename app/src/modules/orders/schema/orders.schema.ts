@@ -11,8 +11,6 @@ import {
   orderTypeSchema,
 } from '@/app/schemas/domain/order.schema';
 import type {
-  OrderItemModifier,
-  OrderItem,
   OrderStatus,
   OrderType,
   Order,
@@ -27,8 +25,6 @@ export type {
   Product,
   SubCategory,
   Category,
-  OrderItemModifier,
-  OrderItem,
   OrderStatus,
   OrderType,
   Order,
