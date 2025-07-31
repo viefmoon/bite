@@ -657,38 +657,42 @@ const OrderCartHeader: React.FC<{
   orderId,
   theme,
 }) => {
-  const styles = useMemo(() => StyleSheet.create({
-    customHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 4,
-      paddingVertical: 8,
-      backgroundColor: theme.colors.elevation.level2,
-    },
-    headerTitleContainer: {
-      flex: 1,
-      alignItems: 'center',
-      gap: 4,
-    },
-    headerTitle: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.onSurface,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    orderStatusBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    orderStatusText: {
-      ...theme.fonts.labelSmall,
-      color: 'white',
-      fontWeight: '600',
-      fontSize: 11,
-    },
-  }), [theme]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        customHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 4,
+          paddingVertical: 8,
+          backgroundColor: theme.colors.elevation.level2,
+        },
+        headerTitleContainer: {
+          flex: 1,
+          alignItems: 'center',
+          gap: 4,
+        },
+        headerTitle: {
+          ...theme.fonts.titleMedium,
+          color: theme.colors.onSurface,
+          fontWeight: 'bold',
+          textAlign: 'center',
+        },
+        orderStatusBadge: {
+          paddingHorizontal: 12,
+          paddingVertical: 4,
+          borderRadius: 12,
+        },
+        orderStatusText: {
+          ...theme.fonts.labelSmall,
+          color: 'white',
+          fontWeight: '600',
+          fontSize: 11,
+        },
+      }),
+    [theme],
+  );
 
   if (isEditMode) {
     return (
@@ -880,78 +884,82 @@ const OrderContent: React.FC<{
   showSnackbar,
   theme,
 }) => {
-  const styles = useMemo(() => StyleSheet.create({
-    scrollView: {
-      flex: 1,
-      paddingHorizontal: theme.spacing.s,
-    },
-    divider: {
-      marginVertical: theme.spacing.s,
-    },
-    addProductsButton: {
-      marginTop: theme.spacing.m,
-      marginBottom: theme.spacing.m,
-    },
-    subtotalSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
-    },
-    subtotalRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-      minHeight: 24,
-    },
-    subtotalLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.onSurfaceVariant,
-      flex: 1,
-      textAlign: 'left',
-    },
-    subtotalAmount: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: theme.colors.onSurface,
-      textAlign: 'right',
-      minWidth: 80,
-    },
-    discountAmount: {
-      color: theme.colors.primary,
-    },
-    chargeAmount: {
-      color: theme.colors.error,
-    },
-    dividerLine: {
-      height: 1,
-      backgroundColor: theme.colors.outlineVariant,
-      marginVertical: theme.spacing.s,
-      marginHorizontal: theme.spacing.xs,
-    },
-    totalLabel: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.onSurface,
-      flex: 1,
-      textAlign: 'left',
-    },
-    totalAmount: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.primary,
-      textAlign: 'right',
-      minWidth: 80,
-    },
-    paidAmount: {
-      color: '#10B981',
-    },
-    pendingAmount: {
-      color: theme.colors.error,
-      fontWeight: 'bold',
-    },
-  }), [theme]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        scrollView: {
+          flex: 1,
+          paddingHorizontal: theme.spacing.s,
+        },
+        divider: {
+          marginVertical: theme.spacing.s,
+        },
+        addProductsButton: {
+          marginTop: theme.spacing.m,
+          marginBottom: theme.spacing.m,
+        },
+        subtotalSection: {
+          paddingHorizontal: theme.spacing.m,
+          paddingVertical: theme.spacing.s,
+        },
+        subtotalRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: theme.spacing.xs,
+          paddingHorizontal: theme.spacing.xs,
+          minHeight: 24,
+        },
+        subtotalLabel: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.colors.onSurfaceVariant,
+          flex: 1,
+          textAlign: 'left',
+        },
+        subtotalAmount: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: theme.colors.onSurface,
+          textAlign: 'right',
+          minWidth: 80,
+        },
+        discountAmount: {
+          color: theme.colors.primary,
+        },
+        chargeAmount: {
+          color: theme.colors.error,
+        },
+        dividerLine: {
+          height: 1,
+          backgroundColor: theme.colors.outlineVariant,
+          marginVertical: theme.spacing.s,
+          marginHorizontal: theme.spacing.xs,
+        },
+        totalLabel: {
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: theme.colors.onSurface,
+          flex: 1,
+          textAlign: 'left',
+        },
+        totalAmount: {
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: theme.colors.primary,
+          textAlign: 'right',
+          minWidth: 80,
+        },
+        paidAmount: {
+          color: '#10B981',
+        },
+        pendingAmount: {
+          color: theme.colors.error,
+          fontWeight: 'bold',
+        },
+      }),
+    [theme],
+  );
 
   return (
     <ScrollView

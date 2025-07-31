@@ -23,10 +23,6 @@ import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
-import {
-  CustomizationActionEnum,
-  PizzaHalfEnum,
-} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
 import PizzaCustomizationSection from './PizzaCustomizationSection';
 import { useProductCustomization } from '../hooks/useProductCustomization';
 import VariantSelectionGroup from './VariantSelectionGroup';
@@ -72,7 +68,6 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       selectedModifiers,
       quantity,
       hasChanges,
-      pizzaCustomizations,
       pizzaConfiguration,
       selectedPizzaCustomizations,
       hasVariants,
@@ -81,13 +76,13 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       pizzaExtraCost,
       totalPrice,
       isValid,
+      validationErrors,
       getFieldError,
       getGroupError,
       handleVariantSelect,
       handleModifierToggle,
       increaseQuantity,
       decreaseQuantity,
-      setSelectedPizzaCustomizations,
       control,
       watchedPreparationNotes,
       flavors,
@@ -115,111 +110,17 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
     const [showExitConfirmation, setShowExitConfirmation] = useState(false);
 
     const handleAddToCart = () => {
-      // Validar variantes requeridas
-      if (hasVariants && !selectedVariantId) {
-        showSnackbar({
-          message: 'Debes seleccionar una variante',
-          type: 'error',
-        });
-        return;
-      }
-
-      // Validar pizzas - cada mitad debe tener al menos un elemento (sabor o ingrediente)
-      if (product.isPizza && pizzaConfiguration) {
-        const addedCustomizations = selectedPizzaCustomizations.filter(
-          (sc) => sc.action === CustomizationActionEnum.ADD,
-        );
-
-        // Verificar elementos en cada mitad
-        const fullPizzaElements = addedCustomizations.filter(
-          (sc) => sc.half === PizzaHalfEnum.FULL,
-        );
-
-        const half1Elements = addedCustomizations.filter(
-          (sc) => sc.half === PizzaHalfEnum.HALF_1,
-        );
-
-        const half2Elements = addedCustomizations.filter(
-          (sc) => sc.half === PizzaHalfEnum.HALF_2,
-        );
-
-        // Si hay elementos en pizza completa, es válido
-        if (fullPizzaElements.length > 0) {
-          // La pizza completa cubre ambas mitades
-        } else {
-          // Si no hay elementos en pizza completa, verificar que ambas mitades tengan al menos un elemento
-          if (half1Elements.length === 0) {
-            showSnackbar({
-              message:
-                'La primera mitad de la pizza debe tener al menos un sabor o ingrediente',
-              type: 'error',
-            });
-            return;
-          }
-
-          if (half2Elements.length === 0) {
-            showSnackbar({
-              message:
-                'La segunda mitad de la pizza debe tener al menos un sabor o ingrediente',
-              type: 'error',
-            });
-            return;
-          }
-        }
-
-        // Verificar que al menos hay un elemento en total
-        if (addedCustomizations.length === 0) {
+      // Usar únicamente la validación centralizada del hook
+      if (!isValid) {
+        // Mostrar el primer error encontrado
+        const firstError = validationErrors[0];
+        if (firstError) {
           showSnackbar({
-            message: 'La pizza debe tener al menos un sabor o ingrediente',
+            message: firstError.message,
             type: 'error',
           });
-          return;
         }
-      }
-
-      // Validar grupos requeridos y límites de selección
-      if (product.modifierGroups) {
-        for (const group of product.modifierGroups) {
-          const selectedInGroup = selectedModifiersByGroup[group.id] || [];
-          const selectedCount = selectedInGroup.length;
-
-          // Validar grupos requeridos y mínimo de selecciones
-          if (
-            group.isRequired ||
-            (group.minSelections && group.minSelections > 0)
-          ) {
-            const minRequired = Math.max(
-              group.minSelections || 0,
-              group.isRequired ? 1 : 0,
-            );
-
-            if (selectedCount < minRequired) {
-              let message = '';
-              if (group.isRequired && minRequired === 1) {
-                message = `"${group.name}" es requerido. Debes seleccionar al menos una opción.`;
-              } else if (minRequired > 1) {
-                message = `Debes seleccionar al menos ${minRequired} ${minRequired === 1 ? 'opción' : 'opciones'} en "${group.name}"`;
-              } else {
-                message = `Debes seleccionar al menos una opción en "${group.name}"`;
-              }
-
-              showSnackbar({
-                message,
-                type: 'error',
-              });
-              return;
-            }
-          }
-
-          // Validar máximo de selecciones (esto ya se valida en handleModifierToggle, pero por si acaso)
-          if (group.maxSelections && selectedCount > group.maxSelections) {
-            showSnackbar({
-              message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
-              type: 'error',
-            });
-            return;
-          }
-        }
+        return;
       }
 
       if (editingItem && onUpdateItem) {
@@ -361,7 +262,9 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                       toggleIngredient={toggleIngredient}
                       isIngredientSelected={isIngredientSelected}
                       manualHalvesMode={manualHalvesMode}
-                      handleManualHalvesModeToggle={handleManualHalvesModeToggle}
+                      handleManualHalvesModeToggle={
+                        handleManualHalvesModeToggle
+                      }
                       expandedIngredients={expandedIngredients}
                       expandedFlavors={expandedFlavors}
                       toggleExpandedFlavors={toggleExpandedFlavors}

@@ -105,14 +105,15 @@ export const useProductCustomization = ({
       product.variants.length > 0,
     [product?.variants],
   );
-  const { isValid, getFieldError, getGroupError } = useProductValidation({
-    product,
-    selectedVariantId,
-    selectedModifiersByGroup,
-    selectedPizzaCustomizations,
-    pizzaCustomizations,
-    pizzaConfiguration,
-  });
+  const { isValid, getFieldError, getGroupError, validationErrors } =
+    useProductValidation({
+      product,
+      selectedVariantId,
+      selectedModifiersByGroup,
+      selectedPizzaCustomizations,
+      pizzaCustomizations,
+      pizzaConfiguration,
+    });
   const calculatePizzaExtraCost = useCallback(() => {
     if (!product?.isPizza || !pizzaConfiguration) return 0;
 
@@ -257,14 +258,17 @@ export const useProductCustomization = ({
         if (!group.allowMultipleSelections) {
           updatedModifiersByGroup[group.id] = [newModifier];
         } else {
-          if (currentGroupModifiers.length < (group.maxSelections || 0)) {
+          if (
+            !group.maxSelections ||
+            currentGroupModifiers.length < group.maxSelections
+          ) {
             updatedModifiersByGroup[group.id] = [
               ...currentGroupModifiers,
               newModifier,
             ];
           } else {
             showSnackbar({
-              message: `Solo puedes seleccionar hasta ${group.maxSelections || 0} opciones en ${group.name}`,
+              message: `Solo puedes seleccionar hasta ${group.maxSelections} opciones en ${group.name}`,
               type: 'warning',
             });
             return;
@@ -577,7 +581,7 @@ export const useProductCustomization = ({
 
           if (defaultModifiers.length > 0) {
             const maxSelections =
-              group.maxSelections || defaultModifiers.length;
+              group.maxSelections ?? defaultModifiers.length;
             defaultModifiersByGroup[group.id] = defaultModifiers.slice(
               0,
               maxSelections,
@@ -630,6 +634,7 @@ export const useProductCustomization = ({
     pizzaExtraCost,
     totalPrice,
     isValid,
+    validationErrors,
     getFieldError,
     getGroupError,
     handleVariantSelect,

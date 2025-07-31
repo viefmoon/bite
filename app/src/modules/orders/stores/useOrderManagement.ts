@@ -150,7 +150,7 @@ export const useOrderManagement = () => {
       const cartItems: CartItem[] = groupedItems.map((group) => {
         const { items, config } = group;
         const quantity = items.length;
-        const originalItemIds = items.map((item) => item.id).join(',');
+        const originalItemIds = items.map((item) => item.id);
 
         // Calcular el costo extra de pizza si existe
         const modifiersPrice = config.modifiers.reduce(
@@ -163,7 +163,7 @@ export const useOrderManagement = () => {
         );
 
         return {
-          id: originalItemIds,
+          id: originalItemIds.join(','), // Mantener como string para el ID del CartItem
           productId: config.productId,
           productName: config.product?.name || 'Producto desconocido',
           quantity,
@@ -179,6 +179,7 @@ export const useOrderManagement = () => {
           preparationStatus: config.preparationStatus || 'PENDING',
           isNew: false,
           isModified: false,
+          originalItemIds: originalItemIds, // Mantener como array para el backend
         };
       });
 

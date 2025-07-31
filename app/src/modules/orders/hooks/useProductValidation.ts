@@ -114,10 +114,14 @@ export const useProductValidation = ({
           );
 
           if (selectedCount < minRequired) {
-            const message =
-              minRequired === 1
-                ? `Selecciona una opción`
-                : `Selecciona al menos ${minRequired} opciones`;
+            let message = '';
+            if (group.isRequired && minRequired === 1) {
+              message = `"${group.name}" es requerido. Debes seleccionar al menos una opción.`;
+            } else if (minRequired > 1) {
+              message = `Debes seleccionar al menos ${minRequired} ${minRequired === 1 ? 'opción' : 'opciones'} en "${group.name}"`;
+            } else {
+              message = `Debes seleccionar al menos una opción en "${group.name}"`;
+            }
 
             errors.push({
               field: `modifier_${group.id}`,
@@ -130,7 +134,7 @@ export const useProductValidation = ({
         if (group.maxSelections && selectedCount > group.maxSelections) {
           errors.push({
             field: `modifier_${group.id}`,
-            message: `Máximo ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'}`,
+            message: `No puedes seleccionar más de ${group.maxSelections} ${group.maxSelections === 1 ? 'opción' : 'opciones'} en "${group.name}"`,
           });
         }
       }
