@@ -85,7 +85,7 @@ export class ProductRelationalRepository implements ProductRepository {
     return new Paginated(products, count, options.page, options.limit);
   }
 
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string): Promise<Product | null> {
     const entity = await this.productRepository.findOne({
       where: { id },
       relations: [
@@ -95,11 +95,13 @@ export class ProductRelationalRepository implements ProductRepository {
         'modifierGroups',
         'modifierGroups.productModifiers',
         'preparationScreen',
+        'pizzaCustomizations',
+        'pizzaConfiguration',
       ],
     });
 
     if (!entity) {
-      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+      return null;
     }
 
     const domainResult = this.productMapper.toDomain(entity);
@@ -149,6 +151,8 @@ export class ProductRelationalRepository implements ProductRepository {
         'modifierGroups',
         'modifierGroups.productModifiers',
         'preparationScreen',
+        'pizzaCustomizations',
+        'pizzaConfiguration',
       ],
     });
 
@@ -185,6 +189,8 @@ export class ProductRelationalRepository implements ProductRepository {
         'modifierGroups',
         'modifierGroups.productModifiers',
         'preparationScreen',
+        'pizzaCustomizations',
+        'pizzaConfiguration',
       ],
     });
     if (!reloadedEntity) {
@@ -222,19 +228,6 @@ export class ProductRelationalRepository implements ProductRepository {
     }
   }
 
-  async findOneWithPizzaCustomizations(id: string): Promise<Product | null> {
-    const entity = await this.productRepository.findOne({
-      where: { id },
-      relations: ['pizzaCustomizations'],
-    });
-
-    if (!entity) {
-      return null;
-    }
-
-    const domainResult = this.productMapper.toDomain(entity);
-    return domainResult;
-  }
 
   async updatePizzaCustomizations(
     productId: string,

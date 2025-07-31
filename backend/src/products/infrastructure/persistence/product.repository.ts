@@ -20,7 +20,6 @@ export interface ProductRepository {
     productId: string,
     preparationScreenId: string | null,
   ): Promise<void>;
-  findOneWithPizzaCustomizations(id: string): Promise<Product | null>;
   updatePizzaCustomizations(
     productId: string,
     pizzaCustomizationIds: string[],

@@ -172,9 +172,11 @@ export class ProductsService {
 
   async findOne(id: string): Promise<Product> {
     const product = await this.productRepository.findOne(id);
+    
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
+    
     return product;
   }
 
@@ -385,8 +387,7 @@ export class ProductsService {
   }
 
   async getPizzaCustomizations(id: string): Promise<any[]> {
-    const product =
-      await this.productRepository.findOneWithPizzaCustomizations(id);
+    const product = await this.productRepository.findOne(id);
     if (!product) {
       throw new NotFoundException(
         `Producto con ID ${id} no encontrado`,
@@ -415,8 +416,7 @@ export class ProductsService {
     );
 
     // Retornar el producto actualizado con las personalizaciones
-    const updatedProduct =
-      await this.productRepository.findOneWithPizzaCustomizations(id);
+    const updatedProduct = await this.productRepository.findOne(id);
     if (!updatedProduct) {
       throw new NotFoundException(
         `Producto con ID ${id} no encontrado después de actualizar`,
