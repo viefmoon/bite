@@ -503,7 +503,7 @@ const AddProductsToOrderScreen = () => {
             product={selectedProduct}
             editingItem={editingItem}
             onDismiss={handleCloseProductModal}
-            onAddToCart={handleAddToCart}
+            onAddItem={handleAddToCart}
             onUpdateItem={(
               itemId,
               quantity,

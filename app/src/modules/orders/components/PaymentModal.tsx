@@ -249,7 +249,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     isLoading={
                       createPaymentMutation.isPending || isCreatingPrepayment
                     }
-                    onSubmit={handleSubmit}
                   />
                 </View>
               )}

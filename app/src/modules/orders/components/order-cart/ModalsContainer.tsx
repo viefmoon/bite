@@ -165,7 +165,7 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
               props.clearEditingState();
               modalHelpers.hideModal();
             }}
-            onAddToCart={() => {}}
+            onAddItem={() => {}}
             onUpdateItem={props.handleUpdateEditedItem}
           />
         );
