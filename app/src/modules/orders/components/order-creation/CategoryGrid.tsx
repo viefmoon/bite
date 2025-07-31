@@ -338,7 +338,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     [colors, fonts, theme, responsive, itemWidth],
   );
 
-
   const renderItem = useCallback(
     ({ item }: { item: Category | SubCategory | Product }) => {
       const imageSource = item.photo ? item.photo.path : null;
@@ -453,13 +452,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         </AnimatedItem>
       );
     },
-    [
-      navigationLevel,
-      onItemSelect,
-      onProductInfo,
-      styles,
-      getProductCount,
-    ],
+    [navigationLevel, onItemSelect, onProductInfo, styles, getProductCount],
   );
 
   return (

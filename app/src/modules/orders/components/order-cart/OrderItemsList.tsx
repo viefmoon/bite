@@ -27,7 +27,7 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  
+
   // Obtener todas las pizza customizations activas (sin paginación)
   const { data: pizzaCustomizationsData } = usePizzaCustomizationsAllActive();
 
@@ -118,11 +118,12 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
             </View>
           )}
           description={() => {
-            const pizzaCustomizationsFormatted = item.selectedPizzaCustomizations && 
-              item.selectedPizzaCustomizations.length > 0 
+            const pizzaCustomizationsFormatted =
+              item.selectedPizzaCustomizations &&
+              item.selectedPizzaCustomizations.length > 0
                 ? formatPizzaCustomizations(
                     item.selectedPizzaCustomizations,
-                    pizzaCustomizationsData
+                    pizzaCustomizationsData,
                   )
                 : '';
 

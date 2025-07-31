@@ -3,8 +3,6 @@ import { Portal } from 'react-native-paper';
 import DateTimePickerSafe from '@/app/components/DateTimePickerSafe';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 import ProductCustomizationModal from '../ProductCustomizationModal';
-import { OrderDetailModal } from '../OrderDetailModal';
-import OrderHistoryModal from '@/modules/shared/components/OrderHistoryModal';
 import PaymentModal from '../PaymentModal';
 import { AdjustmentFormModal } from '../AdjustmentFormModal';
 import { OrderTypeEnum } from '../../schema/orders.schema';
@@ -12,17 +10,14 @@ import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import { useModalStore, modalHelpers } from '../../stores/useModalStore';
 import type {
   TimePickerModalProps,
-  TimeAlertModalProps,
   ExitConfirmationModalProps,
   CancelConfirmationModalProps,
   ModifyInProgressConfirmationModalProps,
   DeletePrepaymentConfirmModalProps,
   ProductCustomizationModalProps,
-  OrderDetailModalProps,
-  OrderHistoryModalProps,
   PaymentModalProps,
   AdjustmentModalProps,
-  PrepaymentModalProps
+  PrepaymentModalProps,
 } from '../../types/modal.types';
 
 export const ModalsContainer: React.FC<Record<string, never>> = () => {
@@ -62,7 +57,6 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
       }
 
       case 'timeAlert': {
-        const props = modalProps as TimeAlertModalProps;
         return (
           <ConfirmationModal
             visible={true}
@@ -99,8 +93,8 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             visible={true}
             title="¿Cancelar orden?"
             message={`¿Estás seguro de que quieres cancelar la orden #${props.orderNumber}? Esta acción no se puede deshacer.`}
-            confirmText="Cancelar Orden"
-            cancelText="No, mantener"
+            confirmText="Descartar"
+            cancelText="Cancelar"
             onConfirm={() => {
               modalHelpers.hideModal();
               props.onCancelOrder?.();
@@ -117,8 +111,8 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             visible={true}
             title="¿Modificar producto en preparación?"
             message={`El producto "${props.modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
-            confirmText="Sí, modificar"
-            cancelText="No, cancelar"
+            confirmText="Descartar"
+            cancelText="Cancelar"
             onConfirm={() => {
               modalHelpers.hideModal();
               if (props.pendingModifyAction) {
@@ -167,31 +161,6 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             }}
             onAddItem={() => {}}
             onUpdateItem={props.handleUpdateEditedItem}
-          />
-        );
-      }
-
-      case 'orderDetail': {
-        const props = modalProps as OrderDetailModalProps;
-        return (
-          <OrderDetailModal
-            visible={true}
-            onDismiss={modalHelpers.hideModal}
-            orderId={props.orderId}
-            orderNumber={props.orderNumber}
-            orderData={props.orderData}
-          />
-        );
-      }
-
-      case 'orderHistory': {
-        const props = modalProps as OrderHistoryModalProps;
-        return (
-          <OrderHistoryModal
-            visible={true}
-            onDismiss={modalHelpers.hideModal}
-            orderId={props.orderId}
-            orderNumber={props.orderNumber}
           />
         );
       }

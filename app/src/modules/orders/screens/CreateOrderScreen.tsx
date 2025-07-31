@@ -131,7 +131,7 @@ const CreateOrderScreen = () => {
         visible={showExitConfirmationModal}
         title="¿Descartar Orden?"
         message="Tienes artículos en el carrito. Si sales, se perderán. ¿Estás seguro?"
-        confirmText="Salir y Descartar"
+        confirmText="Descartar"
         cancelText="Cancelar"
         onConfirm={handleConfirmExit}
         onCancel={handleCancelExit}

@@ -285,7 +285,10 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                             <View style={styles.ingredientInfoContainer}>
                               <View style={styles.ingredientNameContainer}>
                                 <Text style={styles.ingredientLabel}>
-                                  {ingredient.name} <Text style={styles.toppingValueSmall}>({ingredient.toppingValue})</Text>
+                                  {ingredient.name}{' '}
+                                  <Text style={styles.toppingValueSmall}>
+                                    ({ingredient.toppingValue})
+                                  </Text>
                                 </Text>
                               </View>
                             </View>
