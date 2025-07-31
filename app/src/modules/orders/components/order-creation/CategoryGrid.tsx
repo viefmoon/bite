@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import { DEFAULT_IMAGE_BLURHASH } from '@/app/constants/ui';
 import {
   Category,
   SubCategory,
@@ -337,8 +338,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     [colors, fonts, theme, responsive, itemWidth],
   );
 
-  const blurhash =
-    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   const renderItem = useCallback(
     ({ item }: { item: Category | SubCategory | Product }) => {
@@ -400,7 +399,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 (!isActive || isProductWithoutScreen) && styles.imageInactive,
               ]}
               contentFit="cover"
-              placeholder={blurhash}
+              placeholder={DEFAULT_IMAGE_BLURHASH}
               transition={300}
               placeholderIcon="image-outline"
             />
@@ -459,7 +458,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
       onItemSelect,
       onProductInfo,
       styles,
-      blurhash,
       getProductCount,
     ],
   );

@@ -4,6 +4,7 @@ import { Card, Title, Text, IconButton } from 'react-native-paper';
 import { AutoImage } from '@/app/components/common/AutoImage';
 import { useAppTheme } from '@/app/styles/theme';
 import { useResponsive } from '@/app/hooks/useResponsive';
+import { DEFAULT_IMAGE_BLURHASH } from '@/app/constants/ui';
 import type { Product, Category, SubCategory } from '../schema/orders.schema';
 
 interface MenuItemCardProps {
@@ -30,8 +31,6 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
     const { colors } = theme;
     const responsive = useResponsive();
 
-    const blurhash =
-      '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
     const styles = useMemo(
       () =>
@@ -177,7 +176,7 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
           source={imageSource}
           style={[styles.itemImage, isDisabled && styles.imageInactive]}
           contentFit="cover"
-          placeholder={blurhash}
+          placeholder={DEFAULT_IMAGE_BLURHASH}
           transition={300}
           placeholderIcon="image-outline"
         />

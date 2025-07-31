@@ -143,7 +143,7 @@ const CreateOrderScreen = () => {
             visible={true}
             product={selectedProduct}
             editingItem={editingItem}
-            onAddToCart={handleAddItem}
+            onAddItem={handleAddItem}
             onUpdateItem={updateItem}
             onDismiss={handleCloseProductModal}
           />

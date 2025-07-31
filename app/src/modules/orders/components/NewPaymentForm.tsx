@@ -14,6 +14,7 @@ import {
   type PaymentMethod,
 } from '../schema/payment.schema';
 import { formatPaymentMethod } from '../utils/formatters';
+import { DISABLED_PAYMENT_METHODS } from '@/app/constants/ui';
 
 interface NewPaymentFormProps {
   selectedMethod: PaymentMethod;
@@ -25,8 +26,6 @@ interface NewPaymentFormProps {
   isLoading?: boolean;
 }
 
-// Métodos de pago deshabilitados temporalmente
-const DISABLED_METHODS: PaymentMethod[] = ['CARD', 'TRANSFER'];
 
 export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
   selectedMethod,
@@ -56,7 +55,7 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
       {/* Métodos de pago */}
       <View style={styles.methodsContainer}>
         {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-          const isDisabled = DISABLED_METHODS.includes(value as PaymentMethod);
+          const isDisabled = DISABLED_PAYMENT_METHODS.includes(value as PaymentMethod);
           return (
             <TouchableOpacity
               key={key}

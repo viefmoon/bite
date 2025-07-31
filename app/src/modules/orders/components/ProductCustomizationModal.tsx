@@ -33,7 +33,7 @@ interface ProductCustomizationModalProps {
   onDismiss: () => void;
   product: Product;
   editingItem?: CartItem | null;
-  onAddToCart: (
+  onAddItem: (
     product: Product,
     quantity: number,
     variantId?: string,
@@ -56,7 +56,7 @@ interface ProductCustomizationModalProps {
 }
 
 const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
-  ({ visible, onDismiss, product, editingItem, onAddToCart, onUpdateItem }) => {
+  ({ visible, onDismiss, product, editingItem, onAddItem, onUpdateItem }) => {
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
@@ -160,7 +160,7 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
         );
       } else {
         // Si es un nuevo item, agregarlo al carrito
-        onAddToCart(
+        onAddItem(
           product,
           quantity,
           selectedVariantId,
