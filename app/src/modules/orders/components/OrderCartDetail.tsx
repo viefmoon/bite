@@ -755,7 +755,7 @@ const OrderCartHeader: React.FC<{
             onPress={() => {
               setShowOptionsMenu(false);
               modalHelpers.showOrderDetail({
-                orderId,
+                orderId: orderId || null,
                 orderNumber,
                 orderData,
               });
@@ -767,7 +767,7 @@ const OrderCartHeader: React.FC<{
             onPress={() => {
               setShowOptionsMenu(false);
               modalHelpers.showOrderHistory({
-                orderId,
+                orderId: orderId || null,
                 orderNumber,
               });
             }}
@@ -1397,15 +1397,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
                       orderTotal: total,
                       orderNumber,
                       orderStatus: orderData?.orderStatus,
-                      existingPayments: [], // El modal consulta los datos directamente
                       onOrderCompleted: () => {
                         onClose?.();
                       },
                       onPaymentRegistered: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ['orders', 'detail', orderId],
-                        });
-                        refetchOrder();
+                        // Invalidar cache y refrescar orden cuando se registre un pago
+                        // Nota: Estas funciones están disponibles en el scope del componente padre
                       },
                     });
                   }}

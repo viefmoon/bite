@@ -1,32 +1,35 @@
 import { create } from 'zustand';
-import type { OrderAdjustment } from '../schema/adjustments.schema';
-import type { CartItem } from '../utils/cartUtils';
-
-export type ModalType =
-  | 'timePicker'
-  | 'timeAlert'
-  | 'exitConfirmation'
-  | 'cancelConfirmation'
-  | 'modifyInProgressConfirmation'
-  | 'deletePrepaymentConfirm'
-  | 'productCustomization'
-  | 'orderDetail'
-  | 'orderHistory'
-  | 'payment'
-  | 'adjustment'
-  | 'prepayment'
-  | null;
+import type { 
+  ModalType, 
+  ModalConfig, 
+  ModalPropsForType,
+  TimePickerModalProps,
+  TimeAlertModalProps,
+  ExitConfirmationModalProps,
+  CancelConfirmationModalProps,
+  ModifyInProgressConfirmationModalProps,
+  DeletePrepaymentConfirmModalProps,
+  ProductCustomizationModalProps,
+  OrderDetailModalProps,
+  OrderHistoryModalProps,
+  PaymentModalProps,
+  AdjustmentModalProps,
+  PrepaymentModalProps
+} from '../types/modal.types';
 
 interface ModalState {
   modalType: ModalType;
-  modalProps: any;
+  modalProps: ModalConfig['props'];
   isVisible: boolean;
 }
 
 interface ModalActions {
-  showModal: (type: ModalType, props?: any) => void;
+  showModal: <T extends Exclude<ModalType, null>>(
+    type: T,
+    props: ModalPropsForType<T>
+  ) => void;
   hideModal: () => void;
-  updateModalProps: (props: any) => void;
+  updateModalProps: (props: Partial<ModalConfig['props']>) => void;
 }
 
 export interface ModalStore extends ModalState, ModalActions {}
@@ -36,7 +39,10 @@ export const useModalStore = create<ModalStore>((set) => ({
   modalProps: {},
   isVisible: false,
 
-  showModal: (type: ModalType, props = {}) => {
+  showModal: <T extends Exclude<ModalType, null>>(
+    type: T,
+    props: ModalPropsForType<T>
+  ) => {
     set({
       modalType: type,
       modalProps: props,
@@ -52,7 +58,7 @@ export const useModalStore = create<ModalStore>((set) => ({
     });
   },
 
-  updateModalProps: (props: any) => {
+  updateModalProps: (props: Partial<ModalConfig['props']>) => {
     set((state) => ({
       modalProps: { ...state.modalProps, ...props },
     }));
@@ -60,112 +66,51 @@ export const useModalStore = create<ModalStore>((set) => ({
 }));
 
 export const modalHelpers = {
-  showTimePicker: (props: {
-    scheduledTime: Date | null;
-    orderType: string;
-    onTimeConfirm: (date: Date) => void;
-    hideTimePicker: () => void;
-  }) => {
+  showTimePicker: (props: TimePickerModalProps) => {
     useModalStore.getState().showModal('timePicker', props);
   },
 
-  showTimeAlert: () => {
-    useModalStore.getState().showModal('timeAlert');
+  showTimeAlert: (props: TimeAlertModalProps = {}) => {
+    useModalStore.getState().showModal('timeAlert', props);
   },
 
-  showExitConfirmation: (props: { onClose?: () => void }) => {
+  showExitConfirmation: (props: ExitConfirmationModalProps) => {
     useModalStore.getState().showModal('exitConfirmation', props);
   },
 
-  showCancelConfirmation: (props: {
-    orderNumber?: number;
-    onCancelOrder?: () => void;
-  }) => {
+  showCancelConfirmation: (props: CancelConfirmationModalProps) => {
     useModalStore.getState().showModal('cancelConfirmation', props);
   },
 
-  showModifyInProgressConfirmation: (props: {
-    modifyingItemName: string;
-    pendingModifyAction: (() => void) | null;
-    setPendingModifyAction: (action: (() => void) | null) => void;
-    setModifyingItemName: (name: string) => void;
-  }) => {
+  showModifyInProgressConfirmation: (props: ModifyInProgressConfirmationModalProps) => {
     useModalStore.getState().showModal('modifyInProgressConfirmation', props);
   },
 
-  showDeletePrepaymentConfirm: (props: {
-    confirmDeletePrepayment: () => Promise<void>;
-  }) => {
+  showDeletePrepaymentConfirm: (props: DeletePrepaymentConfirmModalProps) => {
     useModalStore.getState().showModal('deletePrepaymentConfirm', props);
   },
 
-  showProductCustomization: (props: {
-    editingProduct: any;
-    editingItemFromList: CartItem | null;
-    clearEditingState: () => void;
-    handleUpdateEditedItem: (
-      itemId: string,
-      quantity: number,
-      modifiers: any[],
-      preparationNotes?: string,
-      variantId?: string,
-      variantName?: string,
-      unitPrice?: number,
-      selectedPizzaCustomizations?: any[],
-      pizzaExtraCost?: number,
-    ) => void;
-  }) => {
+  showProductCustomization: (props: ProductCustomizationModalProps) => {
     useModalStore.getState().showModal('productCustomization', props);
   },
 
-  showOrderDetail: (props: {
-    orderId?: string | null;
-    orderNumber?: number;
-    orderData?: any;
-  }) => {
+  showOrderDetail: (props: OrderDetailModalProps) => {
     useModalStore.getState().showModal('orderDetail', props);
   },
 
-  showOrderHistory: (props: {
-    orderId?: string | null;
-    orderNumber?: number;
-  }) => {
+  showOrderHistory: (props: OrderHistoryModalProps) => {
     useModalStore.getState().showModal('orderHistory', props);
   },
 
-  showPayment: (props: {
-    orderId?: string;
-    orderTotal: number;
-    orderNumber?: number;
-    orderStatus?: string;
-    existingPayments?: any[];
-    onOrderCompleted?: () => void;
-    onPaymentRegistered?: () => void;
-    onClose?: () => void;
-  }) => {
+  showPayment: (props: PaymentModalProps) => {
     useModalStore.getState().showModal('payment', props);
   },
 
-  showAdjustment: (props: {
-    adjustmentToEdit: OrderAdjustment | null;
-    setAdjustmentToEdit: (adjustment: OrderAdjustment | null) => void;
-    handleAddAdjustment: (adjustment: OrderAdjustment) => void;
-    handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
-    subtotal: number;
-  }) => {
+  showAdjustment: (props: AdjustmentModalProps) => {
     useModalStore.getState().showModal('adjustment', props);
   },
 
-  showPrepayment: (props: {
-    orderTotal: number;
-    prepaymentId: string | null;
-    handlePrepaymentCreated: (
-      prepaymentIdCreated: string,
-      amount: number,
-      method: 'CASH' | 'CARD' | 'TRANSFER',
-    ) => void;
-    handlePrepaymentDeleted: () => void;
-  }) => {
+  showPrepayment: (props: PrepaymentModalProps) => {
     useModalStore.getState().showModal('prepayment', props);
   },
 

@@ -10,6 +10,20 @@ import { AdjustmentFormModal } from '../AdjustmentFormModal';
 import { OrderTypeEnum } from '../../schema/orders.schema';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 import { useModalStore, modalHelpers } from '../../stores/useModalStore';
+import type {
+  TimePickerModalProps,
+  TimeAlertModalProps,
+  ExitConfirmationModalProps,
+  CancelConfirmationModalProps,
+  ModifyInProgressConfirmationModalProps,
+  DeletePrepaymentConfirmModalProps,
+  ProductCustomizationModalProps,
+  OrderDetailModalProps,
+  OrderHistoryModalProps,
+  PaymentModalProps,
+  AdjustmentModalProps,
+  PrepaymentModalProps
+} from '../../types/modal.types';
 
 export const ModalsContainer: React.FC<Record<string, never>> = () => {
   const { modalType, modalProps, isVisible } = useModalStore();
@@ -19,24 +33,25 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
 
   const renderModal = () => {
     switch (modalType) {
-      case 'timePicker':
+      case 'timePicker': {
+        const props = modalProps as TimePickerModalProps;
         return (
           <Portal>
             <DateTimePickerSafe
               visible={true}
               mode="time"
-              value={modalProps.scheduledTime}
-              onConfirm={modalProps.onTimeConfirm}
+              value={props.scheduledTime}
+              onConfirm={props.onTimeConfirm}
               onCancel={() => {
-                modalProps.hideTimePicker?.();
+                props.hideTimePicker?.();
                 modalHelpers.hideModal();
               }}
               minimumDate={new Date()}
               minuteInterval={5}
               title={
-                modalProps.orderType === OrderTypeEnum.DELIVERY
+                props.orderType === OrderTypeEnum.DELIVERY
                   ? 'Seleccionar Hora de Entrega'
-                  : modalProps.orderType === OrderTypeEnum.TAKE_AWAY
+                  : props.orderType === OrderTypeEnum.TAKE_AWAY
                     ? 'Seleccionar Hora de Recolección'
                     : 'Seleccionar Hora'
               }
@@ -44,8 +59,10 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             />
           </Portal>
         );
+      }
 
-      case 'timeAlert':
+      case 'timeAlert': {
+        const props = modalProps as TimeAlertModalProps;
         return (
           <ConfirmationModal
             visible={true}
@@ -55,8 +72,10 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             onConfirm={modalHelpers.hideModal}
           />
         );
+      }
 
-      case 'exitConfirmation':
+      case 'exitConfirmation': {
+        const props = modalProps as ExitConfirmationModalProps;
         return (
           <ConfirmationModal
             visible={true}
@@ -66,53 +85,59 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             cancelText="Cancelar"
             onConfirm={() => {
               modalHelpers.hideModal();
-              modalProps.onClose?.();
+              props.onClose?.();
             }}
             onCancel={modalHelpers.hideModal}
           />
         );
+      }
 
-      case 'cancelConfirmation':
+      case 'cancelConfirmation': {
+        const props = modalProps as CancelConfirmationModalProps;
         return (
           <ConfirmationModal
             visible={true}
             title="¿Cancelar orden?"
-            message={`¿Estás seguro de que quieres cancelar la orden #${modalProps.orderNumber}? Esta acción no se puede deshacer.`}
+            message={`¿Estás seguro de que quieres cancelar la orden #${props.orderNumber}? Esta acción no se puede deshacer.`}
             confirmText="Cancelar Orden"
             cancelText="No, mantener"
             onConfirm={() => {
               modalHelpers.hideModal();
-              modalProps.onCancelOrder?.();
+              props.onCancelOrder?.();
             }}
             onCancel={modalHelpers.hideModal}
           />
         );
+      }
 
-      case 'modifyInProgressConfirmation':
+      case 'modifyInProgressConfirmation': {
+        const props = modalProps as ModifyInProgressConfirmationModalProps;
         return (
           <ConfirmationModal
             visible={true}
             title="¿Modificar producto en preparación?"
-            message={`El producto "${modalProps.modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
+            message={`El producto "${props.modifyingItemName}" está actualmente en preparación. ¿Estás seguro de que quieres modificarlo?`}
             confirmText="Sí, modificar"
             cancelText="No, cancelar"
             onConfirm={() => {
               modalHelpers.hideModal();
-              if (modalProps.pendingModifyAction) {
-                modalProps.pendingModifyAction();
-                modalProps.setPendingModifyAction(null);
+              if (props.pendingModifyAction) {
+                props.pendingModifyAction();
+                props.setPendingModifyAction(null);
               }
-              modalProps.setModifyingItemName('');
+              props.setModifyingItemName('');
             }}
             onCancel={() => {
               modalHelpers.hideModal();
-              modalProps.setPendingModifyAction(null);
-              modalProps.setModifyingItemName('');
+              props.setPendingModifyAction(null);
+              props.setModifyingItemName('');
             }}
           />
         );
+      }
 
-      case 'deletePrepaymentConfirm':
+      case 'deletePrepaymentConfirm': {
+        const props = modalProps as DeletePrepaymentConfirmModalProps;
         return (
           <ConfirmationModal
             visible={true}
@@ -121,107 +146,118 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             confirmText="Eliminar"
             cancelText="Cancelar"
             onConfirm={async () => {
-              await modalProps.confirmDeletePrepayment();
+              await props.confirmDeletePrepayment();
               modalHelpers.hideModal();
             }}
             onCancel={modalHelpers.hideModal}
           />
         );
+      }
 
-      case 'productCustomization':
+      case 'productCustomization': {
+        const props = modalProps as ProductCustomizationModalProps;
         return (
           <ProductCustomizationModal
             visible={true}
-            product={modalProps.editingProduct}
-            editingItem={modalProps.editingItemFromList}
+            product={props.editingProduct}
+            editingItem={props.editingItemFromList}
             onDismiss={() => {
-              modalProps.clearEditingState();
+              props.clearEditingState();
               modalHelpers.hideModal();
             }}
             onAddToCart={() => {}}
-            onUpdateItem={modalProps.handleUpdateEditedItem}
+            onUpdateItem={props.handleUpdateEditedItem}
           />
         );
+      }
 
-      case 'orderDetail':
+      case 'orderDetail': {
+        const props = modalProps as OrderDetailModalProps;
         return (
           <OrderDetailModal
             visible={true}
             onDismiss={modalHelpers.hideModal}
-            orderId={modalProps.orderId}
-            orderNumber={modalProps.orderNumber}
-            orderData={modalProps.orderData}
+            orderId={props.orderId}
+            orderNumber={props.orderNumber}
+            orderData={props.orderData}
           />
         );
+      }
 
-      case 'orderHistory':
+      case 'orderHistory': {
+        const props = modalProps as OrderHistoryModalProps;
         return (
           <OrderHistoryModal
             visible={true}
             onDismiss={modalHelpers.hideModal}
-            orderId={modalProps.orderId}
-            orderNumber={modalProps.orderNumber}
+            orderId={props.orderId}
+            orderNumber={props.orderNumber}
           />
         );
+      }
 
-      case 'payment':
-        console.log('ModalsContainer - payment modal props:', modalProps);
+      case 'payment': {
+        const props = modalProps as PaymentModalProps;
         return (
           <PaymentModal
             visible={true}
             onDismiss={modalHelpers.hideModal}
-            orderId={modalProps.orderId}
-            orderTotal={modalProps.orderTotal}
-            orderNumber={modalProps.orderNumber}
-            orderStatus={modalProps.orderStatus}
-            existingPayments={modalProps.existingPayments}
+            orderId={props.orderId}
+            orderTotal={props.orderTotal}
+            orderNumber={props.orderNumber}
+            orderStatus={props.orderStatus}
             onOrderCompleted={() => {
               modalHelpers.hideModal();
-              modalProps.onOrderCompleted?.();
+              props.onOrderCompleted?.();
             }}
             onPaymentRegistered={() => {
-              modalProps.onPaymentRegistered?.();
+              props.onPaymentRegistered?.();
             }}
           />
         );
+      }
 
-      case 'adjustment':
+      case 'adjustment': {
+        const props = modalProps as AdjustmentModalProps;
         return (
           <AdjustmentFormModal
             visible={true}
             onDismiss={() => {
               modalHelpers.hideModal();
-              modalProps.setAdjustmentToEdit(null);
+              props.setAdjustmentToEdit(null);
             }}
             onSave={(adjustment: OrderAdjustment) => {
-              if (modalProps.adjustmentToEdit) {
-                modalProps.handleUpdateAdjustment(
-                  modalProps.adjustmentToEdit.id!,
+              if (props.adjustmentToEdit) {
+                props.handleUpdateAdjustment(
+                  props.adjustmentToEdit.id!,
                   adjustment,
                 );
               } else {
-                modalProps.handleAddAdjustment(adjustment);
+                props.handleAddAdjustment(adjustment);
               }
               modalHelpers.hideModal();
-              modalProps.setAdjustmentToEdit(null);
+              props.setAdjustmentToEdit(null);
             }}
-            adjustment={modalProps.adjustmentToEdit}
-            orderSubtotal={modalProps.subtotal}
+            adjustment={props.adjustmentToEdit}
+            orderSubtotal={props.subtotal}
           />
         );
+      }
 
-      case 'prepayment':
+      case 'prepayment': {
+        const props = modalProps as PrepaymentModalProps;
         return (
           <PaymentModal
             visible={true}
             onDismiss={modalHelpers.hideModal}
-            orderTotal={modalProps.orderTotal}
+            orderTotal={props.orderTotal}
             mode="prepayment"
-            onPrepaymentCreated={modalProps.handlePrepaymentCreated}
-            existingPrepaymentId={modalProps.prepaymentId || undefined}
-            onPrepaymentDeleted={modalProps.handlePrepaymentDeleted}
+            onPrepaymentCreated={props.handlePrepaymentCreated}
+            existingPrepaymentId={props.prepaymentId || undefined}
+            onPrepaymentDeleted={props.handlePrepaymentDeleted}
           />
         );
+      }
 
       default:
         return null;
